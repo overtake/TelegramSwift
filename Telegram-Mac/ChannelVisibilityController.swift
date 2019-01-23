@@ -48,25 +48,9 @@ fileprivate enum ChannelVisibilityEntryStableId: Hashable {
         }
     }
     
-    static func ==(lhs: ChannelVisibilityEntryStableId, rhs: ChannelVisibilityEntryStableId) -> Bool {
-        switch lhs {
-        case let .index(index):
-            if case .index(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .peer(peerId):
-            if case .peer(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
-private enum ChannelVisibilityEntry: Identifiable, Comparable {
+private enum ChannelVisibilityEntry: TableItemListNodeEntry {
     case typeHeader(sectionId:Int32, String)
     case typePublic(sectionId:Int32, Bool)
     case typePrivate(sectionId:Int32, Bool)
@@ -114,7 +98,6 @@ private enum ChannelVisibilityEntry: Identifiable, Comparable {
             return .index((sectionId + 1) * 1000 - sectionId)
         }
     }
-    
     static func ==(lhs: ChannelVisibilityEntry, rhs: ChannelVisibilityEntry) -> Bool {
         switch lhs {
         case let .typeHeader(_, title):
@@ -353,26 +336,6 @@ private struct ChannelVisibilityControllerState: Equatable {
         self.revokingPeerId = revokingPeerId
     }
     
-    static func ==(lhs: ChannelVisibilityControllerState, rhs: ChannelVisibilityControllerState) -> Bool {
-        if lhs.selectedType != rhs.selectedType {
-            return false
-        }
-        if lhs.editingPublicLinkText != rhs.editingPublicLinkText {
-            return false
-        }
-        if lhs.addressNameValidationStatus != rhs.addressNameValidationStatus {
-            return false
-        }
-        if lhs.updatingAddressName != rhs.updatingAddressName {
-            return false
-        }
-        if lhs.revokingPeerId != rhs.revokingPeerId {
-            return false
-        }
-        
-        return true
-    }
-    
     func withUpdatedSelectedType(_ selectedType: CurrentChannelType?) -> ChannelVisibilityControllerState {
         return ChannelVisibilityControllerState(selectedType: selectedType, editingPublicLinkText: self.editingPublicLinkText, addressNameValidationStatus: self.addressNameValidationStatus, updatingAddressName: self.updatingAddressName, revokingPeerId: self.revokingPeerId)
     }
@@ -434,22 +397,22 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             }
         }
         
-        entries.append(.typeHeader(sectionId: sectionId, isGroup ? tr(L10n.channelTypeHeaderGroup) : tr(L10n.channelTypeHeaderChannel)))
+        entries.append(.typeHeader(sectionId: sectionId, isGroup ? L10n.channelTypeHeaderGroup : L10n.channelTypeHeaderChannel))
         entries.append(.typePublic(sectionId: sectionId, selectedType == .publicChannel))
         entries.append(.typePrivate(sectionId: sectionId, selectedType == .privateChannel))
         
         switch selectedType {
         case .publicChannel:
             if isGroup {
-                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPublicAboutGroup)))
+                entries.append(.typeInfo(sectionId: sectionId, L10n.channelPublicAboutGroup))
             } else {
-                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPublicAboutChannel)))
+                entries.append(.typeInfo(sectionId: sectionId, L10n.channelPublicAboutChannel))
             }
         case .privateChannel:
             if isGroup {
-                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPrivateAboutGroup)))
+                entries.append(.typeInfo(sectionId: sectionId, L10n.channelPrivateAboutGroup))
             } else {
-                entries.append(.typeInfo(sectionId: sectionId, tr(L10n.channelPrivateAboutChannel)))
+                entries.append(.typeInfo(sectionId: sectionId, L10n.channelPrivateAboutChannel))
             }
         }
         
@@ -496,11 +459,96 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                         break
                     }
                 }
-                entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? tr(L10n.channelUsernameAboutGroup) : tr(L10n.channelUsernameAboutChannel)))
+                entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelUsernameAboutGroup : L10n.channelUsernameAboutChannel))
             }
         case .privateChannel:
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation?.link))
-            entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? tr(L10n.channelExportLinkAboutGroup) : tr(L10n.channelExportLinkAboutChannel)))
+            entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelExportLinkAboutGroup : L10n.channelExportLinkAboutChannel))
+        }
+    } else if let peer = view.peers[view.peerId] as? TelegramGroup {
+
+        let selectedType: CurrentChannelType
+        if let current = state.selectedType {
+            selectedType = current
+        } else {
+            if let addressName = peer.addressName, !addressName.isEmpty {
+                selectedType = .publicChannel
+            } else {
+                selectedType = .privateChannel
+            }
+        }
+        
+        let currentAddressName: String
+        if let current = state.editingPublicLinkText {
+            currentAddressName = current
+        } else {
+            if let addressName = peer.addressName {
+                currentAddressName = addressName
+            } else {
+                currentAddressName = ""
+            }
+        }
+        
+        entries.append(.typeHeader(sectionId: sectionId, L10n.channelTypeHeaderGroup))
+        entries.append(.typePublic(sectionId: sectionId, selectedType == .publicChannel))
+        entries.append(.typePrivate(sectionId: sectionId, selectedType == .privateChannel))
+        
+        switch selectedType {
+        case .publicChannel:
+            entries.append(.typeInfo(sectionId: sectionId, L10n.channelPublicAboutGroup))
+
+        case .privateChannel:
+            entries.append(.typeInfo(sectionId: sectionId, L10n.channelPrivateAboutGroup))
+        }
+        
+        entries.append(.section(sectionId: sectionId))
+        sectionId += 1
+        
+        switch selectedType {
+        case .publicChannel:
+            var displayAvailability = false
+            if peer.addressName == nil {
+                displayAvailability = publicChannelsToRevoke == nil || !(publicChannelsToRevoke!.isEmpty)
+            }
+            
+            if displayAvailability {
+                if let publicChannelsToRevoke = publicChannelsToRevoke {
+                    
+                    
+                    entries.append(.publicLinkAvailability(sectionId: sectionId, false))
+                    var index: Int32 = 0
+                    for peer in publicChannelsToRevoke.sorted(by: { lhs, rhs in
+                        var lhsDate: Int32 = 0
+                        var rhsDate: Int32 = 0
+                        if let lhs = lhs as? TelegramGroup {
+                            lhsDate = lhs.creationDate
+                        }
+                        if let rhs = rhs as? TelegramGroup {
+                            rhsDate = rhs.creationDate
+                        }
+                        return lhsDate > rhsDate
+                    }) {
+                        entries.append(.existingLinkPeerItem(sectionId: sectionId, index, peer, nil, state.revokingPeerId == nil))
+                        index += 1
+                    }
+                } else {
+                    entries.append(.publicLinkAvailability(sectionId: sectionId, true))
+                }
+            } else {
+                entries.append(.editablePublicLink(sectionId: sectionId, peer.addressName, currentAddressName, state.addressNameValidationStatus))
+                if let status = state.addressNameValidationStatus {
+                    switch status {
+                    case .invalidFormat, .availability:
+                        entries.append(.publicLinkStatus(sectionId: sectionId, currentAddressName, status))
+                    default:
+                        break
+                    }
+                }
+                entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelUsernameAboutGroup))
+            }
+        case .privateChannel:
+            entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation?.link))
+            entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelExportLinkAboutGroup))
         }
     }
     
@@ -520,51 +568,62 @@ private func effectiveChannelType(state: ChannelVisibilityControllerState, peer:
     return selectedType
 }
 
-private func updatedAddressName(state: ChannelVisibilityControllerState, peer: TelegramChannel) -> String? {
-    let selectedType = effectiveChannelType(state: state, peer: peer)
-    
-    let currentAddressName: String
-    
-    switch selectedType {
-    case .privateChannel:
-        currentAddressName = ""
-    case .publicChannel:
-        if let current = state.editingPublicLinkText {
-            currentAddressName = current
-        } else {
-            if let addressName = peer.addressName {
-                currentAddressName = addressName
+private func updatedAddressName(state: ChannelVisibilityControllerState, peer: Peer) -> String? {
+    if let peer = peer as? TelegramChannel {
+        let selectedType = effectiveChannelType(state: state, peer: peer)
+        
+        let currentAddressName: String
+        
+        switch selectedType {
+        case .privateChannel:
+            currentAddressName = ""
+        case .publicChannel:
+            if let current = state.editingPublicLinkText {
+                currentAddressName = current
             } else {
-                currentAddressName = ""
+                if let addressName = peer.addressName {
+                    currentAddressName = addressName
+                } else {
+                    currentAddressName = ""
+                }
             }
         }
-    }
-    
-    if !currentAddressName.isEmpty {
-        if currentAddressName != peer.addressName {
+        
+        if !currentAddressName.isEmpty {
+            if currentAddressName != peer.addressName {
+                return currentAddressName
+            } else {
+                return nil
+            }
+        } else if peer.addressName != nil {
+            return ""
+        } else {
+            return nil
+        }
+    } else if let _ = peer as? TelegramGroup {
+        let currentAddressName = state.editingPublicLinkText ?? ""
+        if !currentAddressName.isEmpty {
             return currentAddressName
         } else {
             return nil
         }
-    } else if peer.addressName != nil {
-        return ""
     } else {
         return nil
     }
 }
 
+
+
 fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelVisibilityEntry>], right: [AppearanceWrapperEntry<ChannelVisibilityEntry>], initialSize:NSSize, arguments:ChannelVisibilityControllerArguments) -> TableUpdateTransition {
-    
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments, initialSize: initialSize)
     }
-    
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
 
 
-class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView> {
+class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableView> {
     fileprivate let statePromise = ValuePromise(ChannelVisibilityControllerState(), ignoreRepeated: true)
     fileprivate let stateValue = Atomic(value: ChannelVisibilityControllerState())
     
@@ -609,7 +668,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView>
         }
         
         
-        peersDisablingAddressNameAssignment.set(.single(nil) |> then(channelAddressNameAssignmentAvailability(account: account, peerId: peerId) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
+        peersDisablingAddressNameAssignment.set(.single(nil) |> then(channelAddressNameAssignmentAvailability(account: account, peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
             
             if case .addressNameLimitReached = result {
                 return adminedPublicChannels(account: account)
@@ -718,10 +777,9 @@ class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView>
                 strongSelf.doneButton?.isEnabled = doneEnabled
                 strongSelf.doneButton?.removeAllHandlers()
                 strongSelf.doneButton?.set(handler: { [weak self] _ in
-                    
-                    var updatedAddressNameValue: String?
-                    self?.updateState { state in
-                        if let peer = peer as? TelegramChannel {
+                    if let peer = peer {
+                        var updatedAddressNameValue: String?
+                        self?.updateState { state in
                             updatedAddressNameValue = updatedAddressName(state: state, peer: peer)
                             
                             if updatedAddressNameValue != nil {
@@ -729,32 +787,52 @@ class ChannelVisibilityController: EmptyComposeController<Void, Bool, TableView>
                             } else {
                                 return state
                             }
+                        }
+                        
+                        if let updatedAddressNameValue = updatedAddressNameValue {
+                            updateState { state in
+                                return state.withUpdatedUpdatingAddressName(true)
+                            }
+                            
+                            let signal: Signal<PeerId?, UpdateAddressNameError>
+                            
+                            if peer.isGroup {
+                                signal = convertGroupToSupergroup(account: account, peerId: peerId)
+                                    |> mapError {_ in return UpdateAddressNameError.generic}
+                                    |> mapToSignal { upgradedPeerId -> Signal<PeerId?, UpdateAddressNameError> in
+                                        return updateAddressName(account: account, domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
+                                        |> mapToSignal { _ in
+                                            return .single(Optional(upgradedPeerId))
+                                        }
+                                    }
+                                    |> deliverOnMainQueue
+                            } else {
+                                signal = updateAddressName(account: account, domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
+                                    |> mapToSignal { _ in
+                                        return .single(nil)
+                                    }
+                            }
+                            
+                            self?.updateAddressNameDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { updatedPeerId in
+                                self?.onComplete.set(.single(updatedPeerId))
+                            }, error: { _ in
+                                updateState { state in
+                                    return state.withUpdatedUpdatingAddressName(false)
+                                }
+                            }))
                         } else {
-                            return state
+                            self?.onComplete.set(.single(nil))
                         }
                     }
-                    
-                    if let updatedAddressNameValue = updatedAddressNameValue {
-                        self?.updateAddressNameDisposable.set((updateAddressName(account: account, domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
-                            |> deliverOnMainQueue).start(error: { [weak self] _ in
-                                self?.updateState { state in
-                                    return state.withUpdatedUpdatingAddressName(false)
-                                }
-                            }, completed: { [weak self] in
-                                self?.updateState { state in
-                                    return state.withUpdatedUpdatingAddressName(false)
-                                }
-                                self?.onComplete.set(.single(true))
-                            }))
-                    } else {
-                        self?.onComplete.set(.single(true))
-                    }
+                   
                 }, for: .SingleClick)
                 
             }
         }))
         
-        exportedLinkDisposable.set((account.viewTracker.peerView(peerId) |> filter { $0.cachedData != nil } |> take(1) |> mapToSignal { _ in return ensuredExistingPeerExportedInvitation(account: account, peerId: peerId)}).start())
+        exportedLinkDisposable.set((account.viewTracker.peerView(peerId) |> filter { $0.cachedData != nil } |> take(1) |> mapToSignal { _ in
+            return ensuredExistingPeerExportedInvitation(account: account, peerId: peerId)
+        }).start())
         
     }
     

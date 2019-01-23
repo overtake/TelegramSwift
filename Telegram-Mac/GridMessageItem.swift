@@ -49,6 +49,7 @@ final class GridMessageItemSection: GridSection {
         var now = time_t(timestamp)
         var timeinfoNow: tm = tm()
         localtime_r(&now, &timeinfoNow)
+
         
         self.roundedTimestamp = timeinfoNow.tm_year * 100 + timeinfoNow.tm_mon
         self.month = timeinfoNow.tm_mon
@@ -83,9 +84,11 @@ final class GridMessageItemSectionNode: View {
         
         let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM YYYY"
+        formatter.timeZone = NSTimeZone.local
+        formatter.dateFormat = "MMMM yyyy"
         
         let layout = TextViewLayout(.initialize(string: formatter.string(from: date), color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
+
         
         layout.measure(width: .greatestFiniteMagnitude)
         textView.update(layout)
@@ -168,18 +171,18 @@ final class GridMessageItemNode: GridItemNode {
 
 
             if canForwardMessage(message, account: account) {
-                menu.addItem(ContextMenuItem(tr(L10n.messageContextForward), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(L10n.messageContextForward, handler: { [weak self] in
                     self?.chatInteraction?.forwardMessages([message.id])
                 }))
             }
             
             if canDeleteMessage(message, account: account) {
-                menu.addItem(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
                    self?.chatInteraction?.deleteMessages([message.id])
                 }))
             }
             
-            menu.addItem(ContextMenuItem(tr(L10n.messageContextGoto), handler: { [weak self] in
+            menu.addItem(ContextMenuItem(L10n.messageContextGoto, handler: { [weak self] in
                 self?.chatInteraction?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
             }))
             return menu

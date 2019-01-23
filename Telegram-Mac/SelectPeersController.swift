@@ -363,6 +363,9 @@ class SelectPeersBehavior {
     
     fileprivate let _peersResult:Atomic<[PeerId:TemporaryPeer]> = Atomic(value: [:])
     
+    var participants:[PeerId:RenderedChannelParticipant] {
+        return [:]
+    }
     
     fileprivate let inSearchSelected:Atomic<[PeerId]> = Atomic(value:[])
     
@@ -383,11 +386,109 @@ class SelectPeersBehavior {
 
 }
 
+
+
+class SelectGroupMembersBehavior : SelectPeersBehavior {
+    fileprivate let peerId:PeerId
+    private let _renderedResult:Atomic<[PeerId:RenderedChannelParticipant]> = Atomic(value: [:])
+    override var participants:[PeerId:RenderedChannelParticipant] {
+        return _renderedResult.modify({$0})
+    }
+    
+    init(peerId:PeerId, limit: Int32 = .max, settings: SelectPeerSettings = [.remote]) {
+        self.peerId = peerId
+        super.init(settings: settings, limit: limit)
+    }
+    
+    override func start(account: Account, search: Signal<SearchState, NoError>, linkInvation: (()->Void)? = nil) -> Signal<[SelectPeerEntry], NoError> {
+        let peerId = self.peerId
+        let _renderedResult = self._renderedResult
+        return search |> map { SearchState(state: .Focus, request: $0.request) } |> distinctUntilChanged |> mapToSignal { search -> Signal<[SelectPeerEntry], NoError> in
+            
+            let participantsPromise: Promise<[RenderedChannelParticipant]> = Promise()
+            
+            let viewKey = PostboxViewKey.peer(peerId: peerId, components: .all)
+            
+            participantsPromise.set(account.postbox.combinedView(keys: [viewKey]) |> map { combinedView in
+                let peerView = combinedView.views[viewKey] as? PeerView
+                
+                if let peerView = peerView {
+                    if let cachedData = peerView.cachedData as? CachedGroupData, let participants = cachedData.participants {
+                        
+                        var creatorPeer: Peer?
+                        for participant in participants.participants {
+                            if let peer = peerView.peers[participant.peerId] {
+                                switch participant {
+                                case .creator:
+                                    creatorPeer = peer
+                                default:
+                                    break
+                                }
+                            }
+                        }
+                        guard let creator = creatorPeer else {
+                            return []
+                        }
+                        
+                        return participants.participants.compactMap { participant in
+                            
+                            if let peer = peerView.peers[participant.peerId] {
+                                
+                                let rendered: RenderedChannelParticipant
+                                
+                                switch participant {
+                                case .creator:
+                                    rendered = RenderedChannelParticipant(participant: .creator(id: peer.id), peer: peer)
+                                case .admin:
+                                    var peers: [PeerId: Peer] = [:]
+                                    peers[creator.id] = creator
+                                    peers[peer.id] = peer
+                                    rendered = RenderedChannelParticipant(participant: .member(id: peer.id, invitedAt: 0, adminInfo: ChannelParticipantAdminInfo(rights: TelegramChatAdminRights(flags: .groupSpecific), promotedBy: creator.id, canBeEditedByAccountPeer: creator.id == account.peerId), banInfo: nil), peer: peer, peers: peers)
+                                case .member:
+                                    var peers: [PeerId: Peer] = [:]
+                                    peers[creator.id] = creator
+                                    peers[peer.id] = peer
+                                    rendered = RenderedChannelParticipant(participant: .member(id: peer.id, invitedAt: 0, adminInfo: nil, banInfo: nil), peer: peer, peers: peers)
+                                }
+                                
+                                if search.request.isEmpty {
+                                    return rendered
+                                } else {
+                                    let found = !rendered.peer.displayTitle.lowercased().components(separatedBy: " ").filter {$0.hasPrefix(search.request.lowercased())}.isEmpty
+                                    if found {
+                                        return rendered
+                                    } else {
+                                        return nil
+                                    }
+                                }
+                            } else {
+                                return nil
+                            }
+                        }
+                        
+                    }
+                }
+                return []
+            })
+            
+            return participantsPromise.get() |> map { participants in
+                _ = _renderedResult.swap(participants.toDictionary(with: { $0.peer.id }))
+                return channelMembersEntries(participants, users: [], remote: [], account: account, isLoading: false)
+            }
+        }
+    }
+    
+    deinit {
+        _ = _renderedResult.swap([:])
+        
+    }
+}
+
 class SelectChannelMembersBehavior : SelectPeersBehavior {
     fileprivate let peerId:PeerId
     private let _renderedResult:Atomic<[PeerId:RenderedChannelParticipant]> = Atomic(value: [:])    
-
-    var participants:[PeerId:RenderedChannelParticipant] {
+    private let loadDisposable = MetaDisposable()
+    override var participants:[PeerId:RenderedChannelParticipant] {
         return _renderedResult.modify({$0})
     }
 
@@ -401,22 +502,27 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
         let _renderedResult = self._renderedResult
         let _peersResult = self._peersResult
         let settings = self.settings
-        return search |> map {SearchState(state: .Focus, request: $0.request)} |> distinctUntilChanged |> mapToSignal { search -> Signal<[SelectPeerEntry], NoError> in
+        let loadDisposable = self.loadDisposable
+        return search |> map { SearchState(state: .Focus, request: $0.request) } |> distinctUntilChanged |> mapToSignal { search -> Signal<[SelectPeerEntry], NoError> in
             
-            let filter:ChannelMembersCategoryFilter
+            let participantsPromise: Promise<[RenderedChannelParticipant]> = Promise()
             
-            if !search.request.isEmpty {
-                filter = .search(search.request)
-            } else {
-                filter = .all
-            }
+            var isListLoading: Bool = false
             
-            let participantsSignal:Signal<[RenderedChannelParticipant]?, NoError> = channelMembers(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, category: .recent(filter)) |> map {_ = _renderedResult.swap(($0 ?? []).reduce([:], { current, participant in
-                var current = current
-                current[participant.peer.id] = participant
-                return current
-            })); return $0}
+            let value = account.context.peerChannelMemberCategoriesContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, requestUpdate: true, updated: { state in
+                participantsPromise.set(.single(state.list))
+                
+                if case .loading = state.loadingState {
+                    isListLoading = true
+                } else {
+                    isListLoading = false
+                }
+                _ = _renderedResult.swap(state.list.toDictionary(with: {$0.peer.id}))
+            })
+
             
+            loadDisposable.set(value.0)
+
             let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
             
             let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = .single(([], [], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} )
@@ -452,19 +558,21 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
             
             
             if !search.request.isEmpty {
-                return combineLatest(participantsSignal, contactsSearch) |> map { participants, peers in
-                    return channelMembersEntries(participants ?? [], users: peers.0, remote: peers.1, account: account, isLoading: participants == nil && peers.2)
+                return combineLatest(participantsPromise.get(), contactsSearch) |> map { participants, peers in
+                    return channelMembersEntries(participants, users: peers.0, remote: peers.1, account: account, isLoading: isListLoading && peers.2)
                 }
             } else {
-                return participantsSignal |> map { participants in
-                    return channelMembersEntries(participants ?? [], account: account, isLoading: participants == nil)
+                return participantsPromise.get() |> map { participants in
+                    return channelMembersEntries(participants, account: account, isLoading: isListLoading)
                 }
             }
         }
     }
     
     deinit {
+        loadDisposable.dispose()
         _ = _renderedResult.swap([:])
+        
     }
 }
 
@@ -740,7 +848,7 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
                 let attributed = NSMutableAttributedString()
                 _ = attributed.append(string: L10n.telegramSelectPeersController, color: theme.colors.text, font: .medium(.title))
                 _ = attributed.append(string: "   ")
-                _ = attributed.append(string: "\(interactions.presentation.selected.count)/\(limits.maxSupergroupMemberCount)", color: theme.colors.grayText, font: .normal(.title))
+                _ = attributed.append(string: "\(interactions.presentation.selected.count.formattedWithSeparator)/\(limits.maxSupergroupMemberCount.formattedWithSeparator)", color: theme.colors.grayText, font: .normal(.title))
                 self.centerBarView.text = attributed
             } else {
                 setCenterTitle(defaultBarTitle)
@@ -793,9 +901,9 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
         } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition, limits in
+            self?.readyOnce()
             self?.genericView.tableView.merge(with: transition)
             self?.limitsConfiguration = limits
-            self?.readyOnce()
         }))
     }
     
@@ -846,8 +954,9 @@ fileprivate class SelectPeersView : View, TokenizedProtocol {
         addSubview(separatorView)
         tokenView.delegate = self
         backgroundColor = theme.colors.background
-        needsLayout = true
+       
         updateLocalizationAndTheme()
+        layout()
     }
     
     override func updateLocalizationAndTheme() {
@@ -923,12 +1032,12 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, max(genericView.tableView.listHeight, 150))), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, max(genericView.tableView.listHeight, 350))), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, max(genericView.tableView.listHeight, 150))), animated: animated)
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, max(genericView.tableView.listHeight, 350))), animated: animated)
         }
     }
     
@@ -1003,8 +1112,8 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition in
-            self?.genericView.tableView.merge(with: transition)
             self?.readyOnce()
+            self?.genericView.tableView.merge(with: transition)
         }))
     }
     
@@ -1042,13 +1151,13 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     override var modalInteractions: ModalInteractions? {
         if behavior.limit == 1 {
-            return ModalInteractions(acceptTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
+            return ModalInteractions(acceptTitle: L10n.modalCancel, drawBorder: true, height: 40)
         } else {
-            return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
+            return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }
-            }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
+            }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 40)
         }
     }
     

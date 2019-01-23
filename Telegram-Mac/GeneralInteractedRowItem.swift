@@ -28,6 +28,9 @@ class GeneralInteractedRowItem: GeneralRowItem {
     let activeThumb:GeneralThumbAdditional?
     let switchAppearance: SwitchViewAppearance
     let autoswitch: Bool
+    
+    let disabledAction:()->Void
+    
     var nameWidth:CGFloat {
         var width = self.size.width - (inset.left + inset.right)
         switch type {
@@ -47,7 +50,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
     }
     
    
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true) {
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}) {
         self.name = name
         if let description = description {
             descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)))
@@ -60,6 +63,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         } else {
             self.thumb = thumb
         }
+        self.disabledAction = disabledAction
         self.autoswitch = autoswitch
         self.activeThumb = activeIcon != nil ? GeneralThumbAdditional(thumb: activeIcon!, textInset: nil) : self.thumb
         self.switchAppearance = switchAppearance

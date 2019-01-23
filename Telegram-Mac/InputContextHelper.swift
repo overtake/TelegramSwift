@@ -25,7 +25,7 @@ enum InputContextEntry : Comparable, Identifiable {
     case sticker(InputMediaStickersRow, Int64)
     case emoji(EmojiClue, Int32)
     case hashtag(String, Int64)
-    case inlineRestricted(String?)
+    case inlineRestricted(String)
     var stableId: Int64 {
         switch self {
         case .switchPeer:
@@ -174,8 +174,7 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             return ContextHashtagRowItem(initialSize, hashtag: "#\(hashtag)")
         case let .sticker(result, stableId):
             return ContextStickerRowItem(initialSize, account, result, stableId, chatInteraction)
-        case .inlineRestricted(let until):
-            let text = until != nil ? tr(L10n.channelPersmissionDeniedSendInlineUntil(until!)) : tr(L10n.channelPersmissionDeniedSendInlineForever)
+        case let .inlineRestricted(text):
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, height: 40, text: text, alignment: .center, centerViewAlignment: true)
         case let .message(_, message, searchText):
             return ContextSearchMessageItem(initialSize, account: account, message: message, searchText: searchText, action: {
@@ -248,6 +247,9 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     private let account:Account
     private let chatInteraction:ChatInteraction
     private let highlightInsteadOfSelect: Bool
+    
+    fileprivate var result:ChatPresentationInputQueryResult?
+    
     fileprivate weak var superview: NSView?
     override func loadView() {
         super.loadView()
@@ -260,6 +262,10 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         self.chatInteraction = chatInteraction
         self.highlightInsteadOfSelect = highlightInsteadOfSelect
         super.init()
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -516,7 +522,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            let future = NSMakeSize(frame.width, min(genericView.listHeight, min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))))
+            let future = NSMakeSize(frame.width, min(genericView.listHeight, min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 3))))
             //  genericView.change(size: future, animated: animated)
             //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
             
@@ -551,7 +557,7 @@ class InputContextHelper: NSObject {
     private let account:Account
     private let chatInteraction:ChatInteraction
     private let entries:Atomic<[AppearanceWrapperEntry<InputContextEntry>]?> = Atomic(value:nil)
-    
+    private let loadMoreDisposable = MetaDisposable()
     init(account:Account, chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false) {
         self.account = account
         self.chatInteraction = chatInteraction
@@ -567,18 +573,53 @@ class InputContextHelper: NSObject {
     }
     
     func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, selectIndex:Int? = nil, animated:Bool) {
-        
-        controller._frameRect = NSMakeRect(0, 0, view.frame.width, floor(view.frame.height / 2))
+        controller._frameRect = NSMakeRect(0, 0, view.frame.width, floor(view.frame.height / 3))
         controller.loadViewIfNeeded()
         controller.superview = view
         controller.genericView.relativeView = relativeView
         controller.genericView.position = position
+        
+        var currentResult = result
+        
         let initialSize = controller.atomicSize
         let previosEntries = self.entries
         let account = self.account
         let chatInteraction = self.chatInteraction
         
-        let makeSignal = combineLatest(entries(for: result, initialSize:initialSize.modify {$0}, chatInteraction: chatInteraction), appearanceSignal) |> map { entries, appearance -> (TableUpdateTransition,Bool, Bool) in
+        let entriesValue: Promise<[InputContextEntry]> = Promise()
+        
+        self.loadMoreDisposable.set(nil)
+        
+        controller.genericView.setScrollHandler { [weak self] position in
+            guard let `self` = self, let result = currentResult else {return}
+            switch position.direction {
+            case .bottom:
+                switch result {
+                case let .searchMessages(messages, _):
+                    messages.2(messages.1)
+                case let .contextRequestResult(peer, oldCollection):
+                    if let oldCollection = oldCollection, let nextOffset = oldCollection.nextOffset {
+                        self.loadMoreDisposable.set((requestChatContextResults(account: self.account, botId: oldCollection.botId, peerId: self.chatInteraction.peerId, query: oldCollection.query, offset: nextOffset) |> delay(0.5, queue: Queue.mainQueue())).start(next: { [weak self] collection in
+                            guard let `self` = self else {return}
+                            
+                            if let collection = collection {
+                                let newResult = ChatPresentationInputQueryResult.contextRequestResult(peer, oldCollection.withAdditionalCollection(collection))
+                                currentResult = newResult
+                                entriesValue.set(self.entries(for: newResult, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
+                            }
+                        }))
+                    }
+                default:
+                    break
+                }
+            default:
+                break
+            }
+        }
+        
+        entriesValue.set(entries(for: result, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
+        
+        let makeSignal = combineLatest(entriesValue.get(), appearanceSignal) |> map { entries, appearance -> (TableUpdateTransition,Bool, Bool) in
             let entries = entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             let previous = previosEntries.swap(entries)
             let previousIsEmpty:Bool = previous?.isEmpty ?? true
@@ -651,9 +692,9 @@ class InputContextHelper: NSObject {
                     }
                 case let .contextRequestResult(_, result):
                     
-                    if let peer = chatInteraction.presentation.peer as? TelegramChannel {
-                        if peer.inlineRestricted, let bannedRights = peer.bannedRights {
-                            entries.append(.inlineRestricted(bannedRights.untilDate == .max ? nil : bannedRights.formattedUntilDate))
+                    if let peer = chatInteraction.presentation.peer {
+                        if let text = permissionText(from: peer, for: .banSendInline) {
+                            entries.append(.inlineRestricted(text))
                             break
                         }
                     }
@@ -693,8 +734,9 @@ class InputContextHelper: NSObject {
                     }
                 case let .stickers(stickers):
                     
-                    if let peer = chatInteraction.presentation.peer as? TelegramChannel {
-                        if peer.stickersRestricted {
+                    if let peer = chatInteraction.presentation.peer {
+                        if let text = permissionText(from: peer, for: .banSendStickers) {
+                            entries.append(.inlineRestricted(text))
                             break
                         }
                     }
@@ -705,7 +747,6 @@ class InputContextHelper: NSObject {
                         entries.append(.sticker(mediaRows[i], Int64(arc4random()) | ((Int64(entries.count) << 40))))
                     }
                     
-                    break
                 case let .emoji(clues):
                     var index:Int32 = 0
                     for clue in clues {
@@ -714,7 +755,7 @@ class InputContextHelper: NSObject {
                     }
                 case let .searchMessages(messages, searchText):
                     var index: Int64 = 0
-                    for message in messages {
+                    for message in messages.0 {
                         entries.append(.message(index, message, searchText))
                         index += 1
                     }
@@ -731,6 +772,7 @@ class InputContextHelper: NSObject {
     
     deinit {
         disposable.dispose()
+        loadMoreDisposable.dispose()
     }
     
 }

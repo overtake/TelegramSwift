@@ -310,7 +310,7 @@ class ServiceEventLogItem: TableRowItem {
                             let message = NSMutableAttributedString()
                    
                             var addedRights = newAdminInfo?.rights.flags ?? []
-                            var removedRights:TelegramChannelAdminRightsFlags = []
+                            var removedRights:TelegramChatAdminRightsFlags = []
                             if let prevAdminInfo = prevAdminInfo {
                                 addedRights = addedRights.subtracting(prevAdminInfo.rights.flags)
                                 removedRights = prevAdminInfo.rights.flags.subtracting(newAdminInfo?.rights.flags ?? [])
@@ -367,7 +367,7 @@ class ServiceEventLogItem: TableRowItem {
                         if let memberPeer = result.peers[memberId] {
                             
                             var addedRights = newBanInfo?.rights.flags ?? []
-                            var removedRights:TelegramChannelBannedRightsFlags = []
+                            var removedRights:TelegramChatBannedRightsFlags = []
                             if let prevBanInfo = prevBanInfo {
                                 addedRights = addedRights.subtracting(prevBanInfo.rights.flags)
                                 removedRights = prevBanInfo.rights.flags.subtracting(newBanInfo?.rights.flags ?? [])
@@ -385,13 +385,13 @@ class ServiceEventLogItem: TableRowItem {
                                     }
                                 } else {
                                     if let newBanInfo = newBanInfo {
-                                        text = newBanInfo.rights.untilDate != .max && newBanInfo.rights.untilDate != 0 ? tr(L10n.eventLogServiceDemotedUntil(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", newBanInfo.rights.formattedUntilDate)) : tr(L10n.eventLogServiceDemoted(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""))
+                                        text = newBanInfo.rights.untilDate != .max && newBanInfo.rights.untilDate != 0 ? L10n.eventLogServiceDemotedUntil(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", newBanInfo.rights.formattedUntilDate) : L10n.eventLogServiceDemoted(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                                     } else {
-                                        text = tr(L10n.eventLogServiceDemotedChanged(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""))
+                                        text = L10n.eventLogServiceDemotedChanged(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                                     }
                                 }
                             } else {
-                                text = tr(L10n.eventLogServiceBanned(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""))
+                                text = L10n.eventLogServiceBanned(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                             }
                             
                             _ = message.append(string: text, color: theme.colors.text)
@@ -464,6 +464,36 @@ class ServiceEventLogItem: TableRowItem {
             case .participantJoin:
                 let text:String = result.isGroup ? tr(L10n.groupEventLogServiceUpdateJoin(peer.displayTitle)) : tr(L10n.channelEventLogServiceUpdateJoin(peer.displayTitle))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .updateDefaultBannedRights(prev, new):
+                
+                
+                
+                let message = NSMutableAttributedString()
+
+                _ = message.append(string: L10n.eventLogServiceChangedDefaultsRights, color: theme.colors.text)
+
+                
+                
+                var addedRights = new.flags
+                var removedRights:TelegramChatBannedRightsFlags = []
+                addedRights = addedRights.subtracting(prev.flags)
+                removedRights = prev.flags.subtracting(new.flags)
+                
+                for right in result.banHelp {
+                    if addedRights.contains(right) {
+                        _ = message.append(string: "\n- \(right.localizedString)", color: theme.colors.text)
+                    }
+                }
+                if !removedRights.isEmpty {
+                    for right in result.banHelp {
+                        if removedRights.contains(right) {
+                            _ = message.append(string: "\n+ \(right.localizedString)", color: theme.colors.text)
+                        }
+                    }
+                }
+                
+                message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
+                self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
             default:
                 break
             }

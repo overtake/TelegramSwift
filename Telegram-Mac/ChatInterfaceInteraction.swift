@@ -245,7 +245,7 @@ final class ChatInteraction : InterfaceObserver  {
         return selectedRange.lowerBound ..< selectedRange.lowerBound + text.length
     }
     
-    func invokeInitialAction(includeAuto:Bool = false) {
+    func invokeInitialAction(includeAuto:Bool = false, animated: Bool = true) {
         if let action = presentation.initialAction {
             switch action {
             case let .start(parameter: parameter, behavior: behavior):
@@ -289,7 +289,7 @@ final class ChatInteraction : InterfaceObserver  {
                     showPreviewSender( list.map { URL(fileURLWithPath: $0) }, true )
                 }
             case let .forward(messageIds, text, _):
-                update({$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(text != nil ? ChatTextInputState(inputText: text!) : $0.inputState)})})
+                update(animated: animated, {$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(text != nil ? ChatTextInputState(inputText: text!) : $0.inputState)})})
             default:
                 break
             }
@@ -359,6 +359,10 @@ final class ChatInteraction : InterfaceObserver  {
     
 
     deinit {
+       clean()
+    }
+    
+    func clean() {
         addContactDisposable.dispose()
         mediaDisposable.dispose()
         startBotDisposable.dispose()
@@ -366,7 +370,6 @@ final class ChatInteraction : InterfaceObserver  {
         disableProxyDisposable.dispose()
         enableProxyDisposable.dispose()
     }
-    
     
     
     

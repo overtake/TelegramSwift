@@ -33,6 +33,28 @@ final class InstantPageLayout {
             return _item
         })
     }
+    
+    var deepMedias: [InstantPageMedia] {
+        var media:[InstantPageMedia] = []
+        for item in items {
+            media.append(contentsOf: self.deepMedia(item, medias: []))
+        }
+        return media
+    }
+    
+    private func deepMedia(_ item: InstantPageItem, medias: [InstantPageMedia]) -> [InstantPageMedia] {
+        var medias = medias
+        if item.isInteractive {
+            return medias + item.medias//.filter({ $0.media is TelegramMediaImage || $0.media is TelegramMediaFile })
+        } else if let item = item as? InstantPageDetailsItem {
+            var mediaDetails:[InstantPageMedia] = medias
+            for item in item.items {
+                mediaDetails.append(contentsOf: deepMedia(item, medias: []))
+            }
+            medias += mediaDetails
+        }
+        return medias
+    }
 }
 
 private func setupStyleStack(_ stack: InstantPageTextStyleStack, theme: InstantPageTheme, category: InstantPageTextCategoryType, link: Bool) {
@@ -654,7 +676,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         styleStack.push(.bold)
         let backgroundInset: CGFloat = 14.0
         let (_, textItems, textContentSize) = layoutTextItemWithString(attributedStringForRichText(title, styleStack: styleStack), boundingWidth: boundingWidth - horizontalInset * 2.0 - backgroundInset * 2.0, offset: CGPoint(x: horizontalInset, y: backgroundInset), media: media, webpage: webpage)
-        let backgroundItem = InstantPageShapeItem(frame: CGRect(origin: CGPoint(), size: CGSize(width: boundingWidth, height: textContentSize.height + backgroundInset * 2.0)), shapeFrame: CGRect(origin: CGPoint(), size: CGSize(width: boundingWidth, height: textContentSize.height + backgroundInset * 2.0)), shape: .rect, color: theme.panelBackgroundColor)
+        let backgroundItem = InstantPageShapeItem(frame: CGRect(origin: CGPoint(), size: CGSize(width: boundingWidth, height: textContentSize.height + backgroundInset * 2.0)), shapeFrame: CGRect(origin: CGPoint(), size: CGSize(width: boundingWidth, height: textContentSize.height + backgroundInset * 2.0)), shape: .rect, color: appAppearance.presentation.colors.grayBackground)
         items.append(backgroundItem)
         items.append(contentsOf: textItems)
         contentSize.height += backgroundItem.frame.height
@@ -756,10 +778,14 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         let frame = CGRect(origin: CGPoint(x: floor((boundingWidth - size.width) / 2.0), y: 0.0), size: size)
         let item: InstantPageItem
         if let url = url, let coverId = coverId, let image = media[coverId] as? TelegramMediaImage {
+            var url = url
+            if url.lowercased().contains("youtube"),  url.lowercased().contains("embed/") {
+                url = url.replacingOccurrences(of: "embed/", with: "watch?v=")
+            }
             let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: size, duration: nil, author: nil, image: image, file: nil, instantPage: nil)
             let content = TelegramMediaWebpageContent.Loaded(loadedContent)
             
-            item = InstantPageImageItem(frame: frame, webPage: webpage, media: InstantPageMedia(index: embedIndex, media: TelegramMediaWebpage(webpageId: MediaId(namespace: Namespaces.Media.LocalWebpage, id: -1), content: content), webpage: webpage, url: nil, caption: nil, credit: nil), attributes: [], interactive: true, roundCorners: false, fit: false)
+            item = InstantPageImageItem(frame: frame, webPage: webpage, media: InstantPageMedia(index: embedIndex, media: TelegramMediaWebpage(webpageId: MediaId(namespace: Namespaces.Media.LocalWebpage, id: -1), content: content), webpage: webpage, url: nil, caption: nil, credit: nil), attributes: [], interactive: false, roundCorners: false, fit: false)
             
         } else {
             item = InstantPageWebEmbedItem(frame: frame, url: url, html: html, enableScrolling: allowScrolling)
@@ -830,13 +856,64 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
 
 
 func instantPageMedias(for webpage: TelegramMediaWebpage) -> [InstantPageMedia] {
-    var medias:[InstantPageMedia] = []
-    let layout = instantPageLayoutForWebPage(webpage, boundingWidth: 800, safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: .defaultSettings))
-    for item in layout.items {
-        medias.append(contentsOf: item.medias)
+    
+    switch webpage.content {
+    case let .Loaded(content):
+        var index: Int = 0
+        var detailsIndex: Int = 0
+        if let instantPage = content.instantPage {
+            return instantPageMedias(for: instantPage.blocks, webpage: webpage, medias: instantPage.media, mediaIndexCounter: &index, detailsIndexCounter: &detailsIndex)
+        } else {
+            return []
+        }
+    default:
+        return []
     }
-    return medias
 }
+
+private func instantPageMedias(for blocks: [InstantPageBlock], webpage: TelegramMediaWebpage, medias: [MediaId : Media], mediaIndexCounter: inout Int, detailsIndexCounter: inout Int) -> [InstantPageMedia] {
+    var current: [InstantPageMedia] = []
+    for block in blocks {
+        switch block {
+        case let .audio(id, _):
+            if let media = medias[id] {
+                current.append(InstantPageMedia(index: mediaIndexCounter, media: media, webpage: webpage, url: nil, caption: nil, credit: nil))
+                mediaIndexCounter += 1
+            }
+        case let .collage(blocks, _), let .slideshow(blocks, _):
+            current.append(contentsOf: instantPageMedias(for: blocks, webpage: webpage, medias: medias, mediaIndexCounter: &mediaIndexCounter, detailsIndexCounter: &detailsIndexCounter))
+        case .details(_, blocks, _):
+            current.append(contentsOf: instantPageMedias(for: blocks, webpage: webpage, medias: medias, mediaIndexCounter: &mediaIndexCounter, detailsIndexCounter: &detailsIndexCounter))
+            detailsIndexCounter += 1
+        case let .image(id, _, _, _):
+            if let media = medias[id] {
+                current.append(InstantPageMedia(index: mediaIndexCounter, media: media, webpage: webpage, url: nil, caption: nil, credit: nil))
+                mediaIndexCounter += 1
+            }
+        case let .video(id, _, _, _):
+            if let media = medias[id] {
+                current.append(InstantPageMedia(index: mediaIndexCounter, media: media, webpage: webpage, url: nil, caption: nil, credit: nil))
+                mediaIndexCounter += 1
+            }
+//        case let .webEmbed(url, _, size, _, _, _, coverId):
+//            if let url = url, let coverId = coverId, let image = medias[coverId] as? TelegramMediaImage {
+//                var url = url
+//                if url.lowercased().contains("youtube"),  url.lowercased().contains("embed/") {
+//                    url = url.replacingOccurrences(of: "embed/", with: "watch?v=")
+//                }
+//                let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: size, duration: nil, author: nil, image: image, file: nil, instantPage: nil)
+//                let content = TelegramMediaWebpageContent.Loaded(loadedContent)
+//                
+//                current.append(InstantPageMedia(index: mediaIndexCounter, media: TelegramMediaWebpage(webpageId: MediaId(namespace: Namespaces.Media.LocalWebpage, id: -1), content: content), webpage: webpage, url: nil, caption: nil, credit: nil))
+//                mediaIndexCounter += 1
+//            }
+        default:
+            break
+        }
+    }
+    return current
+}
+
 
 func instantPageLayoutForWebPage(_ webPage: TelegramMediaWebpage, boundingWidth: CGFloat, safeInset: CGFloat, theme: InstantPageTheme, webEmbedHeights: [Int : CGFloat] = [:]) -> InstantPageLayout {
     var maybeLoadedContent: TelegramMediaWebpageLoadedContent?

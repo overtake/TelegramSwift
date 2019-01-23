@@ -272,20 +272,20 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     func enableScroll() -> Void {
         
         genericView.grid.scrollHandler = { [weak self] scroll in
-            guard let historyView = self?.historyView else {return}
+            guard let view = self?.historyView?.originalView else {return}
             guard let `self` = self else {return}
 
             var index:MessageIndex?
             switch scroll.direction {
             case .bottom:
-                index = historyView.originalView.earlierId
+                index = view.earlierId
             case .top:
-                index = historyView.originalView.laterId
+                index = view.laterId
             default:
                 break
             }
             if let index = index {
-                let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(index), anchorIndex: historyView.originalView.anchorIndex, count: self.requestCount + self.screenCount, side: scroll.direction == .bottom ? .lower : .upper)
+                let location = ChatHistoryLocation.Navigation(index: MessageHistoryAnchorIndex.message(index), anchorIndex: view.anchorIndex, count: self.requestCount + self.screenCount, side: scroll.direction == .bottom ? .lower : .upper)
                 
                 self.disableScroll()
                 
@@ -495,14 +495,14 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
             self.enqueuedHistoryViewTransition = nil
             
             let completion: (GridNodeDisplayedItemRange) -> Void = { [weak self] visibleRange in
-                if let strongSelf = self {
+                if let strongSelf = self, let view = transition.historyView.originalView {
                     strongSelf.historyView = transition.historyView
                     
                     if let range = visibleRange.loadedRange {
-                        strongSelf.account.postbox.updateMessageHistoryViewVisibleRange(transition.historyView.originalView.id, earliestVisibleIndex: transition.historyView.filteredEntries[transition.historyView.filteredEntries.count - 1 - range.upperBound].entry.index, latestVisibleIndex: transition.historyView.filteredEntries[transition.historyView.filteredEntries.count - 1 - range.lowerBound].entry.index)
+                        strongSelf.account.postbox.updateMessageHistoryViewVisibleRange(view.id, earliestVisibleIndex: transition.historyView.filteredEntries[transition.historyView.filteredEntries.count - 1 - range.upperBound].entry.index, latestVisibleIndex: transition.historyView.filteredEntries[transition.historyView.filteredEntries.count - 1 - range.lowerBound].entry.index)
                     }
                     
-                    let historyState: ChatHistoryNodeHistoryState = .loaded(isEmpty: transition.historyView.originalView.entries.isEmpty)
+                    let historyState: ChatHistoryNodeHistoryState = .loaded(isEmpty: view.entries.isEmpty)
                     if strongSelf.currentHistoryState != historyState {
                         strongSelf.currentHistoryState = historyState
                         strongSelf.historyState.set(historyState)

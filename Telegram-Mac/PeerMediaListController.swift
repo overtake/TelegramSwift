@@ -342,7 +342,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                         searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask)
                     }
                     
-                    let signal = searchMessages(account: strongSelf.account, location: searchMessagesLocation, query: searchState.request) |> deliverOnMainQueue |> map {$0.0} |> map { messages -> PeerMediaUpdate in
+                    let signal = searchMessages(account: strongSelf.account, location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
                     }
                     
@@ -430,12 +430,8 @@ class PeerMediaListController: GenericViewController<TableView> {
     }
     
     override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
-        if current == 0 {
-            view.setFrameOrigin(0, 50 + previous)
-        }
-        view._change(pos: NSMakePoint(0, current + 50), animated: animated)//.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current), removeOnCompletion: false)
-        return { [weak view] in
-            view?.layer?.removeAllAnimations()
+        return {
+            
         }
     }
     

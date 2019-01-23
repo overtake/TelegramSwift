@@ -170,6 +170,11 @@ private final class EditImageView : View {
         
 }
 
+enum EditControllerSettings {
+    case disableSizes(dimensions: SelectionRectDimensions)
+    case plain
+}
+
 class EditImageModalController: ModalViewController {
     private let path: URL
     private let editValue: ValuePromise<EditedImageData> = ValuePromise(ignoreRepeated: true)
@@ -178,17 +183,27 @@ class EditImageModalController: ModalViewController {
     private let updatedRectDisposable = MetaDisposable()
     private var controls: EditImageControls!
     private let image: CGImage
-    
+    private let settings: EditControllerSettings
     private let resultValue: Promise<(URL, EditedImageData?)> = Promise()
     private var canReset: Bool
-    init(_ path: URL, defaultData: EditedImageData? = nil) {
+    
+    var onClose: () -> Void = {}
+    
+    init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain) {
         self.canReset = defaultData != nil
         editState = Atomic(value: defaultData ?? EditedImageData(originalUrl: path))
-        self.image = NSImage(contentsOf: path)!.precomposed()
+        self.image = NSImage(contentsOf: path)!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
         self.path = path
+        self.settings = settings
         super.init()
         bar = .init(height: 0)
         editValue.set(defaultData ?? EditedImageData(originalUrl: path))
+    }
+    
+    override func close() {
+        super.close()
+        
+        onClose()
     }
     
     
@@ -238,6 +253,22 @@ class EditImageModalController: ModalViewController {
     
     private func updateValue(_ f:@escaping(EditedImageData) -> EditedImageData) {
         self.editValue.set(editState.modify(f))
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        switch settings {
+        case let .disableSizes(dimensions):
+            let imageSize = self.genericView.imageView.frame.size
+            let size = NSMakeSize(200, 200).aspectFitted(imageSize)
+            let rect = NSMakeRect((imageSize.width - size.width) / 2, (imageSize.height - size.height) / 2, size.width, size.height)
+            genericView.selectionRectView.isCircleCap = true
+            updateValue { data in
+                return data.withUpdatedDimensions(dimensions).withUpdatedSelectedRect(rect)
+            }
+        default:
+            genericView.selectionRectView.isCircleCap = false
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -305,10 +336,11 @@ class EditImageModalController: ModalViewController {
         }
     }
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.controls = EditImageControls(arguments: EditImageControlsArguments(cancel: { [weak self] in
+        self.controls = EditImageControls(settings: settings, arguments: EditImageControlsArguments(cancel: { [weak self] in
             self?.close()
         }, success: { [weak self] in
             _ = self?.returnKeyAction()
@@ -322,6 +354,10 @@ class EditImageModalController: ModalViewController {
             self?.rotate()
         }), stateValue: editValue.get())
 
+        
+      
+        
+        
         genericView.controls = self.controls.genericView
         updateDisposable.set((editValue.get() |> deliverOnMainQueue).start(next: { [weak self] data in
             guard let `self` = self else {return}

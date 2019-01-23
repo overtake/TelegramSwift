@@ -99,7 +99,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                     }
                 }))
                 
-                if peer.hasAdminRights(.canBanUsers) {
+                if peer.hasPermission(.banMembers) {
                     _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 2, name: tr(L10n.supergroupDeleteRestrictionBanUser), type: .selectable(strongSelf.options.contains(.banUser)), action: { [weak strongSelf] in
                         if let strongSelf = strongSelf {
                             if strongSelf.options.contains(.banUser) {
@@ -155,7 +155,8 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
     private func perform() {
         var signals:[Signal<Void, NoError>] = [deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forEveryone)]
         if options.contains(.banUser) {
-            signals.append(removePeerMember(account: account, peerId: peerId, memberId: memberId))
+            
+            signals.append(account.context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)))
         }
         if options.contains(.reportSpam) {
             signals.append(reportSupergroupPeer(account: account, peerId: memberId, memberId: memberId, messageIds: messageIds))

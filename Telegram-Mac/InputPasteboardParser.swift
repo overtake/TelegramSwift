@@ -152,13 +152,12 @@ class InputPasteboardParser: NSObject {
             let afterSizeCheck = files.count
             
             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                alert(for: mainWindow, info: tr(L10n.appMaxFileSize))
+                alert(for: mainWindow, info: L10n.appMaxFileSize)
                 return false
             }
-            
-            if let peer = chatInteraction.presentation.peer, peer.mediaRestricted {
+            if let peer = chatInteraction.presentation.peer, let permissionText = permissionText(from: peer, for: .banSendMedia) {
                 if !files.isEmpty || image != nil {
-                    alertForMediaRestriction(peer)
+                    alert(for: mainWindow, info: permissionText)
                     return false
                 }
             }

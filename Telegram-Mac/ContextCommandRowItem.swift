@@ -76,6 +76,7 @@ class ContextCommandRowView : TableRowView {
     private let photoView:AvatarControl = AvatarControl(font: .avatar(.title))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         textView.userInteractionEnabled = false
         descView.userInteractionEnabled = false
         photoView.userInteractionEnabled = false

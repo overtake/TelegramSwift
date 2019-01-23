@@ -300,7 +300,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                     }
                     
                     if let messageLayout = item.ctxMessageLayout, !hiddemMessage {
-                        messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1 , messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                        messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 3 , messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     }
                     
                     if item.isMuted {

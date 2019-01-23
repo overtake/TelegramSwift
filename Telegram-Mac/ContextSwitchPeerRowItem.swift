@@ -48,6 +48,7 @@ class ContextSwitchPeerRowView: TableRowView {
     private let overlay:OverlayControl = OverlayControl()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         textView.userInteractionEnabled = false
         addSubview(overlay)
         addSubview(textView)

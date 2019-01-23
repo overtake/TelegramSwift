@@ -9,6 +9,47 @@
 import Foundation
 import SwiftSignalKitMac
 
+
+
+open class BackgroundView: ImageView {
+    
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.layer?.contentsGravity = .resizeAspectFill
+    }
+    open override var isFlipped: Bool {
+        return true
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    open var backgroundMode:TableBackgroundMode = .plain {
+        didSet {
+            switch backgroundMode {
+            case let .background(image):
+                layer?.backgroundColor = .clear
+                layer?.contents = image
+            case let .color(color):
+                layer?.backgroundColor = color.cgColor
+                layer?.contents = nil
+            default:
+                layer?.backgroundColor = presentation.colors.background.cgColor
+                layer?.contents = nil
+            }
+        }
+    }
+    
+    override open func copy() -> Any {
+        let view = BackgroundView(frame: self.bounds)
+        view.backgroundMode = self.backgroundMode
+        return view
+    }
+}
+
+
+
 class ControllerToasterView : View {
     
     private weak var toaster:ControllerToaster?
@@ -51,19 +92,20 @@ public class ControllerToaster {
     let text:TextViewLayout
     var view:ControllerToasterView?
     let disposable:MetaDisposable = MetaDisposable()
-    private let height:CGFloat
-    public init(text:NSAttributedString, height:CGFloat = 30.0) {
-        self.text = TextViewLayout(text, maximumNumberOfLines: 1, truncationType: .middle)
-        self.height = height
+    private var height:CGFloat {
+        return max(30, self.text.layoutSize.height + 10)
+    }
+    public init(text:NSAttributedString) {
+        self.text = TextViewLayout(text, maximumNumberOfLines: 3, truncationType: .middle, alignment: .center)
     }
     
-    public init(text:String, height:CGFloat = 30.0) {
-        self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: presentation.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
-        self.height = height
+    public init(text:String) {
+        self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: presentation.colors.text, font: .medium(.text)), maximumNumberOfLines: 3, truncationType: .middle, alignment: .center)
     }
     
     func show(for controller:ViewController, timeout:Double, animated:Bool) {
         assert(view == nil)
+        text.measure(width: controller.frame.width - 40)
         view = ControllerToasterView(frame: NSMakeRect(0, 0, controller.frame.width, height))
         view?.update(with: self)
         controller.addSubview(view!)
@@ -236,6 +278,10 @@ open class ViewController : NSObject {
         return {}
     }
     
+    open func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
+        return {}
+    }
+    
     @available(OSX 10.12.2, *)
     open func makeTouchBar() -> NSTouchBar? {
         return nil//window?.firstResponder?.makeTouchBar()
@@ -275,7 +321,20 @@ open class ViewController : NSObject {
     
     
     @objc func viewFrameChanged(_ notification:Notification) {
-        viewDidResized(frame.size)
+        if atomicSize.with({ $0 != frame.size}) {
+            viewDidResized(frame.size)
+        }
+    }
+    
+    public func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
+        switch backgroundMode {
+        case .background:
+            backgroundColor = .clear
+        case let .color(color):
+            backgroundColor = color
+        default:
+            backgroundColor = presentation.colors.background
+        }
     }
     
     open func viewDidResized(_ size:NSSize) {
@@ -507,6 +566,18 @@ open class ViewController : NSObject {
     }
     public var bounds:NSRect {
         return isLoaded() ? self.view.bounds : NSMakeRect(0, 0, _frameRect.width, _frameRect.height - bar.height)
+    }
+    
+    open var isOpaque: Bool {
+        return true
+    }
+    
+    func removeBackgroundCap() {
+        for subview in view.subviews.reversed() {
+            if subview is BackgroundView {
+                subview.removeFromSuperview()
+            }
+        }
     }
     
     public func addSubview(_ subview:NSView) -> Void {

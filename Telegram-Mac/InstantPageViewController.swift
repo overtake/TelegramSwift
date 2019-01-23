@@ -93,12 +93,13 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     private let actualizeDisposable = MetaDisposable()
     private let saveProgressDisposable = MetaDisposable()
     private let loadWebpageDisposable = MetaDisposable()
-    
+    private let updateLayoutDisposable = MetaDisposable()
+    private let appearanceDisposable = MetaDisposable()
     private var initialAnchor: String?
     private var pendingAnchor: String?
     private var initialState: InstantPageStoredState?
     
-    private let loadProgress = ValuePromise<CGFloat>(1.0, ignoreRepeated: true)
+    private let loadProgress = ValuePromise<CGFloat>(0.00, ignoreRepeated: true)
     var progressSignal: Signal<CGFloat, NoError> {
         return loadProgress.get()
     }
@@ -147,7 +148,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     override var defaultBarTitle: String {
         switch webPage.content {
         case .Loaded(let content):
-            return content.title ?? super.defaultBarTitle
+            return content.websiteName ?? super.defaultBarTitle
         default:
             return super.defaultBarTitle
         }
@@ -156,7 +157,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        reloadData()
     }
     
     var currentState: InstantPageStoredState {
@@ -187,7 +187,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 }
             }
             self.currentLayout = nil
-            self.updateLayout()
             
             
             if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage, instantPage.isComplete {
@@ -205,7 +204,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 
     
     private func updateLayout() {
-        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance))
+        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), webEmbedHeights: self.currentWebEmbedHeights)
         
         updateInteractions()
         
@@ -289,6 +288,14 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         updateInteractions()
     }
     
+    func isExpandedItem(_ item: InstantPageDetailsItem) -> Bool {
+        if let index = self.currentDetailsItems.firstIndex(where: {$0 === item}) {
+            return self.currentExpandedDetails?[index] ?? item.initiallyExpanded
+        } else {
+            return false
+        }
+    }
+    
     override var supportSwipes: Bool {
         return false
     }
@@ -309,6 +316,28 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 guard let `self` = self else { return NSZeroRect }
                 return self.effectiveFrameForItem(item)
             })
+        }
+    }
+    
+    private func updateWebEmbedHeight(_ index: Int, _ height: CGFloat) {
+        
+        
+        let currentHeight = self.currentWebEmbedHeights[index]
+        if height != currentHeight {
+            if let currentHeight = currentHeight, currentHeight > height {
+                return
+            }
+            self.currentWebEmbedHeights[index] = height
+            
+            let signal: Signal<Void, NoError> = (.complete() |> delay(0.08, queue: Queue.mainQueue()))
+            self.updateLayoutDisposable.set(signal.start(completed: { [weak self] in
+                if let strongSelf = self {
+                    NSLog("\(strongSelf.currentWebEmbedHeights)")
+
+                    strongSelf.reloadData()
+                    strongSelf.updateVisibleItems(visibleBounds: strongSelf.genericView.contentView.bounds, animated: false)
+                }
+            }))
         }
     }
     
@@ -456,39 +485,35 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 
         if !anchor.isEmpty {
             if let (item, lineOffset, reference, detailsItems) = findAnchorItem(String(anchor), items: items) {
-                if let item = item as? InstantPageTextItem, reference {
-                  //  self.presentReferenceView(item: item)
-                } else {
-                    var previousDetailsView: InstantPageDetailsView?
-                    var containerOffset: CGFloat = 0.0
-                    for detailsItem in detailsItems {
-                        if let previousView = previousDetailsView {
-                            previousView.contentView.updateDetailsExpanded(detailsItem.index, true, animated: false)
-                            let frame = previousView.effectiveFrameForItem(detailsItem)
-                            containerOffset += frame.minY
-                            
-                            previousDetailsView = previousView.contentView.viewForDetailsItem(detailsItem)
-                            previousDetailsView?.setExpanded(true, animated: false)
-                        } else {
-                            self.updateDetailsExpanded(detailsItem.index, true, animated: false)
-                            let frame = self.effectiveFrameForItem(detailsItem)
-                            containerOffset += frame.minY
-                            
-                            previousDetailsView = self.viewForDetailsItem(detailsItem)
-                            previousDetailsView?.setExpanded(true, animated: false)
-                        }
-                    }
-                    
-                    let frame: CGRect
-                    if let previousDetailsView = previousDetailsView {
-                        frame = previousDetailsView.effectiveFrameForItem(item)
+                var previousDetailsView: InstantPageDetailsView?
+                var containerOffset: CGFloat = 0.0
+                for detailsItem in detailsItems {
+                    if let previousView = previousDetailsView {
+                        previousView.contentView.updateDetailsExpanded(detailsItem.index, true, animated: false)
+                        let frame = previousView.effectiveFrameForItem(detailsItem)
+                        containerOffset += frame.minY
+                        
+                        previousDetailsView = previousView.contentView.viewForDetailsItem(detailsItem)
+                        previousDetailsView?.setExpanded(true, animated: false)
                     } else {
-                        frame = self.effectiveFrameForItem(item)
+                        self.updateDetailsExpanded(detailsItem.index, true, animated: false)
+                        let frame = self.effectiveFrameForItem(detailsItem)
+                        containerOffset += frame.minY
+                        
+                        previousDetailsView = self.viewForDetailsItem(detailsItem)
+                        previousDetailsView?.setExpanded(true, animated: false)
                     }
-                    
-                    let targetY = min(containerOffset + frame.minY + lineOffset, self.documentView.frame.height - self.genericView.frame.height)
-                    genericView.clipView.scroll(to: CGPoint(x: 0.0, y: targetY), animated: true)
                 }
+                
+                let frame: CGRect
+                if let previousDetailsView = previousDetailsView {
+                    frame = previousDetailsView.effectiveFrameForItem(item)
+                } else {
+                    frame = self.effectiveFrameForItem(item)
+                }
+                
+                let targetY = min(containerOffset + frame.minY + (reference ? -5 : lineOffset), self.documentView.frame.height - self.genericView.frame.height)
+                genericView.clipView.scroll(to: CGPoint(x: 0.0, y: targetY), animated: true)
             } else if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage, !instantPage.isComplete {
                // self.loadProgress.set(0.5)
                 self.pendingAnchor = anchor
@@ -573,14 +598,12 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         
         var firstLoad: Bool = true
         
-        ready.set((ivAppearance(postbox: account.postbox) |> deliverOnMainQueue |> map { [weak self] appearance -> Bool in
+        appearanceDisposable.set((ivAppearance(postbox: account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
             self?.appearance = appearance
             self?.reloadData()
-            
+            self?.readyOnce()
             if firstLoad, let currentLayout = self?.currentLayout, let webPage = self?.webPage, let scrollView = self?.genericView {
                 firstLoad = false
-                
-                
                 if let message = self?.message {
                     switch webPage.content {
                     case .Loaded(let content):
@@ -602,7 +625,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                                                 if item.matchesAnchor(anchor) {
                                                     scrollView.clipView.scroll(to: item.frame.origin, animated: false)
                                                     scrollView.reflectScrolledClipView(scrollView.clipView)
-                                                    return true
                                                 }
                                             }
                                         }
@@ -621,15 +643,21 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                     self?.applyScrollState(state)
                 }
             }
-            
-            return true
         }))
+        
+      
         actualizeDisposable.set((actualizedWebpage(postbox: account.postbox, network: account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
             self?.updateWebPage(webpage, anchor: self?.pendingAnchor)
         }))
 
     }
 	
+    override func readyOnce() {
+        if !didSetReady {
+            loadProgress.set(1.0)
+        }
+        super.readyOnce()
+    }
     
     func containerLayoutUpdated(animated: Bool) {
         if visibleItemsWithViews.isEmpty && visibleTiles.isEmpty {
@@ -661,20 +689,11 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     func updateVisibleItems(visibleBounds: CGRect, animated: Bool = false) {
 
         
-        let arguments = InstantPageItemArguments(account: account, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), openMedia: { media in
-            
-        }, openPeer: { peerId in
-            
-        }, openUrl: { [weak self] url in
-            self?.openUrl(url)
-        }, updateWebEmbedHeight: { height in
-            
-        }, updateDetailsExpanded: { [weak self] item, expanded in
-            guard let `self` = self else {return}
-            if let index = self.currentDetailsItems.firstIndex(where: {$0 === item}) {
-                self.updateDetailsExpanded(index, expanded)
-            }
-        })
+        CATransaction.begin()
+        
+        defer {
+            CATransaction.commit()
+        }
                 
         var visibleTileIndices = Set<Int>()
         var visibleItemIndices = Set<Int>()
@@ -747,6 +766,25 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 }
                 
                 if itemView == nil {
+                    let embedIndex = embedIndex
+                    let detailsIndex = detailsIndex
+
+                    let arguments = InstantPageItemArguments(account: account, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), openMedia: { media in
+                        
+                    }, openPeer: { peerId in
+                        
+                    }, openUrl: { [weak self] url in
+                        self?.openUrl(url)
+                    }, updateWebEmbedHeight: { [weak self] height in
+                        self?.updateWebEmbedHeight(embedIndex, height)
+                    }, updateDetailsExpanded: { [weak self] expanded in
+                        self?.updateDetailsExpanded(detailsIndex, expanded)
+                    }, isExpandedItem: { [weak self] item in
+                        return self?.isExpandedItem(item) ?? false
+                    }, effectiveRectForItem: { [weak self] item in
+                        return self?.effectiveFrameForItem(item) ?? item.frame
+                    })
+                    
                     if let newView = item.view(arguments: arguments, currentExpandedDetails: self.currentExpandedDetails) {
                         newView.frame = itemFrame
                         documentView.addSubview(newView)
@@ -793,8 +831,8 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             
             let tileFrame = effectiveFrameForTile(tile)
             var tileVisibleFrame = tileFrame
-            tileVisibleFrame.origin.y -= 400.0
-            tileVisibleFrame.size.height += 400.0 * 2.0
+            tileVisibleFrame.origin.y -= 800.0
+            tileVisibleFrame.size.height += 800.0 * 2.0
             if tileVisibleFrame.intersects(visibleBounds) {
                 visibleTileIndices.insert(tileIndex)
                 
@@ -959,12 +997,14 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         actualizeDisposable.dispose()
         saveProgressDisposable.dispose()
         mediaDisposable.dispose()
+        updateLayoutDisposable.dispose()
         loadWebpageDisposable.dispose()
+        appearanceDisposable.dispose()
         if let window = window {
             selectManager?.removeHandlers(for: window)
         }
         if let state = scrollState, let mediaId = webPage.id {
-            _ = updateInstantViewAppearanceSettingsInteractively(postbox: account.postbox, {$0.withUpdatedIVState(state, for: mediaId)}).start()
+          //  _ = updateInstantViewAppearanceSettingsInteractively(postbox: account.postbox, {$0.withUpdatedIVState(state, for: mediaId)}).start()
         }
         
     }

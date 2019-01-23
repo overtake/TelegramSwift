@@ -161,7 +161,7 @@ class ChatVoiceContentView: ChatAudioContentView {
         acceptDragging = false
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
         
@@ -179,7 +179,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue
+            updatedStatusSignal = chatMessageFileStatus(account: account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in

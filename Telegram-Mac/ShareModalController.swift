@@ -702,10 +702,10 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }
         
         genericView.share.set(handler: { [weak self] control in
-            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(tr(L10n.modalCopyLink), {
+            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.modalCopyLink, {
                 if share.hasLink {
                     share.shareLink()
-                    self?.show(toaster: ControllerToaster(text: tr(L10n.shareLinkCopied), height:50), for: 2.0, animated: true)
+                    self?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied), for: 2.0, animated: true)
                 }
             })]), edge: .maxY, inset: NSMakePoint(-100,  -40))
         }, for: .Click)

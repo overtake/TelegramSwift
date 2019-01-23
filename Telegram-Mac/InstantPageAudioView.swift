@@ -96,15 +96,36 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
     
     override func layout() {
         super.layout()
-        statusView.centerY()
-        linearProgress.setFrameSize(frame.width - statusView.frame.maxX - 10 - frame.minX * 2, 3)
+        
+        let size = self.bounds.size
+        
+
+        
+        let insets = NSEdgeInsets(top: 18.0, left: 17.0, bottom: 18.0, right: 17.0)
+        
+        let leftInset: CGFloat = 46.0 + 10.0
+        let rightInset: CGFloat = 0.0
+        
+        let maxTitleWidth = max(1.0, size.width - insets.left - leftInset - rightInset - insets.right)
+
+        statusView.centerY(x: insets.left)
+        
+        let leftScrubberInset: CGFloat = insets.left + 46.0 + 10.0
+        let rightScrubberInset: CGFloat = insets.right
+        
+        
         if let nameView = nameView {
-            nameView.layout?.measure(width: frame.width - statusView.frame.maxX - 10 - frame.minX * 2)
-            nameView.update(nameView.layout, origin: NSMakePoint(statusView.frame.maxX + 10, 12))
-            linearProgress.setFrameOrigin(statusView.frame.maxX + 10, nameView.frame.maxY + 5)
-        } else {
-            linearProgress.centerY(x: statusView.frame.maxX + 10)
+            nameView.layout?.measure(width: maxTitleWidth)
+            nameView.update(nameView.layout, origin: CGPoint(x: insets.left + leftInset, y: 5))
         }
+        
+        var topOffset: CGFloat = 0.0
+        if nameView == nil {
+            topOffset = -10.0
+        }
+        
+        linearProgress.frame = CGRect(origin: CGPoint(x: leftScrubberInset, y: 26.0 + topOffset + 5), size: CGSize(width: size.width - leftScrubberInset - rightScrubberInset, height: 5))
+        
     }
     
     func updateIsVisible(_ isVisible: Bool) {

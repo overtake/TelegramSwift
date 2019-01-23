@@ -19,13 +19,13 @@ class WPMediaLayout: WPLayout {
     var mediaSize:NSSize = NSZeroSize
     private(set) var media:TelegramMediaFile
     let parameters:ChatMediaLayoutParameters?
-    init(with content: TelegramMediaWebpageLoadedContent, account: Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, downloadSettings: AutomaticMediaDownloadSettings) {
+    init(with content: TelegramMediaWebpageLoadedContent, account: Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings) {
         self.media = content.file!
         if let representations = content.image?.representations {
             self.media = self.media.withUpdatedPreviewRepresentations(representations)
         }
         self.parameters = ChatMediaLayoutParameters.layout(for: content.file!, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(for: parent, account: account, renderType: presentation.renderType), automaticDownload: downloadSettings.isDownloable(parent), isIncoming: parent.isIncoming(account, presentation.renderType == .bubble))
-        super.init(with: content, account: account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation)
+        super.init(with: content, account: account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue)
         
     }
     

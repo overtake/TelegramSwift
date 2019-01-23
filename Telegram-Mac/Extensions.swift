@@ -1691,6 +1691,13 @@ extension Array {
             Array(self[$0..<Swift.min($0 + chunkSize, self.count)])
         }
     }
+    func toDictionary<Key: Hashable>(with selectKey: (Element) -> Key) -> [Key:Element] {
+        var dict = [Key:Element]()
+        for element in self {
+            dict[selectKey(element)] = element
+        }
+        return dict
+    }
 }
 
 func copyToClipboard(_ string:String) {

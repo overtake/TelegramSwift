@@ -1004,6 +1004,13 @@ struct TelegramIconsTheme {
     let chatPollVoteUnselectedBubble_outgoing: CGImage
 
     
+    let peerInfoAdmins: CGImage
+    let peerInfoPermissions: CGImage
+    let peerInfoBanned: CGImage
+    let peerInfoMembers: CGImage
+    
+    let chatUndoAction: CGImage
+    
    // let videoMessageChatCap: CGImage
 
 }
@@ -1076,6 +1083,171 @@ extension TelegramPresentationTheme {
 }
 
 
+enum Wallpaper : Equatable, PostboxCoding {
+    case builtin
+    case color(Int32)
+    case image([TelegramMediaImageRepresentation], blurred: Bool)
+    case file(slug: String, file: TelegramMediaFile, blurred: Bool)
+    case none
+    case custom(TelegramMediaImageRepresentation, blurred: Bool)
+    
+    init(_ wallpaper: TelegramWallpaper) {
+        switch wallpaper {
+        case .builtin:
+            self = .builtin
+        case let .color(color):
+            self = .color(color)
+        case let .image(image):
+            self = .image(image, blurred: false)
+        case let .file(values):
+            self = .file(slug: values.slug, file: values.file, blurred: false)
+        }
+    }
+    
+    public init(decoder: PostboxDecoder) {
+        switch decoder.decodeInt32ForKey("v", orElse: 0) {
+        case 0:
+            self = .builtin
+        case 1:
+            self = .color(decoder.decodeInt32ForKey("c", orElse: 0))
+        case 2:
+            self = .image(decoder.decodeObjectArrayWithDecoderForKey("i"), blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
+        case 3:
+            self = .file(slug: decoder.decodeStringForKey("slug", orElse: ""), file: decoder.decodeObjectForKey("file", decoder: { TelegramMediaFile(decoder: $0) }) as! TelegramMediaFile, blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
+        case 4:
+            self = .custom(decoder.decodeObjectForKey("rep", decoder: { TelegramMediaImageRepresentation(decoder: $0) }) as! TelegramMediaImageRepresentation, blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
+        case 5:
+            self = .none
+        default:
+            assertionFailure()
+            self = .color(0xffffff)
+        }
+    }
+    
+    
+    public func encode(_ encoder: PostboxEncoder) {
+        switch self {
+        case .builtin:
+            encoder.encodeInt32(0, forKey: "v")
+        case let .color(color):
+            encoder.encodeInt32(1, forKey: "v")
+            encoder.encodeInt32(color, forKey: "c")
+        case let .image(representations, blurred):
+            encoder.encodeInt32(2, forKey: "v")
+            encoder.encodeObjectArray(representations, forKey: "i")
+            encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
+        case let .file(slug, file, blurred):
+            encoder.encodeInt32(3, forKey: "v")
+            encoder.encodeString(slug, forKey: "slug")
+            encoder.encodeObject(file, forKey: "file")
+            encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
+        case let .custom(resource, blurred):
+            encoder.encodeInt32(4, forKey: "v")
+            encoder.encodeObject(resource, forKey: "rep")
+            encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
+        case .none:
+            encoder.encodeInt32(5, forKey: "v")
+        }
+    }
+    
+    func withUpdatedBlurrred(_ blurred: Bool) -> Wallpaper {
+        switch self {
+        case .builtin:
+            return self
+        case .color:
+            return self
+        case let .image(representations, _):
+            return .image(representations, blurred: blurred)
+        case let .file(values):
+            return .file(slug: values.slug, file: values.file, blurred: blurred)
+        case let .custom(path, _):
+            return .custom(path, blurred: blurred)
+        case .none:
+            return self
+        }
+    }
+    
+    var isBlurred: Bool {
+        switch self {
+        case let .builtin:
+            return false
+        case .color:
+            return false
+        case let .image(_, blurred):
+            return blurred
+        case let .file(values):
+            return values.blurred
+        case let .custom(_, blurred):
+            return blurred
+        case .none:
+            return false
+        }
+    }
+    
+    func isSemanticallyEqual(to other: Wallpaper) -> Bool {
+        switch self {
+        case .none:
+            return other == self
+        case .builtin:
+            return other == self
+        case .color:
+            return other == self
+        case let .custom(resource, _):
+            if case .custom(resource, _) = other {
+                return true
+            } else {
+                return false
+            }
+        case let .image(representations, _):
+            if case .image(representations, _) = other {
+                return true
+            } else {
+                return false
+            }
+        case let .file(values):
+            if case .file(slug: values.slug, file: _, blurred: _) = other {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+}
+
+func getAverageColor(_ image: NSImage) -> NSColor {
+    let context = DrawingContext(size: CGSize(width: 1.0, height: 1.0), scale: 1.0, clear: false)
+    context.withFlippedContext({ [weak image] context in
+        if let cgImage = image {
+            context.draw(cgImage.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: CGRect(x: 0.0, y: 0.0, width: 1.0, height: 1.0))
+        }
+    })
+    var color = context.colorAt(CGPoint())
+    
+    var hue: CGFloat = 0.0
+    var saturation: CGFloat = 0.0
+    var brightness: CGFloat = 0.0
+    var alpha: CGFloat = 0.0
+    color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+    saturation = min(1.0, saturation + 0.05 + 0.1 * (1.0 - saturation))
+    brightness = max(0.0, brightness * 0.65)
+    alpha = 0.4
+    color = NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
+    
+    return color
+}
+
+private func getAverageColor(_ color: NSColor) -> NSColor {
+    var hue: CGFloat = 0.0
+    var saturation: CGFloat = 0.0
+    var brightness: CGFloat = 0.0
+    var alpha: CGFloat = 0.0
+    color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+    saturation = min(1.0, saturation + 0.05 + 0.1 * (1.0 - saturation))
+    brightness = max(0.0, brightness * 0.65)
+    alpha = 0.4
+    
+    return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
+}
 
 class TelegramPresentationTheme : PresentationTheme {
     let chatList:TelegramChatListTheme
@@ -1085,10 +1257,13 @@ class TelegramPresentationTheme : PresentationTheme {
     let tabBar:TelegramTabBarTheme
     let icons: TelegramIconsTheme
     let bubbled: Bool
-    let wallpaper: TelegramWallpaper
+    let wallpaper: Wallpaper
+    let backgroundMode: TableBackgroundMode
+    let chatServiceItemColor: NSColor
+    let chatServiceItemTextColor: NSColor
     let fontSize: CGFloat
     let followSystemAppearance: Bool
-    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: TelegramWallpaper, followSystemAppearance: Bool) {
+    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: Wallpaper, followSystemAppearance: Bool) {
         self.chatList = chatList
         #if !SHARE
             self.chat = TelegramChatColors(colors, bubbled)
@@ -1099,6 +1274,52 @@ class TelegramPresentationTheme : PresentationTheme {
         self.bubbled = bubbled
         self.fontSize = fontSize
         self.followSystemAppearance = followSystemAppearance
+        #if !SHARE
+        switch wallpaper {
+        case .builtin:
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        case let.color(color):
+            backgroundMode = .color(color: NSColor(UInt32(abs(color))))
+        case let .image(representation, blurred):
+            if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: blurred))) {
+                backgroundMode = .background(image: image)
+            } else {
+                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            }
+            
+        case let .file(_, file, blurred):
+            if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: blurred))) {
+                backgroundMode = .background(image: image)
+            } else {
+                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            }
+        case .none:
+            backgroundMode = .plain
+        case let .custom(representation, blurred):
+            if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
+                backgroundMode = .background(image: image)
+            } else {
+                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            }
+        }
+        #else
+            self.backgroundMode = .plain
+        #endif
+
+        switch backgroundMode {
+        case let .background(image):
+            chatServiceItemColor = getAverageColor(image)
+            chatServiceItemTextColor = .white
+        case let .color(color):
+            chatServiceItemColor = getAverageColor(color)
+            chatServiceItemTextColor = .white
+        case let .tiled(image):
+            chatServiceItemColor = getAverageColor(image)
+            chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
+        case .plain:
+            chatServiceItemColor = colors.background
+            chatServiceItemTextColor = colors.grayText
+        }
         super.init(colors: colors, search: search)
     }
     
@@ -1147,13 +1368,13 @@ extension ColorPalette {
 private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> TelegramIconsTheme {
     return TelegramIconsTheme(dialogMuteImage: #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.grayIcon),
                                                dialogMuteImageSelected: #imageLiteral(resourceName: "Icon_DialogMute").precomposed(.white),
-                                               outgoingMessageImage: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.blueIcon, flipVertical:true),
-                                               readMessageImage: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIcon, flipVertical:true),
+                                               outgoingMessageImage: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true),
+                                               readMessageImage: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true),
                                                outgoingMessageImageSelected: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white, flipVertical:true),
                                                readMessageImageSelected: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(.white, flipVertical:true),
                                                sendingImage: #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.grayIcon, flipVertical:true),
                                                sendingImageSelected: #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(.white, flipVertical:true),
-                                               secretImage:#imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.blueIcon, flipVertical:true),
+                                               secretImage:#imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true),
                                                secretImageSelected: #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(.white, flipVertical:true),
                                                pinnedImage: #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true),
                                                pinnedImageSelected: #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(.white, flipVertical:true),
@@ -1501,13 +1722,18 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                resort: NSImage(named: "Icon_Resort")!.precomposed(palette.grayIcon.withAlphaComponent(0.6)),
                                                chatPollVoteUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayText.withAlphaComponent(0.3)),
                                                chatPollVoteUnselectedBubble_incoming: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_incoming.withAlphaComponent(0.3)),
-                                               chatPollVoteUnselectedBubble_outgoing: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_outgoing.withAlphaComponent(0.3))
+                                               chatPollVoteUnselectedBubble_outgoing: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_outgoing.withAlphaComponent(0.3)),
+                                               peerInfoAdmins: NSImage(named: "Icon_ChatAdmins")!.precomposed(flipVertical: true),
+                                               peerInfoPermissions: NSImage(named: "Icon_ChatPermissions")!.precomposed(flipVertical: true),
+                                               peerInfoBanned: NSImage(named: "Icon_ChatBanned")!.precomposed(flipVertical: true),
+                                               peerInfoMembers: NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true),
+                                               chatUndoAction: NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF))
                                                ///videoMessageChatCap: generateVideoMessageChatCap(backgroundColor: palette.background)
     )
 }
 
 
-private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: TelegramWallpaper) -> TelegramPresentationTheme {
+private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: Wallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.blueSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,
@@ -1516,7 +1742,7 @@ private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFlo
                                          contextMenuBackgroundColor: palette.background,
                                          textColor: palette.text,
                                          grayTextColor: palette.grayText,
-                                         secretChatTextColor: palette.blueUI,
+                                         secretChatTextColor: bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.blueUI,
                                          peerTextColor: palette.text,
                                          activityColor: palette.blueUI,
                                          activitySelectedColor: .white,
@@ -1530,7 +1756,7 @@ private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFlo
                                          badgeMutedBackgroundColor: palette.badgeMuted)
     
     let tabBar = TelegramTabBarTheme(color: palette.grayIcon, selectedColor: palette.blueIcon, badgeTextColor: .white, badgeColor: palette.redUI)
-    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), {tr(L10n.searchFieldSearch)}, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, followSystemAppearance: followSystemAppearance)
+    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, followSystemAppearance: followSystemAppearance)
 }
 
 

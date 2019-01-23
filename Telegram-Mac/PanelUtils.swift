@@ -144,19 +144,8 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = tr(L10n.alertCancel), thridTitle:String? = nil, successHandler:@escaping (ConfirmResult)->Void) {
-//
-//    let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, swapColors: swapColors)
-//    alert.show(completionHandler: { response in
-//        switch response {
-//        case .OK:
-//            successHandler(.basic)
-//        case .alertThirdButtonReturn:
-//            successHandler(.thrid)
-//        default:
-//            break
-//        }
-//    })
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, successHandler:@escaping (ConfirmResult)->Void) {
+
     
     let alert:NSAlert = NSAlert()
     alert.window.appearance = theme.appearance
@@ -205,29 +194,78 @@ func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, access
       //  alert.addButton(withTitle: thridTitle)
     }
     
+    let signal: Signal<Peer?, NoError>
+    if let peerId = peerId, let account = account {
+        signal = account.postbox.loadedPeerWithId(peerId) |> map(Optional.init) |> deliverOnMainQueue
+    } else {
+        signal = .single(nil)
+    }
     
+    var disposable: Disposable?
     
-    alert.beginSheetModal(for: window, completionHandler: { [weak alert] response in
-        if let alert = alert {
-            if alert.showsSuppressionButton, let button = alert.suppressionButton, response.rawValue != 1001 {
-                switch button.state {
-                case .off:
-                    successHandler(.basic)
-                case .on:
-                    successHandler(.thrid)
-                default:
-                    break
+    var shown: Bool = false
+    
+    let readyToShow:() -> Void = {
+        if !shown {
+            shown = true
+            alert.beginSheetModal(for: window, completionHandler: { [weak alert] response in
+                disposable?.dispose()
+                if let alert = alert {
+                    if alert.showsSuppressionButton, let button = alert.suppressionButton, response.rawValue != 1001 {
+                        switch button.state {
+                        case .off:
+                            successHandler(.basic)
+                        case .on:
+                            successHandler(.thrid)
+                        default:
+                            break
+                        }
+                    } else {
+                        if response.rawValue == 1000 {
+                            successHandler(.basic)
+                        } else if response.rawValue == 1002 {
+                            successHandler(.thrid)
+                        }
+                    }
                 }
-            } else {
-                if response.rawValue == 1000 {
-                    successHandler(.basic)
-                } else if response.rawValue == 1002 {
-                    successHandler(.thrid)
-                }
-            }
+            })
         }
+        
+    }
+    
+    _ = signal.start(next: { peer in
+        if let peer = peer, let account = account {
+            alert.messageText = account.peerId == peer.id ? L10n.peerSavedMessages : peer.displayTitle
+            alert.icon = nil
+            if peerId == account.peerId {
+                let icon = theme.icons.searchSaved
+                let signal = generateEmptyPhoto(NSMakeSize(70, 70), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(50, 50)))) |> deliverOnMainQueue
+                disposable = signal.start(next: { image in
+                    if let image = image {
+                        alert.icon = NSImage(cgImage: image, size: NSMakeSize(70, 70))
+                        delay(0.2, closure: {
+                            readyToShow()
+                        })
+                    }
+                })
 
+            } else {
+                disposable = (peerAvatarImage(account: account, photo: PeerPhoto.peer(peer.id, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(70, 70), scale: System.backingScale, font: .avatar(30), genCap: true) |> deliverOnMainQueue).start(next: { image, _ in
+                    if let image = image {
+                        alert.icon = NSImage(cgImage: image, size: NSMakeSize(70, 70))
+                        delay(0.2, closure: {
+                            readyToShow()
+                        })
+                    }
+                })
+            }
+            
+        } else {
+            readyToShow()
+        }
+        
     })
+    
     
     
 //    let alert = AlertController(window, account: account, peerId: peerId, header: header, text: information, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, accessory: accessory)

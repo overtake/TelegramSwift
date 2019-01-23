@@ -84,7 +84,7 @@ public class TabBarController: ViewController, TabViewDelegate {
             item.controller._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height - genericView.tabView.frame.height)
             item.controller.view.frame = item.controller._frameRect
             item.controller.viewWillAppear(false)
-            view.addSubview(item.controller.view)
+            view.addSubview(item.controller.view, positioned: .below, relativeTo: genericView.tabView)
             item.controller.viewDidAppear(false)
             current = item.controller
             didChangedIndex(index)

@@ -1126,7 +1126,7 @@ class LoginAuthInfoView : View {
                     self?.resetAccountContainer.isHidden = true
                 }
             })
-        case let .passwordEntry(hint, number, code):
+        case let .passwordEntry(hint, number, code, suggestReset):
             codeInputContainer.updateLocalizationAndTheme()
             codeInputContainer.isHidden = false
             codeInputContainer.showPasswordInput(hint, number ?? "", code ?? "", animated: animated)

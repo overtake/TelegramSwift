@@ -85,37 +85,59 @@ final class InstantPageTextLine {
     }
     
     func linkAt(point: NSPoint) -> InstantPageUrlItem? {
-        let index: CFIndex = CTLineGetStringIndexForPosition(line, point)
-        if index >= 0 && index < attributedString.length {
-            return attributedString.attribute(.URL, at: index, effectiveRange: nil) as? InstantPageUrlItem
+        if point.x >= 0 && point.x <= frame.width {
+            let index: CFIndex = CTLineGetStringIndexForPosition(line, point)
+            if index >= 0 && index < attributedString.length {
+                return attributedString.attribute(.URL, at: index, effectiveRange: nil) as? InstantPageUrlItem
+            }
         }
+        
         return nil
     }
     
     func selectText(in rect: NSRect, boundingWidth: CGFloat, alignment: NSTextAlignment) -> NSAttributedString {
         
+        var rect = rect
+        if isRTL {
+            rect.origin.x -= (boundingWidth - frame.width)
+        }
         
         let startIndex: CFIndex = CTLineGetStringIndexForPosition(line, NSMakePoint(rect.minX, 0))
         let endIndex: CFIndex = CTLineGetStringIndexForPosition(line, NSMakePoint(rect.maxX, 0))
         
+        
+    
         var startOffset = CTLineGetOffsetForStringIndex(line, startIndex, nil)
         var endOffset = CTLineGetOffsetForStringIndex(line, endIndex, nil)
-
+        
         switch alignment {
         case .center:
             let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
+        case .right:
+            startOffset = boundingWidth - startOffset
+            endOffset =  boundingWidth - endOffset
         default:
             break
         }
         
-        selectRect = NSMakeRect(startOffset, frame.minY - 2, endOffset - startOffset, frame.height + 6)
+        var selectRect = NSMakeRect(startOffset, frame.minY - 2, endOffset - startOffset, frame.height + 6)
+        
+        if isRTL {
+            selectRect.origin.x += (boundingWidth - frame.width)
+        }
+        
+        self.selectRect = selectRect
         return attributedString.attributedSubstring(from: NSMakeRange(min(startIndex, endIndex), abs(endIndex - startIndex)))
     }
     
     func selectWord(in point: NSPoint, boundingWidth: CGFloat, alignment: NSTextAlignment, rect: NSRect) -> NSAttributedString {
         
+        var point = point
+        if isRTL {
+             point.x -= (boundingWidth - frame.width)
+        }
         
         let startIndex: CFIndex = CTLineGetStringIndexForPosition(line, point)
         
@@ -172,11 +194,22 @@ final class InstantPageTextLine {
             let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
+        case .right:
+            startOffset = boundingWidth - startOffset
+            endOffset =  boundingWidth - endOffset
         default:
             break
         }
+     
         
         selectRect = NSMakeRect(startOffset, frame.minY - 2, endOffset - startOffset, frame.height + 6)
+        
+        
+        
+        if isRTL {
+            selectRect.origin.x += (boundingWidth - frame.width)
+        }
+        
         return attributedString.attributedSubstring(from: range)
     }
     
@@ -239,15 +272,17 @@ final class InstantPageTextItem: InstantPageItem {
     
     func linkAt(point: NSPoint) -> InstantPageUrlItem? {
         for line in lines {
-            var point = NSMakePoint(min(max(point.x, 0), frame.width), point.y)
+            var point = NSMakePoint(point.x, point.y)
             switch alignment {
             case .center:
                 point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
+            case .right:
+                point.x = frame.width - point.x
             default:
                 break
             }
             
-            if line.frame.minY < point.y && line.frame.maxY > point.y {
+            if NSPointInRect(point, line.frame) {
                 return line.linkAt(point: NSMakePoint(point.x, 0))
             }
         }

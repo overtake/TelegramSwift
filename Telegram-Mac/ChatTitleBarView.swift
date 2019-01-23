@@ -173,6 +173,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         }
     }
     
+    var onlineMemberCount:Int32? = nil {
+        didSet {
+            updateStatus()
+        }
+    }
+    
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             if let inputActivities = inputActivities  {
@@ -418,7 +424,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 titleImage = nil
             }
             
-            var result = stringStatus(for: peerView, account: chatInteraction.account, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
+            var result = stringStatus(for: peerView, account: chatInteraction.account, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
             
             if chatInteraction.account.peerId == peerView.peerId  {
                 result = result.withUpdatedTitle(L10n.peerSavedMessages)

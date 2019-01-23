@@ -56,6 +56,15 @@ private class ChatUnreadRowView: TableRowView {
     
     private var text:TextNode = TextNode()
     
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func draw(_ dirtyRect: NSRect) {
         
         // Drawing code here.

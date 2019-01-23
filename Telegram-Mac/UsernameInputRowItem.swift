@@ -51,11 +51,16 @@ class UsernameInputRowView: GeneralInputRowView {
         
     }
     
+    override func updateColors() {
+        super.updateColors()
+        indicator.progressColor = theme.colors.grayText
+    }
+    
     override func layout() {
         super.layout()
         if let item = item as? UsernameInputRowItem {
-            imageView.setFrameOrigin(textView.frame.maxX - imageView.frame.width, textView.frame.maxY - imageView.frame.height - item.insets.bottom)
-            indicator.setFrameOrigin(textView.frame.maxX - indicator.frame.width, textView.frame.maxY - indicator.frame.height - item.insets.bottom)
+            imageView.setFrameOrigin(textView.frame.maxX - imageView.frame.width, textView.frame.maxY - imageView.frame.height - item.insets.bottom - 5)
+            indicator.setFrameOrigin(textView.frame.maxX - indicator.frame.width, textView.frame.maxY - indicator.frame.height - item.insets.bottom - 5)
             if !imageView.isHidden || !indicator.isHidden {
                 textView.setFrameSize(frame.width - item.insets.right - 30, textView.frame.height)
             } else {
@@ -85,11 +90,19 @@ class UsernameInputRowView: GeneralInputRowView {
                     indicator.isHidden = false
                     indicator.animates = true
                     imageView.isHidden = true
-                case .availability:
-                    imageView.isHidden = false
-                    imageView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    indicator.isHidden = true
-                    indicator.animates = false
+                case let .availability(status):
+                    
+                    switch status {
+                    case .available:
+                        imageView.isHidden = false
+                        imageView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        indicator.isHidden = true
+                        indicator.animates = false
+                    default:
+                        imageView.isHidden = true
+                        indicator.isHidden = true
+                        indicator.animates = false
+                    }
                 default:
                     imageView.isHidden = true
                     indicator.isHidden = true

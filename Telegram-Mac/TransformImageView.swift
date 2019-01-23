@@ -14,7 +14,7 @@ import TGUIKit
 private let imagesThreadPool = ThreadPool(threadCount: 3, threadPriority: 0.1)
 
 open class TransformImageView: NSView {
-    public var imageUpdated: (() -> Void)?
+    public var imageUpdated: ((Any?) -> Void)?
     private let disposable = MetaDisposable()
     private let cachedDisposable = MetaDisposable()
     public var animatesAlphaOnFirstTransition:Bool = false
@@ -30,9 +30,15 @@ open class TransformImageView: NSView {
         layerContentsRedrawPolicy = .never
     }
     
-    var image: CGImage? {
-        didSet {
-            layer?.contents = image
+    
+    
+    var image: Any? {
+        set {
+            layer?.contents = newValue
+            imageUpdated?(newValue)
+        }
+        get {
+            return layer?.contents
         }
     }
     
@@ -61,18 +67,18 @@ open class TransformImageView: NSView {
     public func setSignal(signal: Signal<(CGImage?, Bool), NoError>, clearInstantly: Bool = true) {
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, isFullyLoaded in
             if clearInstantly {
-                self?.layer?.contents = image
+                self?.image = image
             } else if let image = image {
-                self?.layer?.contents = image
+                self?.image = image
             }
             self?.isFullyLoaded = isFullyLoaded
         }))
     }
     
     
-    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, cacheImage:@escaping(Signal<(CGImage?, Bool), NoError>) -> Signal<Void, NoError> = { signal in return signal |> map {_ in return}}) {
+    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(Signal<(CGImage?, Bool), NoError>) -> Signal<Void, NoError> = { signal in return signal |> map {_ in return}}) {
         if clearInstantly {
-            self.layer?.contents = nil
+            self.image = nil
         }
         
         if isFullyLoaded && !ignoreFullyLoad {
@@ -81,7 +87,13 @@ open class TransformImageView: NSView {
             return
         }
         
-        let result = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged) |> deliverOn(imagesThreadPool) |> mapToThrottled { transform, arguments -> Signal<(CGImage?, Bool), NoError> in
+        var combine = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged)
+        
+        if !synchronousLoad {
+            combine = combine |> deliverOn(imagesThreadPool)
+        }
+        
+        let result = combine |> mapToThrottled { transform, arguments -> Signal<(CGImage?, Bool), NoError> in
             return deferred {
                 let context = transform(arguments)
                 return Signal<(CGImage?, Bool), NoError>.single((context?.generateImage(), context?.isHighQuality ?? true))
@@ -90,10 +102,10 @@ open class TransformImageView: NSView {
         
         self.disposable.set((result |> deliverOnMainQueue |> beforeNext { [weak self] (next, isThumb) in
             if let strongSelf = self  {
-                if strongSelf.layer?.contents == nil && strongSelf.animatesAlphaOnFirstTransition {
+                if strongSelf.image == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
-                self?.layer?.contents = next
+                self?.image = next
                 if !strongSelf.first && animate {
                     self?.layer?.animateContents()
                 }
@@ -105,7 +117,7 @@ open class TransformImageView: NSView {
     }
     
     public var hasImage: Bool {
-        return layer?.contents != nil
+        return image != nil
     }
     
     public func set(arguments:TransformImageArguments) ->Void {
@@ -121,7 +133,7 @@ open class TransformImageView: NSView {
         
         
         view.background = .clear
-        view.layer?.contents = self.layer?.contents
+        view.layer?.contents = self.image
         view.frame = self.visibleRect
         view.layer?.masksToBounds = true
    

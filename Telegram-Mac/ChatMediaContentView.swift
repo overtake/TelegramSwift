@@ -125,7 +125,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         dragDisposable.dispose()
     }
     
-    func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) -> Void  {
+    func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) -> Void  {
         self.setContent(size: size)
         self.parameters = parameters
         self.positionFlags = positionFlags

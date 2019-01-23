@@ -466,6 +466,10 @@ class GalleryViewer: NSResponder {
                         default: 
                             break
                         }
+                    } else if let base = firstStableId.base as? String, base == largestImageRepresentation(photo.image.representations)?.resource.id.uniqueId {
+                        foundIndex = true
+                        currentIndex = i
+                        
                     }
                 }
                 var index: Int = foundIndex ? 0 : 1
@@ -522,6 +526,8 @@ class GalleryViewer: NSResponder {
                     } else if file.isVideo {
                         inserted.append((media.index, MGalleryVideoItem(account, .instantMedia(media, parent), pagerSize)))
                     }
+                } else if media.media is TelegramMediaWebpage {
+                    inserted.append((media.index, MGalleryExternalVideoItem(account, .instantMedia(media, parent), pagerSize)))
                 }
             }
             
@@ -631,6 +637,8 @@ class GalleryViewer: NSResponder {
                                     } else if file.isVideo {
                                         inserted.append((i, MGalleryVideoItem(account, .instantMedia(media, message), pagerSize)))
                                     }
+                                } else if media.media is TelegramMediaWebpage {
+                                    inserted.append((i, MGalleryExternalVideoItem(account, .instantMedia(media, message), pagerSize)))
                                 }
                             }
                         }
@@ -773,11 +781,23 @@ class GalleryViewer: NSResponder {
     
     func showControlsPopover(_ control:Control) {
         var items:[SPopoverItem] = []
-        items.append(SPopoverItem(tr(L10n.galleryContextSaveAs), {[weak self] in
+        items.append(SPopoverItem(L10n.galleryContextSaveAs, {[weak self] in
             self?.saveAs()
         }))
+        
+        let account = self.account
+        if let item = pager.selectedItem as? MGalleryGIFItem {
+            let file = item.media
+            if file.isAnimated && file.isVideo {
+                let reference = item.entry.fileReference(file)
+                items.append(SPopoverItem(L10n.gallerySaveGif, {
+                    let _ = addSavedGif(postbox: account.postbox, fileReference: reference).start()
+                }))
+            }
+        }
+        
         if let _ = self.contentInteractions, case .history = type {
-            items.append(SPopoverItem(tr(L10n.galleryContextShowMessage), {[weak self] in
+            items.append(SPopoverItem(L10n.galleryContextShowMessage, {[weak self] in
                 self?.showMessage()
             }))
             items.append(SPopoverItem(L10n.galleryContextShowGallery, {[weak self] in
@@ -785,21 +805,20 @@ class GalleryViewer: NSResponder {
             }))
             if let message = pager.selectedItem?.entry.message {
                 if canDeleteMessage(message, account: account) {
-                    items.append(SPopoverItem(tr(L10n.galleryContextDeletePhoto), {[weak self] in
+                    items.append(SPopoverItem(L10n.galleryContextDeletePhoto, {[weak self] in
                         self?.deleteMessage(control)
                     }))
                 }
             }
-           
         }
-        items.append(SPopoverItem(tr(L10n.galleryContextCopyToClipboard), {[weak self] in
+        items.append(SPopoverItem(L10n.galleryContextCopyToClipboard, {[weak self] in
             self?.copy(nil)
         }))
         
         switch type {
         case .profile(let peerId):
             if peerId == account.peerId {
-                items.append(SPopoverItem(tr(L10n.galleryContextDeletePhoto), {[weak self] in
+                items.append(SPopoverItem(L10n.galleryContextDeletePhoto, {[weak self] in
                     self?.deletePhoto()
                 }))
             }
@@ -991,9 +1010,9 @@ class GalleryViewer: NSResponder {
                                     } else if let item = item as? MGalleryGIFItem {
                                         file = item.media
                                     } else if let photo = item as? MGalleryPhotoItem {
-                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
                                     } else if let photo = item as? MGalleryPeerPhotoItem {
-                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
                                     } else {
                                         file = nil
                                     }

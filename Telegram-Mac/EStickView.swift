@@ -12,6 +12,7 @@ class EStickView: TableStickView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
     
     required init?(coder: NSCoder) {

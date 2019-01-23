@@ -144,7 +144,7 @@ final class InstantPageMediaView: View, InstantPageView {
             if file.mimeType.hasPrefix("image/") && !file.mimeType.hasSuffix("gif") {
                 self.imageView.setSignal(instantPageImageFile(account: account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor, fetched: true))
             } else {
-                self.imageView.setSignal( chatMessageVideo(postbox: account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+                self.imageView.setSignal(chatMessageVideo(postbox: account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
             }
 
             switch arguments {
@@ -166,8 +166,6 @@ final class InstantPageMediaView: View, InstantPageView {
             
             self.iconView = iconView
             
-         //   self.addSubnode(self.pinNode)
-            
             var zoom: Int32 = 12
             var dimensions = CGSize(width: 200.0, height: 100.0)
             switch arguments {
@@ -186,9 +184,10 @@ final class InstantPageMediaView: View, InstantPageView {
             self.imageView.setSignal(signal)
         } else if let webPage = media.media as? TelegramMediaWebpage, case let .Loaded(content) = webPage.content, let image = content.image {
             let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(webPage), media: image)
-            let signal = chatMessagePhoto(account: account, imageReference: imageReference, scale: backingScaleFactor)
+            let signal = chatWebpageSnippetPhoto(account: account, imageReference: imageReference, scale: backingScaleFactor, small: false)
             self.imageView.setSignal(signal)
             self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: imageReference).start())
+            statusDisposable.set((account.postbox.mediaBox.resourceStatus(image.representations.last!.resource) |> deliverOnMainQueue).start(next: updateProgressState))
         }
         
     }
@@ -270,7 +269,27 @@ final class InstantPageMediaView: View, InstantPageView {
 
                 
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
+            } else if let webPage = media.media as? TelegramMediaWebpage, case let .Loaded(content) = webPage.content, let image = content.image, let largest = largestImageRepresentation(image.representations) {
+                var imageSize = largest.dimensions.aspectFilled(size)
+                var boundingSize = size
+                var radius: CGFloat = 0.0
+                
+                switch arguments {
+                case let .image(_, roundCorners, fit):
+                    radius = roundCorners ? floor(min(size.width, size.height) / 2.0) : 0.0
+                    
+                    if fit {
+                        imageSize = largest.dimensions.fitted(size)
+                        boundingSize = imageSize;
+                    }
+                    
+                default:
+                    
+                    break
+                }
+                imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: radius), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
             }
+
         }
         progressView.center()
     }

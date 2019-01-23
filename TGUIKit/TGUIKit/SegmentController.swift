@@ -23,12 +23,24 @@ private enum SegmentItemPosition {
     case inner
 }
 
+public struct SegmentTheme {
+    let backgroundColor: NSColor
+    let foregroundColor: NSColor
+    let textColor: NSColor
+    public init(backgroundColor: NSColor, foregroundColor: NSColor, textColor: NSColor) {
+        self.backgroundColor = backgroundColor
+        self.foregroundColor = foregroundColor
+        self.textColor = textColor
+    }
+}
+
 private final class SegmentItemView : Control {
     let item: SegmentedItem
     let position: SegmentItemPosition
     let selected: Bool
-    init(item: SegmentedItem, selected: Bool, position: SegmentItemPosition, select:@escaping()->Void) {
+    init(item: SegmentedItem, selected: Bool, theme: SegmentTheme, position: SegmentItemPosition, select:@escaping()->Void) {
         self.item = item
+        self.theme = theme
         self.position = position
         self.selected = selected
         super.init(frame: NSZeroRect)
@@ -36,6 +48,12 @@ private final class SegmentItemView : Control {
         set(handler: { _ in
             select()
         }, for: .SingleClick)
+    }
+    
+    var theme: SegmentTheme {
+        didSet {
+            needsDisplay = true
+        }
     }
     
     required public init?(coder: NSCoder) {
@@ -59,56 +77,62 @@ private final class SegmentItemView : Control {
         switch position {
         case .left:
            ctx.round(bounds, flags: [.bottom, .top, .left])
-           ctx.setFillColor(presentation.colors.blueUI.cgColor)
+           ctx.setFillColor(theme.foregroundColor.cgColor)
            ctx.fill(bounds)
            
            ctx.round(NSMakeRect(.borderSize , .borderSize, bounds.width - (.borderSize / 2), bounds.height - .borderSize), flags: [.bottom, .top, .left])
-           ctx.setFillColor(presentation.colors.background.cgColor)
+           ctx.setFillColor(theme.backgroundColor.cgColor)
            ctx.fill(bounds)
         case .right:
             ctx.round(bounds, flags: [.bottom, .top, .right])
-            ctx.setFillColor(presentation.colors.blueUI.cgColor)
+            ctx.setFillColor(theme.foregroundColor.cgColor)
             ctx.fill(bounds)
             
             ctx.round(NSMakeRect(.borderSize / 2, .borderSize, bounds.width - .borderSize , bounds.height - .borderSize ), flags: [.bottom, .top, .right])
-            ctx.setFillColor(presentation.colors.background.cgColor)
+            ctx.setFillColor(theme.backgroundColor.cgColor)
             ctx.fill(bounds)
         case .inner:
-            ctx.setFillColor(presentation.colors.blueUI.cgColor)
+            ctx.setFillColor(theme.foregroundColor.cgColor)
             ctx.fill(NSMakeRect(0, 0, .borderSize / 2, frame.height))
             
-            ctx.setFillColor(presentation.colors.blueUI.cgColor)
+            ctx.setFillColor(theme.foregroundColor.cgColor)
             ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
             
-            ctx.setFillColor(presentation.colors.blueUI.cgColor)
+            ctx.setFillColor(theme.foregroundColor.cgColor)
             ctx.fill(NSMakeRect(frame.width - .borderSize / 2, 0, .borderSize / 2, frame.height))
             
-            ctx.setFillColor(presentation.colors.blueUI.cgColor)
+            ctx.setFillColor(theme.foregroundColor.cgColor)
             ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))
         }
         
         
         
         if selected {
-            ctx.setFillColor(presentation.colors.blueUI.cgColor)
+            ctx.setFillColor(theme.foregroundColor.cgColor)
             ctx.fill(bounds)
         }
         
-        let text = TextNode.layoutText(NSAttributedString.initialize(string: item.title, color: selected ? presentation.colors.background : presentation.colors.blueUI, font: .normal(12)), selected ? presentation.colors.blueUI : presentation.colors.background, 1, .end, NSMakeSize(frame.width - 10, frame.height), nil, false, .center)
+        let text = TextNode.layoutText(.initialize(string: item.title, color: selected ? theme.backgroundColor : theme.foregroundColor, font: .normal(12)), selected ? theme.foregroundColor : theme.backgroundColor, 1, .end, NSMakeSize(frame.width - 10, frame.height), nil, false, .center)
         
         let f = focus(text.0.size)
-        text.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: selected ? presentation.colors.blueUI : presentation.colors.background)
+        text.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: selected ? theme.foregroundColor : theme.backgroundColor)
     }
 }
 
 private class SegmentedControlView: View {
     
-    
+    public var theme: SegmentTheme = SegmentTheme(backgroundColor: presentation.colors.background, foregroundColor: presentation.colors.blueUI, textColor: presentation.colors.blueUI) {
+        didSet {
+            for subview in subviews.compactMap({ $0 as? SegmentItemView}) {
+                subview.theme = theme
+            }
+        }
+    }
     
     func update(items: [SegmentedItem], selected: Int, select: @escaping(Int)->Void) -> Void {
         self.removeAllSubviews()
         for i in 0 ..< items.count {
-            let view = SegmentItemView(item: items[i], selected: selected == i, position: i == 0 ? .left : i == items.count - 1 ? .right : .inner, select: { select(i) })
+            let view = SegmentItemView(item: items[i], selected: selected == i, theme: theme, position: i == 0 ? .left : i == items.count - 1 ? .right : .inner, select: { select(i) })
             addSubview(view)
         }
         
@@ -137,6 +161,25 @@ public class SegmentController: ViewController {
     
     private var genericView: SegmentedControlView {
         return self.view as! SegmentedControlView
+    }
+    
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        bar = .init(height: 0)
+    }
+    
+    public var theme: SegmentTheme {
+        get {
+            return genericView.theme
+        }
+        set {
+            genericView.theme = newValue
+        }
+    }
+    
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        readyOnce()
     }
     
     private func select(_ index: Int) {

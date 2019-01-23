@@ -5,7 +5,7 @@ import PostboxMac
 import SwiftSignalKitMac
 
 func freeMediaFileInteractiveFetched(account: Account, fileReference: FileMediaReference) -> Signal<FetchResourceSourceType, NoError> {
-    return fetchedMediaResource(postbox: account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), statsCategory: fileReference.media.isVideo ? .video : .file)
+    return fetchedMediaResource(postbox: account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), statsCategory: fileReference.media.isVideo ? .video : .file) |> `catch` { _ in return .complete() }
 }
 
 func cancelFreeMediaFileInteractiveFetch(account: Account, resource: MediaResource) {

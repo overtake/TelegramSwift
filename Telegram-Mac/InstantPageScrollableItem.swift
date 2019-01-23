@@ -121,6 +121,12 @@ final class InstantPageScrollableView: ScrollView, InstantPageView {
         
     }
     
+    override var needsDisplay: Bool {
+        didSet {
+            contentNode.needsDisplay = true
+        }
+    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
