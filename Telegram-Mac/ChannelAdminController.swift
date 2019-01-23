@@ -14,19 +14,20 @@ import SwiftSignalKitMac
 
 private final class ChannelAdminControllerArguments {
     let account: Account
-    let toggleRight: (TelegramChannelAdminRightsFlags, TelegramChannelAdminRightsFlags) -> Void
+    let toggleRight: (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void
     let dismissAdmin: () -> Void
-    
-    init(account: Account, toggleRight: @escaping (TelegramChannelAdminRightsFlags, TelegramChannelAdminRightsFlags) -> Void, dismissAdmin: @escaping () -> Void) {
+    let cantEditError: () -> Void
+    init(account: Account, toggleRight: @escaping (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void, dismissAdmin: @escaping () -> Void, cantEditError: @escaping() -> Void) {
         self.account = account
         self.toggleRight = toggleRight
         self.dismissAdmin = dismissAdmin
+        self.cantEditError = cantEditError
     }
 }
 
 private enum ChannelAdminEntryStableId: Hashable {
     case info
-    case right(TelegramChannelAdminRightsFlags)
+    case right(TelegramChatAdminRightsFlags)
     case description(Int32)
     case section(Int32)
     var hashValue: Int {
@@ -41,40 +42,12 @@ private enum ChannelAdminEntryStableId: Hashable {
             return flags.rawValue.hashValue
         }
     }
-    
-    static func ==(lhs: ChannelAdminEntryStableId, rhs: ChannelAdminEntryStableId) -> Bool {
-        switch lhs {
-        case .info:
-            if case .info = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .right(flags):
-            if case .right(flags) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(section):
-            if case .section(section) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .description(let text):
-            if case .description(text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
+
 }
 
 private enum ChannelAdminEntry: TableItemListNodeEntry {
     case info(Int32, Peer, TelegramUserPresence?)
-    case rightItem(Int32, Int, String, TelegramChannelAdminRightsFlags, TelegramChannelAdminRightsFlags, Bool, Bool)
+    case rightItem(Int32, Int, String, TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags, Bool, Bool)
     case description(Int32, Int32, String)
     case section(Int32)
     
@@ -185,7 +158,9 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             //ControlStyle(font: NSFont.)
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), action: { 
                 arguments.toggleRight(right, flags)
-            }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: theme.colors.background, stateOnColor: enabled ? theme.colors.blueUI : theme.colors.blueUI.withAlphaComponent(0.6), stateOffColor: enabled ? theme.colors.redUI : theme.colors.redUI.withAlphaComponent(0.6), disabledColor: .grayBackground, borderColor: .clear))
+            }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: theme.colors.background, stateOnColor: enabled ? theme.colors.blueUI : theme.colors.blueUI.withAlphaComponent(0.6), stateOffColor: enabled ? theme.colors.redUI : theme.colors.redUI.withAlphaComponent(0.6), disabledColor: .grayBackground, borderColor: .clear), disabledAction: {
+                arguments.cantEditError()
+            })
         case .description(_, _, let name):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: name)//GeneralInteractedRowItem(initialSize, stableId: stableId, name: name)
         }
@@ -194,10 +169,10 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
 }
 
 private struct ChannelAdminControllerState: Equatable {
-    let updatedFlags: TelegramChannelAdminRightsFlags?
+    let updatedFlags: TelegramChatAdminRightsFlags?
     let updating: Bool
     let editable:Bool
-    init(updatedFlags: TelegramChannelAdminRightsFlags? = nil, updating: Bool = false, editable: Bool = false) {
+    init(updatedFlags: TelegramChatAdminRightsFlags? = nil, updating: Bool = false, editable: Bool = false) {
         self.updatedFlags = updatedFlags
         self.updating = updating
         self.editable = editable
@@ -216,7 +191,7 @@ private struct ChannelAdminControllerState: Equatable {
         return true
     }
     
-    func withUpdatedUpdatedFlags(_ updatedFlags: TelegramChannelAdminRightsFlags?) -> ChannelAdminControllerState {
+    func withUpdatedUpdatedFlags(_ updatedFlags: TelegramChatAdminRightsFlags?) -> ChannelAdminControllerState {
         return ChannelAdminControllerState(updatedFlags: updatedFlags, updating: self.updating, editable: self.editable)
     }
     
@@ -229,31 +204,40 @@ private struct ChannelAdminControllerState: Equatable {
     }
 }
 
-private func stringForRight(right: TelegramChannelAdminRightsFlags, isGroup: Bool) -> String {
+private func stringForRight(right: TelegramChatAdminRightsFlags, isGroup: Bool, defaultBannedRights: TelegramChatBannedRights?) -> String {
     if right.contains(.canChangeInfo) {
-        return isGroup ? tr(L10n.groupEditAdminPermissionChangeInfo) : tr(L10n.channelEditAdminPermissionChangeInfo)
+        return isGroup ? L10n.groupEditAdminPermissionChangeInfo : L10n.channelEditAdminPermissionChangeInfo
     } else if right.contains(.canPostMessages) {
-        return tr(L10n.channelEditAdminPermissionPostMessages)
+        return L10n.channelEditAdminPermissionPostMessages
     } else if right.contains(.canEditMessages) {
-        return tr(L10n.channelEditAdminPermissionEditMessages)
+        return L10n.channelEditAdminPermissionEditMessages
     } else if right.contains(.canDeleteMessages) {
-        return tr(L10n.channelEditAdminPermissionDeleteMessages)
+        return L10n.channelEditAdminPermissionDeleteMessages
     } else if right.contains(.canBanUsers) {
-        return tr(L10n.channelEditAdminPermissionBanUsers)
+        return L10n.channelEditAdminPermissionBanUsers
     } else if right.contains(.canInviteUsers) {
-        return tr(L10n.channelEditAdminPermissionInviteUsers)
+        if isGroup {
+            if let defaultBannedRights = defaultBannedRights, defaultBannedRights.flags.contains(.banAddMembers) {
+                return L10n.channelEditAdminPermissionInviteMembers
+            } else {
+                return L10n.channelEditAdminPermissionInviteViaLink
+            }
+        } else {
+            return L10n.channelEditAdminPermissionInviteSubscribers
+        }
+
     } else if right.contains(.canChangeInviteLink) {
-        return "tr(L10n.channelEditAdminPermissionInviteViaLink)"
+        return ""
     } else if right.contains(.canPinMessages) {
-        return tr(L10n.channelEditAdminPermissionPinMessages)
+        return L10n.channelEditAdminPermissionPinMessages
     } else if right.contains(.canAddAdmins) {
-        return tr(L10n.channelEditAdminPermissionAddNewAdmins)
+        return L10n.channelEditAdminPermissionAddNewAdmins
     } else {
         return ""
     }
 }
 
-private func rightDependencies(_ right: TelegramChannelAdminRightsFlags) -> [TelegramChannelAdminRightsFlags] {
+private func rightDependencies(_ right: TelegramChatAdminRightsFlags) -> [TelegramChatAdminRightsFlags] {
     if right.contains(.canChangeInfo) {
         return []
     } else if right.contains(.canPostMessages) {
@@ -289,18 +273,25 @@ private func canEditAdminRights(accountPeerId: PeerId, channelView: PeerView, in
                 if let adminInfo = adminInfo {
                     return adminInfo.canBeEditedByAccountPeer || adminInfo.promotedBy == accountPeerId
                 } else {
-                    return true
+                    return channel.hasPermission(.addAdmins)
                 }
             }
         } else {
-            return channel.hasAdminRights(.canAddAdmins)
+            return channel.hasPermission(.addAdmins)
+        }
+    } else if let group = channelView.peers[channelView.peerId] as? TelegramGroup {
+        if case .creator = group.role {
+            return true
+        } else {
+            return false
         }
     } else {
         return false
     }
 }
 
-private func channelAdminControllerEntries(state: ChannelAdminControllerState, accountPeerId: PeerId, channelView: PeerView, adminView: PeerView, initialParticipant: ChannelParticipant?) -> ([ChannelAdminEntry], TelegramChannelAdminRightsFlags) {
+
+private func channelAdminControllerEntries(state: ChannelAdminControllerState, accountPeerId: PeerId, channelView: PeerView, adminView: PeerView, initialParticipant: ChannelParticipant?) -> [ChannelAdminEntry] {
     var entries: [ChannelAdminEntry] = []
     
     var sectionId:Int32 = 1
@@ -308,19 +299,21 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
     entries.append(.section(sectionId))
     sectionId += 1
     
+    var descId: Int32 = 0
+    
     var addAdminsEnabled: Bool = false
-    var rights:TelegramChannelAdminRightsFlags = []
     if let channel = channelView.peers[channelView.peerId] as? TelegramChannel, let admin = adminView.peers[adminView.peerId] {
         entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence))
         
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.description(sectionId, 1, tr(L10n.channelAdminWhatCanAdminDo)))
+        entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo))
+        descId += 1
         
         let isGroup: Bool
-        let maskRightsFlags: TelegramChannelAdminRightsFlags
-        var rightsOrder: [TelegramChannelAdminRightsFlags] = []
+        let maskRightsFlags: TelegramChatAdminRightsFlags
+        let rightsOrder: [TelegramChatAdminRightsFlags]
         
         switch channel.info {
         case .broadcast:
@@ -328,28 +321,29 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             maskRightsFlags = .broadcastSpecific
             rightsOrder = [
                 .canChangeInfo,
-                .canInviteUsers,
                 .canPostMessages,
                 .canEditMessages,
                 .canDeleteMessages,
+                .canInviteUsers,
                 .canAddAdmins
             ]
-        case let .group(info):
+        case .group:
             isGroup = true
             maskRightsFlags = .groupSpecific
-            
-            rightsOrder.append(.canChangeInfo)
-            rightsOrder.append(.canDeleteMessages)
-            rightsOrder.append(.canBanUsers)
-            if !info.flags.contains(.everyMemberCanInviteMembers)  {
-                rightsOrder.append(.canInviteUsers)
-            }
-            rightsOrder.append(.canPinMessages)
-            rightsOrder.append(.canAddAdmins)
-            
+            rightsOrder = [
+                .canChangeInfo,
+                .canDeleteMessages,
+                .canBanUsers,
+                .canInviteUsers,
+                .canPinMessages,
+                .canAddAdmins
+            ]
         }
+        
+        
+
         if canEditAdminRights(accountPeerId: accountPeerId, channelView: channelView, initialParticipant: initialParticipant) {
-            let accountUserRightsFlags: TelegramChannelAdminRightsFlags
+            let accountUserRightsFlags: TelegramChatAdminRightsFlags
             if channel.flags.contains(.isCreator) {
                 accountUserRightsFlags = maskRightsFlags
             } else if let adminRights = channel.adminRights {
@@ -358,7 +352,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 accountUserRightsFlags = []
             }
             
-            var currentRightsFlags: TelegramChannelAdminRightsFlags
+            let currentRightsFlags: TelegramChatAdminRightsFlags
             if let updatedFlags = state.updatedFlags {
                 currentRightsFlags = updatedFlags
             } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _) = initialParticipant, let adminRights = maybeAdminRights {
@@ -366,9 +360,6 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             } else {
                 currentRightsFlags = accountUserRightsFlags.subtracting(.canAddAdmins)
             }
-
-            
-            rights = currentRightsFlags
             
             if accountUserRightsFlags.contains(.canAddAdmins) {
                 addAdminsEnabled = currentRightsFlags.contains(.canAddAdmins)
@@ -378,22 +369,66 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             for right in rightsOrder {
                 if accountUserRightsFlags.contains(right) {
                     
-                    entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating))
+                    entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating))
                     index += 1
                 }
             }
-            entries.append(.description(sectionId, 50, addAdminsEnabled ? tr(L10n.channelAdminAdminAccess) : tr(L10n.channelAdminAdminRestricted)))
+            entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted))
+            descId += 1
         } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminInfo, _) = initialParticipant, let adminInfo = maybeAdminInfo {
             var index = 0
             for right in rightsOrder {
-                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup), right, adminInfo.rights.flags, adminInfo.rights.flags.contains(right), false))
+                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, adminInfo.rights.flags, adminInfo.rights.flags.contains(right), false))
                 index += 1
             }
-            entries.append(.description(sectionId, 50, tr(L10n.channelAdminCantEditRights)))
+            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights))
+            descId += 1
         }
+    } else if let group = channelView.peers[channelView.peerId] as? TelegramGroup, let admin = adminView.peers[adminView.peerId] {
+        entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence))
+
+        entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo))
+        descId += 1
+
+        let isGroup = true
+        let maskRightsFlags: TelegramChatAdminRightsFlags = .groupSpecific
+        let rightsOrder: [TelegramChatAdminRightsFlags] = [
+            .canChangeInfo,
+            .canDeleteMessages,
+            .canBanUsers,
+            .canInviteUsers,
+            .canPinMessages,
+            .canAddAdmins
+        ]
+        
+        let accountUserRightsFlags: TelegramChatAdminRightsFlags = maskRightsFlags
+        
+        let currentRightsFlags: TelegramChatAdminRightsFlags
+        if let updatedFlags = state.updatedFlags {
+            currentRightsFlags = updatedFlags
+        } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _) = initialParticipant, let adminRights = maybeAdminRights {
+            currentRightsFlags = adminRights.rights.flags.subtracting(.canAddAdmins)
+        } else {
+            currentRightsFlags = accountUserRightsFlags.subtracting(.canAddAdmins)
+        }
+        
+        var index = 0
+        for right in rightsOrder {
+            if accountUserRightsFlags.contains(right) {
+                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: group.defaultBannedRights), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating))
+                index += 1
+            }
+        }
+        
+        if accountUserRightsFlags.contains(.canAddAdmins) {
+            entries.append(.description(sectionId, descId, currentRightsFlags.contains(.canAddAdmins) ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted))
+            descId += 1
+        }
+
     }
+
     
-    return (entries, rights)
+    return entries
 }
 
 fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminEntry>], right: [AppearanceWrapperEntry<ChannelAdminEntry>], initialSize:NSSize, arguments:ChannelAdminControllerArguments) -> TableUpdateTransition {
@@ -412,13 +447,15 @@ class ChannelAdminController: ModalViewController {
     private let peerId:PeerId
     private let adminId:PeerId
     private let initialParticipant:ChannelParticipant?
-    private let updated:(TelegramChannelAdminRights) -> Void
+    private let updated:(TelegramChatAdminRights) -> Void
     private let disposable = MetaDisposable()
-    private let currentRightFlags:Atomic<TelegramChannelAdminRightsFlags> = Atomic(value: [])
-    private let stateValue = Atomic(value: ChannelAdminControllerState())
-    init(account: Account, peerId: PeerId, adminId: PeerId, initialParticipant: ChannelParticipant?, updated: @escaping (TelegramChannelAdminRights) -> Void) {
+    private let upgradedToSupergroup: (PeerId, @escaping () -> Void) -> Void
+    private var okClick: (()-> Void)?
+    
+    init(account: Account, peerId: PeerId, adminId: PeerId, initialParticipant: ChannelParticipant?, updated: @escaping (TelegramChatAdminRights) -> Void, upgradedToSupergroup: @escaping (PeerId, @escaping () -> Void) -> Void) {
         self.account = account
         self.peerId = peerId
+        self.upgradedToSupergroup = upgradedToSupergroup
         self.adminId = adminId
         self.initialParticipant = initialParticipant
         self.updated = updated
@@ -450,11 +487,16 @@ class ChannelAdminController: ModalViewController {
         let adminId = self.adminId
         let initialParticipant = self.initialParticipant
         let updated = self.updated
+        let upgradedToSupergroup = self.upgradedToSupergroup
 
-        let stateValue = self.stateValue
+        let stateValue = Atomic(value: ChannelAdminControllerState())
         let statePromise = ValuePromise(ChannelAdminControllerState(), ignoreRepeated: true)
         let updateState: ((ChannelAdminControllerState) -> ChannelAdminControllerState) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
+        }
+        
+        let dismissImpl:()-> Void = { [weak self] in
+            self?.close()
         }
         
         let actionsDisposable = DisposableSet()
@@ -476,18 +518,27 @@ class ChannelAdminController: ModalViewController {
                 
                 return current.withUpdatedUpdatedFlags(updated)
             }
-        }, dismissAdmin: { [weak self] in
-            if let strongSelf = self {
-                updateState { current in
-                    return current.withUpdatedUpdating(true)
-                }
-                updateRightsDisposable.set((updatePeerAdminRights(account: account, peerId: peerId, adminId: adminId, rights: TelegramChannelAdminRights(flags: [])) |> deliverOnMainQueue).start(error: { _ in
+        }, dismissAdmin: {
+            updateState { current in
+                return current.withUpdatedUpdating(true)
+            }
+            if peerId.namespace == Namespaces.Peer.CloudGroup {
+                updateRightsDisposable.set((removeGroupAdmin(account: account, peerId: peerId, adminId: adminId)
+                    |> deliverOnMainQueue).start(error: { _ in
+                    }, completed: {
+                        updated(TelegramChatAdminRights(flags: []))
+                        dismissImpl()
+                    }))
+            } else {
+                updateRightsDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: [])) |> deliverOnMainQueue).start(error: { _ in
                     
-                }, completed: { [weak strongSelf] in
-                    updated(TelegramChannelAdminRights(flags: []))
-                    strongSelf?.close()
+                }, completed: {
+                    updated(TelegramChatAdminRights(flags: []))
+                    dismissImpl()
                 }))
             }
+        }, cantEditError: { [weak self] in
+            self?.show(toaster: ControllerToaster(text: L10n.channelAdminCantEdit))
         })
         
         self.arguments = arguments
@@ -499,7 +550,7 @@ class ChannelAdminController: ModalViewController {
         
         let signal = combineLatest(statePromise.get(), combinedView, appearanceSignal)
             |> deliverOn(prepareQueue)
-            |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool) in
+            |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool, channelView: PeerView) in
                 let channelView = combinedView.views[.peer(peerId: peerId, components: .all)] as! PeerView
                 let adminView = combinedView.views[.peer(peerId: adminId, components: .all)] as! PeerView
                 let canEdit = canEditAdminRights(accountPeerId: account.peerId, channelView: channelView, initialParticipant: initialParticipant)
@@ -525,9 +576,9 @@ class ChannelAdminController: ModalViewController {
                     }
                 }
                 let result = channelAdminControllerEntries(state: state, accountPeerId: account.peerId, channelView: channelView, adminView: adminView, initialParticipant: initialParticipant)
-                let entries = result.0.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-                _ = stateValue.modify({$0.withUpdatedUpdatedFlags(result.1).withUpdatedEditable(canEdit)})
-                return (transition: prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), canEdit: canEdit, canDismiss: canDismiss)
+                let entries = result.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                _ = stateValue.modify({$0.withUpdatedEditable(canEdit)})
+                return (transition: prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), canEdit: canEdit, canDismiss: canDismiss, channelView: channelView)
                 
         } |> afterDisposed {
             actionsDisposable.dispose()
@@ -541,17 +592,176 @@ class ChannelAdminController: ModalViewController {
             self?.updateSize(updatedSize.swap(true))
             
             self?.modal?.interactions?.updateDone { button in
-                button.set(text: tr(L10n.modalOK), for: .Normal)
-                let flags = (stateValue.modify({$0}).updatedFlags ?? []).subtracting(.canChangeInviteLink)
-                button.isEnabled = !flags.isEmpty
-                if !values.canEdit {
-                    button.isEnabled = true
-                    button.set(text: tr(L10n.navigationDone), for: .Normal)
-                }
+                
+                button.isEnabled = values.canEdit
+                button.set(text: L10n.navigationDone, for: .Normal)
             }
             self?.modal?.interactions?.updateCancel { button in
-                button.set(text: values.canDismiss ? tr(L10n.channelAdminDismiss) : "", for: .Normal)
+                button.set(text: values.canDismiss ? L10n.channelAdminDismiss : "", for: .Normal)
                 button.set(color: values.canDismiss ? theme.colors.redUI : theme.colors.blueText, for: .Normal)
+            }
+            
+            self?.okClick = {
+                if let channel = values.channelView.peers[values.channelView.peerId] as? TelegramChannel {
+                    if let initialParticipant = initialParticipant {
+                        var updateFlags: TelegramChatAdminRightsFlags?
+                        updateState { current in
+                            updateFlags = current.updatedFlags
+                            if let _ = updateFlags {
+                                return current.withUpdatedUpdating(true)
+                            } else {
+                                return current
+                            }
+                        }
+                        
+                        if updateFlags == nil {
+                            switch initialParticipant {
+                            case .creator:
+                                break
+                            case let .member(member):
+                                if member.adminInfo?.rights == nil {
+                                    let maskRightsFlags: TelegramChatAdminRightsFlags
+                                    switch channel.info {
+                                    case .broadcast:
+                                        maskRightsFlags = .broadcastSpecific
+                                    case .group:
+                                        maskRightsFlags = .groupSpecific
+                                    }
+                                    
+                                    if channel.flags.contains(.isCreator) {
+                                        updateFlags = maskRightsFlags.subtracting(.canAddAdmins)
+                                    } else if let adminRights = channel.adminRights {
+                                        updateFlags = maskRightsFlags.intersection(adminRights.flags).subtracting(.canAddAdmins)
+                                    } else {
+                                        updateFlags = []
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if let updateFlags = updateFlags {
+                            updateState { current in
+                                return current.withUpdatedUpdating(true)
+                            }
+                            updateRightsDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue).start(error: { _ in
+                                
+                            }, completed: {
+                                updated(TelegramChatAdminRights(flags: updateFlags))
+                                dismissImpl()
+                            }))
+                        } else {
+                            dismissImpl()
+                        }
+                    } else if values.canEdit {
+                        var updateFlags: TelegramChatAdminRightsFlags?
+                        updateState { current in
+                            updateFlags = current.updatedFlags
+                            return current.withUpdatedUpdating(true)
+                        }
+                        
+                        if updateFlags == nil {
+                            let maskRightsFlags: TelegramChatAdminRightsFlags
+                            switch channel.info {
+                            case .broadcast:
+                                maskRightsFlags = .broadcastSpecific
+                            case .group:
+                                maskRightsFlags = .groupSpecific
+                            }
+                            
+                            if channel.flags.contains(.isCreator) {
+                                updateFlags = maskRightsFlags.subtracting(.canAddAdmins)
+                            } else if let adminRights = channel.adminRights {
+                                updateFlags = maskRightsFlags.intersection(adminRights.flags).subtracting(.canAddAdmins)
+                            } else {
+                                updateFlags = []
+                            }
+                        }
+                        
+                        if let updateFlags = updateFlags {
+                            updateState { current in
+                                return current.withUpdatedUpdating(true)
+                            }
+                            updateRightsDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue).start(error: { _ in
+                                
+                            }, completed: {
+                                updated(TelegramChatAdminRights(flags: updateFlags))
+                                dismissImpl()
+                            }))
+                        }
+                    }
+                } else if let _ = values.channelView.peers[values.channelView.peerId] as? TelegramGroup {
+                    var updateFlags: TelegramChatAdminRightsFlags?
+                    updateState { current in
+                        updateFlags = current.updatedFlags
+                        return current
+                    }
+                    
+                    let maskRightsFlags: TelegramChatAdminRightsFlags = .groupSpecific
+                    let defaultFlags = maskRightsFlags.subtracting(.canAddAdmins)
+                    
+                    if updateFlags == nil {
+                        updateFlags = defaultFlags
+                    }
+                    
+                    if let updateFlags = updateFlags {
+                        if initialParticipant?.adminInfo == nil && updateFlags == defaultFlags {
+                            updateState { current in
+                                return current.withUpdatedUpdating(true)
+                            }
+                            updateRightsDisposable.set((addGroupAdmin(account: account, peerId: peerId, adminId: adminId)
+                                |> deliverOnMainQueue).start(completed: {
+                                    dismissImpl()
+                                }))
+                        } else if updateFlags != defaultFlags {
+                            let signal = convertGroupToSupergroup(account: account, peerId: peerId)
+                                |> map(Optional.init)
+                                |> `catch` { _ -> Signal<PeerId?, NoError> in
+                                    return .single(nil)
+                                }
+                                |> mapToSignal { upgradedPeerId -> Signal<PeerId?, NoError> in
+                                    guard let upgradedPeerId = upgradedPeerId else {
+                                        return .single(nil)
+                                    }
+                                    
+                                    return  account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: upgradedPeerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags))
+                                        |> mapToSignal { _ -> Signal<PeerId?, NoError> in
+                                            return .complete()
+                                        }
+                                        |> then(.single(upgradedPeerId))
+                                }
+                                |> deliverOnMainQueue
+                            
+                            updateState { current in
+                                return current.withUpdatedUpdating(true)
+                            }
+                            
+                            
+                            updateRightsDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { upgradedPeerId in
+                                if let upgradedPeerId = upgradedPeerId {
+                                    let (disposable, _) = account.context.peerChannelMemberCategoriesContextsManager.admins(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: upgradedPeerId, updated: { state in
+                                       
+                                        if case .ready = state.loadingState {
+                                            upgradedToSupergroup(upgradedPeerId, {
+                                                
+                                            })
+                                            dismissImpl()
+                                        }  
+                                    })
+                                    actionsDisposable.add(disposable)
+                                    
+                                }
+                            }, error: { _ in
+                                updateState { current in
+                                    return current.withUpdatedUpdating(false)
+                                }
+                            }))
+                        } else {
+                            dismissImpl()
+                        }
+                    } else {
+                        dismissImpl()
+                    }
+                }
             }
         }))
         
@@ -574,48 +784,24 @@ class ChannelAdminController: ModalViewController {
         super.close()
     }
     
-    func updateRights(_ updateFlags: TelegramChannelAdminRightsFlags) {
-        close()
-        
-        if !stateValue.modify({$0}).editable {
-            return
-        }
-        
-        let updated = self.updated
-        
-        _ = showModalProgress(signal: updatePeerAdminRights(account: account, peerId: peerId, adminId: adminId, rights: TelegramChannelAdminRights(flags: updateFlags)) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-            alert(for: mainWindow, info: tr(L10n.channelAdminsAddAdminError))
-        }, completed: {
-            updated(TelegramChannelAdminRights(flags: updateFlags))
-        })
-    
-    }
-    func addAdmin(_ updateFlags: TelegramChannelAdminRightsFlags) {
-        close()
-    
-        _ = showModalProgress(signal: addPeerAdmin(account: account, peerId: peerId, adminId: adminId, adminRightsFlags: updateFlags) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-            
-        }, completed: { [weak self] in
-            self?.updated(TelegramChannelAdminRights(flags: updateFlags))
-        })
-        
-    }
+//    func updateRights(_ updateFlags: TelegramChatAdminRightsFlags) {
+//        close()
+//
+//
+//
+//        _ = showModalProgress(signal: account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+//
+//        }, completed: { [weak self] in
+//            self?.updated(TelegramChatAdminRights(flags: updateFlags))
+//        })
+//
+//    }
+
     
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
-            if let _ = self?.initialParticipant {
-                if let updatedFlags = self?.stateValue.modify({$0}).updatedFlags {
-                    self?.updateRights(updatedFlags)
-                } else {
-                    self?.close()
-                }
-            } else {
-                if let updatedFlags = self?.stateValue.modify({$0}).updatedFlags {
-                    self?.addAdmin(updatedFlags)
-                }
-            }
-            
-        }, cancelTitle: tr(L10n.modalCancel), cancel: { [weak self] in
+             self?.okClick?()
+        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
             self?.arguments?.dismissAdmin()
         }, height: 40)
     }

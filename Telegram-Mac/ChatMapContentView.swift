@@ -45,7 +45,7 @@ class ChatMapContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         var mediaUpdated = true
         iconView.image = theme.icons.chatMapPin
         iconView.sizeToFit()

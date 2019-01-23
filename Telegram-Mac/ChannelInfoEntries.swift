@@ -255,7 +255,9 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
             
         } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-            return  updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource))
+            return  updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                return mapResourceToAvatarSizes(postbox: account.postbox, resource: resource, representations: representations)
+            })
         }
                 
 
@@ -521,9 +523,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 5
         case .admins:
             return 6
-        case .blocked:
-            return 7
         case .members:
+            return 7
+        case .blocked:
             return 8
         case .link:
             return 9
@@ -608,62 +610,73 @@ enum ChannelInfoEntry: PeerInfoEntry {
             }, hashtag: arguments.account.context.globalSearch)
         case let .userName(_, value):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(L10n.peerInfoSharelink), text: link, account: arguments.account, isTextSelectable:false, callback:{
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, account: arguments.account, isTextSelectable:false, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.account, link: link)), for: mainWindow)
             }, selectFullWord: true)
         case .sharedMedia:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSharedMedia), type: .none, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .none, action: { () in
                 arguments.sharedMedia()
             })
         case let .notifications(_, settings):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoNotifications), type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? false)), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? false)), action: {
                arguments.toggleNotifications()
             })
         case .report:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoReport), type: .none, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoReport, type: .none, action: { () in
                 arguments.report()
             })
         case let .members(_, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSubscribers, type: .context(count != nil ? "\(count!)" : ""), action: { () in
+            //, icon: theme.icons.peerInfoMembers
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSubscribers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), action: { () in
                 arguments.members()
             })
         case let .admins(_, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoAdmins), type: .context(count != nil ? "\(count!)" : ""), action: { () in
+            //, icon: theme.icons.peerInfoAdmins
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), action: { () in
                 arguments.admins()
             })
         case let .blocked(_, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoBlackList), type: .context(count != nil ? "\(count!)" : ""), action: { () in
+            //, icon: theme.icons.peerInfoBanned
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), action: { () in
                 arguments.blocked()
             })
         case let .link(_, addressName: addressName):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoChannelType), type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), action: { () in
                 arguments.visibilitySetup()
             })
         case .setPhoto:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSetChannelPhoto), nameStyle: blueActionButton, type: .none, action: {
-                filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetChannelPhoto, nameStyle: blueActionButton, type: .none, action: {
+                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                        _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { path in
-                            arguments.updatePhoto(path)
+                        _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { path in
+                            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                            showModal(with: controller, for: mainWindow)
+                            _ = controller.result.start(next: { url, _ in
+                                arguments.updatePhoto(url.path)
+                            })
+                            
+                            controller.onClose = {
+                                removeFile(at: path)
+                            }
                         })
                     }
                 })
             })
         case let .aboutInput(_, text):
-            return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: tr(L10n.peerInfoAboutPlaceholder), text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
+            return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: L10n.peerInfoAboutPlaceholder, text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
                 arguments.updateEditingDescriptionText(updatedText)
             }, font: .normal(.title))
         case .aboutDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoSetAboutDescription))
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSetAboutDescription)
         case let .signMessages(_, sign):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: tr(L10n.peerInfoSignMessages), type: .switchable(sign), action: { 
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSignMessages, type: .switchable(sign), action: {
                 arguments.toggleSignatures(!sign)
             })
         case .signDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: tr(L10n.peerInfoSignMessagesDesc))
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSignMessagesDesc)
         case let .leave(_, isCreator):
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? tr(L10n.peerInfoDeleteChannel) : tr(L10n.peerInfoLeaveChannel), nameStyle:redActionButton, type: .none, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? L10n.peerInfoDeleteChannel : L10n.peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, action: { () in
                 arguments.delete()
             })
         case .section(_):
@@ -688,7 +701,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
     if let channel = peerViewMainPeer(view) as? TelegramChannel {
         
         if let editingState = state.editingState {
-            if channel.hasAdminRights(.canChangeInfo) {
+            if channel.hasPermission(.changeInfo) {
                 entries.append(ChannelInfoEntry.setPhoto(sectionId:sectionId))
                 entries.append(ChannelInfoEntry.section(sectionId))
                 sectionId += 1
@@ -697,7 +710,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 entries.append(ChannelInfoEntry.link(sectionId:sectionId, addressName: channel.username ?? ""))
             }
             
-            if channel.hasAdminRights(.canChangeInfo) {
+            if channel.hasPermission(.changeInfo) {
                 entries.append(ChannelInfoEntry.aboutInput(sectionId:sectionId, description: editingState.editingDescriptionText))
                 entries.append(ChannelInfoEntry.aboutDesc(sectionId: sectionId))
                 
@@ -713,7 +726,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 messagesShouldHaveSignatures = false
             }
             
-            if channel.hasAdminRights(.canChangeInfo) {
+            if channel.hasPermission(.changeInfo) {
                 entries.append(ChannelInfoEntry.signMessages(sectionId: sectionId, sign: messagesShouldHaveSignatures))
                 entries.append(ChannelInfoEntry.signDesc(sectionId: sectionId))
                 
@@ -741,7 +754,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 sectionId += 1
             }
             
-            if channel.groupAccess.canManageGroup {
+            if channel.groupAccess.canEditGroupInfo {
                 var membersCount:Int32? = nil
                 var adminsCount:Int32? = nil
                 var blockedCount:Int32? = nil

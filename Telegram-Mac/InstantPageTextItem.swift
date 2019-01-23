@@ -66,6 +66,9 @@ final class InstantPageTextLine {
     let isRTL: Bool
     let attributedString: NSAttributedString
     
+    let separatesTiles: Bool = false
+
+    
     var selectRect: NSRect = NSZeroRect
     
     init(line: CTLine, attributedString: NSAttributedString, range: NSRange, frame: CGRect, strikethroughItems: [InstantPageTextStrikethroughItem], markedItems: [InstantPageTextMarkedItem], imageItems: [InstantPageTextImageItem], anchorItems: [InstantPageTextAnchorItem], isRTL: Bool) {
@@ -82,37 +85,59 @@ final class InstantPageTextLine {
     }
     
     func linkAt(point: NSPoint) -> InstantPageUrlItem? {
-        let index: CFIndex = CTLineGetStringIndexForPosition(line, point)
-        if index >= 0 && index < attributedString.length {
-            return attributedString.attribute(.URL, at: index, effectiveRange: nil) as? InstantPageUrlItem
+        if point.x >= 0 && point.x <= frame.width {
+            let index: CFIndex = CTLineGetStringIndexForPosition(line, point)
+            if index >= 0 && index < attributedString.length {
+                return attributedString.attribute(.URL, at: index, effectiveRange: nil) as? InstantPageUrlItem
+            }
         }
+        
         return nil
     }
     
     func selectText(in rect: NSRect, boundingWidth: CGFloat, alignment: NSTextAlignment) -> NSAttributedString {
         
+        var rect = rect
+        if isRTL {
+            rect.origin.x -= (boundingWidth - frame.width)
+        }
         
         let startIndex: CFIndex = CTLineGetStringIndexForPosition(line, NSMakePoint(rect.minX, 0))
         let endIndex: CFIndex = CTLineGetStringIndexForPosition(line, NSMakePoint(rect.maxX, 0))
         
+        
+    
         var startOffset = CTLineGetOffsetForStringIndex(line, startIndex, nil)
         var endOffset = CTLineGetOffsetForStringIndex(line, endIndex, nil)
-
+        
         switch alignment {
         case .center:
             let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
+        case .right:
+            startOffset = boundingWidth - startOffset
+            endOffset =  boundingWidth - endOffset
         default:
             break
         }
         
-        selectRect = NSMakeRect(startOffset, frame.minY - 2, endOffset - startOffset, frame.height + 6)
+        var selectRect = NSMakeRect(startOffset, frame.minY - 2, endOffset - startOffset, frame.height + 6)
+        
+        if isRTL {
+            selectRect.origin.x += (boundingWidth - frame.width)
+        }
+        
+        self.selectRect = selectRect
         return attributedString.attributedSubstring(from: NSMakeRange(min(startIndex, endIndex), abs(endIndex - startIndex)))
     }
     
     func selectWord(in point: NSPoint, boundingWidth: CGFloat, alignment: NSTextAlignment, rect: NSRect) -> NSAttributedString {
         
+        var point = point
+        if isRTL {
+             point.x -= (boundingWidth - frame.width)
+        }
         
         let startIndex: CFIndex = CTLineGetStringIndexForPosition(line, point)
         
@@ -169,11 +194,22 @@ final class InstantPageTextLine {
             let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
+        case .right:
+            startOffset = boundingWidth - startOffset
+            endOffset =  boundingWidth - endOffset
         default:
             break
         }
+     
         
         selectRect = NSMakeRect(startOffset, frame.minY - 2, endOffset - startOffset, frame.height + 6)
+        
+        
+        
+        if isRTL {
+            selectRect.origin.x += (boundingWidth - frame.width)
+        }
+        
         return attributedString.attributedSubstring(from: range)
     }
     
@@ -205,7 +241,7 @@ final class InstantPageTextItem: InstantPageItem {
     let alignment: NSTextAlignment
     let medias: [InstantPageMedia] = []
     let anchors: [String: (Int, Bool)]
-    let wantsNode: Bool = false
+    let wantsView: Bool = false
     let separatesTiles: Bool = false
     var selectable: Bool = true
     
@@ -236,15 +272,17 @@ final class InstantPageTextItem: InstantPageItem {
     
     func linkAt(point: NSPoint) -> InstantPageUrlItem? {
         for line in lines {
-            var point = NSMakePoint(min(max(point.x, 0), frame.width), point.y)
+            var point = NSMakePoint(point.x, point.y)
             switch alignment {
             case .center:
                 point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
+            case .right:
+                point.x = frame.width - point.x
             default:
                 break
             }
             
-            if line.frame.minY < point.y && line.frame.maxY > point.y {
+            if NSPointInRect(point, line.frame) {
                 return line.linkAt(point: NSMakePoint(point.x, 0))
             }
         }
@@ -317,11 +355,11 @@ final class InstantPageTextItem: InstantPageItem {
         return false
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return nil
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         return false
     }
     
@@ -754,7 +792,7 @@ func layoutTextItemWithString(_ string: NSAttributedString, boundingWidth: CGFlo
             let lineFrame = frameForLine(line, boundingWidth: boundingWidth, alignment: alignment)
             for imageItem in line.imageItems {
                 if let image = media[imageItem.id] as? TelegramMediaFile {
-                    let item = InstantPageImageItem(frame: imageItem.frame.offsetBy(dx: lineFrame.minX + offset.x, dy: offset.y), webPage: webpage, media: InstantPageMedia(index: -1, media: image, webpage: webpage, url: nil, caption: nil, credit: nil), interactive: true, roundCorners: false, fit: false)
+                    let item = InstantPageImageItem(frame: imageItem.frame.offsetBy(dx: lineFrame.minX + offset.x, dy: offset.y), webPage: webpage, media: InstantPageMedia(index: -1, media: image, webpage: webpage, url: nil, caption: nil, credit: nil), interactive: false, roundCorners: false, fit: false)
                     additionalItems.append(item)
                     
                     if item.frame.minY < topInset {

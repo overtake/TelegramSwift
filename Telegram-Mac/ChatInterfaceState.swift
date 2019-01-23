@@ -48,7 +48,7 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
     case uid(Range<Int>, Int32)
     case url(Range<Int>, String)
     init(decoder: PostboxDecoder) {
-        let range = Range<Int>(Int(decoder.decodeInt32ForKey("start", orElse: 0)) ..< Int(decoder.decodeInt32ForKey("end", orElse: 0)))
+        let range = Int(decoder.decodeInt32ForKey("start", orElse: 0)) ..< Int(decoder.decodeInt32ForKey("end", orElse: 0)) // Range()
         
         let type: Int32 = decoder.decodeInt32ForKey("_rawValue", orElse: 0)
         switch type {
@@ -574,6 +574,11 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     
     var associatedMessageIds: [MessageId] {
         return []
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     

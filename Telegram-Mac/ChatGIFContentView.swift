@@ -146,7 +146,7 @@ class ChatGIFContentView: ChatMediaContentView {
         player.set(data: nil)
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil) {
+    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         let mediaUpdated = self.media == nil || !self.media!.isSemanticallyEqual(to: media)
         
         
@@ -209,7 +209,7 @@ class ChatGIFContentView: ChatMediaContentView {
                         }
                     } |> deliverOnMainQueue
             } else {
-                updatedStatusSignal = chatMessageFileStatus(account: account, file: media)
+                updatedStatusSignal = chatMessageFileStatus(account: account, file: media, approximateSynchronousValue: approximateSynchronousValue)
             }
             
             if let updatedStatusSignal = updatedStatusSignal {

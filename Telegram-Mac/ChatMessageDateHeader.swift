@@ -59,7 +59,7 @@ class ChatDateStickItem : TableStickItem {
         
         let text: String
         if timeinfo.tm_year == timeinfoNow.tm_year && timeinfo.tm_yday == timeinfoNow.tm_yday {
-            text = tr(L10n.dateToday)
+            text = L10n.dateToday
         } else {
             let dateFormatter = DateFormatter()
             dateFormatter.calendar = Calendar.autoupdatingCurrent
@@ -72,7 +72,7 @@ class ChatDateStickItem : TableStickItem {
 
         }
         
-        self.layout = TextViewLayout(.initialize(string: text, color: theme.colors.chatDateText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+        self.layout = TextViewLayout(.initialize(string: text, color: theme.chatServiceItemTextColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
 
         
         super.init(initialSize)
@@ -102,7 +102,7 @@ class ChatDateStickItem : TableStickItem {
     }
     
     override var height: CGFloat {
-        return 50
+        return 30
     }
     
     override func viewClass() -> AnyClass {
@@ -185,7 +185,7 @@ class ChatDateStickView : TableStickView {
         super.updateColors()
         
 
-        textView.backgroundColor = theme.colors.chatDateActive
+        textView.backgroundColor = theme.chatServiceItemColor
         
         //containerView.layer?.borderColor = theme.colors.border.cgColor
        // containerView.layer?.borderWidth = header || (theme.wallpaper != .none) ? 1.0 : 0

@@ -21,11 +21,12 @@ class PeerListContainerView : View {
             addSubview(tableView)
         }
     }
-    var searchView:SearchView = SearchView(frame:NSZeroRect)
-    var compose:ImageButton = ImageButton()
+    let searchView:SearchView = SearchView(frame:NSZeroRect)
+    let compose:ImageButton = ImageButton()
     fileprivate let proxyButton:ImageButton = ImageButton()
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
     private var searchState: SearchFieldState = .None
+    
     var mode: PeerListMode = .plain {
         didSet {
             switch mode {
@@ -104,24 +105,35 @@ class PeerListContainerView : View {
     override func layout() {
         super.layout()
         
+        let offset: CGFloat
+        switch theme.backgroundMode {
+        case .background:
+            offset = 50
+        case .tiled:
+            offset = 50
+        default:
+            offset = 49
+        }
+        
         searchView.setFrameSize(NSMakeSize(searchState == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (!mode.isFeedChannels ? 36 + compose.frame.width : 20) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
-        tableView.setFrameSize(frame.width, frame.height - 49)
+        tableView.setFrameSize(frame.width, frame.height - offset)
         
         searchView.isHidden = frame.width < 200
         if searchView.isHidden {
             compose.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - compose.frame.height)/2.0))
             proxyButton.setFrameOrigin(-proxyButton.frame.width, 0)
         } else {
-            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - compose.frame.height)/2.0))
-            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - proxyButton.frame.height)/2.0))
+            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - compose.frame.height)/2.0))
+            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
         }
         searchView.setFrameOrigin(10, floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - searchView.frame.height)/2.0))
-        tableView.setFrameOrigin(0, 49)
+        tableView.setFrameOrigin(0, offset)
         
         proxyConnecting.centerX()
         proxyConnecting.centerY(addition: -(backingScaleFactor == 2.0 ? 0.5 : 0))
         self.needsDisplay = true
     }
+    
 }
 
 
@@ -211,7 +223,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         if followGlobal, mode.groupId == nil {
             actionsDisposable.add((globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
                 guard let `self` = self else {return}
-                self.genericView.tableView.changeSelection(stableId: location)
+                self.changeSelection(location)
                 if location == nil {
                     if !self.genericView.searchView.isEmpty {
                         _ = self.window?.makeFirstResponder(self.genericView.searchView.input)
@@ -341,6 +353,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         
     }
     
+    func changeSelection(_ location: ChatLocation?) {
+        self.genericView.tableView.changeSelection(stableId: location)
+    }
+    
     private func showSearchController(animated: Bool) {
         
         if searchController == nil {
@@ -373,6 +389,13 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         }
         
        
+    }
+    
+    override func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
+        genericView.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current), removeOnCompletion: false)
+        return { [weak genericView] in
+            genericView?.layer?.removeAllAnimations()
+        }
     }
     
     private func hideSearchController(animated: Bool) {

@@ -63,8 +63,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             }
             
         } |> mapToSignal { size, orientation -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments, ImageOrientation?), NoError> in
-            return chatMessagePhoto(account: account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale)
-                |> deliverOn(account.graphicsThreadPool)
+            return chatMessagePhoto(account: account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, synchronousLoad: true)
                 |> map { transform in
                     return (transform, TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()), orientation)
                 }

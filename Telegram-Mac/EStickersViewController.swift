@@ -295,15 +295,10 @@ class StickersControllerView : View {
     }
     
     func updateRestricion(_ peer: Peer?) {
-        if let peer = peer as? TelegramChannel {
-            if peer.stickersRestricted, let bannedRights = peer.bannedRights {
-                restrictedView?.removeFromSuperview()
-                restrictedView = RestrictionWrappedView(bannedRights.untilDate != .max ? tr(L10n.channelPersmissionDeniedSendStickersUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendStickersForever))
-                addSubview(restrictedView!)
-            } else {
-                restrictedView?.removeFromSuperview()
-                restrictedView = nil
-            }
+        if let peer = peer, let text = permissionText(from: peer, for: .banSendStickers) {
+            restrictedView?.removeFromSuperview()
+            restrictedView = RestrictionWrappedView(text)
+            addSubview(restrictedView!)
         } else {
             restrictedView?.removeFromSuperview()
             restrictedView = nil
@@ -432,7 +427,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let peer = value.peer, let oldPeer = oldValue.peer {
-            if peer.stickersRestricted != oldPeer.stickersRestricted {
+            if permissionText(from: peer, for: .banSendStickers) != permissionText(from: oldPeer, for: .banSendStickers) {
                 genericView.updateRestricion(peer)
             }
         }

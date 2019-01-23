@@ -51,6 +51,7 @@ private class ContextClueRowView : TableRowView {
     private let emojiTextView: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         clueTextView.userInteractionEnabled = false
         clueTextView.isSelectable = false
         emojiTextView.userInteractionEnabled = false

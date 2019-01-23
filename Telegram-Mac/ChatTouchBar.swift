@@ -88,20 +88,22 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
         switch presentation.state {
         case .normal:
           //  items.append(.characterPicker)
-            if !presentation.mediaRestricted(.stickers) {
+            if let peer = presentation.peer, permissionText(from: peer, for: .banSendStickers) == nil {
                 items.append(.chatStickersAndEmojiPicker)
                // items.append(.fixedSpaceSmall)
             }
            
             
-            if !presentation.mediaRestricted(.media) {
+            if let peer = presentation.peer, permissionText(from: peer, for: .banSendMedia) == nil {
                // items.append(.flexibleSpace)
                 var appendAttachment: Bool = true
                 if let result = presentation.inputQueryResult {
                     switch result {
                     case .stickers:
-                        items.append(.chatSuggestStickers)
-                        appendAttachment = false
+                        if permissionText(from: peer, for: .banSendStickers) == nil  {
+                            items.append(.chatSuggestStickers)
+                            appendAttachment = false
+                        }
                     default:
                         break
                     }

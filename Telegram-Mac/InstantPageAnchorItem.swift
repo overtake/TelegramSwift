@@ -13,11 +13,12 @@ final class InstantPageAnchorItem: InstantPageItem {
     var frame: CGRect
 
     let medias: [InstantPageMedia] = []
-    let wantsNode: Bool = false
+    let wantsView: Bool = false
     let hasLinks: Bool = false
     let isInteractive: Bool = false
-    
-    private let anchor: String
+    let separatesTiles: Bool = false
+
+    let anchor: String
     
     init(frame: CGRect, anchor: String) {
         self.anchor = anchor
@@ -32,11 +33,11 @@ final class InstantPageAnchorItem: InstantPageItem {
         return self.anchor == anchor
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         return false
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return nil
     }
     

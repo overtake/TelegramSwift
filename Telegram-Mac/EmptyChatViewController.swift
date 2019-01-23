@@ -19,17 +19,32 @@ class EmptyChatView : View {
         addSubview(containerView)
         containerView.addSubview(imageView)
         containerView.addSubview(label)
+        label.userInteractionEnabled = false
+        label.isSelectable = false
         updateLocalizationAndTheme()
     }
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         containerView.backgroundColor = theme.colors.background
-        self.background = theme.colors.background
+        
+        //theme.chatServiceItemColor
+        
+        self.background = .clear
         imageView.image = theme.icons.chatEmpty
+        switch theme.backgroundMode {
+        case .plain:
+            imageView.isHidden = false
+        default:
+            imageView.isHidden = true
+        }
+        
+        containerView.backgroundColor = imageView.isHidden ? .clear : theme.colors.background
+
+        
         imageView.sizeToFit()
-        label.backgroundColor = theme.colors.background
-        label.update(TextViewLayout(.initialize(string: tr(L10n.emptyPeerDescription), color: theme.colors.grayText, font: .normal(.header)), maximumNumberOfLines: 1))
+        label.backgroundColor = imageView.isHidden ? theme.chatServiceItemColor : theme.colors.background
+        label.update(TextViewLayout(.initialize(string: L10n.emptyPeerDescription, color: imageView.isHidden ? .white : theme.colors.grayText, font: .medium(imageView.isHidden ? .text : .header)), maximumNumberOfLines: 1, alignment: .center))
         needsLayout = true
     }
     
@@ -41,10 +56,26 @@ class EmptyChatView : View {
         super.layout()
         label.layout?.measure(width: frame.size.width - 20)
         label.update(label.layout)
-        containerView.setFrameSize(frame.size.width - 20, imageView.frame.size.height + label.frame.size.height + 30)
-        imageView.centerX()
-        containerView.center()
-        label.centerX(y: imageView.frame.maxY + 30)
+        
+        if imageView.isHidden {
+            
+            label.setFrameSize(label.frame.width + 16, label.frame.height + 6)
+            
+            containerView.setFrameSize(label.frame.width + 20, 24)
+            containerView.center()
+            label.center()
+            label.layer?.cornerRadius = label.frame.height / 2
+            containerView.layer?.cornerRadius = containerView.frame.height / 2
+        } else {
+            containerView.setFrameSize(max(imageView.frame.width, label.frame.width) + 40, imageView.frame.size.height + label.frame.size.height + 70)
+            imageView.centerX(y: 20)
+            containerView.center()
+            label.centerX(y: imageView.frame.maxY + 30)
+            containerView.layer?.cornerRadius = 0
+        }
+        
+        
+       
     }
 }
 
@@ -84,6 +115,14 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     
     override func escapeKeyAction() -> KeyHandlerResult {
         return .rejected
+    }
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        updateBackgroundColor(theme.backgroundMode)
+    }
+    
+    override public var isOpaque: Bool {
+        return false
     }
     
     override func viewDidAppear(_ animated: Bool) {

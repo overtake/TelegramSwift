@@ -97,15 +97,10 @@ final class TableContainer : View {
     }
     
     func updateRestricion(_ peer: Peer?) {
-        if let peer = peer as? TelegramChannel {
-            if peer.stickersRestricted, let bannedRights = peer.bannedRights {
-                restrictedView?.removeFromSuperview()
-                restrictedView = RestrictionWrappedView(bannedRights.untilDate != .max ? tr(L10n.channelPersmissionDeniedSendGifsUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendGifsForever))
-                addSubview(restrictedView!)
-            } else {
-                restrictedView?.removeFromSuperview()
-                restrictedView = nil
-            }
+        if let peer = peer, let text = permissionText(from: peer, for: .banSendGifs) {
+            restrictedView?.removeFromSuperview()
+            restrictedView = RestrictionWrappedView(text)
+            addSubview(restrictedView!)
         } else {
             restrictedView?.removeFromSuperview()
             restrictedView = nil
@@ -192,7 +187,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let peer = value.peer, let oldPeer = oldValue.peer {
-            if peer.stickersRestricted != oldPeer.stickersRestricted {
+            if permissionText(from: peer, for: .banSendGifs) != permissionText(from: oldPeer, for: .banSendGifs) {
                 genericView.updateRestricion(peer)
             }
         }

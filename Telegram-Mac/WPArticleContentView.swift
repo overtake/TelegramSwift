@@ -94,6 +94,8 @@ class WPArticleContentView: WPContentView {
                 showModal(with: WebpageModalController(content:content,account:layout.account), for: window)
             } else if layout.isGalleryAssemble {
                 showChatGallery(account: layout.account, message: layout.parent, layout.table, type: .alone)
+            } else if let wallpaper = layout.wallpaper {
+                execute(inapp: wallpaper)
             } else if !content.url.isEmpty {
                 execute(inapp: .external(link: content.url, false))
             }
@@ -102,14 +104,22 @@ class WPArticleContentView: WPContentView {
     }
     
     func fetch() {
-        if let layout = content as? WPArticleLayout, let image = layout.content.image {
-            fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
+        if let layout = content as? WPArticleLayout {
+            if let _ = layout.wallpaper, let file = layout.content.file {
+                fetchDisposable.set(fetchedMediaResource(postbox: layout.account.postbox, reference: MediaResourceReference.wallpaper(resource: file.resource)).start())
+            } else if let image = layout.content.image {
+                fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
+            }
         }
     }
     
     func cancelFetching() {
-         if let layout = content as? WPArticleLayout, let image = layout.content.image {
-            chatMessagePhotoCancelInteractiveFetch(account: layout.account, photo: image)
+         if let layout = content as? WPArticleLayout {
+            if let _ = layout.wallpaper, let file = layout.content.file {
+                fileCancelInteractiveFetch(account: layout.account, file: file)
+            } else if let image = layout.content.image {
+                chatMessagePhotoCancelInteractiveFetch(account: layout.account, photo: image)
+            }
             fetchDisposable.set(nil)
         }
     }
@@ -133,6 +143,8 @@ class WPArticleContentView: WPContentView {
     override func update(with layout: WPLayout) {
         let newLayout = self.content === layout
         if let layout = layout as? WPArticleLayout {
+            
+            let synchronousLoad = layout.approximateSynchronousValue
             
             if let groupLayout = layout.groupLayout {
                 addSubview(groupedContentView)
@@ -175,7 +187,7 @@ class WPArticleContentView: WPContentView {
                     let positionFlags: LayoutPositionFlags = groupLayout.position(at: i)
 
                     
-                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: layout.parent.withUpdatedGroupingKey(groupLayout.messages[i].groupingKey), table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags)
+                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: layout.parent.withUpdatedGroupingKey(groupLayout.messages[i].groupingKey), table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags, approximateSynchronousValue: synchronousLoad)
                     
                     groupedContents[i].change(pos: groupLayout.frame(at: i).origin, animated: false)
                 }
@@ -215,125 +227,127 @@ class WPArticleContentView: WPContentView {
                 progressIndicator = nil
             }
             
-            
+            var image = layout.content.image
+            if layout.content.image == nil, let file = layout.content.file, let dimension = file.dimensions {
+                var representations: [TelegramMediaImageRepresentation] = []
+                representations.append(contentsOf: file.previewRepresentations)
+                representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
+                image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
+                
+            }
             var updateImageSignal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
-            if self.content?.content.image != layout.content.image {
-                if let image = layout.content.image {
-                    updateImageSignal = chatWebpageSnippetPhoto(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
-                   
-                   
-                    
-                    let closestRepresentation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280))//(largestImageRepresentation(image.representations))
-                    
-                    if let closestRepresentation = closestRepresentation {
-                        statusDisposable.set((layout.account.postbox.mediaBox.resourceStatus(closestRepresentation.resource) |> deliverOnMainQueue).start(next: { [weak self] status in
+            if let image = image {
+                updateImageSignal = chatWebpageSnippetPhoto(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
+                
+                if imageView == nil {
+                    imageView = TransformImageView()
+                    self.addSubview(imageView!)
+                }
+                
+                let closestRepresentation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280))//(largestImageRepresentation(image.representations))
+                
+                if let closestRepresentation = closestRepresentation {
+                    statusDisposable.set((layout.account.postbox.mediaBox.resourceStatus(closestRepresentation.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue).start(next: { [weak self] status in
+                        
+                        guard let `self` = self else {return}
+                        
+                        var initProgress: Bool = false
+                        var state: RadialProgressState = .None
+                        switch status {
+                        case .Fetching:
+                            state = .Fetching(progress: 0.3, force: false)
+                            initProgress = true
+                        case .Local:
+                            state = .Fetching(progress: 1.0, force: false)
+                        case .Remote:
+                            initProgress = true
+                            state = .Remote
+                        }
+                        if initProgress {
                             
-                            guard let `self` = self else {return}
+                            self.playIcon?.removeFromSuperview()
+                            self.playIcon = nil
                             
-
-                            var initProgress: Bool = false
-                            var state: RadialProgressState = .None
-                            switch status {
-                            case .Fetching:
-                                state = .Fetching(progress: 0.3, force: false)
-                                initProgress = true
-                            case .Local:
-                                 state = .Fetching(progress: 1.0, force: false)
-                            case .Remote:
-                                initProgress = true
-                                state = .Remote
+                            if self.downloadIndicator == nil {
+                                self.downloadIndicator = RadialProgressView()
                             }
-                            if initProgress {
-                                
+                            self.imageView?.addSubview(self.downloadIndicator!)
+                            self.downloadIndicator!.center()
+                            
+                        } else {
+                            
+                            let playable = ExternalVideoLoader.isPlayable(layout.content)
+                            if playable && layout.isFullImageSize {
+                                if self.playIcon == nil {
+                                    self.playIcon = ImageView()
+                                    self.imageView?.addSubview(self.playIcon!)
+                                }
+                                self.playIcon?.image = ExternalVideoLoader.playIcon(layout.content)
+                                self.playIcon?.sizeToFit()
+                            } else {
                                 self.playIcon?.removeFromSuperview()
                                 self.playIcon = nil
-                                
-                                if self.downloadIndicator == nil {
-                                    self.downloadIndicator = RadialProgressView()
-                                }
-                                self.imageView?.addSubview(self.downloadIndicator!)
-                                self.downloadIndicator!.center()
-                                
-                            } else {
-                                
-                                let playable = ExternalVideoLoader.isPlayable(layout.content)
-                                if playable && layout.isFullImageSize {
-                                    if self.playIcon == nil {
-                                        self.playIcon = ImageView()
-                                        self.imageView?.addSubview(self.playIcon!)
-                                    }
-                                    self.playIcon?.image = ExternalVideoLoader.playIcon(layout.content)
-                                    self.playIcon?.sizeToFit()
-                                } else {
-                                    self.playIcon?.removeFromSuperview()
-                                    self.playIcon = nil
-                                }
-                                
-                                if let progressView = self.downloadIndicator {
-                                    progressView.state = state
-
-                                    self.downloadIndicator = nil
-                                    if playable {
-                                        progressView.removeFromSuperview()
-                                    } else {
-                                        progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
-                                            if completed {
-                                                progressView?.removeFromSuperview()
-                                            }
-                                        })
-                                    }
-                                }
                             }
                             
-                            self.downloadIndicator?.fetchControls = FetchControls(fetch: { [weak self] in
-                                switch status {
-                                case .Remote:
-                                    self?.fetch()
-                                case .Fetching:
-                                    self?.cancelFetching()
-                                case .Local:
-                                    self?.open()
+                            if let progressView = self.downloadIndicator {
+                                progressView.state = state
+                                
+                                self.downloadIndicator = nil
+                                if playable {
+                                    progressView.removeFromSuperview()
+                                } else {
+                                    progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
+                                        if completed {
+                                            progressView?.removeFromSuperview()
+                                        }
+                                    })
                                 }
-                            })
-                            
-                            self.downloadIndicator?.state = state
-                            self.needsLayout = true
-                            
-                        }))
-                    } else {
-                        statusDisposable.set(nil)
-                        downloadIndicator?.removeFromSuperview()
-                        downloadIndicator = nil
-                        
-                    }
-                    
-                    if imageView == nil {
-                        imageView = TransformImageView()
-                        imageView?.animatesAlphaOnFirstTransition = true
-                        self.addSubview(imageView!)
-                    }
-                    
-                    
-                    
-                    if let arguments = layout.imageArguments, let imageView = imageView {
-                        imageView.set(arguments: arguments)
-                        imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: newLayout)
-                        
-                        if let updateImageSignal = updateImageSignal {
-                                imageView.setSignal(updateImageSignal, clearInstantly: false, animate: true, cacheImage: { [weak self] signal in
-                                    if let strongSelf = self {
-                                        return cacheMedia(signal: signal, media: image, arguments: arguments, scale: strongSelf.backingScaleFactor)
-                                    } else {
-                                        return .complete()
-                                    }
-                                })
                             }
                         }
-                    
+                        
+                        self.downloadIndicator?.fetchControls = FetchControls(fetch: { [weak self] in
+                            switch status {
+                            case .Remote:
+                                self?.fetch()
+                            case .Fetching:
+                                self?.cancelFetching()
+                            case .Local:
+                                self?.open()
+                            }
+                        })
+                        
+                        self.downloadIndicator?.state = state
+                        self.needsLayout = true
+                        
+                    }))
                 } else {
-                    imageView?.removeFromSuperview()
-                    imageView = nil
+                    statusDisposable.set(nil)
+                    downloadIndicator?.removeFromSuperview()
+                    downloadIndicator = nil
+                    
                 }
+                
+                
+                
+                
+                if let arguments = layout.imageArguments, let imageView = imageView {
+                    imageView.set(arguments: arguments)
+                    imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: newLayout)
+                    
+                    if let updateImageSignal = updateImageSignal {
+                        imageView.setSignal(updateImageSignal, clearInstantly: false, animate: true, cacheImage: { [weak self] signal in
+                            if let strongSelf = self {
+                                return cacheMedia(signal: signal, media: image, arguments: arguments, scale: strongSelf.backingScaleFactor)
+                            } else {
+                                return .complete()
+                            }
+                        })
+                    }
+                }
+                
+            } else {
+                imageView?.removeFromSuperview()
+                imageView = nil
             }
             
 
@@ -355,7 +369,7 @@ class WPArticleContentView: WPContentView {
                     countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
                     imageView?.addSubview(countAccessoryView!)
                 }
-                countAccessoryView?.updateText(tr(L10n.chatWebpageMediaCount(1, mediaCount)), maxWidth: 40, status: nil, isStreamable: false)
+                countAccessoryView?.updateText(L10n.chatWebpageMediaCount(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
             } else {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil
@@ -414,6 +428,7 @@ class WPArticleContentView: WPContentView {
                 
                 imageView.setFrameOrigin(origin.x, origin.y)
                 playIcon?.center()
+                
                 
                 if let durationView = durationView {
                     durationView.setFrameOrigin(imageView.frame.width - durationView.frame.width - 10, imageView.frame.height - durationView.frame.height - 10)

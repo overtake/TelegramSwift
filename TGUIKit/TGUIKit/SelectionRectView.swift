@@ -98,15 +98,15 @@ public enum SelectionRectDimensions {
         
         
         
-        if newCropRect.maxY > areaSize.height {
-            newCropRect.origin.x = areaSize.width - newCropRect.width;
-        }
-        
-        if (newCropRect.maxY > areaSize.height) {
-            newCropRect.origin.y = areaSize.height - newCropRect.size.height;
-        }
-        
-        
+//        if newCropRect.maxY > areaSize.height {
+//            newCropRect.origin.x = areaSize.width - newCropRect.width;
+//        }
+//
+//        if (newCropRect.maxY > areaSize.height) {
+//            newCropRect.origin.y = areaSize.height - newCropRect.size.height;
+//        }
+//
+//
        
         return newCropRect
     }
@@ -158,6 +158,7 @@ public class SelectionRectView: View {
     private let bottomRightCorner: ImageButton = ImageButton()
     
     public var minimumSize: NSSize = NSMakeSize(40, 40)
+    public var isCircleCap: Bool = false
     private var _updatedRect: ValuePromise<NSRect> = ValuePromise(ignoreRepeated: true)
     public var updatedRect: Signal<NSRect, NoError> {
         return _updatedRect.get()
@@ -248,6 +249,7 @@ public class SelectionRectView: View {
         currentCorner = nil
     }
     
+    
     public override func mouseDragged(with event: NSEvent) {
         guard let window = window else {return}
         let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -277,7 +279,7 @@ public class SelectionRectView: View {
     
     public func applyRect(_ newRect: NSRect, force: Bool = false, dimensions: SelectionRectDimensions = .none) {
         self.dimensions = dimensions
-        selectedRect = dimensions.applyRect(NSMakeRect(min(max(0, newRect.minX), (frame.width) - newRect.width), min(max(0, newRect.minY), frame.height - newRect.height), max(min(newRect.width, frame.width), minimumSize.width), max(min(newRect.height, frame.height), minimumSize.height)), for: self.currentCorner, areaSize: frame.size, force: force)
+        selectedRect = dimensions.applyRect(NSMakeRect(min(max(0, newRect.minX), frame.width - newRect.width), min(max(0, newRect.minY), frame.height - newRect.height), max(min(newRect.width, frame.width), minimumSize.width), max(min(newRect.height, frame.height), minimumSize.height)), for: self.currentCorner, areaSize: frame.size, force: force)
     }
 
     required public init(frame frameRect: NSRect) {
@@ -333,6 +335,8 @@ public class SelectionRectView: View {
         guard let window = window else {return}
         var current = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         current = NSMakePoint(min(max(0, ceil(current.x)), frame.width), min(max(0, ceil(current.y)), frame.height))
+        
+        
 //        guard NSPointInRect(current, frame) else {
 //            return
 //        }
@@ -347,6 +351,7 @@ public class SelectionRectView: View {
         case .bottomRight:
             newRect = NSMakeRect(selectedRect.minX, selectedRect.minY, frame.width - selectedRect.minX - (frame.width - current.x), frame.height - selectedRect.minY - (frame.height - current.y))
         }
+
         applyRect(newRect)
         
     }
@@ -364,13 +369,19 @@ public class SelectionRectView: View {
         
         let rect = NSMakeRect(max(1, selectedRect.minX), max(1, selectedRect.minY), min(selectedRect.width, frame.width - 2), min(selectedRect.height, frame.height - 2))
         
+        ctx.setBlendMode(.normal)
         ctx.fill(bounds)
-        ctx.clear(rect)
-
-        ctx.setStrokeColor(.white)
-        ctx.setLineWidth(1)
-        ctx.stroke(rect)
         
+        ctx.setBlendMode(.clear)
+        if isCircleCap {
+            ctx.fillEllipse(in: rect)
+        } else {
+            ctx.fill(rect)
+            ctx.setBlendMode(.normal)
+            ctx.setStrokeColor(.white)
+            ctx.setLineWidth(1)
+            ctx.stroke(rect)
+        }
     }
     
 }

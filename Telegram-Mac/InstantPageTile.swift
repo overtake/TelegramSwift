@@ -34,11 +34,12 @@ final class InstantPageTile {
 }
 
 func instantPageTilesFromLayout(_ layout: InstantPageLayout, boundingWidth: CGFloat) -> [InstantPageTile] {
-    var tileByOrigin: [Int: InstantPageTile] = [:]
+    var tileByOrigin: [Int : InstantPageTile] = [:]
     let tileHeight: CGFloat = 256.0
     
+    var tileHoles: [CGRect] = []
     for item in layout.items {
-        if !item.wantsNode {
+        if !item.wantsView {
             let topTileIndex = max(0, Int(floor(item.frame.minY - 10.0) / tileHeight))
             let bottomTileIndex = max(topTileIndex, Int(floor(item.frame.maxY + 10.0) / tileHeight))
             for i in topTileIndex ... bottomTileIndex {
@@ -51,10 +52,45 @@ func instantPageTilesFromLayout(_ layout: InstantPageLayout, boundingWidth: CGFl
                 }
                 tile.items.append(item)
             }
+        } else if item.separatesTiles {
+            tileHoles.append(item.frame)
         }
     }
     
-    return tileByOrigin.values.sorted(by: { lhs, rhs in
+    var finalTiles: [InstantPageTile] = []
+    var usedTiles = Set<Int>()
+    
+    for hole in tileHoles {
+        let topTileIndex = max(0, Int(floor(hole.minY - 10.0) / tileHeight))
+        let bottomTileIndex = max(topTileIndex, Int(floor(hole.maxY + 10.0) / tileHeight))
+        for i in topTileIndex ... bottomTileIndex {
+            if let tile = tileByOrigin[i] {
+                if tile.frame.minY > hole.minY && tile.frame.minY < hole.maxY {
+                    let delta = hole.maxY - tile.frame.minY
+                    let updatedTile = InstantPageTile(frame: CGRect(origin: tile.frame.origin.offsetBy(dx: 0.0, dy: delta), size: CGSize(width: tile.frame.width, height: tile.frame.height - delta)))
+                    updatedTile.items.append(contentsOf: tile.items)
+                    finalTiles.append(updatedTile)
+                    usedTiles.insert(i)
+                } else if tile.frame.maxY > hole.minY && tile.frame.minY < hole.minY {
+                    let delta = tile.frame.maxY - hole.minY
+                    let updatedTile = InstantPageTile(frame: CGRect(origin: tile.frame.origin, size: CGSize(width: tile.frame.width, height: tile.frame.height - delta)))
+                    updatedTile.items.append(contentsOf: tile.items)
+                    finalTiles.append(updatedTile)
+                    usedTiles.insert(i)
+                }
+            }
+        }
+        //let holeTile = InstantPageTile(frame: hole)
+        //finalTiles.append(holeTile)
+    }
+    
+    for (index, tile) in tileByOrigin {
+        if !usedTiles.contains(index) {
+            finalTiles.append(tile)
+        }
+    }
+    
+    return finalTiles.sorted(by: { lhs, rhs in
         return lhs.frame.minY < rhs.frame.minY
     })
 }

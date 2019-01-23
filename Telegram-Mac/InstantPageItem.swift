@@ -19,7 +19,9 @@ final class InstantPageItemArguments {
     let openUrl:(InstantPageUrlItem) -> Void
     let updateWebEmbedHeight:(CGFloat) -> Void
     let updateDetailsExpanded: (Bool) -> Void
-    init(account: Account, theme: InstantPageTheme, openMedia: @escaping (InstantPageMedia) -> Void, openPeer: @escaping (PeerId) -> Void, openUrl: @escaping (InstantPageUrlItem) -> Void, updateWebEmbedHeight: @escaping (CGFloat) -> Void, updateDetailsExpanded: @escaping (Bool) -> Void) {
+    let isExpandedItem: (InstantPageDetailsItem) -> Bool
+    let effectiveRectForItem: (InstantPageItem) -> NSRect
+    init(account: Account, theme: InstantPageTheme, openMedia: @escaping (InstantPageMedia) -> Void, openPeer: @escaping (PeerId) -> Void, openUrl: @escaping (InstantPageUrlItem) -> Void, updateWebEmbedHeight: @escaping (CGFloat) -> Void, updateDetailsExpanded: @escaping (Bool) -> Void, isExpandedItem: @escaping(InstantPageDetailsItem) -> Bool, effectiveRectForItem: @escaping(InstantPageItem) -> NSRect) {
         self.account = account
         self.theme = theme
         self.openMedia = openMedia
@@ -27,21 +29,24 @@ final class InstantPageItemArguments {
         self.openUrl = openUrl
         self.updateWebEmbedHeight = updateWebEmbedHeight
         self.updateDetailsExpanded = updateDetailsExpanded
+        self.isExpandedItem = isExpandedItem
+        self.effectiveRectForItem = effectiveRectForItem
     }
 }
 
 protocol InstantPageItem {
     var frame: CGRect { get set }
     var hasLinks: Bool { get }
-    var wantsNode: Bool { get }
+    var wantsView: Bool { get }
     var medias: [InstantPageMedia] { get }
-    
+    var separatesTiles: Bool { get }
+
     var isInteractive: Bool { get }
     
     func matchesAnchor(_ anchor: String) -> Bool
     func drawInTile(context: CGContext)
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView?
-    func matchesNode(_ node: InstantPageView) -> Bool
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)?
+    func matchesView(_ node: InstantPageView) -> Bool
     func linkSelectionViews() -> [InstantPageLinkSelectionView]
     
     func distanceThresholdGroup() -> Int?

@@ -22,6 +22,7 @@ private func parseColor(_ decoder: PostboxDecoder, _ key: String) -> NSColor? {
     return nil
 }
 
+
 struct ThemePaletteSettings: PreferencesEntry, Equatable {
     let palette: ColorPalette
     let followSystemAppearance: Bool
@@ -29,11 +30,11 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     let fontSize: CGFloat
     let defaultNightName: String
     let defaultDayName: String
-    let wallpaper: TelegramWallpaper
+    let wallpaper: Wallpaper
     init(palette: ColorPalette,
          bubbled: Bool,
          fontSize: CGFloat,
-         wallpaper: TelegramWallpaper,
+         wallpaper: Wallpaper,
          defaultNightName: String,
          defaultDayName: String,
          followSystemAppearance: Bool) {
@@ -56,7 +57,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     }
     init(decoder: PostboxDecoder) {
         
-        self.wallpaper = (decoder.decodeObjectForKey("w", decoder: { TelegramWallpaper(decoder: $0) }) as? TelegramWallpaper) ?? .none
+        self.wallpaper = (decoder.decodeObjectForKey("wallpaper", decoder: { Wallpaper(decoder: $0) }) as? Wallpaper) ?? .none
         
         let dark = decoder.decodeBoolForKey("dark", orElse: false)
         let name = decoder.decodeStringForKey("name", orElse: "Default")
@@ -188,7 +189,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         encoder.encodeBool(palette.isDark, forKey: "dark")
         encoder.encodeBool(bubbled, forKey: "bubbled")
         encoder.encodeDouble(Double(fontSize), forKey: "fontSize")
-        encoder.encodeObject(wallpaper, forKey: "w")
+        encoder.encodeObject(wallpaper, forKey: "wallpaper")
         encoder.encodeString(defaultDayName, forKey: "defaultDayName")
         encoder.encodeString(defaultNightName, forKey: "defaultNightName")
         encoder.encodeBool(followSystemAppearance, forKey: "fsa")
@@ -206,7 +207,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     func withUpdatedFollowSystemAppearance(_ followSystemAppearance: Bool) -> ThemePaletteSettings {
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: followSystemAppearance)
     }
-    func withUpdatedWallpaper(_ wallpaper: TelegramWallpaper) -> ThemePaletteSettings {
+    func withUpdatedWallpaper(_ wallpaper: Wallpaper) -> ThemePaletteSettings {
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
     }
     func withUpdatedDefaultDayName(_ defaultDayName: String) -> ThemePaletteSettings {

@@ -723,18 +723,41 @@ class ChatRowItem: TableRowItem {
     let presentation: TelegramPresentationTheme
 
 
+    
+    private var _approximateSynchronousValue: Bool = false
+    var approximateSynchronousValue: Bool {
+        get {
+            let result = _approximateSynchronousValue
+            _approximateSynchronousValue = false
+            return result
+        }
+    }
+    
+    private var _avatarSynchronousValue: Bool = false
+    var avatarSynchronousValue: Bool {
+        get {
+            let result = _avatarSynchronousValue
+            _avatarSynchronousValue = false
+            return result
+        }
+    }
+    
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         self.entry = object
         self.account = account
         self.presentation = theme
         self.chatInteraction = chatInteraction
         self.downloadSettings = downloadSettings
+        self._approximateSynchronousValue = Thread.isMainThread
+        self._avatarSynchronousValue = Thread.isMainThread
         var message: Message?
         var isRead: Bool = true
         var itemType: ChatItemType = .Full(isAdmin: false)
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
         var object = object
+        
+
         
         var captionMessage: Message? = object.message
 
@@ -1438,7 +1461,7 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
     items.append(ContextSeparatorItem())
     
     
-    if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasAdminRights(.canPinMessages) || (peer.isChannel && peer.hasAdminRights(.canEditMessages)) {
+    if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
         if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
             items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
                 if peer.isSupergroup {
@@ -1603,37 +1626,37 @@ func chatMenuItems(for message: Message, account: Account, chatInteraction: Chat
         }
     }
     
-    signal = signal |> map { items in
-        if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup {
-            if peer.hasAdminRights(.canBanUsers), let author = message.author, author.id != chatInteraction.account.peerId {
-                var items = items
-                items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
-                    
-                    _ = showModalProgress(signal: fetchChannelParticipant(account: chatInteraction.account, peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in
-                        let info = ChannelParticipantBannedInfo(rights: TelegramChannelBannedRights(flags: [.banSendMessages, .banReadMessages, .banSendMedia, .banSendStickers, .banEmbedLinks], untilDate: .max), restrictedBy: chatInteraction.account.peerId, isMember: true)
-                        if let participant = participant {
-                            var rendered = RenderedChannelParticipant(participant: participant, peer: author)
-                            switch participant {
-                            case let .member(_, _, _, banInfo):
-                                if banInfo == nil {
-                                    rendered = rendered.withUpdatedBannedRights(info)
-                                }
-                                showModal(with: RestrictedModalViewController(account: chatInteraction.account, peerId: chatInteraction.peerId, participant: rendered, unban: false, updated: { updatedRights in
-                                    _ = showModalProgress(signal: updateChannelMemberBannedRights(account: account, peerId: chatInteraction.peerId, memberId: author.id, rights: updatedRights), for: mainWindow).start()
-                                }), for: mainWindow)
-                            default:
-                                break
-                            }
-                        }
-                        
-                    })
-                }))
-                return items
-            }
-        }
-        return items
-    }
-    
+//    signal = signal |> map { items in
+//        if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup {
+//            if peer.hasPermission(.banMembers), let author = message.author, author.id != chatInteraction.account.peerId {
+//                var items = items
+//                items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
+//
+//                    _ = showModalProgress(signal: fetchChannelParticipant(account: chatInteraction.account, peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in
+//                        let info = ChannelParticipantBannedInfo(rights: TelegramChatBannedRights(flags: [.banSendMessages, .banReadMessages, .banSendMedia, .banSendStickers, .banEmbedLinks], untilDate: .max), restrictedBy: chatInteraction.account.peerId, timestamp: Int32(Date().timeIntervalSince1970), isMember: true)
+//                        if let participant = participant {
+//                            var rendered = RenderedChannelParticipant(participant: participant, peer: author)
+//                            switch participant {
+//                            case let .member(_, _, _, banInfo):
+//                                if banInfo == nil {
+//                                    rendered = rendered.withUpdatedBannedRights(info)
+//                                }
+//                                showModal(with: RestrictedModalViewController(account: chatInteraction.account, peerId: chatInteraction.peerId, participant: rendered, unban: false, updated: { updatedRights in
+//                                    _ = showModalProgress(signal: updateChannelMemberBannedRights(account: account, peerId: chatInteraction.peerId, memberId: author.id, rights: updatedRights), for: mainWindow).start()
+//                                }), for: mainWindow)
+//                            default:
+//                                break
+//                            }
+//                        }
+//
+//                    })
+//                }))
+//                return items
+//            }
+//        }
+//        return items
+//    }
+//
     signal = signal |> map { items in
         var items = items
         if canReportMessage(message, account) {

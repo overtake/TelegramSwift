@@ -14,6 +14,111 @@ import PostboxMac
 import SwiftSignalKitMac
 
 
+private struct PercentCounterItem : Comparable  {
+    var index: Int = 0
+    var percent: Int = 0
+    var remainder: Int = 0
+    
+    static func <(lhs: PercentCounterItem, rhs: PercentCounterItem) -> Bool {
+        if lhs.remainder > rhs.remainder {
+            return true
+        } else if lhs.remainder < rhs.remainder {
+            return false
+        }
+        return lhs.percent < rhs.percent
+    }
+    
+}
+
+private func adjustPercentCount(_ items: [PercentCounterItem], left: Int) -> [PercentCounterItem] {
+    var left = left
+    var items = items.sorted(by: <)
+    var i:Int = 0
+    while i != items.count {
+        let item = items[i]
+        var j = i + 1
+        loop: while j != items.count {
+            if items[j].percent != item.percent || items[j].remainder != item.remainder {
+                break loop
+            }
+            j += 1
+        }
+        let equal = j - i
+        if equal <= left {
+            left -= equal
+            while i != j {
+                items[i].percent += 1
+                i += 1
+            }
+        } else {
+            i = j
+        }
+    }
+    return items
+}
+
+private func countNicePercent(votes:[Int], total: Int) -> [Int] {
+    var result:[Int] = Array(repeating: 0, count: votes.count)
+    var items:[PercentCounterItem] = Array(repeating: PercentCounterItem(), count: votes.count)
+    
+    guard total > 0 else {
+        return result
+    }
+    
+    let count = votes.count
+    
+    var left:Int = 100
+    for i in 0 ..< votes.count {
+        let votes = votes[i]
+        items[i].index = i
+        items[i].percent = Int((Float(votes) * 100) / Float(total))
+        items[i].remainder = (votes * 100) - (items[i].percent * total)
+        left -= items[i].percent
+    }
+    
+    if left > 0 && left <= count {
+        items = adjustPercentCount(items, left: left)
+    }
+    for item in items {
+        result[item.index] = item.percent
+    }
+    
+    return result
+}
+
+//
+//void CountNicePercent(
+//    gsl::span<const int> votes,
+//    int total,
+//gsl::span<int> result) {
+//    Expects(result.size() >= votes.size());
+//    Expects(votes.size() <= PollData::kMaxOptions);
+//
+//    const auto count = size_type(votes.size());
+//    PercentCounterItem ItemsStorage[PollData::kMaxOptions];
+//    const auto items = gsl::make_span(ItemsStorage).subspan(0, count);
+//    auto left = 100;
+//    auto &&zipped = ranges::view::zip(
+//    votes,
+//    items,
+//    ranges::view::ints(0));
+//    for (auto &&[votes, item, index] : zipped) {
+//        item.index = index;
+//        item.percent = (votes * 100) / total;
+//        item.remainder = (votes * 100) - (item.percent * total);
+//        left -= item.percent;
+//    }
+//    if (left > 0 && left <= count) {
+//        AdjustPercentCount(items, left);
+//    }
+//    for (const auto &item : items) {
+//        result[item.index] = item.percent;
+//    }
+//}
+//
+//}
+
+
 
 
 private final class PollOption : Equatable {
@@ -67,7 +172,7 @@ private final class PollOption : Equatable {
         return 40 + PollOption.spaceBetweenTexts
     }
     var currentPercentImage: CGImage? {
-       return presentation.chat.pollPercentAnimatedIcon(isIncoming, isBubbled, selected: isSelected, value: Int(round(realPercent * 100)))
+       return presentation.chat.pollPercentAnimatedIcon(isIncoming, isBubbled, selected: isSelected, value: Int(realPercent))
     }
     
     static var spaceBetweenTexts: CGFloat {
@@ -100,6 +205,7 @@ class ChatPollItem: ChatRowItem {
     }
     
     
+    
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         let poll = object.message!.media[0] as! TelegramMediaPoll
@@ -111,9 +217,20 @@ class ChatPollItem: ChatRowItem {
         
         var options: [PollOption] = []
         
-        let maximum: Int32 = poll.results.voters?.compactMap({$0.count}).max() ?? poll.results.totalVoters ?? 0
+        
+        var votes:[Int] = []
         
         for option in poll.options {
+            let count = Int(poll.results.voters?.first(where: {$0.opaqueIdentifier == option.opaqueIdentifier})?.count ?? 0)
+            votes.append(count)
+        }
+        
+
+        
+        let percents = countNicePercent(votes: votes, total: Int(poll.results.totalVoters ?? 0))
+        let maximum: Int = percents.max() ?? 0
+        
+        for (i, option) in poll.options.enumerated() {
             
             let percent: Float?
             let realPercent: Float
@@ -123,8 +240,8 @@ class ChatPollItem: ChatRowItem {
             
             var votedCount: Int32 = 0
             if let vote = poll.results.voters?.first(where: {$0.opaqueIdentifier == option.opaqueIdentifier}), let totalVoters = poll.results.totalVoters, (voted || poll.isClosed) {
-                percent = maximum == 0 ? 0 : (Float(vote.count) / Float(maximum))
-                realPercent = totalVoters == 0 ? 0 : (Float(vote.count) / Float(totalVoters))
+                percent = maximum == 0 ? 0 : (Float(percents[i]) / Float(maximum))
+                realPercent = totalVoters == 0 ? 0 : Float(percents[i])
                 isSelected = vote.selected
                 votedCount = vote.count
             } else {
@@ -173,7 +290,7 @@ class ChatPollItem: ChatRowItem {
                     if message.forwardInfo == nil {
                         var canClose: Bool = message.author?.id == self.account.peerId
                         if let peer = self.peer as? TelegramChannel {
-                            canClose = peer.hasAdminRights(.canPostMessages) || peer.hasAdminRights(.canEditMessages)
+                            canClose = peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
                         }
                         if canClose {
                             items.insert(ContextMenuItem(L10n.chatPollStop, handler: { [weak self] in
@@ -228,9 +345,9 @@ class ChatPollItem: ChatRowItem {
         
         let width = min(width, 320)
         
-        titleText.measure(width: width)
-        titleTypeText.measure(width: width)
-        totalVotesText?.measure(width: width)
+        titleText.measure(width: width - bubbleContentInset)
+        titleTypeText.measure(width: width - bubbleContentInset)
+        totalVotesText?.measure(width: width - bubbleContentInset)
         
         
         

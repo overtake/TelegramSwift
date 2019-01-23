@@ -19,13 +19,13 @@ enum PeerPhoto {
 
 private var capHolder:[String : CGImage] = [:]
 
-private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool) -> Signal<(CGImage?, Bool), NoError> {
+private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
     if let representation = representation {
         return cachedPeerPhoto(peerId, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                let resourceData = combineLatest(account.postbox.mediaBox.resourceData(representation.resource), account.postbox.loadedPeerWithId(peerId))
+                let resourceData = combineLatest(account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad), account.postbox.transaction { $0.getPeer(peerId) })
                 let imageData = resourceData
                     |> take(1)
                     |> mapToSignal { maybeData, peer -> Signal<(Data?, Bool), NoError> in
@@ -47,10 +47,10 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                                 let fetchedDataDisposable: Disposable
                                 if let message = message {
                                     fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
-                                } else if let reference = PeerReference(peer) {
+                                } else if let peer = peer, let reference = PeerReference(peer) {
                                     fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
                                 } else {
-                                    fetchedDataDisposable = EmptyDisposable
+                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
                                 }
                                 return ActionDisposable {
                                     resourceDataDisposable.dispose()
@@ -70,10 +70,9 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                     }
                 }) |> deliverOnMainQueue
                 
+                let loadDataSignal = synchronousLoad ? imageData : imageData |> deliverOn(account.graphicsThreadPool)
                 
-                let img = imageData
-                    |> deliverOn(account.graphicsThreadPool)
-                    |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), NoError> in
+                let img = loadDataSignal |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), NoError> in
                         
                         let image:CGImage?
                         if let data = data {
@@ -134,18 +133,18 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
     }
 }
 
-func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true) -> Signal<(CGImage?, Bool), NoError> {
+func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
     case let .peer(peerId, representation, displayLetters, message):
-        return peerImage(account: account, peerId: peerId, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap)
+        return peerImage(account: account, peerId: peerId, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
     case let .group(peerIds, representations, displayLetters):
         var combine:[Signal<(CGImage?, Bool), NoError>] = []
         let inGroupSize = NSMakeSize(displayDimensions.width / 2 - 2, displayDimensions.height / 2 - 2)
         for peerId in peerIds {
             let representation: TelegramMediaImageRepresentation? = representations[peerId]
             let letters = displayLetters[peerId] ?? ["", ""]
-            combine.append(peerImage(account: account, peerId: peerId, displayDimensions: inGroupSize, representation: representation, displayLetters: letters, font: font, scale: scale, genCap: genCap))
+            combine.append(peerImage(account: account, peerId: peerId, displayDimensions: inGroupSize, representation: representation, displayLetters: letters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad))
         }
         return combineLatest(combine) |> deliverOn(account.graphicsThreadPool) |> map { images -> (CGImage?, Bool) in
             var animated: Bool = false

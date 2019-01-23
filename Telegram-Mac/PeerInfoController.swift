@@ -102,13 +102,15 @@ class PeerInfoArguments {
         let account = self.account
         let peerId = self.peerId
         
+        let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil
+        
         let signal = account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, NoError> in
-            return removeChatInteractively(account: account, peerId: peerId, userId: peerViewMainPeer(view)?.id)
+            return removeChatInteractively(account: account, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true)
         }
         
         deleteDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] success in
             if success {
-                self?.pullNavigation()?.close()
+               // self?.pullNavigation()?.close()
             }
         }))
         
@@ -348,17 +350,35 @@ class PeerInfoController: EditableViewController<TableView> {
             }
         })
         
+        let actionsDisposable = DisposableSet()
+        
+        var loadMoreControl: PeerChannelMemberCategoryControl?
+        
+        let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
+        if peerId.namespace == Namespaces.Peer.CloudChannel {
+            let (disposable, control) = account.context.peerChannelMemberCategoriesContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, updated: { state in
+                channelMembersPromise.set(.single(state.list))
+            })
+            loadMoreControl = control
+            actionsDisposable.add(disposable)
+        } else {
+            channelMembersPromise.set(.single([]))
+        }
+        
+        
         
         let transition = arguments.get() |> mapToSignal { arguments in
-            return combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue)
-                |> map { view, state, appearance, inputActivities -> (PeerView, TableUpdateTransition) in
+            return combineLatest(account.viewTracker.peerView(peerId) |> deliverOnPrepareQueue, arguments.statePromise |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, inputActivityState.get() |> deliverOnPrepareQueue, channelMembersPromise.get() |> deliverOnPrepareQueue)
+                |> map { view, state, appearance, inputActivities, channelMembers -> (PeerView, TableUpdateTransition) in
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return (view, prepareEntries(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil))
                     
             } |> deliverOnMainQueue
-        }
+            } |> afterDisposed {
+                actionsDisposable.dispose()
+            }
                 
         disposable.set(transition.start(next: { [weak self] (peerView, transition) in
             
@@ -371,13 +391,13 @@ class PeerInfoController: EditableViewController<TableView> {
                 if let peer = peer as? TelegramChannel {
                     switch peer.info {
                     case .broadcast:
-                        editable = peer.hasAdminRights(.canChangeInfo)
+                        editable = peer.hasPermission(.changeInfo)
                     case .group:
                         editable = true //peer.adminRights != nil || peer.flags.contains(.isCreator)
                     }
                     
-                } else if let peer = peer as? TelegramGroup {
-                    editable = peer.role == .creator || peer.role == .admin || !peer.flags.contains(.adminsEnabled)
+                } else if peer is TelegramGroup {
+                    editable = true
                 } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
                     editable = account.peerId != peer.id
                 } else {
@@ -394,13 +414,9 @@ class PeerInfoController: EditableViewController<TableView> {
             
         }))
         
-        if peerId.namespace == Namespaces.Peer.CloudChannel {
-            let fetchParticipants = account.viewTracker.peerView(peerId) |> filter {$0.cachedData != nil} |> take(1) |> deliverOnMainQueue |> mapToSignal {_ -> Signal<Void, NoError> in
-                return account.viewTracker.updatedCachedChannelParticipants(peerId, forceImmediateUpdate: true)
-            }
-            updatedChannelParticipants.set(fetchParticipants.start())
-        }
-        
+       
+     
+
        
         
     }

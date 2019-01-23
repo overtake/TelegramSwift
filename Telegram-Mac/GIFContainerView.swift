@@ -132,7 +132,7 @@ class GIFContainerView: Control {
         if !ignoreWindowKey {
             var s:Signal<Void, Void> = .single(Void())
             if accept {
-                s = s |> delay(0.01, queue: Queue.mainQueue())
+                s = s |> delay(0.1, queue: Queue.mainQueue())
             }
             playerDisposable.set(s.start(next: {[weak self] (next) in
                 if let strongSelf = self {

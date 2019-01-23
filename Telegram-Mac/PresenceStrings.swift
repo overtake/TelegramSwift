@@ -154,3 +154,87 @@ func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, relative
         return Double.infinity
     }
 }
+
+
+func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+    var t: time_t = time_t(relativeTimestamp)
+    var timeinfo: tm = tm()
+    localtime_r(&t, &timeinfo)
+    
+    var now: time_t = time_t(timestamp)
+    var timeinfoNow: tm = tm()
+    localtime_r(&now, &timeinfoNow)
+    
+    let dayDifference = timeinfo.tm_yday - timeinfoNow.tm_yday
+    
+    let hours = timeinfo.tm_hour
+    let minutes = timeinfo.tm_min
+    
+    if dayDifference == 0 {
+        return L10n.timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
+    } else {
+        return stringForFullDate(timestamp: relativeTimestamp)
+    }
+}
+
+
+
+func stringForShortTimestamp(hours: Int32, minutes: Int32) -> String {
+    let hourString: String
+    if hours == 0 {
+        hourString = "12"
+    } else if hours > 12 {
+        hourString = "\(hours - 12)"
+    } else {
+        hourString = "\(hours)"
+    }
+    
+    let periodString: String
+    if hours >= 12 {
+        periodString = "PM"
+    } else {
+        periodString = "AM"
+    }
+    if minutes >= 10 {
+        return "\(hourString):\(minutes) \(periodString)"
+    } else {
+        return "\(hourString):0\(minutes) \(periodString)"
+    }
+}
+
+
+
+func stringForFullDate(timestamp: Int32) -> String {
+    var t: time_t = Int(timestamp)
+    var timeinfo = tm()
+    localtime_r(&t, &timeinfo);
+    
+    switch timeinfo.tm_mon + 1 {
+    case 1:
+        return L10n.timePreciseDateM1("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 2:
+        return L10n.timePreciseDateM2("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 3:
+        return L10n.timePreciseDateM3("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 4:
+        return L10n.timePreciseDateM4("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 5:
+        return L10n.timePreciseDateM5("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 6:
+        return L10n.timePreciseDateM6("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 7:
+        return L10n.timePreciseDateM7("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 8:
+        return L10n.timePreciseDateM8("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 9:
+        return L10n.timePreciseDateM9("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 10:
+        return L10n.timePreciseDateM10("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 11:
+        return L10n.timePreciseDateM11("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 12:
+        return L10n.timePreciseDateM12("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    default:
+        return ""
+    }
+}

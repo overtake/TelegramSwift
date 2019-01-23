@@ -24,6 +24,11 @@
 #import "ffmpeg/include/libavcodec/avcodec.h"
 #import "ffmpeg/include/libavformat/avformat.h"
 #import "FFMpegSwResample.h"
+#import "libjpeg-turbo/jpeglib.h"
+#import "libjpeg-turbo/jerror.h"
+#import "libjpeg-turbo/turbojpeg.h"
+#import "libjpeg-turbo/jmorecfg.h"
+
 #endif
 #import "RingBuffer.h"
 #import "ocr.h"
@@ -50,7 +55,7 @@
 #endif
 
 
-
+void telegramFastBlurMore(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
 void telegramFastBlur(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
 NSArray<NSString *> * __nonnull cut_long_message(NSString * __nonnull message, int max_length);
 int64_t SystemIdleTime(void);

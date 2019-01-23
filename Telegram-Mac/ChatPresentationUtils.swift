@@ -176,7 +176,7 @@ struct TelegramChatColors {
         for i in 0 ..< numberOfFrames {
             let t = CGFloat(i) / CGFloat(numberOfFrames)
             let value = (1.0 - t) * fromValue + t * toValue
-            images.append(generated[Int(round(value * 100))])
+            images.append(generated[Int(round(value))])
         }
         return images
     }

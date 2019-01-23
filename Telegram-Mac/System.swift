@@ -42,6 +42,9 @@ var mainWindow:Window {
 public func deliverOnPrepareQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
     return signal |> deliverOn(prepareQueue)
 }
+public func deliverOnMessagesViewQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
+    return signal |> deliverOn(messagesViewQueue)
+}
 
 public func deliverOnResourceQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
     return signal |> deliverOn(resourcesQueue)

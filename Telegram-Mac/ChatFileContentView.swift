@@ -186,7 +186,7 @@ class ChatFileContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil) {
+    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
         let semanticMedia = self.media?.id == media.id
@@ -221,7 +221,7 @@ class ChatFileContentView: ChatMediaContentView {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), archiveSignal) |> map { resourceStatus, archiveStatus in
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file, approximateSynchronousValue: approximateSynchronousValue), archiveSignal) |> map { resourceStatus, archiveStatus in
                 if let archiveStatus = archiveStatus {
                     switch archiveStatus {
                     case let .progress(progress):
@@ -247,7 +247,7 @@ class ChatFileContentView: ChatMediaContentView {
             thumbView.setSignal(signal: cachedMedia(messageId: stableId, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
-            thumbView.setSignal(chatMessageImageFile(account: account, fileReference: reference, progressive: false, scale: backingScaleFactor), clearInstantly: false, cacheImage: { [weak self] image in
+            thumbView.setSignal(chatMessageImageFile(account: account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue), clearInstantly: false, synchronousLoad: approximateSynchronousValue, cacheImage: { [weak self] image in
                 if let strongSelf = self {
                     return cacheMedia(signal: image, messageId: stableId, arguments: arguments, scale: strongSelf.backingScaleFactor)
                 } else {

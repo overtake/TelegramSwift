@@ -28,7 +28,7 @@ class WPArticleLayout: WPLayout {
     private(set) var groupLayout: GroupedLayout?
     private(set) var parameters:[ChatMediaLayoutParameters] = []
 
-    init(with content: TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, downloadSettings: AutomaticMediaDownloadSettings) {
+    init(with content: TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings) {
         if let duration = content.duration {
             self.durationAttributed = .initialize(string: String.durationTransformed(elapsed: duration), color: .white, font: .normal(.text))
         } else {
@@ -36,7 +36,7 @@ class WPArticleLayout: WPLayout {
         }
         self.downloadSettings = downloadSettings
         
-        super.init(with: content, account:account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation)
+        super.init(with: content, account:account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue)
         
         if let mediaCount = mediaCount, mediaCount > 1 {
             var instantMedias = Array(instantPageMedias(for: parent.media[0] as! TelegramMediaWebpage).suffix(10))
@@ -78,12 +78,31 @@ class WPArticleLayout: WPLayout {
         }
         
         if let image = content.image, groupLayout == nil {
-            
             if let dimensions = largestImageRepresentation(image.representations)?.dimensions {
                 imageSize = dimensions
             }
-           
         }
+        
+        if let file = content.file, groupLayout == nil {
+            if let dimensions = file.dimensions {
+                imageSize = dimensions
+            }
+        }
+//        else if let wallpaper = wallpaper {
+//            switch wallpaper {
+//            case let .wallpaper(_, preview):
+//                switch preview {
+//                case .color:
+//                    imageSize = NSMakeSize(200, 200)
+//                default:
+//                    break
+//                }
+//            default:
+//                break
+//            }
+//        }
+        
+        
         if ExternalVideoLoader.isPlayable(content) {
             _ = sharedVideoLoader.fetch(for: content).start()
         }
@@ -130,9 +149,9 @@ class WPArticleLayout: WPLayout {
             
             if let imageSize = imageSize, isFullImageSize {
                 contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))
-                if presentation.renderType == .bubble {
+              //  if presentation.renderType == .bubble {
                     contrainedImageSize.width = max(contrainedImageSize.width, maxw)
-                }
+              //  }
                 textLayout?.cutout = nil
                 smallThumb = false
                 contentSize.height += contrainedImageSize.height
@@ -169,7 +188,7 @@ class WPArticleLayout: WPLayout {
             }
             
             if let imageSize = imageSize {
-                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: imageSize.fitted(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground)
+                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: wallpaper != nil ? imageSize : imageSize.fitted(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground)
                 
                 if imageArguments != self.imageArguments {
                     self.imageArguments = imageArguments

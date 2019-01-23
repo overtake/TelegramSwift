@@ -108,8 +108,7 @@ class MGalleryPhotoItem: MGalleryItem {
             }
             
         } |> mapToSignal { size, orientation -> Signal<CGImage?, NoError> in
-                return chatGalleryPhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext)
-                |> deliverOn(account.graphicsThreadPool)
+            return chatGalleryPhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
                 |> map { transform in
                     let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                     if let orientation = orientation {

@@ -32,6 +32,15 @@ class ChatMessageItem: ChatRowItem {
         return super.isSharable
     }
     
+    var unsupported: Bool {
+
+        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     var actionButtonText: String? {
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, account: account, openInfo: chatInteraction.openInfo)
@@ -43,6 +52,13 @@ class ChatMessageItem: ChatRowItem {
             default:
                 break
             }
+            if webpage.wallpaper != nil {
+                return "VIEW BACKGROUND"
+            }
+        }
+        
+        if unsupported {
+            return L10n.chatUnsupportedUpdatedApp
         }
         
         return nil
@@ -52,8 +68,16 @@ class ChatMessageItem: ChatRowItem {
         if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, account: account, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
+        } else if unsupported {
+            #if APP_STORE
+            execute(inapp: inAppLink.external(link: "https://itunes.apple.com/us/app/telegram/id747648890", false))
+            #else
+            (NSApp.delegate as? AppDelegate)?.checkForUpdates(self)
+            #endif
         }
     }
+    
+    let wpPresentation: WPLayoutPresentation
     
     var webpageLayout:WPLayout?
     
@@ -63,11 +87,14 @@ class ChatMessageItem: ChatRowItem {
             
             let isIncoming: Bool = message.isIncoming(account, entry.renderType == .bubble)
 
-           
+            
+            
+            
+
             let messageAttr:NSMutableAttributedString
             if message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
-                _ = attr.append(string: tr(L10n.chatMessageUnsupported), color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
+                _ = attr.append(string: L10n.chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
                 messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag:account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
@@ -143,8 +170,10 @@ class ChatMessageItem: ChatRowItem {
                 media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, instantPage: nil)))
             }
             
+            self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble), renderType: entry.renderType)
+
+            
             if let webpage = media as? TelegramMediaWebpage {
-                let presentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble), renderType: entry.renderType)
                 switch webpage.content {
                 case let .Loaded(content):
                     var forceArticle: Bool = false
@@ -158,10 +187,13 @@ class ChatMessageItem: ChatRowItem {
                             }
                         }
                     }
+                    if content.type == "telegram_background" {
+                        forceArticle = true
+                    }
                     if content.file == nil || forceArticle {
-                        webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation, downloadSettings: downloadSettings)
+                        webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings)
                     } else {
-                        webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: presentation, downloadSettings: downloadSettings)
+                        webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings)
                     }
                 default:
                     break
@@ -266,8 +298,13 @@ class ChatMessageItem: ChatRowItem {
                 return .complete()
                 
             }, isDomainLink: { value in
-                if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") && URL(string: value) != nil {
-                    return true
+                if let value = value as? inAppLink {
+                    switch value {
+                    case .external:
+                        return true
+                    default:
+                        return false
+                    }
                 }
                 return false
             }, makeLinkType: { link in
@@ -363,9 +400,10 @@ class ChatMessageItem: ChatRowItem {
         if let webpageLayout = webpageLayout {
             contentSize.height += webpageLayout.size.height + defaultContentInnerInset
             contentSize.width = max(webpageLayout.size.width, contentSize.width)
-            if let _ = actionButtonText {
-                contentSize.height += 36
-            }
+            
+        }
+        if let _ = actionButtonText {
+            contentSize.height += 36
         }
         
         return contentSize

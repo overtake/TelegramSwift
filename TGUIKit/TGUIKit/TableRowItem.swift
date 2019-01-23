@@ -54,7 +54,7 @@ open class TableRowItem: NSObject {
         return 0
     }
     
-    public var index:Int {
+    open var index:Int {
         get {
             if let table = table, let index = table.index(of:self)  {
                 return index

@@ -13,13 +13,15 @@ import TelegramCoreMac
 enum InstantPageMediaArguments {
     case image(interactive: Bool, roundCorners: Bool, fit: Bool)
     case video(interactive: Bool, autoplay: Bool)
-    
+    case map(InstantPageMapAttribute)
     var isInteractive: Bool {
         switch self {
         case .image(let interactive, _, _):
             return interactive
         case .video(let interactive, _):
             return interactive
+        case .map:
+            return false
         }
     }
 }
@@ -38,16 +40,17 @@ final class InstantPageMediaItem: InstantPageItem {
     
     let arguments: InstantPageMediaArguments
     
-    let wantsNode: Bool = true
+    let wantsView: Bool = true
     let hasLinks: Bool = false
-    
+    let separatesTiles: Bool = false
+
     init(frame: CGRect, media: InstantPageMedia, arguments: InstantPageMediaArguments) {
         self.frame = frame
         self.media = media
         self.arguments = arguments
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return InstantPageMediaView(account: arguments.account, media: self.media, arguments: self.arguments)
     }
     
@@ -55,7 +58,7 @@ final class InstantPageMediaItem: InstantPageItem {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         if let node = node as? InstantPageMediaView {
             return node.media == self.media
         } else {

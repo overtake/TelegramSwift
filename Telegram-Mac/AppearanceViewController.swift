@@ -14,14 +14,14 @@ import SwiftSignalKitMac
 
 private final class AppearanceViewArguments {
     let account:Account
-    let togglePalette:(ColorPalette, TelegramWallpaper)->Void
+    let togglePalette:(ColorPalette, Wallpaper?)->Void
     let toggleBubbles:(Bool)->Void
     let toggleFontSize:(Int32)->Void
     let selectAccentColor:()->Void
     let selectChatBackground:()->Void
     let openAutoNightSettings:()->Void
     let toggleFollowSystemAppearance:(Bool)->Void
-    init(account:Account, togglePalette: @escaping(ColorPalette, TelegramWallpaper)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, toggleFollowSystemAppearance: @escaping(Bool)->Void) {
+    init(account:Account, togglePalette: @escaping(ColorPalette, Wallpaper?)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, toggleFollowSystemAppearance: @escaping(Bool)->Void) {
         self.account = account
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
@@ -34,7 +34,7 @@ private final class AppearanceViewArguments {
 }
 
 private enum AppearanceViewEntry : TableItemListNodeEntry {
-    case colorPalette(Int32, Int32, Bool, ColorPalette, TelegramWallpaper)
+    case colorPalette(Int32, Int32, Bool, ColorPalette, Wallpaper?)
     case chatView(Int32, Int32, Bool, Bool)
     case accentColor(Int32, Int32, NSColor)
     case chatBackground(Int32, Int32)
@@ -179,7 +179,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     entries.append(.section(sectionId))
     sectionId += 1
     
-    let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewZeroText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+    let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
 
     
     let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
@@ -189,7 +189,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     entries.append(.preview(sectionId, index, firstEntry))
     index += 1
     
-    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: tr(L10n.appearanceSettingsChatPreviewSecondText), attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     
     let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil, nil)
     
@@ -238,17 +238,17 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         installed[mojavePalette.name] = darkPalette
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : .none))
+        entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, .none))
+        entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, .none))
+        entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, nil))
         index += 1
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, .none))
+        entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, nil))
         index += 1
         
         
@@ -261,7 +261,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         for palette in palettes {
             if palette != whitePalette && palette != darkPalette && palette != settings.colors, installed[palette.name] == nil {
                 installed[palette.name] = palette
-                entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name, palette, .none))
+                entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name, palette, nil))
                 index += 1
             }
         }
@@ -280,11 +280,11 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         descIndex += 1
 
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == nightBluePalette.name, nightBluePalette, .none))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == nightBluePalette.name, nightBluePalette, nil))
         index += 1
         
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == mojavePalette.name, mojavePalette, .none))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == mojavePalette.name, mojavePalette, nil))
         index += 1
         
         entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultDark, false))
@@ -294,10 +294,10 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         sectionId += 1
         
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == dayClassic.name, dayClassic, .none))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == dayClassic.name, dayClassic, nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == whitePalette.name, whitePalette, .none))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == whitePalette.name, whitePalette, nil))
         index += 1
         
         entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultDay, false))
@@ -349,7 +349,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<AppearanceViewEn
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-final class AppeaanceView : ChatBackgroundView {
+final class AppeaanceView : View {
     fileprivate let tableView: TableView = TableView()
     private let bottomHolder: View = View()
     required init(frame frameRect: NSRect) {
@@ -383,6 +383,9 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         let account = self.account
+        
+        _ = telegramWallpapers(postbox: account.postbox, network: account.network).start()
+        
         let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, _ in
             _ = combineLatest(updateThemeInteractivetly(postbox: account.postbox, f: { settings in
                 return settings.withUpdatedPalette(palette).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
@@ -413,7 +416,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
         
-        let signal:Signal<(TableUpdateTransition, TelegramWallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(postbox: account.postbox), account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, themeSettings, selfPeer in
+        let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(postbox: account.postbox), account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, themeSettings, selfPeer in
             let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
         } |> deliverOnMainQueue |> beforeNext { [weak self] _ in
@@ -422,48 +425,25 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         disposable.set(signal.start(next: { [weak self] transition, wallpaper in
             self?.genericView.tableView.merge(with: transition)
-            self?.updateWallpaper(wallpaper)
         }))
         
         
     }
     
-
+    override public var isOpaque: Bool {
+        return false
+    }
     
     override var enableBack: Bool {
         return true
     }
     
-    private var previousWallpaper:TelegramWallpaper? = nil
-    
-    func updateWallpaper(_ wallpaper: TelegramWallpaper) {
-        if previousWallpaper != wallpaper {
-            previousWallpaper = wallpaper
-            
-            switch wallpaper {
-            case .builtin:
-                genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-            case let.color(color):
-                genericView.backgroundMode = .color(color: NSColor(UInt32(abs(color))))
-            case let .image(representation):
-                if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource))) {
-                    genericView.backgroundMode = .background(image: image)
-                } else {
-                    genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-            case let .custom(path):
-                if  let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
-                    genericView.backgroundMode = .background(image: image)
-                } else {
-                    genericView.backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-            case .none:
-                genericView.backgroundMode = .plain
-            }
-            
-        }
-        genericView.needsLayout = true
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        genericView.backgroundColor = .clear
+        self.navigationController?.backgroundMode = theme.backgroundMode
     }
+   
     deinit {
         disposable.dispose()
     }

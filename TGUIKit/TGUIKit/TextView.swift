@@ -183,10 +183,10 @@ public final class TextViewInteractions {
     public var processURL:(Any)->Void // link, isPresent
     public var copy:(()->Bool)?
     public var menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)?
-    public var isDomainLink:(String)->Bool
+    public var isDomainLink:(Any)->Bool
     public var makeLinkType:((Any, String))->LinkType
     public var localizeLinkCopy:(LinkType)-> String
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(String)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -200,10 +200,12 @@ public final class TextViewLine {
     public let line: CTLine
     public let frame: NSRect
     public let range: NSRange
-    init(line: CTLine, frame: CGRect, range: NSRange) {
+    public var penFlush: CGFloat
+    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat) {
         self.line = line
         self.frame = frame
         self.range = range
+        self.penFlush = penFlush
     }
     
 }
@@ -295,7 +297,7 @@ public final class TextViewLayout : Equatable {
         let fontAscent = CTFontGetAscent(font)
         let fontDescent = CTFontGetDescent(font)
        
-        let fontLineHeight = floor(fontAscent + fontDescent)
+        let fontLineHeight = floor(fontAscent + fontDescent) + (lineSpacing ?? 0)
         
         var monospacedRects:[NSRect] = []
         
@@ -437,7 +439,7 @@ public final class TextViewLayout : Equatable {
                 layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length)))
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush))
                 
                 break
             } else {
@@ -467,7 +469,7 @@ public final class TextViewLayout : Equatable {
                     }
 
 
-                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length)))
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
@@ -541,7 +543,7 @@ public final class TextViewLayout : Equatable {
             self.blockImage.0 = NSMakePoint(0, 0)
             
             layoutSize.width += 20
-            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range)
+            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range, penFlush: self.penFlush)
             layoutSize.height = rects.last!.maxY
         }
         
@@ -599,7 +601,7 @@ public final class TextViewLayout : Equatable {
         strokeRects.removeAll()
         if strokeLinks {
             attributedString.enumerateAttribute(NSAttributedString.Key.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
-                if let _ = value, self.interactions.isDomainLink(attributedString.string.nsstring.substring(with: range)) {
+                if let value = value, self.interactions.isDomainLink(value) {
                     
                     for line in self.lines {
                         let lineRange = NSIntersectionRange(range, line.range)
@@ -741,7 +743,16 @@ public final class TextViewLayout : Equatable {
         
          //point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
         
-        point.x -= ((layoutSize.width - line.frame.width) * penFlush)
+        
+//        var penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(frame.width))) + line.frame.minX
+//        if layout.penFlush == 0.5, line.penFlush != 0.5 {
+//            penOffset = startPosition.x
+//        } else if layout.penFlush == 0.0 {
+//            penOffset = startPosition.x
+//        }
+        
+        point.x -= ((layoutSize.width - line.frame.width) * line.penFlush)
+
         
         if  width > point.x, point.x >= 0 {
             var pos = CTLineGetStringIndexForPosition(line.line, point);
@@ -899,6 +910,7 @@ public class TextView: Control {
     
     public var canBeResponder:Bool = true
     
+    
     public var isSelectable:Bool = true {
         didSet {
             if oldValue != isSelectable {
@@ -1029,7 +1041,6 @@ public class TextView: Control {
             let textPosition = ctx.textPosition
             let startPosition = focus(layout.layoutSize).origin
             
-     
             
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             
@@ -1037,11 +1048,13 @@ public class TextView: Control {
             for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
                 
-                let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(frame.width))) + line.frame.minX
-                
+                var penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(frame.width))) + line.frame.minX
+                if layout.penFlush == 0.5, line.penFlush != 0.5 {
+                    penOffset = startPosition.x
+                } else if layout.penFlush == 0.0 {
+                    penOffset = startPosition.x
+                }
                 ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY)
-                
-               
                 
                 CTLineDraw(line.line, ctx)
                 

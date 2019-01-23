@@ -36,7 +36,7 @@ class WPMediaContentView: WPContentView {
                 self.addSubview(self.contentNode!)
             }
             
-            self.contentNode?.update(with: layout.media, size: layout.mediaSize, account: layout.account, parent:layout.parent, table:layout.table, parameters: layout.parameters)
+            self.contentNode?.update(with: layout.media, size: layout.mediaSize, account: layout.account, parent:layout.parent, table:layout.table, parameters: layout.parameters, approximateSynchronousValue: layout.approximateSynchronousValue)
         }
     }
     
