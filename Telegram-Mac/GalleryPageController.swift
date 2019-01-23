@@ -766,7 +766,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                             }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                         } else {
                             selectedView?.isHidden = false
+                            self?.hasInited = true
                             self?.lockedTransition = false
+                            self?.selectedItem?.appear(for: selectedView?.contentView)
+
                         }
                         if let selectedView = selectedView {
                             addVideoTimebase?((item.stableId, selectedView.contentView))

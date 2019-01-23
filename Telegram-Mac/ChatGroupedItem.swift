@@ -496,6 +496,8 @@ private class ChatGroupedView : ChatRowView {
         
         assert(contents.count == item.layout.count)
         
+        let approximateSynchronousValue = item.approximateSynchronousValue
+        
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
@@ -510,7 +512,7 @@ private class ChatGroupedView : ChatRowView {
             }
 
             
-            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, parameters: item.parameters, animated: animated, positionFlags: positionFlags)
+            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: item.layout.messages[i], table: item.table, parameters: item.parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
             
             contents[i].change(pos: item.layout.frame(at: i).origin, animated: animated)
         }

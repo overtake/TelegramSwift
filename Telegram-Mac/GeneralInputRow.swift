@@ -205,10 +205,10 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
                 
                 
                 if item.holdText {
-                      if item.text != textView.string().replacingOccurrences(of: item.placeholder.string, with: "") {
+                      //if item.text != textView.string().replacingOccurrences(of: item.placeholder.string, with: "") {
                         textView.defaultText = item.placeholder.string
                         textView.setString(item.text, animated: false)
-                     }
+                    // }
                 } else {
                     if textView.placeholderAttributedString == nil || !textView.placeholderAttributedString!.isEqual(to: item.placeholder) {
                         textView.setPlaceholderAttributedString(item.placeholder, update: false)

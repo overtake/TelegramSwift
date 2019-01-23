@@ -54,51 +54,11 @@ private enum ChannelMembersEntryStableId: Hashable {
         }
     }
     
-    static func ==(lhs: ChannelMembersEntryStableId, rhs: ChannelMembersEntryStableId) -> Bool {
-        switch lhs {
-        case let .peer(peerId):
-            if case .peer(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .addMembers:
-            if case .addMembers = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .membersDesc:
-            if case .membersDesc = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .inviteLink:
-            if case .inviteLink = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .loading:
-            if case .loading = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum ChannelMembersEntry: Identifiable, Comparable {
     case peerItem(sectionId:Int, Int32, RenderedChannelParticipant, ShortPeerDeleting?, Bool)
-    case addMembers(sectionId:Int)
+    case addMembers(sectionId:Int, isChannel: Bool)
     case inviteLink(sectionId:Int)
     case membersDesc(sectionId:Int)
     case section(sectionId:Int)
@@ -126,7 +86,7 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
         switch self {
         case let .peerItem(sectionId, index, _, _, _):
             return (sectionId * 1000) + Int(index) + 100
-        case let .addMembers(sectionId):
+        case let .addMembers(sectionId, _):
             return (sectionId * 1000) + 0
         case let .inviteLink(sectionId):
             return (sectionId * 1000) + 1
@@ -139,58 +99,6 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
         }
     }
     
-    static func ==(lhs: ChannelMembersEntry, rhs: ChannelMembersEntry) -> Bool {
-        switch lhs {
-        case let .peerItem(_, lhsIndex, lhsParticipant, lhsEditing, lhsEnabled):
-            if case let .peerItem(_, rhsIndex, rhsParticipant, rhsEditing, rhsEnabled) = rhs {
-                if lhsIndex != rhsIndex {
-                    return false
-                }
-                if lhsParticipant != rhsParticipant {
-                    return false
-                }
-                if lhsEditing != rhsEditing {
-                    return false
-                }
-                if lhsEnabled != rhsEnabled {
-                    return false
-                }
-                return true
-            } else {
-                return false
-            }
-        case .addMembers:
-            if case .addMembers = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .loading:
-            if case .loading = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .inviteLink:
-            if case .inviteLink = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .membersDesc:
-            if case .membersDesc = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
     
     static func <(lhs: ChannelMembersEntry, rhs: ChannelMembersEntry) -> Bool {
         return lhs.index < rhs.index
@@ -216,16 +124,16 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
                     arguments.openInfo(participant.peer)
                 }
             })
-        case .addMembers:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelMembersAddMembers), nameStyle: blueActionButton, type: .none, action: {
+        case let .addMembers(_, isChannel):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: isChannel ? L10n.channelMembersAddSubscribers : L10n.channelMembersAddMembers, nameStyle: blueActionButton, type: .none, action: {
                 arguments.addMembers()
             })
         case .inviteLink:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.channelMembersInviteLink), nameStyle: blueActionButton, type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelMembersInviteLink, nameStyle: blueActionButton, type: .none, action: {
                 arguments.inviteLink()
             })
         case .membersDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(L10n.channelMembersMembersListDesc))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.channelMembersMembersListDesc)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
@@ -288,19 +196,19 @@ private func channelMembersControllerEntries(view: PeerView, account:Account, st
         if let peer = peerViewMainPeer(view) as? TelegramChannel {
             
             var usersManage:Bool = false
-            if peer.hasAdminRights(.canInviteUsers) {
-                entries.append(.addMembers(sectionId: sectionId))
+            if peer.hasPermission(.inviteMembers) {
+                entries.append(.addMembers(sectionId: sectionId, isChannel: peer.isChannel))
                 usersManage = true
             }
-            if peer.hasAdminRights(.canChangeInviteLink) {
+            if peer.hasPermission(.manageInviteLink) {
                 entries.append(.inviteLink(sectionId: sectionId))
                 usersManage = true
             }
             
             if usersManage {
+                entries.append(.membersDesc(sectionId: sectionId))
                 entries.append(.section(sectionId: sectionId))
                 sectionId += 1
-                entries.append(.membersDesc(sectionId: sectionId))
             }
             
            
@@ -357,10 +265,13 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     private let removePeerDisposable:MetaDisposable = MetaDisposable()
     
     private let disposable:MetaDisposable = MetaDisposable()
-    
     init(account:Account, peerId:PeerId) {
         self.peerId = peerId
         super.init(account)
+    }
+    
+    override var defaultBarTitle: String {
+        return L10n.peerInfoSubscribers
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -388,6 +299,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             }
         }
         
+        let actionsDisposable = DisposableSet()
         let peersPromise = Promise<[RenderedChannelParticipant]?>(nil)
         
         let arguments = ChannelMembersControllerArguments(account: account, removePeer: { [weak self] memberId in
@@ -396,41 +308,31 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 return $0.withUpdatedRemovingPeerId(memberId)
             }
             
-            let applyPeers: Signal<Void, NoError> = peersPromise.get()
-                |> filter { $0 != nil }
-                |> take(1)
-                |> deliverOnMainQueue
-                |> mapToSignal { peers -> Signal<Void, NoError> in
-                    if let peers = peers {
-                        var updatedPeers = peers
-                        for i in 0 ..< updatedPeers.count {
-                            if updatedPeers[i].peer.id == memberId {
-                                updatedPeers.remove(at: i)
-                                break
-                            }
-                        }
-                        peersPromise.set(.single(updatedPeers))
-                    }
-                    
-                    return .complete()
-            }
-            
-            self?.removePeerDisposable.set((removePeerMember(account: account, peerId: peerId, memberId: memberId) |> then(applyPeers) |> deliverOnMainQueue).start(error: { _ in
-                updateState {
-                    return $0.withUpdatedRemovingPeerId(nil)
-                }
-            }, completed: {
+            self?.removePeerDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)) |> deliverOnMainQueue).start(completed: {
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }
                 
             }))
         }, addMembers: {
-            peersPromise.set(selectModalPeers(account: account, title: tr(L10n.channelMembersSelectTitle), settings: [.contacts, .remote, .excludeBots]) |> mapToSignal { peers -> Signal<[RenderedChannelParticipant]?, NoError> in
-                return showModalProgress(signal: addChannelMembers(account: account, peerId: peerId, memberIds: peers)  |> `catch` { _ in return .complete()} |> mapToSignal {
-                    return channelMembers(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId)
-                }, for: mainWindow)
-            })
+            let signal = selectModalPeers(account: account, title: L10n.channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
+                return showModalProgress(signal: account.context.peerChannelMemberCategoriesContextsManager.addMembers(account: account, peerId: peerId, memberIds: peers), for: mainWindow)
+            } |> deliverOnMainQueue
+            
+            actionsDisposable.add(signal.start(error: { error in
+                let text: String
+                switch error {
+                case .limitExceeded:
+                    text = L10n.channelErrorAddTooMuch
+                case .generic:
+                    text = L10n.unknownError
+                case .restricted:
+                    text = L10n.channelErrorAddBlocked
+                }
+                alert(for: mainWindow, info: text)
+            }, completed: {
+                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+            }))
         }, inviteLink: { [weak self] in
             if let strongSelf = self {
                 strongSelf.navigationController?.push(LinkInvationController(account: strongSelf.account, peerId: strongSelf.peerId))
@@ -441,9 +343,11 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         
         let peerView = account.viewTracker.peerView(peerId)
         
-        let peersSignal: Signal<[RenderedChannelParticipant]?, NoError> = .single(nil) |> then(channelMembers(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId))
-        
-        peersPromise.set(peersSignal)
+        let (disposable, _) = account.context.peerChannelMemberCategoriesContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, updated: { state in
+            peersPromise.set(.single(state.list))
+        })
+        actionsDisposable.add(disposable)
+
         
         let initialSize = atomicSize
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChannelMembersEntry>]> = Atomic(value: [])
@@ -454,9 +358,11 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             |> map { state, view, peers, appearance -> TableUpdateTransition in
                 let entries = channelMembersControllerEntries(view: view, account: account, state: state, participants: peers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
+        } |> afterDisposed {
+            actionsDisposable.dispose()
         }
         
-        disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] transition in
+        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] transition in
             if let strongSelf = self {
                 strongSelf.genericView.merge(with: transition)
                 strongSelf.readyOnce()

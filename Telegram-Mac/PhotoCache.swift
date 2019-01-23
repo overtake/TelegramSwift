@@ -197,7 +197,14 @@ func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NS
     let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
     return .single(peerPhotoCache.cacheImage(image, for: entry))
 }
-
+func cachedPeerPhotoImmediatly(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> CGImage? {
+    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
+    return peerPhotoCache.cachedImage(for: entry)
+}
+func cachedEmptyPeerPhotoImmediatly(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat) -> CGImage? {
+    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
+    return peerPhotoCache.cachedImage(for: entry)
+}
 
 func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<(CGImage?, Bool), NoError> {
     let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)

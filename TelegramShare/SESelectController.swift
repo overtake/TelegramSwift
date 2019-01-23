@@ -18,12 +18,12 @@ extension Peer {
     var canSendMessage: Bool {
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
-                return channel.hasAdminRights(.canPostMessages)
+                return channel.hasPermission(.sendMessages)
             } else if case .group(_) = channel.info  {
-                return !channel.hasBannedRights(.banSendMessages)
+                return channel.hasBannedPermission(.banSendMessages) == nil
             }
         } else if let group = self as? TelegramGroup {
-            return group.membership == .Member
+            return group.membership == .Member && !group.hasBannedPermission(.banSendMessages)
         } else if let secret = self as? TelegramSecretChat {
             switch secret.embeddedState {
             case .terminated:

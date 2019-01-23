@@ -20,11 +20,13 @@ private let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeer
     return nil
 }, fetchResourceMediaReferenceHash: { resource in
     return .single(nil)
+}, prepareSecretThumbnailData: { _ in
+    return nil
 })
 
 func applicationContext(accountManager: AccountManager, appGroupPath: String, extensionContext: NSExtensionContext) -> Signal<ShareApplicationContext?, NoError> {
     
-    return currentAccount(allocateIfNotExists: false, networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos", appVersion: "", voipMaxLayer: 90), supplementary: true, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: false, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, NoError> in
+    return currentAccount(allocateIfNotExists: false, networkArguments: NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos", appVersion: "", voipMaxLayer: 90), supplementary: true, manager: accountManager, rootPath: appGroupPath, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> mapToSignal { result -> Signal<ShareApplicationContext?, NoError> in
         if let result = result {
             switch result {
             case .unauthorized(let account):

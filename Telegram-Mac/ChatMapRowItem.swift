@@ -26,7 +26,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         self.isVenue = map.venue != nil
         self.resource = resource
         self.defaultImageSize = isVenue ? NSMakeSize(60, 60) : NSMakeSize(320, 120)
-        self.url = "https://maps.google.com/maps?q=\(map.latitude),\(map.longitude)"
+        self.url = "https://maps.google.com/maps?q=\(String(format:"%f", map.latitude)),\(String(format:"%f", map.longitude))"
         let representation = TelegramMediaImageRepresentation(dimensions: defaultImageSize, resource: resource)
         self.image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
         
@@ -55,7 +55,7 @@ class ChatMapRowItem: ChatMediaItem {
         super.init(initialSize, chatInteraction, account, object, downloadSettings)
         let map = media as! TelegramMediaMap
       //  let isVenue = map.venue != nil
-        let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2)
+        let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2, zoom: 15)
         //let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
         

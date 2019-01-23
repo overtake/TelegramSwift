@@ -47,28 +47,6 @@ private enum GroupAdminsEntryStableId: Hashable {
         }
     }
     
-    static func ==(lhs: GroupAdminsEntryStableId, rhs: GroupAdminsEntryStableId) -> Bool {
-        switch lhs {
-        case let .index(index):
-            if case .index(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(index):
-            if case .section(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .peer(peerId):
-            if case .peer(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum GroupAdminsEntry: Comparable, Identifiable {
@@ -250,62 +228,62 @@ private struct GroupAdminsControllerState: Equatable {
 private func groupAdminsControllerEntries(account: Account, view: PeerView, state: GroupAdminsControllerState) -> [GroupAdminsEntry] {
     var entries: [GroupAdminsEntry] = []
     
-    if let peer = view.peers[view.peerId] as? TelegramGroup, let cachedData = view.cachedData as? CachedGroupData, let participants = cachedData.participants {
-        
-        var sectionId:Int = 1
-        entries.append(.section(sectionId: sectionId))
-        sectionId += 1
-        
-        let effectiveAdminsEnabled: Bool
-        if let updatingAllAdminsValue = state.updatingAllAdminsValue {
-            effectiveAdminsEnabled = updatingAllAdminsValue
-        } else {
-            effectiveAdminsEnabled = peer.flags.contains(.adminsEnabled)
-        }
-        
-        entries.append(.allAdmins(sectionId: sectionId, !effectiveAdminsEnabled))
-        if effectiveAdminsEnabled {
-            entries.append(.allAdminsInfo(sectionId: sectionId, tr(L10n.groupAdminsDescAdminInvites)))
-        } else {
-            entries.append(.allAdminsInfo(sectionId: sectionId, tr(L10n.groupAdminsDescAllInvites)))
-        }
-        
-        entries.append(.section(sectionId: sectionId))
-        sectionId += 1
-        
-        
-        var index: Int32 = 0
-        for participant in participants.participants.sorted(by: <) {
-            if let peer = view.peers[participant.peerId] {
-                var isAdmin = false
-                var isEnabled = true
-                if !effectiveAdminsEnabled {
-                    isAdmin = true
-                    isEnabled = false
-                } else {
-                    switch participant {
-                    case .creator:
-                        isAdmin = true
-                        isEnabled = false
-                    case .admin:
-                        if let value = state.updatingAdminValue[peer.id] {
-                            isAdmin = value
-                        } else {
-                            isAdmin = true
-                        }
-                    case .member:
-                        if let value = state.updatingAdminValue[peer.id] {
-                            isAdmin = value
-                        } else {
-                            isAdmin = false
-                        }
-                    }
-                }
-                entries.append(.peerItem(sectionId: sectionId, index, peer, view.peerPresences[participant.peerId], isAdmin, isEnabled))
-                index += 1
-            }
-        }
-    }
+//    if let peer = view.peers[view.peerId] as? TelegramGroup, let cachedData = view.cachedData as? CachedGroupData, let participants = cachedData.participants {
+//        
+//        var sectionId:Int = 1
+//        entries.append(.section(sectionId: sectionId))
+//        sectionId += 1
+//        
+//        let effectiveAdminsEnabled: Bool
+//        if let updatingAllAdminsValue = state.updatingAllAdminsValue {
+//            effectiveAdminsEnabled = updatingAllAdminsValue
+//        } else {
+//            effectiveAdminsEnabled = peer.flags.contains(.adminsEnabled)
+//        }
+//        
+//        entries.append(.allAdmins(sectionId: sectionId, !effectiveAdminsEnabled))
+//        if effectiveAdminsEnabled {
+//            entries.append(.allAdminsInfo(sectionId: sectionId, tr(L10n.groupAdminsDescAdminInvites)))
+//        } else {
+//            entries.append(.allAdminsInfo(sectionId: sectionId, tr(L10n.groupAdminsDescAllInvites)))
+//        }
+//        
+//        entries.append(.section(sectionId: sectionId))
+//        sectionId += 1
+//        
+//        
+//        var index: Int32 = 0
+//        for participant in participants.participants.sorted(by: <) {
+//            if let peer = view.peers[participant.peerId] {
+//                var isAdmin = false
+//                var isEnabled = true
+//                if !effectiveAdminsEnabled {
+//                    isAdmin = true
+//                    isEnabled = false
+//                } else {
+//                    switch participant {
+//                    case .creator:
+//                        isAdmin = true
+//                        isEnabled = false
+//                    case .admin:
+//                        if let value = state.updatingAdminValue[peer.id] {
+//                            isAdmin = value
+//                        } else {
+//                            isAdmin = true
+//                        }
+//                    case .member:
+//                        if let value = state.updatingAdminValue[peer.id] {
+//                            isAdmin = value
+//                        } else {
+//                            isAdmin = false
+//                        }
+//                    }
+//                }
+//                entries.append(.peerItem(sectionId: sectionId, index, peer, view.peerPresences[participant.peerId], isAdmin, isEnabled))
+//                index += 1
+//            }
+//        }
+//    }
     
     return entries
 }
@@ -372,7 +350,7 @@ class GroupAdminsController : TableViewController {
             }
             
             if value {
-                toggleAdminsDisposables.set((addPeerAdmin(account: account, peerId: peerId, adminId: memberId) |> deliverOnMainQueue).start(error: { _ in
+                toggleAdminsDisposables.set((addGroupAdmin(account: account, peerId: peerId, adminId: memberId) |> deliverOnMainQueue).start(error: { _ in
                     updateState { state in
                         var updatingAdminValue = state.updatingAdminValue
                         updatingAdminValue.removeValue(forKey: memberId)
@@ -386,7 +364,7 @@ class GroupAdminsController : TableViewController {
                     }
                 }), forKey: memberId)
             } else {
-                toggleAdminsDisposables.set((removePeerAdmin(account: account, peerId: peerId, adminId: memberId) |> deliverOnMainQueue).start(error: { _ in
+                toggleAdminsDisposables.set((removeGroupAdmin(account: account, peerId: peerId, adminId: memberId) |> deliverOnMainQueue).start(error: { _ in
                     updateState { state in
                         var updatingAdminValue = state.updatingAdminValue
                         updatingAdminValue.removeValue(forKey: memberId)

@@ -21,7 +21,7 @@ final class InstantPagePeerReferenceItem: InstantPageItem {
     }
     
     var frame: CGRect
-    let wantsNode: Bool = true
+    let wantsView: Bool = true
     let separatesTiles: Bool = false
     let medias: [InstantPageMedia] = []
     
@@ -38,11 +38,11 @@ final class InstantPagePeerReferenceItem: InstantPageItem {
         self.rtl = rtl
     }
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return nil
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         return false
     }
     

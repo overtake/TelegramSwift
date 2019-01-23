@@ -69,7 +69,18 @@ struct EditedImageData : Equatable {
         if let orientation = orientation {
             image = image.createMatchingBackingDataWithImage(orienation: orientation)!
         } else if data.isHorizontalFlipped {
-            image = NSImage(cgImage: image, size: image.backingSize).precomposed(flipHorizontal: true)
+            return generateImage(image.backingSize, contextGenerator: { size, ctx in
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.scaleBy(x: -1.0, y: 1.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                
+                ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
+                
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.scaleBy(x: -1.0, y: 1.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+            })!
+          //  image = NSImage(cgImage: image, size: image.backingSize).precomposed(flipHorizontal: true)
         }
        
         return image
@@ -78,13 +89,13 @@ struct EditedImageData : Equatable {
     static func generateNewUrl(data: EditedImageData, selectedRect: NSRect) -> Signal<URL, NoError> {
         return Signal { subscriber in
             
-            if let image = NSImage(contentsOf: data.originalUrl)?.precomposed() {
+            if let image = NSImage(contentsOf: data.originalUrl)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                 if selectedRect == NSMakeRect(0, 0, image.size.width, image.size.height) && data.hasntData {
                     subscriber.putNext(data.originalUrl)
                     subscriber.putCompletion()
                 } else {
                     if let image = self.makeImage(image, data: data).cropping(to: selectedRect) {
-                        return putToTemp(image: NSImage(cgImage: image, size: image.size)).start(next: { url in
+                        return putToTemp(image: NSImage(cgImage: image, size: image.size), compress: true).start(next: { url in
                             subscriber.putNext(URL(fileURLWithPath: url))
                         }, error: { error in
                             subscriber.putError(error)
@@ -192,7 +203,7 @@ final class EditImageControlsView : View {
         super.setFrameSize(newSize)
     }
     
-    fileprivate func set(handlers: EditImageControlsArguments) {
+    fileprivate func set(settings: EditControllerSettings, handlers: EditImageControlsArguments) {
         
         success.set(handler: { _ in
             handlers.success()
@@ -211,16 +222,22 @@ final class EditImageControlsView : View {
         }, for: .Click)
         
         dimensions.set(handler: { control in
-            if control.isSelected {
-                 handlers.selectionDimensions(.none)
-            } else {
-                let items: [SPopoverItem] = SelectionRectDimensions.all.map { value in
-                    return SPopoverItem(value.description, {
-                        handlers.selectionDimensions(value)
-                    })
+            switch settings {
+            case .disableSizes:
+                break
+            case .plain:
+                if control.isSelected {
+                    handlers.selectionDimensions(.none)
+                } else {
+                    let items: [SPopoverItem] = SelectionRectDimensions.all.map { value in
+                        return SPopoverItem(value.description, {
+                            handlers.selectionDimensions(value)
+                        })
+                    }
+                    showPopover(for: control, with: SPopoverViewController(items: items, visibility: SelectionRectDimensions.all.count, handlerDelay: 0))
                 }
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: SelectionRectDimensions.all.count, handlerDelay: 0))
             }
+            
            
         }, for: .Click)
     }
@@ -234,9 +251,11 @@ class EditImageControls: GenericViewController<EditImageControlsView> {
     let arguments: EditImageControlsArguments
     private let stateDisposable = MetaDisposable()
     private let stateValue: Signal<EditedImageData, NoError>
-    init(arguments: EditImageControlsArguments, stateValue: Signal<EditedImageData, NoError>) {
+    private let settings: EditControllerSettings
+    init(settings:EditControllerSettings, arguments: EditImageControlsArguments, stateValue: Signal<EditedImageData, NoError>) {
         self.arguments = arguments
         self.stateValue = stateValue
+        self.settings = settings
         super.init(frame: NSMakeRect(0, 0, 300, 40))
         bar = .init(height: 0)
     }
@@ -244,7 +263,7 @@ class EditImageControls: GenericViewController<EditImageControlsView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.set(handlers: arguments)
+        genericView.set(settings: settings, handlers: arguments)
         stateDisposable.set(stateValue.start(next: { [weak self] current in
             self?.genericView.updateUserInterface(current)
         }))

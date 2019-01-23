@@ -132,6 +132,17 @@ enum GalleryEntry : Comparable, Identifiable {
         return nil
     }
     
+    var webpage: TelegramMediaWebpage? {
+        switch self {
+        case let .message(entry):
+            return entry.message!.media[0] as! TelegramMediaWebpage
+        case let .instantMedia(media, _):
+            return media.media as? TelegramMediaWebpage
+        default:
+            return nil
+        }
+    }
+    
     func imageReference( _ image: TelegramMediaImage) -> ImageMediaReference {
         switch self {
         case let .message(entry):
@@ -329,7 +340,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             view.layer?.backgroundColor = self is MGalleryPhotoItem ? theme.colors.transparentBackground.cgColor : .black
 
             if let magnify = view.superview?.superview as? MagnifyView {
-                if let size = image?.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height {
+                if let size = image?.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height, size.width > 150 && size.height > 150 {
                     self.modifiedSize = size
                     if magnify.contentSize != self.sizeValue {
                         magnify.contentSize = self.sizeValue

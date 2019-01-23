@@ -258,7 +258,7 @@ private class ContextSearchMessageView : GeneralRowView {
         
         
         super.init(frame: frameRect)
-        
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         photo.userInteractionEnabled = false
         photo.frame = NSMakeRect(10, 8, 30, 30)
         addSubview(photo)

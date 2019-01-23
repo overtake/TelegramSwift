@@ -20,10 +20,10 @@ class ReplyMarkupButtonLayout {
     let style:ControlStyle
     let button:ReplyMarkupButton
     
-    init(_ button:ReplyMarkupButton, _ style:ControlStyle = ControlStyle(backgroundColor: theme.colors.grayForeground, highlightColor: theme.colors.text)) {
+    init(button:ReplyMarkupButton, style:ControlStyle = ControlStyle(backgroundColor: theme.colors.grayForeground, highlightColor: theme.colors.text), isInput: Bool) {
         self.button = button
         self.style = style
-        self.text = TextViewLayout(NSAttributedString.initialize(string: button.title.fixed, color: theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
+        self.text = TextViewLayout(NSAttributedString.initialize(string: button.title.fixed, color: theme.backgroundMode.hasWallpapaer && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
     }
     
     func measure(_ width:CGFloat) {
@@ -46,14 +46,15 @@ class ReplyMarkupNode: Node {
     private let flags:ReplyMarkupMessageFlags
     
     private let interactions:ReplyMarkupInteractions
-    
-    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ view:View? = nil) {
+    private let isInput: Bool
+    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ view:View? = nil, _ isInput: Bool = false) {
         self.flags = flags
+        self.isInput = isInput
         self.interactions = interactions
         var layoutRows:[[ReplyMarkupButtonLayout]] = Array(repeating: [], count: rows.count)
         for i in 0 ..< rows.count {
             for button in rows[i].buttons {
-                layoutRows[i].append(ReplyMarkupButtonLayout(button))
+                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, isInput: isInput))
             }
         }
         self.markup = layoutRows
@@ -123,7 +124,7 @@ class ReplyMarkupNode: Node {
                 }
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
                 let button:View? = view?.subviews[i] as? View
-                button?.backgroundColor = theme.colors.grayBackground
+                button?.backgroundColor = theme.backgroundMode.hasWallpapaer && !isInput ? theme.chatServiceItemColor : theme.colors.grayBackground
                 if let button = button {
                     button.frame = rect
                     button.setNeedsDisplayLayer()

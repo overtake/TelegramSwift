@@ -147,7 +147,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
     }
 
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil) {
+    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         var mediaUpdated = parent?.stableId != self.parent?.stableId
         
@@ -190,9 +190,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 dimensions = image.representationForDisplayAtSize(size)?.dimensions ?? size
                 
                 if let parent = parent, parent.containsSecretMedia {
-                    updateImageSignal = chatSecretPhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor)
+                    updateImageSignal = chatSecretPhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
                 } else {
-                    updateImageSignal = chatMessagePhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor)
+                    updateImageSignal = chatMessagePhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
                 }
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
@@ -205,7 +205,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             }
                     } |> deliverOnMainQueue
                 } else {
-                    updatedStatusSignal = chatMessagePhotoStatus(account: account, photo: image) |> map {($0, $0)} |> deliverOnMainQueue
+                    updatedStatusSignal = chatMessagePhotoStatus(account: account, photo: image, approximateSynchronousValue: approximateSynchronousValue) |> map {($0, $0)} |> deliverOnMainQueue
                 }
             
             } else if let file = media as? TelegramMediaFile {
@@ -250,7 +250,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             }
                     } |> deliverOnMainQueue
                 } else {
-                    updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue |> map { [weak parent, weak file] status in
+                    updatedStatusSignal = chatMessageFileStatus(account: account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue |> map { [weak parent, weak file] status in
                         if let parent = parent, let file = file {
                             if file.isStreamable && parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
                                 return (.Local, status)
@@ -267,7 +267,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: mediaUpdated)
             mediaUpdated = mediaUpdated && !self.image.hasImage
 
-            
             if let updateImageSignal = updateImageSignal {
                 self.image.setSignal( updateImageSignal, animate: mediaUpdated, cacheImage: { [weak self] image in
                     if let strongSelf = self {

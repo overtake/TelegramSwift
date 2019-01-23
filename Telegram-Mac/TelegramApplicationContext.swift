@@ -35,7 +35,9 @@ class TelegramApplicationContext : NSObject {
     let mainViewController: MainViewController
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
     let archiver: ArchiverContext = ArchiverContext()
-
+    let chatUndoManager = ChatUndoManager()
+    let peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager()
+    
     private(set) var timeDifference:TimeInterval  = 0
     private(set) var recentlyPeerUsed:[PeerId] {
         set {

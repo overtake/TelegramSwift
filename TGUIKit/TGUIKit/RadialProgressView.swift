@@ -42,12 +42,13 @@ private class RadialProgressParameters: NSObject {
     let diameter: CGFloat
     let twist: Bool
     let state: RadialProgressState
-    
+    let clockwise: Bool
     init(theme: RadialProgressTheme, diameter: CGFloat, state: RadialProgressState, twist: Bool = true) {
         self.theme = theme
         self.diameter = diameter
         self.state = state
         self.twist = twist
+        self.clockwise = theme.clockwise
         super.init()
     }
 }
@@ -60,7 +61,8 @@ public struct RadialProgressTheme : Equatable {
     public let iconInset:NSEdgeInsets
     public let diameter:CGFloat?
     public let lineWidth: CGFloat
-    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, cancelFetchingIcon: CGImage? = nil, iconInset:NSEdgeInsets = NSEdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2) {
+    public let clockwise: Bool
+    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, cancelFetchingIcon: CGImage? = nil, iconInset:NSEdgeInsets = NSEdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2, clockwise: Bool = true) {
         self.iconInset = iconInset
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
@@ -68,6 +70,7 @@ public struct RadialProgressTheme : Equatable {
         self.cancelFetchingIcon = cancelFetchingIcon
         self.diameter = diameter
         self.lineWidth = lineWidth
+        self.clockwise = clockwise
     }
 }
 
@@ -161,12 +164,15 @@ private class RadialProgressOverlayLayer: CALayer {
             let fps: Float = 60
             let difference = progress - _progress
             let tick: Float = Float(difference / (fps * 0.2))
-            if difference > 0 {
+            
+            let clockwise = theme.clockwise
+            
+            if (clockwise && difference > 0) || (!clockwise && difference != 0)  {
                 timer = SwiftSignalKitMac.Timer(timeout: TimeInterval(1 / fps), repeat: true, completion: { [weak self] in
                     if let strongSelf = self {
                         strongSelf._progress += tick
                         strongSelf.setNeedsDisplay()
-                        if strongSelf._progress == strongSelf.progress || strongSelf._progress < 0 || strongSelf._progress > strongSelf.progress {
+                        if strongSelf._progress == strongSelf.progress || strongSelf._progress < 0 || (strongSelf._progress >= 1 && !clockwise) || (strongSelf._progress > strongSelf.progress && clockwise) {
                             strongSelf.stopAnimation()
                         }
                     }
@@ -212,7 +218,7 @@ private class RadialProgressOverlayLayer: CALayer {
         let endAngle = -(CGFloat.pi / 2)
         
         let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
-        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(scaleFactor: System.backingScale, parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(scaleFactor: System.backingScale, parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.clockwise)
         
         ctx.setLineWidth(parameters.theme.lineWidth);
         ctx.setLineCap(.round);

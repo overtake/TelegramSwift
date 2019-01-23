@@ -22,6 +22,10 @@ class ExMajorNavigationController: MajorNavigationController {
         super.init(majorClass, empty)
     }
     
+    override func push(_ controller: ViewController, _ animated: Bool, style: ViewControllerStyle?) {
+        super.push(controller, animated, style: style)
+    }
+    
     @available(OSX 10.12.2, *)
     override func makeTouchBar() -> NSTouchBar? {
         return  controller.makeTouchBar()//globalAudio?.makeTouchBar()//

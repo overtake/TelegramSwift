@@ -33,8 +33,8 @@ class ChatContactRowItem: ChatRowItem {
 
             
             if let vCard = contact.vCardData?.data(using: .utf8) {
-                let contacts = try? CNContactVCardSerialization.contacts(with: vCard)
-                self.vCard = contacts?.first
+                //let contacts = try? CNContactVCardSerialization.contacts(with: vCard)
+                self.vCard = nil
             } else {
                 self.vCard = nil
             }

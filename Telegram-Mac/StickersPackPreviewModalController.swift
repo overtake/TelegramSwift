@@ -220,7 +220,7 @@ class StickersPackPreviewModalController: ModalViewController {
                     attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
                 }
                 
-                _ = (strongSelf.account.postbox.loadedPeerWithId(peerId) |> filter {$0.canSendMessage && !$0.stickersRestricted} |> mapToSignal { _ -> Signal<[MessageId?], NoError> in
+                _ = (strongSelf.account.postbox.loadedPeerWithId(peerId) |> filter { $0.canSendMessage && permissionText(from: $0, for: .banSendStickers) == nil } |> mapToSignal { _ -> Signal<[MessageId?], NoError> in
                     let enqueue = EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.stickerPack(stickerPack: reference, media: media), replyToMessageId: nil, localGroupingKey: nil)
                     let value = enqueueMessages(account: account, peerId: peerId, messages: [enqueue])
                     return value

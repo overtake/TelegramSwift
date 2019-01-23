@@ -101,6 +101,7 @@ public struct TransformImageArguments: Equatable {
     public let boundingSize: NSSize
     public let intrinsicInsets: NSEdgeInsets
     public let resizeMode: TransformImageResizeMode
+    public let emptyColor: NSColor?
 
     public var drawingSize: CGSize {
         let cornersExtendedEdges = self.corners.extendedEdges
@@ -117,18 +118,19 @@ public struct TransformImageArguments: Equatable {
         return NSEdgeInsets(top: cornersExtendedEdges.top + self.intrinsicInsets.top, left: cornersExtendedEdges.left + self.intrinsicInsets.left, bottom: cornersExtendedEdges.bottom + self.intrinsicInsets.bottom, right: cornersExtendedEdges.right + self.intrinsicInsets.right)
     }
     
-    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none) {
+    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none, emptyColor: NSColor? = nil) {
         self.corners = corners
         let min = corners.topLeft.corner + corners.topRight.corner
         self.imageSize = NSMakeSize(max(imageSize.width, min), max(imageSize.height, min))
         self.boundingSize = NSMakeSize(max(boundingSize.width, min), max(boundingSize.height, min))
         self.intrinsicInsets = intrinsicInsets
         self.resizeMode = resizeMode
+        self.emptyColor = emptyColor
     }
 }
 
 public func ==(lhs: TransformImageArguments, rhs: TransformImageArguments) -> Bool {
-    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners
+    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners && lhs.emptyColor == rhs.emptyColor
 }
 
 

@@ -149,7 +149,7 @@ struct ChatSearchInteractions {
     let results:(String)->Void
     let calendarAction:(Date)->Void
     let cancel:()->Void
-    let searchRequest:(String, PeerId?) -> Signal<[Message], NoError>
+    let searchRequest:(String, PeerId?, SearchMessagesState?) -> Signal<([Message], SearchMessagesState?), NoError>
 }
 
 private class ChatSponsoredModel: ChatAccessoryModel {
@@ -434,11 +434,11 @@ private final class CSearchContextState : Equatable {
     let inputQueryResult: ChatPresentationInputQueryResult?
     let tokenState: TokenSearchState
     let peerId:PeerId?
-    let messages:[Message]
+    let messages: ([Message], SearchMessagesState?)
     let selectedIndex: Int
     let searchState: SearchState
     
-    init(inputQueryResult: ChatPresentationInputQueryResult? = nil, messages: [Message] = [], selectedIndex: Int = -1, searchState: SearchState = SearchState(state: .None, request: ""), tokenState: TokenSearchState = .none, peerId: PeerId? = nil) {
+    init(inputQueryResult: ChatPresentationInputQueryResult? = nil, messages: ([Message], SearchMessagesState?) = ([], nil), selectedIndex: Int = -1, searchState: SearchState = SearchState(state: .None, request: ""), tokenState: TokenSearchState = .none, peerId: PeerId? = nil) {
         self.inputQueryResult = inputQueryResult
         self.tokenState = tokenState
         self.peerId = peerId
@@ -455,7 +455,7 @@ private final class CSearchContextState : Equatable {
     func updatedPeerId(_ peerId: PeerId?) -> CSearchContextState {
         return CSearchContextState(inputQueryResult: self.inputQueryResult, messages: self.messages, selectedIndex: self.selectedIndex, searchState: self.searchState, tokenState: self.tokenState, peerId: peerId)
     }
-    func updatedMessages(_ messages: [Message]) -> CSearchContextState {
+    func updatedMessages(_ messages: ([Message], SearchMessagesState?)) -> CSearchContextState {
         return CSearchContextState(inputQueryResult: self.inputQueryResult, messages: messages, selectedIndex: self.selectedIndex, searchState: self.searchState, tokenState: self.tokenState, peerId: self.peerId)
     }
     func updatedSelectedIndex(_ selectedIndex: Int) -> CSearchContextState {
@@ -467,16 +467,16 @@ private final class CSearchContextState : Equatable {
 }
 
 private func ==(lhs: CSearchContextState, rhs: CSearchContextState) -> Bool {
-    if lhs.messages.count != rhs.messages.count {
+    if lhs.messages.0.count != rhs.messages.0.count {
         return false
     } else {
-        for i in 0 ..< lhs.messages.count {
-            if !isEqualMessages(lhs.messages[i], rhs.messages[i]) {
+        for i in 0 ..< lhs.messages.0.count {
+            if !isEqualMessages(lhs.messages.0[i], rhs.messages.0[i]) {
                 return false
             }
         }
     }
-    return lhs.inputQueryResult == rhs.inputQueryResult && lhs.tokenState == rhs.tokenState && lhs.selectedIndex == rhs.selectedIndex && lhs.searchState == rhs.searchState
+    return lhs.inputQueryResult == rhs.inputQueryResult && lhs.tokenState == rhs.tokenState && lhs.selectedIndex == rhs.selectedIndex && lhs.searchState == rhs.searchState && lhs.messages.1 == rhs.messages.1
 }
 
 private final class CSearchInteraction : InterfaceObserver {
@@ -491,12 +491,21 @@ private final class CSearchInteraction : InterfaceObserver {
     }
     
     var currentMessage: Message? {
-        if state.messages.isEmpty {
+        if state.messages.0.isEmpty {
             return nil
-        } else if state.messages.count <= state.selectedIndex || state.selectedIndex < 0 {
+        } else if state.messages.0.count <= state.selectedIndex || state.selectedIndex < 0 {
             return nil
         }
-        return state.messages[state.selectedIndex]
+        return state.messages.0[state.selectedIndex]
+    }
+}
+
+private struct SearchStateQuery : Equatable {
+    let query: String?
+    let state: SearchMessagesState?
+    init(_ query: String?, _ state: SearchMessagesState?) {
+        self.query = query
+        self.state = state
     }
 }
 
@@ -504,8 +513,6 @@ class ChatSearchHeader : View, Notifable {
     
     private let searchView:ChatSearchView = ChatSearchView(frame: NSZeroRect)
     private let cancel:ImageButton = ImageButton()
-    private let prev:ImageButton = ImageButton()
-    private let next:ImageButton = ImageButton()
     private let from:ImageButton = ImageButton()
     private let calendar:ImageButton = ImageButton()
     
@@ -513,7 +520,8 @@ class ChatSearchHeader : View, Notifable {
     private let interactions:ChatSearchInteractions
     private let chatInteraction: ChatInteraction
     
-    private let query:Promise<String?> = Promise()
+    private let query:ValuePromise<SearchStateQuery> = ValuePromise()
+
     private let disposable:MetaDisposable = MetaDisposable()
     
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
@@ -539,7 +547,7 @@ class ChatSearchHeader : View, Notifable {
         
         self.chatInteraction.focusMessageId = { [weak self] fromId, messageId, state in
             self?.parentInteractions.focusMessageId(fromId, messageId, state)
-            self?.inputInteraction.update({$0.updatedSelectedIndex($0.messages.firstIndex(where: {$0.id == messageId}) ?? -1)})
+            self?.inputInteraction.update({$0.updatedSelectedIndex($0.messages.0.firstIndex(where: {$0.id == messageId}) ?? -1)})
             _ = self?.window?.makeFirstResponder(nil)
         }
 
@@ -581,11 +589,7 @@ class ChatSearchHeader : View, Notifable {
         let account = chatInteraction.account
         if let value = value as? CSearchContextState, let oldValue = oldValue as? CSearchContextState, let view = superview {
             
-            
-            prev.isEnabled = !value.messages.isEmpty && value.selectedIndex < value.messages.count - 1
-            next.isEnabled = !value.messages.isEmpty && value.selectedIndex > 0
-            next.set(image: next.isEnabled ? theme.icons.chatSearchDown : theme.icons.chatSearchDownDisabled, for: .Normal)
-            prev.set(image: prev.isEnabled ? theme.icons.chatSearchUp : theme.icons.chatSearchUpDisabled, for: .Normal)
+            let stateValue = self.query
             
             
             if let peer = chatInteraction.presentation.peer {
@@ -600,7 +604,11 @@ class ChatSearchHeader : View, Notifable {
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
                     inputInteraction.update(animated: animated, { state in
                         return state.updatedInputQueryResult { previousResult in
-                            return .searchMessages(state.searchState.responder ? state.messages : [], state.searchState.request)
+                            
+                            let result = state.searchState.responder ? state.messages : ([], nil)
+                            return .searchMessages((result.0, result.1, { searchMessagesState in
+                                stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
+                            }), state.searchState.request)
                         }.updatedPeerId(nil)
                     })
                 case let .from(query, complete):
@@ -611,7 +619,10 @@ class ChatSearchHeader : View, Notifable {
                     if complete {
                         inputInteraction.update(animated: animated, { state in
                             return state.updatedInputQueryResult { previousResult in
-                                return .searchMessages(state.searchState.responder ? state.messages : [], state.searchState.request)
+                                let result = state.searchState.responder ? state.messages : ([], nil)
+                                return .searchMessages((result.0, result.1, { searchMessagesState in
+                                    stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
+                                }), state.searchState.request)
                             }
                         })
                     } else {
@@ -628,7 +639,7 @@ class ChatSearchHeader : View, Notifable {
                                         strongSelf.inputInteraction.update(animated: animated, {
                                             $0.updatedInputQueryResult { previousResult in
                                                 return result(previousResult)
-                                            }.updatedMessages([]).updatedSelectedIndex(-1)
+                                            }.updatedMessages(([], nil)).updatedSelectedIndex(-1)
                                         })
                                         
                                     }
@@ -639,7 +650,7 @@ class ChatSearchHeader : View, Notifable {
                                 inputInteraction.update(animated: animated, {
                                     $0.updatedInputQueryResult { previousResult in
                                         return inScopeResult(previousResult)
-                                    }.updatedMessages([]).updatedSelectedIndex(-1)
+                                    }.updatedMessages(([], nil)).updatedSelectedIndex(-1)
                                 })
                             }
                         }
@@ -672,28 +683,28 @@ class ChatSearchHeader : View, Notifable {
         self.searchView.searchInteractions = SearchInteractions({ [weak self] state in
             if state.state == .None {
                 self?.parentInteractions.loadingMessage.set(.single(false))
-                self?.inputInteraction.update({$0.updatedMessages([]).updatedSelectedIndex(-1).updatedSearchState(state)})
+                self?.inputInteraction.update({$0.updatedMessages(([], nil)).updatedSelectedIndex(-1).updatedSearchState(state)})
             }
         }, { [weak self] state in
             guard let `self` = self else {return}
             
-            self.inputInteraction.update({$0.updatedMessages([]).updatedSelectedIndex(-1).updatedSearchState(state)})
+            self.inputInteraction.update({$0.updatedMessages(([], nil)).updatedSelectedIndex(-1).updatedSearchState(state)})
             
             self.updateSearchState()
             switch self.searchView.tokenState {
             case .none:
                 if state.request == L10n.chatSearchFrom, let peer = self.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
-                    self.query.set(.single(""))
+                    self.query.set(SearchStateQuery("", nil))
                     self.searchView.initToken()
                 } else {
                     self.parentInteractions.loadingMessage.set(.single(true))
-                    self.query.set(.single(state.request))
+                    self.query.set(SearchStateQuery(state.request, nil))
                 }
                 
             case .from(_, let complete):
                 if complete {
                     self.parentInteractions.loadingMessage.set(.single(true))
-                    self.query.set(.single(state.request))
+                    self.query.set(SearchStateQuery(state.request, nil))
                 }
             }
             
@@ -702,26 +713,37 @@ class ChatSearchHeader : View, Notifable {
         })
  
         
-        let apply = query.get() |> mapToSignal { [weak self] query -> Signal<[Message], NoError> in
-            if let strongSelf = self, let query = query {
-                return .single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> mapToSignal { [weak strongSelf] () -> Signal<[Message], NoError> in
-                    if let strongSelf = strongSelf {
-                        let emptyRequest: Bool
-                        if case .from = strongSelf.inputInteraction.state.tokenState {
-                            emptyRequest = true
-                        } else {
-                            emptyRequest = !query.isEmpty
-                        }
-                        if emptyRequest {
-                            return strongSelf.interactions.searchRequest(query, strongSelf.inputInteraction.state.peerId)
-                        } else {
-                            return .single([])
-                        }
+        let apply = query.get() |> mapToSignal { [weak self] state -> Signal<([Message], SearchMessagesState?), NoError> in
+            
+            guard let `self` = self else { return .single(([], nil)) }
+            
+            if let query = state.query {
+                
+                let stateSignal: Signal<SearchMessagesState?, NoError>
+                if state.state == nil {
+                    stateSignal = .single(state.state) |> delay(0.3, queue: Queue.mainQueue())
+                } else {
+                    stateSignal = .single(state.state)
+                }
+                
+                return stateSignal |> mapToSignal { [weak self] state in
+                    
+                    guard let `self` = self else { return .single(([], nil)) }
+                    
+                    let emptyRequest: Bool
+                    if case .from = self.inputInteraction.state.tokenState {
+                        emptyRequest = true
+                    } else {
+                        emptyRequest = !query.isEmpty
                     }
-                    return .single([])
+                    if emptyRequest {
+                        return self.interactions.searchRequest(query, self.inputInteraction.state.peerId, state)
+                    } else {
+                        return .single(([], nil))
+                    }
                 }
             } else {
-                return .single([])
+                return .single(([], nil))
             }
         } |> deliverOnMainQueue
         
@@ -731,13 +753,9 @@ class ChatSearchHeader : View, Notifable {
             self.parentInteractions.loadingMessage.set(.single(false))
         }))
 
-        next.autohighlight = false
-        prev.autohighlight = false
 
         _ = calendar.sizeToFit()
         
-        addSubview(next)
-        addSubview(prev)
         addSubview(from)
         
         
@@ -750,17 +768,11 @@ class ChatSearchHeader : View, Notifable {
         let interactions = self.interactions
         let searchView = self.searchView
         cancel.set(handler: { [weak self] _ in
-            self?.inputInteraction.update {$0.updatedTokenState(.none).updatedSelectedIndex(-1).updatedMessages([]).updatedSearchState(SearchState(state: .None, request: ""))}
+            self?.inputInteraction.update {$0.updatedTokenState(.none).updatedSelectedIndex(-1).updatedMessages(([], nil)).updatedSearchState(SearchState(state: .None, request: ""))}
             interactions.cancel()
         }, for: .Click)
         
-        next.set(handler: { [weak self] _ in
-            self?.nextAction()
-        }, for: .Click)
-        prev.set(handler: { [weak self] _ in
-            self?.prevAction()
-        }, for: .Click)
-        
+
         from.set(handler: { [weak self] _ in
             self?.searchView.initToken()
         }, for: .Click)
@@ -782,11 +794,6 @@ class ChatSearchHeader : View, Notifable {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         backgroundColor = theme.colors.background
-        next.set(image: theme.icons.chatSearchDown, for: .Normal)
-        _ = next.sizeToFit()
-        
-        prev.set(image: theme.icons.chatSearchUp, for: .Normal)
-        _ = prev.sizeToFit()
 
         calendar.set(image: theme.icons.chatSearchCalendar, for: .Normal)
         _ = calendar.sizeToFit()
@@ -808,7 +815,7 @@ class ChatSearchHeader : View, Notifable {
     }
     
     func prevAction() {
-        inputInteraction.update({$0.updatedSelectedIndex(min($0.selectedIndex + 1, $0.messages.count - 1))})
+        inputInteraction.update({$0.updatedSelectedIndex(min($0.selectedIndex + 1, $0.messages.0.count - 1))})
         perform()
     }
     
@@ -825,20 +832,18 @@ class ChatSearchHeader : View, Notifable {
     }
     
     private var searchWidth: CGFloat {
-        return frame.width - cancel.frame.width - 20 - 20 - 80 - (calendar.isHidden ? 0 : calendar.frame.width + 20) - (from.isHidden ? 0 : from.frame.width + 20)
+        return frame.width - cancel.frame.width - 20 - 20 - 20 - (calendar.isHidden ? 0 : calendar.frame.width + 20) - (from.isHidden ? 0 : from.frame.width + 20)
     }
     
     override func layout() {
         super.layout()
         
-        prev.centerY(x:10)
-        next.centerY(x:prev.frame.maxX)
 
         cancel.centerY(x:frame.width - cancel.frame.width - 20)
 
         searchView.setFrameSize(NSMakeSize(searchWidth, 30))
         inputContextHelper.controller.view.setFrameSize(frame.width, inputContextHelper.controller.frame.height)
-        searchView.centerY(x:80)
+        searchView.centerY(x:20)
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
         
         from.centerY(x: searchView.frame.maxX + 20)
@@ -854,28 +859,16 @@ class ChatSearchHeader : View, Notifable {
     }
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {
-        if let window = newWindow as? Window {
-            window.set(handler: { [weak self] () -> KeyHandlerResult in
-                guard let `self` = self else {return .rejected}
-                self.prevAction()
-                return .invoked
-            }, with: self, for: .UpArrow, priority: .medium)
-            
-            window.set(handler: { [weak self] () -> KeyHandlerResult in
-                guard let `self` = self else {return .rejected}
-                self.nextAction()
-                return .invoked
-            }, with: self, for: .DownArrow, priority: .medium)
-        } else {
-            if let window = window as? Window {
-                window.removeAllHandlers(for: self)
-                self.searchView.change(state: .None, false)
-            }
+        if let _ = window as? Window {
+            self.searchView.change(state: .None, false)
         }
     }
     
     
     deinit {
+        inputInteraction.update(animated: false, { state in
+            return state.updatedInputQueryResult( { _ in return nil } )
+        })
         disposable.dispose()
         inputInteraction.remove(observer: self)
         loadingDisposable.set(nil)

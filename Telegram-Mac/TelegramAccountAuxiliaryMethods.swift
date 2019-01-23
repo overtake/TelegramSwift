@@ -38,4 +38,6 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerC
     return nil
 }, fetchResourceMediaReferenceHash: { resource in
     return .single(nil)
+}, prepareSecretThumbnailData: { resource in
+    return nil
 })

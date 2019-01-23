@@ -205,7 +205,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override var backdorColor: NSColor {
         guard let item = item as? ChatRowItem else {return super.backdorColor}
         
-        return item.presentation.bubbled ? .clear : contextMenu != nil || isSelect ? item.presentation.colors.selectMessage : item.presentation.colors.background
+        return item.renderType == .bubble ? .clear : contextMenu != nil || isSelect ? item.presentation.colors.selectMessage : item.presentation.colors.background
     }
     
     var contentColor: NSColor {
@@ -700,7 +700,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             
 
-            if item.isBubbled && item.presentation.wallpaper.hasWallpaper {
+            if item.isBubbled && item.presentation.backgroundMode.hasWallpapaer  {
                 shareControl.set(image: item.isStorage ? item.presentation.icons.chatGotoMessageWallpaper : item.presentation.icons.chatShareWallpaper, for: .Normal)
                 _ = shareControl.sizeToFit()
                 shareControl.setFrameSize(NSMakeSize(shareControl.frame.width + 10, shareControl.frame.height + 10))
@@ -1028,7 +1028,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         control.disableActions()
         
         
-        if item.isBubbled && item.presentation.wallpaper.hasWallpaper {
+        if item.isBubbled && item.presentation.backgroundMode.hasWallpapaer {
             control.set(image: item.presentation.icons.chatSwipeReplyWallpaper, for: .Normal)
             _ = control.sizeToFit()
             control.setFrameSize(NSMakeSize(control.frame.width + 10, control.frame.height + 10))

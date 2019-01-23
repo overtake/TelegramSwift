@@ -348,7 +348,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:[PeerId] = [], pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:Set<PeerId> = Set(), pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
  
     
@@ -395,6 +395,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 case .historyCleared:
                     disableEntry = true
                 case .groupMigratedToChannel:
+                    disableEntry = true
+                case .channelMigratedFromGroup:
                     disableEntry = true
                 case .peerJoined:
                     disableEntry = true
@@ -588,7 +590,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             
             if prev == nil && dayGrouping {
                 let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
-                let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
+                let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: 0), timestamp: Int32(dateId))
                 entries.append(.DateEntry(index, renderType))
             }
 
@@ -598,7 +600,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 
                 
                 if dateId != nextDateId {
-                    let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: INT_MAX), timestamp: Int32(nextDateId))
+                    let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: INT_MAX), timestamp: Int32(nextDateId))
                     entries.append(.DateEntry(index, renderType))
                 }
             }

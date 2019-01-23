@@ -36,6 +36,10 @@ class ChatMessageView: ChatRowView {
                 if let webpageContent = webpageContent, let actionButton = actionButton {
                     actionButton.setFrameOrigin(0, webpageContent.frame.maxY + 6)
                 }
+            } else {
+                if let actionButton = actionButton {
+                    actionButton.setFrameOrigin(0, contentView.frame.height - actionButton.frame.height)
+                }
             }
            
         }
@@ -85,33 +89,31 @@ class ChatMessageView: ChatRowView {
                     addSubview(webpageContent!)
                 }
                 webpageContent?.update(with: webpageLayout)
-                
-                if let text = item.actionButtonText {
-                    if actionButton == nil {
-                        actionButton = TitleButton()
-                        actionButton?.layer?.cornerRadius = .cornerRadius
-                        actionButton?.layer?.borderWidth = 1
-                        actionButton?.disableActions()
-                        actionButton?.set(font: .normal(.text), for: .Normal)
-                        addSubview(actionButton!)
-                    }
-                    actionButton?.removeAllHandlers()
-                    actionButton?.set(handler: { [weak item] _ in
-                        item?.invokeAction()
-                    }, for: .Click)
-                    actionButton?.set(text: text, for: .Normal)
-                    actionButton?.layer?.borderColor = webpageLayout.presentation.activity.cgColor
-                    actionButton?.set(color: webpageLayout.presentation.activity, for: .Normal)
-                    _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(webpageLayout.size.width, 30), thatFit: true)
-
-                } else {
-                    actionButton?.removeFromSuperview()
-                    actionButton = nil
-                }
-                
             } else {
                 webpageContent?.removeFromSuperview()
                 webpageContent = nil
+            }
+            
+            
+            if let text = item.actionButtonText {
+                if actionButton == nil {
+                    actionButton = TitleButton()
+                    actionButton?.layer?.cornerRadius = .cornerRadius
+                    actionButton?.layer?.borderWidth = 1
+                    actionButton?.disableActions()
+                    actionButton?.set(font: .normal(.text), for: .Normal)
+                    addSubview(actionButton!)
+                }
+                actionButton?.removeAllHandlers()
+                actionButton?.set(handler: { [weak item] _ in
+                    item?.invokeAction()
+                    }, for: .Click)
+                actionButton?.set(text: text, for: .Normal)
+                actionButton?.layer?.borderColor = item.wpPresentation.activity.cgColor
+                actionButton?.set(color: item.wpPresentation.activity, for: .Normal)
+                _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.contentSize.width, 30), thatFit: true)
+                
+            } else {
                 actionButton?.removeFromSuperview()
                 actionButton = nil
             }

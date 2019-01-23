@@ -76,13 +76,24 @@ class WPLayout: Equatable {
     
     let presentation: WPLayoutPresentation
     
-    init(with content:TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation) {
+    private var _approximateSynchronousValue: Bool = false
+    var approximateSynchronousValue: Bool {
+        get {
+            let result = _approximateSynchronousValue
+            _approximateSynchronousValue = false
+            return result
+        }
+    }
+    
+    init(with content:TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool) {
         self.content = content
         self.account = account
         self.presentation = presentation
         self.parent = parent
         self.fontSize = fontSize
+        self._approximateSynchronousValue = approximateSynchronousValue
         if let websiteName = content.websiteName {
+            let websiteName = content.type == "telegram_background" ? L10n.chatWPBackgroundTitle : websiteName
             _siteNameAttr = .initialize(string: websiteName, color: presentation.activity, font: .medium(.text))
             _nameNode = TextNode()
         }
@@ -137,8 +148,13 @@ class WPLayout: Equatable {
                     execute(inapp: link)
                 }
             }, isDomainLink: { value in
-                if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") {
-                    return true
+                if let value = value as? inAppLink {
+                    switch value {
+                    case .external:
+                        return true
+                    default:
+                        return false
+                    }
                 }
                 return false
             })
@@ -151,9 +167,16 @@ class WPLayout: Equatable {
     var isGalleryAssemble: Bool {
         // && content.instantPage != nil
         if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram")) || content.text == nil {
-            return !content.url.isEmpty
+            return !content.url.isEmpty && content.type != "telegram_background"
         }
-        return content.type == "telegram_album"
+        return content.type == "telegram_album" && content.type != "telegram_background"
+    }
+    
+    var wallpaper: inAppLink? {
+        if content.type == "telegram_background" {
+            return inApp(for: content.url as NSString, account: account)
+        }
+        return nil
     }
     
     func viewClass() -> AnyClass {
@@ -186,16 +209,13 @@ class WPLayout: Equatable {
             }
             if instantPage.blocks.count == 3 {
                 switch instantPage.blocks[2] {
-                case .collage, .slideshow:
-                    return false
+                case let .collage(_, caption), let .slideshow(_, caption):
+                    return !attributedStringForRichText(caption.text, styleStack: InstantPageTextStyleStack()).string.isEmpty
                 default:
                     break
                 }
             }
             
-            if instantPage.v2 {
-                return false
-            }
             return true
         }
         return  false

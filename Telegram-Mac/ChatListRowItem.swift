@@ -313,7 +313,7 @@ class ChatListRowItem: TableRowItem {
         var embeddedState = embeddedState
         
         if let peer = renderedPeer.chatMainPeer as? TelegramChannel {
-            if !peer.hasAdminRights(.canPostMessages) {
+            if !peer.hasPermission(.sendMessages) {
                 embeddedState = nil
             }
         }
@@ -459,15 +459,8 @@ class ChatListRowItem: TableRowItem {
     }
     
     func delete() {
-        let signal = removeChatInteractively(account: account, peerId: peerId, userId: peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
-            return globalPeerHandler.get() |> take(1)
-            } |> deliverOnMainQueue
-        
-        deleteChatDisposable.set(signal.start(next: { [weak self] location in
-            if location == self?.chatLocation {
-                self?.account.context.mainNavigation?.close()
-            }
-        }))
+        let signal = removeChatInteractively(account: account, peerId: peerId, userId: peer?.id)
+        _ = signal.start()
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -479,10 +472,21 @@ class ChatListRowItem: TableRowItem {
                 self?.delete()
             }
             
+            let account = self.account
+            let peerId = self.peerId
+            
             let clearHistory = { [weak self] in
                 if let strongSelf = self {
-                    modernConfirm(for: mainWindow, account: strongSelf.account, peerId: strongSelf.peer?.id, accessory: theme.icons.confirmDeleteChatAccessory, information: tr(L10n.confirmDeleteChatUser), successHandler: { _ in
-                        strongSelf.clearHistoryDisposable.set(clearHistoryInteractively(postbox: strongSelf.account.postbox, peerId: strongSelf.peerId).start())
+                    modernConfirm(for: mainWindow, account: strongSelf.account, peerId: strongSelf.peer?.id, accessory: nil, information: strongSelf.peer is TelegramUser ? strongSelf.peerId == account.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, successHandler: { _ in
+                        account.context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
+                            switch status {
+                            case .success:
+                                account.context.chatUndoManager.clearHistoryInteractively(postbox: account.postbox, peerId: peerId)
+                                break
+                            default:
+                                break
+                            }
+                        }))
                    })
                 }
             }
@@ -503,18 +507,14 @@ class ChatListRowItem: TableRowItem {
                 self?.toggleMuted()
             }
             
-            let leaveGroup = { [weak self] in
-                if let strongSelf = self {
-                    confirm(for: mainWindow, information: tr(L10n.confirmLeaveGroup), successHandler: { _ in
-                        strongSelf.deleteChatDisposable.set(leftGroup(account: strongSelf.account, peerId: strongSelf.peerId).start())
-                    })
-                }
+            let leaveGroup = {
+                modernConfirm(for: mainWindow, account: account, peerId: peerId, accessory: nil, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
+                    _ = leftGroup(account: account, peerId: peerId).start()
+                })
             }
             
-            let rGroup = { [weak self] in
-                if let strongSelf = self {
-                    _ = returnGroup(account: strongSelf.account, peerId: strongSelf.peerId).start()
-                }
+            let rGroup = {
+                _ = returnGroup(account: account, peerId: peerId).start()
             }
             
             if pinnedType != .ad {
@@ -529,8 +529,8 @@ class ChatListRowItem: TableRowItem {
                 if peer.canCall && peer.id != account.peerId {
                     items.append(ContextMenuItem(tr(L10n.chatListContextCall), handler: call))
                 }
-                items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
-                items.append(ContextMenuItem(tr(L10n.chatListContextDeleteChat), handler: deleteChat))
+                items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: clearHistory))
+                items.append(ContextMenuItem(L10n.chatListContextDeleteChat, handler: deleteChat))
             }
             
             if !isSecret {
@@ -555,24 +555,22 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
                 switch peer.membership {
                 case .Member:
-                    items.append(ContextMenuItem(tr(L10n.chatListContextLeaveGroup), handler: leaveGroup))
+                    items.append(ContextMenuItem(L10n.chatListContextLeaveGroup, handler: leaveGroup))
                 case .Left:
-                    items.append(ContextMenuItem(tr(L10n.chatListContextReturnGroup), handler: rGroup))
+                    items.append(ContextMenuItem(L10n.chatListContextReturnGroup, handler: rGroup))
                 default:
                     break
                 }
-                items.append(ContextMenuItem(tr(L10n.chatListContextDeleteAndExit), handler: deleteChat))
+                items.append(ContextMenuItem(L10n.chatListContextDeleteAndExit, handler: deleteChat))
             } else if let peer = peer as? TelegramChannel, pinnedType != .ad {
                 
                 if case .broadcast = peer.info {
-                    
-                    items.append(ContextMenuItem(tr(L10n.chatListContextLeaveChannel), handler: deleteChat))
-
+                     items.append(ContextMenuItem(L10n.chatListContextLeaveChannel, handler: deleteChat))
                 } else if pinnedType != .ad {
                     if peer.addressName == nil {
-                        items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
+                        items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: clearHistory))
                     }
-                    items.append(ContextMenuItem(tr(L10n.chatListContextLeaveGroup), handler: deleteChat))
+                    items.append(ContextMenuItem(L10n.chatListContextLeaveGroup, handler: deleteChat))
                 }
             }
             
@@ -646,7 +644,7 @@ class ChatListRowItem: TableRowItem {
     }
   
     override var height: CGFloat {
-        return 66;
+        return 70;
     }
     
 }

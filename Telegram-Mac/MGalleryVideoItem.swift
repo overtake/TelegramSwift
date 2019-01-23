@@ -151,11 +151,11 @@ class MGalleryVideoItem: MGalleryItem {
     override func request(immediately: Bool) {
 
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)  //chatMessagePhoto(account: account, imageReference: entry.imageReference(image), scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
         
         
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: media.dimensions?.fitted(pagerSize) ?? sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .fill(.black))
-        let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
+        let result = signal |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())
         }
         

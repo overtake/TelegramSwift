@@ -73,7 +73,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                             
                             if let thumbData = try? Data(contentsOf: URL(fileURLWithPath: thumbedFile)) {
                                 let options = NSMutableDictionary()
-                                options.setValue(90 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                                options.setValue(320 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                                 
                                 if let imageSource = CGImageSourceCreateWithData(thumbData as CFData, nil) {
@@ -85,24 +85,36 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                         } else if file.mimeType.hasPrefix("video/") {
                             let asset = AVAsset(url: URL(fileURLWithPath: thumbedFile))
                             let imageGenerator = AVAssetImageGenerator(asset: asset)
-                            imageGenerator.maximumSize = CGSize(width: 90, height: 90)
+                            imageGenerator.maximumSize = CGSize(width: 320, height: 320)
                             imageGenerator.appliesPreferredTrackTransform = true
                             thumbImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
    
                         }
                         
-                        if let thumbImage = thumbImage, let data = NSImage(cgImage: thumbImage, size: thumbImage.backingSize).tiffRepresentation(using: .jpeg, factor: 0.6) {
+                        if let image = thumbImage {
                             
-                            let imageRep = NSBitmapImageRep(data: data)
-                            let compressedData: Data? = imageRep?.representation(using: .jpeg, properties: [:])
+                            let options = NSMutableDictionary()
+                            options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
+                            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                             
-                            if let compressedData = compressedData {
-                                let thumbnailResource = LocalFileMediaResource(fileId: arc4random64())
-                                postbox.mediaBox.storeResourceData(thumbnailResource.id, data: compressedData)
-                                subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: thumbImage.size, resource: thumbnailResource)])))
+                            let colorQuality: Float = 0.6
+                            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                            
+                            
+                            let mutableData: CFMutableData = NSMutableData() as CFMutableData
+                            if let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, options) {
+                                CGImageDestinationSetProperties(colorDestination, nil)
                                 
-                                return EmptyDisposable
+                                CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
+                                if CGImageDestinationFinalize(colorDestination) {
+                                    let thumbnailResource = LocalFileMediaResource(fileId: arc4random64())
+                                    postbox.mediaBox.storeResourceData(thumbnailResource.id, data: mutableData as Data)
+                                    subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: image.size, resource: thumbnailResource)])))
+                                    
+                                     return EmptyDisposable
+                                }
                             }
+                        
                         }
                         
                         

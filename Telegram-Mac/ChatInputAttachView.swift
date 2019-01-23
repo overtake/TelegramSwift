@@ -39,11 +39,6 @@ class ChatInputAttachView: ImageButton, Notifable {
             guard let `self` = self else {return}
             if let peer = chatInteraction.presentation.peer {
                 
-                if let peer = peer as? TelegramChannel {
-                    if peer.hasBannedRights(.banSendMedia) {
-                        return
-                    }
-                }
                 var items:[SPopoverItem] = []
 
                 
@@ -52,7 +47,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
                         self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
-                        }, theme.icons.chatAttachPhoto))
+                    }, theme.icons.chatAttachPhoto))
                     
                     if editState.message.groupingKey == nil {
                         items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
@@ -69,11 +64,19 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                 } else if chatInteraction.presentation.interfaceState.editState == nil {
                     items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                            alert(for: mainWindow, info: permissionText)
+                            return
+                        }
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, theme.icons.chatAttachPhoto))
                     
                     items.append(SPopoverItem(L10n.inputAttachPopoverPicture, { [weak self] in
                         guard let `self` = self else {return}
+                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                            alert(for: mainWindow, info: permissionText)
+                            return
+                        }
                         self.chatInteraction.attachPicture()
                     }, theme.icons.chatAttachCamera))
                     
@@ -82,7 +85,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         canAttachPoll = true
                     }
                     if let peer = chatInteraction.presentation.peer as? TelegramChannel {
-                        if peer.hasAdminRights(.canPostMessages) {
+                        if peer.hasPermission(.sendMessages) {
                             canAttachPoll = true
                         }
                     }
@@ -90,11 +93,19 @@ class ChatInputAttachView: ImageButton, Notifable {
                     if canAttachPoll {
                         items.append(SPopoverItem(L10n.inputAttachPopoverPoll, { [weak self] in
                             guard let `self` = self else {return}
+                            if let permissionText = permissionText(from: peer, for: .banSendPolls) {
+                                alert(for: mainWindow, info: permissionText)
+                                return
+                            }
                             showModal(with: newPollController(account: self.chatInteraction.account, chatInteraction: self.chatInteraction), for: mainWindow)
                         }, theme.icons.chatAttachPoll))
                     }
                     
                     items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                            alert(for: mainWindow, info: permissionText)
+                            return
+                        }
                         self?.chatInteraction.attachFile(false)
                     }, theme.icons.chatAttachFile))
                     
@@ -115,8 +126,8 @@ class ChatInputAttachView: ImageButton, Notifable {
         set(handler: { [weak self] _ in
             guard let `self` = self else {return}
             if let peer = self.chatInteraction.presentation.peer, self.chatInteraction.presentation.interfaceState.editState == nil {
-                if peer.mediaRestricted {
-                    alertForMediaRestriction(peer)
+                if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                    alert(for: mainWindow, info: permissionText)
                     return
                 }
                 self.controller?.popover?.hide()

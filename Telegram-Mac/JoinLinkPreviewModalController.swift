@@ -124,9 +124,9 @@ class JoinLinkPreviewModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         switch join {
-        case let .invite(data):
-            let peer = TelegramGroup(id: PeerId(namespace: 0, id: 0), title: data.title, photo: data.photoRepresentation != nil ? [data.photoRepresentation!] : [], participantCount: Int(data.participantsCount), role: .member, membership: .Left, flags: [], migrationReference: nil, creationDate: 0, version: 0)
-            genericView.update(with: peer, account: account, participants: data.participants, groupUserCount: data.participantsCount)
+        case let .invite(title: title, image, memberCount, participants):
+            let peer = TelegramGroup(id: PeerId(namespace: 0, id: 0), title: title, photo: image.flatMap { [$0] } ?? [], participantCount: Int(memberCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
+                        genericView.update(with: peer, account: account, participants: participants, groupUserCount: memberCount)
         default:
             break
         }
@@ -161,7 +161,7 @@ class JoinLinkPreviewModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(L10n.joinLinkJoin), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: L10n.joinLinkJoin, accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
                 _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.account), for: window).start(next: { [weak strongSelf] (peerId) in
                     strongSelf?.interaction(peerId)

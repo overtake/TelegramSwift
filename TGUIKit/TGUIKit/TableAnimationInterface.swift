@@ -57,18 +57,20 @@ open class TableAnimationInterface: NSObject {
         } else if height - bounds.height < table.frame.height || bounds.minY > height, scrollBelow {
             
             
-            if scrollBelow {
+            if scrollBelow, contentView.bounds.minY != 0 {
                 contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
                 contentView.layer?.removeAllAnimations()
             }
             
             let range:NSRange = table.visibleRows(height)
-            
-            for item in added {
-                if item.index < range.location || item.index > range.location + range.length {
-                    return
+            if !table.isEmpty {
+                for item in added {
+                    if item.index < range.location || item.index > range.location + range.length {
+                        return
+                    }
                 }
             }
+           
             
             CATransaction.begin()
             for idx in added[0].index ..< range.length {

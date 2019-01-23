@@ -26,7 +26,7 @@ class RestrictionWrappedView : Control {
     
     override func updateLocalizationAndTheme() {
         self.backgroundColor = theme.colors.background
-        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2, alignment: .center)
+        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         textView.update(layout)
         textView.backgroundColor = theme.colors.background
     }

@@ -15,41 +15,21 @@ import TGUIKit
 
 extension Peer {
     
-    var mediaRestricted:Bool {
+    func hasBannedRights(_ flags: TelegramChatBannedRightsFlags) -> Bool {
         if let peer = self as? TelegramChannel {
-            if peer.hasBannedRights(.banSendMedia) {
+            if let _ = peer.hasBannedPermission(flags) {
                 return true
             }
-        }
-        return false
-    }
-    
-    var stickersRestricted: Bool {
-        if let peer = self as? TelegramChannel {
-            if peer.hasBannedRights([.banSendStickers, .banSendGifs]) {
-                return true
-            }
-        }
-        return false
-    }
-    
-    var inlineRestricted: Bool {
-        if let peer = self as? TelegramChannel {
-            if peer.hasBannedRights([.banSendInline]) {
-                return true
-            }
+        } else if let peer = self as? TelegramGroup {
+            return peer.hasBannedPermission(flags)
         }
         return false
     }
     
     var webUrlRestricted: Bool {
-        if let peer = self as? TelegramChannel {
-            if peer.hasBannedRights([.banEmbedLinks]) {
-                return true
-            }
-        }
-        return false
+        return hasBannedRights([.banEmbedLinks])
     }
+    
     
     var peerSummaryTags: PeerSummaryCounterTags {
         if let peer = self as? TelegramChannel {
@@ -71,7 +51,7 @@ extension Peer {
     var canSendMessage: Bool {
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
-                return channel.hasAdminRights(.canPostMessages)
+                return channel.hasPermission(.sendMessages)
             } else if case .group = channel.info  {
                 switch channel.participationStatus {
                 case .member:
@@ -81,7 +61,7 @@ extension Peer {
                 }
             }
         } else if let group = self as? TelegramGroup {
-            return group.membership == .Member
+            return group.membership == .Member && !group.hasBannedPermission(.banSendMessages)
         } else if let secret = self as? TelegramSecretChat {
             switch secret.embeddedState {
             case .terminated:
@@ -233,27 +213,27 @@ extension ChannelParticipant {
     }
 }
 
-extension TelegramChannelAdminRightsFlags {
+extension TelegramChatAdminRightsFlags {
     var localizedString:String {
         switch self {
             //EventLog.Service.Restriction.AddNewAdmins
-        case TelegramChannelAdminRightsFlags.canAddAdmins:
+        case TelegramChatAdminRightsFlags.canAddAdmins:
             return tr(L10n.eventLogServicePromoteAddNewAdmins)
-        case TelegramChannelAdminRightsFlags.canBanUsers:
+        case TelegramChatAdminRightsFlags.canBanUsers:
             return tr(L10n.eventLogServicePromoteBanUsers)
-        case TelegramChannelAdminRightsFlags.canChangeInfo:
+        case TelegramChatAdminRightsFlags.canChangeInfo:
             return tr(L10n.eventLogServicePromoteChangeInfo)
-        case TelegramChannelAdminRightsFlags.canInviteUsers:
+        case TelegramChatAdminRightsFlags.canInviteUsers:
             return tr(L10n.eventLogServicePromoteAddUsers)
-        case TelegramChannelAdminRightsFlags.canChangeInviteLink:
+        case TelegramChatAdminRightsFlags.canChangeInviteLink:
             return tr(L10n.eventLogServicePromoteInviteViaLink)
-        case TelegramChannelAdminRightsFlags.canDeleteMessages:
+        case TelegramChatAdminRightsFlags.canDeleteMessages:
             return tr(L10n.eventLogServicePromoteDeleteMessages)
-        case TelegramChannelAdminRightsFlags.canEditMessages:
+        case TelegramChatAdminRightsFlags.canEditMessages:
             return tr(L10n.eventLogServicePromoteEditMessages)
-        case TelegramChannelAdminRightsFlags.canPinMessages:
+        case TelegramChatAdminRightsFlags.canPinMessages:
             return tr(L10n.eventLogServicePromotePinMessages)
-        case TelegramChannelAdminRightsFlags.canPostMessages:
+        case TelegramChatAdminRightsFlags.canPostMessages:
             return tr(L10n.eventLogServicePromotePostMessages)
         default:
             return "Undefined Promotion"
@@ -261,32 +241,40 @@ extension TelegramChannelAdminRightsFlags {
     }
 }
 
-extension TelegramChannelBannedRightsFlags {
+extension TelegramChatBannedRightsFlags {
     var localizedString:String {
         switch self {
-        case TelegramChannelBannedRightsFlags.banSendGifs:
-            return tr(L10n.eventLogServiceDemoteSendStickers)
-        case TelegramChannelBannedRightsFlags.banEmbedLinks:
-            return tr(L10n.eventLogServiceDemoteEmbedLinks)
-        case TelegramChannelBannedRightsFlags.banReadMessages:
+        case TelegramChatBannedRightsFlags.banSendGifs:
+            return L10n.eventLogServiceDemoteSendGifs
+        case TelegramChatBannedRightsFlags.banPinMessages:
+            return L10n.eventLogServiceDemotePinMessages
+        case TelegramChatBannedRightsFlags.banAddMembers:
+            return L10n.eventLogServiceDemoteAddMembers
+        case TelegramChatBannedRightsFlags.banSendPolls:
+            return L10n.eventLogServiceDemotePostPolls
+        case TelegramChatBannedRightsFlags.banEmbedLinks:
+            return L10n.eventLogServiceDemoteEmbedLinks
+        case TelegramChatBannedRightsFlags.banReadMessages:
             return ""
-        case TelegramChannelBannedRightsFlags.banSendGames:
-            return tr(L10n.eventLogServiceDemoteEmbedLinks)
-        case TelegramChannelBannedRightsFlags.banSendInline:
-            return tr(L10n.eventLogServiceDemoteSendInline)
-        case TelegramChannelBannedRightsFlags.banSendMedia:
-            return tr(L10n.eventLogServiceDemoteSendMedia)
-        case TelegramChannelBannedRightsFlags.banSendMessages:
-            return tr(L10n.eventLogServiceDemoteSendMessages)
-        case TelegramChannelBannedRightsFlags.banSendStickers:
-            return tr(L10n.eventLogServiceDemoteSendStickers)
+        case TelegramChatBannedRightsFlags.banSendGames:
+            return L10n.eventLogServiceDemoteEmbedLinks
+        case TelegramChatBannedRightsFlags.banSendInline:
+            return L10n.eventLogServiceDemoteSendInline
+        case TelegramChatBannedRightsFlags.banSendMedia:
+            return L10n.eventLogServiceDemoteSendMedia
+        case TelegramChatBannedRightsFlags.banSendMessages:
+            return L10n.eventLogServiceDemoteSendMessages
+        case TelegramChatBannedRightsFlags.banSendStickers:
+            return L10n.eventLogServiceDemoteSendStickers
+        case TelegramChatBannedRightsFlags.banChangeInfo:
+            return L10n.eventLogServiceDemoteChangeInfo
         default:
             return ""
         }
     }
 }
 /*
- public struct TelegramChannelBannedRightsFlags: OptionSet {
+ public struct TelegramChatBannedRightsFlags: OptionSet {
  public var rawValue: Int32
  
  public init(rawValue: Int32) {
@@ -297,18 +285,18 @@ extension TelegramChannelBannedRightsFlags {
  self.rawValue = 0
  }
  
- public static let banReadMessages = TelegramChannelBannedRightsFlags(rawValue: 1 << 0)
- public static let banSendMessages = TelegramChannelBannedRightsFlags(rawValue: 1 << 1)
- public static let banSendMedia = TelegramChannelBannedRightsFlags(rawValue: 1 << 2)
- public static let banSendStickers = TelegramChannelBannedRightsFlags(rawValue: 1 << 3)
- public static let banSendGifs = TelegramChannelBannedRightsFlags(rawValue: 1 << 4)
- public static let banSendGames = TelegramChannelBannedRightsFlags(rawValue: 1 << 5)
- public static let banSendInline = TelegramChannelBannedRightsFlags(rawValue: 1 << 6)
- public static let banEmbedLinks = TelegramChannelBannedRightsFlags(rawValue: 1 << 7)
+ public static let banReadMessages = TelegramChatBannedRightsFlags(rawValue: 1 << 0)
+ public static let banSendMessages = TelegramChatBannedRightsFlags(rawValue: 1 << 1)
+ public static let banSendMedia = TelegramChatBannedRightsFlags(rawValue: 1 << 2)
+ public static let banSendStickers = TelegramChatBannedRightsFlags(rawValue: 1 << 3)
+ public static let banSendGifs = TelegramChatBannedRightsFlags(rawValue: 1 << 4)
+ public static let banSendGames = TelegramChatBannedRightsFlags(rawValue: 1 << 5)
+ public static let banSendInline = TelegramChatBannedRightsFlags(rawValue: 1 << 6)
+ public static let banEmbedLinks = TelegramChatBannedRightsFlags(rawValue: 1 << 7)
  }
  */
 
-extension TelegramChannelBannedRights {
+extension TelegramChatBannedRights {
     var formattedUntilDate: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
@@ -320,10 +308,80 @@ extension TelegramChannelBannedRights {
     }
 }
 
-func alertForMediaRestriction(_ peer:Peer) {
-    if let peer = peer as? TelegramChannel, let bannedRights = peer.bannedRights {
-        alert(for: mainWindow, info: bannedRights.untilDate != .max ? tr(L10n.channelPersmissionDeniedSendMediaUntil(bannedRights.formattedUntilDate)) : tr(L10n.channelPersmissionDeniedSendMediaForever))
+
+func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -> String? {
+    let bannedPermission: (Int32, Bool)?
+    if let channel = peer as? TelegramChannel {
+        bannedPermission = channel.hasBannedPermission(flags)
+    } else if let group = peer as? TelegramGroup {
+        if group.hasBannedPermission(flags) {
+            bannedPermission = (Int32.max, false)
+        } else {
+            bannedPermission = nil
+        }
+    } else {
+        bannedPermission = nil
     }
+    
+    if let (untilDate, personal) = bannedPermission {
+        
+        switch flags {
+        case .banSendMessages:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return L10n.channelPersmissionDeniedSendMessagesUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return L10n.channelPersmissionDeniedSendMessagesForever
+            } else {
+                return L10n.channelPersmissionDeniedSendMessagesDefaultRestrictedText
+            }
+        case .banSendStickers:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return L10n.channelPersmissionDeniedSendStickersUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return L10n.channelPersmissionDeniedSendStickersForever
+            } else {
+                return L10n.channelPersmissionDeniedSendStickersDefaultRestrictedText
+            }
+        case .banSendGifs:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return L10n.channelPersmissionDeniedSendGifsUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return L10n.channelPersmissionDeniedSendGifsForever
+            } else {
+                return L10n.channelPersmissionDeniedSendGifsDefaultRestrictedText
+            }
+        case .banSendMedia:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return L10n.channelPersmissionDeniedSendMediaUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return L10n.channelPersmissionDeniedSendMediaForever
+            } else {
+                return L10n.channelPersmissionDeniedSendMediaDefaultRestrictedText
+            }
+        case .banSendPolls:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return L10n.channelPersmissionDeniedSendPollUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return L10n.channelPersmissionDeniedSendPollForever
+            } else {
+                return L10n.channelPersmissionDeniedSendPollDefaultRestrictedText
+            }
+        case .banSendInline:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return L10n.channelPersmissionDeniedSendInlineUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return L10n.channelPersmissionDeniedSendInlineForever
+            } else {
+                return L10n.channelPersmissionDeniedSendInlineDefaultRestrictedText
+            }
+        default:
+            return nil
+        }
+        
+        
+    }
+    
+    return nil
 }
 
 extension RenderedPeer {
@@ -345,7 +403,7 @@ extension TelegramMediaFile {
     var isStreamable: Bool {
         for attr in attributes {
             if case let .Video(_, _, flags) = attr {
-                return flags.contains(.supportsStreaming) || !flags.contains(.mediaAfterSupportVideoStreaming)
+                return flags.contains(.supportsStreaming)
             }
         }
         return false
@@ -763,11 +821,11 @@ func canDeleteMessage(_ message:Message, account:Account) -> Bool {
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
             if !message.flags.contains(.Incoming) {
-                return channel.hasAdminRights(.canPostMessages)
+                return channel.hasPermission(.sendMessages)
             }
-            return channel.hasAdminRights(.canDeleteMessages)
+            return channel.hasPermission(.deleteAllMessages)
         }
-        return channel.hasAdminRights(.canDeleteMessages) || !message.flags.contains(.Incoming)
+        return channel.hasPermission(.deleteAllMessages) || !message.flags.contains(.Incoming)
     } else if message.peers[message.id.peerId] is TelegramSecretChat {
         return true
     } else {
@@ -888,11 +946,11 @@ func canEditMessage(_ message:Message, account:Account) -> Bool {
     
     if let peer = messageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
-            return ((peer.hasAdminRights(.canPostMessages) || peer.hasAdminRights(.canEditMessages)) && (message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970))) || peer.groupAccess.isCreator
+            return ((peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)) && (message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970))) || peer.groupAccess.isCreator
         } else if case .group = peer.info {
-            if peer.hasAdminRights(.canPinMessages) {
+            if peer.hasPermission(.pinMessages) {
                 return !message.flags.contains(.Incoming)
-            } else if peer.hasAdminRights(.canEditMessages) {
+            } else if peer.hasPermission(.editAllMessages) {
                 return message.timestamp + edit_limit_time > Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
             }
         }
@@ -935,7 +993,7 @@ func canReportMessage(_ message: Message, _ account: Account) -> Bool {
 
 func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Account) -> Bool {
     
-    if peer.isSupergroup, peer.groupAccess.canManageGroup {
+    if peer.isSupergroup, peer.groupAccess.canEditGroupInfo {
         let peerId:PeerId? = messages[0].author?.id
         if account.peerId != peerId {
             for message in messages {
@@ -983,9 +1041,9 @@ extension AddressNameAvailability {
         case .available:
             return L10n.usernameSettingsAvailable(username)
         case .invalid:
-            return tr(L10n.errorUsernameInvalid)
+            return L10n.errorUsernameInvalid
         case .taken:
-            return tr(L10n.errorUsernameAlreadyTaken)
+            return L10n.errorUsernameAlreadyTaken
         }
     }
 }
@@ -1012,16 +1070,7 @@ func <(lhs:RenderedChannelParticipant, rhs: RenderedChannelParticipant) -> Bool 
 
 extension TelegramGroup {
     var canPinMessage: Bool {
-        if self.flags.contains(.adminsEnabled) {
-            switch role {
-            case .admin, .creator:
-                return true
-            default:
-                return false
-            }
-        } else {
-            return true
-        }
+        return !hasBannedRights(.banPinMessages)
     }
 }
 
@@ -2084,7 +2133,7 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 }
 
 
-func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = nil) -> Signal<Bool, NoError> {
+func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = nil, deleteGroup: Bool = false) -> Signal<Bool, NoError> {
     return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
         let text:String
         var okTitle: String? = nil
@@ -2092,31 +2141,67 @@ func removeChatInteractively(account:Account, peerId:PeerId, userId: PeerId? = n
         if let peer = peer as? TelegramChannel {
             switch peer.info {
             case .broadcast:
-                if peer.flags.contains(.isCreator) {
-                    text = tr(L10n.confirmDeleteAdminedChannel)
-                    okTitle = tr(L10n.confirmDelete)
+                if peer.flags.contains(.isCreator) && deleteGroup {
+                    text = L10n.confirmDeleteAdminedChannel
+                    okTitle = L10n.confirmDelete
                     accessory = theme.icons.confirmDeleteChatAccessory
                 } else {
-                    text = tr(L10n.peerInfoConfirmLeaveChannel)
+                    text = L10n.peerInfoConfirmLeaveChannel
                 }
             case .group:
-                text = L10n.confirmLeaveGroup
+                if deleteGroup && peer.flags.contains(.isCreator) {
+                    text = L10n.peerInfoConfirmDeleteGroupConfirmation
+                    okTitle = L10n.confirmDelete
+                } else {
+                    text = L10n.confirmLeaveGroup
+                    okTitle = L10n.peerInfoConfirmLeave
+                }
             }
         } else if let peer = peer as? TelegramGroup {
-            text = tr(L10n.peerInfoConfirmDeleteChat(peer.title))
-            okTitle = tr(L10n.confirmDelete)
+            text = L10n.peerInfoConfirmDeleteChat(peer.title)
+            okTitle = L10n.confirmDelete
             accessory = theme.icons.confirmDeleteChatAccessory
         } else {
-            text = tr(L10n.confirmDeleteChatUser)
-            okTitle = tr(L10n.confirmDelete)
+            text = L10n.peerInfoConfirmDeleteUserChat
+            okTitle = L10n.confirmDelete
             accessory = theme.icons.confirmDeleteChatAccessory
         }
         
         
+        let type: ChatUndoActionType
+        
+        if let peer = peer as? TelegramChannel {
+            switch peer.info {
+            case .broadcast:
+                if peer.flags.contains(.isCreator) && deleteGroup {
+                    type = .deleteChannel
+                } else {
+                    type = .leftChannel
+                }
+            case .group:
+                if peer.flags.contains(.isCreator) && deleteGroup {
+                    type = .deleteChat
+                } else {
+                    type = .leftChat
+                }
+            }
+        } else {
+            type = .deleteChat
+        }
         
         return modernConfirmSignal(for: mainWindow, account: account, peerId: userId ?? peerId, accessory: accessory, information: text, okTitle: okTitle ?? L10n.alertOK) |> mapToSignal { result -> Signal<Bool, NoError> in
+            
+            account.context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: type, action: { status in
+                switch status {
+                case .success:
+                    _ = account.context.chatUndoManager.removePeerChat(postbox: account.postbox, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup)
+                default:
+                    break
+                }
+            }))
+            
             if result {
-                return removePeerChat(postbox: account.postbox, peerId: peerId, reportChatSpam: false) |> map {_ in return true}
+                return .single(true)
             } else {
                 return .complete()
             }
@@ -2227,15 +2312,39 @@ func clearCache(_ path: String, excludes: [(partial: String, complete: String)])
     } |> runOn(resourcesQueue)
 }
 
-func moveWallpaperToCache(postbox: Postbox, _ resource: TelegramMediaResource) -> Signal<String, NoError> {
-    if let path = postbox.mediaBox.completedResourcePath(resource) {
-        return moveWallpaperToCache(postbox: postbox, path)
+func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blurred: Bool) -> Signal<String, NoError> {
+    let resourceData: Signal<MediaResourceData, NoError>
+    if blurred {
+        resourceData = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedBlurredWallpaperRepresentation(), complete: true)
     } else {
+        resourceData = postbox.mediaBox.resourceData(resource)
+    }
+   
+    return combineLatest(fetchedMediaResource(postbox: postbox, reference: MediaResourceReference.wallpaper(resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
+        if data.complete {
+            return moveWallpaperToCache(postbox: postbox, path: data.path, blurred: blurred)
+        } else {
+            return .complete()
+        }
+    }
+}
+
+func moveWallpaperToCache(postbox: Postbox, wallpaper: Wallpaper) -> Signal<Wallpaper, NoError> {
+    switch wallpaper {
+    case let .image(reps, blurred):
+        return moveWallpaperToCache(postbox: postbox, resource: largestImageRepresentation(reps)!.resource, blurred: blurred) |> map { _ in return wallpaper}
+    case let .custom(representation, blurred):
+        return moveWallpaperToCache(postbox: postbox, resource: representation.resource, blurred: blurred) |> map { _ in return wallpaper}
+    case let .file(_, file, blurred):
+        return moveWallpaperToCache(postbox: postbox, resource: file.resource, blurred: blurred) |> map { _ in return wallpaper}
+    case .color:
+        return .single(wallpaper)
+    default:
         return .complete()
     }
 }
 
-func moveWallpaperToCache(postbox: Postbox, _ path: String, randomName: Bool = false) -> Signal<String, NoError> {
+func moveWallpaperToCache(postbox: Postbox, path: String, blurred: Bool, randomName: Bool = false) -> Signal<String, NoError> {
     return Signal { subscriber in
         
         let wallpapers = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath
@@ -2243,6 +2352,7 @@ func moveWallpaperToCache(postbox: Postbox, _ path: String, randomName: Bool = f
         
         let out = wallpapers + "/" + (randomName ? "\(arc4random64())" : path.nsstring.lastPathComponent) + ".jpg"
         
+        try? FileManager.default.removeItem(atPath: out)
         try? FileManager.default.copyItem(atPath: path, toPath: out)
         subscriber.putNext(out)
         
@@ -2251,6 +2361,11 @@ func moveWallpaperToCache(postbox: Postbox, _ path: String, randomName: Bool = f
         
     }
 }
+
+func wallpaperPath(_ resource: TelegramMediaResource, blurred: Bool) -> String {
+    return "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath + "/" + resource.id.uniqueId + "\(blurred ? ":\(CachedBlurredWallpaperRepresentation.uniqueId)" : "")" + ".jpg"
+}
+
 
 func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     var canCollage: Bool = urls.count > 1 && urls.count <= 10
@@ -2325,6 +2440,9 @@ extension AutomaticMediaDownloadSettings {
             } else if let media = message.media.first as? TelegramMediaWebpage {
                 switch media.content {
                 case let .Loaded(content):
+                    if content.type == "telegram_background" {
+                         return ability(categories.photo, peer)
+                    }
                     if let file = content.file {
                         return checkFile(file, peer, categories)
                     } else if let _ = content.image {
@@ -2346,9 +2464,6 @@ extension AutomaticMediaDownloadSettings {
     }
 }
 
-func wallpaperPath(_ resource: TelegramMediaResource) -> String {
-    return "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath + "/" + resource.id.uniqueId + ".jpg"
-}
 
 func fileExtenstion(_ file: TelegramMediaFile) -> String {
     return fileExt(file.mimeType) ?? file.fileName?.nsstring.pathExtension ?? ""
@@ -2533,3 +2648,19 @@ extension MessageHistoryAnchorIndex {
 }
 
 
+extension ChatContextResultCollection {
+    func withAdditionalCollection(_ collection: ChatContextResultCollection) -> ChatContextResultCollection {
+        return ChatContextResultCollection(botId: collection.botId, peerId: collection.peerId, query: collection.query, geoPoint: collection.geoPoint, queryId: collection.queryId, nextOffset: collection.nextOffset, presentation: collection.presentation, switchPeer: collection.switchPeer, results: self.results + collection.results, cacheTimeout: collection.cacheTimeout)
+    }
+}
+
+extension LocalFileReferenceMediaResource : Equatable {
+    public static func ==(lhs: LocalFileReferenceMediaResource, rhs: LocalFileReferenceMediaResource) -> Bool {
+        return lhs.isEqual(to: rhs)
+    }
+}
+
+
+public func removeFile(at path: String) {
+    try? FileManager.default.removeItem(atPath: path)
+}

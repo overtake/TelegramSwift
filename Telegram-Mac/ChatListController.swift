@@ -129,8 +129,9 @@ class ChatListController : PeersListController {
             return signal |> map { ($0.0, $0.1, removeNextAnimation)}
         }
         
+        
         let list:Signal<TableUpdateTransition,NoError> = combineLatest(chatHistoryView |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateValue.get()
-                |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state -> Signal<TableUpdateTransition, NoError> in
+                |> deliverOnPrepareQueue, account.context.chatUndoManager.allStatuses() |> deliverOnPrepareQueue) |> mapToQueue { value, appearance, state, undoStatuses -> Signal<TableUpdateTransition, NoError> in
                     
                     var removeNextAnimation = value.2
                     
@@ -178,14 +179,26 @@ class ChatListController : PeersListController {
                         }
                     }
                     
-                    let entries = prepare.filter({ value in
-                        switch value {
+                    let entries = prepare.compactMap { entry -> AppearanceWrapperEntry<ChatListEntry>? in
+                        switch entry {
                         case .HoleEntry:
-                            return false
+                            return nil
                         default:
-                            return true
+                            if undoStatuses.isActive(peerId: entry.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel]) {
+                                return nil
+                            } else if undoStatuses.isActive(peerId: entry.index.messageIndex.id.peerId, types: [.clearHistory]) {
+                                switch entry {
+                                case let .MessageEntry(values):
+                                    let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6)
+                                    return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                                default:
+                                    return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                                }
+                            } else {
+                                return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                            }
                         }
-                    }).map({AppearanceWrapperEntry(entry: $0, appearance: stateWasUpdated ? appearance.newAllocation : appearance)})
+                    }
                 
                     let prev = previousEntries.swap(entries)
                     
@@ -564,6 +577,12 @@ class ChatListController : PeersListController {
                 (item.view as? ChatListRowView)?.endSwipingState = nil
             }
             return true
+        }
+    }
+    
+    func openChat(_ index: Int) {
+        if genericView.tableView.count > index {
+            _ = genericView.tableView.select(item: genericView.tableView.item(at: index), notify: true, byClick: true)
         }
     }
     

@@ -444,16 +444,16 @@ public extension NSView {
         var x:CGFloat = 0
         var y:CGFloat = 0
         
-        x = CGFloat(roundf(Float((frame.width - size.width)/2.0)))
-        y = CGFloat(roundf(Float((frame.height - size.height)/2.0)))
+        x = CGFloat(round((frame.width - size.width)/2.0))
+        y = CGFloat(round((frame.height - size.height)/2.0))
         
         
         return NSMakeRect(x, y, size.width, size.height)
     }
     
     public func focus(_ size:NSSize, inset:NSEdgeInsets) -> NSRect {
-        let x:CGFloat = CGFloat(roundf(Float((frame.width - size.width + (inset.left + inset.right))/2.0)))
-        let y:CGFloat = CGFloat(roundf(Float((frame.height - size.height + (inset.top + inset.bottom))/2.0)))
+        let x:CGFloat = CGFloat(round((frame.width - size.width + (inset.left + inset.right))/2.0))
+        let y:CGFloat = CGFloat(round((frame.height - size.height + (inset.top + inset.bottom))/2.0))
         return NSMakeRect(x, y, size.width, size.height)
     }
     
@@ -462,9 +462,9 @@ public extension NSView {
         var y:CGFloat = 0
         
         if let sv = superView {
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         } else if let sv = self.superview {
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         }
         
         self.setFrameOrigin(NSMakePoint(x ?? frame.minX, y + addition))
@@ -477,11 +477,11 @@ public extension NSView {
         var y:CGFloat = 0
         
         if let sv = superView {
-            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            x = CGFloat(round((sv.frame.width - frame.width)/2.0))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         } else if let sv = self.superview {
-            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            x = CGFloat(round((sv.frame.width - frame.width)/2.0))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         }
         
         self.setFrameOrigin(NSMakePoint(x, y))
@@ -712,9 +712,11 @@ public extension NSImage {
         
         let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
         
-        let image:NSImage = self
         
-        let make:(CGContext) -> Void = { ctx in
+        let make:(CGContext) -> Void = { [weak self] ctx in
+            
+            guard let image = self else { return }
+            
             let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
             ctx.interpolationQuality = .high
             ctx.clear(rect)
@@ -980,6 +982,24 @@ public struct LayoutPositionFlags : OptionSet {
     public static let inside = LayoutPositionFlags(rawValue: 1 << 4)
 }
 
+public struct NSRectCorner: OptionSet {
+    public let rawValue: UInt
+    
+    public static let none = NSRectCorner(rawValue: 0)
+    public static let topLeft = NSRectCorner(rawValue: 1 << 0)
+    public static let topRight = NSRectCorner(rawValue: 1 << 1)
+    public static let bottomLeft = NSRectCorner(rawValue: 1 << 2)
+    public static let bottomRight = NSRectCorner(rawValue: 1 << 3)
+    public static var all: NSRectCorner {
+        return [.topLeft, .topRight, .bottomLeft, .bottomRight]
+    }
+    
+    public init(rawValue: UInt) {
+        self.rawValue = rawValue
+    }
+    
+}
+
 public extension CGContext {
     public func round(_ size:NSSize,_ corners:CGFloat = .cornerRadius) {
         let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
@@ -1029,6 +1049,56 @@ public extension CGContext {
         self.closePath()
         self.clip()
     }
+    
+    
+    public static func round(frame: NSRect, cornerRadius: CGFloat, rectCorner: NSRectCorner) -> CGPath {
+        
+        let path = CGMutablePath()
+        
+        let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+        let miny:CGFloat = frame.height, midy = frame.height/2.0, maxy: CGFloat = 0
+        
+        path.move(to: NSMakePoint(minx, midy))
+        
+        var topLeftRadius: CGFloat = 0
+        var bottomLeftRadius: CGFloat = 0
+        var topRightRadius: CGFloat = 0
+        var bottomRightRadius: CGFloat = 0
+        
+        
+        if rectCorner.contains(.topLeft) {
+            topLeftRadius = cornerRadius
+        }
+        if rectCorner.contains(.topRight) {
+            topRightRadius = cornerRadius
+        }
+        if rectCorner.contains(.bottomLeft) {
+            bottomLeftRadius = cornerRadius
+        }
+        if rectCorner.contains(.bottomRight) {
+            bottomRightRadius = cornerRadius
+        }
+        
+        
+        
+        path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+        path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+        path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
+        path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
+        
+        if rectCorner.contains(.topLeft) {
+             path.move(to: NSMakePoint(minx, cornerRadius))
+        } else {
+             path.move(to: NSMakePoint(minx, maxy))
+        }
+       
+        
+        path.addLine(to: NSMakePoint(minx, midy))
+        
+        //cgPath.closePath()
+        return path
+        //cgPath.clip()
+    }
 }
 
 
@@ -1046,38 +1116,21 @@ public extension NSRange {
 }
 
 public extension NSBezierPath {
-    public var cgPath:CGPath? {
-        if self.elementCount == 0 {
-            return nil
-        }
-        
+    public var cgPath: CGPath {
         let path = CGMutablePath()
-        var didClosePath = false
-        
+        var points = [CGPoint](repeating: .zero, count: 3)
         for i in 0 ..< self.elementCount {
-            var points = [NSPoint](repeating: NSZeroPoint, count: 3)
-            
-            switch self.element(at: i, associatedPoints: &points) {
-            case .moveTo:
-                path.move(to: points[0])
-            case .lineTo:
-                path.addLine(to: points[0])
-                didClosePath = false
-            case .curveTo:
-                path.addCurve(to: points[0], control1: points[1], control2: points[2])
-                didClosePath = false
-            case .closePath:
-                path.closeSubpath()
-                didClosePath = true;
+            let type = self.element(at: i, associatedPoints: &points)
+            switch type {
+            case .moveTo: path.move(to: points[0])
+            case .lineTo: path.addLine(to: points[0])
+            case .curveTo: path.addCurve(to: points[2], control1: points[0], control2: points[1])
+            case .closePath: path.closeSubpath()
             }
         }
-        
-        if !didClosePath {
-            path.closeSubpath()
-        }
-        
         return path
     }
+
 }
 
 
@@ -1138,14 +1191,26 @@ public extension NSRect {
 public extension NSEdgeInsets {
 
     public init(left:CGFloat = 0, right:CGFloat = 0, top:CGFloat = 0, bottom:CGFloat = 0) {
-        self.left = left
-        self.right = right
-        self.top = top
-        self.bottom = bottom
+        self.init(top: top, left: left, bottom: bottom, right: right)
     }
 }
 
 public extension NSColor {
+    
+    convenience init?(hexString: String) {
+        let scanner = Scanner(string: hexString)
+        if hexString.hasPrefix("#") {
+            scanner.scanLocation = 1
+        }
+        var num: UInt32 = 0
+        if scanner.scanHexInt32(&num) {
+            self.init(rgb: num)
+        } else {
+            return nil
+        }
+    }
+    
+    
     public convenience init(_ rgbValue:UInt32, _ alpha:CGFloat = 1.0) {
         let r: CGFloat = ((CGFloat)((rgbValue & 0xFF0000) >> 16))
         let g: CGFloat = ((CGFloat)((rgbValue & 0xFF00) >> 8))
@@ -1675,7 +1740,7 @@ public extension String {
 public extension Formatter {
     public static let withSeparator: NumberFormatter = {
         let formatter = NumberFormatter()
-        formatter.groupingSeparator = " "
+        formatter.locale = NSLocale.current
         formatter.numberStyle = .decimal
         return formatter
     }()

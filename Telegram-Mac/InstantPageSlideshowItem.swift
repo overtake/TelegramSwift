@@ -14,12 +14,12 @@ class InstantPageSlideshowItem: InstantPageItem {
     var frame: CGRect
     
     let medias: [InstantPageMedia]
-    let wantsNode: Bool = true
+    let wantsView: Bool = true
     let hasLinks: Bool = false
     let isInteractive: Bool = true
-    
-    let webPage: TelegramMediaWebpage
     let separatesTiles: Bool = false
+
+    let webPage: TelegramMediaWebpage
     
     init(frame: CGRect, webPage: TelegramMediaWebpage, medias: [InstantPageMedia]) {
         self.frame = frame
@@ -35,7 +35,7 @@ class InstantPageSlideshowItem: InstantPageItem {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         if let view = node as? InstantPageSlideshowView {
             return self.medias == view.medias
         }
@@ -43,7 +43,7 @@ class InstantPageSlideshowItem: InstantPageItem {
     }
 
     
-    func node(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return InstantPageSlideshowView(frameRect: frame, medias: medias, account: arguments.account)
     }
     
@@ -63,10 +63,10 @@ class InstantPageSlideshowItem: InstantPageItem {
 
 class InstantPageSlideshowView : View, InstantPageView {
     fileprivate let medias: [InstantPageMedia]
-    private let slideView: MIHSliderView
+    private let slideView: SliderView
     init(frameRect: NSRect, medias: [InstantPageMedia], account: Account) {
         self.medias = medias
-        slideView = MIHSliderView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        slideView = SliderView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(slideView)
         
@@ -94,7 +94,7 @@ class InstantPageSlideshowView : View, InstantPageView {
     
     override func copy() -> Any {
         
-        return slideView.displayedSlide.copy()
+        return slideView.displayedSlide?.copy() ?? super.copy()
     }
     
     func updateIsVisible(_ isVisible: Bool) {

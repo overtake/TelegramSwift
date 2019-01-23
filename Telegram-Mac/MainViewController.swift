@@ -159,7 +159,7 @@ class MainViewController: TelegramViewController {
                         } else {
                             palette = palettes[settings.defaultDayName] ?? dayClassic
                         }
-                        return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? palette.name == dayClassic.name ? .builtin : palette.isDark ? .none: settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName, followSystemAppearance: settings.followSystemAppearance)
+                        return ThemePaletteSettings(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.bubbled ? settings.wallpaper : .none, defaultNightName: settings.defaultNightName, defaultDayName: settings.defaultDayName, followSystemAppearance: settings.followSystemAppearance)
                     }).start()
                     _ = updateAutoNightSettingsInteractively(postbox: strongSelf.account.postbox, { $0.withUpdatedSchedule(nil)}).start()
                 }
@@ -203,19 +203,25 @@ class MainViewController: TelegramViewController {
         }
     }
     
+    private var previousIndex: Int? = nil
+    
     func checkSettings(_ index:Int) {
         let isSettings = tabController.tab(at: index).controller is AccountViewController
-        if isSettings && account.context.layout != .single {
-            account.context.mainNavigation?.push(GeneralSettingsViewController(account), false)
-        } else {
-            account.context.mainNavigation?.enumerateControllers( { controller, index in
-                if (controller is ChatController) || (controller is PeerInfoController) || (controller is GroupAdminsController) || (controller is GroupAdminsController)  || (controller is ChannelAdminsViewController) || (controller is ChannelAdminsViewController) || (controller is EmptyChatViewController) {
-                    self.backFromSettings(index)
-                    return true
-                }
-                return false
-            })
+
+        if previousIndex == tabController.count - 1 || isSettings {
+            if isSettings && account.context.layout != .single {
+                account.context.mainNavigation?.push(GeneralSettingsViewController(account), false)
+            } else {
+                account.context.mainNavigation?.enumerateControllers( { controller, index in
+                    if (controller is ChatController) || (controller is PeerInfoController) || (controller is GroupAdminsController) || (controller is GroupAdminsController)  || (controller is ChannelAdminsViewController) || (controller is ChannelAdminsViewController) || (controller is EmptyChatViewController) {
+                        self.backFromSettings(index)
+                        return true
+                    }
+                    return false
+                })
+            }
         }
+        self.previousIndex = index
         quickController?.popover?.hide()
     }
     
@@ -260,6 +266,17 @@ class MainViewController: TelegramViewController {
         } else {
             return 2
         }
+    }
+    
+    override func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
+        if let controller = self.tabController.current {
+            return controller.navigationUndoHeaderDidNoticeAnimation(current, previous, animated)
+        }
+        return {}
+    }
+    
+    func openChat(_ index: Int) {
+        chatList.openChat(index)
     }
     
     func showPreferences() {
