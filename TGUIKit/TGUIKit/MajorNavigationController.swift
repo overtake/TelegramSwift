@@ -22,9 +22,9 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     private var defaultEmpty:ViewController
     private var listeners:[WeakReference<ViewController>] = []
     
-    private let container:GenericViewController<View> = GenericViewController<View>()
+    private let container:GenericViewController<BackgroundView> = GenericViewController<BackgroundView>()
     
-    override var containerView:View {
+    override var containerView:BackgroundView {
         get {
             return container.genericView
         }
@@ -265,6 +265,18 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.controller.view)
                     
                     
+                    let prevBackgroundView = self.containerView.copy() as! NSView
+                    let nextBackgroundView = self.containerView.copy() as! NSView
+                    
+                    if !previous.isOpaque {
+                        previous.view.addSubview(prevBackgroundView, positioned: .below, relativeTo: previous.view.subviews.first)
+                        prevBackgroundView.setFrameOrigin(NSMakePoint(prevBackgroundView.frame.minX, -previous.view.frame.minY))
+                    }
+                    if !self.controller.isOpaque {
+                        self.controller.view.addSubview(nextBackgroundView, positioned: .below, relativeTo: self.controller.view.subviews.first)
+                        nextBackgroundView.setFrameOrigin(NSMakePoint(nextBackgroundView.frame.minX, -self.controller.view.frame.minY))
+                    }
+                    
                     self.addShadowView(.left)
                     if previous.bar.has {
                         self.navigationBar.startMoveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction)
@@ -289,16 +301,22 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     }
                     return .deltaUpdated(available: nPosition)
                     
-                case .success:
+                case let .success(_, controller):
                     self.lock = false
+                    
+                    controller.removeBackgroundCap()
+                    self.controller.removeBackgroundCap()
+                    
                     self.back(forceAnimated: true)
                 case let .failed(_, previous):
                  //   CATransaction.begin()
                     let animationStyle = previous.animationStyle
                     self.controller.view._change(pos: NSMakePoint(0, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
-                    self.containerView.subviews[0]._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
+                    self.containerView.subviews[0]._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self, weak previous] completed in
                         if completed {
                             self?.containerView.subviews[0].removeFromSuperview()
+                            self?.controller.removeBackgroundCap()
+                            previous?.removeBackgroundCap()
                         }
                     })
                     self.shadowView.change(pos: NSMakePoint(-self.shadowView.frame.width, self.shadowView.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
@@ -321,6 +339,19 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     new._frameRect = self.containerView.bounds
                     new.view.setFrameOrigin(NSMakePoint(self.containerView.frame.width, self.controller.frame.minY))
 
+                    
+                    let prevBackgroundView = self.containerView.copy() as! NSView
+                    let nextBackgroundView = self.containerView.copy() as! NSView
+                    
+                    if !new.isOpaque {
+                        new.view.addSubview(prevBackgroundView, positioned: .below, relativeTo: new.view.subviews.first)
+                        prevBackgroundView.setFrameOrigin(NSMakePoint(prevBackgroundView.frame.minX, -new.view.frame.minY))
+                    }
+                    if !self.controller.isOpaque {
+                        self.controller.view.addSubview(nextBackgroundView, positioned: .below, relativeTo: self.controller.view.subviews.first)
+                        nextBackgroundView.setFrameOrigin(NSMakePoint(nextBackgroundView.frame.minX, -self.controller.view.frame.minY))
+                    }
+                    
                     self.containerView.addSubview(new.view, positioned: .above, relativeTo: self.controller.view)
                     self.addShadowView(.right)
                     self.navigationBar.startMoveViews(left: new.leftBarView, center: new.centerBarView, right: new.rightBarView, direction: direction)
@@ -343,13 +374,20 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     return .deltaUpdated(available: delta)
                 case let .success(_, controller):
                     self.lock = false
+                    
+                    controller.removeBackgroundCap()
+                    self.controller.removeBackgroundCap()
+                    
                     self.push(controller, true, style: .push)
                 case let .failed(_, new):
                    // CATransaction.begin()
                     let animationStyle = new.animationStyle
                     var _new:ViewController? = new
+                    
+                    
                     _new?.view._change(pos: NSMakePoint(self.containerView.frame.width, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
-                    self.containerView.subviews[0]._change(pos: NSMakePoint(0, self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new] completed in
+                    self.containerView.subviews[0]._change(pos: NSMakePoint(0, self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new, weak self] completed in
+                        self?.controller.removeBackgroundCap()
                         new?.view.removeFromSuperview()
                         _new = nil
                     })

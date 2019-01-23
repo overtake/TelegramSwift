@@ -189,8 +189,9 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
     
     
     let arguments = EditInfoControllerArguments(account: account, uploadNewPhoto: {
-        pickImage(for: mainWindow, completion:{ image in
-            if let image = image {
+        
+        filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+            if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                 
                 let cancel = {
                     photoDisposable.dispose()
@@ -199,41 +200,54 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
                     }
                 }
                 
-                let updateSignal = putToTemp(image: image) |> map { path -> TelegramMediaResource in
-                    return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                    } |> beforeNext { resource in
+                _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+                    let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                    showModal(with: controller, for: mainWindow)
+                    
+                    let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
+                        return LocalFileReferenceMediaResource(localFilePath: path.path, randomId: arc4random64())
+                        } |> beforeNext { resource in
+                            updateState { state -> EditInfoState in
+                                return state.withUpdatedUpdatingPhotoState { _ in
+                                    return PeerInfoUpdatingPhotoState(progress: 0, cancel: cancel)
+                                }
+                            }
+                        } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+                            return updateAccountPhoto(account: account, resource: resource, mapResourceToAvatarSizes: { resource, representations in
+                                return mapResourceToAvatarSizes(postbox: account.postbox, resource: resource, representations: representations)
+                            }) //updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource))
+                        } |> deliverOnMainQueue
+                    
+                    photoDisposable.set(updateSignal.start(next: { status in
                         updateState { state -> EditInfoState in
-                            return state.withUpdatedUpdatingPhotoState { _ in
-                                return PeerInfoUpdatingPhotoState(progress: 0, cancel: cancel)
+                            switch status {
+                            case .complete:
+                                return state.withoutUpdatingPhotoState()
+                            case let .progress(progress):
+                                return state.withUpdatedUpdatingPhotoState { current -> PeerInfoUpdatingPhotoState? in
+                                    return current?.withUpdatedProgress(progress)
+                                }
                             }
                         }
-                    } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                        return updateAccountPhoto(account: account, resource: resource) //updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource))
-                    } |> deliverOnMainQueue
-                
-                photoDisposable.set(updateSignal.start(next: { status in
-                    updateState { state -> EditInfoState in
-                        switch status {
-                        case .complete:
-                            return state
-                        case let .progress(progress):
-                            return state.withUpdatedUpdatingPhotoState { current -> PeerInfoUpdatingPhotoState? in
-                                return current?.withUpdatedProgress(progress)
-                            }
+                    }, error: { error in
+                        updateState { state in
+                            return state.withoutUpdatingPhotoState()
                         }
+                    }, completed: {
+                        updateState { state -> EditInfoState in
+                            return state.withoutUpdatingPhotoState()
+                        }
+                    }))
+                    
+
+                    
+                    controller.onClose = {
+                        removeFile(at: path)
                     }
-                }, error: { error in
-                    updateState { state in
-                        return state.withoutUpdatingPhotoState()
-                    }
-                }, completed: {
-                    updateState { state -> EditInfoState in
-                        return state.withoutUpdatingPhotoState()
-                    }
-                }))
-                
+                })
             }
         })
+        
     }, logout: {
         confirm(for: mainWindow, header: L10n.accountConfirmLogout, information: L10n.accountConfirmLogoutText, successHandler: { _ in
             logoutDisposable.set(logoutFromAccount(id: account.id, accountManager: accountManager).start())

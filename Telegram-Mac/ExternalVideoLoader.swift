@@ -143,10 +143,10 @@ class ExternalVideoLoader {
     }
     
     func fetch(for content:TelegramMediaWebpageLoadedContent) -> Signal<ExternalVideo?,Void> {
-        if content.websiteName?.lowercased() == youtubeName.lowercased() {
+        if content.displayUrl.lowercased().contains(youtubeName.lowercased()) {
             return fetchYoutubeContent(for: content.displayUrl)
         }
-        if content.websiteName?.lowercased() == vimeoName.lowercased() {
+        if content.displayUrl.lowercased().contains(vimeoName.lowercased()) {
             return fetchVimeoContent(for: content.displayUrl)
         }
         return .fail(Void())

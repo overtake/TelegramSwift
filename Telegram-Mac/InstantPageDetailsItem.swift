@@ -34,6 +34,16 @@ final class InstantPageDetailsItem: InstantPageItem {
     let initiallyExpanded: Bool
     let index: Int
     
+    var isExpanded: Bool {
+        return self.arguments?.isExpandedItem(self) ?? initiallyExpanded
+    }
+    
+    var effectiveRect: NSRect {
+        return self.arguments?.effectiveRectForItem(self) ?? frame
+    }
+    
+    private var arguments: InstantPageItemArguments?
+    
     init(frame: CGRect, titleItems: [InstantPageItem], titleHeight: CGFloat, items: [InstantPageItem], safeInset: CGFloat, rtl: Bool, initiallyExpanded: Bool, index: Int) {
         self.frame = frame
         self.titleItems = titleItems
@@ -47,10 +57,73 @@ final class InstantPageDetailsItem: InstantPageItem {
     
     func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         var expanded: Bool?
+        self.arguments = arguments
         if let expandedDetails = currentExpandedDetails, let currentlyExpanded = expandedDetails[self.index] {
             expanded = currentlyExpanded
         }
         return InstantPageDetailsView(arguments: arguments, item: self, currentlyExpanded: expanded)
+    }
+    
+    private func itemsIn( _ rect: NSRect, items: [InstantPageItem] = []) -> [InstantPageItem] {
+        var items: [InstantPageItem] = items
+        for (_, item) in self.items.enumerated() {
+            if  item.frame.intersects(rect) {
+                if let item = item as? InstantPageTableItem {
+                    return item.itemsIn(rect, items: items)
+                } else if let item = item as? InstantPageDetailsItem {
+                    var rect = rect
+                    rect.origin.y = rect.minY - item.effectiveRect.minY - titleHeight
+                    return item.itemsIn(rect, items: items)
+                } else {
+                    items.append(item)
+                }
+            }
+            
+        }
+        return items
+    }
+    func itemsIn( _ rect: NSRect) -> [InstantPageItem] {
+        return self.itemsIn(rect.offsetBy(dx: 0, dy: -titleHeight), items: [])
+    }
+    
+    func deepRect(_ rect: NSRect) -> NSRect {
+        for (_, item) in self.items.enumerated() {
+            if item.frame.intersects(rect) {
+                if let item = item as? InstantPageDetailsItem {
+                    var rect = rect
+                    let result = rect.minY - item.effectiveRect.minY - titleHeight
+                    rect.origin.y = result
+                    if result > 0 {
+                        
+                        return item.deepRect(rect)
+
+                    } else {
+                        var bp:Int = 0
+                        bp += 1
+                    }
+                }
+            }
+            
+        }
+        return rect
+    }
+    
+    func deepItemsInRect(_ rect: NSRect, items: [InstantPageItem] = []) -> [InstantPageItem] {
+        for (_, item) in self.items.enumerated() {
+            if  item.frame.intersects(rect) {
+                if let item = item as? InstantPageDetailsItem {
+                    var rect = rect
+                    rect.origin.y = rect.minY - item.effectiveRect.minY - titleHeight
+                    return item.deepItemsInRect(rect, items: item.items)
+                }
+            }
+            
+        }
+        return items
+    }
+    
+    func deepItemsInRect(_ rect: NSRect) -> [InstantPageItem] {
+        return deepItemsInRect(rect, items: self.items)
     }
     
 
@@ -120,7 +193,7 @@ final class InstantPageDetailsView: Control, InstantPageView {
     private let titleTileView: InstantPageTileView
     
     private let highlightedBackgroundView: View
-    private let buttonView: View
+    private let buttonView: Control
     private let arrowView: InstantPageDetailsArrowView
     let separatorView: View
     let contentView: InstantPageContentView
@@ -155,7 +228,8 @@ final class InstantPageDetailsView: Control, InstantPageView {
         
         self.arrowView = InstantPageDetailsArrowView(color: theme.colors.grayText, open: self.expanded)
         self.separatorView = View()
-        self.buttonView = View()
+        separatorView.backgroundColor = theme.colors.border
+        self.buttonView = Control()
         
         self.contentView = InstantPageContentView(arguments: arguments, items: item.items, contentSize: CGSize(width: item.frame.width, height: item.frame.height - item.titleHeight))
         
@@ -166,16 +240,16 @@ final class InstantPageDetailsView: Control, InstantPageView {
         
         self.addSubview(self.contentView)
         self.addSubview(self.highlightedBackgroundView)
-        self.addSubview(self.buttonView)
         self.addSubview(self.titleTileView)
         self.addSubview(self.arrowView)
         self.addSubview(self.separatorView)
-        
+        self.addSubview(self.buttonView)
+
        
         
-        set(handler: { [weak self] _ in
+        buttonView.set(handler: { [weak self] _ in
             guard let `self` = self else {return}
-            arguments.updateDetailsExpanded(self.item, !self.expanded)
+            arguments.updateDetailsExpanded(!self.expanded)
             self.setExpanded(!self.expanded, animated: true)
         }, for: .Click)
         
@@ -184,6 +258,15 @@ final class InstantPageDetailsView: Control, InstantPageView {
         }
         self.setExpanded(self.expanded, animated: false)
 
+    }
+    
+
+    override var needsDisplay: Bool {
+        didSet {
+            for subview in self.contentView.subviews {
+                subview.needsDisplay = true
+            }
+        }
     }
     
     required init?(coder: NSCoder) {

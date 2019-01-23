@@ -46,6 +46,17 @@ public enum TableBackgroundMode {
     case color(color: NSColor)
     case background(image: NSImage)
     case tiled(image: NSImage)
+    
+    public var hasWallpapaer: Bool {
+        switch self {
+        case .plain:
+            return false
+        case let .color(color):
+            return color.hexString != presentation.colors.background.hexString
+        default:
+            return true
+        }
+    }
 }
 
 public class TableResortController {
@@ -469,8 +480,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var alwaysOpenRowsOnMouseUp: Bool = true
     
     
+    public var emptyChecker: (([TableRowItem]) -> Bool)? = nil
+    
     public var emptyItem:TableRowItem? {
         didSet {
+            emptyItem?.table = self
             if let _ = emptyView {
                 updateEmpties()
             }
@@ -619,10 +633,34 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
+    private func findBackgroundControllerView(view: NSView) -> BackgroundView? {
+        if let superview = view.superview {
+            for subview in superview.subviews {
+                if let subview = subview as? BackgroundView {
+                    return subview
+                } else {
+                    if let superview = subview.superview {
+                        if let result = findBackgroundControllerView(view: superview) {
+                            return result
+                        }
+                    }
+                }
+            }
+        }
+        return nil
+    }
+    
+    private var findBackgroundControllerView: BackgroundView? {
+        return self.findBackgroundControllerView(view: self)
+    }
     
     open override func layout() {
         super.layout()
-        emptyView?.frame = bounds
+        if let emptyView = emptyView, let superview = superview {
+            emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
+            emptyView.centerX(y: superview.frame.height - emptyView.frame.height)
+        }
+       
         if needsLayouItemsOnNextTransition {
             layoutItems()
         }
@@ -802,9 +840,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         y = nrect.minY - visible.1
                     }
                     
-                    //clipView.scroll(to: NSMakePoint(0, y + frame.minY), animated: false)
-                     self.contentView.bounds = NSMakeRect(0, y, 0, clipView.bounds.height)
+                    self.contentView.scroll(to: NSMakePoint(0, y))
                     reflectScrolledClipView(clipView)
+                    flashScrollers()
                     break
                 }
             }
@@ -888,10 +926,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                         
                         stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
-                        stickView.header = fabs(dif) <= item.height
+                        stickView.header = abs(dif) <= item.height
 
                         if !firstTime {
-                            let rows:[Int] = [tableView.row(at: NSMakePoint(0, scrollInset - 50)), tableView.row(at: NSMakePoint(0, scrollInset))]
+                            let rows:[Int] = [tableView.row(at: NSMakePoint(0, scrollInset - stickView.frame.height)), tableView.row(at: NSMakePoint(0, scrollInset))]
                             for row in rows {
                                 let row = min(max(0, row), list.count - 1)
                                 if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
@@ -1382,7 +1420,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.listhash.removeAll()
         
         if(redraw) {
-            
             self.tableView.removeRows(at: IndexSet(integersIn: 0 ..< count), withAnimation:  animation != .none ? .effectFade : .none)
         }
     }
@@ -1582,6 +1619,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     public var isEmpty:Bool {
+        
+        if let emptyChecker = emptyChecker {
+            return emptyChecker(self.list)
+        }
+        
         return self.list.isEmpty || (!tableView.isFlipped && list.count == 1)
     }
     
@@ -1611,6 +1653,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func viewNecessary(at row:Int, makeIfNecessary: Bool = false) -> TableRowView? {
         if row < 0 || row > count - 1 {
+            if row == -1000 {
+                return emptyView
+            }
             return nil
         }
         return self.tableView.rowView(atRow: row, makeIfNecessary: makeIfNecessary) as? TableRowView
@@ -1959,6 +2004,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                     self.contentView.scroll(to: NSMakePoint(0, y))
                     reflectScrolledClipView(clipView)
+                    tile()
                     //self.contentView.bounds = NSMakeRect(0, y, 0, contentView.bounds.height)
                     //self.display(visi)
                    // reflectScrolledClipView(clipView)
@@ -1978,7 +2024,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         case let .none(animation):
             // print("scroll do nothing")
             animation?.animate(table:self, added: inserted, removed:removed)
-            if let animation = animation, !animation.scrollBelow, !transition.isEmpty {
+            if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
                 saveVisible(.upper)
             }
         case .bottom, .top, .center:
@@ -2002,14 +2048,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //        }
         
         if oldEmpty != isEmpty || first {
-            updateEmpties()
+            updateEmpties(animated: !first)
         }
         
         first = false
         performScrollEvent()
     }
     
-    public func updateEmpties() {
+    public func updateEmpties(animated: Bool = false) {
         if let emptyItem = emptyItem {
             if isEmpty {
                 if let empt = emptyView, !empt.isKind(of: emptyItem.viewClass()) || empt.item != emptyItem {
@@ -2020,16 +2066,44 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     let vz = emptyItem.viewClass() as! TableRowView.Type
                     emptyView = vz.init(frame:bounds)
                     emptyView?.identifier = identifier
+                    if animated, let emptyView = emptyView {
+                        emptyView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
-                emptyView?.frame = bounds
+                
                 if emptyView?.superview == nil {
                     addSubview(emptyView!)
                 }
+                
+                if let emptyView = emptyView, let superview = superview {
+                    emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
+                    emptyView.centerX(y: superview.frame.height - emptyView.frame.height)
+                    
+                    if animated {
+                        emptyView.layer?.animatePosition(from: emptyView.frame.origin.offsetBy(dx: 0, dy: 25), to: emptyView.frame.origin)
+                    }
+                }
+               
+                
                 emptyView?.set(item: emptyItem)
                 emptyView?.needsLayout = true
+                
+                tableView._change(opacity: 0, animated: animated)
             } else {
-                emptyView?.removeFromSuperview()
-                emptyView = nil
+                if let emptyView = emptyView {
+                    self.emptyView = nil
+                    if animated {
+                        emptyView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak emptyView] completed in
+                            emptyView?.removeFromSuperview()
+                        })
+                        if animated {
+                            emptyView.layer?.animatePosition(from: emptyView.frame.origin, to: emptyView.frame.origin.offsetBy(dx: 0, dy: 25), removeOnCompletion: false)
+                        }
+                    } else {
+                        emptyView.removeFromSuperview()
+                    }
+                }
+                tableView._change(opacity: 1, animated: animated)
             }
         }
         

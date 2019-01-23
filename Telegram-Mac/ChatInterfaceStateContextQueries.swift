@@ -106,7 +106,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 inlineSignal = recentlyUsedInlineBots(postbox: account.postbox) |> take(1)
             }
             
-            let participants = combineLatest(inlineSignal, peerParticipants(postbox: account.postbox, id: global.id) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+            let participants = combineLatest(inlineSignal, searchPeerMembers(account: account, peerId: global.id, query: query) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
                 return account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                         switch entry {
@@ -279,7 +279,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         let normalizedQuery = query.lowercased()
                         
                         if let global = chatPresentationInterfaceState.peer {
-                            return peerParticipants(postbox: account.postbox, id: global.id) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+                            return searchPeerMembers(account: account, peerId: global.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
                                 return account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                                         switch entry {
@@ -365,7 +365,7 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
             }
         }
         
-        let participants = peerParticipants(postbox: account.postbox, id: peer.id) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+        let participants = searchPeerMembers(account: account, peerId: peer.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
             return account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peer.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                 let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                     switch entry {
@@ -459,6 +459,11 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
         if media is TelegramMediaFile || media is TelegramMediaImage {
             return (nil, .single({ _ in return nil }))
         }
+    }
+    
+    
+    if let peer = chatPresentationInterfaceState.peer, peer.webUrlRestricted {
+        return (nil, .single({ _ in return nil }))
     }
     
     if let dataDetector = dataDetector {

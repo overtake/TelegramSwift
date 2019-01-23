@@ -327,7 +327,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     
-    
     private let account:Account
     private var marked: Bool = false
     private let arguments:SearchControllerArguments
@@ -356,14 +355,16 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let account = self.account
         let options = self.options
 
+        let searchMessagesState: ValuePromise<SearchMessagesState?> = ValuePromise()
+        let searchMessagesStateValue: Atomic<SearchMessagesState?> = Atomic(value: nil)
 
-      
+        
         let arguments = self.arguments
         let statePromise = self.statePromise.get()
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
         let groupId: PeerGroupId? = self.groupId
-        let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool), NoError> in
+        let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?), NoError> in
             if let query = query, !query.isEmpty {
                 var ids:[PeerId:PeerId] = [:]
                 
@@ -439,44 +440,51 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             })
                 }
                 
-                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool), NoError> = !options.contains(.messages) ? .single(([], false)) : .single(([], true)) |> then(searchMessages(account: account, location: location , query: query)
-                    |> delay(0.2, queue: prepareQueue)
-                    |> map { messages -> ([ChatListSearchEntry], Bool) in
-                        
-                        
-                        var entries: [ChatListSearchEntry] = []
-                        var index = 20001
-                        for message in messages.0 {
-                            entries.append(.message(message, index))
-                            index += 1
-                        }
-                        
-                        return (entries, false)
-                    })
+                searchMessagesState.set(nil)
+                
+                
+                let remoteSearch = searchMessagesState.get() |> mapToSignal { state in
+                    return searchMessages(account: account, location: location , query: query, state: state)
+                        |> delay(0.2, queue: prepareQueue)
+                        |> map { result -> ([ChatListSearchEntry], Bool, SearchMessagesState?) in
+                            
+                            var entries: [ChatListSearchEntry] = []
+                            var index = 20001
+                            for message in result.0.messages {
+                                entries.append(.message(message, index))
+                                index += 1
+                            }
+                            
+                            return (entries, false, result.1)
+                    }
+                }
+                
+                
+                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?), NoError> = !options.contains(.messages) ? .single(([], false, nil)) : .single(([], true, nil)) |> then(remoteSearch)
                 
                 return combineLatest(foundLocalPeers |> deliverOnPrepareQueue, foundRemotePeers |> deliverOnPrepareQueue, foundRemoteMessages |> deliverOnPrepareQueue)
-                    |> map { localPeers, remotePeers, remoteMessages -> ([ChatListSearchEntry], Bool) in
+                    |> map { localPeers, remotePeers, remoteMessages -> ([ChatListSearchEntry], Bool, SearchMessagesState?) in
                         
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
-                            entries.append(.separator(text: tr(L10n.searchSeparatorChatsAndContacts), index: 0, state: .none))
+                            entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: .none))
                             entries += localPeers
                             entries += remotePeers.0
                         }
                         if !remotePeers.1.isEmpty {
-                            entries.append(.separator(text: tr(L10n.searchSeparatorGlobalPeers), index: 10000, state: .none))
+                            entries.append(.separator(text: L10n.searchSeparatorGlobalPeers, index: 10000, state: .none))
                             entries += remotePeers.1
                         }
                         if !remoteMessages.0.isEmpty {
-                            entries.append(.separator(text: tr(L10n.searchSeparatorMessages), index: 20000, state: .none))
+                            entries.append(.separator(text: L10n.searchSeparatorMessages, index: 20000, state: .none))
                             entries += remoteMessages.0
                         }
                         if entries.isEmpty && !remotePeers.2 && !remoteMessages.1 {
                             entries.append(.emptySearch)
                         }
-                        return (entries, remotePeers.2 || remoteMessages.1)
+                        return (entries, remotePeers.2 || remoteMessages.1, remoteMessages.2)
                     } |> map { value in
-                        return (value.0, value.1, false)
+                        return (value.0, value.1, false, value.2)
                     }
                 
             } else {
@@ -535,7 +543,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                 } |> deliverOnPrepareQueue
                 
-                return combineLatest(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnPrepareQueue, top, recently, statePromise |> deliverOnPrepareQueue, combineLatest(readArticlesListPreferences(account.postbox) |> deliverOnPrepareQueue, baseAppSettings(postbox: account.postbox) |> deliverOnPrepareQueue)) |> map { user, top, recent, state, articles -> ([ChatListSearchEntry], Bool) in
+                return combineLatest(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnPrepareQueue, top, recently, statePromise |> deliverOnPrepareQueue) |> map { user, top, recent, state -> ([ChatListSearchEntry], Bool) in
                     var entries:[ChatListSearchEntry] = []
                     var i:Int = 0
                     var ids:[PeerId:PeerId] = [:]
@@ -543,17 +551,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     ids[account.peerId] = account.peerId
                     
                     
-                    entries.append(ChatListSearchEntry.topPeers(i, articlesEnabled: !articles.0.list.isEmpty && articles.1.latestArticles, unreadArticles: Int32(articles.0.unreadList.count), selfPeer: user, peers: top.0, unread: top.1, online: top.2))
-//
-//                    for peer in topPeers {
-//                        if ids[peer.id] == nil {
-//                            ids[peer.id] = peer.id
-//                            var stop:Bool = false
-//                            recent = recent.filter({ids[$0.peerId] == nil})
-//
-//                        }
-//
-//                    }
+                    entries.append(ChatListSearchEntry.topPeers(i, articlesEnabled: false, unreadArticles: 0, selfPeer: user, peers: top.0, unread: top.1, online: top.2))
                     
                     if recent.0.count > 0 {
                         entries.append(.separator(text: L10n.searchSeparatorRecent, index: i, state: .clear))
@@ -582,23 +580,27 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     
                     return (entries.sorted(by: <), false)
                 } |> map {value in
-                    return (value.0, value.1, true)
+                    return (value.0, value.1, true, nil)
                 }
             }
         }
         
         
         let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, globalPeerHandler.get() |> deliverOnPrepareQueue |> distinctUntilChanged, pinnedPromise.get() |> deliverOnPrepareQueue) |> map { value, appearance, location, pinnedItems in
-            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2, pinnedItems)
+            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2, pinnedItems, value.3)
         }
-        |> map { entries, loading, location, animated, pinnedItems -> (TableUpdateTransition, Bool, ChatLocation?) in
+        |> map { entries, loading, location, animated, pinnedItems, searchMessagesState -> (TableUpdateTransition, Bool, ChatLocation?, SearchMessagesState?) in
             let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, pinnedItems: pinnedItems, initialSize: atomicSize.modify { $0 }, animated: animated)
-            return (transition, loading, location)
+            return (transition, loading, location, searchMessagesState)
         } |> deliverOnMainQueue
         
-        disposable.set(transition.start(next: { [weak self] (transition, loading, location) in
+        
+        disposable.set(transition.start(next: { [weak self] (transition, loading, location, searchMessagesState) in
             self?.genericView.merge(with: transition)
             self?.isLoading.set(.single(loading))
+            
+            _ = searchMessagesStateValue.swap(searchMessagesState)
+            
             if let location = location {
                 switch location {
                 case let .peer(peerId):
@@ -614,6 +616,15 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
         }))
 
+        
+        genericView.setScrollHandler { position in
+            switch position.direction {
+            case .bottom:
+                searchMessagesState.set(searchMessagesStateValue.swap(nil))
+            default:
+                break
+            }
+        }
         
         ready.set(.single(true))
         
@@ -790,6 +801,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         var peer:Peer?
         var peerId:PeerId?
         var message:Message?
+        
+        let account = self.account
+        
         if let item = item as? ChatListMessageRowItem {
             peer = item.peer
             message = item.message
@@ -821,7 +835,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             return
         }
         
-        let storedPeer: Signal<Void, NoError>
+        var storedPeer: Signal<PeerId, NoError>
         if let peer = peer {
              storedPeer = account.postbox.transaction { transaction -> Void in
                 if transaction.getPeer(peer.id) == nil {
@@ -830,21 +844,27 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     })
                 }
                 
+            } |> mapToSignal {
+                return storedMessageFromSearchPeer(account: account, peer: peer)
             }
+        } else if let peerId = peerId {
+            storedPeer = .single(peerId)
         } else {
             storedPeer = .complete()
         }
         
+        
+        
         let recently: Signal<Void, NoError>
         if let peerId = peerId {
             recently = (searchQuery.get() |> take(1)) |> mapToSignal { [weak self] query -> Signal<Void, NoError> in
-                if let _ = query, let account = self?.account, !(item is ChatListMessageRowItem) {
+                if let account = self?.account, !(item is ChatListMessageRowItem) {
                     return addRecentlySearchedPeer(postbox: account.postbox, peerId: peerId)
                 }
-                return .complete()
+                return .single(Void())
             }
         } else {
-            recently = .complete()
+            recently = .single(Void())
         }
         
         
@@ -852,11 +872,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
         marked = true
         
-        openPeerDisposable.set((combineLatest(storedPeer, recently) |> deliverOnMainQueue).start( completed: { [weak self] in
-            //!(item is ChatListMessageRowItem) && byClick
-            if let peerId = peerId {
-                self?.open(peerId, message, self?.closeNext ?? false)
-            }
+        openPeerDisposable.set((combineLatest(storedPeer, recently) |> deliverOnMainQueue).start( next: { [weak self] peerId, _ in
+            self?.open(peerId, message, self?.closeNext ?? false)
         }))
         
     }

@@ -15,22 +15,6 @@ enum TokenSearchState : Equatable {
     case from(query: String, complete: Bool)
 }
 
-func ==(lhs: TokenSearchState, rhs: TokenSearchState) -> Bool {
-    switch lhs {
-    case .none:
-        if case .none = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .from(query, complete):
-        if case .from(query, complete) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 class ChatSearchView: SearchView {
     private let fromView: TextView = TextView()

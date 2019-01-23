@@ -162,12 +162,16 @@ class UserInfoArguments : PeerInfoArguments {
         let result = selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
             if let peerId = peerIds.first {
                 return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
-                    return confirmSignal(for: mainWindow, information: tr(L10n.confirmAddBotToGroup(peer.displayTitle)))
+                    return confirmSignal(for: mainWindow, information: L10n.confirmAddBotToGroup(peer.displayTitle))
                 }
             }
             return .single(false)
-        }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { groupId in
-            return showModalProgress(signal: addPeerMember(account: account, peerId: groupId, memberId: peerId), for: mainWindow) |> `catch` {_ in .complete()} |> map {groupId}
+        }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { groupId -> Signal<PeerId, NoError> in
+            if groupId.namespace == Namespaces.Peer.CloudGroup {
+                return showModalProgress(signal: addGroupMember(account: account, peerId: groupId, memberId: peerId), for: mainWindow) |> `catch` {_ in .complete()} |> map {groupId}
+            } else {
+                return showModalProgress(signal: account.context.peerChannelMemberCategoriesContextsManager.addMember(account: account, peerId: groupId, memberId: peerId), for: mainWindow) |> map { groupId }
+            }
         }
         
         _ = result.start(next: { [weak self] peerId in

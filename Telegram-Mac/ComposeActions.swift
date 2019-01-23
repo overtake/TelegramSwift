@@ -24,7 +24,9 @@ func createGroup(with account:Account, for navigation:NavigationViewController) 
     } |> mapToSignal{ peerId, picture -> Signal<(PeerId?, Bool), NoError> in
             if let peerId = peerId, let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
-                let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource)) |> `catch` {_ in .complete()} |> map { value in
+                let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                    return mapResourceToAvatarSizes(postbox: account.postbox, resource: resource, representations: representations)
+                }) |> `catch` {_ in .complete()} |> map { value in
                     switch value {
                     case .complete:
                         return (Optional(peerId), false)
@@ -61,10 +63,30 @@ func createChannel(with account:Account, for navigation:NavigationViewController
         return create.onComplete.get() |> deliverOnMainQueue |> filter {$0.1} |> mapToSignal { peerId, _ -> Signal<PeerId?, NoError> in
             if let peerId = peerId {
                 FastSettings.markChannelIntroHasSeen()
-                navigation.push(ChatController(account: account, chatLocation: .peer(peerId)), style: .none)
-                let visibility = ChannelVisibilityController(account: account, peerId: peerId)
-                navigation.push(visibility)
-                return visibility.onComplete.get() |> filter {$0} |> map {_ in return peerId}
+                navigation.removeAll()
+                
+                var chat: ChatController? = ChatController(account: account, chatLocation: .peer(peerId))
+                var visibility: ChannelVisibilityController? = ChannelVisibilityController(account: account, peerId: peerId)
+
+                chat!.navigationController = navigation
+                visibility!.navigationController = navigation
+                
+                chat!.loadViewIfNeeded(navigation.bounds)
+                visibility!.loadViewIfNeeded(navigation.bounds)
+                
+                
+                
+                let chatSignal = chat!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
+                let visibilitySignal = visibility!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
+
+                _ = combineLatest(queue: .mainQueue(), chatSignal, visibilitySignal).start(completed: {
+                    navigation.push(chat!)
+                    navigation.push(visibility!)
+                    chat = nil
+                    visibility = nil
+                })
+               
+                return visibility!.onComplete.get() |> map {_ in return peerId}
             }
             return .single(nil)
         }

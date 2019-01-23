@@ -235,20 +235,26 @@ extension AdminLogEventsResult {
         return false
     }
     
-    var banHelp:[TelegramChannelBannedRightsFlags] {
-        var order:[TelegramChannelBannedRightsFlags] = []
+    var banHelp:[TelegramChatBannedRightsFlags] {
+        var order:[TelegramChatBannedRightsFlags] = []
         order.append(.banSendMessages)
         order.append(.banReadMessages)
+        order.append(.banChangeInfo)
         order.append(.banSendMedia)
         order.append(.banSendStickers)
+        order.append(.banSendGifs)
+        order.append(.banAddMembers)
+        order.append(.banPinMessages)
+        order.append(.banSendInline)
+        order.append(.banSendPolls)
         order.append(.banEmbedLinks)
         return order
     }
     
-    var rightsHelp:(specific: TelegramChannelAdminRightsFlags, order: [TelegramChannelAdminRightsFlags]) {
+    var rightsHelp:(specific: TelegramChatAdminRightsFlags, order: [TelegramChatAdminRightsFlags]) {
         if let peer = peers[peerId] as? TelegramChannel {
-            let maskRightsFlags: TelegramChannelAdminRightsFlags
-            let rightsOrder: [TelegramChannelAdminRightsFlags]
+            let maskRightsFlags: TelegramChatAdminRightsFlags
+            let rightsOrder: [TelegramChatAdminRightsFlags]
             
             switch peer.info {
             case .broadcast:

@@ -25,6 +25,10 @@ class ChatEmptyPeerItem: TableRowItem {
         return false
     }
     
+    override var index: Int {
+        return -1000
+    }
+    
     override var height: CGFloat {
         if let table = table {
             return table.frame.height
@@ -38,30 +42,45 @@ class ChatEmptyPeerItem: TableRowItem {
         self.chatInteraction = chatInteraction
         
         let attr = NSMutableAttributedString()
+        var lineSpacing: CGFloat? = 5
         if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
-            _ = attr.append(string: tr(L10n.chatSecretChatEmptyHeader), color: theme.colors.grayText, font: .normal(.text))
-            _ = attr.append(string: "\n\n")
-            _ = attr.append(string: tr(L10n.chatSecretChat1Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: L10n.chatSecretChatEmptyHeader, color: theme.chatServiceItemTextColor, font: .medium(.text))
             _ = attr.append(string: "\n")
-            _ = attr.append(string: tr(L10n.chatSecretChat2Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: L10n.chatSecretChat1Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
             _ = attr.append(string: "\n")
-            _ = attr.append(string: tr(L10n.chatSecretChat3Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: L10n.chatSecretChat2Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
             _ = attr.append(string: "\n")
-            _ = attr.append(string: tr(L10n.chatSecretChat4Feature), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: L10n.chatSecretChat3Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: "\n")
+            _ = attr.append(string: L10n.chatSecretChat4Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
 
+        } else if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup, peer.groupAccess.isCreator {
+            _ = attr.append(string: L10n.emptyGroupInfoTitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: "\n")
+            _ = attr.append(string: L10n.emptyGroupInfoSubtitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: "\n")
+            _ = attr.append(string: L10n.emptyGroupInfoLine1(chatInteraction.presentation.limitConfiguration.maxSupergroupMemberCount.formattedWithSeparator), color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: "\n")
+            _ = attr.append(string: L10n.emptyGroupInfoLine2, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: "\n")
+            _ = attr.append(string: L10n.emptyGroupInfoLine3, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: "\n")
+            _ = attr.append(string: L10n.emptyGroupInfoLine4, color: theme.chatServiceItemTextColor, font: .medium(.text))
         } else {
             if let restriction = chatInteraction.presentation.restrictionInfo {
                 let reason = restriction.reason.components(separatedBy: ":")
                 if reason.count == 2 {
-                    _ = attr.append(string: reason[1], color: theme.colors.grayText, font: .normal(.text))
+                    _ = attr.append(string: reason[1], color: theme.colors.grayText, font: .medium(.text))
                 } else {
-                    _ = attr.append(string: L10n.chatEmptyChat, color: theme.colors.grayText, font: .normal(.text))
+                    _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                    lineSpacing = nil
                 }
             } else {
-                _ = attr.append(string: tr(L10n.chatEmptyChat), color: theme.colors.grayText, font: .normal(.text))
+                lineSpacing = nil
+                _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
             }
         }
-        textViewLayout = TextViewLayout(attr, alignment: .center)
+        textViewLayout = TextViewLayout(attr, alignment: .center, lineSpacing: lineSpacing, alwaysStaticItems: true)
         textViewLayout.interactions = globalLinkExecutor
         
         super.init(initialSize)
@@ -73,12 +92,11 @@ class ChatEmptyPeerItem: TableRowItem {
                     if let about = cachedData.botInfo?.description {
                         guard let `self` = self else {return}
                         let attr = NSMutableAttributedString()
-                        _ = attr.append(string: about, color: theme.colors.grayText, font: .normal(.text))
+                        _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))
                         attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], account: chatInteraction.account, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.account.context.globalSearch ?? {_ in }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self.textViewLayout = TextViewLayout(attr, alignment: .left)
                         self.textViewLayout.interactions = globalLinkExecutor
-                        self.textViewLayout.measure(width: self.width / 2)
-                        self.redraw()
+                        self.view?.layout()
                     }
                 }
             }))
@@ -88,11 +106,6 @@ class ChatEmptyPeerItem: TableRowItem {
     
     deinit {
         peerViewDisposable.dispose()
-    }
-    
-    override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        textViewLayout.measure(width: width / 2)
-        return super.makeSize(width)
     }
     
     override func viewClass() -> AnyClass {
@@ -107,27 +120,54 @@ class ChatEmptyPeerView : TableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
+        //containerView.addSubview(textView)
         textView.isSelectable = false
+        textView.userInteractionEnabled = true
     }
     
     override func updateColors() {
         super.updateColors()
-        textView.background = theme.colors.background
+        textView.background = theme.chatServiceItemColor
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
     }
     
     override var backdorColor: NSColor {
-        return .clear
+        return theme.wallpaper != .none ? .clear : theme.colors.background
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item)
+        needsLayout = true
     }
     
     override func layout() {
         super.layout()
         if let item = item as? ChatEmptyPeerItem {
             item.textViewLayout.measure(width: frame.width / 2)
+            
+            if item.textViewLayout.lineSpacing != nil {
+                for (i, line) in item.textViewLayout.lines.enumerated() {
+                    if i == 0 {
+                        line.penFlush = 0.5
+                    } else {
+                        line.penFlush = 0.0
+                    }
+                }
+            }
+            
             textView.update(item.textViewLayout)
-            textView.setFrameSize(item.textViewLayout.layoutSize.width + 20, item.textViewLayout.layoutSize.height + 8)
+            
+            let singleLine = item.textViewLayout.lines.count == 1
+            
+            textView.setFrameSize( singleLine ? item.textViewLayout.layoutSize.width + 16 : item.textViewLayout.layoutSize.width + 30, singleLine ? 24 : item.textViewLayout.layoutSize.height + 20)
             textView.center()
             
-            textView.layer?.cornerRadius = item.textViewLayout.lines.count == 1 ? textView.frame.height / 2 : .cornerRadius
+            
+            
+            textView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
         }
     }
     

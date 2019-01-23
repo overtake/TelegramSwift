@@ -56,7 +56,7 @@ enum MigrationData {
 
 
 func migrationData(accountManager: AccountManager, appGroupPath:String, testingEnvironment: Bool) -> Signal<MigrationData, NoError> {
-    return currentAccount(allocateIfNotExists: true, networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer()), supplementary: false, manager: accountManager, rootPath: appGroupPath, beginWithTestingEnvironment: testingEnvironment, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
+    return currentAccount(allocateIfNotExists: true, networkArguments: NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer()), supplementary: false, manager: accountManager, rootPath: appGroupPath, auxiliaryMethods: telegramAccountAuxiliaryMethods) |> map { account in return .auth(account, ignorepasslock: false) }
 }
 
 
@@ -290,6 +290,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
     private let masterClientDisposable = MetaDisposable()
+    private let chatUndoManagerDisposable = MetaDisposable()
     private func updateLocked(_ f:(LockNotificationsData) -> LockNotificationsData) {
         _lockedValue = f(_lockedValue)
         lockedScreenPromise.set(.single(_lockedValue))
@@ -346,14 +347,19 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             let view = CallNavigationHeaderView(header)
             return view
         }))
-
+        
+        rightController.set(undoHeader: UndoNavigationHeader(35, initializer: { header -> NavigationHeaderView in
+            let view = UndoOverlayHeaderView(header, manager: account.context.chatUndoManager)
+            return view
+        }))
+        
         window.rootViewController = rightController
         
         leftController = MainViewController(account, accountManager: accountManager);
 
         applicationContext = TelegramApplicationContext(rightController, EntertainmentViewController(size: NSMakeSize(350, window.frame.height), account: account), leftController, network: account.network, postbox: account.postbox)
         
-       
+        
         
         account.applicationContext = applicationContext
         
@@ -365,7 +371,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
 
         super.init()
         
+        chatUndoManagerDisposable.set((applicationContext.chatUndoManager.allStatuses() |> deliverOnMainQueue).start(next: { [weak self] statuses in
+            guard let `self` = self else {return}
+            
+            if let header = self.rightController.undoHeader {
+                (header.view as? UndoOverlayHeaderView)?.removeAnimationForNextTransition = true
 
+                if statuses.hasProcessingActions {
+                    header.show(true)
+                } else {
+                    header.hide(true)
+                }
+            }
+            
+        }))
         
         termDisposable.set((account.stateManager.termsOfServiceUpdate |> deliverOnMainQueue).start(next: { terms in
             if let terms = terms {
@@ -537,7 +556,50 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         }, with: self, for: .Zero, priority: .low, modifierFlags: [.command])
         
         
-
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(0)
+            return .invoked
+        }, with: self, for: .One, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(1)
+            return .invoked
+            }, with: self, for: .Two, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(2)
+            return .invoked
+            }, with: self, for: .Three, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(3)
+            return .invoked
+        }, with: self, for: .Four, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(4)
+            return .invoked
+        }, with: self, for: .Five, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(5)
+            return .invoked
+        }, with: self, for: .Six, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(6)
+            return .invoked
+        }, with: self, for: .Seven, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(7)
+            return .invoked
+        }, with: self, for: .Eight, priority: .low, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(8)
+            return .invoked
+        }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
         
         
         suggestedLocalizationDisposable.set(( account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, NoError> in
@@ -568,6 +630,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         }))
         
         rightController.backgroundColor = theme.colors.background
+        rightController.backgroundMode = theme.backgroundMode
         splitView.backgroundColor = theme.colors.background
         let basic = Atomic<ThemePaletteSettings?>(value: themeSettings)
         let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
@@ -576,6 +639,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
                 updateTheme(with: settings, for: window, animated: true)
                 self?.rightController.backgroundColor = theme.colors.background
                 self?.splitView.backgroundColor = theme.colors.background
+                self?.rightController.backgroundMode = theme.backgroundMode
             }
         }))
         
@@ -701,8 +765,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
             return  .invoked
         }, with: self, for: .Minus, modifierFlags: [.command])
         
-        
-        
+    }
+    
+    private func openChat(_ index: Int) {
+        self.applicationContext.mainViewController.openChat(index)
     }
     
     
@@ -874,7 +940,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate, NSUserNot
         viewer?.close()
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
-        
+        chatUndoManagerDisposable.dispose()
         for window in NSApp.windows {
             if window != self.window {
                 window.orderOut(nil)

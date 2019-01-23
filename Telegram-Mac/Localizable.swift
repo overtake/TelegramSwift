@@ -157,7 +157,7 @@ internal final class L10n {
   internal static var appMaxFileSize: String  { return L10n.tr("Localizable", "App.MaxFileSize") }
   /// Custom Background
   internal static var appearanceCustomBackground: String  { return L10n.tr("Localizable", "Appearance.CustomBackground") }
-  /// The file size must not exceed 10MB and the image dimensions must not exceed 500x500px.
+  /// The file size must not exceed 2MB and the image dimensions must not exceed 500x500px.
   internal static var appearanceCustomBackgroundFileError: String  { return L10n.tr("Localizable", "Appearance.CustomBackground.FileError") }
   /// Auto-Night Mode
   internal static var appearanceSettingsAutoNight: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNight") }
@@ -437,6 +437,10 @@ internal final class L10n {
   internal static var channelDescriptionHolder: String  { return L10n.tr("Localizable", "Channel.DescriptionHolder") }
   /// You can provide an optional description for your channel.
   internal static var channelDescriptionHolderDescrpiton: String  { return L10n.tr("Localizable", "Channel.DescriptionHolderDescrpiton") }
+  /// Sorry, you can't add this user to channels.
+  internal static var channelErrorAddBlocked: String  { return L10n.tr("Localizable", "Channel.ErrorAddBlocked") }
+  /// Sorry, you can only add the first 200 members to a channel. Note that an unlimited number of people may join via the channel's link.
+  internal static var channelErrorAddTooMuch: String  { return L10n.tr("Localizable", "Channel.ErrorAddTooMuch") }
   /// People can join your channel by following this link. You can revoke the link at any time.
   internal static var channelExportLinkAboutChannel: String  { return L10n.tr("Localizable", "Channel.ExportLinkAboutChannel") }
   /// People can join your group by following this link. You can revoke the link at any time.
@@ -475,6 +479,8 @@ internal final class L10n {
   internal static var channelAdminAdminAccess: String  { return L10n.tr("Localizable", "Channel.Admin.AdminAccess") }
   /// This admin will not be able to add new admins.
   internal static var channelAdminAdminRestricted: String  { return L10n.tr("Localizable", "Channel.Admin.AdminRestricted") }
+  /// You are not allowed to edit the rights of this admin.
+  internal static var channelAdminCantEdit: String  { return L10n.tr("Localizable", "Channel.Admin.CantEdit") }
   /// You cannot edit the rights of this admin.
   internal static var channelAdminCantEditRights: String  { return L10n.tr("Localizable", "Channel.Admin.CantEditRights") }
   /// Dismiss Admin
@@ -491,12 +497,40 @@ internal final class L10n {
   internal static var channelAdminsPromoteBannedAdminError: String  { return L10n.tr("Localizable", "Channel.Admins.Promote.BannedAdminError") }
   /// Sorry, you can't add this user as an admin because they are not a member of this group and you are not allowed to invite them.
   internal static var channelAdminsPromoteUnmemberAdminError: String  { return L10n.tr("Localizable", "Channel.Admins.Promote.UnmemberAdminError") }
+  /// Add Members
+  internal static var channelBanUserPermissionAddMembers: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionAddMembers") }
+  /// Change Group Info
+  internal static var channelBanUserPermissionChangeGroupInfo: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionChangeGroupInfo") }
+  /// Can Embed Links
+  internal static var channelBanUserPermissionEmbedLinks: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionEmbedLinks") }
+  /// Can Read Messages
+  internal static var channelBanUserPermissionReadMessages: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionReadMessages") }
+  /// Can Send Media
+  internal static var channelBanUserPermissionSendMedia: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionSendMedia") }
+  /// Can Send Messages
+  internal static var channelBanUserPermissionSendMessages: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionSendMessages") }
+  /// Send Polls
+  internal static var channelBanUserPermissionSendPolls: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionSendPolls") }
+  /// Can Send Stickers & GIFs
+  internal static var channelBanUserPermissionSendStickersAndGifs: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionSendStickersAndGifs") }
+  /// User Restrictions
+  internal static var channelBanUserPermissionsHeader: String  { return L10n.tr("Localizable", "Channel.BanUser.PermissionsHeader") }
+  /// Ban User
+  internal static var channelBanUserTitle: String  { return L10n.tr("Localizable", "Channel.BanUser.Title") }
+  /// Unban
+  internal static var channelBanUserUnban: String  { return L10n.tr("Localizable", "Channel.BanUser.Unban") }
   /// blocked by %@
   internal static func channelBlacklistBlockedBy(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Blacklist.BlockedBy", p1)
   }
   /// Sorry, you can't ban this user because they are an admin of this group and you are not allowed to demote them.
   internal static var channelBlacklistDemoteAdminError: String  { return L10n.tr("Localizable", "Channel.Blacklist.DemoteAdminError") }
+  /// Users removed from the channel by admins cannot rejoin via invite links.
+  internal static var channelBlacklistDescChannel: String  { return L10n.tr("Localizable", "Channel.Blacklist.DescChannel") }
+  /// Users removed from the group by admins cannot rejoin via invite links.
+  internal static var channelBlacklistDescGroup: String  { return L10n.tr("Localizable", "Channel.Blacklist.DescGroup") }
+  /// Remove User
+  internal static var channelBlacklistRemoveUser: String  { return L10n.tr("Localizable", "Channel.Blacklist.RemoveUser") }
   /// restricted by %@
   internal static func channelBlacklistRestrictedBy(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Blacklist.RestrictedBy", p1)
@@ -505,6 +539,10 @@ internal final class L10n {
   internal static var channelBlacklistSelectNewUserTitle: String  { return L10n.tr("Localizable", "Channel.Blacklist.SelectNewUserTitle") }
   /// Unban
   internal static var channelBlacklistUnban: String  { return L10n.tr("Localizable", "Channel.Blacklist.Unban") }
+  /// Add To Group
+  internal static var channelBlacklistContextAddToGroup: String  { return L10n.tr("Localizable", "Channel.Blacklist.Context.AddToGroup") }
+  /// Remove
+  internal static var channelBlacklistContextRemove: String  { return L10n.tr("Localizable", "Channel.Blacklist.Context.Remove") }
   /// Block For
   internal static var channelBlockUserBlockFor: String  { return L10n.tr("Localizable", "Channel.BlockUser.BlockFor") }
   /// Can Embed Links
@@ -517,6 +555,12 @@ internal final class L10n {
   internal static var channelBlockUserCanSendMessages: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendMessages") }
   /// Can Send Stickers & GIFs
   internal static var channelBlockUserCanSendStickers: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendStickers") }
+  /// Add Members
+  internal static var channelEditAdminPermissionInviteMembers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteMembers") }
+  /// Add Subscribers
+  internal static var channelEditAdminPermissionInviteSubscribers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteSubscribers") }
+  /// Invite Users via Link
+  internal static var channelEditAdminPermissionInviteViaLink: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteViaLink") }
   /// Add New Admins
   internal static var channelEditAdminPermissionAddNewAdmins: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.AddNewAdmins") }
   /// Ban Users
@@ -527,8 +571,6 @@ internal final class L10n {
   internal static var channelEditAdminPermissionDeleteMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.DeleteMessages") }
   /// Edit Messages
   internal static var channelEditAdminPermissionEditMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.EditMessages") }
-  /// Invite Users
-  internal static var channelEditAdminPermissionInviteUsers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.InviteUsers") }
   /// Pin Messages
   internal static var channelEditAdminPermissionPinMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.PinMessages") }
   /// Post Messages
@@ -595,32 +637,54 @@ internal final class L10n {
   internal static func channelEventLogServiceUpdateLeft(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.UpdateLeft", p1)
   }
+  /// This option is disabled in channel Permissions for all members.
+  internal static var channelExceptionDisabledOptionChannel: String  { return L10n.tr("Localizable", "Channel.Exception.DisabledOption.Channel") }
+  /// This option is disabled in group's Permissions for all members.
+  internal static var channelExceptionDisabledOptionGroup: String  { return L10n.tr("Localizable", "Channel.Exception.DisabledOption.Group") }
   /// Create Channel
   internal static var channelIntroCreateChannel: String  { return L10n.tr("Localizable", "Channel.Intro.CreateChannel") }
+  /// Sending GIFs isn't allowed in this group.
+  internal static var channelPersmissionDeniedSendGifsDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendGifs.DefaultRestrictedText") }
   /// The admins of this group have restricted you from sending GIFs here.
   internal static var channelPersmissionDeniedSendGifsForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendGifs.Forever") }
   /// The admins of this group have restricted you from sending GIFs here until %@.
   internal static func channelPersmissionDeniedSendGifsUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendGifs.Until", p1)
   }
+  /// Posting inline content isn't allowed in this group.
+  internal static var channelPersmissionDeniedSendInlineDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInline.DefaultRestrictedText") }
   /// The admins of this group have restricted you from posting inline content here.
   internal static var channelPersmissionDeniedSendInlineForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInline.Forever") }
   /// The admins of this group have restricted you from posting inline content here until %@.
   internal static func channelPersmissionDeniedSendInlineUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInline.Until", p1)
   }
+  /// Sending media isn't allowed in this group.
+  internal static var channelPersmissionDeniedSendMediaDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMedia.DefaultRestrictedText") }
   /// The admins of this group have restricted you from sending media here.
   internal static var channelPersmissionDeniedSendMediaForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMedia.Forever") }
   /// The admins of this group have restricted you from sending media here until %@.
   internal static func channelPersmissionDeniedSendMediaUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMedia.Until", p1)
   }
+  /// Writing messages isn’t allowed in this group.
+  internal static var channelPersmissionDeniedSendMessagesDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMessages.DefaultRestrictedText") }
   /// The admins of this group have restricted you from writing here
   internal static var channelPersmissionDeniedSendMessagesForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMessages.Forever") }
   /// The admins of this group have restricted you from writing here until %@.
   internal static func channelPersmissionDeniedSendMessagesUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMessages.Until", p1)
   }
+  /// Posting polls isn't allowed in this group.
+  internal static var channelPersmissionDeniedSendPollDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPoll.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from posting polls here.
+  internal static var channelPersmissionDeniedSendPollForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPoll.Forever") }
+  /// The admins of this group have restricted you from posting polls here until %@.
+  internal static func channelPersmissionDeniedSendPollUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPoll.Until", p1)
+  }
+  /// Sending stickers isn't allowed in this group.
+  internal static var channelPersmissionDeniedSendStickersDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendStickers.DefaultRestrictedText") }
   /// The admins of this group have restricted you from sending stickers here.
   internal static var channelPersmissionDeniedSendStickersForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendStickers.Forever") }
   /// The admins of this group have restricted you from sending stickers here until %@.
@@ -633,8 +697,6 @@ internal final class L10n {
   internal static var channelSelectPeersGlobal: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Global") }
   /// Recent Actions
   internal static var channelAdminsRecentActions: String  { return L10n.tr("Localizable", "ChannelAdmins.RecentActions") }
-  /// Add Member
-  internal static var channelBlacklistAddMember: String  { return L10n.tr("Localizable", "ChannelBlacklist.AddMember") }
   /// BLOCKED
   internal static var channelBlacklistBlocked: String  { return L10n.tr("Localizable", "ChannelBlacklist.Blocked") }
   /// Blacklisted users are removed from the group and can only come back if they are invited back by an admin. Invite links won't work for blacklisted users.
@@ -661,6 +723,8 @@ internal final class L10n {
   internal static var channelEventFilterPinnedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.PinnedMessages") }
   /// Add Members
   internal static var channelMembersAddMembers: String  { return L10n.tr("Localizable", "ChannelMembers.AddMembers") }
+  /// Add Subscribers
+  internal static var channelMembersAddSubscribers: String  { return L10n.tr("Localizable", "ChannelMembers.AddSubscribers") }
   /// Invite via Link
   internal static var channelMembersInviteLink: String  { return L10n.tr("Localizable", "ChannelMembers.InviteLink") }
   /// Only channel admins can see this list.
@@ -807,8 +871,10 @@ internal final class L10n {
   internal static var chatInputUnmute: String  { return L10n.tr("Localizable", "Chat.Input.Unmute") }
   /// Edit Message
   internal static var chatInputAccessoryEditMessage: String  { return L10n.tr("Localizable", "Chat.Input.Accessory.EditMessage") }
-  /// Waiting for the other user to come online...
-  internal static var chatInputSecretChatWaitingToOnline: String  { return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToOnline") }
+  /// Waiting for the %@ to get online...
+  internal static func chatInputSecretChatWaitingToUserOnline(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToUserOnline", p1)
+  }
   /// Contact
   internal static var chatListContact: String  { return L10n.tr("Localizable", "Chat.List.Contact") }
   /// GIF
@@ -873,6 +939,8 @@ internal final class L10n {
   internal static var chatMessageEdited: String  { return L10n.tr("Localizable", "Chat.Message.edited") }
   /// This message is not supported by your version of Telegram. Please update to the latest version from the AppStore or install it from https://macos.telegram.org
   internal static var chatMessageUnsupported: String  { return L10n.tr("Localizable", "Chat.Message.Unsupported") }
+  /// This message is not supported by your version Telegram. Please update to the latest version.
+  internal static var chatMessageUnsupportedNew: String  { return L10n.tr("Localizable", "Chat.Message.UnsupportedNew") }
   /// via
   internal static var chatMessageVia: String  { return L10n.tr("Localizable", "Chat.Message.Via") }
   /// MTProxy Configuration
@@ -971,13 +1039,13 @@ internal final class L10n {
   internal static var chatProxySponsoredCapTitle: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.CapTitle") }
   /// Are you sure you want to cancel recording?
   internal static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
-  ///  - Use end-to-end encryption
+  /// • Use end-to-end encryption
   internal static var chatSecretChat1Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.1Feature") }
-  ///  - Leave no trace on our servers
+  /// • Leave no trace on our servers
   internal static var chatSecretChat2Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.2Feature") }
-  ///  - Have a self-destruct timer
+  /// • Have a self-destruct timer
   internal static var chatSecretChat3Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.3Feature") }
-  ///  - Do not allow forwarding
+  /// • Do not allow forwarding
   internal static var chatSecretChat4Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.4Feature") }
   /// Secret chats:
   internal static var chatSecretChatEmptyHeader: String  { return L10n.tr("Localizable", "Chat.SecretChat.EmptyHeader") }
@@ -1075,10 +1143,146 @@ internal final class L10n {
   }
   /// Your cloud storage
   internal static var chatTitleSelf: String  { return L10n.tr("Localizable", "Chat.Title.self") }
+  /// %d
+  internal static func chatUndoManagerChannelDeletedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_countable", p1)
+  }
+  /// %d Channels Deleted
+  internal static func chatUndoManagerChannelDeletedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_few", p1)
+  }
+  /// %d Channels Deleted
+  internal static func chatUndoManagerChannelDeletedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_many", p1)
+  }
+  /// Channel Deleted
+  internal static var chatUndoManagerChannelDeletedOne: String  { return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_one") }
+  /// %d Channels Deleted
+  internal static func chatUndoManagerChannelDeletedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_other", p1)
+  }
+  /// %d Channels Deleted
+  internal static func chatUndoManagerChannelDeletedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_two", p1)
+  }
+  /// %d Channels Deleted
+  internal static func chatUndoManagerChannelDeletedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_zero", p1)
+  }
+  /// %d
+  internal static func chatUndoManagerChannelLeftCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelLeft_countable", p1)
+  }
+  /// %d Channels Left
+  internal static func chatUndoManagerChannelLeftFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelLeft_few", p1)
+  }
+  /// %d Channels Left
+  internal static func chatUndoManagerChannelLeftMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelLeft_many", p1)
+  }
+  /// Channel Left
+  internal static var chatUndoManagerChannelLeftOne: String  { return L10n.tr("Localizable", "Chat.UndoManager.ChannelLeft_one") }
+  /// %d Channels Left
+  internal static func chatUndoManagerChannelLeftOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelLeft_other", p1)
+  }
+  /// %d Channels Left
+  internal static func chatUndoManagerChannelLeftTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelLeft_two", p1)
+  }
+  /// %d Channels Left
+  internal static func chatUndoManagerChannelLeftZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChannelLeft_zero", p1)
+  }
+  /// %d
+  internal static func chatUndoManagerChatLeftCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_countable", p1)
+  }
+  /// %d Chats Left
+  internal static func chatUndoManagerChatLeftFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_few", p1)
+  }
+  /// %d Chats Left
+  internal static func chatUndoManagerChatLeftMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_many", p1)
+  }
+  /// Chat Left
+  internal static var chatUndoManagerChatLeftOne: String  { return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_one") }
+  /// %d Chats Left
+  internal static func chatUndoManagerChatLeftOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_other", p1)
+  }
+  /// %d Chats Left
+  internal static func chatUndoManagerChatLeftTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_two", p1)
+  }
+  /// %d Chats Left
+  internal static func chatUndoManagerChatLeftZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_zero", p1)
+  }
+  /// %d
+  internal static func chatUndoManagerChatsDeletedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_countable", p1)
+  }
+  /// %d Chats Deleted
+  internal static func chatUndoManagerChatsDeletedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_few", p1)
+  }
+  /// %d Chats Deleted
+  internal static func chatUndoManagerChatsDeletedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_many", p1)
+  }
+  /// Chat Deleted
+  internal static var chatUndoManagerChatsDeletedOne: String  { return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_one") }
+  /// %d Chats Deleted
+  internal static func chatUndoManagerChatsDeletedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_other", p1)
+  }
+  /// %d Chats Deleted
+  internal static func chatUndoManagerChatsDeletedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_two", p1)
+  }
+  /// %d Chat Deleted
+  internal static func chatUndoManagerChatsDeletedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_zero", p1)
+  }
+  /// %d
+  internal static func chatUndoManagerChatsHistoryClearedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsHistoryCleared_countable", p1)
+  }
+  /// %d Chat History Cleared
+  internal static func chatUndoManagerChatsHistoryClearedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsHistoryCleared_few", p1)
+  }
+  /// %d Chat History Cleared
+  internal static func chatUndoManagerChatsHistoryClearedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsHistoryCleared_many", p1)
+  }
+  /// Chat History Cleared
+  internal static var chatUndoManagerChatsHistoryClearedOne: String  { return L10n.tr("Localizable", "Chat.UndoManager.ChatsHistoryCleared_one") }
+  /// %d Chat History Cleared
+  internal static func chatUndoManagerChatsHistoryClearedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsHistoryCleared_other", p1)
+  }
+  /// %d Chat History Cleared
+  internal static func chatUndoManagerChatsHistoryClearedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsHistoryCleared_two", p1)
+  }
+  /// %d Chat History Cleared
+  internal static func chatUndoManagerChatsHistoryClearedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsHistoryCleared_zero", p1)
+  }
+  /// Undo
+  internal static var chatUndoManagerUndo: String  { return L10n.tr("Localizable", "Chat.UndoManager.Undo") }
+  /// UPDATE
+  internal static var chatUnsupportedUpdatedApp: String  { return L10n.tr("Localizable", "Chat.Unsupported.UpdatedApp") }
   /// %d of %d
   internal static func chatWebpageMediaCount(_ p1: Int, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Chat.Webpage.MediaCount", p1, p2)
   }
+  /// Chat Background
+  internal static var chatWPBackgroundTitle: String  { return L10n.tr("Localizable", "Chat.WP.BackgroundTitle") }
   /// Show Next
   internal static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
   /// Draft:
@@ -1231,7 +1435,7 @@ internal final class L10n {
   internal static var confirmDelete: String  { return L10n.tr("Localizable", "Confirm.Delete") }
   /// Wait! Deleting this channel will remove all of its members and all of its messages will be lost forever.\n\nAre you sure you want to continue?
   internal static var confirmDeleteAdminedChannel: String  { return L10n.tr("Localizable", "Confirm.DeleteAdminedChannel") }
-  /// Are you sure you want to delete all message history?\n\nThis action cannot be undone.
+  /// Are you sure you want to delete all message history?
   internal static var confirmDeleteChatUser: String  { return L10n.tr("Localizable", "Confirm.DeleteChatUser") }
   /// Are you sure you want to leave this group?
   internal static var confirmLeaveGroup: String  { return L10n.tr("Localizable", "Confirm.LeaveGroup") }
@@ -1397,6 +1601,20 @@ internal final class L10n {
   internal static var emojiSymbols: String  { return L10n.tr("Localizable", "Emoji.Symbols") }
   /// Travel & Places
   internal static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
+  /// • Up to %@ members
+  internal static func emptyGroupInfoLine1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmptyGroupInfo.Line1", p1)
+  }
+  /// • Persistent chat history
+  internal static var emptyGroupInfoLine2: String  { return L10n.tr("Localizable", "EmptyGroupInfo.Line2") }
+  /// • Public links such as t.me/title
+  internal static var emptyGroupInfoLine3: String  { return L10n.tr("Localizable", "EmptyGroupInfo.Line3") }
+  /// • Admins with different rights
+  internal static var emptyGroupInfoLine4: String  { return L10n.tr("Localizable", "EmptyGroupInfo.Line4") }
+  /// Groups can have:
+  internal static var emptyGroupInfoSubtitle: String  { return L10n.tr("Localizable", "EmptyGroupInfo.Subtitle") }
+  /// You have created a group
+  internal static var emptyGroupInfoTitle: String  { return L10n.tr("Localizable", "EmptyGroupInfo.Title") }
   /// Select a chat to start messaging
   internal static var emptyPeerDescription: String  { return L10n.tr("Localizable", "EmptyPeer.Description") }
   /// This image and text were derived from the encryption key for this secret chat with **%@**.\n\nIf they look the same on **%@**'s device, end-to-end encryption is guaranteed.
@@ -1431,6 +1649,8 @@ internal final class L10n {
   internal static func eventLogServiceBanned(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.Banned", p1, p2)
   }
+  /// changed defaults rights
+  internal static var eventLogServiceChangedDefaultsRights: String  { return L10n.tr("Localizable", "EventLog.Service.ChangedDefaultsRights") }
   /// %@ changed group sticker set
   internal static func eventLogServiceChangedStickerSet(_ p1: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.ChangedStickerSet", p1)
@@ -1477,8 +1697,18 @@ internal final class L10n {
   internal static func eventLogServiceUpdatePinned(_ p1: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.UpdatePinned", p1)
   }
+  /// Add Members
+  internal static var eventLogServiceDemoteAddMembers: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.AddMembers") }
+  /// Change Info
+  internal static var eventLogServiceDemoteChangeInfo: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.ChangeInfo") }
   /// Embed Links
   internal static var eventLogServiceDemoteEmbedLinks: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.EmbedLinks") }
+  /// Pin Messages
+  internal static var eventLogServiceDemotePinMessages: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.PinMessages") }
+  /// Post Polls
+  internal static var eventLogServiceDemotePostPolls: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.PostPolls") }
+  /// Send GIFs
+  internal static var eventLogServiceDemoteSendGifs: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.SendGifs") }
   /// Send Inline
   internal static var eventLogServiceDemoteSendInline: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.SendInline") }
   /// Send Media
@@ -1581,10 +1811,8 @@ internal final class L10n {
   internal static var forwardModalActionTitleZero: String  { return L10n.tr("Localizable", "ForwardModalAction.Title_zero") }
   /// Delete
   internal static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
-  /// %d of %d
-  internal static func galleryCounter(_ p1: Int, _ p2: Int) -> String {
-    return L10n.tr("Localizable", "Gallery.Counter", p1, p2)
-  }
+  /// Save GIF
+  internal static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
   /// Copy to Clipboard
   internal static var galleryContextCopyToClipboard: String  { return L10n.tr("Localizable", "Gallery.Context.CopyToClipboard") }
   /// Save As...
@@ -1801,6 +2029,20 @@ internal final class L10n {
   internal static var groupAdminsDescAdminInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AdminInvites") }
   /// Group members can add new members, and can edit the name or photo of the group.
   internal static var groupAdminsDescAllInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AllInvites") }
+  /// Administrators
+  internal static var groupInfoAdministrators: String  { return L10n.tr("Localizable", "GroupInfo.Administrators") }
+  /// Administrators
+  internal static var groupInfoAdministratorsTitle: String  { return L10n.tr("Localizable", "GroupInfo.Administrators.Title") }
+  /// Add Exception
+  internal static var groupInfoPermissionsAddException: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.AddException") }
+  /// EXCEPTIONS
+  internal static var groupInfoPermissionsExceptions: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.Exceptions") }
+  /// Removed Users
+  internal static var groupInfoPermissionsRemoved: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.Removed") }
+  /// Search Exceptions
+  internal static var groupInfoPermissionsSearchPlaceholder: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.SearchPlaceholder") }
+  /// WHAT CAN MEMBERS OF THIS GROUP DO?
+  internal static var groupInfoPermissionsSectionTitle: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.SectionTitle") }
   /// Anyone who has Telegram installed will be able to join your channel by following this link
   internal static var groupInvationChannelDescription: String  { return L10n.tr("Localizable", "GroupInvation.ChannelDescription") }
   /// Copy Link
@@ -1811,6 +2053,46 @@ internal final class L10n {
   internal static var groupInvationRevoke: String  { return L10n.tr("Localizable", "GroupInvation.Revoke") }
   /// Share Link
   internal static var groupInvationShare: String  { return L10n.tr("Localizable", "GroupInvation.Share") }
+  /// Exception added by %@ %@
+  internal static func groupPermissionAddedInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "GroupPermission.AddedInfo", p1, p2)
+  }
+  /// Exception Added
+  internal static var groupPermissionAddSuccess: String  { return L10n.tr("Localizable", "GroupPermission.AddSuccess") }
+  /// Apply
+  internal static var groupPermissionApplyAlertAction: String  { return L10n.tr("Localizable", "GroupPermission.ApplyAlertAction") }
+  /// You have changed this user's rights in %@.\nApply Changes?
+  internal static func groupPermissionApplyAlertText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GroupPermission.ApplyAlertText", p1)
+  }
+  /// Delete Exception
+  internal static var groupPermissionDelete: String  { return L10n.tr("Localizable", "GroupPermission.Delete") }
+  /// Duration
+  internal static var groupPermissionDuration: String  { return L10n.tr("Localizable", "GroupPermission.Duration") }
+  /// New Exception
+  internal static var groupPermissionNewTitle: String  { return L10n.tr("Localizable", "GroupPermission.NewTitle") }
+  /// no add
+  internal static var groupPermissionNoAddMembers: String  { return L10n.tr("Localizable", "GroupPermission.NoAddMembers") }
+  /// no info
+  internal static var groupPermissionNoChangeInfo: String  { return L10n.tr("Localizable", "GroupPermission.NoChangeInfo") }
+  /// no pin
+  internal static var groupPermissionNoPinMessages: String  { return L10n.tr("Localizable", "GroupPermission.NoPinMessages") }
+  /// no GIFs
+  internal static var groupPermissionNoSendGifs: String  { return L10n.tr("Localizable", "GroupPermission.NoSendGifs") }
+  /// no links
+  internal static var groupPermissionNoSendLinks: String  { return L10n.tr("Localizable", "GroupPermission.NoSendLinks") }
+  /// no media
+  internal static var groupPermissionNoSendMedia: String  { return L10n.tr("Localizable", "GroupPermission.NoSendMedia") }
+  /// no messages
+  internal static var groupPermissionNoSendMessages: String  { return L10n.tr("Localizable", "GroupPermission.NoSendMessages") }
+  /// no polls
+  internal static var groupPermissionNoSendPolls: String  { return L10n.tr("Localizable", "GroupPermission.NoSendPolls") }
+  /// This permission is not available in public groups.
+  internal static var groupPermissionNotAvailableInPublicGroups: String  { return L10n.tr("Localizable", "GroupPermission.NotAvailableInPublicGroups") }
+  /// WHAT CAN THIS MEMBER DO?
+  internal static var groupPermissionSectionTitle: String  { return L10n.tr("Localizable", "GroupPermission.SectionTitle") }
+  /// Exception
+  internal static var groupPermissionTitle: String  { return L10n.tr("Localizable", "GroupPermission.Title") }
   /// No groups in common
   internal static var groupsInCommonEmpty: String  { return L10n.tr("Localizable", "GroupsInCommon.Empty") }
   /// CHOOSE FROM YOUR STICKERS
@@ -1879,11 +2161,11 @@ internal final class L10n {
   internal static var installedStickersRemoveDelete: String  { return L10n.tr("Localizable", "InstalledStickers.Remove.Delete") }
   /// Stickers will be archived, you can quickly restore it later from the Archived Stickers section.
   internal static var installedStickersRemoveDescription: String  { return L10n.tr("Localizable", "InstalledStickers.Remove.Description") }
-  /// By %1$@ • %2$@
+  /// By %@ • %@
   internal static func instantPageAuthorAndDateTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "InstantPage.AuthorAndDateTitle", p1, p2)
   }
-  /// %1$@ • %2$@
+  /// %@ • %@
   internal static func instantPageRelatedArticleAuthorAndDateTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "InstantPage.RelatedArticleAuthorAndDateTitle", p1, p2)
   }
@@ -2145,6 +2427,8 @@ internal final class L10n {
   internal static var modalOK: String  { return L10n.tr("Localizable", "Modal.OK") }
   /// Send
   internal static var modalSend: String  { return L10n.tr("Localizable", "Modal.Send") }
+  /// Set
+  internal static var modalSet: String  { return L10n.tr("Localizable", "Modal.Set") }
   /// Share
   internal static var modalShare: String  { return L10n.tr("Localizable", "Modal.Share") }
   /// Back
@@ -2659,13 +2943,13 @@ internal final class L10n {
   internal static var peerInfoAddContact: String  { return L10n.tr("Localizable", "PeerInfo.AddContact") }
   /// Add Members
   internal static var peerInfoAddMember: String  { return L10n.tr("Localizable", "PeerInfo.AddMember") }
+  /// Administrators
+  internal static var peerInfoAdministrators: String  { return L10n.tr("Localizable", "PeerInfo.Administrators") }
   /// admin
   internal static var peerInfoAdminLabel: String  { return L10n.tr("Localizable", "PeerInfo.AdminLabel") }
-  /// Admins
-  internal static var peerInfoAdmins: String  { return L10n.tr("Localizable", "PeerInfo.Admins") }
   /// bio
   internal static var peerInfoBio: String  { return L10n.tr("Localizable", "PeerInfo.bio") }
-  /// Blacklist
+  /// Removed Users
   internal static var peerInfoBlackList: String  { return L10n.tr("Localizable", "PeerInfo.BlackList") }
   /// Block User
   internal static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
@@ -2681,6 +2965,8 @@ internal final class L10n {
   internal static var peerInfoDeleteChannel: String  { return L10n.tr("Localizable", "PeerInfo.DeleteChannel") }
   /// Delete Contact
   internal static var peerInfoDeleteContact: String  { return L10n.tr("Localizable", "PeerInfo.DeleteContact") }
+  /// Delete Group
+  internal static var peerInfoDeleteGroup: String  { return L10n.tr("Localizable", "PeerInfo.DeleteGroup") }
   /// Delete Secret Chat
   internal static var peerInfoDeleteSecretChat: String  { return L10n.tr("Localizable", "PeerInfo.DeleteSecretChat") }
   /// Encryption Key
@@ -2729,10 +3015,14 @@ internal final class L10n {
   }
   /// Notifications
   internal static var peerInfoNotifications: String  { return L10n.tr("Localizable", "PeerInfo.Notifications") }
+  /// Permissions
+  internal static var peerInfoPermissions: String  { return L10n.tr("Localizable", "PeerInfo.Permissions") }
   /// phone
   internal static var peerInfoPhone: String  { return L10n.tr("Localizable", "PeerInfo.Phone") }
   /// Chat History For New Members
   internal static var peerInfoPreHistory: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory") }
+  /// Removed Users
+  internal static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
   internal static var peerInfoReport: String  { return L10n.tr("Localizable", "PeerInfo.Report") }
   /// Restart Bot
@@ -2741,8 +3031,6 @@ internal final class L10n {
   internal static var peerInfoSendMessage: String  { return L10n.tr("Localizable", "PeerInfo.SendMessage") }
   /// You can provide an optional description for your group.
   internal static var peerInfoSetAboutDescription: String  { return L10n.tr("Localizable", "PeerInfo.SetAboutDescription") }
-  /// Set Admins
-  internal static var peerInfoSetAdmins: String  { return L10n.tr("Localizable", "PeerInfo.SetAdmins") }
   /// Set Channel Photo
   internal static var peerInfoSetChannelPhoto: String  { return L10n.tr("Localizable", "PeerInfo.SetChannelPhoto") }
   /// Set Group Photo
@@ -2819,15 +3107,23 @@ internal final class L10n {
   internal static func peerInfoConfirmAddMembers1Zero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerInfo.Confirm.AddMembers1_zero", p1)
   }
-  /// Are you sure you want to delete all message history and leave "%@"?\n\nThis action cannot be undone.
+  /// Clear
+  internal static var peerInfoConfirmClear: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.Clear") }
+  /// Are you sure you want to delete all message history and leave "%@"?
   internal static func peerInfoConfirmDeleteChat(_ p1: String) -> String {
     return L10n.tr("Localizable", "PeerInfo.Confirm.DeleteChat", p1)
   }
   /// Are you sure you want to delete this contact?
   internal static var peerInfoConfirmDeleteContact: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.DeleteContact") }
+  /// Wait! Deleting this group will remove all members and all messages will be lost. Delete the group anyway?
+  internal static var peerInfoConfirmDeleteGroupConfirmation: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.DeleteGroupConfirmation") }
+  /// Are you sure you want to delete chat?
+  internal static var peerInfoConfirmDeleteUserChat: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.DeleteUserChat") }
+  /// Leave
+  internal static var peerInfoConfirmLeave: String  { return L10n.tr("Localizable", "peerInfo.Confirm.Leave") }
   /// Are you sure you want to leave this channel?
   internal static var peerInfoConfirmLeaveChannel: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.LeaveChannel") }
-  /// Are you sure you want to leave this group?\n\nThis action cannot be undone.
+  /// Are you sure you want to leave this group?
   internal static var peerInfoConfirmLeaveGroup: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.LeaveGroup") }
   /// Remove "%@" from group?
   internal static func peerInfoConfirmRemovePeer(_ p1: String) -> String {
@@ -2837,6 +3133,12 @@ internal final class L10n {
   internal static func peerInfoConfirmStartSecretChat(_ p1: String) -> String {
     return L10n.tr("Localizable", "PeerInfo.Confirm.StartSecretChat", p1)
   }
+  /// This will delete all messages and media in this chat from your Telegram cloud. Other members of the group will still have them.
+  internal static var peerInfoConfirmClearHistoryGroup: String  { return L10n.tr("Localizable", "peerInfo.Confirm.ClearHistory.Group") }
+  /// This will delete all messages and media in this chat from your Telegram cloud.
+  internal static var peerInfoConfirmClearHistorySavedMesssages: String  { return L10n.tr("Localizable", "peerInfo.Confirm.ClearHistory.SavedMesssages") }
+  /// This will delete all messages and media in this chat from your Telegram cloud. Your chat partner will still have them.
+  internal static var peerInfoConfirmClearHistoryUser: String  { return L10n.tr("Localizable", "peerInfo.Confirm.ClearHistory.User") }
   /// First Name
   internal static var peerInfoFirstNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.FirstName.Placeholder") }
   /// Group Name
@@ -2881,6 +3183,8 @@ internal final class L10n {
   internal static var preHistorySettingsDescriptionHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Hidden") }
   /// New Members will see messages that were sent before they joined.
   internal static var preHistorySettingsDescriptionVisible: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Visible") }
+  /// New members won't see more than 100 previous messages.
+  internal static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
   /// bot
   internal static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
   /// %d
@@ -3073,8 +3377,14 @@ internal final class L10n {
   internal static func privacyAndSecurityBlockedUsers(_ p1: String) -> String {
     return L10n.tr("Localizable", "PrivacyAndSecurity.BlockedUsers", p1)
   }
+  /// Clear Cloud Drafts
+  internal static var privacyAndSecurityClearCloudDrafts: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDrafts") }
+  /// CHATS
+  internal static var privacyAndSecurityClearCloudDraftsHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDraftsHeader") }
   /// CONNECTED WEBSITES
   internal static var privacyAndSecurityWebAuthorizationHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.WebAuthorizationHeader") }
+  /// Are you sure you want to clear all cloud drafts?
+  internal static var privacyAndSecurityConfirmClearCloudDrafts: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.Confirm.ClearCloudDrafts") }
   /// Active Sessions
   internal static var privacySettingsActiveSessions: String  { return L10n.tr("Localizable", "PrivacySettings.ActiveSessions") }
   /// Blocked Users
@@ -4075,7 +4385,7 @@ internal final class L10n {
   internal static var telegramBlockedPeersViewController: String  { return L10n.tr("Localizable", "Telegram.BlockedPeersViewController") }
   /// Admins
   internal static var telegramChannelAdminsViewController: String  { return L10n.tr("Localizable", "Telegram.ChannelAdminsViewController") }
-  /// Blacklist
+  /// Removed Users
   internal static var telegramChannelBlacklistViewController: String  { return L10n.tr("Localizable", "Telegram.ChannelBlacklistViewController") }
   /// All Actions
   internal static var telegramChannelEventLogController: String  { return L10n.tr("Localizable", "Telegram.ChannelEventLogController") }
@@ -4083,6 +4393,8 @@ internal final class L10n {
   internal static var telegramChannelIntroViewController: String  { return L10n.tr("Localizable", "Telegram.ChannelIntroViewController") }
   /// Channel Members
   internal static var telegramChannelMembersViewController: String  { return L10n.tr("Localizable", "Telegram.ChannelMembersViewController") }
+  /// Permissions
+  internal static var telegramChannelPermissionsController: String  { return L10n.tr("Localizable", "Telegram.ChannelPermissionsController") }
   /// Group
   internal static var telegramChannelVisibilityController: String  { return L10n.tr("Localizable", "Telegram.ChannelVisibilityController") }
   /// Supergroup
@@ -4201,10 +4513,66 @@ internal final class L10n {
   internal static var timeAt: String  { return L10n.tr("Localizable", "Time.at") }
   /// last seen
   internal static var timeLastSeen: String  { return L10n.tr("Localizable", "Time.last_seen") }
+  /// Jan %@, %@ at %@
+  internal static func timePreciseDateM1(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m1", p1, p2, p3)
+  }
+  /// Oct %@, %@ at %@
+  internal static func timePreciseDateM10(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m10", p1, p2, p3)
+  }
+  /// Nov %@, %@ at %@
+  internal static func timePreciseDateM11(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m11", p1, p2, p3)
+  }
+  /// Dec %@, %@ at %@
+  internal static func timePreciseDateM12(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m12", p1, p2, p3)
+  }
+  /// Feb %@, %@ at %@
+  internal static func timePreciseDateM2(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m2", p1, p2, p3)
+  }
+  /// Mar %@, %@ at %@
+  internal static func timePreciseDateM3(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m3", p1, p2, p3)
+  }
+  /// Apr %@, %@ at %@
+  internal static func timePreciseDateM4(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m4", p1, p2, p3)
+  }
+  /// May %@, %@ at %@
+  internal static func timePreciseDateM5(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m5", p1, p2, p3)
+  }
+  /// Jun %@, %@ at %@
+  internal static func timePreciseDateM6(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m6", p1, p2, p3)
+  }
+  /// Jul %@, %@ at %@
+  internal static func timePreciseDateM7(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m7", p1, p2, p3)
+  }
+  /// Aug %@, %@ at %@
+  internal static func timePreciseDateM8(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m8", p1, p2, p3)
+  }
+  /// Sep %@, %@ at %@
+  internal static func timePreciseDateM9(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseDate_m9", p1, p2, p3)
+  }
   /// today
   internal static var timeToday: String  { return L10n.tr("Localizable", "Time.today") }
+  /// today at %@
+  internal static func timeTodayAt(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Time.TodayAt", p1)
+  }
   /// yesterday
   internal static var timeYesterday: String  { return L10n.tr("Localizable", "Time.yesterday") }
+  /// yesterday at %@
+  internal static func timeYesterdayAt(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Time.YesterdayAt", p1)
+  }
   /// %d
   internal static func timerDaysCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Timer.Days_countable", p1)
@@ -4577,6 +4945,16 @@ internal final class L10n {
   internal static var vmV6d7jITitle: String  { return L10n.tr("Localizable", "vmV-6d-7jI.title") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
+  /// Apply
+  internal static var wallpaperPreviewApply: String  { return L10n.tr("Localizable", "WallpaperPreview.Apply") }
+  /// Blurred
+  internal static var wallpaperPreviewBlurred: String  { return L10n.tr("Localizable", "WallpaperPreview.Blurred") }
+  /// Sorry, this background doesn't seem to exist.
+  internal static var wallpaperPreviewDoesntExists: String  { return L10n.tr("Localizable", "WallpaperPreview.DoesntExists") }
+  /// Background Preview
+  internal static var wallpaperPreviewHeader: String  { return L10n.tr("Localizable", "WallpaperPreview.Header") }
+  /// Plain
+  internal static var wallpaperPreviewPlain: String  { return L10n.tr("Localizable", "WallpaperPreview.Plain") }
   /// Disconnect
   internal static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
   /// Disconnect All Websites

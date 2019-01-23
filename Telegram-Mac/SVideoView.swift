@@ -150,6 +150,7 @@ private final class SVideoControlsView : Control {
         playOrPause.isEnabled = status.duration > 0
         progress.isEnabled = status.duration > 0
         
+        
         switch status.status {
         case .playing:
             playOrPause.set(image: theme.icons.videoPlayerPause, for: .Normal)

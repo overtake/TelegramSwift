@@ -30,7 +30,10 @@ final class InstantPageWebEmbedItem: InstantPageItem {
     }
     
     func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
-        return instantPageWebEmbedView(frame: self.frame, url: self.url, html: self.html, enableScrolling: self.enableScrolling)
+        return InstantPageWebEmbedView(frame: self.frame, url: self.url, html: self.html, enableScrolling: self.enableScrolling, updateWebEmbedHeight: { height in
+            arguments.updateWebEmbedHeight(height)
+
+        })
     }
     
     func matchesAnchor(_ anchor: String) -> Bool {
@@ -38,7 +41,7 @@ final class InstantPageWebEmbedItem: InstantPageItem {
     }
     
     func matchesView(_ node: InstantPageView) -> Bool {
-        if let node = node as? instantPageWebEmbedView {
+        if let node = node as? InstantPageWebEmbedView {
             return self.url == node.url && self.html == node.html
         } else {
             return false

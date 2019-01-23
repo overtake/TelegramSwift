@@ -63,10 +63,10 @@ class InstantPageSlideshowItem: InstantPageItem {
 
 class InstantPageSlideshowView : View, InstantPageView {
     fileprivate let medias: [InstantPageMedia]
-    private let slideView: MIHSliderView
+    private let slideView: SliderView
     init(frameRect: NSRect, medias: [InstantPageMedia], account: Account) {
         self.medias = medias
-        slideView = MIHSliderView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        slideView = SliderView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(slideView)
         
@@ -94,7 +94,7 @@ class InstantPageSlideshowView : View, InstantPageView {
     
     override func copy() -> Any {
         
-        return slideView.displayedSlide.copy()
+        return slideView.displayedSlide?.copy() ?? super.copy()
     }
     
     func updateIsVisible(_ isVisible: Bool) {

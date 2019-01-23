@@ -18,6 +18,14 @@ public extension NSColor {
         return NSColor.init(srgbRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha:alpha)
     }
     
+    public var brightnessAdjustedColor: NSColor{
+        
+        var components = self.cgColor.components
+        let alpha = components?.last
+        components?.removeLast()
+        let color = CGFloat(1-(components?.max())! >= 0.5 ? 1.0 : 0.0)
+        return NSColor(red: color, green: color, blue: color, alpha: alpha!)
+    }
     
     public static var link:NSColor {
         return .colorFromRGB(rgbValue: 0x2481cc)

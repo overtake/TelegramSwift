@@ -18,8 +18,10 @@ final class InstantPageItemArguments {
     let openPeer:(PeerId) -> Void
     let openUrl:(InstantPageUrlItem) -> Void
     let updateWebEmbedHeight:(CGFloat) -> Void
-    let updateDetailsExpanded: (InstantPageDetailsItem, Bool) -> Void
-    init(account: Account, theme: InstantPageTheme, openMedia: @escaping (InstantPageMedia) -> Void, openPeer: @escaping (PeerId) -> Void, openUrl: @escaping (InstantPageUrlItem) -> Void, updateWebEmbedHeight: @escaping (CGFloat) -> Void, updateDetailsExpanded: @escaping (InstantPageDetailsItem, Bool) -> Void) {
+    let updateDetailsExpanded: (Bool) -> Void
+    let isExpandedItem: (InstantPageDetailsItem) -> Bool
+    let effectiveRectForItem: (InstantPageItem) -> NSRect
+    init(account: Account, theme: InstantPageTheme, openMedia: @escaping (InstantPageMedia) -> Void, openPeer: @escaping (PeerId) -> Void, openUrl: @escaping (InstantPageUrlItem) -> Void, updateWebEmbedHeight: @escaping (CGFloat) -> Void, updateDetailsExpanded: @escaping (Bool) -> Void, isExpandedItem: @escaping(InstantPageDetailsItem) -> Bool, effectiveRectForItem: @escaping(InstantPageItem) -> NSRect) {
         self.account = account
         self.theme = theme
         self.openMedia = openMedia
@@ -27,6 +29,8 @@ final class InstantPageItemArguments {
         self.openUrl = openUrl
         self.updateWebEmbedHeight = updateWebEmbedHeight
         self.updateDetailsExpanded = updateDetailsExpanded
+        self.isExpandedItem = isExpandedItem
+        self.effectiveRectForItem = effectiveRectForItem
     }
 }
 

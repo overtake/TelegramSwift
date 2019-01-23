@@ -196,7 +196,7 @@ class GIFPlayerView: TransformImageView {
                     
                     
                     layer.stopRequestingMediaData()
-                   // layer.flushAndRemoveImage()
+                    layer.flush()
                     let reader = reader.swap(nil)
                     Queue.concurrentBackgroundQueue().async {
                        reader?.cancelReading()

@@ -21,8 +21,9 @@ class ChatServiceItem: ChatRowItem {
         let message:Message = entry.message!
         
         
-        let linkColor: NSColor = entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
-        let grayTextColor: NSColor = entry.renderType == .bubble ? theme.chat.grayText(true, entry.renderType == .bubble) : theme.colors.grayText
+        
+        let linkColor: NSColor = theme.backgroundMode.hasWallpapaer ? theme.chatServiceItemTextColor : entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
+        let grayTextColor: NSColor = theme.chatServiceItemTextColor
 
         let authorId:PeerId? = message.author?.id
         var authorName:String = ""
@@ -34,6 +35,11 @@ class ChatServiceItem: ChatRowItem {
 
         
         let nameColor:(PeerId) -> NSColor = { peerId in
+            
+            if theme.backgroundMode.hasWallpapaer {
+                return theme.chatServiceItemTextColor
+            }
+            
             if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
                 if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                     return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
@@ -54,7 +60,7 @@ class ChatServiceItem: ChatRowItem {
                 switch media.action {
                 case let .groupCreated(title: title):
                     if !peer.isChannel {
-                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupCreated(authorName, title)), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: L10n.chatServiceGroupCreated(authorName, title), color: grayTextColor, font: .normal(theme.fontSize))
                         
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
@@ -323,7 +329,7 @@ class ChatServiceItem: ChatRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
         if isBubbled {
-            text.generateAutoBlock(backgroundColor: theme.colors.chatDateActive)
+            text.generateAutoBlock(backgroundColor: theme.chatServiceItemColor)
         }
         return true
     }
@@ -339,7 +345,7 @@ class ChatServiceItem: ChatRowItem {
         if chatInteraction.presentation.state != .selecting {
             
             if let message = message, let peer = messageMainPeer(message) {
-                if peer.canSendMessage, !message.containsSecretMedia {
+                if peer.canSendMessage, !message.containsSecretMedia, canReplyMessage(message, peerId: peer.id) {
                     items.append(ContextMenuItem(tr(L10n.messageContextReply1), handler: {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
@@ -378,7 +384,7 @@ class ChatServiceRowView: TableRowView {
             return .clear
         }
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

@@ -30,7 +30,7 @@ class GalleryModernControlsView: View {
         didSet {
             oldValue?.removeFromSuperview()
             if let thumbs = thumbs {
-                addSubview(thumbs)
+                addSubview(thumbs, positioned: .below, relativeTo: self.subviews.first)
                 thumbs.setFrameOrigin(NSMakePoint((self.frame.width - thumbs.frame.width) / 2 + (thumbs.frame.width - thumbs.documentSize.width) / 2, (self.frame.height - thumbs.frame.height) / 2))
             }
             needsLayout = true

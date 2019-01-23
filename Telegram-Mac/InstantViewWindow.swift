@@ -171,7 +171,7 @@ private class HeaderView : View {
 class InstantWindowContentView : View {
     private let headerView: HeaderView = HeaderView(frame: NSZeroRect)
     private let contentView: View = View()
-    fileprivate let loadingIndicatorView: LinearProgressControl = LinearProgressControl(progressHeight: 4)
+    fileprivate let loadingIndicatorView: LinearProgressControl = LinearProgressControl(progressHeight: 2)
 
     fileprivate var arguments: InstantViewArguments? {
         didSet {
@@ -372,14 +372,18 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         return nil
     }
     
-    func updateProgress(_ signal: Signal<CGFloat, NoError>) {
+    func updateProgress(_ signal: Signal<CGFloat, NoError>, animated: Bool = true) {
         loadProgressDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] value in
             guard let `self` = self else {return}
-            self.genericView.loadingIndicatorView.set(progress: value, animated: true, duration: 0.2)
+            self.genericView.loadingIndicatorView.set(progress: value, animated: animated, duration: 0.2)
             if value == 1 || value == 0 {
-                self.genericView.loadingIndicatorView.change(opacity: 0, animated: true)
+                self.genericView.loadingIndicatorView.change(opacity: 0, animated: animated, completion: { [weak self] completed in
+                    if completed {
+                        self?.genericView.loadingIndicatorView.set(progress: 0, animated: false)
+                    }
+                })
             } else if value > 0 {
-                self.genericView.loadingIndicatorView.change(opacity: 1, animated: true)
+                self.genericView.loadingIndicatorView.change(opacity: 1, animated: animated)
             }
         }))
     }
@@ -497,7 +501,7 @@ func showInstantPage(_ page: InstantPageViewController) {
     if let instantController = instantController {
         if page.webPage.webpageId != (instantController.navigationController?.controller as? InstantPageViewController)?.webPage.webpageId {
             instantController.navigation.push(page, true)
-            instantController.updateProgress(page.progressSignal)
+            instantController.updateProgress(page.progressSignal, animated: false)
             instantController._window.orderFront(nil)
             instantController._window.deminiaturize(nil)
         }

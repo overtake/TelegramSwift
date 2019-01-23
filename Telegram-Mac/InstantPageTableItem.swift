@@ -147,6 +147,25 @@ final class InstantPageTableItem: InstantPageScrollableItem {
         self.anchors = anchors
     }
     
+    func itemsIn( _ rect: NSRect, items: [InstantPageItem] = []) -> [InstantPageItem] {
+        var items: [InstantPageItem] = items
+        for cell in cells {
+            if let textItem = cell.textItem, cell.frame.intersects(rect) {
+                items.append(textItem)
+            }
+        }
+        return items
+    }
+    
+    func itemFrameSkipCells(_ item: InstantPageTextItem, effectiveRect: NSRect) -> NSRect {
+        for cell in cells {
+            if let textItem = cell.textItem, textItem === item {
+                return item.frame.offsetBy(dx: cell.frame.minX, dy: cell.frame.minY).offsetBy(dx: effectiveRect.minX + horizontalInset, dy: effectiveRect.minY)
+            }
+        }
+        return item.frame
+    }
+    
     var contentSize: CGSize {
         return CGSize(width: self.totalWidth, height: self.frame.height)
     }
@@ -220,7 +239,7 @@ final class InstantPageTableItem: InstantPageScrollableItem {
             for item in cell.additionalItems {
                 if item.wantsView {
                     if let view = item.view(arguments: arguments, currentExpandedDetails: nil) {
-                        (view as? NSView)?.frame = item.frame.offsetBy(dx: cell.frame.minX, dy: cell.frame.minY)
+                        view.frame = item.frame.offsetBy(dx: cell.frame.minX, dy: cell.frame.minY)
                         additionalViews.append(view)
                     }
                 }

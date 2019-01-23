@@ -189,8 +189,8 @@ final class InstantPageArticleView: Button, InstantPageView {
 
         set(handler: { [weak self] _ in
             self?.click()
-        }, for: .Click)
-
+        }, for: .Up)
+        
         set(background: theme.colors.grayBackground, for: .Highlight)
         
     }

@@ -1,0 +1,77 @@
+//
+//  SearchPeerMembers.swift
+//  Telegram
+//
+//  Created by Mikhail Filimonov on 02/01/2019.
+//  Copyright © 2019 Telegram. All rights reserved.
+//
+
+import Cocoa
+
+import Foundation
+import PostboxMac
+import TelegramCoreMac
+import SwiftSignalKitMac
+
+func searchPeerMembers(account: Account, peerId: PeerId, query: String) -> Signal<[Peer], NoError> {
+    if peerId.namespace == Namespaces.Peer.CloudChannel {
+        return account.postbox.transaction { transaction -> CachedChannelData? in
+            return transaction.getPeerCachedData(peerId: peerId) as? CachedChannelData
+            }
+            |> mapToSignal { cachedData -> Signal<[Peer], NoError> in
+                if let cachedData = cachedData, let memberCount = cachedData.participantsSummary.memberCount, memberCount <= 64 {
+                    return Signal { subscriber in
+                        let (disposable, _) = account.context.peerChannelMemberCategoriesContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: nil, requestUpdate: false, updated: { state in
+                            if case .ready = state.loadingState {
+                                let normalizedQuery = query.lowercased()
+                                subscriber.putNext(state.list.compactMap { participant -> Peer? in
+                                    if participant.peer.displayTitle.isEmpty {
+                                        return nil
+                                    }
+                                    if normalizedQuery.isEmpty {
+                                        return participant.peer
+                                    }
+                                    if normalizedQuery.isEmpty {
+                                        return participant.peer
+                                    } else {
+                                        if participant.peer.indexName.matchesByTokens(normalizedQuery) {
+                                            return participant.peer
+                                        }
+                                        if let addressName = participant.peer.addressName, addressName.lowercased().hasPrefix(normalizedQuery) {
+                                            return participant.peer
+                                        }
+                                        
+                                        return nil
+                                    }
+                                })
+                            }
+                        })
+                        
+                        return ActionDisposable {
+                            disposable.dispose()
+                        }
+                        }
+                        |> runOn(Queue.mainQueue())
+                }
+                
+                return Signal { subscriber in
+                    let (disposable, _) = account.context.peerChannelMemberCategoriesContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: query.isEmpty ? nil : query, updated: { state in
+                        if case .ready = state.loadingState {
+                            subscriber.putNext(state.list.compactMap { participant in
+                                if participant.peer.displayTitle.isEmpty {
+                                    return nil
+                                }
+                                return participant.peer
+                            })
+                        }
+                    })
+                    
+                    return ActionDisposable {
+                        disposable.dispose()
+                    }
+                    } |> runOn(Queue.mainQueue())
+        }
+    } else {
+        return searchGroupMembers(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, query: query)
+    }
+}

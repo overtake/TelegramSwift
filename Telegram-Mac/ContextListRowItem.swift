@@ -188,6 +188,7 @@ class ContextListRowView : TableRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
 }
 
@@ -195,6 +196,7 @@ class ContextListImageView : TableRowView {
     let image:TransformImageView = TransformImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         image.setFrameSize(NSMakeSize(50, 50))
         addSubview(image)
     }
@@ -292,6 +294,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
         progressView.fetchControls = FetchControls(fetch: { [weak self] in
             self?.checkOperation()
         })
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         addSubview(progressView)
     }
     

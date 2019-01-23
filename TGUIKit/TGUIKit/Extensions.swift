@@ -444,16 +444,16 @@ public extension NSView {
         var x:CGFloat = 0
         var y:CGFloat = 0
         
-        x = CGFloat(roundf(Float((frame.width - size.width)/2.0)))
-        y = CGFloat(roundf(Float((frame.height - size.height)/2.0)))
+        x = CGFloat(round((frame.width - size.width)/2.0))
+        y = CGFloat(round((frame.height - size.height)/2.0))
         
         
         return NSMakeRect(x, y, size.width, size.height)
     }
     
     public func focus(_ size:NSSize, inset:NSEdgeInsets) -> NSRect {
-        let x:CGFloat = CGFloat(roundf(Float((frame.width - size.width + (inset.left + inset.right))/2.0)))
-        let y:CGFloat = CGFloat(roundf(Float((frame.height - size.height + (inset.top + inset.bottom))/2.0)))
+        let x:CGFloat = CGFloat(round((frame.width - size.width + (inset.left + inset.right))/2.0))
+        let y:CGFloat = CGFloat(round((frame.height - size.height + (inset.top + inset.bottom))/2.0))
         return NSMakeRect(x, y, size.width, size.height)
     }
     
@@ -462,9 +462,9 @@ public extension NSView {
         var y:CGFloat = 0
         
         if let sv = superView {
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         } else if let sv = self.superview {
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         }
         
         self.setFrameOrigin(NSMakePoint(x ?? frame.minX, y + addition))
@@ -477,11 +477,11 @@ public extension NSView {
         var y:CGFloat = 0
         
         if let sv = superView {
-            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            x = CGFloat(round((sv.frame.width - frame.width)/2.0))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         } else if let sv = self.superview {
-            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
-            y = CGFloat(roundf(Float((sv.frame.height - frame.height)/2.0)))
+            x = CGFloat(round((sv.frame.width - frame.width)/2.0))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
         }
         
         self.setFrameOrigin(NSMakePoint(x, y))
@@ -712,9 +712,11 @@ public extension NSImage {
         
         let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
         
-        let image:NSImage = self
         
-        let make:(CGContext) -> Void = { ctx in
+        let make:(CGContext) -> Void = { [weak self] ctx in
+            
+            guard let image = self else { return }
+            
             let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
             ctx.interpolationQuality = .high
             ctx.clear(rect)
@@ -1189,14 +1191,26 @@ public extension NSRect {
 public extension NSEdgeInsets {
 
     public init(left:CGFloat = 0, right:CGFloat = 0, top:CGFloat = 0, bottom:CGFloat = 0) {
-        self.left = left
-        self.right = right
-        self.top = top
-        self.bottom = bottom
+        self.init(top: top, left: left, bottom: bottom, right: right)
     }
 }
 
 public extension NSColor {
+    
+    convenience init?(hexString: String) {
+        let scanner = Scanner(string: hexString)
+        if hexString.hasPrefix("#") {
+            scanner.scanLocation = 1
+        }
+        var num: UInt32 = 0
+        if scanner.scanHexInt32(&num) {
+            self.init(rgb: num)
+        } else {
+            return nil
+        }
+    }
+    
+    
     public convenience init(_ rgbValue:UInt32, _ alpha:CGFloat = 1.0) {
         let r: CGFloat = ((CGFloat)((rgbValue & 0xFF0000) >> 16))
         let g: CGFloat = ((CGFloat)((rgbValue & 0xFF00) >> 8))
@@ -1726,7 +1740,7 @@ public extension String {
 public extension Formatter {
     public static let withSeparator: NumberFormatter = {
         let formatter = NumberFormatter()
-        formatter.groupingSeparator = " "
+        formatter.locale = NSLocale.current
         formatter.numberStyle = .decimal
         return formatter
     }()

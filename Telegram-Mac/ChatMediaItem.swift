@@ -64,8 +64,8 @@ class ChatMediaLayoutParameters : Equatable {
                 case let .Audio(params):
                     if let data = params.waveform?.makeData() {
                         waveform = AudioWaveform(bitstream: data, bitsPerSample: 5)
-                        duration = params.duration
                     }
+                    duration = params.duration
                 default:
                     break
                 }
@@ -140,6 +140,7 @@ class ChatMediaItem: ChatRowItem {
     
     var parameters:ChatMediaLayoutParameters?
     
+  
     
     
     override var topInset:CGFloat {
@@ -294,7 +295,7 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             if hasEntities {
-                caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
+                caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
             }
             caption.detectLinks(type: types, account: account, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: account.context.globalSearch ?? {_ in }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true)
@@ -472,7 +473,7 @@ class ChatMediaView: ChatRowView {
                 self.addSubview(self.contentNode!)
             }
             
-            self.contentNode?.update(with: item.media, size: item.contentSize, account: item.account!, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags)
+            self.contentNode?.update(with: item.media, size: item.contentSize, account: item.account!, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
         }
         super.set(item: item, animated: animated)
     }

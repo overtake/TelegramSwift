@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */; };
+		9F4EEF9A21DCD260002C3B33 /* SliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF9921DCD260002C3B33 /* SliderView.swift */; };
 		9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6281282037389200B2D3C9 /* CheckBox.swift */; };
 		9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
@@ -106,6 +107,7 @@
 
 /* Begin PBXFileReference section */
 		9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalScrollView.swift; sourceTree = "<group>"; };
+		9F4EEF9921DCD260002C3B33 /* SliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SliderView.swift; sourceTree = "<group>"; };
 		9F6281282037389200B2D3C9 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
 		9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentController.swift; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
@@ -495,6 +497,7 @@
 				C28CFC7C1F387A7F00C55596 /* TokenizedView.swift */,
 				9F6281282037389200B2D3C9 /* CheckBox.swift */,
 				D0BEB9912163C1F00055B718 /* SelectionRectView.swift */,
+				9F4EEF9921DCD260002C3B33 /* SliderView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -627,6 +630,7 @@
 				C24A37161F324A36004ADE5C /* ShadowView.swift in Sources */,
 				C2B1A1321DA57E8300ACB1DD /* EditableViewController.swift in Sources */,
 				C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */,
+				9F4EEF9A21DCD260002C3B33 /* SliderView.swift in Sources */,
 				C230B9181DD3A6350057F596 /* ProgressModal.swift in Sources */,
 				C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */,
 				C2E0DEB91D7EF7F300EF1C8D /* ViewController.swift in Sources */,

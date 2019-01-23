@@ -80,6 +80,17 @@ class AvatarControl: NSView {
     private var contentScale: CGFloat = 0
     
     public var animated: Bool = false
+    private var _attemptLoadNextSynchronous: Bool = false
+    public var attemptLoadNextSynchronous: Bool {
+        get {
+            let result = _attemptLoadNextSynchronous
+            _attemptLoadNextSynchronous = false
+            return result
+        }
+        set {
+            _attemptLoadNextSynchronous = newValue
+        }
+    }
     
     public init(font: NSFont) {
         self.font = font
@@ -217,7 +228,7 @@ class AvatarControl: NSView {
                     photo = nil
                 }
                 if let photo = photo {
-                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions:frame.size, scale:backingScaleFactor, font: self.font))
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions:frame.size, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous))
                 } else {
                     self.displaySuspended = false
                 }

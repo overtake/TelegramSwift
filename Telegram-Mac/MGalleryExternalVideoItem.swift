@@ -183,7 +183,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
     }
     
     private(set) var startTime: TimeInterval = 0
-    private var playAfter:Bool = false
+    private var playAfter:Bool = true
     private let _playerItem: Promise<GAVPlayer> = Promise()
     
     var playerState: Signal<AVPlayerState, NoError> {
@@ -193,7 +193,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
         
         
         
-        let webpage = entry.message!.media[0] as! TelegramMediaWebpage
+        let webpage = entry.webpage!
         
         var startTime:TimeInterval = 0
         if case let .Loaded(content) = webpage.content {
@@ -320,6 +320,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
         if let view = view as? AVPlayerView {
             if let player = view.player {
                 player.play()
+                playAfter = false
             } else {
                 playAfter = true
             }
@@ -353,13 +354,20 @@ class MGalleryExternalVideoItem: MGalleryItem {
     
     override func request(immediately: Bool) {
         
-        let webpage = entry.message!.media[0] as! TelegramMediaWebpage
+        let webpage = entry.webpage!
 
         
         let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(webpage), media: _media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
         let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())
+        }
+        
+        switch webpage.content {
+        case let .Loaded(content):
+            _ = sharedVideoLoader.fetch(for: content).start()
+        default:
+            break
         }
         
         self.path.set(sharedVideoLoader.status(for: content) |> `catch` {_ in return .complete()} |> mapToSignal { (status) -> Signal<String, NoError> in

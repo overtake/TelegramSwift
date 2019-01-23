@@ -42,8 +42,13 @@ var globalLinkExecutor:TextViewInteractions {
                 }
             }
         }, isDomainLink: { value in
-            if !value.hasPrefix("@") && !value.hasPrefix("#") && !value.hasPrefix("/") && !value.hasPrefix("$") {
-                return true
+            if let value = value as? inAppLink {
+                switch value {
+                case .external:
+                    return true
+                default:
+                    return false
+                }
             }
             return false
         }, makeLinkType: { link, url in
@@ -192,12 +197,16 @@ func execute(inapp:inAppLink) {
             return selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
                     return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
-                        return confirmSignal(for: mainWindow, information: tr(L10n.confirmAddBotToGroup(peer.displayTitle)))
+                        return confirmSignal(for: mainWindow, information: L10n.confirmAddBotToGroup(peer.displayTitle))
                     }
                 }
                 return .single(false)
             }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { peerId -> Signal<PeerId, NoError> in
-                return showModalProgress(signal: addPeerMember(account: account, peerId: peerId, memberId: memberId) |> map {peerId} |> `catch` {_ in return .complete()}, for: mainWindow)
+                if peerId.namespace == Namespaces.Peer.CloudGroup {
+                    return showModalProgress(signal: addGroupMember(account: account, peerId: peerId, memberId: memberId), for: mainWindow) |> map {peerId} |> `catch` {_ in return .complete()}
+                } else {
+                    return showModalProgress(signal: account.context.peerChannelMemberCategoriesContextsManager.addMember(account: account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId} |> `catch` {_ in return .complete()}
+                }
             }
             
         }).start(next: { peerId in
@@ -231,6 +240,21 @@ func execute(inapp:inAppLink) {
     case let .shareUrl(account, url):
         if !url.hasPrefix("@") {
             showModal(with: ShareModalController(ShareLinkObject(account, link: url)), for: mainWindow)
+        }
+    case let .wallpaper(account, preview):
+        switch preview {
+        case let .color(color):
+            let wallpaper: TelegramWallpaper = .color(Int32(color.rgb))
+            showModal(with: WallpaperPreviewController(account: account, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: mainWindow)
+        case let .slug(slug, option):
+            _ = showModalProgress(signal: getWallpaper(account: account, slug: slug) |> deliverOnMainQueue, for: mainWindow).start(next: { wallpaper in
+                showModal(with: WallpaperPreviewController(account: account, wallpaper: Wallpaper(wallpaper).withUpdatedBlurrred(option == .blur), source: .link(wallpaper)), for: mainWindow)
+            }, error: { error in
+                switch error {
+                case .generic:
+                    alert(for: mainWindow, info: L10n.wallpaperPreviewDoesntExists)
+                }
+            })
         }
     case let .stickerPack(reference, account, peerId):
         showModal(with: StickersPackPreviewModalController(account, peerId: peerId, reference: reference), for: mainWindow)
@@ -381,6 +405,16 @@ struct inAppSecureIdRequest {
     let isModern: Bool
 }
 
+enum WallpaperPresentationOptions {
+    case blur
+    case none
+}
+
+enum WallpaperPreview {
+    case color(NSColor)
+    case slug(String, WallpaperPresentationOptions)
+}
+
 enum inAppLink {
     case external(link:String, Bool) // link, confirm
     case peerInfo(peerId:PeerId, action:ChatInitialAction?, openChat:Bool, postId:Int32?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
@@ -400,13 +434,14 @@ enum inAppLink {
     case requestSecureId(account: Account, value: inAppSecureIdRequest)
     case unsupportedScheme(account: Account, path: String)
     case applyLocalization(account: Account, value: String)
+    case wallpaper(account: Account, preview: WallpaperPreview)
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage"]
+let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg"]
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -471,8 +506,31 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         if let account = account, !value.isEmpty {
                             return .applyLocalization(account: account, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
                         } else {
-                            return .external(link: url as String, false)
+                            
                         }
+                    case actions_me[6]:
+                        if !value.isEmpty {
+                            let component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
+                            if let account = account {
+                                if component.count == 6, component.rangeOfCharacter(from: CharacterSet(charactersIn: "0123456789abcdefABCDEF").inverted) == nil, let color = NSColor(hexString: component) {
+                                    return .wallpaper(account: account, preview: .color(color))
+                                } else {
+                                    let vars = urlVars(with: value)
+                                    var options: WallpaperPresentationOptions = .none
+                                    
+                                    if let mode = vars["mode"], mode.contains("blur") {
+                                        options = .blur
+                                    }
+                                    var slug = component
+                                    if let index = component.range(of: "?") {
+                                        slug = String(component[component.startIndex ..< index.lowerBound])
+                                    }
+
+                                    return .wallpaper(account: account, preview: .slug(slug, options))
+                                }
+                            }
+                        }
+                        return .external(link: url as String, false)
                     default:
                         break
                     }
@@ -511,7 +569,7 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                 let userAndPost = string.components(separatedBy: "/")
                 if userAndPost.count >= 2 {
                     let name = userAndPost[0]
-                    let post = userAndPost[1].isEmpty ? nil : userAndPost[1].nsstring.intValue
+                    let post = userAndPost[1].isEmpty ? nil : Int32(userAndPost[1])//.intValue
                     if name.hasPrefix("iv?") {
                         return .external(link: url as String, false)
                     } else if name.hasPrefix("share") {
@@ -624,6 +682,18 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                 case known_scheme[8]:
                     if let account = account, let value = vars["lang"] {
                         return .applyLocalization(account: account, value: value)
+                    }
+                case known_scheme[9]:
+                    if let account = account, let value = vars["slug"] {
+                        var options: WallpaperPresentationOptions = .none
+                        
+                        if let mode = vars["mode"], mode.contains("blur") {
+                            options = .blur
+                        }
+                        return .wallpaper(account: account, preview: .slug(value, options))
+                    }
+                    if let account = account, let value = vars["color"] {
+                        return .wallpaper(account: account, preview: .slug(value, .none))
                     }
                 default:
                     break

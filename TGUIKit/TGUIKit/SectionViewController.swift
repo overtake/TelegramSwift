@@ -22,7 +22,7 @@ public class SectionControllerView : View {
     private let container: View = View()
     private weak var current: ViewController?
     
-    fileprivate var selectorIndex:Int = 0 {
+    public var selectorIndex:Int = 0 {
         didSet {
             if selectorIndex != oldValue {
                 var index:Int = 0

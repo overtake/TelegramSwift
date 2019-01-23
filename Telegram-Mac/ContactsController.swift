@@ -32,42 +32,6 @@ private enum ContactsControllerEntryId: Hashable {
     }
 }
 
-private func <(lhs: ContactsControllerEntryId, rhs: ContactsControllerEntryId) -> Bool {
-    return lhs.hashValue < rhs.hashValue
-}
-
-private func ==(lhs: ContactsControllerEntryId, rhs: ContactsControllerEntryId) -> Bool {
-    switch lhs {
-    case .vcard:
-        switch rhs {
-        case .vcard:
-            return true
-        default:
-            return false
-        }
-    case .separator:
-        switch rhs {
-        case .separator:
-            return true
-        default:
-            return false
-        }
-    case .addContact:
-        switch rhs {
-        case .addContact:
-            return true
-        default:
-            return false
-        }
-    case let .peerId(lhsId):
-        switch rhs {
-        case let .peerId(rhsId):
-            return lhsId == rhsId
-        default:
-            return false
-        }
-    }
-}
 
 private enum ContactsEntry: Comparable, Identifiable {
     case vcard(Peer)
@@ -229,7 +193,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: account.context.timeDifference, relativeTo: Int32(timestamp))
                 }
                 
-                item = ShortPeerRowItem(initialSize, peer: peer, account:account,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right])
+                item = ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right])
             case let .separator(str):
                 item = SeparatorRowItem(initialSize, 1, string: str.uppercased())
             case .addContact:
@@ -271,14 +235,13 @@ class ContactsController: PeersListController {
     }
     
 
-    override func loadView() {
-        super.loadView()
+    override func viewDidLoad() {
+        super.viewDidLoad()
         backgroundColor = theme.colors.background
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        genericView.tableView.clipView.scroll(to: NSZeroPoint)
 
         let account = self.account
         
@@ -313,10 +276,9 @@ class ContactsController: PeersListController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         _ = previousEntries.swap(nil)
+        genericView.tableView.cancelSelection()
         genericView.tableView.removeAll()
-        genericView.tableView = TableView(frame:NSZeroRect, drawBorder: true)
-        genericView.tableView.delegate = self
-        genericView.needsLayout = true
+        genericView.tableView.documentView?.removeAllSubviews()
         disposable.set(nil)
     }
 
@@ -326,6 +288,19 @@ class ContactsController: PeersListController {
     
     init(_ account:Account) {
         super.init(account, searchOptions: [.chats])
+    }
+    
+    override func changeSelection(_ location: ChatLocation?) {
+        if let location = location {
+            switch location {
+            case let .peer(peerId):
+                genericView.tableView.changeSelection(stableId: ContactsControllerEntryId.peerId(peerId.toInt64()))
+            default:
+                break
+            }
+        } else {
+            genericView.tableView.cancelSelection()
+        }
     }
     
     override func selectionWillChange(row:Int, item:TableRowItem) -> Bool {

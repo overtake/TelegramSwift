@@ -57,7 +57,7 @@ final class InstantPageContentView : View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    private func updateLayout() {
+    func updateLayout() {
         for (_, tileView) in self.visibleTiles {
             tileView.removeFromSuperview()
         }
@@ -111,11 +111,24 @@ final class InstantPageContentView : View {
         return contentSize
     }
     
+    func isExpandedItem(_ item: InstantPageDetailsItem) -> Bool {
+        if let index = self.currentDetailsItems.firstIndex(where: {$0 === item}) {
+            return self.currentExpandedDetails?[index] ?? item.initiallyExpanded
+        } else {
+            return false
+        }
+    }
+    
     func updateVisibleItems(visibleBounds: CGRect, animated: Bool = false) {
         var visibleTileIndices = Set<Int>()
         var visibleItemIndices = Set<Int>()
         
         self.previousVisibleBounds = visibleBounds
+        
+        CATransaction.begin()
+        defer {
+            CATransaction.commit()
+        }
         
         var topView: View?
         let topTileView = topView
@@ -132,6 +145,7 @@ final class InstantPageContentView : View {
         var embedIndex = -1
         var detailsIndex = -1
         
+       
         for item in self.currentLayoutItemsWithViews {
             itemIndex += 1
             if item is InstantPageWebEmbedItem {
@@ -167,7 +181,7 @@ final class InstantPageContentView : View {
                 var itemView = self.visibleItemsWithViews[itemIndex]
                 if let currentItemView = itemView {
                     if !item.matchesView(currentItemView) {
-                        (currentItemView as! View).removeFromSuperview()
+                        (currentItemView as! NSView).removeFromSuperview()
                         self.visibleItemsWithViews.removeValue(forKey: itemIndex)
                         itemView = nil
                     }
@@ -177,13 +191,16 @@ final class InstantPageContentView : View {
                     let itemIndex = itemIndex
                     let detailsIndex = detailsIndex
                     
-                    let arguments = InstantPageItemArguments.init(account: self.arguments.account, theme: self.arguments.theme, openMedia: self.arguments.openMedia, openPeer: self.arguments.openPeer, openUrl: self.arguments.openUrl, updateWebEmbedHeight: { _ in }, updateDetailsExpanded: { [weak self] item, expanded  in
+                    let arguments = InstantPageItemArguments(account: self.arguments.account, theme: self.arguments.theme, openMedia: self.arguments.openMedia, openPeer: self.arguments.openPeer, openUrl: self.arguments.openUrl, updateWebEmbedHeight: { _ in }, updateDetailsExpanded: { [weak self] expanded  in
                         self?.updateDetailsExpanded(detailsIndex, expanded)
+                    }, isExpandedItem: { [weak self] item in
+                        return self?.isExpandedItem(item) ?? false
+                    }, effectiveRectForItem: { [weak self] item in
+                        return self?.effectiveFrameForItem(item) ?? item.frame
                     })
                     
                     if let newView = item.view(arguments: arguments, currentExpandedDetails: self.currentExpandedDetails) {
                         newView.frame = itemFrame
-                        newView._change(size: itemFrame.size, animated: animated)
                         self.addSubview(newView)
                         topView = newView as? View
                         self.visibleItemsWithViews[itemIndex] = newView
@@ -196,11 +213,11 @@ final class InstantPageContentView : View {
                         }
                     }
                 } else {
-                    if (itemView as! View).frame != itemFrame {
-                        
-                        (itemView as! View).change(pos: itemFrame.origin, animated: animated)
-                        (itemView as! View).change(size: itemFrame.size, animated: animated)
-                        
+                    if (itemView as! NSView).frame != itemFrame {
+                        (itemView as! NSView)._change(size: itemFrame.size, animated: animated)
+                        (itemView as! NSView)._change(pos: itemFrame.origin, animated: animated)
+                    } else {
+                        (itemView as! NSView).needsDisplay = true
                     }
                 }
                 
@@ -255,9 +272,9 @@ final class InstantPageContentView : View {
         for (index, itemView) in self.visibleItemsWithViews {
             if !visibleItemIndices.contains(index) {
                 removeItemIndices.append(index)
-                (itemView as! View).removeFromSuperview()
+                (itemView as! NSView).removeFromSuperview()
             } else {
-                var itemFrame = (itemView as! View).frame
+                var itemFrame = (itemView as! NSView).frame
                 let itemThreshold: CGFloat = 200.0
                 itemFrame.origin.y -= itemThreshold
                 itemFrame.size.height += itemThreshold * 2.0
