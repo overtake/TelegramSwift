@@ -25,6 +25,7 @@ let API_ID:Int32 = 'api_id'
 let API_HASH:String = "api_hash"
 let TEST_SERVER:Bool = false
 let languagesCategory = "macos"
+let appVersion:String = "your_version"
 ```
 4. build and enjoy
 
