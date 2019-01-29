@@ -4,7 +4,7 @@
 #define JPEG_LIB_VERSION  62
 
 /* libjpeg-turbo version */
-#define LIBJPEG_TURBO_VERSION  2.0.1
+#define LIBJPEG_TURBO_VERSION  "2.0.1"
 
 /* libjpeg-turbo version in integer form */
 #define LIBJPEG_TURBO_VERSION_NUMBER  2000001

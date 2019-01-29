@@ -33,11 +33,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-<<<<<<< HEAD
-	<string>151700</string>
-=======
-	<string>155529</string>
->>>>>>> IV2.0
+	<string>155531</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSMinimumSystemVersion</key>
