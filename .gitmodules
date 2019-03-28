@@ -18,7 +18,7 @@
 	url = https://github.com/grishka/libtgvoip
 [submodule "submodules/Sparkle"]
 	path = submodules/Sparkle
-	url = https://github.com/sparkle-project/Sparkle
+url=https://github.com/overtake/Sparkle
 [submodule "submodules/Zip"]
 	path = submodules/Zip
 	url = https://github.com/overtake/Zip
