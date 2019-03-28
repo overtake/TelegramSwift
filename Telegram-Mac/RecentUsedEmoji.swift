@@ -129,7 +129,7 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
             
             for emoji in list.reversed() {
                 let emoji = emoji.emojiString.emojiUnmodified
-                if !emoji.isEmpty && emoji.length > 1 && !emoji.emojiSkinToneModifiers.contains(emoji) {
+                if !emoji.isEmpty && emoji.length > 1 {
                     if let index = emojies.index(of: emoji) {
                         emojies.remove(at: index)
                     }

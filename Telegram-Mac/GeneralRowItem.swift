@@ -17,6 +17,10 @@ enum InputDataValueErrorTarget : Equatable {
 struct InputDataValueError : Equatable {
     let description: String
     let target: InputDataValueErrorTarget
+    init(description: String, target: InputDataValueErrorTarget) {
+        self.description = description
+        self.target = target
+    }
 }
 
 enum GeneralInteractedType : Equatable {
@@ -30,6 +34,9 @@ enum GeneralInteractedType : Equatable {
     case button(String)
     case search(Bool)
     case colorSelector(NSColor)
+    #if !SHARE
+    case contextSelector(String, [SPopoverItem])
+    #endif
 }
 
 class GeneralRowItem: TableRowItem {

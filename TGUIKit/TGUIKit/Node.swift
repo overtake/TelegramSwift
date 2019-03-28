@@ -53,6 +53,9 @@ open class Node: NSObject, ViewDisplayDelegate {
         self.view = view
         
     }
+    open func update() {
+        
+    }
     
 
     open func setNeedDisplay() -> Void {

@@ -62,7 +62,7 @@ final class InstantPageImageItem: InstantPageItem {
             viewArguments = .image(interactive: self.isInteractive, roundCorners: self.roundCorners, fit: self.fit)
         }
         
-        return  InstantPageMediaView(account: arguments.account, media: media, arguments: viewArguments)
+        return  InstantPageMediaView(context: arguments.context, media: media, arguments: viewArguments)
     }
     
     func matchesAnchor(_ anchor: String) -> Bool {

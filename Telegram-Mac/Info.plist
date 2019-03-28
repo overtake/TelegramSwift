@@ -19,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>4.9</string>
+	<string>5.0.1</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -33,13 +33,11 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-<<<<<<< HEAD
-	<string>151700</string>
-=======
-	<string>155529</string>
->>>>>>> IV2.0
+	<string>165019</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
+	<key>LSFileQuarantineEnabled</key>
+	<true/>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSAppTransportSecurity</key>

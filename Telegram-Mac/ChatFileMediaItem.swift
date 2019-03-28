@@ -20,7 +20,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
     let downloadLayout: TextViewLayout
     fileprivate let uploadingLayout: TextViewLayout
     fileprivate let downloadingLayout: TextViewLayout
-    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, isIncoming: Bool) {
+    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, isIncoming: Bool, autoplayMedia: AutoplayMediaPreferences) {
         self.fileName = fileName
         self.hasThumb = hasThumb
         
@@ -52,7 +52,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
         
 
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
         
     }
     override func makeLabelsForWidth(_ width: CGFloat) {
@@ -72,9 +72,9 @@ class ChatFileMediaItem: ChatMediaItem {
 
     
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
-        super.init(initialSize, chatInteraction, account, object, downloadSettings)
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(account, object.renderType == .bubble), isFile: true)
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+        super.init(initialSize, chatInteraction, context, object, downloadSettings)
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), isFile: true, autoplayMedia: object.autoplayMedia)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

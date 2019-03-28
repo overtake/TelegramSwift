@@ -89,8 +89,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         //super.viewDidLoad()
         
         genericView.delegate = self
-        genericView.update()
-
+        genericView.layout()
     }
     
     public func splitViewDidNeedSwapToLayout(state: SplitViewState) {
@@ -108,6 +107,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             break
         }
         controller.viewDidChangedNavigationLayout(state)
+        viewDidResized(self.frame.size)
     }
     
     public func splitViewDidNeedMinimisize(controller: ViewController) {
@@ -134,19 +134,18 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         return view as! SplitView
     }
    
-    override open func push(_ controller: ViewController, _ animated: Bool, style:ViewControllerStyle? = nil) {
+    override open func push(_ controller: ViewController, _ animated: Bool = true, style:ViewControllerStyle? = nil) {
         
         assertOnMainThread()
         
         controller.navigationController = self
-        controller.loadViewIfNeeded(self.container.bounds)
+        controller.loadViewIfNeeded(genericView.bounds)
         
         genericView.update()
         
 
         pushDisposable.set((controller.ready.get() |> deliverOnMainQueue |> take(1)).start(next: {[weak self] _ in
             if let strongSelf = self {
-                strongSelf.lock = true
                 let isMajorController = controller.className == NSStringFromClass(strongSelf.majorClass)
                 let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController && !strongSelf.alwaysAnimate
                 
@@ -250,8 +249,13 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         }, with: self, for: .RightArrow, priority:.medium)
         
         self.window?.add(swipe: { [weak self] direction -> SwipeHandlerResult in
-            guard let `self` = self, self.controller.view.layer?.animationKeys() == nil else {return .failed}
+            guard let `self` = self, self.controller.view.layer?.animationKeys() == nil, let window = self.window else {return .failed}
             
+            if let view = window.contentView!.hitTest(window.contentView!.convert(window.mouseLocationOutsideOfEventStream, from: nil))?.superview {
+                if view is HorizontalRowView || view.superview is HorizontalRowView {
+                    return .failed
+                }
+            }
             
             switch direction {
             case let .left(state):

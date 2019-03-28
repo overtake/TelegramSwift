@@ -13,11 +13,11 @@ import PostboxMac
 import SwiftSignalKitMac
 
 final class GroupsInCommonArguments {
-    let account:Account
+    let context: AccountContext
     let open:(PeerId)->Void
-    init(account: Account, open: @escaping(PeerId) -> Void) {
+    init(context: AccountContext, open: @escaping(PeerId) -> Void) {
         self.open = open
-        self.account = account
+        self.context = context
     }
 }
 
@@ -55,7 +55,7 @@ private enum GroupsInCommonEntry : Comparable, Identifiable {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, type: .none)
         case let .peer(_, peer):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, inset:NSEdgeInsets(left:30.0,right:30.0), action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, inset:NSEdgeInsets(left:30.0,right:30.0), action: {
                 arguments.open(peer.id)
             })
         }
@@ -114,25 +114,25 @@ private func <(lhs:GroupsInCommonEntry, rhs: GroupsInCommonEntry) -> Bool {
 
 class GroupsInCommonViewController: TableViewController {
     private let peerId:PeerId
-    init(account:Account, peerId:PeerId) {
+    init(_ context: AccountContext, peerId:PeerId) {
         self.peerId = peerId
-        super.init(account)
+        super.init(context)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let account = self.account
+        let context = self.context
         
-        let arguments = GroupsInCommonArguments(account: account, open: { [weak self] peerId in
+        let arguments = GroupsInCommonArguments(context: context, open: { [weak self] peerId in
             if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(peerId)))
+                strongSelf.navigationController?.push(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
             }
         })
         
         let previous:Atomic<[AppearanceWrapperEntry<GroupsInCommonEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        let signal = combineLatest(Signal<([Peer], Bool), NoError>.single(([], true)), appearanceSignal |> take(1)) |> then(combineLatest(groupsInCommon(account: account, peerId: peerId) |> mapToSignal { peerIds -> Signal<([Peer], Bool), NoError> in
-            return account.postbox.transaction { transaction -> ([Peer], Bool) in
+        let signal = combineLatest(Signal<([Peer], Bool), NoError>.single(([], true)), appearanceSignal |> take(1)) |> then(combineLatest(groupsInCommon(account: context.account, peerId: peerId) |> mapToSignal { peerIds -> Signal<([Peer], Bool), NoError> in
+            return context.account.postbox.transaction { transaction -> ([Peer], Bool) in
                 var peers:[Peer] = []
                 for peerId in peerIds {
                     if let peer = transaction.getPeer(peerId) {

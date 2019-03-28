@@ -27,6 +27,7 @@ struct PossibleContextQueryTypes: OptionSet {
     static let contextRequest = PossibleContextQueryTypes(rawValue: (1 << 3))
     static let stickers = PossibleContextQueryTypes(rawValue: (1 << 4))
     static let emoji = PossibleContextQueryTypes(rawValue: (1 << 5))
+    static let emojiFast = PossibleContextQueryTypes(rawValue: (1 << 6))
 }
 
 private func makeScalar(_ c: Character) -> Character {
@@ -99,7 +100,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         
         var possibleQueryRange: Range<String.Index>?
         
-        var possibleTypes = PossibleContextQueryTypes([.command, .mention, .emoji, .hashtag])
+        var possibleTypes = PossibleContextQueryTypes([.command, .mention, .emoji, .hashtag, .emojiFast])
         //var possibleTypes = PossibleContextQueryTypes([.command, .mention])
 
 
@@ -196,6 +197,13 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             }
         }
         
+        if inputText.trimmingCharacters(in: CharacterSet.alphanumerics).isEmpty, !inputText.isEmpty  {
+            possibleTypes = possibleTypes.intersection([.emojiFast])
+            definedType = true
+            possibleQueryRange = index ..< maxIndex
+        }
+        
+        
         if let possibleQueryRange = possibleQueryRange, definedType && !possibleTypes.isEmpty {
             return (possibleQueryRange, possibleTypes, nil)
         }
@@ -225,7 +233,9 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         } else if possibleTypes == [.stickers] {
             return .stickers(query)
         } else if possibleTypes == [.emoji] {
-            return .emoji(query)
+            return .emoji(query, firstWord: false)
+        } else if possibleTypes == [.emojiFast] {
+            return .emoji(query, firstWord: true)
         }
         return .none
     } else {

@@ -10,6 +10,8 @@
 #import <AppKit/AppKit.h>
 #import <AVFoundation/AVFoundation.h>
 
+
+
 @interface OpenWithObject : NSObject
 @property (nonatomic, strong,readonly) NSString *fullname;
 @property (nonatomic, strong,readonly) NSURL *app;
@@ -64,3 +66,6 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 int colorIndexForGroupId(int64_t groupId);
 int64_t TGPeerIdFromChannelId(int32_t channelId);
 int colorIndexForUid(int32_t uid, int32_t myUserId);
+
+
+NSArray<NSString *> * __nonnull currentAppInputSource();

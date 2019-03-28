@@ -25,19 +25,19 @@ class GalleryTouchBarThumbItemView: NSScrubberItemView {
         var signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
         var size: NSSize?
         if let item = item as? MGalleryPhotoItem {
-            signal = chatWebpageSnippetPhoto(account: item.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor, small: true, secureIdAccessContext: item.secureIdAccessContext)
+            signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor, small: true, secureIdAccessContext: item.secureIdAccessContext)
             size = item.media.representations.first?.dimensions
         } else if let item = item as? MGalleryGIFItem {
-            signal = chatMessageImageFile(account: item.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
+            signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
         } else if let item = item as? MGalleryExternalVideoItem {
-            signal = chatWebpageSnippetPhoto(account: item.account, imageReference: item.entry.imageReference(item.mediaImage), scale: backingScaleFactor, small: true, secureIdAccessContext: nil)
+            signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.mediaImage), scale: backingScaleFactor, small: true, secureIdAccessContext: nil)
             size = item.mediaImage.representations.first?.dimensions
         } else if let item = item as? MGalleryVideoItem {
-            signal = chatMessageImageFile(account: item.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
+            signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
         } else if let item = item as? MGalleryPeerPhotoItem {
-            signal = chatMessagePhotoThumbnail(account: item.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
+            signal = chatMessagePhotoThumbnail(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
             
             size = item.media.representations.first?.dimensions
         }

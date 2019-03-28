@@ -102,6 +102,8 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
     private let secureField: NSSecureTextField = NSSecureTextField(frame: NSMakeRect(0, 0, 100, 16))
     
     private let cleanImage: ImageButton = ImageButton()
+    let separator: View = View()
+
     required init(frame frameRect: NSRect) {
         textView = TGModernGrowingTextView(frame: NSMakeRect(25, 0, frameRect.width - 50, frameRect.height))
         super.init(frame: frameRect)
@@ -124,7 +126,8 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         secureField.sizeToFit()
       
         addSubview(cleanImage)
-        
+        addSubview(separator)
+
         cleanImage.set(handler: { [weak self] _ in
             self?.textView.setString("")
             self?.secureField.stringValue = ""
@@ -164,15 +167,12 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
             textView.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right,textView.frame.height)
             secureField.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right, secureField.frame.height)
             cleanImage.centerY(x: frame.width - item.insets.right - cleanImage.frame.width)
+            separator.frame = NSMakeRect(item.insets.left, frame.height - .borderSize, frame.width - item.insets.left - item.insets.right, .borderSize)
         }
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        if let item = item as? GeneralInputRowItem {
-            ctx.setFillColor(theme.colors.border.cgColor)
-            ctx.fill(NSMakeRect(item.insets.left, frame.height - .borderSize, frame.width - item.insets.left - item.insets.right, .borderSize))
-        }
+        
     }
     
     override func viewDidMoveToWindow() {
@@ -185,6 +185,9 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         textView.animates = false
         
         if let item = item as? GeneralInputRowItem {
+            
+            separator.backgroundColor = theme.colors.border
+
             
             cleanImage.set(image: theme.icons.recentDismiss, for: .Normal)
             _ = cleanImage.sizeToFit()
@@ -260,6 +263,9 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
             item._height = height
             
             table.noteHeightOfRow(item.index,animated)
+            
+            separator.change(pos: NSMakePoint(separator.frame.minX, frame.height - .borderSize), animated: animated)
+            
         }
         
     }

@@ -11,8 +11,12 @@ import TGUIKit
 import TelegramCoreMac
 
 
-class WPContentView: View, MultipleSelectable {
+class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
     
+    
+    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+        return nil
+    }
     
     var header: String? {
         return nil
@@ -33,7 +37,9 @@ class WPContentView: View, MultipleSelectable {
             
             containerView.backgroundColor = backgroundColor
             for subview in containerView.subviews {
-                subview.background = backgroundColor
+                if !(subview is TransformImageView) {
+                    subview.background = backgroundColor
+                }
             }
             if let content = content {
                 instantPageButton?.layer?.borderColor = content.presentation.activity.cgColor
@@ -54,6 +60,10 @@ class WPContentView: View, MultipleSelectable {
     
     var selectableTextViews: [TextView] {
         return [textView]
+    }
+    
+    func previewMediaIfPossible() -> Bool {
+        return false
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -111,9 +121,14 @@ class WPContentView: View, MultipleSelectable {
     deinit {
         containerView.removeAllSubviews()
     }
+    
+    func updateMouse() {
+        
+    }
 
     func update(with layout:WPLayout) -> Void {
         self.content = layout
+        
         
         if layout.hasInstantPage || layout.isProxyConfig {
             if instantPageButton == nil {
@@ -138,9 +153,9 @@ class WPContentView: View, MultipleSelectable {
             instantPageButton?.set(handler : { [weak layout] _ in
                 if let content = layout {
                     if content.hasInstantPage {
-                        showInstantPage(InstantPageViewController(content.account, webPage: content.parent.media[0] as! TelegramMediaWebpage, message: content.parent.text))
+                        showInstantPage(InstantPageViewController(content.context, webPage: content.parent.media[0] as! TelegramMediaWebpage, message: content.parent.text))
                     } else if let proxyConfig = content.proxyConfig {
-                        applyExternalProxy(proxyConfig, postbox: content.account.postbox, network: content.account.network)
+                        applyExternalProxy(proxyConfig, accountManager: content.context.sharedContext.accountManager)
                     }
                 }
             }, for: .Click)

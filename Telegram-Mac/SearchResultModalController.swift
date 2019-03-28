@@ -78,11 +78,11 @@ fileprivate class SearchResultModalView : View {
     }
 }
 
-fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry], initialSize:NSSize, account:Account) -> TableUpdateTransition {
+fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry], initialSize:NSSize, context: AccountContext) -> TableUpdateTransition {
     let (removed,inserted,updated) = proccessEntriesWithoutReverse(from, right: to) { entry -> TableRowItem in
         switch entry {
         case let .message(message):
-            return ChatListMessageRowItem(initialSize, account: account, message: message, renderedPeer: RenderedPeer(message: message))
+            return ChatListMessageRowItem(initialSize, context: context, message: message, renderedPeer: RenderedPeer(message: message))
         }
     }
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated)
@@ -94,21 +94,21 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
         return nil
     }
     
-    private let account:Account
+    private let context:AccountContext
     private let entries:Atomic<[SearchResultEntry]> = Atomic(value:[])
     private let promise:Promise<[Message]> = Promise()
     private let query:String
     private let chatInteraction:ChatInteraction
-    init(_ account:Account, messages:[Message] = [], query:String, chatInteraction:ChatInteraction) {
-        self.account = account
+    init(_ context: AccountContext, messages:[Message] = [], query:String, chatInteraction:ChatInteraction) {
+        self.context = context
         self.query = query
         self.chatInteraction = chatInteraction
         promise.set(.single(messages))
         super.init(frame: NSMakeRect(0, 0, 300, 360))
     }
     
-    init(_ account:Account, request:Signal<[Message], NoError>, query:String, chatInteraction:ChatInteraction) {
-        self.account = account
+    init(_ context: AccountContext, request:Signal<[Message], NoError>, query:String, chatInteraction:ChatInteraction) {
+        self.context = context
         self.query = query
         promise.set(request)
         self.chatInteraction = chatInteraction
@@ -130,7 +130,7 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
         genericView.updateTitle(query)
         let entries = self.entries
         let initialSize = self.atomicSize
-        let account = self.account
+        let context = self.context
         genericView.table.delegate = self
         
         genericView.table.merge(with: promise.get()
@@ -138,7 +138,7 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
             return messages.map({.message($0)})
         } |> map { [weak self] new -> TableUpdateTransition in
             self?.readyOnce()
-            return prepareEntries(from: entries.swap(new), to: entries.modify({$0}), initialSize: initialSize.modify({$0}), account: account)
+            return prepareEntries(from: entries.swap(new), to: entries.modify({$0}), initialSize: initialSize.modify({$0}), context: context)
         })
     }
     

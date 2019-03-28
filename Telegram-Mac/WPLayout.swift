@@ -24,7 +24,7 @@ struct WPLayoutPresentation {
 class WPLayout: Equatable {
     let content:TelegramMediaWebpageLoadedContent
     let parent:Message
-    let account:Account
+    let context: AccountContext
     let fontSize:CGFloat
     weak var table:TableView?
     
@@ -85,9 +85,9 @@ class WPLayout: Equatable {
         }
     }
     
-    init(with content:TelegramMediaWebpageLoadedContent, account:Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool) {
+    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool) {
         self.content = content
-        self.account = account
+        self.context = context
         self.presentation = presentation
         self.parent = parent
         self.fontSize = fontSize
@@ -101,8 +101,8 @@ class WPLayout: Equatable {
         
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
         
-        let text = content.text?.trimmed
-        if let title = content.title ?? content.author {
+        let text = content.type != "telegram_background" ? content.text?.trimmed : nil
+        if let title = content.title ?? content.author, content.type != "telegram_background" {
             _ = attributedText.append(string: title, color: presentation.text, font: .medium(fontSize))
             if text != nil {
                 _ = attributedText.append(string: "\n")
@@ -140,7 +140,7 @@ class WPLayout: Equatable {
                                 link = .external(link: "https://twitter.com/hashtag/\(url.nsstring.substring(from: 1))", false)
                             }
                         default:
-                            link = inApp(for: url.nsstring, account: account, peerId: nil, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                            link = inApp(for: url.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                             break
                         }
                     }
@@ -174,7 +174,7 @@ class WPLayout: Equatable {
     
     var wallpaper: inAppLink? {
         if content.type == "telegram_background" {
-            return inApp(for: content.url as NSString, account: account)
+            return inApp(for: content.url as NSString, context: context)
         }
         return nil
     }

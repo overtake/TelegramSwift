@@ -14,11 +14,11 @@ import TGUIKit
 
 
 fileprivate final class CreateGroupArguments {
-    let account: Account
+    let context: AccountContext
     let choicePicture:(Bool)->Void
     let updatedText:(String)->Void
-    init(account: Account, choicePicture:@escaping(Bool)->Void, updatedText:@escaping(String)->Void) {
-        self.account = account
+    init(context: AccountContext, choicePicture:@escaping(Bool)->Void, updatedText:@escaping(String)->Void) {
+        self.context = context
         self.updatedText = updatedText
         self.choicePicture = choicePicture
     }
@@ -88,16 +88,16 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
             
             switch entry.entry {
             case let .info(photo, currentText):
-                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.account, placeholder: L10n.createGroupNameHolder, photo: photo, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
+                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: L10n.createGroupNameHolder, photo: photo, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
             case let .peer(peer, _, presence):
                 
                 var color:NSColor = theme.colors.grayText
                 var string:String = tr(L10n.peerStatusRecently)
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                    (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
+                    (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30))
+                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30))
             }
         })
         
@@ -139,15 +139,24 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         let textValue = self.textValue
 
         let entries = self.entries
-        let arguments = CreateGroupArguments(account: account, choicePicture: { select in
+        let arguments = CreateGroupArguments(context: context, choicePicture: { select in
             if select {
-                pickImage(for: mainWindow, completion: { image in
-                    if let image = image {
-                        _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { path in
-                            pictureValue.set(.single(path))
+                
+                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                        _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+                            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                            showModal(with: controller, for: mainWindow)
+                            pictureValue.set(controller.result |> map {Optional($0.0.path)})
+                           
+                            
+                            controller.onClose = {
+                                removeFile(at: path)
+                            }
                         })
                     }
                 })
+                
             } else {
                 pictureValue.set(.single(nil))
             }
@@ -156,7 +165,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
             textValue.set(text)
         })
         
-        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(account.postbox.multiplePeersView(result.result) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, pictureValue.get() |> deliverOnPrepareQueue, textValue.get() |> deliverOnPrepareQueue) |> mapToSignal { view, appearance, picture, text in
+        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(context.account.postbox.multiplePeersView(result.result) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, pictureValue.get() |> deliverOnPrepareQueue, textValue.get() |> deliverOnPrepareQueue) |> mapToSignal { view, appearance, picture, text in
             let list = createGroupEntries(view, picture: picture, text: text, appearance: appearance)
            
             return prepareEntries(from: entries.swap(list), to: list, arguments: arguments, initialSize: initialSize.modify({$0}), animated: true)

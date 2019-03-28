@@ -43,7 +43,7 @@ private enum PlayerListEntry: TableItemListNodeEntry {
     func item(_ arguments: PlayerListArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .message(_, message):
-            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, arguments.chatInteraction.account, .messageEntry(message, .defaultSettings),  isCompactPlayer: true)
+            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, .messageEntry(message, .defaultSettings),  isCompactPlayer: true)
         }
     }
     
@@ -93,15 +93,15 @@ class PlayerListController: TableViewController {
     private let chatInteraction: ChatInteraction
     private let disposable = MetaDisposable()
     private let messageIndex: MessageIndex
-    init(audioPlayer: InlineAudioPlayerView, account: Account, messageIndex: MessageIndex) {
-        self.chatInteraction = ChatInteraction(chatLocation: .peer(messageIndex.id.peerId), account: account)
+    init(audioPlayer: InlineAudioPlayerView, context: AccountContext, messageIndex: MessageIndex) {
+        self.chatInteraction = ChatInteraction(chatLocation: .peer(messageIndex.id.peerId), context: context)
         self.messageIndex = messageIndex
         self.audioPlayer = audioPlayer
-        super.init(account)
+        super.init(context)
         
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
-            self?.audioPlayer.update(with: controller, tableView: self?.genericView)
+            self?.audioPlayer.update(with: controller, context: context, tableView: self?.genericView)
         }
     }
     
@@ -119,7 +119,7 @@ class PlayerListController: TableViewController {
                 
                 guard let `self` = self else {return .complete()}
                 
-                return chatHistoryViewForLocation(location, account: self.account, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: []) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
+                return chatHistoryViewForLocation(location, account: self.chatInteraction.context.account, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: []) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
                     switch view {
                     case .Loading:
                         return .single((PeerMediaUpdate(), nil))
@@ -127,7 +127,7 @@ class PlayerListController: TableViewController {
                         var messages:[Message] = []
                         for entry in view.entries {
                             switch entry {
-                            case let .MessageEntry(message, _, _, _):
+                            case let .MessageEntry(message, _, _, _, _):
                                 messages.append(message)
                             default:
                                 break
@@ -157,7 +157,7 @@ class PlayerListController: TableViewController {
         }
         
         let animated: Atomic<Bool> = Atomic(value: false)
-        let account: Account = self.account
+        let context = self.chatInteraction.context
         let previous:Atomic<[PlayerListEntry]> = Atomic(value: [])
         let updateView = Atomic<PeerMediaUpdate?>(value: nil)
         
@@ -168,7 +168,7 @@ class PlayerListController: TableViewController {
             let animated = animated.swap(true)
             let scroll:TableScrollState = scroll ?? (animated ? .none(nil) : .saveVisible(.upper))
             
-            let entries = playerAudioEntries(update, timeDifference: account.context.timeDifference)
+            let entries = playerAudioEntries(update, timeDifference: context.timeDifference)
             _ = updateView.swap(update)
             
             return preparedAudioListTransition(from: previous.swap(entries), to: entries, initialSize: NSMakeSize(300, 0), arguments: arguments, animated: animated, scroll: scroll)

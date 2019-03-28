@@ -31,13 +31,13 @@ public class NavigationBarView: View {
     
     override init() {
         super.init()
-        self.autoresizingMask = [.width]
+   //     self.autoresizingMask = [.width]
         updateLocalizationAndTheme()
     }
     
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.autoresizingMask = [.width]
+       // self.autoresizingMask = [.width]
         updateLocalizationAndTheme()
     }
     
@@ -70,7 +70,7 @@ public class NavigationBarView: View {
         super.setFrameSize(newSize)
         self.bottomBorder.frame = NSMakeRect(0, newSize.height - .borderSize, newSize.width, .borderSize)
         
-        guard let window = window as? Window, !window.inLiveSwiping else {return}
+       // guard let window = window as? Window, !window.inLiveSwiping else {return}
 
         self.layout(left: leftView, center: centerView, right: rightView)
     }

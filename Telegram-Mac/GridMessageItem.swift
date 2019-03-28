@@ -116,15 +116,15 @@ final class GridMessageItemSectionNode: View {
 }
 
 final class GridMessageItem: GridItem {
-    private let account: Account
+    private let context: AccountContext
     private let message: Message
     private let chatInteraction: ChatInteraction
     
     let section: GridSection?
     fileprivate weak var grid:GridNode?
-    init(account: Account, message: Message, chatInteraction: ChatInteraction) {
+    init(context: AccountContext, message: Message, chatInteraction: ChatInteraction) {
         self.section = GridMessageItemSection(timestamp: message.timestamp)
-        self.account = account
+        self.context = context
         self.message = message
         self.chatInteraction = chatInteraction
     }
@@ -136,14 +136,14 @@ final class GridMessageItem: GridItem {
             return
         }
         if let media = mediaForMessage(self.message) {
-            node.setup(account: self.account, media: media, message: self.message, chatInteraction: self.chatInteraction)
+            node.setup(context: self.context, media: media, message: self.message, chatInteraction: self.chatInteraction)
         }
     }
     
     func node(layout: GridNodeLayout, gridNode:GridNode, cachedNode: GridItemNode?) -> GridItemNode {
         let node = GridMessageItemNode(gridNode)
         if let media = mediaForMessage(self.message) {
-            node.setup(account: self.account, media: media, message: self.message, chatInteraction: self.chatInteraction)
+            node.setup(context: self.context, media: media, message: self.message, chatInteraction: self.chatInteraction)
         }
         return node
     }
@@ -151,7 +151,7 @@ final class GridMessageItem: GridItem {
 
 final class GridMessageItemNode: GridItemNode {
     private var videoAccessory: ChatMessageAccessoryView?
-    private var currentState: (Account, Media, CGSize)?
+    private var currentState: (AccountContext, Media, CGSize)?
     private let imageView: TransformImageView
     private(set) var message: Message?
     private var chatInteraction: ChatInteraction?
@@ -166,17 +166,17 @@ final class GridMessageItemNode: GridItemNode {
 
     
     override func menu(for event: NSEvent) -> NSMenu? {
-        if let message = message, let account = currentState?.0 {
+        if let message = message, let context = currentState?.0 {
             let menu = ContextMenu()
 
 
-            if canForwardMessage(message, account: account) {
+            if canForwardMessage(message, account: context.account) {
                 menu.addItem(ContextMenuItem(L10n.messageContextForward, handler: { [weak self] in
                     self?.chatInteraction?.forwardMessages([message.id])
                 }))
             }
             
-            if canDeleteMessage(message, account: account) {
+            if canDeleteMessage(message, account: context.account) {
                 menu.addItem(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
                    self?.chatInteraction?.deleteMessages([message.id])
                 }))
@@ -202,7 +202,7 @@ final class GridMessageItemNode: GridItemNode {
     private func fetch() {
         if let currentState = currentState, let message = message {
             if let file = message.media.first as? TelegramMediaFile {
-                fetchingDisposable.set(messageMediaFileInteractiveFetched(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start())
+                fetchingDisposable.set(messageMediaFileInteractiveFetched(context: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start())
             }
         }
     }
@@ -210,7 +210,7 @@ final class GridMessageItemNode: GridItemNode {
     private func cancelFetching() {
         if let currentState = currentState, let message = message {
             if let file = message.media.first as? TelegramMediaFile {
-               messageMediaFileCancelInteractiveFetch(account: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file))
+               messageMediaFileCancelInteractiveFetch(context: currentState.0, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: file))
             }
         }
     }
@@ -230,24 +230,24 @@ final class GridMessageItemNode: GridItemNode {
                             if NSPointInRect(self.convert(event.locationInWindow, from: nil), progressView.frame) {
                                 cancelFetching()
                             } else if file.isStreamable {
-                                showChatGallery(account: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
+                                showChatGallery(context: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
                                     interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
-                                }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
+                            }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                             }
                         case .Remote:
                             fetch()
                         default:
-                            showChatGallery(account: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
+                            showChatGallery(context: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
                                 interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
-                            }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
+                                }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                         }
                         
                     }
                 } else {
                     if _status == nil || _status == .Local {
-                        showChatGallery(account: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
+                        showChatGallery(context: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
                             interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
-                        }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
+                    }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                     }
                 }
             }
@@ -266,7 +266,7 @@ final class GridMessageItemNode: GridItemNode {
         return imageView.copy()
     }
     
-    private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile) {
+    private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile, animated: Bool) {
         let maxWidth = frame.width - 10
         let text: String
         
@@ -274,7 +274,7 @@ final class GridMessageItemNode: GridItemNode {
          text = String.durationTransformed(elapsed: file.videoDuration)
         
         
-        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: file.isStreamable, isCompact: true, fetch: { [weak self] in
+        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: file.isStreamable, isCompact: true, animated: animated, fetch: { [weak self] in
             self?.fetch()
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()
@@ -283,12 +283,12 @@ final class GridMessageItemNode: GridItemNode {
     }
     
     
-    func setup(account: Account, media: Media, message: Message, chatInteraction: ChatInteraction) {
+    func setup(context: AccountContext, media: Media, message: Message, chatInteraction: ChatInteraction) {
         
         let semanticMedia = self.currentState?.1.id == media.id
 
         
-        if self.currentState == nil || self.currentState!.0 !== account || !self.currentState!.1.isEqual(to: media) {
+        if self.currentState == nil || !self.currentState!.1.isEqual(to: media) {
             var mediaDimensions: CGSize?
             backgroundColor = theme.colors.background
             statusDisposable.set(nil)
@@ -303,7 +303,7 @@ final class GridMessageItemNode: GridItemNode {
                 let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageFrame.size, intrinsicInsets: NSEdgeInsets())
                 self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
 
-                self.imageView.setSignal( mediaGridMessagePhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                self.imageView.setSignal( mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                     if let strongSelf = self {
                         return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor)
                     } else {
@@ -327,7 +327,7 @@ final class GridMessageItemNode: GridItemNode {
                 
                 self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
 
-                self.imageView.setSignal( mediaGridMessageVideo(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
+                self.imageView.setSignal( mediaGridMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
                     if let strongSelf = self {
                         return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor)
                     } else {
@@ -337,7 +337,7 @@ final class GridMessageItemNode: GridItemNode {
                 
                 self.imageView.set(arguments: arguments)
 
-                let updatedStatusSignal = chatMessageFileStatus(account: account, file: file) |> deliverOnMainQueue |> map { [weak message, weak file] status -> (MediaResourceStatus, MediaResourceStatus) in
+                let updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file) |> deliverOnMainQueue |> map { [weak message, weak file] status -> (MediaResourceStatus, MediaResourceStatus) in
                     if let message = message, let file = file {
                         if file.isStreamable && message.id.peerId.namespace != Namespaces.Peer.SecretChat {
                             return (.Local, status)
@@ -345,7 +345,9 @@ final class GridMessageItemNode: GridItemNode {
                     }
                     return (status, status)
                 }  |> deliverOnMainQueue
-
+                
+                var first: Bool = true
+                
                 statusDisposable.set(updatedStatusSignal.start(next: { [weak self] status, authentic in
                     guard let `self` = self else {return}
                     
@@ -360,8 +362,8 @@ final class GridMessageItemNode: GridItemNode {
                         self.addSubview(self.videoAccessory!)
                     }
                     
-                    self.updateVideoAccessory(authentic, file: file)
-                    
+                    self.updateVideoAccessory(authentic, file: file, animated: !first)
+                    first = false
                     self._status = status
                     
                     let progressStatus: MediaResourceStatus
@@ -385,7 +387,7 @@ final class GridMessageItemNode: GridItemNode {
             }
 
 
-            self.currentState = (account, media, mediaDimensions ?? NSMakeSize(100, 100))
+            self.currentState = (context, media, mediaDimensions ?? NSMakeSize(100, 100))
         } else {
             needsLayout = true
         }

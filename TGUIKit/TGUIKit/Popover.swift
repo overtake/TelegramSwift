@@ -127,9 +127,9 @@ open class Popover: NSObject {
                 signal = signal |> delay(delayBeforeShown, queue: Queue.mainQueue())
             }
             self.readyDisposable.set(signal.start(next: { [weak self, weak controller, weak parentView] ready in
-                if let parentView = parentView {
+                if let parentView = parentView, let `self` = self {
                     for subview in parentView.subviews {
-                        if let view = subview  as? PopoverBackground {
+                        if let view = subview  as? PopoverBackground, self.isShown {
                             view.popover?.hide(false)
                         }
                     }
@@ -387,17 +387,24 @@ public func hasPopover(_ window:Window) -> Bool {
 }
 
 public func closeAllPopovers(for window: Window) {
+    
     while hasPopover(window) {
+        
+        while !window.sheets.isEmpty {
+            window.sheets.last?.orderOut(nil)
+        }
+        
         for subview in window.contentView!.subviews {
             if let subview = subview as? PopoverBackground, let popover = subview.popover {
                 popover.hide()
             }
         }
     }
+   
 }
 
 public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.2, static: Bool = false ) -> Void {
-    if let window = control.window as? Window {
+    if let _ = control.window as? Window {
         if let popover = controller.popover {
             if popover.isShown {
                 return

@@ -15,6 +15,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(BaseApplicationSettings.self, f: { BaseApplicationSettings(decoder: $0) })
     declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
     declareEncodable(LocalFileGifMediaResource.self, f: { LocalFileGifMediaResource(decoder: $0) })
+    declareEncodable(LocalFileVideoMediaResource.self, f: { LocalFileVideoMediaResource(decoder: $0) })
     declareEncodable(LocalFileArchiveMediaResource.self, f: { LocalFileArchiveMediaResource(decoder: $0) })
     declareEncodable(RecentUsedEmoji.self, f: { RecentUsedEmoji(decoder: $0) })
     declareEncodable(InstantViewAppearance.self, f: { InstantViewAppearance(decoder: $0) })
@@ -30,6 +31,13 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(EmojiSkinModifier.self, f: { AutoNightThemePreferences(decoder: $0) })
     declareEncodable(InstantPageStoredDetailsState.self, f: { InstantPageStoredDetailsState(decoder: $0) })
     declareEncodable(CachedChannelAdminIds.self, f: { CachedChannelAdminIds(decoder: $0) })
+    declareEncodable(DefaultWallpaper.self, f: { DefaultWallpaper(decoder: $0) })
+    declareEncodable(LaunchSettings.self, f: { LaunchSettings(decoder: $0)})
+    declareEncodable(AutoplayMediaPreferences.self, f: { AutoplayMediaPreferences(decoder: $0)})
+    declareEncodable(VoiceCallSettings.self, f: { VoiceCallSettings(decoder: $0)})
+    declareEncodable(LaunchNavigation.self, f: { LaunchNavigation(decoder: $0)})
+    declareEncodable(DownloadedFilesPaths.self, f: { DownloadedFilesPaths(decoder: $0)})
+    declareEncodable(DownloadedPath.self, f: { DownloadedPath(decoder: $0)})
     return
 }()
 

@@ -149,6 +149,7 @@ public class SplitView : View {
         }
     }
     
+    public var mustMinimisize: Bool = false
     
     public var canChangeState:Bool = true;
     public weak var delegate:SplitViewDelegate?
@@ -182,6 +183,7 @@ public class SplitView : View {
     public override var backgroundColor: NSColor {
         didSet {
             container.backgroundColor = backgroundColor
+            minimisizeOverlay.needsDisplay = true
         }
     }
 
@@ -274,7 +276,7 @@ public class SplitView : View {
         
         
         
-        if acceptLayout(prop: single) && canChangeState && state != .minimisize {
+        if acceptLayout(prop: single) && canChangeState && !mustMinimisize {
             if frame.width < single.max  {
                 if self.state != .single {
                     self.state = .single;
@@ -295,6 +297,8 @@ public class SplitView : View {
                 }
                 
             }
+        } else if mustMinimisize, self.state != .minimisize {
+            self.state = .minimisize
         }
         
         if forceNotice {

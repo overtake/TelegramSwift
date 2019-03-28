@@ -110,7 +110,7 @@ class ShortPeerRowItem: GeneralRowItem {
     var textInset:CGFloat {
         return inset.left + photoSize.width + 10.0 + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
     }
-    
+    let badgeNode: GlobalBadgeNode?
     let deleteInset:CGFloat
     
     let photoSize:NSSize
@@ -119,11 +119,11 @@ class ShortPeerRowItem: GeneralRowItem {
     private var titleNode:TextNode = TextNode()
     private var statusNode:TextNode = TextNode()
     
-    private var title:(TextNodeLayout, TextNode)?
-    private var status:(TextNodeLayout, TextNode)?
+    private(set) var title:(TextNodeLayout, TextNode)?
+    private(set) var status:(TextNodeLayout, TextNode)?
     
-    private var titleSelected:(TextNodeLayout, TextNode)?
-    private var statusSelected:(TextNodeLayout, TextNode)?
+    private(set) var titleSelected:(TextNodeLayout, TextNode)?
+    private(set) var statusSelected:(TextNodeLayout, TextNode)?
     
     let leftImage:CGImage?
     
@@ -137,8 +137,11 @@ class ShortPeerRowItem: GeneralRowItem {
     private var statusAttr:NSAttributedString?
     let inputActivity: PeerInputActivity?
     let drawLastSeparator:Bool
+    
+    let highlightOnHover: Bool
+    let alwaysHighlight: Bool
     private let contextMenuItems:()->[ContextMenuItem]
-    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}, inputActivity: PeerInputActivity? = nil) {
+    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false) {
         self.peer = peer
         self.contextMenuItems = contextMenuItems
         self.account = account
@@ -150,6 +153,9 @@ class ShortPeerRowItem: GeneralRowItem {
         } else {
             self.deleteInset = inset.left
         }
+        self.badgeNode = badgeNode
+        self.alwaysHighlight = alwaysHighlight
+        self.highlightOnHover = highlightOnHover
         self.interactionType = interactionType
         self.drawLastSeparator = drawLastSeparator
         self.drawSeparatorIgnoringInset = drawSeparatorIgnoringInset
@@ -164,7 +170,7 @@ class ShortPeerRowItem: GeneralRowItem {
         if isLookSavedMessage && account.peerId == peer.id {
             photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 15, photoSize.height - 15)))) |> map {($0, false)}
         }
-        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? L10n.peerSavedMessages : peer.displayTitle, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
+        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? L10n.peerSavedMessages : (compactText ? peer.compactDisplayTitle + (account.testingEnvironment ? " [🤖]" : "") : peer.displayTitle), color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
         
         if let titleAddition = titleAddition {
             _ = tAttr.append(string: titleAddition, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
@@ -225,9 +231,13 @@ class ShortPeerRowItem: GeneralRowItem {
             break
         }
         
+        if let _ = badgeNode {
+            addition += 40
+        }
+        
         if let titleAttr = titleAttr {
             title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right == 0 ? 10 : inset.right) - addition - textAdditionInset, 20), nil,false, .left)
-            titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - inset.right - addition - textAdditionInset, 20), nil,true, .left)
+            titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right == 0 ? 10 : inset.right) - addition - textAdditionInset, 20), nil,true, .left)
         }
         if let statusAttr = statusAttr {
             status = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right == 0 ? 10 : inset.right) - addition - textAdditionInset, 20), nil,false, .left)
@@ -243,5 +253,10 @@ class ShortPeerRowItem: GeneralRowItem {
     }
     override func viewClass() -> AnyClass {
         return ShortPeerRowView.self
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
 }

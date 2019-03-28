@@ -29,13 +29,11 @@ class PeerMediaRowItem: TableRowItem {
     
     private var entry:PeerMediaSharedEntry
     let message:Message
-    let account:Account
     let interface:ChatInteraction
     let automaticDownload: AutomaticMediaDownloadSettings
     
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry) {
         self.entry = object
-        self.account = account
         self.interface = interface
         if case let .messageEntry(message, automaticDownload) = object {
             self.message = message
@@ -48,29 +46,9 @@ class PeerMediaRowItem: TableRowItem {
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        if message.stableId == UINT32_MAX, let webpage = self.message.media[0] as? TelegramMediaWebpage {
-            let account = self.account
-            return readArticlesListPreferences(account.postbox) |> map { pref -> [ContextMenuItem] in
-                var items:[ContextMenuItem] = []
-                if let article = pref.list.first(where: {$0.id == webpage.webpageId}) {
-                    items.append(ContextMenuItem(article.percent != 100 ? L10n.articleMarkAsRead : L10n.articleMarkAsUnread, handler: {
-                        _ = updateReadArticlesPreferences(postbox: account.postbox, { pref -> ReadArticlesListPreferences in
-                            return pref.withUpdatedArticle(article.withUpdatedPercent(article.percent != 100 ? 100 : 0, force: true))
-                        }).start()
-                    }))
-                    items.append(ContextMenuItem(L10n.articleRemove, handler: {
-                        _ = updateReadArticlesPreferences(postbox: account.postbox, { pref -> ReadArticlesListPreferences in
-                            return pref.withRemovedArticles(article)
-                        }).start()
-                    }))
-                }
-                return items
-            }
-            
-            
-        }
+
         var items:[ContextMenuItem] = []
-        if canForwardMessage(message, account: account) {
+        if canForwardMessage(message, account: interface.context.account) {
             items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.forwardMessages([strongSelf.message.id])
@@ -78,7 +56,7 @@ class PeerMediaRowItem: TableRowItem {
             }))
         }
         
-        if canDeleteMessage(message, account: account) {
+        if canDeleteMessage(message, account: interface.context.account) {
             items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.deleteMessages([strongSelf.message.id])

@@ -15,10 +15,10 @@ import SwiftSignalKitMac
 
 
 private final class PreHistoryArguments {
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     fileprivate let preHistory:(Bool)->Void
-    init(account:Account, preHistory:@escaping(Bool)->Void) {
-        self.account = account
+    init(context: AccountContext, preHistory:@escaping(Bool)->Void) {
+        self.context = context
         self.preHistory = preHistory
     }
 }
@@ -147,15 +147,15 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
     private let stateValue = Atomic(value: PreHistoryControllerState())
     private let disposable = MetaDisposable()
     private let applyDisposable = MetaDisposable()
-    init(_ account: Account, peerId:PeerId) {
+    init(_ context: AccountContext, peerId:PeerId) {
         self.peerId = peerId
-        super.init(account)
+        super.init(context)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         
         let previous:Atomic<[AppearanceWrapperEntry<PreHistoryEntry>]> = Atomic(value: [])
@@ -167,14 +167,14 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
         }
         let initialSize = self.atomicSize
         
-        let arguments = PreHistoryArguments(account: account, preHistory: { enabled in
+        let arguments = PreHistoryArguments(context: context, preHistory: { enabled in
             updateState({$0.withUpdatedEnabled(enabled)})
         })
         
         let key = PostboxViewKey.cachedPeerData(peerId: peerId)
         
         
-        let signal: Signal<(TableUpdateTransition, PreHistoryControllerState, Bool), NoError> = combineLatest(account.postbox.combinedView(keys: [key]) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue) |> map { view, appearance, state in
+        let signal: Signal<(TableUpdateTransition, PreHistoryControllerState, Bool), NoError> = combineLatest(context.account.postbox.combinedView(keys: [key]) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue) |> map { view, appearance, state in
             
             let cachedData = view.views[key] as? CachedPeerDataView
             let entries = preHistoryEntries(cachedData: cachedData?.cachedPeerData as? CachedChannelData, isGrpup: peerId.namespace == Namespaces.Peer.CloudGroup, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
@@ -197,7 +197,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                 }
                 if let value = value, value != defaultValue {
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
-                        let signal = convertGroupToSupergroup(account: account, peerId: peerId)
+                        let signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                             |> map(Optional.init)
                             |> `catch` { _ -> Signal<PeerId?, NoError> in
                                 return .single(nil)
@@ -206,7 +206,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                                 guard let upgradedPeerId = upgradedPeerId else {
                                     return .single(nil)
                                 }
-                                return updateChannelHistoryAvailabilitySettingsInteractively(postbox: account.postbox, network: account.network, accountStateManager: account.stateManager, peerId: upgradedPeerId, historyAvailableForNewMembers: value)
+                                return updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: upgradedPeerId, historyAvailableForNewMembers: value)
                                     |> mapToSignal { _ -> Signal<PeerId?, NoError> in
                                         return .complete()
                                     }
@@ -216,7 +216,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                         
                         self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
                     } else {
-                        let signal: Signal<PeerId?, NoError> = updateChannelHistoryAvailabilitySettingsInteractively(postbox: account.postbox, network: account.network, accountStateManager: account.stateManager, peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> map { _ in return nil }
+                        let signal: Signal<PeerId?, NoError> = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> map { _ in return nil }
                         self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
                     }
                 } else {
@@ -226,12 +226,6 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
             }, for: .SingleClick)
             
         }))
-        
-        //            _ = showModalProgress(signal: updateChannelHistoryAvailabilitySettingsInteractively(postbox: self.account.postbox, network: self.account.network, accountStateManager: self.account.stateManager, peerId: self.peerId, historyAvailableForNewMembers: enabled), for: mainWindow).start()
-
-        
-        //        onComplete.set(statePromise.get() |> filter {$0.enabled != nil} |> map {$0.enabled!})
-
     }
     
     var doneButton:Control? {

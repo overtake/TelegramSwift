@@ -137,12 +137,12 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
     return tgvoip::VoIPController::GetConnectionMaxLayer();
 }
 
--(NSArray<AudioDevice *> *)inputDevices {
++(NSArray<AudioDevice *> *)inputDevices {
     
-    std::vector<tgvoip::AudioInputDevice> vector = _controller.controller->EnumerateAudioInputs();
+    std::vector<tgvoip::AudioInputDevice> vector = tgvoip::VoIPController::EnumerateAudioInputs();
     
     NSMutableArray <AudioDevice *> * devices = [[NSMutableArray alloc] init];
-    [devices addObject:[[AudioDevice alloc] initWithDeviceId:@"default" deviceName:@"Default"]];
+    [devices addObject:[[AudioDevice alloc] initWithDeviceId:nil deviceName:@"Default"]];
     for(std::vector<tgvoip::AudioInputDevice>::iterator it = vector.begin(); it != vector.end(); ++it) {
         std::string deviceId = it->id;
         std::string deviceName = it->displayName;
@@ -152,12 +152,12 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
     return devices;
 }
 
--(NSArray<AudioDevice *> *)outputDevices {
++(NSArray<AudioDevice *> *)outputDevices {
     
-    std::vector<tgvoip::AudioOutputDevice> vector = _controller.controller->EnumerateAudioOutputs();
+    std::vector<tgvoip::AudioOutputDevice> vector = tgvoip::VoIPController::EnumerateAudioOutputs();
     
     NSMutableArray <AudioDevice *> * devices = [[NSMutableArray alloc] init];
-    [devices addObject:[[AudioDevice alloc] initWithDeviceId:@"default" deviceName:@"Default"]];
+    [devices addObject:[[AudioDevice alloc] initWithDeviceId:nil deviceName:@"Default"]];
     for(std::vector<tgvoip::AudioOutputDevice>::iterator it = vector.begin(); it != vector.end(); ++it) {
         std::string deviceId = it->id;
         std::string deviceName = it->displayName;
@@ -180,6 +180,10 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
 }
 -(void)setCurrentOutputDeviceId:(NSString *)deviceId {
     _controller.controller->SetCurrentAudioOutput(std::string([deviceId UTF8String]));
+}
+
+-(void)setMutedOtherSounds:(BOOL)mute {
+    _controller.controller->SetAudioOutputDuckingEnabled(mute);
 }
 
 //

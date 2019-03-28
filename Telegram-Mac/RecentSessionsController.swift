@@ -15,12 +15,12 @@ import PostboxMac
 import TelegramCoreMac
 
 private final class RecentSessionsControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let removeSession: (Int64) -> Void
     let terminateOthers:() -> Void
-    init(account: Account, removeSession: @escaping (Int64) -> Void, terminateOthers: @escaping()->Void) {
-        self.account = account
+    init(context: AccountContext, removeSession: @escaping (Int64) -> Void, terminateOthers: @escaping()->Void) {
+        self.context = context
         self.removeSession = removeSession
         self.terminateOthers = terminateOthers
     }
@@ -322,9 +322,9 @@ private func prepareSessions(left:[AppearanceWrapperEntry<RecentSessionsEntry>],
 
 class RecentSessionsController : TableViewController {
     private let activeSessions: [RecentAccountSession]?
-    init(_ account: Account, activeSessions: [RecentAccountSession]?) {
+    init(_ context: AccountContext, activeSessions: [RecentAccountSession]?) {
         self.activeSessions = activeSessions
-        super.init(account)
+        super.init(context)
     }
     
     override func viewDidLoad() {
@@ -333,7 +333,7 @@ class RecentSessionsController : TableViewController {
         let updateState: ((RecentSessionsControllerState) -> RecentSessionsControllerState) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
         }
-        let account = self.account
+        let context = self.context
         let initialSize = self.atomicSize
         let actionsDisposable = DisposableSet()
         
@@ -342,7 +342,7 @@ class RecentSessionsController : TableViewController {
         
         let sessionsPromise = Promise<[RecentAccountSession]?>()
         
-        let arguments = RecentSessionsControllerArguments(account: account, removeSession: { sessionId in
+        let arguments = RecentSessionsControllerArguments(context: context, removeSession: { sessionId in
             updateState {
                 return $0.withUpdatedRemovingSessionId(sessionId)
             }
@@ -367,13 +367,7 @@ class RecentSessionsController : TableViewController {
                 } |> mapError {_ in return .generic}
 
             
-            removeSessionDisposable.set((terminateAccountSession(account: account, hash: sessionId) |> then(applySessions) |> deliverOnMainQueue).start(error: { error in
-                switch error {
-                case .freshReset:
-                    alert(for: mainWindow, info: L10n.recentSessionsErrorFreshReset)
-                default:
-                    break
-                }
+            removeSessionDisposable.set((terminateAccountSession(account: context.account, hash: sessionId) |> then(applySessions) |> deliverOnMainQueue).start(error: { _ in
                 updateState {
                     return $0.withUpdatedRemovingSessionId(nil)
                 }
@@ -383,10 +377,10 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            _ = (confirmSignal(for: mainWindow, information: tr(L10n.recentSessionsConfirmTerminateOthers)) |> filter {$0} |> map {_ in} |> mapToSignal{terminateOtherAccountSessions(account: account)}).start()
+            _ = (confirmSignal(for: mainWindow, information: tr(L10n.recentSessionsConfirmTerminateOthers)) |> filter {$0} |> map {_ in} |> mapToSignal{terminateOtherAccountSessions(account: context.account)}).start()
         })
         
-        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(self.activeSessions) |> then(requestRecentAccountSessions(account: account) |> map { Optional($0) })
+        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(self.activeSessions) |> then(requestRecentAccountSessions(account: context.account) |> map { Optional($0) })
         
         sessionsPromise.set(sessionsSignal)
         

@@ -37,8 +37,8 @@ public final class EntertainmentInteractions {
 class EntertainmentViewController: NavigationViewController {
     private let languageDisposable:MetaDisposable = MetaDisposable()
 
-    private var account:Account
-    private var chatInteraction:ChatInteraction?
+    private let context: AccountContext
+    private(set) var chatInteraction:ChatInteraction?
     private(set) var interactions:EntertainmentInteractions?
     private let cap:SidebarCapViewController
     
@@ -84,13 +84,13 @@ class EntertainmentViewController: NavigationViewController {
         self.viewWillDisappear(false)
     }
     
-    init(size:NSSize, account:Account) {
+    init(size:NSSize, context:AccountContext) {
         
-        self.account = account
-        self.cap = SidebarCapViewController(account: account)
-        self.emoji = EmojiViewController(account)
-        self.stickers = StickersViewController(account:account)
-        self.gifs = GIFViewController(account: account)
+        self.context = context
+        self.cap = SidebarCapViewController(context)
+        self.emoji = EmojiViewController(context)
+        self.stickers = StickersViewController(context)
+        self.gifs = GIFViewController(context)
         
         var items:[SectionControllerItem] = []
         items.append(SectionControllerItem(title:{L10n.entertainmentEmoji.uppercased()}, controller: emoji))

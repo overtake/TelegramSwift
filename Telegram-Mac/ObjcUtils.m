@@ -9,7 +9,7 @@
 #import "ObjcUtils.h"
 #import <CommonCrypto/CommonCrypto.h>
 #import <AVFoundation/AVFoundation.h>
-
+#import <Carbon/Carbon.h>
 
 @implementation OpenWithObject
 
@@ -148,7 +148,8 @@
              {
                  @try {
                      NSTextCheckingType type = [match resultType];
-                     if (type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber)
+                     NSString *scheme = [[[match URL] scheme] lowercaseString];
+                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || scheme == nil))
                      {
                          [results addObject:[NSValue valueWithRange:match.range]];
                      }
@@ -1303,5 +1304,25 @@ inline int colorIndexForGroupId(int64_t groupId)
     colorIndex = ABS(digest[ABS(groupId % 16)]) % numColors;
     
     return colorIndex;
+}
+
+NSArray<NSString *> * __nonnull currentAppInputSource()
+{
+    
+    CFArrayRef inputSourcesList = TISCreateInputSourceList(NULL, false);
+    
+    CFIndex inputSourcesCount = CFArrayGetCount(inputSourcesList);
+    
+    NSMutableArray<NSString *> *inputs = [[NSMutableArray alloc] init];
+    
+    for (int i = 0; i < inputSourcesCount; i++) {
+        NSArray* list = (__bridge NSArray *)(TISGetInputSourceProperty(CFArrayGetValueAtIndex(inputSourcesList, i), kTISPropertyInputSourceLanguages));
+        if ([list count] > 0 && list[0] != nil) {
+            [inputs addObject:list[0]];
+        }
+        
+    }
+    
+    return inputs;
 }
 

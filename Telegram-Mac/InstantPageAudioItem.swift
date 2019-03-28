@@ -34,7 +34,7 @@ final class InstantPageAudioItem: InstantPageItem {
     }
     
     func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
-        return InstantPageAudioView(account: arguments.account, media: media)
+        return InstantPageAudioView(context: arguments.context, media: media)
     }
     
     func matchesAnchor(_ anchor: String) -> Bool {

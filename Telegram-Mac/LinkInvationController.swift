@@ -28,29 +28,6 @@ private enum GroupLinkInvationEntryStableId : Hashable {
             return 1000000
         }
     }
-    
-    static func ==(lhs:GroupLinkInvationEntryStableId, rhs:GroupLinkInvationEntryStableId) -> Bool {
-        switch lhs {
-        case let .section(id):
-            if case .section(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .index(id):
-            if case .index(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .loading:
-            if case .loading = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum GroupLinkInvationEntry : Identifiable, Comparable {
@@ -136,13 +113,13 @@ private func <(lhs:GroupLinkInvationEntry, rhs:GroupLinkInvationEntry) -> Bool {
 }
 
 final class GroupLinkInvationArguments {
-    let account:Account
+    let context: AccountContext
     let copy:()->Void
     let share:()->Void
     let revoke:()->Void
     
-    init(account:Account, copy:@escaping()->Void, share:@escaping()->Void, revoke:@escaping()->Void) {
-        self.account = account
+    init(context: AccountContext, copy:@escaping()->Void, share:@escaping()->Void, revoke:@escaping()->Void) {
+        self.context = context
         self.copy = copy
         self.share = share
         self.revoke = revoke
@@ -178,21 +155,21 @@ private func groupInvationEntries(view:PeerView, arguments:GroupLinkInvationArgu
         
         entries.append(.link(sectionId: sectionId, uniqueIdx: uniqueId, text: link))
         uniqueId += 1
-        entries.append(.text(sectionId: sectionId, uniqueIdx: uniqueId, text: isGroup ? tr(L10n.groupInvationGroupDescription) : tr(L10n.groupInvationChannelDescription)))
+        entries.append(.text(sectionId: sectionId, uniqueIdx: uniqueId, text: isGroup ? L10n.groupInvationGroupDescription : L10n.groupInvationChannelDescription))
         uniqueId += 1
         
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
         
-        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(L10n.groupInvationCopyLink), callback: {
+        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: L10n.groupInvationCopyLink, callback: {
             arguments.copy()
         }))
         uniqueId += 1
-        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(L10n.groupInvationRevoke), callback: {
+        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: L10n.groupInvationRevoke, callback: {
             arguments.revoke()
         }))
         uniqueId += 1
-        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: tr(L10n.groupInvationShare), callback: {
+        entries.append(.action(sectionId: sectionId, uniqueIdx: uniqueId, text: L10n.groupInvationShare, callback: {
             arguments.share()
         }))
         uniqueId += 1
@@ -231,36 +208,36 @@ class LinkInvationController: TableViewController {
     private let revokeLinkDisposable = MetaDisposable()
     private let disposable:MetaDisposable = MetaDisposable()
     
-    init(account:Account, peerId:PeerId) {
+    init(_ context: AccountContext, peerId:PeerId) {
         self.peerId = peerId
-        super.init(account)
+        super.init(context)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         
         let link:Atomic<String?> = Atomic(value: nil)
         let peer:Atomic<Peer?> = Atomic(value: nil)
 
         
-        let arguments = GroupLinkInvationArguments(account: account, copy: { [weak self] in
+        let arguments = GroupLinkInvationArguments(context: context, copy: { [weak self] in
             if let link = link.modify({$0}) {
                 copyToClipboard(link)
                 self?.show(toaster: ControllerToaster(text: tr(L10n.shareLinkCopied)))
             }
         }, share: {
             if let link = link.modify({$0}) {
-                showModal(with: ShareModalController(ShareLinkObject(account, link: link)), for: mainWindow)
+                showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: mainWindow)
             }
         }, revoke: { [weak self] in
-            if let peer = peer.modify({$0}), let account = self?.account {
-                let info = peer.isChannel ? tr(L10n.linkInvationChannelConfirmRevoke) : tr(L10n.linkInvationGroupConfirmRevoke)
-                let signal = confirmSignal(for: mainWindow, information: info, okTitle: tr(L10n.linkInvationConfirmOk))
+            if let peer = peer.modify({$0}), let context = self?.context {
+                let info = peer.isChannel ? L10n.linkInvationChannelConfirmRevoke : L10n.linkInvationGroupConfirmRevoke
+                let signal = confirmSignal(for: mainWindow, information: info, okTitle: L10n.linkInvationConfirmOk)
                     |> filter {$0}
                     |> mapToSignal { _ -> Signal<Void, NoError> in
-                        return ensuredExistingPeerExportedInvitation(account: account, peerId: peer.id, revokeExisted: true)
+                        return ensuredExistingPeerExportedInvitation(account: context.account, peerId: peer.id, revokeExisted: true)
                     }
                 self?.revokeLinkDisposable.set(signal.start())
             }
@@ -268,7 +245,7 @@ class LinkInvationController: TableViewController {
         
         let previous:Atomic<[GroupLinkInvationEntry]> = Atomic(value: [])
         let atomicSize = self.atomicSize
-        let apply = account.viewTracker.peerView( peerId) |> deliverOn(prepareQueue) |> map { view -> TableUpdateTransition in
+        let apply = context.account.viewTracker.peerView( peerId) |> deliverOn(prepareQueue) |> map { view -> TableUpdateTransition in
             
             let exportLink:String?
             if let cachedData = view.cachedData as? CachedChannelData {
@@ -291,7 +268,7 @@ class LinkInvationController: TableViewController {
             self?.readyOnce()
         }))
         
-        revokeLinkDisposable.set(ensuredExistingPeerExportedInvitation(account: account, peerId: peerId).start())
+        revokeLinkDisposable.set(ensuredExistingPeerExportedInvitation(account: context.account, peerId: peerId).start())
     }
     
     deinit {

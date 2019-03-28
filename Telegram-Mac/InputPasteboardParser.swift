@@ -112,8 +112,9 @@ class InputPasteboardParser: NSObject {
         return true
     }
     
-    public class func proccess(pasteboard:NSPasteboard, account:Account, chatInteraction:ChatInteraction, window:Window) -> Bool {
+    public class func proccess(pasteboard:NSPasteboard, chatInteraction:ChatInteraction, window:Window) -> Bool {
         let items = pasteboard.pasteboardItems
+        
         
         if let items = items, !items.isEmpty {
             var files:[URL] = []
@@ -130,7 +131,17 @@ class InputPasteboardParser: NSObject {
             
             if files.isEmpty {
                 if let images = pasteboard.readObjects(forClasses: [NSImage.self], options: nil) as? [NSImage], !images.isEmpty {
-                    image = images[0]
+                    
+                    if let representation = images[0].representations.first as? NSPDFImageRep {
+                        let url = URL(fileURLWithPath: NSTemporaryDirectory() + "ios_scan_\(arc4random()).pdf")
+                        
+                        try? representation.pdfRepresentation.write(to: url)
+                        
+                        files.append(url)
+                        image = nil
+                    } else {
+                        image = images[0]
+                    }
                 }
             }
             
@@ -163,24 +174,24 @@ class InputPasteboardParser: NSObject {
             }
             
             if files.count == 1, let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
-                _ = (Sender.generateMedia(for: MediaSenderContainer(path: files[0].path, isFile: false), account: chatInteraction.account) |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
+                _ = (Sender.generateMedia(for: MediaSenderContainer(path: files[0].path, isFile: false), account: chatInteraction.context.account) |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
                     chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                 })
                 return false
             } else if let image = image, let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
-                _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: chatInteraction.account)} |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
+                _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: chatInteraction.context.account)} |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
                     chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                 })
                 return false
             }
             
             if !files.isEmpty {
-                showModal(with:PreviewSenderController(urls: files, account:account, chatInteraction:chatInteraction), for:window)
+                showModal(with:PreviewSenderController(urls: files, chatInteraction:chatInteraction), for:window)
                 
                 return false
             } else if let image = image {
                 _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { (path) in
-                    showModal(with:PreviewSenderController(urls: [URL(fileURLWithPath: path)], account:account, chatInteraction:chatInteraction), for:window)
+                    showModal(with:PreviewSenderController(urls: [URL(fileURLWithPath: path)], chatInteraction: chatInteraction), for: window)
                 })
                 return false
             }

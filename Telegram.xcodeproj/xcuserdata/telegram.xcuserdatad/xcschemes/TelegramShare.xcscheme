@@ -38,7 +38,7 @@
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Release AppStore"
+      buildConfiguration = "ReleaseAppStore"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
@@ -57,7 +57,7 @@
       </AdditionalOptions>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release AppStore"
+      buildConfiguration = "ReleaseAppStore"
       selectedDebuggerIdentifier = ""
       selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
       launchStyle = "0"
@@ -69,8 +69,8 @@
       launchAutomaticallySubstyle = "2">
       <RemoteRunnable
          runnableDebuggingMode = "0"
-         BundleIdentifier = "com.apple.Safari"
-         RemotePath = "/Applications/Safari.app">
+         BundleIdentifier = "com.apple.Photos"
+         RemotePath = "/Applications/Photos.app">
       </RemoteRunnable>
       <MacroExpansion>
          <BuildableReference
@@ -85,7 +85,7 @@
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release AppStore"
+      buildConfiguration = "ReleaseAppStore"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -103,10 +103,10 @@
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Release AppStore">
+      buildConfiguration = "ReleaseAppStore">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "Release AppStore"
+      buildConfiguration = "ReleaseAppStore"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

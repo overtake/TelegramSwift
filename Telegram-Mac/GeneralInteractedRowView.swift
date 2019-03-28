@@ -64,14 +64,14 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             
             switch item.type {
-            case let .context(value), let .nextContext(value):
+            case let .context(value), let .nextContext(value), let .contextSelector(value, _):
                 if textView == nil {
                     textView = TextView()
                     textView?.animates = false
                     textView?.userInteractionEnabled = false
                     addSubview(textView!)
                 }
-                let layout = TextViewLayout(.initialize(string: value, color: isSelect ? .white : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+                let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? .white : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
                 
                 textView?.set(layout: layout)
                 
@@ -86,18 +86,30 @@ class GeneralInteractedRowView: GeneralRowView {
             
             if item.enabled {
                 overlay.set(handler:{ [weak self, weak item] _ in
-                    item?.action()
-                    if let item = item {
+                    
+                    guard let item = item, let `self` = self else {return}
+                    
+                    if let textView = self.textView {
                         switch item.type {
-                        case let .switchable(enabled):
-                            if item.autoswitch {
-                                item.type = .switchable(!enabled)
-                                self?.switchView?.setIsOn(!enabled)
-                            }
-                            
+                        case let .contextSelector(_, items):
+                            showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
+                            return
                         default:
                             break
                         }
+                    }
+                    
+                    
+                    item.action()
+                    switch item.type {
+                    case let .switchable(enabled):
+                        if item.autoswitch {
+                            item.type = .switchable(!enabled)
+                            self.switchView?.setIsOn(!enabled)
+                        }
+                        
+                    default:
+                        break
                     }
                    
                 }, for: .SingleClick)
@@ -187,7 +199,10 @@ class GeneralInteractedRowView: GeneralRowView {
             
             let t = item.isSelected ? item.activeThumb : item.thumb
             if let thumb = t {
-                let f = focus(thumb.thumb.backingSize)
+                var f = focus(thumb.thumb.backingSize)
+                if item.descLayout != nil {
+                    f.origin.y = 11
+                }
                 let icon = thumb.thumb //isSelect ? ControlStyle(highlightColor: .white).highlight(image: thumb.thumb) : 
                 ctx.draw(icon, in: NSMakeRect(item.inset.left, f.minY, f.width, f.height))
             }

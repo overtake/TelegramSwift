@@ -12,13 +12,28 @@ import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
 
+private let cacheThreadPool = ThreadPool(threadCount: 3, threadPriority: 0.1)
+
+
 public func fetchCachedResourceRepresentation(account: Account, resource: MediaResource, representation: CachedMediaResourceRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     if let representation = representation as? CachedStickerAJpegRepresentation {
         return fetchCachedStickerAJpegRepresentation(account: account, resource: resource, representation: representation)
     } else if let representation = representation as? CachedScaledImageRepresentation {
         return fetchCachedScaledImageRepresentation(account: account, resource: resource, representation: representation)
-    } else if let representation = representation as? CachedVideoFirstFrameRepresentation {
-        return fetchCachedVideoFirstFrameRepresentation(account: account, resource: resource, representation: representation)
+    } else if representation is CachedVideoFirstFrameRepresentation {
+        return account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
+            |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                if data.complete {
+                    return fetchCachedVideoFirstFrameRepresentation(account: account, resource: resource, resourceData: data)
+                        |> `catch` { _ -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                            return .complete()
+                    }
+                } else if let size = resource.size {
+                    return videoFirstFrameData(account: account, resource: resource, chunkSize: min(size, 192 * 1024))
+                } else {
+                    return .complete()
+                }
+        }
     } else if let representation = representation as? CachedScaledVideoFirstFrameRepresentation {
         return fetchCachedScaledVideoFirstFrameRepresentation(account: account, resource: resource, representation: representation)
     } else if let representation = representation as? CachedBlurredWallpaperRepresentation {
@@ -34,9 +49,92 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
     return .never()
 }
 
+
+public func fetchCachedSharedResourceRepresentation(accountManager: AccountManager, resource: MediaResource, representation: CachedMediaResourceRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    fatalError()
+}
+
+
+
 private func accountRecordIdPathName(_ id: AccountRecordId) -> String {
     return "account-\(UInt64(bitPattern: id.int64))"
 }
+
+
+public enum FetchVideoFirstFrameError {
+    case generic
+}
+
+
+private func videoFirstFrameData(account: Account, resource: MediaResource, chunkSize: Int) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    if let size = resource.size {
+        return account.postbox.mediaBox.resourceData(resource, size: size, in: 0 ..< min(size, chunkSize))
+            |> mapToSignal { _ -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                 return account.postbox.mediaBox.resourceData(resource, option: .incremental(waitUntilFetchStatus: false), attemptSynchronously: false)
+                    |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                        
+                        return fetchCachedVideoFirstFrameRepresentation(account: account, resource: resource, resourceData: data)
+                            |> `catch` { _ -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                                if chunkSize > size {
+                                    return .complete()
+                                } else {
+                                    return videoFirstFrameData(account: account, resource: resource, chunkSize: chunkSize + chunkSize)
+                                }
+                        }
+                }
+        }
+    } else {
+        return .complete()
+    }
+}
+
+
+
+private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource: MediaResource, resourceData: MediaResourceData) -> Signal<CachedMediaResourceRepresentationResult, FetchVideoFirstFrameError> {
+    return Signal { subscriber in
+        let tempFilePath = NSTemporaryDirectory() + "\(arc4random()).mov"
+        do {
+            let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
+            try FileManager.default.linkItem(atPath: resourceData.path, toPath: tempFilePath)
+            
+            let asset = AVAsset(url: URL(fileURLWithPath: tempFilePath))
+            let imageGenerator = AVAssetImageGenerator(asset: asset)
+            imageGenerator.maximumSize = CGSize(width: 800.0, height: 800.0)
+            imageGenerator.appliesPreferredTrackTransform = true
+            
+            let fullSizeImage = try imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
+            
+            
+            var randomId: Int64 = 0
+            arc4random_buf(&randomId, 8)
+            let path = NSTemporaryDirectory() + "\(randomId)"
+            let url = URL(fileURLWithPath: path)
+            
+            if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                
+                let colorQuality: Float = 0.6
+                
+                let options = NSMutableDictionary()
+                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                
+                CGImageDestinationAddImage(colorDestination, fullSizeImage, options as CFDictionary)
+                if CGImageDestinationFinalize(colorDestination) {
+                    subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                    subscriber.putCompletion()
+                }
+            }
+        } catch {
+            let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
+            subscriber.putError(.generic)
+            subscriber.putCompletion()
+        }
+        return EmptyDisposable
+        } |> runOn(Queue.concurrentDefaultQueue())
+}
+
+
+
 
 private func fetchCachedStickerAJpegRepresentation(account: Account, resource: MediaResource, representation: CachedStickerAJpegRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     return account.postbox.mediaBox.resourceData(resource) |> mapToSignal { resourceData in
@@ -128,7 +226,7 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
                 }
             }
             return EmptyDisposable
-        } |> runOn(account.graphicsThreadPool)
+        } |> runOn(cacheThreadPool)
     }
 }
 
@@ -146,7 +244,9 @@ private func fetchCachedScaledImageRepresentation(account: Account, resource: Me
                     
                     let colorImage = generateImage(size, contextGenerator: { size, context in
                         context.setBlendMode(.copy)
-                        context.draw(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: CGRect(origin: CGPoint(), size: size))
+                        if let image = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                            context.draw(image, in: CGRect(origin: CGPoint(), size: size))
+                        }
                     })!
                     
                     if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
@@ -166,56 +266,44 @@ private func fetchCachedScaledImageRepresentation(account: Account, resource: Me
                 }
             }
             return EmptyDisposable
-        } |> runOn(account.graphicsThreadPool)
+        } |> runOn(cacheThreadPool)
     }
 }
 
 private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource: MediaResource, representation: CachedVideoFirstFrameRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
-    return account.postbox.mediaBox.resourceData(resource) |> mapToSignal { resourceData in
-        return Signal { subscriber in
-            if resourceData.complete {
-                let tempFilePath = NSTemporaryDirectory() + "\(arc4random()).mov"
-                
-                do {
-                    let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
-                    try FileManager.default.linkItem(atPath: resourceData.path, toPath: tempFilePath)
-                    
-                    let asset = AVAsset(url: URL(fileURLWithPath: tempFilePath))
-                    let imageGenerator = AVAssetImageGenerator(asset: asset)
-                    imageGenerator.maximumSize = CGSize(width: 800.0, height: 800.0)
-                    imageGenerator.appliesPreferredTrackTransform = true
-                    let fullSizeImage = try imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
-                    
-                    var randomId: Int64 = 0
-                    arc4random_buf(&randomId, 8)
-                    let path = NSTemporaryDirectory() + "\(randomId)"
-                    let url = URL(fileURLWithPath: path)
-                    
-                    if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
-                        CGImageDestinationSetProperties(colorDestination, nil)
-                        
-                        let colorQuality: Float = 0.6
-                        
-                        let options = NSMutableDictionary()
-                        options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-                        
-                        CGImageDestinationAddImage(colorDestination, fullSizeImage, options as CFDictionary)
-                        if CGImageDestinationFinalize(colorDestination) {
-                            subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
-                            subscriber.putCompletion()
-                        }
-                    }
-                    
-                    subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
-                    subscriber.putCompletion()
-                } catch (let e) {
-                    print("\(e)")
-                }
+    return account.postbox.mediaBox.resourceRangesStatus(resource) |> mapToSignal { _ in
+        return account.postbox.mediaBox.resourceData(resource) |> take(1)
+    } |> runOn(cacheThreadPool) |> mapToSignal { resourceData in
+        let tempFilePath = NSTemporaryDirectory() + "\(resourceData.path.nsstring.lastPathComponent).mp4"
+        let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
+        try? FileManager.default.linkItem(atPath: resourceData.path, toPath: tempFilePath)
+        
+        let asset = AVAsset(url: URL(fileURLWithPath: tempFilePath))
+        let imageGenerator = AVAssetImageGenerator(asset: asset)
+        imageGenerator.maximumSize = CGSize(width: 800.0, height: 800.0)
+        imageGenerator.appliesPreferredTrackTransform = true
+        let fullSizeImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
+        
+        var randomId: Int64 = 0
+        arc4random_buf(&randomId, 8)
+        let path = NSTemporaryDirectory() + "\(randomId)"
+        let url = URL(fileURLWithPath: path)
+        
+        if let fullSizeImage = fullSizeImage, let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+            CGImageDestinationSetProperties(colorDestination, nil)
+            
+            let colorQuality: Float = 0.6
+            
+            let options = NSMutableDictionary()
+            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+            
+            CGImageDestinationAddImage(colorDestination, fullSizeImage, options as CFDictionary)
+            if CGImageDestinationFinalize(colorDestination) {
+                return .single(CachedMediaResourceRepresentationResult(temporaryPath: path))
             }
-            return EmptyDisposable
-            } |> runOn(account.graphicsThreadPool)
+        }
+        return .never()
     }
-    
 }
 
 
@@ -254,7 +342,7 @@ private func fetchCachedScaledVideoFirstFrameRepresentation(account: Account, re
                     }
                 }
                 return EmptyDisposable
-            }) |> runOn(account.graphicsThreadPool)
+            }) |> runOn(cacheThreadPool)
         }
     }
     
@@ -271,7 +359,7 @@ private func fetchCachedBlurredWallpaperRepresentation(account: Account, resourc
                 let path = NSTemporaryDirectory() + "\(randomId)"
                 let url = URL(fileURLWithPath: path)
                 
-                if let colorImage = blurredImage(image, radius: 80), let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                if let colorImage = blurredImage(image, radius: 70), let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
                     CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
                     
                     let colorQuality: Float = 0.5
@@ -288,5 +376,5 @@ private func fetchCachedBlurredWallpaperRepresentation(account: Account, resourc
             }
         }
         return EmptyDisposable
-    }) |> runOn(account.graphicsThreadPool)
+    }) |> runOn(cacheThreadPool)
 }

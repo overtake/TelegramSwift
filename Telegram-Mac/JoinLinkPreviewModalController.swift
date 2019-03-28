@@ -117,7 +117,7 @@ private class JoinLinkPreviewView : View {
 
 class JoinLinkPreviewModalController: ModalViewController {
 
-    private let account:Account
+    private let context:AccountContext
     private let join:ExternalJoiningChatState
     private let joinhash:String
     private let interaction:(PeerId?)->Void
@@ -126,7 +126,7 @@ class JoinLinkPreviewModalController: ModalViewController {
         switch join {
         case let .invite(title: title, image, memberCount, participants):
             let peer = TelegramGroup(id: PeerId(namespace: 0, id: 0), title: title, photo: image.flatMap { [$0] } ?? [], participantCount: Int(memberCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
-                        genericView.update(with: peer, account: account, participants: participants, groupUserCount: memberCount)
+                        genericView.update(with: peer, account: context.account, participants: participants, groupUserCount: memberCount)
         default:
             break
         }
@@ -141,8 +141,8 @@ class JoinLinkPreviewModalController: ModalViewController {
         return JoinLinkPreviewView.self
     }
     
-    init(_ account:Account, hash:String, join:ExternalJoiningChatState, interaction:@escaping(PeerId?)->Void) {
-        self.account = account
+    init(_ context: AccountContext, hash:String, join:ExternalJoiningChatState, interaction:@escaping(PeerId?)->Void) {
+        self.context = context
         self.join = join
         self.joinhash = hash
         self.interaction = interaction
@@ -163,7 +163,7 @@ class JoinLinkPreviewModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: L10n.joinLinkJoin, accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
-                _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.account), for: window).start(next: { [weak strongSelf] (peerId) in
+                _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.context.account), for: window).start(next: { [weak strongSelf] (peerId) in
                     strongSelf?.interaction(peerId)
                     self?.close()
                 })

@@ -50,7 +50,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
     private weak var delegate:InteractionContentViewProtocol?
     
     private var item:QuickLookPreviewItem!
-    private var account:Account!
+    private var context: AccountContext!
     private var media:Media!
     private var ready:Promise<(String?,String?)> = Promise()
     private let disposable:MetaDisposable = MetaDisposable()
@@ -62,8 +62,8 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         super.init()
     }
     
-    public func show(account:Account, with media:Media, stableId:ChatHistoryEntryId?,  _ delegate:InteractionContentViewProtocol? = nil) {
-        self.account = account
+    public func show(context: AccountContext, with media:Media, stableId:ChatHistoryEntryId?,  _ delegate:InteractionContentViewProtocol? = nil) {
+        self.context = context
         self.media = media
         self.delegate = delegate
         self.stableId = stableId
@@ -86,15 +86,15 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
                 forceExtension = ext
             }
             
-            signal = downloadFilePath(file, account.postbox) |> mapToSignal { data in
-                return copyToDownloads(file, postbox: account.postbox) |> map {
+            signal = downloadFilePath(file, context.account.postbox) |> mapToSignal { data in
+                return copyToDownloads(file, postbox: context.account.postbox) |> map {
                     return  (Optional(data.1.nsstring.deletingPathExtension), Optional(data.1.nsstring.pathExtension))
                 }
             }
         } else if let image = media as? TelegramMediaImage {
             fileResource = largestImageRepresentation(image.representations)?.resource
             if let fileResource = fileResource {
-                signal = combineLatest(account.postbox.mediaBox.resourceData(fileResource), resourceType(mimeType: mimeType))
+                signal = combineLatest(context.account.postbox.mediaBox.resourceData(fileResource), resourceType(mimeType: mimeType))
                     |> mapToSignal({ (data) -> Signal<(String?,String?), NoError> in
                         
                         return .single((data.0.path, forceExtension ?? data.1))
@@ -199,7 +199,7 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         if isOpened() {
             panel.orderOut(nil)
         }
-        self.account = nil
+        self.context = nil
         self.media = nil
         self.stableId = nil
         self.disposable.set(nil)

@@ -179,14 +179,39 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         }
     }
     
+    
+    
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             if let inputActivities = inputActivities  {
                 activities.update(with: inputActivities, for: max(frame.width - 80, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background), layout: { [weak self] show in
-                    self?.needsLayout = true
-                    self?.hiddenStatus = show
-                    self?.setNeedsDisplay()
-                    self?.activities.view?.isHidden = !show
+                    guard let `self` = self else { return }
+                    self.needsLayout = true
+                    self.hiddenStatus = show
+                    self.setNeedsDisplay()
+                    if let view = self.activities.view {
+                        if self.animates {
+                            if show {
+                                if view.isHidden {
+                                    
+                                }
+                                view.isHidden = false
+                                view.change(opacity: 1, duration: 0.2)
+                            } else {
+                                view.change(opacity: 0, completion: { [weak view] completed in
+                                    if completed {
+                                        view?.isHidden = true
+                                    }
+                                })
+                            }
+                           
+                        } else {
+                            view.layer?.opacity = 1
+                            view.layer?.removeAllAnimations()
+                            view.isHidden = !show
+                        }
+                    }
+                    
                 })
             } else {
                 activities.clean()
@@ -206,16 +231,18 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         var layoutChanged:(()->Void)?
         
-        badgeNode = GlobalBadgeNode(chatInteraction.account, excludePeerId: self.chatInteraction.peerId, layoutChanged: {
+        badgeNode = GlobalBadgeNode(chatInteraction.context.account, sharedContext: chatInteraction.context.sharedContext, excludePeerId: self.chatInteraction.peerId, view: View(), layoutChanged: {
             layoutChanged?()
         })
+        
 
         super.init(controller: controller, textInset: 46)
         
         layoutChanged = {
             //self?.needsLayout = true
         }
-        
+        addSubview(activities.view!)
+
         
         searchButton.set(handler: { [weak self] _ in
             self?.chatInteraction.update({$0.updatedSearchMode(!$0.isSearchMode)})
@@ -230,7 +257,6 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
            chatInteraction.call()
         }, for: .Click)
         
-        addSubview(activities.view!)
         activities.view?.isHidden = true
         callButton.isHidden = true
         addSubview(callButton)
@@ -238,7 +264,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         avatarControl.setFrameSize(36,36)
         addSubview(avatarControl)
         
-        disposable.set(chatInteraction.account.context.layoutHandler.get().start(next: { [weak self] state in
+        disposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self {
                 switch state {
                 case .single:
@@ -259,41 +285,22 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         closeButton.autohighlight = false
         closeButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
         closeButton.set(handler: { [weak self] _ in
-            self?.chatInteraction.account.context.mainNavigation?.back()
+            self?.chatInteraction.context.sharedContext.bindings.rootNavigation().back()
         }, for: .Click)
         _ = closeButton.sizeToFit()
         closeButton.setFrameSize(closeButton.frame.width, frame.height)
         addSubview(closeButton)
         
         avatarControl.userInteractionEnabled = false
-        
+
         addSubview(badgeNode.view!)
         
         updateLocalizationAndTheme()
         
         self.continuesAction = true
         
-        self.set(handler: { [weak self] control in
-            self?.showLatestUsers(control)
-        }, for: .LongOver)
     }
     
-    private func showLatestUsers(_ control: Control) {
-//        if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup {
-//            let controller = latestGroupUsers(chatInteraction: chatInteraction) { [weak control, weak self] controller in
-//                guard let `self` = self, let parent = self.controller, parent.navigationController?.controller == parent else {return}
-//
-//                controller.view.setFrameSize(300, min(controller.genericView.listHeight, parent.view.frame.height / 3 + 30))
-//                self.lastestUsersController = nil
-//                if let control = control {
-//                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-10, -70), delayBeforeShown: 0.4)
-//                }
-//            }
-//            self.lastestUsersController = controller
-//            controller.loadViewIfNeeded()
-//        }
-       
-    }
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
@@ -331,15 +338,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         if NSPointInRect(point, avatarControl.frame) {
             if let peer = chatInteraction.peer, let large = peer.largeProfileImage {
-                showPhotosGallery(account: chatInteraction.account, peerId: chatInteraction.peerId, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
+                showPhotosGallery(context: chatInteraction.context, peerId: chatInteraction.peerId, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
                 return
             }
         }
         
         if isSingleLayout {
             if point.x > 20 {
-                if chatInteraction.peerId == chatInteraction.account.peerId {
-                    chatInteraction.account.context.mainNavigation?.push(PeerMediaController(account: chatInteraction.account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+                if chatInteraction.peerId == chatInteraction.context.peerId {
+                    chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
                 } else {
                     switch chatInteraction.chatLocation {
                     case let .group(groupId):
@@ -349,11 +356,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     }
                 }
             } else {
-                chatInteraction.account.context.mainNavigation?.back()
+                chatInteraction.context.sharedContext.bindings.rootNavigation().back()
             }
         } else {
-            if chatInteraction.peerId == chatInteraction.account.peerId {
-                chatInteraction.account.context.mainNavigation?.push(PeerMediaController(account: chatInteraction.account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+            if chatInteraction.peerId == chatInteraction.context.peerId {
+                chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
             } else {
                 switch chatInteraction.chatLocation {
                 case let .group(groupId):
@@ -404,17 +411,17 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if let peerView = self.postboxView as? PeerView {
             
             if let peer = peerViewMainPeer(peerView) {
-                callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.account.peerId
+                callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId
             } else {
                 callButton.isHidden = true
             }
             
             if let peer = peerViewMainPeer(peerView) {
-                if peer.id == chatInteraction.account.peerId {
+                if peer.id == chatInteraction.context.peerId {
                     let icon = theme.icons.searchSaved
                     avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)))) |> map {($0, false)})
                 } else {
-                    avatarControl.setPeer(account: chatInteraction.account, peer: peer)
+                    avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
                 }
             }
             
@@ -424,12 +431,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 titleImage = nil
             }
             
-            var result = stringStatus(for: peerView, account: chatInteraction.account, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
+            var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
             
-            if chatInteraction.account.peerId == peerView.peerId  {
+            if chatInteraction.context.peerId == peerView.peerId  {
                 result = result.withUpdatedTitle(L10n.peerSavedMessages)
             }
-            if chatInteraction.account.peerId == peerView.peerId {
+            if chatInteraction.context.peerId == peerView.peerId {
                 status = nil
             } else if status == nil || !status!.isEqual(to: result.status) || force {
                 status = result.status
@@ -448,7 +455,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 self.setNeedsDisplay()
             }
         } else  if let view = postboxView as? ChatListTopPeersView {
-            avatarControl.setState(account: chatInteraction.account, state: .GroupAvatar(view.peers))
+            avatarControl.setState(account: chatInteraction.context.account, state: .GroupAvatar(view.peers))
             status = nil
             text = .initialize(string: L10n.chatTitleFeed, color: theme.colors.text, font: .medium(.title))
         }

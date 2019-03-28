@@ -1025,7 +1025,7 @@ public class TextView: Control {
                         rect.origin.x = startOffset + blockValue
                         rect.origin.y = rect.minY - rect.height + blockValue / 2
                         rect.size.height += ceil(descent - leading)
-                        let color:NSColor = layout.selectText
+                        let color:NSColor = window?.isKeyWindow == true ? layout.selectText : NSColor.lightGray
                         
                         ctx.setFillColor(color.cgColor)
                         ctx.fill(rect)
@@ -1201,6 +1201,25 @@ public class TextView: Control {
         
     }
     
+    
+    public override func viewWillMove(toWindow newWindow: NSWindow?) {
+        if let newWindow = newWindow {
+            NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: newWindow)
+            NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: newWindow)
+        } else {
+            NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
+            NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: window)
+        }
+    }
+    
+    @objc open func windowDidBecomeKey() {
+        needsDisplay = true
+    }
+    
+    @objc open func windowDidResignKey() {
+        needsDisplay = true
+    }
+    
     func _mouseDown(with event: NSEvent) -> Void {
         
         if !isSelectable || !userInteractionEnabled || event.modifierFlags.contains(.shift) {
@@ -1237,18 +1256,28 @@ public class TextView: Control {
     
     
     public override func mouseEntered(with event: NSEvent) {
-        super.mouseEntered(with: event)
-        checkCursor(event)
+        if userInteractionEnabled {
+            checkCursor(event)
+        } else {
+            super.mouseEntered(with: event)
+        }
+        
     }
     
     public override func mouseExited(with event: NSEvent) {
-        super.mouseExited(with: event)
-        checkCursor(event)
+        if userInteractionEnabled {
+            checkCursor(event)
+        } else {
+            super.mouseExited(with: event)
+        }
     }
     
     public override func mouseMoved(with event: NSEvent) {
-        super.mouseMoved(with: event)
-        checkCursor(event)
+        if userInteractionEnabled {
+            checkCursor(event)
+        } else {
+            super.mouseMoved(with: event)
+        }
     }
     
     
@@ -1288,10 +1317,15 @@ public class TextView: Control {
         }
     }
     public override func cursorUpdate(with event: NSEvent) {
-        checkCursor(event)
+        if userInteractionEnabled {
+            checkCursor(event)
+        } else {
+            super.cursorUpdate(with: event)
+        }
     }
     
     func checkCursor(_ event:NSEvent) -> Void {
+        
         let location = self.convert(event.locationInWindow, from: nil)
         
         if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
@@ -1322,6 +1356,9 @@ public class TextView: Control {
         return false        
     }
 
+//    public override var isOpaque: Bool {
+//        return false
+//    }
     
     public override func resignFirstResponder() -> Bool {
         _resignFirstResponder()

@@ -73,11 +73,20 @@ func savePanel(file:String, ext:String, for window:Window) {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
     savePanel.nameFieldStringValue = "\(dateFormatter.string(from: Date())).\(ext)"
-    savePanel.beginSheetModal(for: window, completionHandler: {(result) in
+    
+    let wLevel = window.level
+    if wLevel == .screenSaver {
+        window.level = .normal
+    }
+    
+    
+    savePanel.beginSheetModal(for: window, completionHandler: { [weak window] result in
     
         if result == NSApplication.ModalResponse.OK, let saveUrl = savePanel.url {
+            try? FileManager.default.removeItem(atPath: saveUrl.path)
             try? FileManager.default.copyItem(atPath: file, toPath: saveUrl.path)
         }
+        window?.level = wLevel
     })
     
     
@@ -144,7 +153,7 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, successHandler:@escaping (ConfirmResult)->Void) {
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void) {
 
     
     let alert:NSAlert = NSAlert()
@@ -160,6 +169,9 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
     if let thridTitle = thridTitle {
         alert.addButton(withTitle: thridTitle)
     }
+    if let fourTitle = fourTitle {
+        alert.addButton(withTitle: fourTitle)
+    }
     
     
     
@@ -174,7 +186,7 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
     })
 }
 
-func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, accessory: CGImage?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, successHandler:@escaping(ConfirmResult)->Void) {
+func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void) {
     //
     
     let alert:NSAlert = NSAlert()
@@ -190,7 +202,7 @@ func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, access
     if let thridTitle = thridTitle {
         alert.showsSuppressionButton = true
         alert.suppressionButton?.title = thridTitle
-        alert.suppressionButton?.state = .on
+        alert.suppressionButton?.state = thridAutoOn ? .on : .off
       //  alert.addButton(withTitle: thridTitle)
     }
     
@@ -283,12 +295,12 @@ func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, access
     
 }
 
-func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, accessory: CGImage?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel) -> Signal<Bool, NoError> {
-    let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
+func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle: String? = nil, thridAutoOn: Bool = true) -> Signal<ConfirmResult, NoError> {
+    let value:ValuePromise<ConfirmResult> = ValuePromise(ignoreRepeated: true)
     
     Queue.mainQueue().async {
-        modernConfirm(for: window, account: account, peerId: peerId, accessory: accessory, header: header, information: information, okTitle: okTitle, cancelTitle: cancelTitle, successHandler: { response in
-             value.set(response == .basic)
+        modernConfirm(for: window, account: account, peerId: peerId, header: header, information: information, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, thridAutoOn: thridAutoOn, successHandler: { response in
+             value.set(response)
         })
     }
     return value.get() |> take(1)

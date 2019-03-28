@@ -217,7 +217,7 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         secureField.setFrameOrigin(item.inset.left + item.textFieldLeftInset, 14)
 
         textView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - item.textFieldLeftInset - additionalRightInset, item.inputHeight))
-        textView.setFrameOrigin(item.inset.left + item.textFieldLeftInset - 2, 5)
+        textView.setFrameOrigin(item.inset.left + item.textFieldLeftInset - 3, 5)
         
         textLimitation.setFrameOrigin(NSMakePoint(frame.width - item.inset.right - textLimitation.frame.width + 4, frame.height - textLimitation.frame.height - 4))
         

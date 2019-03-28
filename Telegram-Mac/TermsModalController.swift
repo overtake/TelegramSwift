@@ -81,9 +81,9 @@ class TermsModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        let network = self.account.network
+        let network = self.context.account.network
         let terms = self.terms
-        let account = self.account
+        let account = self.context.account
         let accept:()->Void = { [weak self] in
             guard let `self` = self else {return}
             
@@ -91,17 +91,17 @@ class TermsModalController: ModalViewController {
                 self?.close()
             })
             if let botname = self.proceedBotAfterAgree {
-                _ = (resolvePeerByName(account: self.account, name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
+                _ = (resolvePeerByName(account: self.context.account, name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
                     guard let `self` = self else {return}
                     if let peerId = peerId {
-                        self.account.context.mainNavigation?.push(ChatController(account: self.account, chatLocation: .peer(peerId)))
+                        self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId)))
                     }
                 })
             }
         }
         return ModalInteractions(acceptTitle: L10n.termsOfServiceAccept, accept: {
             if let age = terms.ageConfirmation {
-                confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceConfirmAge("\(age)"), okTitle: L10n.termsOfServiceDisagreeOK, successHandler: { _ in
+                confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceConfirmAge("\(age)"), okTitle: L10n.termsOfServiceAcceptConfirmAge, successHandler: { _ in
                    accept()
                 })
             } else {
@@ -125,11 +125,11 @@ class TermsModalController: ModalViewController {
     }
     
    
-    private let account: Account
+    private let context: AccountContext
     private let terms: TermsOfServiceUpdate
     private var proceedBotAfterAgree: String? = nil
-    init(_ account: Account, terms: TermsOfServiceUpdate) {
-        self.account = account
+    init(_ context: AccountContext, terms: TermsOfServiceUpdate) {
+        self.context = context
         self.terms = terms
         super.init(frame: NSMakeRect(0, 0, 380, 380))
     }

@@ -25,7 +25,7 @@ class ChatHoleRowItem: ChatRowItem {
         return false
     }
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ entry:ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry:ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         super.init(initialSize, chatInteraction, entry, downloadSettings)
     }
     

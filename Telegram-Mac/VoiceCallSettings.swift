@@ -18,33 +18,42 @@ public enum VoiceCallDataSaving: Int32 {
 }
 
 public struct VoiceCallSettings: PreferencesEntry, Equatable {
-    public let dataSaving: VoiceCallDataSaving
-    public let legacyP2PMode: VoiceCallP2PMode?
+    
+    let inputDeviceId: String?
+    let outputDeviceId: String?
+    let muteSounds: Bool
+    
+    
     public static var defaultSettings: VoiceCallSettings {
-        return VoiceCallSettings(dataSaving: .never, p2pMode: nil)
+        return VoiceCallSettings(inputDeviceId: nil, outputDeviceId: nil, muteSounds: true)
     }
     
-    init(dataSaving: VoiceCallDataSaving, p2pMode: VoiceCallP2PMode?) {
-        self.dataSaving = dataSaving
-        self.legacyP2PMode = p2pMode
+    init(inputDeviceId: String?, outputDeviceId: String?, muteSounds: Bool) {
+        self.inputDeviceId = inputDeviceId
+        self.outputDeviceId = outputDeviceId
+        self.muteSounds = muteSounds
     }
     
     public init(decoder: PostboxDecoder) {
-        self.dataSaving = VoiceCallDataSaving(rawValue: decoder.decodeInt32ForKey("ds", orElse: 0))!
-        if let mode = decoder.decodeOptionalInt32ForKey("defaultP2PMode") {
-            self.legacyP2PMode = VoiceCallP2PMode(rawValue: mode) ?? .contacts
-        } else {
-            self.legacyP2PMode = nil
-        }
+        self.inputDeviceId = decoder.decodeOptionalStringForKey("i")
+        self.outputDeviceId = decoder.decodeOptionalStringForKey("o")
+        self.muteSounds = decoder.decodeInt32ForKey("m", orElse: 1) == 1
     }
     
     public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.dataSaving.rawValue, forKey: "ds")
-        if let mode = self.legacyP2PMode {
-            encoder.encodeInt32(mode.rawValue, forKey: "defaultP2PMode")
+        if let inputDeviceId = inputDeviceId {
+            encoder.encodeString(inputDeviceId, forKey: "i")
         } else {
-            encoder.encodeNil(forKey: "defaultP2PMode")
+            encoder.encodeNil(forKey: "i")
         }
+        
+        if let outputDeviceId = outputDeviceId {
+            encoder.encodeString(outputDeviceId, forKey: "o")
+        } else {
+            encoder.encodeNil(forKey: "o")
+        }
+        
+        encoder.encodeInt32(muteSounds ? 1 : 0, forKey: "m")
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -55,22 +64,23 @@ public struct VoiceCallSettings: PreferencesEntry, Equatable {
         }
     }
     
-    public static func ==(lhs: VoiceCallSettings, rhs: VoiceCallSettings) -> Bool {
-        return lhs.dataSaving == rhs.dataSaving && lhs.legacyP2PMode == rhs.legacyP2PMode
+
+    func withUpdatedInputDeviceId(_ inputDeviceId: String?) -> VoiceCallSettings {
+        return VoiceCallSettings(inputDeviceId: inputDeviceId, outputDeviceId: self.outputDeviceId, muteSounds: self.muteSounds)
     }
     
-    func withUpdatedDataSaving(_ dataSaving: VoiceCallDataSaving) -> VoiceCallSettings {
-        return VoiceCallSettings(dataSaving: dataSaving, p2pMode: self.legacyP2PMode)
+    func withUpdatedOutputDeviceId(_ outputDeviceId: String?) -> VoiceCallSettings {
+        return VoiceCallSettings(inputDeviceId: self.inputDeviceId, outputDeviceId: outputDeviceId, muteSounds: self.muteSounds)
     }
     
-    func withUpdatedP2pCallMode(_ mode: VoiceCallP2PMode?) -> VoiceCallSettings {
-        return VoiceCallSettings(dataSaving: self.dataSaving, p2pMode: mode)
+    func withUpdatedMuteSounds(_ muteSounds: Bool) -> VoiceCallSettings {
+        return VoiceCallSettings(inputDeviceId: self.inputDeviceId, outputDeviceId: self.outputDeviceId, muteSounds: muteSounds)
     }
 }
 
-func updateVoiceCallSettingsSettingsInteractively(postbox: Postbox, _ f: @escaping (VoiceCallSettings) -> VoiceCallSettings) -> Signal<Void, NoError> {
-    return postbox.transaction { transaction -> Void in
-        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.voiceCallSettings, { entry in
+func updateVoiceCallSettingsSettingsInteractively(accountManager: AccountManager, _ f: @escaping (VoiceCallSettings) -> VoiceCallSettings) -> Signal<Void, NoError> {
+    return accountManager.transaction { transaction -> Void in
+        transaction.updateSharedData(ApplicationSharedPreferencesKeys.voiceCallSettings, { entry in
             let currentSettings: VoiceCallSettings
             if let entry = entry as? VoiceCallSettings {
                 currentSettings = entry
@@ -83,16 +93,8 @@ func updateVoiceCallSettingsSettingsInteractively(postbox: Postbox, _ f: @escapi
 }
 
 
-func p2pCallMode(transaction: Transaction) -> VoiceCallP2PMode {
-    
-    fatalError("TODO THIS")
-//    if let prefs = transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.voiceCallSettings) as? VoiceCallSettings {
-//        if let  {
-//            return mode
-//        } else {
-//            return currentVoipConfiguration(transaction: transaction).defaultP2PMode
-//        }
-//    } else {
-//        return currentVoipConfiguration(transaction: transaction).defaultP2PMode
-//    }
+func voiceCallSettings(_ accountManager: AccountManager) -> Signal<VoiceCallSettings, NoError>  {
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.voiceCallSettings]) |> map { view in
+        return view.entries[ApplicationSharedPreferencesKeys.voiceCallSettings] as? VoiceCallSettings ?? VoiceCallSettings.defaultSettings
+    }
 }

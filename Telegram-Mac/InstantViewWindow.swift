@@ -12,13 +12,13 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 private final class InstantViewArguments {
-    let account: Account
+    let context: AccountContext
     let share:()->Void
     let back:()->Void
     let openInSafari:()->Void
     let enableSansSerif:(Bool)->Void
-    init(account: Account, share: @escaping()->Void, back: @escaping()->Void, openInSafari: @escaping()->Void, enableSansSerif:@escaping(Bool)->Void) {
-        self.account = account
+    init(context: AccountContext, share: @escaping()->Void, back: @escaping()->Void, openInSafari: @escaping()->Void, enableSansSerif:@escaping(Bool)->Void) {
+        self.context = context
         self.share = share
         self.back = back
         self.enableSansSerif = enableSansSerif
@@ -226,7 +226,8 @@ class InstantWindowContentView : View {
     override func layout() {
         super.layout()
         headerView.frame = NSMakeRect(0, frame.height - barHeight, frame.width, barHeight)
-        contentView.frame = NSMakeRect(0, 0, frame.width, frame.height - headerView.frame.height)
+        contentView.frame = NSMakeRect(0, 0, min(frame.width, 720), frame.height - headerView.frame.height)
+        contentView.centerX()
         contentView.subviews.first?.frame = contentView.bounds
         loadingIndicatorView.frame = NSMakeRect(0, frame.height - barHeight, frame.width, loadingIndicatorView.frame.height)
     }
@@ -245,7 +246,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     fileprivate let _window:Window
     private let appearanceDisposable = MetaDisposable()
     private let loadProgressDisposable = MetaDisposable()
-    init( page: InstantPageViewController, account: Account) {
+    init( page: InstantPageViewController, context: AccountContext) {
         navigation = MajorNavigationController(ViewController.self, page)
         navigation.alwaysAnimate = true
         let screen = NSScreen.main!
@@ -257,7 +258,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         
         _window = Window(contentRect: center, styleMask: [.closable, .resizable, .miniaturizable, .fullSizeContentView, .titled, .unifiedTitleAndToolbar, .texturedBackground], backing: .buffered, defer: true)
        
-        super.init(account)
+        super.init(context)
         _window.isMovableByWindowBackground = false
         _window.name = "Telegram.InstantViewWindow"
         _window.initSaver()
@@ -280,7 +281,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
             self?.genericView.updateBorder(value.position.rect.minY - value.documentSize.height > 0, animated: true)
         }
         
-        let arguments = InstantViewArguments(account: account, share: { [weak self] in
+        let arguments = InstantViewArguments(context: context, share: { [weak self] in
             self?.share()
         }, back: { [weak self] in
             self?.navigation.back()
@@ -288,12 +289,12 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
             self?.openInSafari()
         }, enableSansSerif: { [weak self] enable in
             if let strongSelf = self {
-                _ = updateInstantViewAppearanceSettingsInteractively(postbox: strongSelf.account.postbox, {$0.withUpdatedFontSerif(enable)}).start()
+                _ = updateInstantViewAppearanceSettingsInteractively(postbox: strongSelf.context.account.postbox, {$0.withUpdatedFontSerif(enable)}).start()
             }
         })
 
         genericView.arguments = arguments
-        appearanceDisposable.set((ivAppearance(postbox: account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
+        appearanceDisposable.set((ivAppearance(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
             self?.genericView.presenation = appearance
         }))
         
@@ -416,7 +417,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     
     private func share() {
         if let currentPageUrl = currentPageUrl {
-            showModal(with: ShareModalController(ShareLinkObject(account, link: currentPageUrl)), for: _window)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: currentPageUrl)), for: _window)
         }
     }
     
@@ -506,7 +507,7 @@ func showInstantPage(_ page: InstantPageViewController) {
             instantController._window.deminiaturize(nil)
         }
     } else {
-        instantController = InstantViewController(page: page, account: page.account)
+        instantController = InstantViewController(page: page, context: page.context)
         instantController?.show()
     }
 }

@@ -14,7 +14,9 @@ import PostboxMac
 
 
 class ChatInputAttachView: ImageButton, Notifable {
-        
+    
+    
+    
     private var chatInteraction:ChatInteraction
     private var controller:SPopoverViewController?
     private let editMediaAccessory: ImageView = ImageView()
@@ -41,7 +43,6 @@ class ChatInputAttachView: ImageButton, Notifable {
                 
                 var items:[SPopoverItem] = []
 
-                
                 
                 if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                     
@@ -97,7 +98,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 alert(for: mainWindow, info: permissionText)
                                 return
                             }
-                            showModal(with: newPollController(account: self.chatInteraction.account, chatInteraction: self.chatInteraction), for: mainWindow)
+                            showModal(with: NewPollController(chatInteraction: self.chatInteraction), for: mainWindow)
                         }, theme.icons.chatAttachPoll))
                     }
                     

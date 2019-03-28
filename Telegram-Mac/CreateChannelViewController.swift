@@ -27,27 +27,43 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
     override func viewDidLoad() {
         super.viewDidLoad()
         self.nextEnabled(false)
-        nameItem = GroupNameRowItem(atomicSize.modify({$0}), stableId: 0, account: account, placeholder: tr(L10n.channelChannelNameHolder), limit: 140, textChangeHandler:{ [weak self] text in
+        nameItem = GroupNameRowItem(atomicSize.modify({$0}), stableId: 0, account: context.account, placeholder: L10n.channelChannelNameHolder, limit: 140, textChangeHandler:{ [weak self] text in
             self?.nextEnabled(!text.isEmpty)
         }, pickPicture: { [weak self] select in
-            if let strongSelf = self, select {
-                pickImage(for: mainWindow, completion: { image in
-                    if let image = image {
-                        _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak strongSelf] path in
-                            strongSelf?.picture = path
+            if select {
+                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                        _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+                            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                            showModal(with: controller, for: mainWindow)
+                            _ = (controller.result |> deliverOnMainQueue).start(next: { url, _ in
+                                self?.picture = url.path
+                            })
+                            
+                            controller.onClose = {
+                                removeFile(at: path)
+                            }
                         })
                     }
                 })
+                
+//                pickImage(for: mainWindow, completion: { image in
+//                    if let image = image {
+//                        _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak strongSelf] path in
+//                            strongSelf?.picture = path
+//                        })
+//                    }
+//                })
             } else {
                 self?.picture = nil
             }
         })
-        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: tr(L10n.channelDescriptionHolder), limit: 300, automaticallyBecomeResponder: false)
+        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: L10n.channelDescriptionHolder, limit: 300, automaticallyBecomeResponder: false)
        
         _ = genericView.addItem(item: nameItem)
         _ = genericView.addItem(item: GeneralRowItem(atomicSize.modify({$0}), height: 30, stableId: 1))
         _ = genericView.addItem(item: descItem)
-        _ = genericView.addItem(item: GeneralTextRowItem(atomicSize.modify({$0}), stableId: 3, text: tr(L10n.channelDescriptionHolderDescrpiton)))
+        _ = genericView.addItem(item: GeneralTextRowItem(atomicSize.modify({$0}), stableId: 3, text: L10n.channelDescriptionHolderDescrpiton))
         readyOnce()
     }
     
@@ -71,7 +87,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
     
     override func executeNext() {
         let picture = self.picture
-        let account = self.account
+        let context = self.context
         
         if nameItem.text.isEmpty {
             nameItem.view?.shakeView()
@@ -79,11 +95,11 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         }
         
         
-        onComplete.set(showModalProgress(signal: createChannel(account: account, title: nameItem.text, description: descItem.text), for: window!, disposeAfterComplete: false) |> mapToSignal { peerId in
+        onComplete.set(showModalProgress(signal: createChannel(account: context.account, title: nameItem.text, description: descItem.text), for: window!, disposeAfterComplete: false) |> mapToSignal { peerId in
             if let peerId = peerId, let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
-                let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
-                    return mapResourceToAvatarSizes(postbox: account.postbox, resource: resource, representations: representations)
+                let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                    return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                 }) |> `catch` {_ in return .complete()} |> map { value in
                     switch value {
                     case .complete:

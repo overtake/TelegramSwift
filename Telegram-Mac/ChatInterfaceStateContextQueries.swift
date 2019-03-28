@@ -12,13 +12,13 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
 
-func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, account: Account, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
+func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
     let inputQuery = chatPresentationInterfaceState.inputContext
-    if inputQuery != .none, chatPresentationInterfaceState.state != .editing {
+    if inputQuery != .none {
         if inputQuery == currentQuery {
             return nil
         } else {
-            return makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: currentQuery, account: account)
+            return makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: currentQuery, context: context)
             
         }
     } else {
@@ -26,7 +26,7 @@ func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentation
     }
 }
 
-private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPresentationInterfaceState: ChatPresentationInterfaceState, currentQuery: ChatPresentationInputQuery?,  account:Account)  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
+private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPresentationInterfaceState: ChatPresentationInterfaceState, currentQuery: ChatPresentationInputQuery?,  context: AccountContext)  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
     switch inputQuery {
     case .none:
         return (nil, .single({ _ in return nil }))
@@ -42,7 +42,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
         }
         
-        let hashtags: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = recentlyUsedHashtags(postbox: account.postbox) |> map { hashtags -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+        let hashtags: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = recentlyUsedHashtags(postbox: context.account.postbox) |> map { hashtags -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             let normalizedQuery = query.lowercased()
             var result: [String] = []
             for hashtag in hashtags {
@@ -57,7 +57,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
         
     case let .stickers(query):
         
-        return (inputQuery, account.postbox.transaction { transaction -> StickerSettings in
+        return (inputQuery, context.account.postbox.transaction { transaction -> StickerSettings in
             let stickerSettings: StickerSettings = (transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.stickerSettings) as? StickerSettings) ?? .defaultSettings
             return stickerSettings
         }
@@ -71,7 +71,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 case .installed:
                     scope = [.installed]
                 }
-                return searchStickers(account: account, query: query, scope: scope)
+                return searchStickers(account: context.account, query: query, scope: scope)
         }
         |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             return { _ in
@@ -82,11 +82,18 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
 //        return (inputQuery, searchStickers(account: account, query: query) |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
 //            return { _ in return .stickers(stickers) }
 //        })
-    case let .emoji(query):
-        
-        return (inputQuery, searchEmojiClue(query: query, postbox: account.postbox) |> map { clues -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-            return { _ in return .emoji(clues) }
-        })
+    case let .emoji(query, firstWord):
+        if !query.isEmpty {
+            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(0.3, queue: .concurrentDefaultQueue())
+            
+            return (inputQuery, .single({ _ in return nil }) |> then(signal |> map { matches -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                return { _ in return .emoji(matches, firstWord) }
+            }))
+            
+        } else {
+           return (nil, .single({ _ in return nil }))
+        }
+
     case let .mention(query: query, includeRecent: includeRecent):
         let normalizedQuery = query.lowercased()
         
@@ -103,14 +110,14 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             
             var inlineSignal: Signal<[(Peer, Double)], NoError> = .single([])
             if includeRecent {
-                inlineSignal = recentlyUsedInlineBots(postbox: account.postbox) |> take(1)
+                inlineSignal = recentlyUsedInlineBots(postbox: context.account.postbox) |> take(1)
             }
             
-            let participants = combineLatest(inlineSignal, searchPeerMembers(account: account, peerId: global.id, query: query) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+            let participants = combineLatest(inlineSignal, searchPeerMembers(context: context, peerId: global.id, query: query) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                         switch entry {
-                        case let .MessageEntry(message, _, _, _):
+                        case let .MessageEntry(message, _, _, _, _):
                             if message.media.first is TelegramMediaAction {
                                 return nil
                             }
@@ -155,7 +162,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     }).map {$0.0}
                     
                     let filteredParticipants = participants.filter ({ peer in
-                        if peer.id == account.peerId {
+                        if peer.id == context.peerId {
                             return false
                         }
                         if peer.displayTitle == L10n.peerDeletedUser {
@@ -195,7 +202,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 }
             }
             
-            let participants = peerCommands(account: account, id: peer.id)
+            let participants = peerCommands(account: context.account, id: peer.id)
                 |> map { commands -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     let filteredCommands = commands.commands.filter { command in
                         if command.command.text.hasPrefix(normalizedQuery) {
@@ -230,10 +237,10 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
         }
         
-        let contextBot = resolvePeerByName(account: account, name: addressName)
+        let contextBot = resolvePeerByName(account: context.account, name: addressName)
             |> mapToSignal { peerId -> Signal<Peer?, NoError> in
                 if let peerId = peerId {
-                    return account.postbox.loadedPeerWithId(peerId)
+                    return context.account.postbox.loadedPeerWithId(peerId)
                         |> map { peer -> Peer? in
                             return peer
                         }
@@ -244,7 +251,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
             |> mapToSignal { peer -> Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> in
                 if let user = peer as? TelegramUser, let botInfo = user.botInfo, let _ = botInfo.inlinePlaceholder {
-                    let contextResults = requestChatContextResults(account: account, botId: user.id, peerId: chatPeer.id, query: query, offset: "")
+                    let contextResults = requestChatContextResults(account: context.account, botId: user.id, peerId: chatPeer.id, query: query, offset: "")
                         |> map { results -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                             return { _ in
                                 return .contextRequestResult(user, results)
@@ -279,11 +286,11 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         let normalizedQuery = query.lowercased()
                         
                         if let global = chatPresentationInterfaceState.peer {
-                            return searchPeerMembers(account: account, peerId: global.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                                return account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                            return searchPeerMembers(context: context, peerId: global.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                                         switch entry {
-                                        case let .MessageEntry(message, _, _, _):
+                                        case let .MessageEntry(message, _, _, _, _):
                                             if message.media.first is TelegramMediaAction {
                                                 return nil
                                             }
@@ -313,7 +320,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                                 
                             } |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                                     let filteredParticipants = participants.filter ({ peer in
-                                        if peer.id == account.peerId {
+                                        if peer.id == context.peerId {
                                             return false
                                         }
                                         if global.isChannel, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder == nil {
@@ -350,7 +357,7 @@ enum ContextQueryForSearchMentionFilter {
 }
 
 
-func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentationInputQuery, currentQuery: ChatPresentationInputQuery?,  account:Account, filter: ContextQueryForSearchMentionFilter = .plain(includeNameless: true, includeInlineBots: false))  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
+func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentationInputQuery, currentQuery: ChatPresentationInputQuery?, context: AccountContext, filter: ContextQueryForSearchMentionFilter = .plain(includeNameless: true, includeInlineBots: false))  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
     switch inputQuery {
     case let .mention(query: query, includeRecent: _):
         let normalizedQuery = query.lowercased()
@@ -365,11 +372,11 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
             }
         }
         
-        let participants = searchPeerMembers(account: account, peerId: peer.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-            return account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peer.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+        let participants = searchPeerMembers(context: context, peerId: peer.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peer.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                 let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                     switch entry {
-                    case let .MessageEntry(message, _, _, _):
+                    case let .MessageEntry(message, _, _, _, _):
                         if message.media.first is TelegramMediaAction {
                             return nil
                         }
@@ -394,7 +401,7 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
                     
                 }
                 
-                if let index = sorted.firstIndex(where: {$0.id == account.peerId}) {
+                if let index = sorted.firstIndex(where: {$0.id == context.peerId}) {
                     sorted.move(at: index, to: 0)
                 }
                 
@@ -416,7 +423,7 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
                         if !includeNameless, peer.addressName == nil || peer.addressName!.isEmpty {
                             return false
                         }
-                        if peer.id == account.peerId {
+                        if peer.id == context.peerId {
                             return false
                         }
                         
@@ -441,10 +448,17 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
         }
         
         return (inputQuery, signal |> then(participants))
-    case let .emoji(query):
-        return (inputQuery, searchEmojiClue(query: query, postbox: account.postbox) |> map { clues -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-            return { _ in return .emoji(clues) }
-        })
+    case let .emoji(query, firstWord):
+        if !query.isEmpty {
+            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(0.3, queue: .concurrentDefaultQueue())
+            
+            return (inputQuery, .single({ _ in return nil }) |> then(signal |> map { matches -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                return { _ in return .emoji(matches, firstWord) }
+            }))
+            
+        } else {
+            return (nil, .single({ _ in return nil }))
+        }
     default:
         return (nil, .single({ _ in return nil }))
     }

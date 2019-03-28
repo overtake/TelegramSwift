@@ -13,12 +13,12 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 
 private final class ChannelAdminControllerArguments {
-    let account: Account
+    let context: AccountContext
     let toggleRight: (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void
     let dismissAdmin: () -> Void
     let cantEditError: () -> Void
-    init(account: Account, toggleRight: @escaping (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void, dismissAdmin: @escaping () -> Void, cantEditError: @escaping() -> Void) {
-        self.account = account
+    init(context: AccountContext, toggleRight: @escaping (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void, dismissAdmin: @escaping () -> Void, cantEditError: @escaping() -> Void) {
+        self.context = context
         self.toggleRight = toggleRight
         self.dismissAdmin = dismissAdmin
         self.cantEditError = cantEditError
@@ -151,9 +151,9 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             var color:NSColor = theme.colors.grayText
             if let presence = presence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
+                (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
             }
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(50, 50), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, action: {})
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(50, 50), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, action: {})
         case let .rightItem(_, _, name, right, flags, value, enabled):
             //ControlStyle(font: NSFont.)
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), action: { 
@@ -226,8 +226,6 @@ private func stringForRight(right: TelegramChatAdminRightsFlags, isGroup: Bool, 
             return L10n.channelEditAdminPermissionInviteSubscribers
         }
 
-    } else if right.contains(.canChangeInviteLink) {
-        return ""
     } else if right.contains(.canPinMessages) {
         return L10n.channelEditAdminPermissionPinMessages
     } else if right.contains(.canAddAdmins) {
@@ -250,8 +248,6 @@ private func rightDependencies(_ right: TelegramChatAdminRightsFlags) -> [Telegr
         return []
     } else if right.contains(.canInviteUsers) {
         return []
-    } else if right.contains(.canChangeInviteLink) {
-        return [.canInviteUsers]
     } else if right.contains(.canPinMessages) {
         return []
     } else if right.contains(.canAddAdmins) {
@@ -443,7 +439,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminEntr
 
 class ChannelAdminController: ModalViewController {
     private var arguments: ChannelAdminControllerArguments?
-    private let account:Account
+    private let context:AccountContext
     private let peerId:PeerId
     private let adminId:PeerId
     private let initialParticipant:ChannelParticipant?
@@ -452,8 +448,8 @@ class ChannelAdminController: ModalViewController {
     private let upgradedToSupergroup: (PeerId, @escaping () -> Void) -> Void
     private var okClick: (()-> Void)?
     
-    init(account: Account, peerId: PeerId, adminId: PeerId, initialParticipant: ChannelParticipant?, updated: @escaping (TelegramChatAdminRights) -> Void, upgradedToSupergroup: @escaping (PeerId, @escaping () -> Void) -> Void) {
-        self.account = account
+    init(_ context: AccountContext, peerId: PeerId, adminId: PeerId, initialParticipant: ChannelParticipant?, updated: @escaping (TelegramChatAdminRights) -> Void, upgradedToSupergroup: @escaping (PeerId, @escaping () -> Void) -> Void) {
+        self.context = context
         self.peerId = peerId
         self.upgradedToSupergroup = upgradedToSupergroup
         self.adminId = adminId
@@ -482,7 +478,7 @@ class ChannelAdminController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         let adminId = self.adminId
         let initialParticipant = self.initialParticipant
@@ -504,15 +500,12 @@ class ChannelAdminController: ModalViewController {
         let updateRightsDisposable = MetaDisposable()
         actionsDisposable.add(updateRightsDisposable)
         
-        let arguments = ChannelAdminControllerArguments(account: account, toggleRight: { right, flags in
+        let arguments = ChannelAdminControllerArguments(context: context, toggleRight: { right, flags in
             updateState { current in
                 var updated = flags
                 if flags.contains(right) {
                     updated.remove(right)
                 } else {
-                    if right.contains(.canInviteUsers) {
-                        updated.insert(.canChangeInviteLink)
-                    }
                     updated.insert(right)
                 }
                 
@@ -523,14 +516,14 @@ class ChannelAdminController: ModalViewController {
                 return current.withUpdatedUpdating(true)
             }
             if peerId.namespace == Namespaces.Peer.CloudGroup {
-                updateRightsDisposable.set((removeGroupAdmin(account: account, peerId: peerId, adminId: adminId)
+                updateRightsDisposable.set((removeGroupAdmin(account: context.account, peerId: peerId, adminId: adminId)
                     |> deliverOnMainQueue).start(error: { _ in
                     }, completed: {
                         updated(TelegramChatAdminRights(flags: []))
                         dismissImpl()
                     }))
             } else {
-                updateRightsDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: [])) |> deliverOnMainQueue).start(error: { _ in
+                updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: [])) |> deliverOnMainQueue).start(error: { _ in
                     
                 }, completed: {
                     updated(TelegramChatAdminRights(flags: []))
@@ -543,7 +536,7 @@ class ChannelAdminController: ModalViewController {
         
         self.arguments = arguments
         
-        let combinedView = account.postbox.combinedView(keys: [.peer(peerId: peerId, components: .all), .peer(peerId: adminId, components: .all)])
+        let combinedView = context.account.postbox.combinedView(keys: [.peer(peerId: peerId, components: .all), .peer(peerId: adminId, components: .all)])
         
         let previous:Atomic<[AppearanceWrapperEntry<ChannelAdminEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
@@ -553,7 +546,7 @@ class ChannelAdminController: ModalViewController {
             |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool, channelView: PeerView) in
                 let channelView = combinedView.views[.peer(peerId: peerId, components: .all)] as! PeerView
                 let adminView = combinedView.views[.peer(peerId: adminId, components: .all)] as! PeerView
-                let canEdit = canEditAdminRights(accountPeerId: account.peerId, channelView: channelView, initialParticipant: initialParticipant)
+                let canEdit = canEditAdminRights(accountPeerId: context.account.peerId, channelView: channelView, initialParticipant: initialParticipant)
                 var canDismiss = false
 
                 if let channel = peerViewMainPeer(channelView) as? TelegramChannel {
@@ -567,7 +560,7 @@ class ChannelAdminController: ModalViewController {
                                 break
                             case let .member(_, _, adminInfo, _):
                                 if let adminInfo = adminInfo {
-                                    if adminInfo.promotedBy == account.peerId || adminInfo.canBeEditedByAccountPeer {
+                                    if adminInfo.promotedBy == context.account.peerId || adminInfo.canBeEditedByAccountPeer {
                                         canDismiss = true
                                     }
                                 }
@@ -575,7 +568,7 @@ class ChannelAdminController: ModalViewController {
                         }
                     }
                 }
-                let result = channelAdminControllerEntries(state: state, accountPeerId: account.peerId, channelView: channelView, adminView: adminView, initialParticipant: initialParticipant)
+                let result = channelAdminControllerEntries(state: state, accountPeerId: context.account.peerId, channelView: channelView, adminView: adminView, initialParticipant: initialParticipant)
                 let entries = result.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                 _ = stateValue.modify({$0.withUpdatedEditable(canEdit)})
                 return (transition: prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), canEdit: canEdit, canDismiss: canDismiss, channelView: channelView)
@@ -643,7 +636,7 @@ class ChannelAdminController: ModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue).start(error: { _ in
+                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue).start(error: { _ in
                                 
                             }, completed: {
                                 updated(TelegramChatAdminRights(flags: updateFlags))
@@ -681,7 +674,7 @@ class ChannelAdminController: ModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue).start(error: { _ in
+                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue).start(error: { _ in
                                 
                             }, completed: {
                                 updated(TelegramChatAdminRights(flags: updateFlags))
@@ -708,12 +701,12 @@ class ChannelAdminController: ModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((addGroupAdmin(account: account, peerId: peerId, adminId: adminId)
+                            updateRightsDisposable.set((addGroupAdmin(account: context.account, peerId: peerId, adminId: adminId)
                                 |> deliverOnMainQueue).start(completed: {
                                     dismissImpl()
                                 }))
                         } else if updateFlags != defaultFlags {
-                            let signal = convertGroupToSupergroup(account: account, peerId: peerId)
+                            let signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                                 |> map(Optional.init)
                                 |> `catch` { _ -> Signal<PeerId?, NoError> in
                                     return .single(nil)
@@ -723,7 +716,7 @@ class ChannelAdminController: ModalViewController {
                                         return .single(nil)
                                     }
                                     
-                                    return  account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: upgradedPeerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags))
+                                    return  context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: upgradedPeerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags))
                                         |> mapToSignal { _ -> Signal<PeerId?, NoError> in
                                             return .complete()
                                         }
@@ -738,7 +731,7 @@ class ChannelAdminController: ModalViewController {
                             
                             updateRightsDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { upgradedPeerId in
                                 if let upgradedPeerId = upgradedPeerId {
-                                    let (disposable, _) = account.context.peerChannelMemberCategoriesContextsManager.admins(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: upgradedPeerId, updated: { state in
+                                    let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: upgradedPeerId, updated: { state in
                                        
                                         if case .ready = state.loadingState {
                                             upgradedToSupergroup(upgradedPeerId, {
@@ -784,19 +777,6 @@ class ChannelAdminController: ModalViewController {
         super.close()
     }
     
-//    func updateRights(_ updateFlags: TelegramChatAdminRightsFlags) {
-//        close()
-//
-//
-//
-//        _ = showModalProgress(signal: account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags)) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-//
-//        }, completed: { [weak self] in
-//            self?.updated(TelegramChatAdminRights(flags: updateFlags))
-//        })
-//
-//    }
-
     
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in

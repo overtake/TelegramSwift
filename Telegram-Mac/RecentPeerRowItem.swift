@@ -15,17 +15,17 @@ class RecentPeerRowItem: ShortPeerRowItem {
 
     fileprivate let removeAction:()->Void
     fileprivate let canRemoveFromRecent:Bool
-    fileprivate let badgeNode: BadgeNode?
+    fileprivate let badge: BadgeNode?
     init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font:.medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, canRemoveFromRecent: Bool = false, removeAction:@escaping()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}, unreadBadge: UnreadSearchBadge = .none) {
         self.canRemoveFromRecent = canRemoveFromRecent
         self.removeAction = removeAction
         switch unreadBadge {
         case let .muted(count):
-            badgeNode = BadgeNode(.initialize(string: "\(count)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeMutedBackgroundColor)
+            badge = BadgeNode(.initialize(string: "\(count)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeMutedBackgroundColor)
         case let .unmuted(count):
-            badgeNode = BadgeNode(.initialize(string: "\(count)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeBackgroundColor)
+            badge = BadgeNode(.initialize(string: "\(count)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeBackgroundColor)
         case .none:
-            self.badgeNode = nil
+            self.badge = nil
         }
 
         super.init(initialSize, peer: peer, account: account, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems)
@@ -37,7 +37,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
     }
     
     override var textAdditionInset:CGFloat {
-        return 15
+        return 20
     }
 }
 
@@ -124,7 +124,7 @@ class RecentPeerRowView : ShortPeerRowView {
                 removeControl.removeFromSuperview()
             }
             
-            if let badgeNode = item.badgeNode {
+            if let badgeNode = item.badge {
                 if badgeView == nil {
                     badgeView = View()
                     addSubview(badgeView!)

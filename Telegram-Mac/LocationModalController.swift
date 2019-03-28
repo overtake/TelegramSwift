@@ -253,12 +253,12 @@ private final class LocationMapView : View {
 
 
 private final class MapItemsArguments {
-    let account: Account
+    let context: AccountContext
     let sendCurrent:()->Void
     let sendVenue:(TelegramMediaMap)->Void
     let searchVenues:(String)->Void
-    init(account: Account, sendCurrent:@escaping()->Void, sendVenue:@escaping(TelegramMediaMap)->Void, searchVenues: @escaping(String)->Void) {
-        self.account = account
+    init(context: AccountContext, sendCurrent:@escaping()->Void, sendVenue:@escaping(TelegramMediaMap)->Void, searchVenues: @escaping(String)->Void) {
+        self.context = context
         self.sendCurrent = sendCurrent
         self.sendVenue = sendVenue
         self.searchVenues = searchVenues
@@ -315,7 +315,7 @@ private enum MapItemEntry : TableItemListNodeEntry {
     func item(_ arguments: MapItemsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .nearby(_, result):
-            return LocationPlaceSuggestionRowItem(initialSize, stableId: stableId, account: arguments.account, result: result, action: {
+            return LocationPlaceSuggestionRowItem(initialSize, stableId: stableId, account: arguments.context.account, result: result, action: {
                 switch result.message {
                 case let .mapLocation(media, _):
                     arguments.sendVenue(media)
@@ -566,19 +566,19 @@ class LocationModalController: ModalViewController {
         }
         
         let peerId = chatInteraction.peerId
-        let account = self.chatInteraction.account
+        let context = self.chatInteraction.context
         
         let search:Promise<String> = Promise("")
         
         var cachedData:[String : ChatContextResultCollection] = [:]
         let previousResult:Atomic<ChatContextResultCollection?> = Atomic(value: nil)
-        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(resolvePeerByName(account: chatInteraction.account, name: "foursquare") )
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(resolvePeerByName(account: context.account, name: "foursquare") )
         let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> take(1) |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue)
             |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> in
                 if let botId = botId, let location = location {
                     let first = Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError>.single((cachedData[query] ?? previousResult.modify {$0}, location.location, cachedData[query] == nil, !query.isEmpty))
                     if cachedData[query] == nil {
-                        return first |> then(requestChatContextResults(account: account, botId: botId, peerId: peerId, query: query, location: .single((location.coordinate.latitude, location.coordinate.longitude)), offset: "")
+                        return first |> then(requestChatContextResults(account: context.account, botId: botId, peerId: peerId, query: query, location: .single((location.coordinate.latitude, location.coordinate.longitude)), offset: "")
                             |> deliverOnPrepareQueue |> map { result in
                                 var value = result
                                 if let result = result {
@@ -602,7 +602,7 @@ class LocationModalController: ModalViewController {
         let previous: Atomic<[AppearanceWrapperEntry<MapItemEntry>]> = Atomic(value: [])
         
         let initialSize = self.atomicSize
-        let arguments = MapItemsArguments(account: chatInteraction.account, sendCurrent: { [weak self] in
+        let arguments = MapItemsArguments(context: context, sendCurrent: { [weak self] in
             self?.sendLocation()
         }, sendVenue: { [weak self] venue in
             self?.sendLocation(venue)

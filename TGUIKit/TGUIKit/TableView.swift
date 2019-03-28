@@ -346,8 +346,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                 if resortController.resortRange.indexIn(beforeRange.location) {
                     longDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(resortController.startTimeout, queue: Queue.mainQueue())).start(next: { [weak self] in
                         let currentEvent = NSApp.currentEvent
-                        guard let `self` = self, let window = self.window, let ev = currentEvent, ev.type == .leftMouseDown || ev.type == .leftMouseDragged || ev.type == .pressure else {return}
-                        let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                        guard let `self` = self, let ev = currentEvent, ev.type == .leftMouseDown || ev.type == .leftMouseDragged || ev.type == .pressure else {return}
+                        let point = self.convert(ev.locationInWindow, from: nil)
                         let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
                         if afterRange == beforeRange {
                             self.table?.startResorting()
@@ -550,8 +550,25 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return true
     }
     
-    convenience override init(frame frameRect: NSRect) {
-        self.init(frame:frameRect, isFlipped:true, drawBorder: false)
+    public override init(frame frameRect: NSRect) {
+        self.tableView = TGFlipableTableView(frame:frameRect)
+        self.tableView.wantsLayer = true
+        self.tableView.autoresizesSubviews = false
+        super.init(frame: frameRect)
+        
+        updateAfterInitialize(isFlipped:true, drawBorder: false)
+    }
+    
+    public init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
+        self.tableView = TGFlipableTableView(frame:frameRect)
+        self.tableView.wantsLayer = true
+        self.tableView.autoresizesSubviews = false
+        super.init(frame: frameRect)
+        updateAfterInitialize(isFlipped: isFlipped, drawBorder: drawBorder)
+    }
+
+    public convenience init() {
+        self.init(frame: NSZeroRect)
     }
     
     public var border:BorderType? {
@@ -575,21 +592,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.flip = flipped
     }
     
-    public required init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
+    public func updateAfterInitialize(isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
 
-        let table = TGFlipableTableView(frame:frameRect)
-        table.flip = isFlipped
-        
-        
-
-        self.tableView = table
-        self.tableView.wantsLayer = true
-        
-        //self.tableView.layerContentsRedrawPolicy = .onSetNeedsDisplay
-        tableView.autoresizesSubviews = false
-
-        super.init(frame: frameRect);
-        
+        self.tableView.flip = isFlipped
         
      //   clipView.copiesOnScroll = true
         
@@ -598,10 +603,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         //self.verticalScrollElasticity = .none
         self.autoresizesSubviews = false
 
-        table.table = self
+        self.tableView.table = self
         
         self.bottomInset = bottomInset
-        table.bottomInset = bottomInset
+        self.tableView.bottomInset = bottomInset
         
         if drawBorder {
             self.clipView.border = BorderType([.Right])
@@ -1098,16 +1103,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     var newPoint = NSMakePoint(view.frame.minX, max(controller.startRowLocation.y - difference, 0))
                     
                     newPoint = self.convert(newPoint, from: self.contentView)
-                    
-                    
+
                     view.setFrameOrigin(newPoint)
                     
                     self.updateMovableItem(point)
+                    self.contentView.autoscroll(with: event)
                     return .invoked
                 } else {
                     return .rejected
                 }
             }, with: self, for: .leftMouseDragged, priority: .modal)
+            
             
         }
     }
@@ -1869,6 +1875,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         let oldEmpty = self.isEmpty
+        
+        for subview in tableView.subviews.reversed() {
+            if let subview = subview as? NSTableRowView {
+                if tableView.row(for: subview) == -1 {
+                    subview.removeFromSuperview()
+                }
+            }
+        }
         
         self.beginUpdates()
         

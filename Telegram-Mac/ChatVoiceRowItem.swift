@@ -29,7 +29,7 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
         self.isWebpage = isWebpage
         self.resource = resource
         durationLayout = TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: duration), color: presentation.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
     }
     
     func duration(for duration:TimeInterval) -> TextViewLayout {
@@ -39,10 +39,10 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
 
 class ChatVoiceRowItem: ChatMediaItem {
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
-        super.init(initialSize, chatInteraction, account, object, downloadSettings)
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+        super.init(initialSize, chatInteraction, context, object, downloadSettings)
         
-        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(account, object.renderType == .bubble))
+        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {

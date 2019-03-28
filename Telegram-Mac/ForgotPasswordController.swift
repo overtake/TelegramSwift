@@ -10,6 +10,8 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 import TelegramCoreMac
+import PostboxMac
+
 
 private let _id_input_code = InputDataIdentifier("_id_input_code")
 
@@ -56,7 +58,7 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
     return entries
 }
 
-func forgotUnauthorizedPasswordController(account: UnauthorizedAccount, emailPattern: String) -> InputDataModalController {
+func ForgotUnauthorizedPasswordController(accountManager: AccountManager, account: UnauthorizedAccount, emailPattern: String) -> InputDataModalController {
     
     
     let initialState = ForgotPasswordState(code: "", error: nil, checking: false)
@@ -82,7 +84,7 @@ func forgotUnauthorizedPasswordController(account: UnauthorizedAccount, emailPat
                 }
                 
                 if code.length == 6 {
-                    disposable.set(showModalProgress(signal: performPasswordRecovery(account: account, code: code) |> deliverOnMainQueue, for: mainWindow).start(next: {
+                    disposable.set(showModalProgress(signal: performPasswordRecovery(accountManager: accountManager, account: account, code: code, syncContacts: false) |> deliverOnMainQueue, for: mainWindow).start(next: {
                         
                         updateState { state in
                             return state.withUpdatedChecking(false)

@@ -13,13 +13,13 @@ import PostboxMac
 import TelegramCoreMac
 
 private final class FeaturedStickerPacksControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let openStickerPack: (StickerPackCollectionInfo) -> Void
     let addPack: (StickerPackCollectionInfo) -> Void
     
-    init(account: Account, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, addPack: @escaping (StickerPackCollectionInfo) -> Void) {
-        self.account = account
+    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, addPack: @escaping (StickerPackCollectionInfo) -> Void) {
+        self.context = context
         self.openStickerPack = openStickerPack
         self.addPack = addPack
     }
@@ -40,23 +40,6 @@ private enum FeaturedStickerPacksEntryId: Hashable {
             return id.hashValue
         }
     }
-    
-    static func ==(lhs: FeaturedStickerPacksEntryId, rhs: FeaturedStickerPacksEntryId) -> Bool {
-        switch lhs {
-        case let .pack(id):
-            if case .pack(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(id):
-            if case .section(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
@@ -70,45 +53,6 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
             return .pack(info.id)
         case let .section(id):
             return .section(id)
-        }
-    }
-    
-    static func ==(lhs: FeaturedStickerPacksEntry, rhs: FeaturedStickerPacksEntry) -> Bool {
-        switch lhs {
-        case let .pack(lhsSectionId, lhsIndex, lhsInfo, lhsUnread, lhsTopItem, lhsCount, lhsInstalled):
-            if case let .pack(rhsSectionId, rhsIndex, rhsInfo, rhsUnread, rhsTopItem, rhsCount, rhsInstalled) = rhs {
-                
-                if lhsSectionId != rhsSectionId {
-                    return false
-                }
-                if lhsIndex != rhsIndex {
-                    return false
-                }
-                if lhsInfo != rhsInfo {
-                    return false
-                }
-                if lhsUnread != rhsUnread {
-                    return false
-                }
-                if lhsTopItem != rhsTopItem {
-                    return false
-                }
-                if lhsCount != rhsCount {
-                    return false
-                }
-                if lhsInstalled != rhsInstalled {
-                    return false
-                }
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
         }
     }
     
@@ -137,7 +81,7 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
     func item(_ arguments: FeaturedStickerPacksControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .pack(_, _, info, unread, topItem, count, installed):
-            return StickerSetTableRowItem(initialSize, account: arguments.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .installation(installed: installed), action: {
+            return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .installation(installed: installed), action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 arguments.addPack(info)
@@ -215,24 +159,24 @@ class FeaturedStickerPacksController: TableViewController {
          statePromise.set(stateValue.modify { f($0) })
          }*/
         
-        let account = self.account
+        let context = self.context
         
         let actionsDisposable = DisposableSet()
         
         let resolveDisposable = MetaDisposable()
         actionsDisposable.add(resolveDisposable)
         
-        let arguments = FeaturedStickerPacksControllerArguments(account: account, openStickerPack: { info in
-           showModal(with: StickersPackPreviewModalController(account, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+        let arguments = FeaturedStickerPacksControllerArguments(context: context, openStickerPack: { info in
+           showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, addPack: { info in
-            showModal(with: StickersPackPreviewModalController(account, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         })
         
         let stickerPacks = Promise<CombinedView>()
-        stickerPacks.set(account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
+        stickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
         
         let featured = Promise<[FeaturedStickerPackItem]>()
-        featured.set(account.viewTracker.featuredStickerPacks())
+        featured.set(context.account.viewTracker.featuredStickerPacks())
         
         var initialUnreadPacks: [ItemCollectionId: Bool] = [:]
         
@@ -258,22 +202,7 @@ class FeaturedStickerPacksController: TableViewController {
         var alreadyReadIds = Set<ItemCollectionId>()
         
         genericView.addScroll(listener: TableScrollListener ({ scroll in
-            /*
-             var unreadIds: [ItemCollectionId] = []
-             for entry in entries {
-             switch entry {
-             case let .pack(_, info, unread, _, _, _):
-             if unread && !alreadyReadIds.contains(info.id) {
-             unreadIds.append(info.id)
-             }
-             }
-             }
-             if !unreadIds.isEmpty {
-             alreadyReadIds.formUnion(Set(unreadIds))
-             
-             let _ = markFeaturedStickerPacksAsSeenInteractively(postbox: account.postbox, ids: unreadIds).start()
-             }
- */
+           
         }))
         
         readyOnce()

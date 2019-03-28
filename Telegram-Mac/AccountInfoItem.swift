@@ -18,12 +18,12 @@ class AccountInfoItem: GeneralRowItem {
     
     fileprivate let textLayout: TextViewLayout
     fileprivate let activeTextlayout: TextViewLayout
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     fileprivate let peer: TelegramUser
 
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, account: Account, peer: TelegramUser, action: @escaping()->Void) {
-        self.account = account
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, peer: TelegramUser, action: @escaping()->Void) {
+        self.context = context
         self.peer = peer
         
         let attr = NSMutableAttributedString()
@@ -69,7 +69,7 @@ class AccountInfoView : TableRowView {
         avatarView = AvatarControl(font: .avatar(22.0))
         avatarView.setFrameSize(NSMakeSize(60, 60))
         super.init(frame: frameRect)
-
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         avatarView.animated = true
         
         textView.userInteractionEnabled = false
@@ -81,7 +81,7 @@ class AccountInfoView : TableRowView {
         
         avatarView.set(handler: { [weak self] _ in
             if let item = self?.item as? AccountInfoItem, let _ = item.peer.largeProfileImage {
-                showPhotosGallery(account: item.account, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
+                showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
             }
         }, for: .Click)
         
@@ -110,7 +110,7 @@ class AccountInfoView : TableRowView {
         if let item = item as? AccountInfoItem {
             actionView.image = item.isSelected ? nil : theme.icons.generalNext
             actionView.sizeToFit()
-            avatarView.setPeer(account: item.account, peer: item.peer)
+            avatarView.setPeer(account: item.context.account, peer: item.peer)
             textView.update(isSelect ? item.activeTextlayout : item.textLayout)
             needsDisplay = true
         }

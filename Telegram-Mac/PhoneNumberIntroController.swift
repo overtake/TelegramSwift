@@ -63,7 +63,7 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        ready.set(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue |> map { [weak self] peer -> Bool in
+        ready.set(context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue |> map { [weak self] peer -> Bool in
             if let phone = (peer as? TelegramUser)?.phone {
                 self?.setCenterTitle(formatPhoneNumber("+" + phone))
             }
@@ -85,13 +85,13 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: tr(L10n.composeNext), style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: L10n.composeNext, style: navigationButtonStyle, alignment:.Right)
     }
     
     func executeNext() {
-        confirm(for: mainWindow, information: tr(L10n.changePhoneNumberIntroAlert), successHandler: { [weak self] _ in
-            if let account = self?.account {
-                self?.navigationController?.push(PhoneNumberConfirmController(account))
+        confirm(for: mainWindow, information: L10n.changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
+            if let context = self?.context {
+                self?.navigationController?.push(PhoneNumberConfirmController(context))
             }
         })
     }

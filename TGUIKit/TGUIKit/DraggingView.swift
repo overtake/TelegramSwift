@@ -45,20 +45,21 @@ class DragView : OverlayControl {
         self.layer?.backgroundColor = presentation.colors.background.cgColor
         self.layer?.borderColor = presentation.colors.border.cgColor
         self.backgroundColor = presentation.colors.background
-        self.set(handler: { control in
-            control.layer?.borderColor = presentation.colors.blueUI.cgColor
-            control.layer?.animateBorder()
-        }, for: .Hover)
-        
-        self.set(handler: { control in
-            control.layer?.borderColor = presentation.colors.border.cgColor
-            control.layer?.animateBorder()
-        }, for: .Normal)
-        
+//        self.set(handler: { control in
+//            control.layer?.borderColor = presentation.colors.blueUI.cgColor
+//            control.layer?.animateBorder()
+//        }, for: .Hover)
+//
+//        self.set(handler: { control in
+//            control.layer?.borderColor = presentation.colors.border.cgColor
+//            control.layer?.animateBorder()
+//        }, for: .Normal)
         
     }
     
-  
+    public override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
     
     override func layout() {
         super.layout()
@@ -107,8 +108,12 @@ public class DraggingView: SplitView {
         return false
     }
     
+
+    
     func layoutItems(with items:[DragItem]) {
         container.removeAllSubviews()
+        
+
         
         let itemSize = NSMakeSize(frame.width - 10, ceil((frame.height - 10 - (5 * (CGFloat(items.count) - 1))) / CGFloat(items.count)))
         
@@ -122,6 +127,28 @@ public class DraggingView: SplitView {
         }
         
         
+    }
+    
+    public override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
+    
+    private func updateItems() {
+        for itemView in container.subviews as! [DragView] {
+            if itemView.mouseInside() {
+                itemView.layer?.borderColor = presentation.colors.blueUI.cgColor
+                itemView.layer?.animateBorder()
+            } else {
+                itemView.layer?.borderColor = presentation.colors.border.cgColor
+                itemView.layer?.animateBorder()
+            }
+        }
+    }
+    
+    public override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        updateItems()
+        
+        return .copy
     }
     
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
@@ -138,8 +165,8 @@ public class DraggingView: SplitView {
             container.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25)
             
             controller?.draggingEntered()
+            updateItems()
         }
-        
        
         return .copy
     }

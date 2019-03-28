@@ -57,10 +57,7 @@ class ForwardPanelModel: ChatAccessoryModel {
             for attr in message.attributes {
                 if let _ = attr as? SourceReferenceMessageAttribute {
                     if let info = message.forwardInfo {
-                        if !used.contains(info.author.id) {
-                            used.insert(info.author.id)
-                            names.append(info.author.displayTitle)
-                        }
+                        names.append(info.authorTitle)
                     }
                     hasSource = true
                     break

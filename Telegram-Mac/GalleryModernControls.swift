@@ -67,6 +67,8 @@ class GalleryModernControlsView: View {
         moreControl.set(image: theme.icons.galleryMore, for: .Hover)
         shareControl.set(image: theme.icons.galleryShare, for: .Highlight)
         moreControl.set(image: theme.icons.galleryMore, for: .Highlight)
+        
+        fastSaveControl.set(image: theme.icons.galleryFastSave, for: .Hover)
         fastSaveControl.set(image: theme.icons.galleryFastSave, for: .Highlight)
         
         _ = moreControl.sizeToFit(NSZeroSize, NSMakeSize(60, 60), thatFit: true)
@@ -290,12 +292,12 @@ class GalleryModernControlsView: View {
 
 
 class GalleryModernControls: GenericViewController<GalleryModernControlsView> {
-    private let account: Account
+    private let context: AccountContext
     private let interactions: GalleryInteractions
     private let thumbs: GalleryThumbsControl
     private let peerDisposable = MetaDisposable()
-    init(_ account: Account, interactions: GalleryInteractions, frame: NSRect, thumbsControl: GalleryThumbsControl) {
-        self.account = account
+    init(_ context: AccountContext, interactions: GalleryInteractions, frame: NSRect, thumbsControl: GalleryThumbsControl) {
+        self.context = context
         self.interactions = interactions
         thumbs = thumbsControl
         super.init(frame: frame)
@@ -321,9 +323,9 @@ class GalleryModernControls: GenericViewController<GalleryModernControlsView> {
         if let entry = entry {
             if let interfaceState = entry.interfaceState {
                 self.genericView.updateControlsVisible(entry)
-                peerDisposable.set((account.postbox.loadedPeerWithId(interfaceState.0) |> deliverOnMainQueue).start(next: { [weak self] peer in
+                peerDisposable.set((context.account.postbox.loadedPeerWithId(interfaceState.0) |> deliverOnMainQueue).start(next: { [weak self] peer in
                     guard let `self` = self else {return}
-                    self.genericView.updatePeer(peer, timestamp: interfaceState.1 == 0 ? 0 : interfaceState.1 - self.account.context.timeDifference, account: self.account, canShare: entry.canShare)
+                    self.genericView.updatePeer(peer, timestamp: interfaceState.1 == 0 ? 0 : interfaceState.1 - self.context.timeDifference, account: self.context.account, canShare: entry.canShare)
                 }))
             }
         }

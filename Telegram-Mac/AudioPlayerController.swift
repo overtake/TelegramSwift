@@ -46,40 +46,7 @@ enum APState : Equatable {
     case stoped
     case fetching(Float, Bool)
 }
-func ==(lhs:APState, rhs:APState) -> Bool {
-    switch lhs {
-    case .waiting:
-        if case .waiting = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .paused(lhsVars):
-        if case let .paused(rhsVars) = rhs, lhsVars.current == rhsVars.current && lhsVars.duration == rhsVars.duration {
-            return true
-        } else {
-            return false
-        }
-    case .stoped:
-        if case .stoped = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .playing(lhsVars):
-        if case let .playing(rhsVars) = rhs, lhsVars.current == rhsVars.current && lhsVars.duration == rhsVars.duration {
-            return true
-        } else {
-            return false
-        }
-    case let .fetching(lhsCurrent, _):
-        if case let .fetching(rhsCurrent, _) = rhs, lhsCurrent == rhsCurrent {
-            return true
-        } else {
-            return false
-        }
-    }
-}
+
 
 
 struct APResource {
@@ -185,7 +152,7 @@ class APSongItem : APItem {
             }
             if file.isVoice || file.isInstantVideo {
                 if let forward = message.forwardInfo {
-                    performerName = forward.author.displayTitle
+                    performerName = forward.authorTitle
                 } else if let peer = message.author {
                     if peer.id == account.peerId {
                         performerName = localizedString("You");
@@ -435,17 +402,6 @@ class APController : NSResponder {
     private let statusDisposable = MetaDisposable()
     private let readyDisposable = MetaDisposable()
 
-    @available(OSX 10.12.2, *)
-    var touchBarViews: AudioTouchBarItemViews {
-        if let touchBarViews = _touchBarViews as? AudioTouchBarItemViews {
-            return touchBarViews
-        }
-        let value = AudioTouchBarItemViews()
-        _touchBarViews = value
-        return value
-    }
-
-    private var _touchBarViews: Any? = nil
 
 
     public let ready:Promise<Bool> = Promise()
@@ -544,9 +500,6 @@ class APController : NSResponder {
                 value.songDidChangedState(song: item, for: self)
             }
         }
-        if #available(OSX 10.12.2, *) {
-            updateTouchbarControls(item.state)
-        }
     }
 
     private func notifySongChanged(item:APSongItem) {
@@ -606,13 +559,12 @@ class APController : NSResponder {
             mediaPlayer?.setBaseRate(baseRate)
         }
     }
-    init(account:Account, streamable: Bool, baseRate: Double) {
+    init(account:Account, streamable: Bool, baseRate: Double, initialTimebase: CMTimebase?) {
         self.account = account
         self.streamable = streamable
         self.baseRate = baseRate
         super.init()
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: mainWindow)
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: mainWindow)
+        _ = self.initialTimebase.swap(initialTimebase)
 
 //        readyDisposable.set((ready.get() |> filter {$0} |> take(1) |> deliverOnMainQueue).start(next: { [weak self] _ in
 //
@@ -620,17 +572,12 @@ class APController : NSResponder {
     }
 
     @objc open func windowDidBecomeKey() {
-        if #available(OSX 10.12.2, *) {
-            toggleControlStripButton(visible: false)
-            reloadTouchBarIfNeeded()
-        }
+        
     }
 
 
     @objc open func windowDidResignKey() {
-        if #available(OSX 10.12.2, *) {
-            toggleControlStripButton(visible: true)
-        }
+       
     }
 
     required init?(coder: NSCoder) {
@@ -641,12 +588,7 @@ class APController : NSResponder {
         globalAudio?.stop()
         globalAudio?.cleanup()
 
-        if #available(OSX 10.12.2, *) {
-            self.injectControlStripButton()
-        }
-
         globalAudio = self
-        account.context.mediaKeyTap?.startWatchingMediaKeys()
     }
 
 
@@ -780,6 +722,7 @@ class APController : NSResponder {
 
     func complete() {
         notifyCompleteQueue()
+        cleanup()
     }
 
     var currentSong:APSongItem? {
@@ -797,13 +740,14 @@ class APController : NSResponder {
         }
     }
 
+    private let initialTimebase: Atomic<CMTimebase?> = Atomic(value: nil)
 
     fileprivate func play(with item:APSongItem) {
         
 
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false)
+        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false, initialTimebase: self.initialTimebase.swap(nil))
         
         player.play()
 
@@ -955,19 +899,13 @@ class APController : NSResponder {
 
     func cleanup() {
         listeners.removeAll()
-        if #available(OSX 10.12.2, *) {
-            toggleControlStripButton(force: true, visible: false)
-        }
         globalAudio = nil
         mainWindow.applyResponderIfNeeded()
-        account.context.mediaKeyTap?.stopWatchingMediaKeys()
         stop()
     }
 
     private func updateUIAfterTick(_ status: MediaPlayerStatus) {
-        if #available(OSX 10.12.2, *) {
-            touchBarViews.updateSongProgressSlider(with: status.timestamp, duration: status.duration)
-        }
+        
     }
 
 
@@ -1022,10 +960,10 @@ class APChatController : APController {
     private let peerId:PeerId
     private let index:MessageIndex?
 
-    init(account: Account, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0) {
+    init(account: Account, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
         self.peerId = peerId
         self.index = index
-        super.init(account: account, streamable: streamable, baseRate: baseRate)
+        super.init(account: account, streamable: streamable, baseRate: baseRate, initialTimebase: initialTimebase)
     }
 
     required init?(coder: NSCoder) {
@@ -1053,7 +991,7 @@ class APChatController : APController {
             var entries:[APEntry] = []
             for viewEntry in view.0.entries {
                 switch viewEntry {
-                case let .MessageEntry(message, _, _, _):
+                case let .MessageEntry(message, _, _, _, _):
                     entries.append(.song(message))
                 case let .HoleEntry(hole, _):
                     entries.append(.hole(hole))
@@ -1102,8 +1040,8 @@ class APChatController : APController {
 
 class APChatMusicController : APChatController {
 
-    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
-        super.init(account: account, peerId: peerId, index: index, streamable: true, baseRate: baseRate)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
+        super.init(account: account, peerId: peerId, index: index, streamable: true, baseRate: baseRate, initialTimebase: initialTimebase)
     }
 
     required init?(coder: NSCoder) {
@@ -1117,8 +1055,8 @@ class APChatMusicController : APChatController {
 
 class APChatVoiceController : APChatController {
     private let markAsConsumedDisposable = MetaDisposable()
-    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
-        super.init(account: account, peerId: peerId, index:index, streamable: false, baseRate: baseRate)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
+        super.init(account: account, peerId: peerId, index:index, streamable: false, baseRate: baseRate, initialTimebase: initialTimebase)
     }
 
     required init?(coder: NSCoder) {
@@ -1154,9 +1092,9 @@ class APChatVoiceController : APChatController {
 
 class APSingleResourceController : APController {
     let wrapper:APSingleWrapper
-    init(account: Account, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0) {
+    init(account: Account, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
         self.wrapper = wrapper
-        super.init(account: account, streamable: streamable, baseRate: baseRate)
+        super.init(account: account, streamable: streamable, baseRate: baseRate, initialTimebase: initialTimebase)
         merge(with: APTransition(inserted: [(0,APSongItem(.single(wrapper), account))], removed: [], updated: []))
     }
 

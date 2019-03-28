@@ -102,7 +102,9 @@ public class TabBarController: ViewController, TabViewDelegate {
     }
     
     public func select(index:Int) -> Void {
-        genericView.tabView.setSelectedIndex(index, respondToDelegate: true)
+        if index != self.genericView.tabView.selectedIndex {
+            genericView.tabView.setSelectedIndex(index, respondToDelegate: true, animated: false)
+        }
     }
     
     public var count: Int {

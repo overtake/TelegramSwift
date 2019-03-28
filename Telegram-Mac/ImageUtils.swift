@@ -12,6 +12,8 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import TGUIKit
 
+let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
+
 enum PeerPhoto {
     case peer(PeerId, TelegramMediaImageRepresentation?, [String], Message?)
     case group([PeerId], [PeerId : TelegramMediaImageRepresentation], [PeerId : [String]])
@@ -70,7 +72,7 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                     }
                 }) |> deliverOnMainQueue
                 
-                let loadDataSignal = synchronousLoad ? imageData : imageData |> deliverOn(account.graphicsThreadPool)
+                let loadDataSignal = synchronousLoad ? imageData : imageData |> deliverOn(graphicsThreadPool)
                 
                 let img = loadDataSignal |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), NoError> in
                         
@@ -118,7 +120,7 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(account.graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
+                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
                     if let image = image {
                         return cacheEmptyPeerPhoto(image: image, peerId: peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
                             return (image, false)
@@ -146,7 +148,7 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
             let letters = displayLetters[peerId] ?? ["", ""]
             combine.append(peerImage(account: account, peerId: peerId, displayDimensions: inGroupSize, representation: representation, displayLetters: letters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad))
         }
-        return combineLatest(combine) |> deliverOn(account.graphicsThreadPool) |> map { images -> (CGImage?, Bool) in
+        return combineLatest(combine) |> deliverOn(graphicsThreadPool) |> map { images -> (CGImage?, Bool) in
             var animated: Bool = false
             for image in images {
                 if image.1 {

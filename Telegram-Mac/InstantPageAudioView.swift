@@ -15,7 +15,7 @@ import SwiftSignalKitMac
 final class InstantPageAudioView: View, InstantPageView, APDelegate {
     
     
-    private let account: Account
+    private let context: AccountContext
     let media: InstantPageMedia
     private var nameView: TextView?
     private let statusView: RadialProgressView = RadialProgressView()
@@ -55,8 +55,8 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         bufferingStatusDisposable.dispose()
     }
     
-    init(account: Account, media: InstantPageMedia) {
-        self.account = account
+    init(context: AccountContext, media: InstantPageMedia) {
+        self.context = context
         self.media = media
         super.init()
         addSubview(statusView)

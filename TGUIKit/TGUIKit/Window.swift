@@ -8,6 +8,46 @@
 
 import Cocoa
 
+public class ObervableView: NSView {
+    private var listeners:[WeakReference<NSObject>] = []
+
+    func add(listener: NSObject) {
+        listeners.append(WeakReference(value: listener))
+    }
+    
+    func remove(listener: NSObject) {
+        let index = listeners.index(where: { (weakValue) -> Bool in
+            return listener == weakValue.value
+        })
+        if let index = index {
+            listeners.remove(at: index)
+        }
+    }
+    override public func didAddSubview(_ subview: NSView) {
+        super.didAddSubview(subview)
+        for listener in listeners {
+            if let listener = listener.value as? ObservableViewDelegate {
+                listener.observableView(self, didAddSubview: subview)
+            }
+        }
+    }
+    
+    override public func willRemoveSubview(_ subview: NSView) {
+        super.willRemoveSubview(subview)
+        for listener in listeners {
+            if let listener = listener.value as? ObservableViewDelegate {
+                listener.observableview(self, willRemoveSubview: subview)
+            }
+        }
+    }
+    
+}
+
+protocol ObservableViewDelegate : class {
+    func observableView(_ view: NSView, didAddSubview: NSView)
+    func observableview(_ view: NSView, willRemoveSubview: NSView)
+}
+
 public enum HandlerPriority: Int, Comparable {
     case low = 0
     case medium = 1
@@ -437,6 +477,12 @@ open class Window: NSWindow {
     }
     
     open override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
+        if let responder = responder, responder.responds(to: NSSelectorFromString("window")) {
+            let window:NSWindow? = responder.value(forKey: "window") as? NSWindow
+            if window != self {
+                return false
+            }
+        }
         return super.makeFirstResponder(self.firstResponderFilter(responder))
     }
     
@@ -662,7 +708,6 @@ open class Window: NSWindow {
                     }
                 }
             }
-            
             super.sendEvent(event)
         } else {
             //super.sendEvent(event)
@@ -687,6 +732,9 @@ open class Window: NSWindow {
         set(handler: handler, with: object, for: .Escape, priority:priority, modifierFlags:modifierFlags)
     }
     
+    open override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+    }
     
     
     open override var canBecomeKey: Bool {
@@ -733,13 +781,13 @@ open class Window: NSWindow {
     }
     
     
-    
+
     public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
         
         self.acceptsMouseMovedEvents = true
-        self.contentView?.wantsLayer = true
         
+       
         
         
         self.contentView?.acceptsTouchEvents = true
@@ -747,5 +795,6 @@ open class Window: NSWindow {
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
         
     }
+    
 
 }

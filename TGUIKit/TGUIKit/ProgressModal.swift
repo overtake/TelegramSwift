@@ -136,9 +136,14 @@ class SuccessModalController : ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.updateIcon(icon: icon, text: text)
+        genericView.background = _backgroundColor
         readyOnce()
     }
     
+//    override var handleEvents: Bool {
+//        return false
+//    }
+//    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
     }
@@ -153,9 +158,11 @@ class SuccessModalController : ModalViewController {
     
     private let icon: CGImage
     private let text: TextViewLayout?
-    init(_ icon: CGImage, text: TextViewLayout? = nil) {
+    private let _backgroundColor: NSColor
+    init(_ icon: CGImage, text: TextViewLayout? = nil, background: NSColor) {
         self.icon = icon
         self.text = text
+        self._backgroundColor = background
         super.init(frame:NSMakeRect(0, 0, text != nil ? 100 + text!.layoutSize.width : 80, text != nil ? max(icon.backingSize.height + 20, text!.layoutSize.height + 20) : 80))
         self.bar = .init(height: 0)
     }
@@ -196,9 +203,9 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
     }
 }
 
-public func showModalSuccess(for window: Window, icon: CGImage, text: TextViewLayout? = nil, delay _delay: Double) -> Signal<Void, NoError> {
+public func showModalSuccess(for window: Window, icon: CGImage, text: TextViewLayout? = nil, background: NSColor = presentation.colors.background, delay _delay: Double) -> Signal<Void, NoError> {
     
-    let modal = SuccessModalController(icon, text: text)
+    let modal = SuccessModalController(icon, text: text, background: background)
     
     return Signal<Void, NoError>({ _ -> Disposable in
         showModal(with: modal, for: window)

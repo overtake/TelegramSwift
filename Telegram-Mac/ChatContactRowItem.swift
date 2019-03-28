@@ -21,12 +21,12 @@ class ChatContactRowItem: ChatRowItem {
     let vCard: CNContact?
     let contact: TelegramMediaContact
     let appearance: WPLayoutPresentation
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
             
-            let isIncoming: Bool = message.isIncoming(account, object.renderType == .bubble)
+            let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
 
             
             self.appearance = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, object.renderType == .bubble), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble), renderType: object.renderType)
@@ -63,7 +63,7 @@ class ChatContactRowItem: ChatRowItem {
             fatalError("contact not found for item")
         }
         
-        super.init(initialSize, chatInteraction, account, object, downloadSettings)
+        super.init(initialSize, chatInteraction, context, object, downloadSettings)
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
@@ -144,7 +144,7 @@ class ChatContactRowView : ChatRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? ChatContactRowItem {
-            photoView.setPeer(account: item.account, peer: item.contactPeer)
+            photoView.setPeer(account: item.context.account, peer: item.contactPeer)
             photoView.removeAllHandlers()
             if let peerId = item.contactPeer?.id {
                 photoView.set(handler: { [weak item] control in
@@ -167,11 +167,11 @@ class ChatContactRowView : ChatRowView {
                     addSubview(actionButton!)
                 }
                 actionButton?.removeAllHandlers()
-                actionButton?.set(handler: { [weak item] _ in
-                    guard let item = item, let vCard = item.vCard else {return}
-                    let controller = VCardModalController(item.account, vCard: vCard, contact: item.contact)
-                    showModal(with: controller, for: mainWindow)
-                }, for: .Click)
+//                actionButton?.set(handler: { [weak item] _ in
+//                    guard let item = item, let vCard = item.vCard else {return}
+//                    let controller = VCardModalController(item.account, vCard: vCard, contact: item.contact)
+//                    showModal(with: controller, for: mainWindow)
+//                }, for: .Click)
                 actionButton?.set(text: L10n.chatViewContact, for: .Normal)
                 actionButton?.layer?.borderColor = item.appearance.activity.cgColor
                 actionButton?.set(color: item.appearance.activity, for: .Normal)

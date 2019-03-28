@@ -236,7 +236,7 @@ func takeSenderOptions(for urls:[URL]) -> [PreviewOptions] {
             }
         }
         
-        let media = mime.hasPrefix("image") || mime.hasSuffix("gif") || mime.hasPrefix("video/mp4")
+        let media = mime.hasPrefix("image") || mime.hasSuffix("gif") || mime.hasPrefix("video/mp4") || mime.hasPrefix("video/mov")
 
         if media {
             if !options.contains(.media) {

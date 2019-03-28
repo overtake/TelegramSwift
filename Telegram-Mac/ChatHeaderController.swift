@@ -244,7 +244,7 @@ class ChatPinnedView : Control {
     private let dismiss:ImageButton = ImageButton()
     private let loadMessageDisposable = MetaDisposable()
     init(_ messageId:MessageId, chatInteraction:ChatInteraction) {
-        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true)
+        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.context.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true)
         self.chatInteraction = chatInteraction
         super.init()
         
@@ -269,7 +269,7 @@ class ChatPinnedView : Control {
             self?.needsLayout = true
             
             if !result, let chatInteraction = self?.chatInteraction {
-                _ = requestUpdatePinnedMessage(account: chatInteraction.account, peerId: chatInteraction.peerId, update: .clear).start()
+                _ = requestUpdatePinnedMessage(account: chatInteraction.context.account, peerId: chatInteraction.peerId, update: .clear).start()
             }
         }))
         updateLocalizationAndTheme()
@@ -516,6 +516,10 @@ class ChatSearchHeader : View, Notifable {
     private let from:ImageButton = ImageButton()
     private let calendar:ImageButton = ImageButton()
     
+    private let prev:ImageButton = ImageButton()
+    private let next:ImageButton = ImageButton()
+
+    
     private let separator:View = View()
     private let interactions:ChatSearchInteractions
     private let chatInteraction: ChatInteraction
@@ -535,9 +539,9 @@ class ChatSearchHeader : View, Notifable {
         self.interactions = interactions
         self.parentInteractions = chatInteraction
         self.calendarController = CalendarController(NSMakeRect(0, 0, 250, 250), selectHandler: interactions.calendarAction)
-        self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, account: chatInteraction.account)
+        self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, context: chatInteraction.context)
         self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
-        self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: self.chatInteraction, highlightInsteadOfSelect: true)
+        self.inputContextHelper = InputContextHelper(chatInteraction: self.chatInteraction, highlightInsteadOfSelect: true)
         super.init()
         
         self.chatInteraction.movePeerToInput = { [weak self] peer in
@@ -553,7 +557,6 @@ class ChatSearchHeader : View, Notifable {
 
         initialize()
         
-      //  self.searchView.change(state: .Focus, false)
 
         
         parentInteractions.loadingMessage.set(.single(false))
@@ -562,6 +565,8 @@ class ChatSearchHeader : View, Notifable {
         self.loadingDisposable.set((parentInteractions.loadingMessage.get() |> deliverOnMainQueue).start(next: { [weak self] loading in
             self?.searchView.isLoading = loading
         }))
+        
+        
     }
     
     func applySearchResponder() {
@@ -586,10 +591,16 @@ class ChatSearchHeader : View, Notifable {
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
-        let account = chatInteraction.account
+        let context = chatInteraction.context
         if let value = value as? CSearchContextState, let oldValue = oldValue as? CSearchContextState, let view = superview {
             
             let stateValue = self.query
+            
+            prev.isEnabled = !value.messages.0.isEmpty && value.selectedIndex < value.messages.0.count - 1
+            next.isEnabled = !value.messages.0.isEmpty && value.selectedIndex > 0
+            next.set(image: next.isEnabled ? theme.icons.chatSearchDown : theme.icons.chatSearchDownDisabled, for: .Normal)
+            prev.set(image: prev.isEnabled ? theme.icons.chatSearchUp : theme.icons.chatSearchUpDisabled, for: .Normal)
+
             
             
             if let peer = chatInteraction.presentation.peer {
@@ -626,7 +637,7 @@ class ChatSearchHeader : View, Notifable {
                             }
                         })
                     } else {
-                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, account: account) {
+                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
                             self.contextQueryState?.1.dispose()
                             var inScope = true
                             var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
@@ -752,9 +763,17 @@ class ChatSearchHeader : View, Notifable {
             self.inputInteraction.update({$0.updatedMessages(messages).updatedSelectedIndex(-1)})
             self.parentInteractions.loadingMessage.set(.single(false))
         }))
+        
+        next.autohighlight = false
+        prev.autohighlight = false
+
 
 
         _ = calendar.sizeToFit()
+        
+        addSubview(next)
+        addSubview(prev)
+
         
         addSubview(from)
         
@@ -771,6 +790,14 @@ class ChatSearchHeader : View, Notifable {
             self?.inputInteraction.update {$0.updatedTokenState(.none).updatedSelectedIndex(-1).updatedMessages(([], nil)).updatedSearchState(SearchState(state: .None, request: ""))}
             interactions.cancel()
         }, for: .Click)
+        
+        next.set(handler: { [weak self] _ in
+            self?.nextAction()
+            }, for: .Click)
+        prev.set(handler: { [weak self] _ in
+            self?.prevAction()
+        }, for: .Click)
+
         
 
         from.set(handler: { [weak self] _ in
@@ -794,6 +821,13 @@ class ChatSearchHeader : View, Notifable {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         backgroundColor = theme.colors.background
+        
+        next.set(image: theme.icons.chatSearchDown, for: .Normal)
+        _ = next.sizeToFit()
+        
+        prev.set(image: theme.icons.chatSearchUp, for: .Normal)
+        _ = prev.sizeToFit()
+
 
         calendar.set(image: theme.icons.chatSearchCalendar, for: .Normal)
         _ = calendar.sizeToFit()
@@ -832,18 +866,22 @@ class ChatSearchHeader : View, Notifable {
     }
     
     private var searchWidth: CGFloat {
-        return frame.width - cancel.frame.width - 20 - 20 - 20 - (calendar.isHidden ? 0 : calendar.frame.width + 20) - (from.isHidden ? 0 : from.frame.width + 20)
+        return frame.width - cancel.frame.width - 20 - 20 - 80 - (calendar.isHidden ? 0 : calendar.frame.width + 20) - (from.isHidden ? 0 : from.frame.width + 20)
     }
     
     override func layout() {
         super.layout()
         
+        
+        prev.centerY(x:10)
+        next.centerY(x:prev.frame.maxX)
+
 
         cancel.centerY(x:frame.width - cancel.frame.width - 20)
 
         searchView.setFrameSize(NSMakeSize(searchWidth, 30))
         inputContextHelper.controller.view.setFrameSize(frame.width, inputContextHelper.controller.frame.height)
-        searchView.centerY(x:20)
+        searchView.centerY(x: 80)
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
         
         from.centerY(x: searchView.frame.maxX + 20)
@@ -859,8 +897,8 @@ class ChatSearchHeader : View, Notifable {
     }
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {
-        if let _ = window as? Window {
-            self.searchView.change(state: .None, false)
+        if newWindow == nil {
+         //   self.searchView.change(state: .None, false)
         }
     }
     
@@ -885,7 +923,7 @@ class ChatSearchHeader : View, Notifable {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
         self.parentInteractions = chatInteraction
-        self.inputContextHelper = InputContextHelper(account: chatInteraction.account, chatInteraction: chatInteraction, highlightInsteadOfSelect: true)
+        self.inputContextHelper = InputContextHelper(chatInteraction: chatInteraction, highlightInsteadOfSelect: true)
         self.calendarController = CalendarController(NSMakeRect(0,0,250,250), selectHandler: interactions.calendarAction)
         super.init(frame: frameRect)
         initialize()

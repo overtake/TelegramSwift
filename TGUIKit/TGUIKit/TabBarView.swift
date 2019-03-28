@@ -112,14 +112,14 @@ public class TabBarView: View {
                     if strongSelf.selectedIndex == i {
                         strongSelf.delegate?.scrollup()
                     } else {
-                        strongSelf.setSelectedIndex(i, respondToDelegate:true)
+                        strongSelf.setSelectedIndex(i, respondToDelegate:true, animated: true)
                     }
                 }
             }, for: .Click)
             view.autoresizingMask = [.minXMargin, .maxXMargin, .width]
             view.autoresizesSubviews = true
-            let imageView = ImageView(frame: NSMakeRect(0, 0, tab.image.backingSize.width, tab.image.backingSize.height))
-            imageView.image = tab.image
+            let imageView = tab.makeView()
+            tab.setSelected(false, for: imageView, animated: false)
             container.addSubview(imageView)
             container.backgroundColor = presentation.colors.background
             container.setFrameSize(NSMakeSize(NSWidth(imageView.frame), NSHeight(container.frame)))
@@ -127,6 +127,7 @@ public class TabBarView: View {
             
             if let subView = tab.subNode?.view {
                 view.addSubview(subView)
+                tab.subNode?.update()
             }
             
             imageView.center()
@@ -136,7 +137,7 @@ public class TabBarView: View {
             xOffset += itemWidth
         }
         
-        self.setSelectedIndex(self.selectedIndex, respondToDelegate: false)
+        self.setSelectedIndex(self.selectedIndex, respondToDelegate: false, animated: false)
         setFrameSize(frame.size)
     }
     
@@ -176,21 +177,19 @@ public class TabBarView: View {
     }
     
     
-    public func setSelectedIndex(_ selectedIndex: Int, respondToDelegate: Bool) {
+    public func setSelectedIndex(_ selectedIndex: Int, respondToDelegate: Bool, animated: Bool) {
         if selectedIndex > self.tabs.count || self.tabs.count == 0 {
             return
         }
         let deselectItem = self.tabs[self.selectedIndex]
         let deselectView = self.subviews[self.selectedIndex]
         
-        var image:ImageView = deselectView.subviews[0].subviews[0] as! ImageView
-        image.image = deselectItem.image
+        deselectItem.setSelected(false, for: deselectView.subviews[0].subviews[0], animated: animated)
         self.selectedIndex = selectedIndex
         let selectItem = self.tabs[self.selectedIndex]
         let selectView = self.subviews[self.selectedIndex]
        
-        image = selectView.subviews[0].subviews[0] as! ImageView
-        image.image = selectItem.selectedImage
+        selectItem.setSelected(true, for: selectView.subviews[0].subviews[0], animated: animated)
         if respondToDelegate {
             self.delegate?.didChange(selected: selectItem, index: selectedIndex)
         }

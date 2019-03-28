@@ -245,7 +245,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     private let viewDisposable:MetaDisposable = MetaDisposable()
     let path:Promise<String> = Promise()
     let entry:GalleryEntry
-    let account:Account
+    let context: AccountContext
     private var _pagerSize: NSSize
     var pagerSize:NSSize {
         return _pagerSize
@@ -302,16 +302,16 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
     }
     
-    init(_ account:Account, _ entry:GalleryEntry, _ pagerSize:NSSize) {
+    init(_ context: AccountContext, _ entry:GalleryEntry, _ pagerSize:NSSize) {
         self.entry = entry
-        self.account = account
+        self.context = context
         self._pagerSize = pagerSize
         if let caption = entry.message?.text, !caption.isEmpty, !(entry.message?.media.first is TelegramMediaWebpage) {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: caption.prefixWithDots(255), color: .white, font: .normal(.text))
             
 //            attr.detectLinks(type: [.Links, .Mentions], account: account, color: .linkColor, openInfo: { peerId, _, _, _ in
-//                account.context.mainNavigation?.push(PeerInfoController.init(account: account, peerId: peerId))
+//                context.sharedContext.bindings.rootNavigation().push(PeerInfoController.init(account: account, peerId: peerId))
 //                viewer?.close()
 //            }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
             

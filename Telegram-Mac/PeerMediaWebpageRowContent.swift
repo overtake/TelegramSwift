@@ -23,9 +23,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     var iconArguments:TransformImageArguments?
     var thumb:CGImage? = nil
     let readPercent: Int32?
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry, saveToRecent: Bool = true, readPercent: Int32? = nil) {
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, saveToRecent: Bool = true, readPercent: Int32? = nil) {
         self.readPercent = readPercent
-        super.init(initialSize,interface,account,object)
+        super.init(initialSize,interface,object)
         iconSize = NSMakeSize(50, 50)
         self.contentInset = NSEdgeInsets(left: 70, right: 10, top: 5, bottom: 5)
         let isFullRead = readPercent == 100
@@ -63,14 +63,14 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 if let text = content.text {
                     let _ = attributedText.append(string: "\n")
                     let _ = attributedText.append(string: text, color: isFullRead ? theme.colors.grayText : theme.colors.text, font: NSFont.normal(FontSize.text))
-                    attributedText.detectLinks(type: [.Links], account: account, openInfo: interface.openInfo)
+                    attributedText.detectLinks(type: [.Links], context: interface.context, openInfo: interface.openInfo)
                 }
                 
                 textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
                 
                 let linkAttributed:NSMutableAttributedString = NSMutableAttributedString()
                 let _ = linkAttributed.append(string: content.displayUrl, color: theme.colors.link, font: NSFont.normal(FontSize.text))
-                linkAttributed.detectLinks(type: [.Links], account: account, color: isFullRead ? theme.colors.link.withAlphaComponent(0.7) : theme.colors.link, openInfo: interface.openInfo)
+                linkAttributed.detectLinks(type: [.Links], context: interface.context, color: isFullRead ? theme.colors.link.withAlphaComponent(0.7) : theme.colors.link, openInfo: interface.openInfo)
                 
                 linkLayout = TextViewLayout(linkAttributed, maximumNumberOfLines: 1, truncationType: .end)
             }
@@ -135,7 +135,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         linkLayout?.interactions = TextViewInteractions(processURL: { [weak self] url in
             if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
                 if self.hasInstantPage {
-                    showInstantPage(InstantPageViewController(account, webPage: webpage, message: nil, saveToRecent: saveToRecent))
+                    showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: saveToRecent))
                     return
                 }
             }
@@ -264,7 +264,7 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             
             let updateIconImageSignal:Signal<(TransformImageArguments) -> DrawingContext?,NoError>
             if let icon = item.icon {
-                updateIconImageSignal = chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
+                updateIconImageSignal = chatWebpageSnippetPhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {
                 updateIconImageSignal = .single({_ in return nil})
             }

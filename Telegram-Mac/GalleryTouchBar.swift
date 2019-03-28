@@ -10,6 +10,7 @@ import Cocoa
 import SwiftSignalKitMac
 import TGUIKit
 
+
 @available(OSX 10.12.2, *)
 private extension NSTouchBarItem.Identifier {
     static let zoomControls = NSTouchBarItem.Identifier("\(Bundle.main.bundleIdentifier!).touchBar.gallery.zoom")

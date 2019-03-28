@@ -22,7 +22,7 @@ class ChatUnreadRowItem: ChatRowItem {
     
     public var text:NSAttributedString;
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ entry:ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry:ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         let titleAttr:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleAttr.append(string:tr(L10n.messagesUnreadMark), color: theme.colors.grayText, font: .normal(.text))

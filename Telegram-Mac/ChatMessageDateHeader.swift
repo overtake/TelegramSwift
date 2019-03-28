@@ -121,6 +121,7 @@ class ChatDateStickView : TableStickView {
         self.textView.isSelectable = false
        // self.textView.userInteractionEnabled = false
         self.containerView.wantsLayer = true
+        self.textView.disableBackgroundDrawing = true
        // textView.isEventLess = false
         super.init(frame: frameRect)
         addSubview(textView)

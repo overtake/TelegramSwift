@@ -196,7 +196,7 @@ class ChatSelectText : NSObject {
     
     func initializeHandlers(for window:Window, chatInteraction:ChatInteraction) {
         
-        table.addScroll(listener: TableScrollListener ({ [weak table] _ in
+        table.addScroll(listener: TableScrollListener (dispatchWhenVisibleRangeUpdated: false, { [weak table] _ in
             table?.enumerateVisibleViews(with: { view in
                 view.updateMouse()
             })
@@ -336,12 +336,12 @@ class ChatSelectText : NSObject {
         }, with: self, for: .leftMouseDragged, priority:.medium)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
-            guard let `self` = self else { return .invokeNext }
+            guard let `self` = self else { return .rejected }
             if event.stage == 2 && self.lastPressureEventStage < 2 {
                 self.inPressedState = true
             }
             self.lastPressureEventStage = event.stage
-            return .invokeNext
+            return .rejected
         }, with: self, for: .pressure, priority: .medium)
         
         window.set(handler: { () -> KeyHandlerResult in

@@ -19,12 +19,12 @@ final class StickerPackGridItem: GridItem {
         return nil
     }
     
-    let account: Account
+    let context: AccountContext
     let file: TelegramMediaFile
     let selected: () -> Void
     let send:(TelegramMediaFile) -> Void
-    init(account: Account, file: TelegramMediaFile, send:@escaping(TelegramMediaFile) -> Void,  selected: @escaping () -> Void) {
-        self.account = account
+    init(context: AccountContext, file: TelegramMediaFile, send:@escaping(TelegramMediaFile) -> Void,  selected: @escaping () -> Void) {
+        self.context = context
         self.file = file
         self.send = send
         self.selected = selected
@@ -36,7 +36,7 @@ final class StickerPackGridItem: GridItem {
         node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
             self?.send(file)
             }, previewStickerSet: {_ in}, addStickerSet: {_ in}, showStickerPack: {_ in})
-        node.setup(account: self.account, file: self.file, packInfo: nil)
+        node.setup(context: self.context, file: self.file, packInfo: nil)
         node.selected = self.selected
         return node
     }
@@ -50,7 +50,7 @@ final class StickerPackGridItem: GridItem {
             self?.send(file)
         }, previewStickerSet: {_ in}, addStickerSet: {_ in}, showStickerPack: {_ in})
         
-        node.setup(account: self.account, file: self.file, packInfo: nil)
+        node.setup(context: self.context, file: self.file, packInfo: nil)
         node.selected = self.selected
     }
 }

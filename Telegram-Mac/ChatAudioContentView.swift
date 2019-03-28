@@ -74,7 +74,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     
     override func open() {
-        if let parameters = parameters as? ChatMediaMusicLayoutParameters, let account = account, let parent = parent  {
+        if let parameters = parameters as? ChatMediaMusicLayoutParameters, let context = context, let parent = parent  {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: parent) {
                 controller.playOrPause()
             } else {
@@ -83,9 +83,9 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 let controller:APController
 
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true)
+                    controller = APSingleResourceController(account: context.account, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true)
                 } else {
-                    controller = APChatMusicController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
+                    controller = APChatMusicController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
                 parameters.showPlayer(controller)
                 controller.start()
@@ -97,15 +97,15 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
    
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+        if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
         }
     }
     
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile, let parent = parent {
-            messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
+        if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
+            messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
         }
     }
     
@@ -148,9 +148,9 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         }
     }
     
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+    override func update(with media: Media, size:NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
+        super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
         
@@ -158,7 +158,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
         
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-            updatedStatusSignal = account.pendingMessageManager.pendingMessageStatus(parent.id) |> map { pendingStatus in
+            updatedStatusSignal = context.account.pendingMessageManager.pendingMessageStatus(parent.id) |> map { pendingStatus in
                 if let pendingStatus = pendingStatus {
                     return .Fetching(isActive: true, progress: pendingStatus.progress)
                 } else {

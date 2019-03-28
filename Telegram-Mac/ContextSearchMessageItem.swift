@@ -16,7 +16,7 @@ class ContextSearchMessageItem: GeneralRowItem {
     
     let message:Message
     
-    let account:Account
+    let context: AccountContext
     let peer:Peer
     var peerId:PeerId {
         return peer.id
@@ -47,8 +47,8 @@ class ContextSearchMessageItem: GeneralRowItem {
     private var messageSelectedLayout: TextViewLayout
 
     
-    init(_ initialSize:NSSize, account:Account, message: Message, searchText: String, action: @escaping()->Void) {
-        self.account = account
+    init(_ initialSize:NSSize, context: AccountContext, message: Message, searchText: String, action: @escaping()->Void) {
+        self.context = context
         self.message = message
 
         
@@ -68,7 +68,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
             if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                 nameColor = theme.chat.linkColor(true, false)
-            } else if account.peerId != peer.id {
+            } else if context.peerId != peer.id {
                 let value = abs(Int(peer.id.id) % 7)
                 nameColor = theme.chat.peerName(value)
             }
@@ -83,7 +83,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         var text = pullText(from: message) as String
         if text.isEmpty {
-            text = serviceMessageText(message, account: account)
+            text = serviceMessageText(message, account: context.account)
         }
         _ = messageTitle.append(string: text, color: theme.colors.text, font: .normal(.text))
         let selectRange = text.lowercased().nsstring.range(of: searchText.lowercased())
@@ -100,7 +100,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         let date:NSMutableAttributedString = NSMutableAttributedString()
         var time:TimeInterval = TimeInterval(message.timestamp)
-        time -= account.context.timeDifference
+        time -= context.timeDifference
         let range = date.append(string: DateUtils.string(forMessageListDate: Int32(time)), color: theme.colors.grayText, font: .normal(.short))
         date.setSelected(color: .white,range: range)
         self.date = date.copy() as? NSAttributedString
@@ -291,7 +291,7 @@ private class ContextSearchMessageView : GeneralRowView {
         
         guard let item = item as? ContextSearchMessageItem else {return}
         
-        photo.setState(account: item.account, state: item.photo)
+        photo.setState(account: item.context.account, state: item.photo)
         messageText.update(item.ctxMessageLayout)
     }
     

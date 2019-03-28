@@ -10,7 +10,7 @@ import Cocoa
 
 public class HorizontalTableView: TableView {
 
-    public required init(frame frameRect: NSRect, isFlipped: Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
+    public override init(frame frameRect: NSRect, isFlipped: Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
         super.init(frame: frameRect, isFlipped: isFlipped, bottomInset: bottomInset, drawBorder: drawBorder)
         //        [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
         //self.verticalScroller?.controlSize = NSControlSize.small

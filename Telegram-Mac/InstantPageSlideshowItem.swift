@@ -44,7 +44,7 @@ class InstantPageSlideshowItem: InstantPageItem {
 
     
     func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
-        return InstantPageSlideshowView(frameRect: frame, medias: medias, account: arguments.account)
+        return InstantPageSlideshowView(frameRect: frame, medias: medias, context: arguments.context)
     }
     
     func linkSelectionViews() -> [InstantPageLinkSelectionView] {
@@ -64,7 +64,7 @@ class InstantPageSlideshowItem: InstantPageItem {
 class InstantPageSlideshowView : View, InstantPageView {
     fileprivate let medias: [InstantPageMedia]
     private let slideView: SliderView
-    init(frameRect: NSRect, medias: [InstantPageMedia], account: Account) {
+    init(frameRect: NSRect, medias: [InstantPageMedia], context: AccountContext) {
         self.medias = medias
         slideView = SliderView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -77,7 +77,7 @@ class InstantPageSlideshowView : View, InstantPageView {
                     arguments = .video(interactive: true, autoplay: media.isAnimated)
                 }
             }
-            let view = InstantPageMediaView(account: account, media: media, arguments: arguments)
+            let view = InstantPageMediaView(context: context, media: media, arguments: arguments)
             slideView.addSlide(view)
         }
         

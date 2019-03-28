@@ -134,7 +134,7 @@ final class ChatStickersTouchBarPopover : NSTouchBar, NSTouchBarDelegate {
     func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
         switch identifier {
         case .sticker:
-            let scrubberItem: NSCustomTouchBarItem = StickersScrubberBarItem(identifier: identifier, account: chatInteraction.account, sendSticker: { [weak self] file in
+            let scrubberItem: NSCustomTouchBarItem = StickersScrubberBarItem(identifier: identifier, account: chatInteraction.context.account, sendSticker: { [weak self] file in
                 self?.dismiss(file)
             }, entries: self.entries)
             return scrubberItem

@@ -7,12 +7,12 @@ import SwiftSignalKitMac
 
 
 private final class BlockedPeerControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let removePeer: (PeerId) -> Void
     let openPeer:(PeerId) -> Void
-    init(account: Account, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping(PeerId)->Void) {
-        self.account = account
+    init(context: AccountContext, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping(PeerId)->Void) {
+        self.context = context
         self.removePeer = removePeer
         self.openPeer = openPeer
     }
@@ -32,29 +32,7 @@ private enum BlockedPeerEntryStableId: Hashable {
             return 1
         }
     }
-    
-    static func ==(lhs: BlockedPeerEntryStableId, rhs: BlockedPeerEntryStableId) -> Bool {
-        switch lhs {
-        case let .peer(peerId):
-            if case .peer(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .empty:
-            if case .empty = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .whiteSpace:
-            if case .whiteSpace = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
+
 }
 
 private enum BlockedPeerEntry: Identifiable, Comparable {
@@ -147,7 +125,7 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
                 arguments.openPeer(peer.id)
             }, contextMenuItems: {
                 if case .plain = interactionType {
@@ -254,16 +232,16 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     private let disposable:MetaDisposable = MetaDisposable()
     private let defaultPeers:[Peer]?
     private let updated:([Peer]?) -> Void
-    init(_ account: Account, _ defaultPeers:[Peer]?, updated: @escaping([Peer]?) -> Void) {
+    init(_ context: AccountContext, _ defaultPeers:[Peer]?, updated: @escaping([Peer]?) -> Void) {
         self.defaultPeers = defaultPeers
         self.updated = updated
-        super.init(account)
+        super.init(context)
     }
 
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let account = self.account
+        let context = self.context
         
         let updateState: ((BlockedPeerControllerState) -> BlockedPeerControllerState) -> Void = { [weak self] f in
             if let strongSelf = self {
@@ -273,7 +251,7 @@ class BlockedPeersViewController: EditableViewController<TableView> {
         
         let peersPromise = Promise<[Peer]?>(nil)
         
-        let arguments = BlockedPeerControllerArguments(account: account, removePeer: { [weak self] memberId in
+        let arguments = BlockedPeerControllerArguments(context: context, removePeer: { [weak self] memberId in
             
             updateState {
                 return $0.withUpdatedRemovingPeerId(memberId)
@@ -298,7 +276,7 @@ class BlockedPeersViewController: EditableViewController<TableView> {
                     return .complete()
             }
             
-            self?.removePeerDisposable.set((requestUpdatePeerIsBlocked(account: account, peerId: memberId, isBlocked: false) |> then(applyPeers) |> deliverOnMainQueue).start(error: { _ in
+            self?.removePeerDisposable.set((requestUpdatePeerIsBlocked(account: context.account, peerId: memberId, isBlocked: false) |> then(applyPeers) |> deliverOnMainQueue).start(error: { _ in
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }
@@ -310,11 +288,11 @@ class BlockedPeersViewController: EditableViewController<TableView> {
             }))
         }, openPeer: { [weak self] peerId in
             guard let `self` = self else {return}
-            self.navigationController?.push(PeerInfoController(account: self.account, peerId: peerId))
+            self.navigationController?.push(PeerInfoController(context: self.context, peerId: peerId))
         })
         
         
-        let peersSignal: Signal<[Peer]?, NoError> = .single(defaultPeers) |> then(requestBlockedPeers(account: account) |> map { Optional($0) })
+        let peersSignal: Signal<[Peer]?, NoError> = .single(defaultPeers) |> then(requestBlockedPeers(account: context.account) |> map { Optional($0) })
         
         peersPromise.set(peersSignal)
         

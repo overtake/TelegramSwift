@@ -35,7 +35,7 @@ private final class FetchManagerLocationEntry {
     var referenceCount: Int32 = 0
     var elevatedPriorityReferenceCount: Int32 = 0
     var userInitiatedPriorityIndices: [Int32] = []
-    
+    let downloadRange: Range<Int>?
     var priorityKey: FetchManagerPriorityKey? {
         if self.referenceCount > 0 {
             return FetchManagerPriorityKey(locationKey: self.id.locationKey, hasElevatedPriority: self.elevatedPriorityReferenceCount > 0, userInitiatedPriority: userInitiatedPriorityIndices.last)
@@ -44,11 +44,12 @@ private final class FetchManagerLocationEntry {
         }
     }
     
-    init(id: FetchManagerLocationEntryId, episode: Int32, reference: MediaResourceReference, fetchTag: MediaResourceStatsCategory?) {
+    init(id: FetchManagerLocationEntryId, episode: Int32, reference: MediaResourceReference, fetchTag: MediaResourceStatsCategory?, downloadRange: Range<Int>? = nil) {
         self.id = id
         self.episode = episode
         self.reference = reference
         self.fetchTag = fetchTag ?? .generic
+        self.downloadRange = downloadRange
     }
 }
 
@@ -95,7 +96,7 @@ private final class FetchManagerCategoryContext {
         self.entryCompleted = entryCompleted
     }
     
-    func withEntry(id: FetchManagerLocationEntryId, takeNew: (() -> (MediaResourceReference, MediaResourceStatsCategory?, Int32))?, _ f: (FetchManagerLocationEntry) -> Void) {
+    func withEntry(id: FetchManagerLocationEntryId, downloadRange: Range<Int>? = nil, takeNew: (() -> (MediaResourceReference, MediaResourceStatsCategory?, Int32))?, _ f: (FetchManagerLocationEntry) -> Void) {
         let entry: FetchManagerLocationEntry
         let previousPriorityKey: FetchManagerPriorityKey?
         
@@ -105,7 +106,7 @@ private final class FetchManagerCategoryContext {
         } else if let takeNew = takeNew {
             previousPriorityKey = nil
             let (reference, fetchTag, episode) = takeNew()
-            entry = FetchManagerLocationEntry(id: id, episode: episode, reference: reference, fetchTag: fetchTag)
+            entry = FetchManagerLocationEntry(id: id, episode: episode, reference: reference, fetchTag: fetchTag, downloadRange: downloadRange)
             self.entries[id] = entry
         } else {
             return
@@ -155,8 +156,13 @@ private final class FetchManagerCategoryContext {
             if activeContext.disposable == nil {
                 if let entry = self.entries[id] {
                     let entryCompleted = self.entryCompleted
-                    
-                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
+                    let range: (Range<Int>, MediaBoxFetchPriority)?
+                    if let downloadRange = entry.downloadRange {
+                        range = (downloadRange, .default)
+                    } else {
+                        range = nil
+                    }
+                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, range: range, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
                         entryCompleted(id, value)
                     })
                 } else {
@@ -203,7 +209,13 @@ private final class FetchManagerCategoryContext {
                     let activeContext = FetchManagerActiveContext()
                     self.activeContexts[id] = activeContext
                     let entryCompleted = self.entryCompleted
-                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
+                    let range: (Range<Int>, MediaBoxFetchPriority)?
+                    if let downloadRange = entry.downloadRange {
+                        range = (downloadRange, .default)
+                    } else {
+                        range = nil
+                    }
+                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, range: range, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
                         entryCompleted(id, value)
                     })
                 }
@@ -346,7 +358,7 @@ final class FetchManager {
         }
     }
     
-    func interactivelyFetched(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, reference: MediaResourceReference, fetchTag: MediaResourceStatsCategory?, elevatedPriority: Bool, userInitiated: Bool) -> Signal<Void, NoError> {
+    func interactivelyFetched(category: FetchManagerCategory, location: FetchManagerLocation, locationKey: FetchManagerLocationKey, downloadRange: Range<Int>? = nil, reference: MediaResourceReference, fetchTag: MediaResourceStatsCategory?, elevatedPriority: Bool, userInitiated: Bool) -> Signal<Void, NoError> {
         let queue = self.queue
         return Signal { [weak self] subscriber in
             if let strongSelf = self {
@@ -354,7 +366,7 @@ final class FetchManager {
                 var assignedUserInitiatedIndex: Int32?
                 
                 strongSelf.withCategoryContext(category, { context in
-                    context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey), takeNew: { return (reference, fetchTag, strongSelf.takeNextEpisodeId()) }, { entry in
+                    context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey), downloadRange: downloadRange, takeNew: { return (reference, fetchTag, strongSelf.takeNextEpisodeId()) }, { entry in
                         assignedEpisode = entry.episode
                         entry.referenceCount += 1
                         if elevatedPriority {
@@ -373,7 +385,7 @@ final class FetchManager {
                     queue.async {
                         if let strongSelf = self {
                             strongSelf.withCategoryContext(category, { context in
-                                context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey), takeNew: nil, { entry in
+                                context.withEntry(id: FetchManagerLocationEntryId(location: location, resourceId: reference.resource.id, locationKey: locationKey), downloadRange: downloadRange, takeNew: nil, { entry in
                                     if entry.episode == assignedEpisode {
                                         entry.referenceCount -= 1
                                         assert(entry.referenceCount >= 0)

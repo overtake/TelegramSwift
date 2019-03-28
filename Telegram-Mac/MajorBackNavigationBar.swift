@@ -13,17 +13,17 @@ import TelegramCoreMac
 import PostboxMac
 class MajorBackNavigationBar: BackNavigationBar {
     private let disposable:MetaDisposable = MetaDisposable()
-    private let account:Account
+    private let context:AccountContext
     private let peerId:PeerId
     private let badgeNode:GlobalBadgeNode
-    init(_ controller: ViewController, account:Account, excludePeerId:PeerId) {
-        self.account = account
+    init(_ controller: ViewController, context: AccountContext, excludePeerId:PeerId) {
+        self.context = context
         self.peerId = excludePeerId
-        badgeNode = GlobalBadgeNode(account, excludePeerId: excludePeerId)
+        badgeNode = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, excludePeerId: excludePeerId, view: View())
         badgeNode.xInset = -22
         super.init(controller)
         
-        disposable.set((account.applicationContext as? TelegramApplicationContext)?.layoutHandler.get().start(next: { [weak self] state in
+        disposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self {
                 switch state {
                 case .single:

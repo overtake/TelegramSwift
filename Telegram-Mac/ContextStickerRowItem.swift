@@ -15,15 +15,15 @@ import TGUIKit
 
 class ContextStickerRowItem: TableRowItem {
     let result:InputMediaStickersRow
-    fileprivate let account:Account
+    fileprivate let context:AccountContext
     fileprivate let _stableId:Int64
     fileprivate let chatInteraction:ChatInteraction
     var selectedIndex:Int? = nil
     override var stableId: AnyHashable {
         return _stableId
     }
-    init(_ initialSize:NSSize, _ account:Account, _ entry:InputMediaStickersRow, _ stableId:Int64, _ chatInteraction:ChatInteraction) {
-        self.account = account
+    init(_ initialSize:NSSize, _ context: AccountContext, _ entry:InputMediaStickersRow, _ stableId:Int64, _ chatInteraction:ChatInteraction) {
+        self.context = context
         self.result = entry
         self.chatInteraction = chatInteraction
         self._stableId = stableId
@@ -45,14 +45,14 @@ class ContextStickerRowItem: TableRowItem {
 class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
 
     
-    func fileAtPoint(_ point:NSPoint) -> FileMediaReference? {
+    func fileAtPoint(_ point:NSPoint) -> QuickPreviewMedia? {
         if let item = item as? ContextStickerRowItem {
             var i:Int = 0
             for subview in subviews {
                 if point.x > subview.frame.minX && point.x < subview.frame.maxX {
                     let file = item.result.results[i].file
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                    return reference
+                    return .file(reference, StickerPreviewModalView.self)
                 }
                 i += 1
             }
@@ -66,9 +66,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             let reference = fileAtPoint(convert(event.locationInWindow, from: nil))
             
-            if let reference = reference?.media.stickerReference {
+            if let reference = reference?.fileReference?.media.stickerReference {
                 menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: {
-                    showModal(with: StickersPackPreviewModalController.init(item.account, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
+                    showModal(with: StickersPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
                 }))
             }
         }
@@ -105,7 +105,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     
                     container.set(handler: { [weak self, weak item] (control) in
                         if let window = self?.window as? Window, let item = item, let table = item.table {
-                            _ = startModalPreviewHandle(table, viewType: StickerPreviewModalView.self, window: window, account: item.account)
+                            _ = startModalPreviewHandle(table, window: window, context: item.context)
                         }
                     }, for: .LongMouseDown)
                     
@@ -115,14 +115,14 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     let view = TransformImageView()
                     let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
                     view.setSignal(signal: cachedMedia(media: data.file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                    view.setSignal( chatMessageSticker(account: item.account, fileReference: reference, type: .small, scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                    view.setSignal( chatMessageSticker(account: item.context.account, fileReference: reference, type: .small, scale: backingScaleFactor), cacheImage: { [weak self] signal in
                         if let strongSelf = self {
                             return cacheMedia(signal: signal, media: data.file, arguments: arguments, scale: strongSelf.backingScaleFactor)
                         } else {
                             return .complete()
                         }
                     })
-                    _ = fileInteractiveFetched(account: item.account, fileReference: reference).start()
+                    _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
                     
                     view.set(arguments: arguments)
                     

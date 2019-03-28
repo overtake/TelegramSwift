@@ -42,32 +42,7 @@ fileprivate func <(lhs:UsernameEntries, rhs:UsernameEntries) ->Bool {
     return lhs.index < rhs.index
 }
 
-fileprivate func ==(lhs:UsernameEntries, rhs:UsernameEntries) ->Bool {
-    switch lhs {
-    case let .whiteSpace(lhsIndex, lhsHeight):
-        if case let .whiteSpace(rhsIndex, rhsHeight) = rhs {
-            return lhsIndex == rhsIndex && lhsHeight == rhsHeight
-        }
-        return false
-    case let .inputEntry(lhsState):
-        if case let .inputEntry(rhsState) = rhs , lhsState.state == rhsState.state {
-            return true
-        }
-        return false
-    case let .stateEntry(lhsState):
-        if case let .stateEntry(rhsState) = rhs, lhsState == rhsState {
-            return true
-        }
-        return false
-    case let .descEntry(lhsDesc):
-        if case let .descEntry(rhsDesc) = rhs, lhsDesc == rhsDesc {
-            return true
-        }
-        return false
-    }
-}
-
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntries>], to:[AppearanceWrapperEntry<UsernameEntries>], account:Account, initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntries>], to:[AppearanceWrapperEntry<UsernameEntries>], initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
     
         let (removed, inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
@@ -129,7 +104,15 @@ class UsernameSettingsViewController: TableViewController {
     
     func saveUsername() {
         if let item = genericView.item(stableId: Int64(1000)) as? UsernameInputRowItem, let window = window {
-            updateDisposable.set(showModalProgress(signal: updateAddressName(account: account, domain: .account, name: item.text) |> mapError({_ in}), for: window).start())
+            updateDisposable.set(showModalProgress(signal: updateAddressName(account: context.account, domain: .account, name: item.text), for: window).start(error: { error in
+                switch error {
+                case .generic:
+                    alert(for: mainWindow, info: L10n.unknownError)
+                }
+            }, completed: { [weak self] in
+                self?.navigationController?.back()
+                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 0.5).start()
+            }))
         }
     }
     
@@ -153,7 +136,7 @@ class UsernameSettingsViewController: TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<UsernameEntries>]> = Atomic(value:[])
         let entries:Promise<[UsernameEntries]> = Promise()
         let initialSize = self.atomicSize.modify({$0})
-        let account = self.account
+        let context = self.context
         let availability = self.availability
         var mutableItems:[UsernameEntries] = [.whiteSpace(0, 16),
                                               .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:.none(username: nil)),
@@ -161,8 +144,8 @@ class UsernameSettingsViewController: TableViewController {
         
         
 
-        username.set(account.viewTracker.peerView( account.peerId) |> deliverOnMainQueue |> mapToSignal { peerView -> Signal<String, NoError> in
-            if let peer = peerView.peers[account.peerId] {
+        username.set(context.account.viewTracker.peerView( context.peerId) |> deliverOnMainQueue |> mapToSignal { peerView -> Signal<String, NoError> in
+            if let peer = peerView.peers[context.peerId] {
                 return .single(peer.username ?? "")
             }
             return .complete()
@@ -176,7 +159,7 @@ class UsernameSettingsViewController: TableViewController {
         |> deliverOnMainQueue
         |> mapToSignal { items, username, appearance -> Signal<TableUpdateTransition, NoError> in
             let items = items.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-            return prepareEntries(from: previous.swap(items), to: items, account: account, initialSize: initialSize, animated: true, availability:availability)
+            return prepareEntries(from: previous.swap(items), to: items, initialSize: initialSize, animated: true, availability:availability)
         })
 
         let availabilityChecker = combineLatest(availability.get(), username.get()
@@ -185,7 +168,7 @@ class UsernameSettingsViewController: TableViewController {
                 if let error = checkAddressNameFormat(value) {
                     return .single((AddressNameAvailabilityState.fail(username: value, formatError: error, availability: .available), username))
                 } else {
-                    return .single((AddressNameAvailabilityState.progress(username: value), username)) |> then(addressNameAvailability(account: account, domain: .account, name: value)
+                    return .single((AddressNameAvailabilityState.progress(username: value), username)) |> then(addressNameAvailability(account: context.account, domain: .account, name: value)
                         |> map { availability -> (AddressNameAvailabilityState,String) in
                         switch availability {
                         case .available:

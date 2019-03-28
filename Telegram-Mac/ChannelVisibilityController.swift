@@ -18,15 +18,15 @@ private enum CurrentChannelType {
 }
 
 private final class ChannelVisibilityControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let updateCurrentType: (CurrentChannelType) -> Void
     let updatePublicLinkText: (String?, String) -> Void
     let displayPrivateLinkMenu: (String) -> Void
     let revokePeerId: (PeerId) -> Void
     
-    init(account: Account, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void) {
-        self.account = account
+    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void) {
+        self.context = context
         self.updateCurrentType = updateCurrentType
         self.updatePublicLinkText = updatePublicLinkText
         self.displayPrivateLinkMenu = displayPrivateLinkMenu
@@ -259,9 +259,9 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 if let link = link {
                     arguments.displayPrivateLinkMenu(link)
                 }
-            }, linkExecutor: TextViewInteractions.init(processURL: { _ in
+            }, linkExecutor: TextViewInteractions(processURL: { _ in
                 if let link = link {
-                    arguments.account.context.mainNavigation?.controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                    arguments.context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
                     copyToClipboard(link)
                 }
             }, makeLinkType: { _ in
@@ -302,7 +302,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
         case let .existingLinksInfo(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .existingLinkPeerItem(_, _, peer, _, _):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, status:"t.me/\(peer.addressName ?? "unknown")", inset:NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove:{ peerId in
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, status:"t.me/\(peer.addressName ?? "unknown")", inset:NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove:{ peerId in
                 arguments.revokePeerId(peerId)
             }, deletable: true))
         case .section:
@@ -637,10 +637,10 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
     let peerId:PeerId
     let onlyUsername:Bool
     
-    init(account:Account, peerId:PeerId, onlyUsername: Bool = false) {
+    init(_ context: AccountContext, peerId:PeerId, onlyUsername: Bool = false) {
         self.peerId = peerId
         self.onlyUsername = onlyUsername
-        super.init(account)
+        super.init(context)
     }
     
     override var enableBack: Bool {
@@ -657,7 +657,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         let onlyUsername = self.onlyUsername
         
@@ -668,17 +668,17 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         }
         
         
-        peersDisablingAddressNameAssignment.set(.single(nil) |> then(channelAddressNameAssignmentAvailability(account: account, peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
+        peersDisablingAddressNameAssignment.set(.single(nil) |> then(channelAddressNameAssignmentAvailability(account: context.account, peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
             
             if case .addressNameLimitReached = result {
-                return adminedPublicChannels(account: account)
+                return adminedPublicChannels(account: context.account)
                     |> map { Optional($0) }
             } else {
                 return .single([])
             }
         }))
         
-        let arguments = ChannelVisibilityControllerArguments(account: account, updateCurrentType: { type in
+        let arguments = ChannelVisibilityControllerArguments(context: context, updateCurrentType: { type in
             updateState { state in
                 return state.withUpdatedSelectedType(type)
             }
@@ -698,7 +698,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                     return state.withUpdatedEditingPublicLinkText(text)
                 }
                 
-                self?.checkAddressNameDisposable.set((validateAddressNameInteractive(account: account, domain: .peer(peerId), name: text)
+                self?.checkAddressNameDisposable.set((validateAddressNameInteractive(account: context.account, domain: .peer(peerId), name: text)
                     |> deliverOnMainQueue).start(next: { result in
                         updateState { state in
                             return state.withUpdatedAddressNameValidationStatus(result)
@@ -720,7 +720,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                     return .single(true)
                 }
             } |> mapToSignal { _ -> Signal<Void, UpdateAddressNameError> in
-                return updateAddressName(account: account, domain: .peer(peerId), name: nil)
+                return updateAddressName(account: context.account, domain: .peer(peerId), name: nil)
             } |> deliverOnMainQueue).start(error: { _ in
                 updateState { state in
                     return state.withUpdatedRevokingPeerId(nil)
@@ -733,7 +733,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             }))
         })
         
-        let peerView = account.viewTracker.peerView(peerId)
+        let peerView = context.account.viewTracker.peerView(peerId)
         
         let initialSize = atomicSize
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChannelVisibilityEntry>]> = Atomic(value: [])
@@ -797,17 +797,17 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                             let signal: Signal<PeerId?, UpdateAddressNameError>
                             
                             if peer.isGroup {
-                                signal = convertGroupToSupergroup(account: account, peerId: peerId)
+                                signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                                     |> mapError {_ in return UpdateAddressNameError.generic}
                                     |> mapToSignal { upgradedPeerId -> Signal<PeerId?, UpdateAddressNameError> in
-                                        return updateAddressName(account: account, domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
+                                        return updateAddressName(account: context.account, domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
                                         |> mapToSignal { _ in
                                             return .single(Optional(upgradedPeerId))
                                         }
                                     }
                                     |> deliverOnMainQueue
                             } else {
-                                signal = updateAddressName(account: account, domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
+                                signal = updateAddressName(account: context.account, domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
                                     |> mapToSignal { _ in
                                         return .single(nil)
                                     }
@@ -830,8 +830,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             }
         }))
         
-        exportedLinkDisposable.set((account.viewTracker.peerView(peerId) |> filter { $0.cachedData != nil } |> take(1) |> mapToSignal { _ in
-            return ensuredExistingPeerExportedInvitation(account: account, peerId: peerId)
+        exportedLinkDisposable.set((context.account.viewTracker.peerView(peerId) |> filter { $0.cachedData != nil } |> take(1) |> mapToSignal { _ in
+            return ensuredExistingPeerExportedInvitation(account: context.account, peerId: peerId)
         }).start())
         
     }

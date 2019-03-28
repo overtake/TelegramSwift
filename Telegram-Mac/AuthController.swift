@@ -15,6 +15,9 @@ enum LoginAuthViewState {
 
 
 class AuthHeaderView : View {
+
+    
+    private let containerView = View(frame: NSMakeRect(0, 0, 300, 480))
     
     fileprivate let proxyButton:ImageButton = ImageButton()
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 12, 12))
@@ -31,28 +34,38 @@ class AuthHeaderView : View {
     private let switchLanguage:TitleButton = TitleButton()
     fileprivate let nextButton:TitleButton = TitleButton()
     fileprivate let backButton = TitleButton()
+    fileprivate let cancelButton = TitleButton()
+
     fileprivate var needShowSuggestedButton: Bool = false
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        intro.setFrameSize(frameRect.size)
-        addSubview(intro)
-        
-        
+        intro.setFrameSize(containerView.frame.size)
         
         let logoImage = #imageLiteral(resourceName: "Icon_LegacyIntro").precomposed()
         self.logo.image = logoImage
         self.logo.sizeToFit()
-       
         updateLocalizationAndTheme()
 
         intro.addSubview(logo)
         intro.addSubview(header)
         intro.addSubview(desc)
         
-        addSubview(loginView)
+        containerView.addSubview(intro)
 
         
-        addSubview(textHeaderView)
+        desc.userInteractionEnabled = false
+        desc.isSelectable = false
+        
+        header.userInteractionEnabled = false
+        header.isSelectable = false
+        
+        textHeaderView.userInteractionEnabled = false
+        textHeaderView.isSelectable = false
+        
+        containerView.addSubview(loginView)
+
+        
+        containerView.addSubview(textHeaderView)
         textHeaderView.userInteractionEnabled = false
         textHeaderView.isSelected = false
         
@@ -73,14 +86,16 @@ class AuthHeaderView : View {
                     strongSelf.arguments?.checkCode(strongSelf.loginView.code)
                 case .passwordEntry:
                     strongSelf.arguments?.checkPassword(strongSelf.loginView.password)
+                case .signUp:
+                     strongSelf.loginView.trySignUp()
                 default:
                     break
                 }
             }
         }, for: .Click)
         
-        addSubview(nextButton)
-        addSubview(switchLanguage)
+        containerView.addSubview(nextButton)
+        containerView.addSubview(switchLanguage)
         switchLanguage.isHidden = true
         
         switchLanguage.disableActions()
@@ -90,7 +105,14 @@ class AuthHeaderView : View {
         
         addSubview(proxyButton)
         proxyButton.addSubview(proxyConnecting)
-        addSubview(backButton)
+        containerView.addSubview(backButton)
+        
+        addSubview(containerView)
+        
+        
+        addSubview(cancelButton)
+        
+        needsLayout = true
     }
     
     fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus, _ isForceHidden: Bool = true) {
@@ -142,23 +164,27 @@ class AuthHeaderView : View {
     
     override func layout() {
         super.layout()
-        switchLanguage.centerX(y: frame.height - switchLanguage.frame.height - 35)
+        switchLanguage.centerX(y: containerView.frame.height - switchLanguage.frame.height - 20)
+       
+        logo.centerX(y: 0)
         header.centerX(y: logo.frame.maxY + 10)
-        desc.centerX(y: header.frame.maxY + 10)
-        logo.centerX()
-        intro.centerX(y: 60)
-        intro.setFrameSize(frame.width, desc.frame.maxY)
-        loginView.setFrameSize(400, frame.height)
-        loginView.centerX(y: intro.frame.maxY + 60)
-        nextButton.centerX(y: frame.height - nextButton.frame.height - 80)
-        updateState(state, animated: false)
+        desc.centerX(y: header.frame.maxY)
+        intro.setFrameSize(containerView.frame.width, desc.frame.maxY)
+        intro.centerX(y: 20)
+        loginView.setFrameSize(300, containerView.frame.height)
+        loginView.centerX(y: intro.frame.maxY)
+        nextButton.centerX(y: containerView.frame.height - nextButton.frame.height - 50)
         
         proxyConnecting.centerX()
         proxyConnecting.centerY(addition: -1)
-        proxyButton.setFrameOrigin(10, 10)
+        proxyButton.setFrameOrigin(frame.width - proxyButton.frame.width - 15, 15)
         
-       
+        containerView.center()
+        
+        cancelButton.setFrameOrigin(15, 15)
 
+        
+        updateState(state, animated: false)
     }
     
     
@@ -175,8 +201,8 @@ class AuthHeaderView : View {
         desc.backgroundColor = theme.colors.background
         textHeaderView.backgroundColor = theme.colors.background
         
-        let descLayout = TextViewLayout(.initialize(string: tr(L10n.loginWelcomeDescription), color: theme.colors.grayText, font: .normal(16.0)), maximumNumberOfLines: 1)
-        descLayout.measure(width: .greatestFiniteMagnitude)
+        let descLayout = TextViewLayout(.initialize(string: tr(L10n.loginWelcomeDescription), color: theme.colors.grayText, font: .normal(16.0)), maximumNumberOfLines: 2, alignment: .center)
+        descLayout.measure(width: 300)
         desc.update(descLayout)
         
         nextButton.set(text: L10n.loginNext, for: .Normal)
@@ -191,8 +217,16 @@ class AuthHeaderView : View {
         backButton.set(text: L10n.navigationBack, for: .Normal)
         _ = backButton.sizeToFit()
         
+        cancelButton.set(font: .medium(.header), for: .Normal)
+        cancelButton.set(color: theme.colors.blueUI, for: .Normal)
+        cancelButton.set(text: L10n.navigationCancel, for: .Normal)
+        _ = cancelButton.sizeToFit()
+        
+        
+        
         updateState(self.state, animated: false)
         needsLayout = true
+        
     }
     
     fileprivate func updateState(_ state:UnauthorizedAccountStateContents, animated: Bool) {
@@ -208,62 +242,67 @@ class AuthHeaderView : View {
         case .phoneEntry, .empty:
             nextButton.change(opacity: 1, animated: animated)
             textHeaderView.change(opacity: 0, animated: animated)
-            intro.change(pos: NSMakePoint(intro.frame.minX, 50), animated: animated)
+            intro.change(pos: NSMakePoint(intro.frame.minX, 20), animated: animated)
             intro.change(opacity: 1, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, intro.frame.maxY + 50), animated: animated)
+            loginView.change(pos: NSMakePoint(loginView.frame.minX, intro.frame.maxY + 30), animated: animated)
             textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - textHeaderView.frame.height)/2)), animated: animated)
             switchLanguage.isHidden = !needShowSuggestedButton
         case .confirmationCodeEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderCode, color: theme.colors.text, font: .normal(30.0)))
+            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderCode, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()
             textHeaderView.change(opacity: 1, animated: animated)
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 90), animated: animated)
+            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 30), animated: animated)
             intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
             intro.change(opacity: 0, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, 160), animated: animated)
+            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 30), animated: animated)
             switchLanguage.isHidden = true
         case .passwordEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderPassword, color: theme.colors.text, font: .normal(30.0)))
+            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderPassword, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
-            textHeaderView.centerX(y: 90)
+            textHeaderView.centerX(y: 30)
             textHeaderView.change(opacity: 1, animated: animated)
             intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
             intro.change(opacity: 0, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, 160), animated: animated)
+            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 30), animated: animated)
             switchLanguage.isHidden = true
         case .signUp:
-            nextButton.change(opacity: 0, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderSignUp, color: theme.colors.text, font: .normal(30.0)))
+            nextButton.change(opacity: 1, animated: animated)
+            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderSignUp, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()
             textHeaderView.change(opacity: 1, animated: animated)
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 90), animated: animated)
+            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 50), animated: animated)
             intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
             intro.change(opacity: 0, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, 160), animated: animated)
+            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 50), animated: animated)
             switchLanguage.isHidden = true
+            backButton.isHidden = false
+            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(scaleFactor: backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
         case .passwordRecovery:
             break
         case .awaitingAccountReset:
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginResetAccountText, color: theme.colors.text, font: .normal(15)))
+            let headerLayout = TextViewLayout(.initialize(string: L10n.loginResetAccountText, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
             intro.change(opacity: 0, animated: animated)
             switchLanguage.isHidden = true
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, 160), animated: animated)
 
             textHeaderView.update(headerLayout)
-            textHeaderView.centerX(y: 120)
+            textHeaderView.centerX()
+            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 50), animated: animated)
             textHeaderView.change(opacity: 1, animated: animated)
+            
+            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 20), animated: animated)
+            
             nextButton.change(opacity: 0, animated: animated)
             backButton.isHidden = false
-            backButton.setFrameOrigin(loginView.frame.minX + 16, textHeaderView.frame.minY - 2)
+            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(scaleFactor: backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
         }
     }
     
@@ -280,12 +319,24 @@ class AuthController : GenericViewController<AuthHeaderView> {
     private let suggestedLanguageDisposable = MetaDisposable()
     private let localizationDisposable = MetaDisposable()
     private var account:UnauthorizedAccount
-    init(_ account:UnauthorizedAccount) {
+    private let sharedContext: SharedAccountContext
+    #if !APP_STORE
+    private let updateController: UpdateTabController
+    #endif
+    
+    private let otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])
+    
+    init(_ account:UnauthorizedAccount, sharedContext: SharedAccountContext, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
         self.account = account
+        self.sharedContext = sharedContext
+        self.otherAccountPhoneNumbers = otherAccountPhoneNumbers
+        #if !APP_STORE
+        updateController = UpdateTabController(sharedContext)
+        #endif
         super.init()
         
         self.disposable.set(combineLatest(account.postbox.stateView() |> deliverOnMainQueue, appearanceSignal).start(next: { [weak self] view, _ in
-            self?.updateState(state: view.state ?? UnauthorizedAccountState(isTestingEnvironment: false, masterDatacenterId: account.masterDatacenterId, contents: .empty))
+            self?.updateState(state: view.state ?? UnauthorizedAccountState(isTestingEnvironment: account.testingEnvironment, masterDatacenterId: account.masterDatacenterId, contents: .empty))
         }))
         bar = .init(height: 0)
     }
@@ -297,6 +348,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             self.genericView.updateState(state.contents, animated: !isFirst)
         }
         isFirst = false
+        readyOnce()
     }
 
     
@@ -307,6 +359,18 @@ class AuthController : GenericViewController<AuthHeaderView> {
         proxyDisposable.dispose()
     }
 
+    override func returnKeyAction() -> KeyHandlerResult {
+        return .invokeNext
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if !self.otherAccountPhoneNumbers.1.isEmpty {
+            _ = sharedContext.accountManager.transaction({ transaction in
+                transaction.removeAuth()
+            }).start()
+        }
+        return .invoked
+    }
     
     override func firstResponder() -> NSResponder? {
         return genericView.loginView.firstResponder()
@@ -323,7 +387,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         
         var first: Bool = true
         
-        proxyListController(postbox: account.postbox, network: account.network, showUseCalls: false) ({ controller in
+        proxyListController(accountManager: sharedContext.accountManager, network: account.network, showUseCalls: false) ({ controller in
             if first {
                 navigation = NavigationViewController(controller)
                 navigation!._frameRect = NSMakeRect(0, 0, 300, 440)
@@ -339,6 +403,11 @@ class AuthController : GenericViewController<AuthHeaderView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        #if !APP_STORE
+            addSubview(updateController.view)
+            updateController.frame = NSMakeRect(0, frame.height - 60, frame.width, 60)
+        #endif
+        
         var arguments: LoginAuthViewArguments?
         
         let again:(String)-> Void = { number in
@@ -346,6 +415,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         }
         
         
+        let sharedContext = self.sharedContext
         var forceHide = true
         
       
@@ -365,7 +435,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             updateProxyUI()
         }
         
-        proxyDisposable.add(combineLatest(proxySettingsSignal(account.postbox) |> deliverOnMainQueue, account.network.connectionStatus |> deliverOnMainQueue).start(next: { pref, connection in
+        proxyDisposable.add(combineLatest(proxySettings(accountManager: sharedContext.accountManager) |> deliverOnMainQueue, account.network.connectionStatus |> deliverOnMainQueue).start(next: { pref, connection in
             settings = (pref, connection)
             updateProxyUI()
         }))
@@ -383,11 +453,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             updateProxyUI()
         }
         
-//        let countryDisposable = (getCountryCode(network: account.network) |> deliverOnMainQueue).start(next: { [weak self] country in
-//            self?.genericView.loginView.updateCountryCode(country)
-//        })
-//        proxyDisposable.add(countryDisposable)
-        
+
         
         let resetState:()->Void = { [weak self] in
             guard let `self` = self else {return}
@@ -402,7 +468,28 @@ class AuthController : GenericViewController<AuthHeaderView> {
         
         arguments = LoginAuthViewArguments(sendCode: { [weak self] phoneNumber in
             if let strongSelf = self {
-                self?.actionDisposable.set((showModalProgress(signal: sendAuthorizationCode(account: strongSelf.account, phoneNumber: phoneNumber, apiId: API_ID, apiHash: API_HASH)
+                
+                let logInNumber = formatPhoneNumber(phoneNumber)
+                for (number, accountId, isTestingEnvironment) in strongSelf.otherAccountPhoneNumbers.1 {
+                    if isTestingEnvironment == strongSelf.account.testingEnvironment && formatPhoneNumber(number) == logInNumber {
+                        confirm(for: mainWindow, information: L10n.loginPhoneNumberAlreadyAuthorized, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
+                            switch result {
+                            case .thrid:
+                                _ = (sharedContext.accountManager.transaction({ transaction in
+                                    transaction.removeAuth()
+                                }) |> deliverOnMainQueue).start(completed: {
+                                    sharedContext.switchToAccount(id: accountId, action: nil)
+                                })
+                            default:
+                                break
+                            }
+                        })
+                        return
+                    }
+                }
+
+                
+                self?.actionDisposable.set((showModalProgress(signal: sendAuthorizationCode(accountManager: sharedContext.accountManager, account: strongSelf.account, phoneNumber: phoneNumber, apiId: API_ID, apiHash: API_HASH, syncContacts: false)
                     |> map {Optional($0)}
                     |> mapError {Optional($0)}
                     |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))
@@ -434,12 +521,14 @@ class AuthController : GenericViewController<AuthHeaderView> {
             resetState()
         }, checkCode: { [weak self] code in
             if let strongSelf = self {
-                _ = (authorizeWithCode(account: strongSelf.account, code: code, termsOfService: nil) |> deliverOnMainQueue ).start(next: { [weak self] value in
-                    switch value {
-                    case .signUp:
-                        self?.genericView.updateState(.signUp(number: "", codeHash: "", code: "", firstName: "", lastName: "", termsOfService: nil), animated: true)
-                    default:
-                        break
+                _ = (authorizeWithCode(accountManager: sharedContext.accountManager, account: strongSelf.account, code: code, termsOfService: nil) |> deliverOnMainQueue ).start(next: { [weak strongSelf] value in
+                    if let strongSelf = strongSelf {
+                        switch value {
+                        case let .signUp(data):
+                            _ = beginSignUp(account: strongSelf.account, data: data).start()
+                        default:
+                            break
+                        }
                     }
                 }, error: { [weak self] error in
                     self?.genericView.loginView.updateCodeError(error)
@@ -448,7 +537,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             
         }, checkPassword: { [weak self] password in
             if let strongSelf = self {
-                _ = (authorizeWithPassword(account: strongSelf.account, password: password)
+                _ = (authorizeWithPassword(accountManager: sharedContext.accountManager, account: strongSelf.account, password: password, syncContacts: false)
                     |> map { () -> AuthorizationPasswordVerificationError? in
                         return nil
                     }
@@ -469,7 +558,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
                 f(option)
                 switch option {
                 case let .email(pattern):
-                    showModal(with: forgotUnauthorizedPasswordController(account: self.account, emailPattern: pattern), for: mainWindow)
+                    showModal(with: ForgotUnauthorizedPasswordController(accountManager: sharedContext.accountManager, account: self.account, emailPattern: pattern), for: mainWindow)
                 default:
                     break
                 }
@@ -484,6 +573,24 @@ class AuthController : GenericViewController<AuthHeaderView> {
                     alert(for: mainWindow, info: L10n.unknownError)
                 })
             })
+        }, signUp: { [weak self] firstName, lastName, photo in
+            guard let `self` = self else {return}
+            _ = showModalProgress(signal: signUpWithName(accountManager: sharedContext.accountManager, account: self.account, firstName: firstName, lastName: lastName, avatarData: photo != nil ? try? Data(contentsOf: photo!) : nil) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                let text: String
+                switch error {
+                case .limitExceeded:
+                    text = L10n.loginFloodWait
+                case .codeExpired:
+                    text = L10n.phoneCodeExpired
+                case .invalidFirstName:
+                    text = L10n.loginInvalidFirstNameError
+                case .invalidLastName:
+                    text = L10n.loginInvalidLastNameError
+                case .generic:
+                    text = L10n.unknownError
+                }
+                alert(for: mainWindow, info: text)
+            })
         })
         
         //
@@ -494,23 +601,42 @@ class AuthController : GenericViewController<AuthHeaderView> {
            resetState()
         }, for: .Click)
         
-        suggestedLanguageDisposable.set((currentlySuggestedLocalization(network: account.network, extractKeys: ["Login.ContinueOnLanguage"]) |> deliverOnMainQueue).start(next: { [weak self] info in
-            if let strongSelf = self, let info = info, info.languageCode != appCurrentLanguage.baseLanguageCode {
-                
-                strongSelf.genericView.showLanguageButton(title: info.localizedKey("Login.ContinueOnLanguage"), callback: { [weak strongSelf] in
-                    if let strongSelf = strongSelf {
-                        strongSelf.genericView.hideSwitchButton()
-                        _ = showModalProgress(signal: downloadAndApplyLocalization(postbox: strongSelf.account.postbox, network: strongSelf.account.network, languageCode: info.languageCode), for: mainWindow).start()
-                    }
-                })
-            }
-        }))
         
+        genericView.cancelButton.isHidden = otherAccountPhoneNumbers.1.isEmpty
+        
+        genericView.cancelButton.set(handler: { _ in
+            _ = sharedContext.accountManager.transaction({ transaction in
+                transaction.removeAuth()
+            }).start()
+        }, for: .Click)
+        
+        if otherAccountPhoneNumbers.1.isEmpty {
+            suggestedLanguageDisposable.set((currentlySuggestedLocalization(network: account.network, extractKeys: ["Login.ContinueOnLanguage"]) |> deliverOnMainQueue).start(next: { [weak self] info in
+                if let strongSelf = self, let info = info, info.languageCode != appCurrentLanguage.baseLanguageCode {
+                    
+                    strongSelf.genericView.showLanguageButton(title: info.localizedKey("Login.ContinueOnLanguage"), callback: { [weak strongSelf] in
+                        if let strongSelf = strongSelf {
+                            strongSelf.genericView.hideSwitchButton()
+                            _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: sharedContext.accountManager, postbox: strongSelf.account.postbox, network: strongSelf.account.network, languageCode: info.languageCode), for: mainWindow).start()
+                        }
+                    })
+                }
+            }))
+        }
+        
+       
         localizationDisposable.set(appearanceSignal.start(next: { [weak self] _ in
             self?.updateLocalizationAndTheme()
         }))
         
+        
     }
     
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        #if !APP_STORE
+        updateController.updateLocalizationAndTheme()
+        #endif
+    }
     
 }

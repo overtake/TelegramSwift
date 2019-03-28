@@ -12,6 +12,7 @@ import TelegramCoreMac
 import TGUIKit
 import SwiftSignalKitMac
 
+
 struct ChannelInfoEditingState: Equatable {
     let editingName: String?
     let editingDescriptionText: String
@@ -136,7 +137,7 @@ class ChannelInfoArguments : PeerInfoArguments {
     
     override func updateEditable(_ editable: Bool, peerView: PeerView) {
         
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         let updateState:((ChannelInfoState)->ChannelInfoState)->Void = { [weak self] f in
             self?.updateState(f)
@@ -163,7 +164,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             
             let updateTitle: Signal<Void, NoError>
             if let titleValue = updateValues.title {
-                updateTitle = updatePeerTitle(account: account, peerId: peerId, title: titleValue)
+                updateTitle = updatePeerTitle(account: context.account, peerId: peerId, title: titleValue)
                     |> `catch` { _ in return .complete() }
             } else {
                 updateTitle = .complete()
@@ -171,7 +172,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             
             let updateDescription: Signal<Void, NoError>
             if let descriptionValue = updateValues.description {
-                updateDescription = updatePeerDescription(account: account, peerId: peerId, description: descriptionValue.isEmpty ? nil : descriptionValue)
+                updateDescription = updatePeerDescription(account: context.account, peerId: peerId, description: descriptionValue.isEmpty ? nil : descriptionValue)
                     |> `catch` { _ in return .complete() }
             } else {
                 updateDescription = .complete()
@@ -179,7 +180,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             
             let signal = combineLatest(updateTitle, updateDescription)
             
-            updatePeerNameDisposable.set(showModalProgress(signal: (signal |> deliverOnMainQueue), for: mainWindow).start(error: { _ in
+            updatePeerNameDisposable.set(showModalProgress(signal: (signal |> deliverOnMainQueue), for: context.window).start(error: { _ in
                 updateState { state in
                     return state.withUpdatedSavingData(false)
                 }
@@ -194,7 +195,7 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func visibilitySetup() {
-        let setup = ChannelVisibilityController(account: account, peerId: peerId)
+        let setup = ChannelVisibilityController(context, peerId: peerId)
         _ = (setup.onComplete.get() |> deliverOnMainQueue).start(next: { [weak self] _ in
             self?.pullNavigation()?.back()
         })
@@ -202,19 +203,19 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func toggleSignatures( _ enabled: Bool) -> Void {
-        toggleSignaturesDisposable.set(toggleShouldChannelMessagesSignatures(account: account, peerId: peerId, enabled: enabled).start())
+        toggleSignaturesDisposable.set(toggleShouldChannelMessagesSignatures(account: context.account, peerId: peerId, enabled: enabled).start())
     }
     
     func members() -> Void {
-        pushViewController(ChannelMembersViewController(account: account, peerId: peerId))
+        pushViewController(ChannelMembersViewController(context, peerId: peerId))
     }
     
     func admins() -> Void {
-        pushViewController(ChannelAdminsViewController(account: account, peerId: peerId))
+        pushViewController(ChannelAdminsViewController(context, peerId: peerId))
     }
     
     func blocked() -> Void {
-        pushViewController(ChannelBlacklistViewController(account: account, peerId: peerId))
+        pushViewController(ChannelBlacklistViewController(context, peerId: peerId))
     }
     
     func updatePhoto(_ path:String) -> Void {
@@ -230,7 +231,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
         }
         
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         /*
          filethumb(with: URL(fileURLWithPath: path), account: account, scale: System.backingScale) |> mapToSignal { res -> Signal<String, NoError> in
@@ -255,8 +256,8 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
             
         } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-            return  updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
-                return mapResourceToAvatarSizes(postbox: account.postbox, resource: resource, representations: representations)
+            return  updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
             })
         }
                 
@@ -285,16 +286,23 @@ class ChannelInfoArguments : PeerInfoArguments {
 
     }
     
+    func stats() {
+//        _ = showModalProgress(signal: getChannelStats(postbox: context.account.postbox, network: context.account.network, peerId) |> deliverOnMainQueue, for: arguments.context.window).start(next: { [weak self] url in
+//            guard let `self` = self, let url = url else {return}
+//            self.pushViewController(ChannelStatisticsController(self.context, self.peerId, statsUrl: url))
+//        })
+    }
+    
     func report() -> Void {
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         
         let report = reportReasonSelector() |> mapToSignal { reason -> Signal<Void, NoError> in
-            return showModalProgress(signal: reportPeer(account: account, peerId: peerId, reason: reason), for: mainWindow)
+            return showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: reason), for: context.window)
         } |> deliverOnMainQueue
         
         reportPeerDisposable.set(report.start(next: { [weak self] in
-            self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: tr(L10n.peerInfoChannelReported)))
+            self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.peerInfoChannelReported))
         }))
     }
     
@@ -335,6 +343,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case admins(sectionId:Int, count:Int32?)
     case blocked(sectionId:Int, count:Int32?)
     case members(sectionId:Int, count:Int32?)
+    case statistics(sectionId:Int)
     case link(sectionId:Int, addressName:String)
     case aboutInput(sectionId:Int, description:String)
     case aboutDesc(sectionId:Int)
@@ -460,6 +469,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .statistics(sectionId):
+            if case .statistics(sectionId) = entry {
+                return true
+            } else {
+                return false
+            }
+            
         case let .link(sectionId, addressName):
             if case  .link(sectionId, addressName) = entry {
                 return true
@@ -527,20 +543,22 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 7
         case .blocked:
             return 8
-        case .link:
+        case .statistics:
             return 9
-        case .aboutInput:
+        case .link:
             return 10
-        case .aboutDesc:
+        case .aboutInput:
             return 11
-        case .signMessages:
+        case .aboutDesc:
             return 12
-        case .signDesc:
+        case .signMessages:
             return 13
-        case .report:
+        case .signDesc:
             return 14
-        case .leave:
+        case .report:
             return 15
+        case .leave:
+            return 16
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -566,6 +584,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .members(sectionId, _):
             return (sectionId * 1000) + stableIndex
+        case let .statistics(sectionId):
+            return (sectionId * 1000) + stableIndex
         case let .link(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .aboutInput(sectionId, _):
@@ -589,7 +609,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         guard let entry = entry as? ChannelInfoEntry else {
             return false
         }
-        return self.sortIndex > entry.sortIndex
+        return self.sortIndex < entry.sortIndex
     }
     
     func item(initialSize:NSSize, arguments:PeerInfoArguments) -> TableRowItem {
@@ -597,21 +617,21 @@ enum ChannelInfoEntry: PeerInfoEntry {
         let state = arguments.state as! ChannelInfoState
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState):
-            return PeerInfoHeaderItem(initialSize, stableId: stableId.hashValue, account:arguments.account, peerView:peerView, editable: editable, updatingPhotoState: updatingPhotoState, firstNameEditableText: state.editingState?.editingName, textChangeHandler: { name, _ in
+            return PeerInfoHeaderItem(initialSize, stableId: stableId.hashValue, context: arguments.context, peerView:peerView, editable: editable, updatingPhotoState: updatingPhotoState, firstNameEditableText: state.editingState?.editingName, textChangeHandler: { name, _ in
                 arguments.updateEditingName(name)
             })
         case let .about(_, text):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:tr(L10n.peerInfoInfo), text:text, account: arguments.account, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, text:text, context: arguments.context, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.account.context.globalSearch)
+            }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
         case let .userName(_, value):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, account: arguments.account, isTextSelectable:false, callback:{
-                showModal(with: ShareModalController(ShareLinkObject(arguments.account, link: link)), for: mainWindow)
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, isTextSelectable:false, callback:{
+                showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: arguments.context.window)
             }, selectFullWord: true)
         case .sharedMedia:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .none, action: { () in
@@ -640,17 +660,21 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), action: { () in
                 arguments.blocked()
             })
+        case .statistics:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStatistics, type: .next, action: { () in
+                arguments.stats()
+            })
         case let .link(_, addressName: addressName):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), action: { () in
                 arguments.visibilitySetup()
             })
         case .setPhoto:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetChannelPhoto, nameStyle: blueActionButton, type: .none, action: {
-                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: arguments.context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { path in
                             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                            showModal(with: controller, for: mainWindow)
+                            showModal(with: controller, for: arguments.context.window)
                             _ = controller.result.start(next: { url, _ in
                                 arguments.updatePhoto(url.path)
                             })
@@ -758,15 +782,24 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 var membersCount:Int32? = nil
                 var adminsCount:Int32? = nil
                 var blockedCount:Int32? = nil
+                var canViewStats: Bool = false
                 if let cachedData = view.cachedData as? CachedChannelData {
                     membersCount = cachedData.participantsSummary.memberCount
                     adminsCount = cachedData.participantsSummary.adminCount
                     blockedCount = cachedData.participantsSummary.kickedCount
+                    canViewStats = cachedData.flags.contains(.canViewStats)
                 }
                 entries.append(ChannelInfoEntry.admins(sectionId: sectionId, count: adminsCount))
                 entries.append(ChannelInfoEntry.members(sectionId: sectionId, count: membersCount))
                 
                 entries.append(ChannelInfoEntry.blocked(sectionId: sectionId, count: blockedCount))
+                
+                #if DEBUG
+                if canViewStats {
+                    entries.append(ChannelInfoEntry.statistics(sectionId: sectionId))
+                }
+                #endif
+                
                 
                 entries.append(ChannelInfoEntry.section(sectionId))
                 sectionId += 1

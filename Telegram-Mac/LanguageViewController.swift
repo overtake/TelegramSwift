@@ -14,12 +14,12 @@ import SwiftSignalKitMac
 
 
 final class LanguageControllerArguments {
-    let account:Account
+    let context:AccountContext
     let change:(LocalizationInfo)->Void
     let delete:(LocalizationInfo)->Void
     let searchInteractions:SearchInteractions
-    init(account:Account, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void, searchInteractions: SearchInteractions) {
-        self.account = account
+    init(context: AccountContext, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void, searchInteractions: SearchInteractions) {
+        self.context = context
         self.change = change
         self.delete = delete
         self.searchInteractions = searchInteractions
@@ -220,8 +220,8 @@ class LanguageViewController: TableViewController {
         return true
     }
     
-    override init(_ account: Account) {
-        super.init(account)
+    override init(_ context: AccountContext) {
+        super.init(context)
     }
     
     deinit {
@@ -235,10 +235,10 @@ class LanguageViewController: TableViewController {
 
         
         let searchPromise = ValuePromise<SearchState>()
-        let account = self.account
+        let context = self.context
         
         let removeItem: (String) -> Void = { id in
-            let _ = (account.postbox.transaction { transaction in
+            let _ = (context.account.postbox.transaction { transaction in
                 removeSavedLocalization(transaction: transaction, languageCode: id)
             }).start()
         }
@@ -255,10 +255,10 @@ class LanguageViewController: TableViewController {
         searchPromise.set(SearchState(state: .None, request: nil))
         
         
-        let arguments = LanguageControllerArguments(account: account, change: { [weak self] value in
+        let arguments = LanguageControllerArguments(context: context, change: { [weak self] value in
             if value.languageCode != appCurrentLanguage.primaryLanguage.languageCode {
                 animated = true
-                self?.applyDisposable.set(showModalProgress(signal: downloadAndApplyLocalization(postbox: account.postbox, network: account.network, languageCode: value.languageCode), for: mainWindow).start())
+                self?.applyDisposable.set(showModalProgress(signal: downloadAndApplyLocalization(accountManager:context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: value.languageCode), for: mainWindow).start())
             }
         }, delete: { info in
             confirm(for: mainWindow, information: L10n.languageRemovePack, successHandler: { _ in
@@ -271,7 +271,7 @@ class LanguageViewController: TableViewController {
         
         let initialSize = atomicSize
 
-        let signal = account.postbox.preferencesView(keys: [PreferencesKeys.localizationListState]) |> map { value -> LocalizationListState? in
+        let signal = context.account.postbox.preferencesView(keys: [PreferencesKeys.localizationListState]) |> map { value -> LocalizationListState? in
             return value.values[PreferencesKeys.localizationListState] as? LocalizationListState
         } |> deliverOnMainQueue
         

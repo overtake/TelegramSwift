@@ -90,7 +90,12 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 @end
 
-@implementation TGGrowingTextView
+
+
+
+
+
+@implementation TGGrowingTextView 
 
 -(instancetype)initWithFrame:(NSRect)frameRect {
     if(self = [super initWithFrame:frameRect]) {
@@ -115,6 +120,23 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     [self removeTrackingArea:_trackingArea];
     _trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds] options: (NSTrackingMouseMoved | NSTrackingActiveInKeyWindow | NSTrackingMouseEnteredAndExited | NSTrackingCursorUpdate) owner:self userInfo:nil];
     [self addTrackingArea:_trackingArea];
+}
+
+-(id)validRequestorForSendType:(NSPasteboardType)sendType returnType:(NSPasteboardType)returnType {
+    if (([NSImage.imageTypes containsObject:returnType]) && [self.weakd respondsToSelector:@selector(supportContinuityCamera)] && [self.weakd supportContinuityCamera]) {
+        return self;
+    } else {
+        return nil;
+    }
+}
+
+-(BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard {
+    if([pboard canReadItemWithDataConformingToTypes:NSImage.imageTypes]) {
+        [self.weakd textViewDidPaste:pboard];
+        return YES;
+    } else {
+        return [super readSelectionFromPasteboard:pboard];
+    }
 }
 
 -(NSPoint)textContainerOrigin {
@@ -145,6 +167,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 }
 
+-(void)rightMouseDown:(NSEvent *)event {
+    [self.window makeFirstResponder:self];
+    [super rightMouseDown:event];
+}
 
 -(void)paste:(id)sender {
     if (![self.weakd textViewDidPaste:[NSPasteboard generalPasteboard]]) {
@@ -193,6 +219,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         [menu removeItem:obj];
     }];
     
+    [self.window makeFirstResponder:self];
     return menu;
 }
 
@@ -345,8 +372,17 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         return NO;
     }
     
+    if(menuItem.action == @selector(copy:)) {
+        return self.string.length > 0;
+    }
     
     return [super validateMenuItem:menuItem];
+}
+
+-(void)copy:(id)sender {
+    if (self.string.length > 0) {
+        [super copy:sender];
+    }
 }
 
 
@@ -512,6 +548,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     }
     [super drawRect:dirtyRect];
     
+}
+
+-(NSMenu *)menuForEvent:(NSEvent *)event {
+    return [self.superview menuForEvent:event];
 }
 
 -(void)setHidden:(BOOL)hidden {
@@ -1365,6 +1405,24 @@ static int64_t nextId = 0;
     [_textView paste:sender];
 }
 
+-(void)rightMouseDown:(NSEvent *)event {
+    [super rightMouseDown:event];
+}
+
+-(NSMenu *)menuForEvent:(NSEvent *)event {
+    return [self.textView menuForEvent:event];
+}
+
+-(id)validRequestorForSendType:(NSPasteboardType)sendType returnType:(NSPasteboardType)returnType {
+    return [self.textView validRequestorForSendType:sendType returnType:returnType];
+   
+}
+
+-(BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard {
+    [self.delegate textViewDidPaste:pboard];
+    return YES;
+}
+
 -(void)setSelectedRange:(NSRange)range {
     _notify_next = NO;
     if(range.location != NSNotFound)
@@ -1379,7 +1437,6 @@ static int64_t nextId = 0;
     [__undo removeAllActionsWithTarget:_textView];
     [__undo removeAllActions];
 }
-
 
 
 

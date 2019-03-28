@@ -37,9 +37,9 @@ class MGalleryVideoItem: MGalleryItem {
             }
         } |> deliverOnMainQueue
     }
-    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
-        controller = SVideoController(postbox: account.postbox, reference: entry.fileReference(entry.file!))
-        super.init(account, entry, pagerSize)
+    override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
+        controller = SVideoController(postbox: context.account.postbox, reference: entry.fileReference(entry.file!))
+        super.init(context, entry, pagerSize)
         
         controller.togglePictureInPictureImpl = { [weak self] enter, control in
             guard let `self` = self else {return}
@@ -97,12 +97,12 @@ class MGalleryVideoItem: MGalleryItem {
         if media.isStreamable {
             return .single(.Local)
         } else {
-            return chatMessageFileStatus(account: account, file: media)
+            return chatMessageFileStatus(account: context.account, file: media)
         }
     }
     
     override var realStatus:Signal<MediaResourceStatus, NoError> {
-        return chatMessageFileStatus(account: account, file: media)
+        return chatMessageFileStatus(account: context.account, file: media)
     }
     
     var media:TelegramMediaFile {
@@ -151,7 +151,7 @@ class MGalleryVideoItem: MGalleryItem {
     override func request(immediately: Bool) {
 
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
         
         
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: media.dimensions?.fitted(pagerSize) ?? sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .fill(.black))
@@ -159,7 +159,7 @@ class MGalleryVideoItem: MGalleryItem {
             return .single(transform(arguments)?.generateImage())
         }
         
-        path.set(account.postbox.mediaBox.resourceData(media.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
+        path.set(context.account.postbox.mediaBox.resourceData(media.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
             if resource.complete {
                 return .single(link(path:resource.path, ext:kMediaVideoExt)!)
             }
@@ -177,9 +177,9 @@ class MGalleryVideoItem: MGalleryItem {
     override func fetch() -> Void {
         if !media.isStreamable {
             if let parent = entry.message {
-                _ = messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start()
+                _ = messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start()
             } else {
-                _ = freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.standalone(media: media)).start()
+                _ = freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start()
             }
         }
     }

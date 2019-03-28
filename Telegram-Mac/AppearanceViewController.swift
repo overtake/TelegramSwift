@@ -13,7 +13,7 @@ import PostboxMac
 import SwiftSignalKitMac
 
 private final class AppearanceViewArguments {
-    let account:Account
+    let context: AccountContext
     let togglePalette:(ColorPalette, Wallpaper?)->Void
     let toggleBubbles:(Bool)->Void
     let toggleFontSize:(Int32)->Void
@@ -21,8 +21,8 @@ private final class AppearanceViewArguments {
     let selectChatBackground:()->Void
     let openAutoNightSettings:()->Void
     let toggleFollowSystemAppearance:(Bool)->Void
-    init(account:Account, togglePalette: @escaping(ColorPalette, Wallpaper?)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, toggleFollowSystemAppearance: @escaping(Bool)->Void) {
-        self.account = account
+    init(context: AccountContext, togglePalette: @escaping(ColorPalette, Wallpaper?)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, toggleFollowSystemAppearance: @escaping(Bool)->Void) {
+        self.context = context
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
         self.toggleFontSize = toggleFontSize
@@ -134,7 +134,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
                 arguments.toggleFontSize(sizes[index])
             })
         case let .preview(_, _, entry):
-            let item = ChatRowItem.item(initialSize, from: entry, with: arguments.account, interaction: ChatInteraction(chatLocation: .peer(PeerId(0)), account: arguments.account, disableSelectAbility: true))
+            let item = ChatRowItem.item(initialSize, from: entry, interaction: ChatInteraction(chatLocation: .peer(PeerId(0)), context: arguments.context, disableSelectAbility: true))
             _ = item.makeSize(initialSize.width, oldWidth: 0)
             return item
         }
@@ -184,23 +184,20 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     
     let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
     
-    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil, nil)
+    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
     
     entries.append(.preview(sectionId, index, firstEntry))
     index += 1
     
     let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     
-    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil, nil)
+    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, settings.bubbled ? .bubble : .list, .Full(isAdmin: false), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
     
     entries.append(.preview(sectionId, index, secondEntry))
     index += 1
     
-    if settings.bubbled  {
-        entries.append(.chatBackground(sectionId, index))
-        index += 1
-        
-    }
+    entries.append(.chatBackground(sectionId, index))
+    index += 1
     
     if #available(OSX 10.14, *) {
         entries.append(.section(sectionId))
@@ -210,7 +207,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     }
     
     if !settings.followSystemAppearance {
-        if settings.colors == whitePalette {
+        if settings.colors.name == whitePalette.name && settings.colors.isDark == whitePalette.isDark {
             
             entries.append(.section(sectionId))
             sectionId += 1
@@ -382,31 +379,31 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
     private let disposable = MetaDisposable()
     override func viewDidLoad() {
         super.viewDidLoad()
-        let account = self.account
+        let context = self.context
         
-        _ = telegramWallpapers(postbox: account.postbox, network: account.network).start()
+        _ = telegramWallpapers(postbox: context.account.postbox, network: context.account.network).start()
         
-        let arguments = AppearanceViewArguments(account: account, togglePalette: { palette, _ in
-            _ = combineLatest(updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+        let arguments = AppearanceViewArguments(context: context, togglePalette: { palette, _ in
+            _ = combineLatest(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 return settings.withUpdatedPalette(palette).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
                 
-            }), updateAutoNightSettingsInteractively(postbox: account.postbox, {$0.withUpdatedSchedule(nil)})).start()
+            }), updateAutoNightSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
-            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 return settings.withUpdatedBubbled(enabled).withUpdatedWallpaper(enabled ? settings.wallpaper : .none)
             }).start()
         }, toggleFontSize: { size in
-            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 return settings.withUpdatedFontSize(CGFloat(size))
             }).start()
         }, selectAccentColor: {
-            showModal(with: AccentColorModalController(account, current: theme.colors.blueUI), for: mainWindow)
+            showModal(with: AccentColorModalController(context, current: theme.colors.blueUI), for: mainWindow)
         }, selectChatBackground: {
-            showModal(with: ChatWallpaperModalController(account: account), for: mainWindow)
+            showModal(with: ChatWallpaperModalController(context), for: mainWindow)
         }, openAutoNightSettings: { [weak self] in
-            self?.navigationController?.push(autoNightSettingsController(account.postbox))
+            self?.navigationController?.push(autoNightSettingsController(context.sharedContext))
         }, toggleFollowSystemAppearance: { value in
-            _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
+            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 return settings.withUpdatedFollowSystemAppearance(value).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none)
             }).start()
         })
@@ -416,7 +413,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
         
-        let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(postbox: account.postbox), account.postbox.loadedPeerWithId(account.peerId)) |> map { appearance, themeSettings, selfPeer in
+        let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager), context.account.postbox.loadedPeerWithId(context.account.peerId)) |> map { appearance, themeSettings, selfPeer in
             let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
         } |> deliverOnMainQueue |> beforeNext { [weak self] _ in

@@ -110,7 +110,7 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
     }
     
     deinit {
-        assert(self.queue.isCurrent())
+       // assert(self.queue.isCurrent())
         
         self.taskQueue.terminate()
     }
@@ -122,7 +122,7 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
     }
     
     func removeEventSink(_ index: Int) {
-        assert(self.queue.isCurrent())
+       // assert(self.queue.isCurrent())
         
         self.eventSinkBag.remove(index)
     }

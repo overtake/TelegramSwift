@@ -45,9 +45,12 @@ func pullCurrentSession(_ f:@escaping (PCallSession?)->Void) {
 
 class PCallSession {
     let peerId:PeerId
-    let account:Account
+    let account: Account
+    let sharedContext: SharedAccountContext
     let id:CallSessionInternalId
     
+    private(set) var peer: Peer?
+    private let peerDisposable = MetaDisposable()
     private var contextRef: Unmanaged<CallBridge>?
     
     private let stateDisposable = MetaDisposable()
@@ -67,7 +70,7 @@ class PCallSession {
     private var callSessionValue:CallSession? = nil
     private let proxyDisposable = MetaDisposable()
     private let requestMicroAccessDisposable = MetaDisposable()
-    init(account:Account, peerId:PeerId, id: CallSessionInternalId) {
+    init(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, id: CallSessionInternalId) {
         
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
@@ -75,9 +78,18 @@ class PCallSession {
         
         assert(callQueue.isCurrent())
         
+        
+        
         self.account = account
+        self.sharedContext = sharedContext
         self.peerId = peerId
         self.id = id
+        
+        
+        peerDisposable.set((account.postbox.multiplePeersView([peerId]) |> deliverOnMainQueue).start(next: { [weak self] view in
+            self?.peer = view.peers[peerId]
+        }))
+
 
         let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(CallSession, VoipConfiguration), NoError> in
             return account.postbox.transaction { transaction in
@@ -90,11 +102,11 @@ class PCallSession {
         
         state.set(signal |> map { $0.0.state})
         
-        proxyDisposable.set((proxySettingsSignal(account.postbox) |> deliverOn(callQueue) |> take(1)).start(next: { [weak self] settings in
+        proxyDisposable.set((combineLatest(queue: callQueue, proxySettings(accountManager: sharedContext.accountManager), voiceCallSettings(sharedContext.accountManager))).start(next: { [weak self] proxySetttings, callSettings in
             guard let `self` = self else {return}
             callSession = self
             let bridge:CallBridge
-            if let server = settings.effectiveActiveServer {
+            if let server = proxySetttings.effectiveActiveServer, proxySetttings.useForCalls {
                 switch server.connection {
                 case let .socks5(username, password):
                     bridge = CallBridge(proxy: CProxy(host: server.host, port: server.port, user: username != nil ? username : "", pass: password != nil ? password : ""))
@@ -105,13 +117,13 @@ class PCallSession {
                 bridge = CallBridge(proxy: nil)
             }
             
-            if let inputDeviceId = UserDefaults.standard.object(forKey: "call_inputDevice") as? String {
+            if let inputDeviceId = callSettings.inputDeviceId {
                 bridge.setCurrentInputDeviceId(inputDeviceId)
             }
-            if let outputDeviceId = UserDefaults.standard.object(forKey: "call_outputDevice") as? String {
+            if let outputDeviceId = callSettings.outputDeviceId {
                 bridge.setCurrentOutputDeviceId(outputDeviceId)
             }
-            
+            bridge.setMutedOtherSounds(callSettings.muteSounds)
             
             self.contextRef = Unmanaged.passRetained(bridge)
             bridge.stateChangeHandler = { value in
@@ -153,79 +165,9 @@ class PCallSession {
         }))
     }
     
-    func inputDevices() -> Signal<[AudioDevice], NoError> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.inputDevices())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
-    
-    func currentInputDeviceId()-> Signal<String, NoError> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.currentInputDeviceId())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
-    func currentOutputDeviceId()-> Signal<String, NoError> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.currentOutputDeviceId())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
-    func setCurrentInputDevice(_ device:AudioDevice) {
-        UserDefaults.standard.set(device.deviceId, forKey: "call_inputDevice")
-        UserDefaults.standard.synchronize()
-        withContext { context in
-            context.setCurrentInputDeviceId(device.deviceId);
-        }
-    }
-    
-    func setCurrentOutputDevice(_ device:AudioDevice) {
-        UserDefaults.standard.set(device.deviceId, forKey: "call_outputDevice")
-        UserDefaults.standard.synchronize()
-        withContext { context in
-            context.setCurrentOutputDeviceId(device.deviceId);
-        }
-    }
-    
-    func outputDevices() -> Signal<[AudioDevice], NoError> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.outputDevices())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
+
+
+
     
     private func invalidateTimeout() {
         timeoutDisposable.set(nil)
@@ -343,7 +285,7 @@ class PCallSession {
             invalidateTimeout()
             stopAudio()
             break
-        case .terminated(let reason, let report):
+        case .terminated(_, let reason, let report):
             stopTransmission()
             invalidateTimeout()
             switch reason {
@@ -365,6 +307,7 @@ class PCallSession {
     }
     
     deinit {
+        peerDisposable.dispose()
         stateDisposable.dispose()
         drop(.disconnect)
         proxyDisposable.dispose()
@@ -501,7 +444,7 @@ enum PCallResult {
     case samePeer(PCallSession)
 }
 
-func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, NoError> {
+func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, NoError> {
     return requestAudioPermission() |> deliverOnMainQueue |> mapToSignal { hasAccess -> Signal<PCallResult, NoError> in
         if hasAccess {
             return Signal { subscriber in
@@ -513,11 +456,11 @@ func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Sig
                     subscriber.putCompletion()
                 } else {
                     let confirmation:Signal<Bool, NoError>
-                    if let session = callSession {
+                    if let sessionPeerId = callSession?.peerId {
                         confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), NoError> in
-                            return account.postbox.loadedPeerWithId(session.peerId) |> map {(new:peer, previous:$0)}
+                            return account.postbox.loadedPeerWithId(sessionPeerId) |> map { (new: peer, previous: $0) }
                             } |> mapToSignal { value in
-                                return confirmSignal(for: mainWindow, header: tr(L10n.callConfirmDiscardCurrentHeader), information: tr(L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle)))
+                                return confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader, information: L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle))
                         }
                         
                     } else {
@@ -527,7 +470,7 @@ func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Sig
                     return (confirmation |> filter {$0} |> map { _ in
                         callSession?.hangUpCurrentCall()
                         } |> mapToSignal { _ in return account.callSessionManager.request(peerId: peerId) } |> deliverOn(callQueue) ).start(next: { id in
-                            subscriber.putNext(.success(PCallSession(account: account, peerId: peerId, id: id)))
+                            subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id)))
                             subscriber.putCompletion()
                         })
                 }

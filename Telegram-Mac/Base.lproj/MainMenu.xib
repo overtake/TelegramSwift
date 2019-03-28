@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14313.18"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -19,7 +19,6 @@
                 <outlet property="checkForUpdates" destination="xey-M7-XVy" id="7ii-1E-tIe"/>
                 <outlet property="preferences" destination="BOF-NM-1cW" id="iiN-GN-soF"/>
                 <outlet property="showQuickSwitcher" destination="sZh-ct-GQS" id="loY-ub-t4u"/>
-                <outlet property="updater" destination="cz9-G6-B4s" id="O7M-Lm-aWB"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
         </customObject>
@@ -46,7 +45,7 @@
                             <menuItem title="Check for Updates" tag="1000" identifier="1000" id="xey-M7-XVy" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="checkForUpdates:" target="Voe-Tx-rLC" id="N0u-hi-DH9"/>
+                                    <action selector="checkForUpdates:" target="Voe-Tx-rLC" id="Ang-sr-P90"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="4je-JR-u6R"/>
@@ -305,6 +304,5 @@
                 <autoresizingMask key="autoresizingMask"/>
             </view>
         </window>
-        <customObject id="cz9-G6-B4s" customClass="SUUpdater"/>
     </objects>
 </document>

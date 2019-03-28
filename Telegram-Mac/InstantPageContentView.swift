@@ -191,7 +191,7 @@ final class InstantPageContentView : View {
                     let itemIndex = itemIndex
                     let detailsIndex = detailsIndex
                     
-                    let arguments = InstantPageItemArguments(account: self.arguments.account, theme: self.arguments.theme, openMedia: self.arguments.openMedia, openPeer: self.arguments.openPeer, openUrl: self.arguments.openUrl, updateWebEmbedHeight: { _ in }, updateDetailsExpanded: { [weak self] expanded  in
+                    let arguments = InstantPageItemArguments(context: self.arguments.context, theme: self.arguments.theme, openMedia: self.arguments.openMedia, openPeer: self.arguments.openPeer, openUrl: self.arguments.openUrl, updateWebEmbedHeight: { _ in }, updateDetailsExpanded: { [weak self] expanded  in
                         self?.updateDetailsExpanded(detailsIndex, expanded)
                     }, isExpandedItem: { [weak self] item in
                         return self?.isExpandedItem(item) ?? false

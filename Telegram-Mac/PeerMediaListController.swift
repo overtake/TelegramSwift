@@ -190,13 +190,13 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
         switch entry.entry {
         case let .messageEntry(message, _):
             if tags == .file, message.media.first is TelegramMediaFile {
-                return PeerMediaFileRowItem(initialSize, interaction, account, entry.entry)
+                return PeerMediaFileRowItem(initialSize, interaction, entry.entry)
             } else if tags == .webPage {
-                return PeerMediaWebpageRowItem(initialSize,interaction,account, entry.entry)
+                return PeerMediaWebpageRowItem(initialSize,interaction, entry.entry)
             } else if tags == .music, message.media.first is TelegramMediaFile {
-                return PeerMediaMusicRowItem(initialSize, interaction, account, entry.entry)
+                return PeerMediaMusicRowItem(initialSize, interaction, entry.entry)
             } else if tags == .voiceOrInstantVideo, message.media.first is TelegramMediaFile {
-                return PeerMediaVoiceRowItem(initialSize,interaction,account, entry.entry)
+                return PeerMediaVoiceRowItem(initialSize,interaction, entry.entry)
             } else {
                 return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)
             }
@@ -249,15 +249,15 @@ struct PeerMediaUpdate {
 
 class PeerMediaListController: GenericViewController<TableView> {
     
-    private var account:Account
+    private var context: AccountContext
     private var chatLocation:ChatLocation
     private var chatInteraction:ChatInteraction
     private let disposable: MetaDisposable = MetaDisposable()
     private let entires = Atomic<[AppearanceWrapperEntry<PeerMediaSharedEntry>]?>(value: nil)
     private let updateView = Atomic<PeerMediaUpdate?>(value: nil)
     private let searchState:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
-    public init(account: Account, chatLocation: ChatLocation, chatInteraction: ChatInteraction) {
-        self.account = account
+    public init(context: AccountContext, chatLocation: ChatLocation, chatInteraction: ChatInteraction) {
+        self.context = context
         self.chatLocation = chatLocation
         self.chatInteraction = chatInteraction
         super.init()
@@ -305,7 +305,7 @@ class PeerMediaListController: GenericViewController<TableView> {
          |> mapToSignal { [weak self] location, searchState -> Signal<PeerMediaUpdate, NoError> in
             if let strongSelf = self {
                 if searchState.request.isEmpty {
-                    return combineLatest(chatHistoryViewForLocation(location, account: strongSelf.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> deliverOnPrepareQueue, automaticDownloadSettings(postbox: strongSelf.account.postbox) |> deliverOnPrepareQueue) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
+                    return combineLatest(chatHistoryViewForLocation(location, account: strongSelf.context.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> deliverOnPrepareQueue, automaticDownloadSettings(postbox: strongSelf.context.account.postbox) |> deliverOnPrepareQueue) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
                         switch view {
                         case .Loading:
                             return .single(PeerMediaUpdate())
@@ -313,7 +313,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                             var messages:[Message] = []
                             for entry in view.entries {
                                 switch entry {
-                                case let .MessageEntry(message, _, _, _):
+                                case let .MessageEntry(message, _, _, _, _):
                                     messages.append(message)
                                 default:
                                     break
@@ -342,7 +342,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                         searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask)
                     }
                     
-                    let signal = searchMessages(account: strongSelf.account, location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
+                    let signal = searchMessages(account: strongSelf.context.account, location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
                     }
                     
@@ -371,7 +371,7 @@ class PeerMediaListController: GenericViewController<TableView> {
                 strongSelf.searchState.set(state)
             }
         })
-        let account = self.account
+        let context = self.context
         let chatInteraction = self.chatInteraction
         let initialSize = self.atomicSize
         let _updateView = self.updateView
@@ -383,11 +383,11 @@ class PeerMediaListController: GenericViewController<TableView> {
             let animated = animated.swap(true)
             let scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
             
-            let entries = convertEntries(from: update, tags: tagMask, timeDifference: account.context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let entries = convertEntries(from: update, tags: tagMask, timeDifference: context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = _entries.swap(entries)
             _ = _updateView.swap(update)
             
-            return preparedMediaTransition(from: previous, to: entries, account: account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: false, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
+            return preparedMediaTransition(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: false, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
 
         } |> deliverOnMainQueue
         
@@ -397,7 +397,7 @@ class PeerMediaListController: GenericViewController<TableView> {
             
             guard let `self` = self else {return}
             if let controller = globalAudio {
-                (account.context.mainNavigation?.header?.view as? InlineAudioPlayerView)?.update(with: controller, tableView: (self.navigationController?.first {$0 is ChatController} as? ChatController)?.genericView.tableView, supportTableView: self.genericView)
+                (self.navigationController?.header?.view as? InlineAudioPlayerView)?.update(with: controller, context: context, tableView: (self.navigationController?.first {$0 is ChatController} as? ChatController)?.genericView.tableView, supportTableView: self.genericView)
             }
         }))
         

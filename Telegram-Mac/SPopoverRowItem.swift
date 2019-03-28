@@ -130,3 +130,46 @@ private class SPopoverRowView: TableRowView {
     }
     
 }
+
+
+final class SPopoverSeparatorItem : TableRowItem {
+    
+    override var stableId: AnyHashable {
+        return arc4random()
+    }
+    
+    override init(_ initialSize: NSSize) {
+        super.init(initialSize)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return SPopoverSeparatorView.self
+    }
+    
+    override var height: CGFloat {
+        return 10
+    }
+}
+
+
+private final class SPopoverSeparatorView : TableRowView {
+    private let separator: View = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(separator)
+    }
+    override func updateColors() {
+        super.updateColors()
+        separator.backgroundColor = theme.colors.border
+    }
+    
+    override func layout() {
+        super.layout()
+        separator.setFrameSize(NSMakeSize(frame.width, .borderSize))
+        separator.center()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

@@ -13,7 +13,7 @@ import PostboxMac
 import SwiftSignalKitMac
 
 class MediaGroupPreviewRowItem: TableRowItem {
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     private let _stableId: UInt32 = arc4random()
     fileprivate let layout: GroupedLayout
     fileprivate let reorder:(Int, Int)->Void
@@ -21,14 +21,14 @@ class MediaGroupPreviewRowItem: TableRowItem {
     fileprivate let hasEditedData: [URL: EditedImageData]
     fileprivate let edit:(URL)->Void
     fileprivate let delete:(URL)->Void
-    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], edit: @escaping(URL)->Void, delete:@escaping(URL)->Void, account: Account, reorder:@escaping(Int, Int)->Void) {
+    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], edit: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
         layout = GroupedLayout(messages)
         self.hasEditedData = editedData
         self.edit = edit
         self.delete = delete
         self.urls = urls
         self.reorder = reorder
-        self.account = account
+        self.context = context
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -55,10 +55,34 @@ class MediaGroupPreviewRowItem: TableRowItem {
     
 }
 
-class MediaGroupPreviewRowView : TableRowView {
+class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
     private var contents: [ChatMediaContentView] = []
     private var startPoint: NSPoint = NSZeroPoint
     private(set) var draggingIndex: Int? = nil
+    
+    
+    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+        
+        guard let item = item as? MediaGroupPreviewRowItem else { return nil }
+        
+        for i in 0 ..< item.layout.count {
+            if NSPointInRect(point, item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)) {
+                let contentNode = contents[i]
+                if contentNode is ChatGIFContentView {
+                    if let file = contentNode.media as? TelegramMediaFile {
+                        let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
+                        return .file(reference, GifPreviewModalView.self)
+                    }
+                } else if contentNode is ChatInteractiveContentView {
+                    if let image = contentNode.media as? TelegramMediaImage {
+                        let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
+                        return .image(reference, ImagePreviewModalView.self)
+                    }
+                }
+            }
+        }
+        return nil
+    }
 
     override func draw(_ dirtyRect: NSRect) {
         
@@ -123,13 +147,24 @@ class MediaGroupPreviewRowView : TableRowView {
         assert(contents.count == item.layout.count)
         
         for i in 0 ..< item.layout.count {
-            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, account: item.account, parent: nil, table: item.table, positionFlags: item.layout.position(at: i))
+            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, context: item.context, parent: nil, table: item.table, positionFlags: item.layout.position(at: i))
         }
         super.set(item: item, animated: animated)
         
         needsLayout = true
         
         updateMouse()
+    }
+    
+    override func forceClick(in location: NSPoint) {
+        guard let item = item as? MediaGroupPreviewRowItem else {return}
+
+        for i in 0 ..< item.layout.count {
+            if NSPointInRect(location, item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)) {
+                _ = contents[i].previewMediaIfPossible()
+                break
+            }
+        }
     }
     
     override func updateMouse() {

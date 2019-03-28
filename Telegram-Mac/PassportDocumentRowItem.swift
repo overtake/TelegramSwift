@@ -17,7 +17,7 @@ class PassportDocumentRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let title: TextViewLayout
     fileprivate let status: TextViewLayout
     fileprivate let removeAction:(SecureIdVerificationDocument)->Void
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     
     fileprivate let documentValue: SecureIdDocumentValue
     
@@ -33,9 +33,9 @@ class PassportDocumentRowItem: GeneralRowItem, InputDataRowDataValue {
     
     fileprivate private(set) var uploadingProgress: Float?
     
-    init(_ initialSize: NSSize, account: Account, document: SecureIdDocumentValue, error: InputDataValueError?, header: String, removeAction:@escaping(SecureIdVerificationDocument)->Void) {
+    init(_ initialSize: NSSize, context: AccountContext, document: SecureIdDocumentValue, error: InputDataValueError?, header: String, removeAction:@escaping(SecureIdVerificationDocument)->Void) {
         self.documentValue = document
-        self.account = account
+        self.context = context
         title = TextViewLayout(.initialize(string: header, color: theme.colors.text, font: .normal(.text)))
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -138,7 +138,7 @@ final class PassportDocumentRowView : TableRowView {
                 return true
             }
             let index = passportItems.index(of: item)!
-            showSecureIdDocumentsGallery(account: item.account, medias: passportItems.map({$0.documentValue}), firstIndex: index, item.table)
+            showSecureIdDocumentsGallery(context: item.context, medias: passportItems.map({$0.documentValue}), firstIndex: index, item.table)
         } else {
             super.mouseUp(with: event)
         }
@@ -179,7 +179,7 @@ final class PassportDocumentRowView : TableRowView {
             progressView.removeFromSuperview()
         }
         
-        downloadingProgress.set((chatMessagePhotoStatus(account: item.account, photo: item.image) |> deliverOnMainQueue).start(next: { [weak self] status in
+        downloadingProgress.set((chatMessagePhotoStatus(account: item.context.account, photo: item.image) |> deliverOnMainQueue).start(next: { [weak self] status in
             guard let `self` = self else {return}
             guard let item = self.item as? PassportDocumentRowItem else {return}
             switch status {
@@ -203,8 +203,8 @@ final class PassportDocumentRowView : TableRowView {
             item.removeAction(item.documentValue.document)
         })
         
-        imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: item.image), scale: backingScaleFactor, small: true, secureIdAccessContext: item.accessContext))
-        _ = chatMessagePhotoInteractiveFetched(account: item.account, imageReference: ImageMediaReference.standalone(media: item.image)).start()
+        imageView.setSignal(chatWebpageSnippetPhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: item.image), scale: backingScaleFactor, small: true, secureIdAccessContext: item.accessContext))
+        _ = chatMessagePhotoInteractiveFetched(account: item.context.account, imageReference: ImageMediaReference.standalone(media: item.image)).start()
         imageView.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: NSMakeSize(60, 50), boundingSize: NSMakeSize(60, 50), intrinsicInsets: NSEdgeInsets()))
         removeButton.set(image: theme.icons.stickerPackDelete, for: .Normal)
         _ = removeButton.sizeToFit()

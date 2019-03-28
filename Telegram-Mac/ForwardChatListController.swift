@@ -25,8 +25,8 @@ class ForwardChatListController: ChatListController {
         return BarView(controller: self)
     }
     
-    init(_ account: Account) {
-        super.init(account, modal:true)
+    init(_ context: AccountContext) {
+        super.init(context, modal:true)
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

@@ -71,31 +71,32 @@ class SidebarCapView : View {
 }
 
 class SidebarCapViewController: GenericViewController<SidebarCapView> {
-    private let account:Account
+    private let context:AccountContext
     private let globalPeerDisposable = MetaDisposable()
     private var inChatAbility: Bool = true {
         didSet {
             navigationWillChangeController()
         }
     }
-    init(account:Account) {
-        self.account = account
+    init(_ context:AccountContext) {
+        self.context = context
         super.init()
         
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigation?.add(listener: WeakReference(value: self))
+        self.navigationController = context.sharedContext.bindings.rootNavigation()
+        (navigationController as? MajorNavigationController)?.add(listener: WeakReference(value: self))
         genericView.close.set(handler: { [weak self] _ in
-            self?.navigation?.closeSidebar()
+            self?.context.sharedContext.bindings.rootNavigation().closeSidebar()
             FastSettings.toggleSidebarShown(false)
-            self?.account.context.entertainment.closedBySide()
+            self?.context.sharedContext.bindings.entertainment().closedBySide()
         }, for: .Click)
         
-        let postbox = self.account.postbox
+        let postbox = self.context.account.postbox
         
-        globalPeerDisposable.set((globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, NoError> in
+        globalPeerDisposable.set((context.globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, NoError> in
             if let value = value {
                 switch value {
                 case .group:
@@ -115,27 +116,24 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
     }
     
     deinit {
-        navigation?.remove(listener: WeakReference(value: self))
+        
     }
     
-    var navigation:MajorNavigationController? {
-        return self.account.context.mainNavigation as? MajorNavigationController
-    }
-    
+
     override func navigationWillChangeController() {
         
         self.genericView.restrictedByPeer = !inChatAbility
         self.genericView.updateLocalizationAndTheme()
         
-        self.view.setFrameSize(account.context.entertainment.frame.size)
+        self.view.setFrameSize(context.sharedContext.bindings.entertainment().frame.size)
         
-        if navigation?.controller is ChatController, inChatAbility {
+        if context.sharedContext.bindings.rootNavigation().controller is ChatController, inChatAbility {
             view.removeFromSuperview()
         } else {
-            self.account.context.entertainment.addSubview(view)
+            context.sharedContext.bindings.entertainment().addSubview(view)
         }
         
-        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: mainWindow)
+       // NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: mainWindow)
 
     }
     

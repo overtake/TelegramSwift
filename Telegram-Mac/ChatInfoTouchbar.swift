@@ -38,7 +38,7 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         }
         items.append(.flexibleSpace)
         items.append(.sharedMediaAndInfo)
-        if peer.isUser && peer.id != chatInteraction.account.peerId, !peer.isBot {
+        if peer.isUser && peer.id != chatInteraction.context.peerId, !peer.isBot {
             items.append(.userActions)
         }
         items.append(.flexibleSpace)
@@ -51,15 +51,15 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         guard let segment = sender as? NSSegmentedControl else {return}
         switch segment.selectedSegment {
         case 0:
-            _ = showModalProgress(signal: createSecretChat(account: chatInteraction.account, peerId: chatInteraction.peerId) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] peerId in
+            _ = showModalProgress(signal: createSecretChat(account: chatInteraction.context.account, peerId: chatInteraction.peerId) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] peerId in
                 if let strongSelf = self {
-                    strongSelf.chatInteraction.account.context.mainNavigation?.push(ChatController(account: strongSelf.chatInteraction.account, chatLocation: .peer(peerId)))
+                    strongSelf.chatInteraction.context.sharedContext.bindings.rootNavigation().push(ChatController(context: strongSelf.chatInteraction.context, chatLocation: .peer(peerId)))
                 }
             })
         case 1:
-            let account = chatInteraction.account
-            _ = (phoneCall(account, peerId: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(account, result)
+            let context = chatInteraction.context
+            _ = (phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context.sharedContext, result)
             })
         default:
             break
@@ -74,24 +74,24 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         guard let peer = chatInteraction.peer else {return}
 
         if peer.isUser, let peer = peer as? TelegramUser {
-            showModal(with: ShareModalController(ShareContactObject(chatInteraction.account, user: peer)), for: mainWindow)
+            showModal(with: ShareModalController(ShareContactObject(chatInteraction.context, user: peer)), for: mainWindow)
         } else if let address = peer.addressName {
-            showModal(with: ShareModalController(ShareLinkObject(chatInteraction.account, link: "https://t.me/\(address)")), for: mainWindow)
+            showModal(with: ShareModalController(ShareLinkObject(chatInteraction.context, link: "https://t.me/\(address)")), for: mainWindow)
         }
         
         dismiss()
     }
     @objc private func sharedMediaAction() {
-        chatInteraction.account.context.mainNavigation?.push(PeerMediaController(account: chatInteraction.account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
         dismiss()
     }
     @objc private func peerInfoActions(_ sender: Any?) {
         guard let segment = sender as? NSSegmentedControl else {return}
         switch segment.selectedSegment {
         case 0:
-            chatInteraction.account.context.mainNavigation?.push(PeerMediaController(account: chatInteraction.account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+            chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
         case 1:
-            chatInteraction.account.context.mainNavigation?.push(PeerInfoController(account: chatInteraction.account, peerId: chatInteraction.peerId))
+            chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         default:
             break
         }

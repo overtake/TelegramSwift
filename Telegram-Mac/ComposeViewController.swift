@@ -69,8 +69,8 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
     
     
     
-    public init(titles:ComposeTitles, account:Account) {
+    public init(titles:ComposeTitles, context: AccountContext) {
         self.titles = titles
-        super.init(account)
+        super.init(context)
     }
 }

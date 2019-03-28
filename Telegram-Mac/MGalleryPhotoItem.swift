@@ -17,7 +17,7 @@ class MGalleryPhotoItem: MGalleryItem {
     let media:TelegramMediaImage
     let secureIdAccessContext: SecureIdAccessContext?
     private let representation:TelegramMediaImageRepresentation
-    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
+    override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {
         case .message(let entry):
             if let webpage =  entry.message!.media[0] as? TelegramMediaWebpage {
@@ -54,7 +54,7 @@ class MGalleryPhotoItem: MGalleryItem {
         }
         
         self.representation = media.representations.last!
-        super.init(account, entry, pagerSize)
+        super.init(context, entry, pagerSize)
     }
     
     
@@ -84,12 +84,12 @@ class MGalleryPhotoItem: MGalleryItem {
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
-        return chatMessagePhotoStatus(account: account, photo: media)
+        return chatMessagePhotoStatus(account: context.account, photo: media)
     }
     
     override func request(immediately: Bool) {
         
-        let account = self.account
+        let context = self.context
         let entry = self.entry
         let media = self.media
         let secureIdAccessContext = self.secureIdAccessContext
@@ -108,7 +108,7 @@ class MGalleryPhotoItem: MGalleryItem {
             }
             
         } |> mapToSignal { size, orientation -> Signal<CGImage?, NoError> in
-            return chatGalleryPhoto(account: account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
+            return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
                 |> map { transform in
                     let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                     if let orientation = orientation {
@@ -118,7 +118,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 }
         }
         
-        path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { resource -> Signal<String, NoError> in
+        path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { resource -> Signal<String, NoError> in
             if resource.complete {
                 return .single(link(path:resource.path, ext:kMediaImageExt)!)
             }
@@ -133,12 +133,12 @@ class MGalleryPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-         fetching.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: entry.imageReference(media)).start())
+         fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media)).start())
     }
     
     override func cancel() -> Void {
         super.cancel()
-        chatMessagePhotoCancelInteractiveFetch(account: account, photo: media)
+        chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
     }
     
     

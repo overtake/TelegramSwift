@@ -24,11 +24,13 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case enterBehavior(sectionId:Int, enabled: Bool)
     case cmdEnterBehavior(sectionId:Int, enabled: Bool)
     case emojiReplacements(sectionId:Int, enabled: Bool)
+    case predictEmoji(sectionId:Int, enabled: Bool)
     case showCallsTab(sectionId:Int, enabled: Bool)
     case latestArticles(sectionId:Int, enabled: Bool)
     case forceTouchReply(sectionId:Int, enabled: Bool)
     case forceTouchEdit(sectionId:Int, enabled: Bool)
     case forceTouchForward(sectionId:Int, enabled: Bool)
+    case forceTouchPreviewMedia(sectionId:Int, enabled: Bool)
 	case instantViewScrollBySpace(sectionId:Int, enabled: Bool)
     var stableId: Int {
         switch self {
@@ -50,18 +52,22 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 6
         case .emojiReplacements:
             return 7
-        case .showCallsTab:
+        case .predictEmoji:
             return 8
-        case .latestArticles:
+        case .showCallsTab:
             return 9
-        case .forceTouchReply:
+        case .latestArticles:
             return 10
-        case .forceTouchEdit:
+        case .forceTouchReply:
             return 11
-        case .forceTouchForward:
+        case .forceTouchEdit:
             return 12
+        case .forceTouchForward:
+            return 13
+        case .forceTouchPreviewMedia:
+            return 14
 		case .instantViewScrollBySpace:
-			return 13
+			return 15
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -85,6 +91,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return (sectionId * 1000) + stableId
         case let .emojiReplacements(sectionId, _):
             return (sectionId * 1000) + stableId
+        case let .predictEmoji(sectionId, _):
+            return (sectionId * 1000) + stableId
         case let .handleInAppKeys(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .enterBehavior(sectionId, _):
@@ -96,6 +104,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .forceTouchEdit(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .forceTouchForward(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .forceTouchPreviewMedia(sectionId, _):
             return (sectionId * 1000) + stableId
 		case let .instantViewScrollBySpace(sectionId, _):
 			return (sectionId * 1000) + stableId
@@ -118,7 +128,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             })
         case let .darkMode(sectionId: _, enabled: enabled):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(enabled), action: {
-                _ = updateThemeInteractivetly(postbox: arguments.account.postbox, f: { settings in
+                _ = updateThemeInteractivetly(accountManager: arguments.context.sharedContext.accountManager, f: { settings in
                     return settings.withUpdatedPalette(!enabled ? darkPalette : whitePalette)
                 }).start()
             })
@@ -142,6 +152,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsEmojiReplacements), type: .switchable(enabled), action: {
                 arguments.toggleEmojiReplacements(!enabled)
             })
+        case let .predictEmoji(sectionId: _, enabled):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEmojiPrediction, type: .switchable(enabled), action: {
+                arguments.toggleEmojiPrediction(!enabled)
+            })
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .enterBehavior(sectionId: _, enabled: enabled):
@@ -164,6 +178,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return GeneralInteractedRowItem(initialSize, name: tr(L10n.generalSettingsForceTouchForward), type: .selectable(enabled), action: {
                 arguments.toggleForceTouchAction(.forward)
             })
+        case let .forceTouchPreviewMedia(sectionId: _, enabled: enabled):
+            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchPreviewMedia, type: .selectable(enabled), action: {
+                arguments.toggleForceTouchAction(.previewMedia)
+            })
 		case let .instantViewScrollBySpace(sectionId: _, enabled: enabled):
 			return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsInstantViewScrollBySpace), type: .switchable(enabled), action: {
 				arguments.toggleInstantViewScrollBySpace(!enabled)
@@ -176,7 +194,7 @@ private func <(lhs: GeneralSettingsEntry, rhs: GeneralSettingsEntry) -> Bool {
 }
 
 private final class GeneralSettingsArguments {
-    let account:Account
+    let context:AccountContext
     let toggleCallsTab:(Bool) -> Void
     let toggleInAppKeys:(Bool) -> Void
     let toggleInput:(SendingType)-> Void
@@ -187,8 +205,9 @@ private final class GeneralSettingsArguments {
 	let toggleInstantViewScrollBySpace:(Bool) -> Void
     let toggleAutoplayGifs:(Bool) -> Void
     let toggleLatestArticles: (Bool)->Void
-    init(account:Account, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleLatestArticles: @escaping(Bool)->Void) {
-        self.account = account
+    let toggleEmojiPrediction: (Bool)->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleLatestArticles: @escaping(Bool)->Void, toggleEmojiPrediction: @escaping(Bool) -> Void) {
+        self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
         self.toggleInput = toggleInput
@@ -199,6 +218,7 @@ private final class GeneralSettingsArguments {
 		self.toggleInstantViewScrollBySpace = toggleInstantViewScrollBySpace
         self.toggleAutoplayGifs = toggleAutoplayGifs
         self.toggleLatestArticles = toggleLatestArticles
+        self.toggleEmojiPrediction = toggleEmojiPrediction
     }
    
 }
@@ -245,10 +265,12 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     }
     #endif
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled))
-    entries.append(.autoplayGifs(sectionId: sectionId, enabled: FastSettings.gifsAutoPlay))
 
     entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds))
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies))
+    if !baseSettings.predictEmoji {
+        entries.append(.predictEmoji(sectionId: sectionId, enabled: baseSettings.predictEmoji))
+    }
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab))
   //  entries.append(.latestArticles(sectionId: sectionId, enabled: baseSettings.latestArticles))
 
@@ -262,7 +284,8 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.forceTouchReply(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .reply))
     entries.append(.forceTouchEdit(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .edit))
     entries.append(.forceTouchForward(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .forward))
-    
+   // entries.append(.forceTouchPreviewMedia(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .previewMedia))
+
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
 	
@@ -293,18 +316,17 @@ class GeneralSettingsViewController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
        
-        
-        let postbox = account.postbox
+        let context = self.context
         let inputPromise:ValuePromise<SendingType> = ValuePromise(FastSettings.sendingType, ignoreRepeated: true)
         
         let forceTouchPromise:ValuePromise<ForceTouchAction> = ValuePromise(FastSettings.forceTouchAction, ignoreRepeated: true)
         
-        let arguments = GeneralSettingsArguments(account: account, toggleCallsTab: { enable in
-            _ = updateBaseAppSettingsInteractively(postbox: postbox, { settings -> BaseApplicationSettings in
+        let arguments = GeneralSettingsArguments(context: context, toggleCallsTab: { enable in
+            _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings -> BaseApplicationSettings in
                 return settings.withUpdatedShowCallsTab(enable)
             }).start()
         }, toggleInAppKeys: { enable in
-            _ = updateBaseAppSettingsInteractively(postbox: postbox, { settings -> BaseApplicationSettings in
+            _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings -> BaseApplicationSettings in
                 return settings.withUpdatedInAppKeyHandle(enable)
             }).start()
         }, toggleInput: { input in
@@ -324,8 +346,12 @@ class GeneralSettingsViewController: TableViewController {
         }, toggleAutoplayGifs: { enable in
             FastSettings.toggleAutoPlayGifs(enable)
         }, toggleLatestArticles: { enable in
-            _ = updateBaseAppSettingsInteractively(postbox: postbox, { settings -> BaseApplicationSettings in
+            _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings -> BaseApplicationSettings in
                 return settings.withUpdatedLatestArticles(enable)
+            }).start()
+        }, toggleEmojiPrediction: { enable in
+            _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings -> BaseApplicationSettings in
+                return settings.withUpdatedPredictEmoji(enable)
             }).start()
         })
         
@@ -333,14 +359,25 @@ class GeneralSettingsViewController: TableViewController {
         
         let previos:Atomic<[AppearanceWrapperEntry<GeneralSettingsEntry>]> = Atomic(value: [])
         
-        let signal = combineLatest(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.baseAppSettings]) |> deliverOnMainQueue, inputPromise.get() |> deliverOnMainQueue, forceTouchPromise.get() |> deliverOnMainQueue, appearanceSignal) |> map { settings, _, _, appearance -> TableUpdateTransition in
+        
+        var baseApplicationSettings: BaseApplicationSettings = BaseApplicationSettings.defaultSettings
+        
+        let baseSettingsSemaphore = DispatchSemaphore(value: 0)
+        
+        _ = (baseAppSettings(accountManager: context.sharedContext.accountManager) |> take(1)).start(next: { settings in
+             baseApplicationSettings = settings
+             baseSettingsSemaphore.signal()
+        })
+        baseSettingsSemaphore.wait()
+        
+        
+        
+        
+        let baseSettingsSignal: Signal<BaseApplicationSettings, NoError> = .single(baseApplicationSettings) |> then(baseAppSettings(accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue)
+        
+        let signal = combineLatest(baseSettingsSignal, inputPromise.get() |> deliverOnMainQueue, forceTouchPromise.get() |> deliverOnMainQueue, appearanceSignal) |> map { settings, _, _, appearance -> TableUpdateTransition in
             
-            let baseSettings: BaseApplicationSettings
-            if let settings = settings.values[ApplicationSpecificPreferencesKeys.baseAppSettings] as? BaseApplicationSettings {
-                baseSettings = settings
-            } else {
-                baseSettings = BaseApplicationSettings.defaultSettings
-            }
+            let baseSettings: BaseApplicationSettings = settings
             
             let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = previos.swap(entries)
@@ -361,17 +398,17 @@ class GeneralSettingsViewController: TableViewController {
 
     private func incrementLogClick() {
         loggerClickCount += 1
-        let account = self.account
+        let context = self.context
         if loggerClickCount == 5 {
             UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: "enablelogs"), forKey: "enablelogs")
             let logs = Logger.shared.collectLogs() |> deliverOnMainQueue |> mapToSignal { logs -> Signal<Void, NoError> in
-                return selectModalPeers(account: account, title: "Send Logs", limit: 1, confirmation: {_ in return confirmSignal(for: mainWindow, information: "Are you sure you want send logs?")}) |> filter {!$0.isEmpty} |> map {$0.first!} |> mapToSignal { peerId -> Signal<Void, NoError> in
+                return selectModalPeers(context: context, title: "Send Logs", limit: 1, confirmation: {_ in return confirmSignal(for: mainWindow, information: "Are you sure you want send logs?")}) |> filter {!$0.isEmpty} |> map {$0.first!} |> mapToSignal { peerId -> Signal<Void, NoError> in
                     let messages = logs.map { (name, path) -> EnqueueMessage in
                         let id = arc4random64()
                         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), partialReference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], immediateThumbnailData: nil, mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
                         return .message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: file), replyToMessageId: nil, localGroupingKey: nil)
                     }
-                    return enqueueMessages(account: account, peerId: peerId, messages: messages) |> map {_ in}
+                    return enqueueMessages(context: context, peerId: peerId, messages: messages) |> map {_ in}
                 }
             }
             _ = logs.start()

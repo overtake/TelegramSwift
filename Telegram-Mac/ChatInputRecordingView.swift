@@ -32,13 +32,9 @@ class ChatInputRecordingView: View {
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction, recorder:ChatRecordingState) {
         self.chatInteraction = chatInteraction
         self.recorder = recorder
-        overlayController = ChatRecorderOverlayWindowController(account: chatInteraction.account, parent: mainWindow, chatInteraction: chatInteraction)
+        overlayController = ChatRecorderOverlayWindowController(parent: mainWindow, chatInteraction: chatInteraction)
         super.init(frame: frameRect)
         
-        
-        
-      //  peakLayer.frame = NSMakeRect(0, 0, 14, 14)
-      //  peakLayer.cornerRadius = peakLayer.frame.width / 2
         
         statusImage.image = FastSettings.recordingState == .voice ? theme.icons.chatVoiceRecording : theme.icons.chatVideoRecording
         statusImage.animates = true
@@ -71,8 +67,6 @@ class ChatInputRecordingView: View {
         descView.backgroundColor = theme.colors.background
         timerView.backgroundColor = theme.colors.background
         recView.backgroundColor = theme.colors.blueUI
-      //  peakLayer.backgroundColor = theme.colors.redUI.cgColor
-
     }
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {

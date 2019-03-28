@@ -34,7 +34,7 @@ enum ChatPresentationInputQuery: Equatable {
     case mention(query: String, includeRecent: Bool)
     case command(String)
     case contextRequest(addressName: String, query: String)
-    case emoji(String)
+    case emoji(String, firstWord: Bool)
     case stickers(String)
 }
 
@@ -43,7 +43,7 @@ enum ChatPresentationInputQueryResult: Equatable {
     case mentions([Peer])
     case commands([PeerCommand])
     case stickers([FoundStickerItem])
-    case emoji([EmojiClue])
+    case emoji([String], Bool)
     case searchMessages(([Message], SearchMessagesState?, (SearchMessagesState?)-> Void), String)
     case contextRequestResult(Peer, ChatContextResultCollection?)
     
@@ -61,9 +61,9 @@ enum ChatPresentationInputQueryResult: Equatable {
                 } else {
                     return false
             }
-        case let .emoji(lhsResults):
-            if case let .emoji(rhsResults) = rhs {
-                return lhsResults == rhsResults
+        case let .emoji(lhsResults, lhsFirstWord):
+            if case let .emoji(rhsResults, rhsFirstWord) = rhs {
+                return lhsResults == rhsResults && lhsFirstWord == rhsFirstWord
             } else {
                 return false
             }
@@ -403,15 +403,13 @@ struct ChatPresentationInterfaceState: Equatable {
             }
             
             
-            if let peer = peer, let permissionText = permissionText(from: peer, for: .banSendMessages) {
-                return .restricted(permissionText)
-            }
+          
 
             
             if let peer = peer as? TelegramChannel {
                 if let _ = restrictionInfo {
                     return .action(L10n.chatInputClose, { chatInteraction in
-                        chatInteraction.account.context.mainNavigation?.back()
+                        chatInteraction.context.sharedContext.bindings.rootNavigation().back()
                     })
                 }
                 
@@ -426,8 +424,8 @@ struct ChatPresentationInterfaceState: Equatable {
                     return .action(L10n.chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
                     })
-                } else if peer.hasBannedRights(.banSendMessages), let bannedRights = peer.bannedRights {
-                    return .restricted(bannedRights.untilDate != Int32.max ? L10n.channelPersmissionDeniedSendMessagesUntil(bannedRights.formattedUntilDate) : L10n.channelPersmissionDeniedSendMessagesForever)
+                } else if let permissionText = permissionText(from: peer, for: .banSendMessages) {
+                    return .restricted(permissionText)
                 } else if !peer.canSendMessage, let notificationSettings = notificationSettings {
                     return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
                         chatInteraction.toggleNotifications()
@@ -469,6 +467,10 @@ struct ChatPresentationInterfaceState: Equatable {
                 return .action(tr(L10n.chatInputUnblock), { chatInteraction in
                     chatInteraction.unblock()
                 })
+            }
+            
+            if let peer = peer, let permissionText = permissionText(from: peer, for: .banSendMessages) {
+                return .restricted(permissionText)
             }
             
             if self.interfaceState.editState != nil {
@@ -862,7 +864,11 @@ struct ChatPresentationInterfaceState: Equatable {
         if let selectionState = self.selectionState {
             selectedIds.formUnion(selectionState.selectedIds)
         }
-        selectedIds.insert(messageId)
+        if selectedIds.count < 100 {
+            selectedIds.insert(messageId)
+        } else {
+            NSSound.beep()
+        }
         
         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration)
     }
@@ -879,7 +885,11 @@ struct ChatPresentationInterfaceState: Equatable {
         if selectedIds.contains(messageId) {
             let _ = selectedIds.remove(messageId)
         } else {
-            selectedIds.insert(messageId)
+            if selectedIds.count < 100 {
+                selectedIds.insert(messageId)
+            } else {
+                NSSound.beep()
+            }
         }
         
          return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration)

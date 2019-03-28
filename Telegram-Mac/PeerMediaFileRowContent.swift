@@ -27,8 +27,8 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
-        super.init(initialSize,interface,account,object)
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry) {
+        super.init(initialSize,interface,object)
         iconSize = NSMakeSize(40, 40)
         
         if let file = message.media.first as? TelegramMediaFile {
@@ -40,14 +40,14 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "MMM d, yyyy 'at' h a"
             
-            let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - account.context.timeDifference)))
+            let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
             
             actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(FontSize.text)), maximumNumberOfLines: 1, truncationType: .end)
             
             let localAction = NSMutableAttributedString()
             let range = localAction.append(string: tr(L10n.contextShowInFinder), color: theme.colors.link, font: .normal(.text))
             localAction.add(link: inAppLink.callback("finder", { _ in
-                showInFinder(file, account: account)
+                showInFinder(file, account: interface.context.account)
             }), for: range)
             actionLayoutLocal = TextViewLayout(localAction, maximumNumberOfLines: 1, truncationType: .end)
             actionLayoutLocal.interactions = globalLinkExecutor
@@ -76,17 +76,17 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         let signal = super.menuItems(in: location)
-        let account = self.account
+        let context = self.interface.context
         if let file = self.file {
             return signal |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
                 var items = items
-                return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> map {data in
+                return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> map {data in
                     if data.complete {
-                        items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
-                            saveAs(file, account: account)
+                        items.append(ContextMenuItem(L10n.contextCopyMedia, handler: {
+                            saveAs(file, account: context.account)
                         }))
-                        items.append(ContextMenuItem(tr(L10n.contextShowInFinder), handler: {
-                            showInFinder(file, account: account)
+                        items.append(ContextMenuItem(L10n.contextShowInFinder, handler: {
+                            showInFinder(file, account: context.account)
                         }))
                     }
                     return items
@@ -144,7 +144,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func delete() -> Void {
         if let item = item as? PeerMediaFileRowItem {
-            _ = item.account.postbox.transaction({ transaction -> Void in
+            _ = item.interface.context.account.postbox.transaction({ transaction -> Void in
                 transaction.deleteMessages([item.message.id])
             }).start()
         }
@@ -152,23 +152,23 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file))
+            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file))
         }
     }
     
     func open() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
             if file.isGraphicFile {
-                showChatGallery(account: item.account, message: item.message, item.table, nil)
+                showChatGallery(context: item.interface.context, message: item.message, item.table, nil)
             } else {
-               QuickLookPreview.current.show(account: item.account, with: file, stableId:item.message.chatStableId, item.table)
+               QuickLookPreview.current.show(context: item.interface.context, with: file, stableId:item.message.chatStableId, item.table)
             }
         }
     }
     
     func fetch() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file)).start())
         }
     }
     
@@ -254,7 +254,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
             
             let updateIconImageSignal:Signal<(TransformImageArguments) -> DrawingContext?,NoError>
             if let icon = item.icon {
-                updateIconImageSignal = chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
+                updateIconImageSignal = chatWebpageSnippetPhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {
                 updateIconImageSignal = .complete()
             }
@@ -270,9 +270,9 @@ class PeerMediaFileRowView : PeerMediaRowView {
             var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
             var updatedFetchControls: FetchControls?
             
-            let account = item.account
+            let context = item.interface.context
             if let file = item.file {
-                updatedStatusSignal = chatMessageFileStatus(account: account, file: file)
+                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file)
                 updatedFetchControls = FetchControls(fetch: { [weak self] in
                     self?.executeInteraction(true)
                 })

@@ -9,6 +9,20 @@
 import Cocoa
 import TGUIKit
 
+var APP_VERSION_STRING: String {
+    var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1") (\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0"))"
+    
+    
+    #if STABLE
+    vText += " Stable"
+    #elseif APP_STORE
+    vText += " AppStore"
+    #else
+    vText += " Beta"
+    #endif
+    return vText
+}
+
 fileprivate class AboutModalView : Control {
     fileprivate let copyright:TextView = TextView()
     fileprivate let descView:TextView = TextView()
@@ -23,24 +37,23 @@ fileprivate class AboutModalView : Control {
         copyrightLayout.measure(width:frameRect.width - 40)
         
         
-        var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1").\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0")"
-        
-
-        #if STABLE
-            vText += " Stable"
-        #elseif APP_STORE
-            vText += " AppStore"
-        #else
-            vText += " Beta"
-        #endif
+        let vText = APP_VERSION_STRING
 
         let attr = NSMutableAttributedString()
         
         _ = attr.append(string: appName, color: theme.colors.text, font: .medium(.header))
         _ = attr.append(string: "\n\(vText)", color: theme.colors.grayText, font: .medium(.text))
         
+        _ = attr.append(string: " (", color: theme.colors.grayText, font: .medium(.text))
+
+        let range = attr.append(string: L10n.x3vGGIWUTitle.lowercased(), color: theme.colors.blueUI, font: .medium(.text))
+        attr.addAttribute(.link, value: "copy", range: range)
+        _ = attr.append(string: ")", color: theme.colors.grayText, font: .medium(.text))
+
         _ = attr.append(string: "\n\n")
         
+        
+
         _ = attr.append(string: L10n.aboutDescription, color: theme.colors.text, font: .normal(.text))
         
         let descLayout = TextViewLayout(attr, alignment: .center)
@@ -48,8 +61,13 @@ fileprivate class AboutModalView : Control {
         
 
         descLayout.interactions.copy = {
-            copyToClipboard(vText)
+            copyToClipboard(APP_VERSION_STRING)
             return true
+        }
+        
+        descLayout.interactions.processURL = { _ in
+            var bp:Int = 0
+            bp += 1
         }
         
         copyright.update(copyrightLayout)
@@ -89,12 +107,20 @@ class AboutModalController: ModalViewController {
         bar = .init(height: 0)
     }
     
+    override func close() {
+        super.close()
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.descView.layout?.interactions.processURL = { [weak self] url in
             if let url = url as? inAppLink {
                 execute(inapp: url)
+            } else if let url = url as? String, url == "copy" {
+                copyToClipboard(APP_VERSION_STRING)
+                self?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                return
             }
             self?.close()
         }

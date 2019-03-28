@@ -17,7 +17,7 @@ import WebKit
 class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
     private var indicator:ProgressIndicator!
     private let content:TelegramMediaWebpageLoadedContent
-    private let account:Account
+    private let context:AccountContext
     private let webview: WebView = WebView(frame: NSZeroRect)
     override func loadView() {
         super.loadView()
@@ -83,9 +83,9 @@ class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
         indicator.animates = false
     }
     
-    init(content:TelegramMediaWebpageLoadedContent, account:Account) {
+    init(content:TelegramMediaWebpageLoadedContent, context: AccountContext) {
         self.content = content
-        self.account = account
+        self.context = context
         super.init(frame:NSMakeRect(0,0,350,270))
     }
     

@@ -13,6 +13,12 @@ import PostboxMac
 import TelegramCoreMac
 
 fileprivate enum NotificationSettingsEntry : Comparable, Identifiable {
+    case accountsNoticationsHeader
+    case allAccounts(Bool)
+    case accountsNoticationsDesc(Bool)
+    case snoofHeader
+    case snoof(Bool)
+    case snoofDesc(Bool)
     case notifications
     case messagePreview
     case notificationTone(String)
@@ -30,36 +36,48 @@ fileprivate enum NotificationSettingsEntry : Comparable, Identifiable {
     case searchPeer(Peer, Int32, PeerNotificationSettings?)
     var index:Int32 {
         switch self {
-        case .notifications:
+        case .accountsNoticationsHeader:
             return 1000
-        case .messagePreview:
+        case .allAccounts:
             return 2000
-        case .notificationTone:
+        case .accountsNoticationsDesc:
             return 3000
-        case .resetNotifications:
+        case .snoofHeader:
             return 4000
-        case .resetText:
+        case .snoof:
             return 5000
-        case .badgeHeader:
+        case .snoofDesc:
             return 6000
-        case .includeUnreadChats:
+        case .notifications:
             return 7000
-        case .includePublicGroups:
+        case .messagePreview:
             return 8000
-        case .includeChannels:
+        case .notificationTone:
             return 9000
-        case .countUnreadMessages:
+        case .resetNotifications:
             return 10000
-        case .countUnreadDesc:
+        case .resetText:
             return 11000
+        case .badgeHeader:
+            return 12000
+        case .includeUnreadChats:
+            return 13000
+        case .includePublicGroups:
+            return 14000
+        case .includeChannels:
+            return 15000
+        case .countUnreadMessages:
+            return 16000
+        case .countUnreadDesc:
+            return 17000
         case let .whiteSpace(index,_):
             return index
         case .searchField:
-            return 12000
+            return 18000
         case let .peer(entry):
             return INT32_MAX - entry.index.messageIndex.timestamp
         case let .searchPeer(_, index, _):
-            return 13000 + index
+            return 19000 + index
         }
     }
     
@@ -86,6 +104,42 @@ fileprivate func <(lhs:NotificationSettingsEntry, rhs:NotificationSettingsEntry)
 
 fileprivate func ==(lhs:NotificationSettingsEntry, rhs:NotificationSettingsEntry) -> Bool {
     switch lhs {
+    case .accountsNoticationsHeader:
+        if case .accountsNoticationsHeader = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .allAccounts(value):
+        if case .allAccounts(value) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .accountsNoticationsDesc(value):
+        if case .accountsNoticationsDesc(value) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .snoofHeader:
+        if case .snoofHeader = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .snoof(value):
+        if case .snoof(value) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .snoofDesc(value):
+        if case .snoofDesc(value) = rhs {
+            return true
+        } else {
+            return false
+        }
     case let .peer(lhsEntry):
         if case let .peer(rhsEntry) = rhs {
             return lhsEntry == rhsEntry
@@ -144,23 +198,38 @@ fileprivate func ==(lhs:NotificationSettingsEntry, rhs:NotificationSettingsEntry
     return lhs.stableId == rhs.stableId
 }
 
-private func simpleEntries(_ settings:InAppNotificationSettings) -> [NotificationSettingsEntry] {
+private func simpleEntries(_ settings:InAppNotificationSettings, accounts: [AccountWithInfo]) -> [NotificationSettingsEntry] {
     var simpleEntries:[NotificationSettingsEntry] = []
-    simpleEntries.append(.whiteSpace(1,15))
+    simpleEntries.append(.whiteSpace(1,20))
+    
+    if accounts.count > 1 {
+        simpleEntries.append(.accountsNoticationsHeader)
+        simpleEntries.append(.allAccounts(settings.notifyAllAccounts))
+        simpleEntries.append(.accountsNoticationsDesc(settings.notifyAllAccounts))
+        
+        simpleEntries.append(.whiteSpace(3001,20))
+    }
+    
+    simpleEntries.append(.snoofHeader)
+    simpleEntries.append(.snoof(!settings.showNotificationsOutOfFocus))
+    simpleEntries.append(.snoofDesc(!settings.showNotificationsOutOfFocus))
+    
+    simpleEntries.append(.whiteSpace(6001,20))
+    
     simpleEntries.append(.notifications)
     simpleEntries.append(.messagePreview)
     simpleEntries.append(.notificationTone(settings.tone))
     simpleEntries.append(.resetNotifications)
     simpleEntries.append(.resetText)
     
-    simpleEntries.append(.whiteSpace(5001, 20))
+    simpleEntries.append(.whiteSpace(11001, 20))
     simpleEntries.append(.badgeHeader)
     simpleEntries.append(.includeUnreadChats(settings.totalUnreadCountDisplayStyle == .raw))
     simpleEntries.append(.includePublicGroups(settings.totalUnreadCountIncludeTags.contains(.publicGroups)))
     simpleEntries.append(.includeChannels(settings.totalUnreadCountIncludeTags.contains(.channels)))
     simpleEntries.append(.countUnreadMessages(settings.totalUnreadCountDisplayCategory == .messages))
     simpleEntries.append(.countUnreadDesc)
-    simpleEntries.append(.whiteSpace(11001,20))
+    simpleEntries.append(.whiteSpace(17001,20))
     simpleEntries.append(.searchField)
     return simpleEntries.reversed()
 }
@@ -181,7 +250,8 @@ struct NotificationSettingsInteractions {
     let toggleIncludeChannels:(Bool) -> Void
     let togglePeerId:(PeerId) -> Void
     let showToneOptions:() -> Void
-    
+    let allAcounts: (Bool)-> Void
+    let snoof: (Bool)-> Void
 }
 
 fileprivate func prepareEntries(from:NotificationsSettingsList?, to:NotificationsSettingsList, account:Account, interactions:NotificationSettingsInteractions, searchInteractions:SearchInteractions, initialSize:NSSize, animated:Bool) -> Signal<TableEntriesTransition<NotificationsSettingsList>, NoError> {
@@ -252,6 +322,22 @@ fileprivate func prepareEntries(from:NotificationsSettingsList?, to:Notification
                     interactions.togglePeerId(peer.id)
                 })
                 
+            case .accountsNoticationsHeader:
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: L10n.notificationSettingsShowNotificationsFrom)
+            case let .allAccounts(enabled):
+                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.notificationSettingsAllAccounts, type: .switchable(enabled), action: {
+                    interactions.allAcounts(!enabled)
+                })
+            case let .accountsNoticationsDesc(enabled):
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: enabled ? L10n.notificationSettingsShowNotificationsFromOn : L10n.notificationSettingsShowNotificationsFromOff)
+            case .snoofHeader:
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: L10n.notificationSettingsSnoofHeader)
+            case let .snoof(enabled):
+                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.notificationSettingsSnoof, type: .switchable(enabled), action: {
+                    interactions.snoof(!enabled)
+                })
+            case let .snoofDesc(enabled):
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: enabled ? L10n.notificationSettingsSnoofOn : L10n.notificationSettingsSnoofOff)
             }
             
         })
@@ -285,7 +371,7 @@ class NotificationSettingsViewController: TableViewController {
         
         let previous:Atomic<NotificationsSettingsList?> = Atomic(value: nil)
         let initialSize = self.atomicSize
-        let account = self.account
+        let context = self.context
         
         
         search.set(SearchState(state: .None, request: nil))
@@ -297,24 +383,22 @@ class NotificationSettingsViewController: TableViewController {
             self?.search.set(state)
         })
         
-        let interactions = NotificationSettingsInteractions(resetAllNotifications: { [weak self] in
-            if let window = self?.window , let account = self?.account {
-                confirm(for: window, header: tr(L10n.notificationSettingsConfirmReset), information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
-                    _ = resetPeerNotificationSettings(network: account.network).start()
-                })
-            }
-            }, toggleMessagesPreview: {
-                _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {$0.withUpdatedDisplayPreviews(!$0.displayPreviews)}).start()
+        let interactions = NotificationSettingsInteractions(resetAllNotifications: {
+            confirm(for: context.window, header: L10n.notificationSettingsConfirmReset, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
+                _ = resetPeerNotificationSettings(network: context.account.network).start()
+            })
+        }, toggleMessagesPreview: {
+                _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedDisplayPreviews(!$0.displayPreviews)}).start()
         }, toggleNotifications: {
-            _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {$0.withUpdatedEnables(!$0.enabled)}).start()
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedEnables(!$0.enabled)}).start()
         }, notificationTone: { (tone) in
             
         }, toggleIncludeUnreadChats: { enable in
-            _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {$0.withUpdatedTotalUnreadCountDisplayStyle(enable ? .raw : .filtered)}).start()
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayStyle(enable ? .raw : .filtered)}).start()
         }, toggleCountUnreadMessages: { enable in
-            _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {$0.withUpdatedTotalUnreadCountDisplayCategory(enable ? .messages : .chats)}).start()
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayCategory(enable ? .messages : .chats)}).start()
         }, toggleIncludePublicGroups: { enable in
-            _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {value in
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {value in
                 var tags: PeerSummaryCounterTags = value.totalUnreadCountIncludeTags
                 if enable {
                     tags.insert(.publicGroups)
@@ -324,7 +408,7 @@ class NotificationSettingsViewController: TableViewController {
                return value.withUpdatedTotalUnreadCountIncludeTags(tags)
             }).start()
         }, toggleIncludeChannels: { enable in
-            _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {value in
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {value in
                 var tags: PeerSummaryCounterTags = value.totalUnreadCountIncludeTags
                 if enable {
                     tags.insert(.channels)
@@ -334,16 +418,24 @@ class NotificationSettingsViewController: TableViewController {
                 return value.withUpdatedTotalUnreadCountIncludeTags(tags)
             }).start()
         }, togglePeerId: { [weak self] peerId in
-            self?.notificationsDisposable.set(togglePeerMuted(account: account, peerId: peerId).start())
+            self?.notificationsDisposable.set(togglePeerMuted(account: context.account, peerId: peerId).start())
         }, showToneOptions: { [weak self] in
             self?.showToneOptions()
+        }, allAcounts: { enabled in
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {value in
+                return value.withUpdatedNotifyAllAccounts(enabled)
+            }).start()
+        }, snoof: { enabled in
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {value in
+                return value.withUpdatedSnoof(!enabled)
+            }).start()
         });
         
         let tones = ObjcUtils.notificationTones("Default")
         for tone in tones {
             self.tones.append(SPopoverItem(localizedString(tone), {
                 _ = NSSound(named: tone)?.play()
-                _ = updateInAppNotificationSettingsInteractively(postbox: account.postbox, {$0.withUpdatedTone(tone)}).start()
+                _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTone(tone)}).start()
             }))
         }
         
@@ -360,9 +452,9 @@ class NotificationSettingsViewController: TableViewController {
                 
                 switch(location) {
                 case let .Initial(count, _):
-                    signal = account.viewTracker.tailChatListView(groupId: nil, count: count) |> map {$0.0}
+                    signal = context.account.viewTracker.tailChatListView(groupId: nil, count: count) |> map {$0.0}
                 case let .Index(index, _):
-                    signal = account.viewTracker.aroundChatListView(groupId: nil, index: index, count: 100) |> map {$0.0}
+                    signal = context.account.viewTracker.aroundChatListView(groupId: nil, index: index, count: 100) |> map {$0.0}
                 }
                 
                 mappedEntries = signal |> map { value -> [NotificationSettingsEntry] in
@@ -390,7 +482,7 @@ class NotificationSettingsViewController: TableViewController {
                 
                 
                 var ids:[PeerId:Peer] = [:]
-                let foundLocalPeers = combineLatest(account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})},account.postbox.searchContacts(query: search.request.lowercased()) |> map {$0.0})
+                let foundLocalPeers = combineLatest(context.account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}, context.account.postbox.searchContacts(query: search.request.lowercased()) |> map {$0.0})
                     |> map { (peers, contacts) -> [Peer] in
                         return (peers + contacts).filter({ (peer) -> Bool in
                             let first = ids[peer.id] == nil
@@ -403,7 +495,7 @@ class NotificationSettingsViewController: TableViewController {
                     
                     return combineLatest(peers.map { peer -> Signal<TelegramPeerNotificationSettings?, NoError> in
                         
-                        return account.postbox.transaction { transaction -> TelegramPeerNotificationSettings? in
+                        return context.account.postbox.transaction { transaction -> TelegramPeerNotificationSettings? in
                             return transaction.getPeerNotificationSettings(peer.id) as? TelegramPeerNotificationSettings
                         }
                         
@@ -417,17 +509,10 @@ class NotificationSettingsViewController: TableViewController {
                 }
             }
             
-            return combineLatest(mappedEntries |> deliverOnPrepareQueue, account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { value, settings, appearance -> NotificationsSettingsList in
-                
-                let inAppSettings: InAppNotificationSettings
-                if let settings = settings.values[ApplicationSpecificPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings {
-                    inAppSettings = settings
-                } else {
-                    inAppSettings = InAppNotificationSettings.defaultSettings
-                }
-                return NotificationsSettingsList(list: (simpleEntries(inAppSettings) + value).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}.sorted(by: <), settings: inAppSettings)
+            return combineLatest(queue: prepareQueue, mappedEntries, appNotificationSettings(accountManager: context.sharedContext.accountManager), appearanceSignal, context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }) |> map { value, inAppSettings, appearance, accounts -> NotificationsSettingsList in
+                return NotificationsSettingsList(list: (simpleEntries(inAppSettings, accounts: accounts) + value).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}.sorted(by: <), settings: inAppSettings)
             } |> mapToQueue { value -> Signal<TableEntriesTransition<NotificationsSettingsList>, NoError> in
-                return prepareEntries(from: previous.modify {$0}, to: value, account: account, interactions:interactions, searchInteractions: searchInteractions, initialSize: initialSize.modify({$0}), animated: !first.swap(false))
+                return prepareEntries(from: previous.modify {$0}, to: value, account: context.account, interactions:interactions, searchInteractions: searchInteractions, initialSize: initialSize.modify({$0}), animated: !first.swap(false))
             }
 
         })
@@ -456,7 +541,7 @@ class NotificationSettingsViewController: TableViewController {
     
     
     func showToneOptions() {
-        if let view = (genericView.viewNecessary(at: 3) as? GeneralInteractedRowView)?.textView {
+        if let view = (genericView.viewNecessary(at: 11) as? GeneralInteractedRowView)?.textView {
             showPopover(for: view, with: SPopoverViewController(items: tones), edge: .minX, inset: NSMakePoint(0,-30))
         }
 

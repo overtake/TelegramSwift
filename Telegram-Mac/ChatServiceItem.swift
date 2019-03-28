@@ -17,7 +17,7 @@ class ChatServiceItem: ChatRowItem {
     private(set) var imageArguments:TransformImageArguments?
     private(set) var image:TelegramMediaImage?
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account:Account, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         let message:Message = entry.message!
         
         
@@ -31,7 +31,7 @@ class ChatServiceItem: ChatRowItem {
             authorName = displayTitle
         }
         
-        let isIncoming: Bool = message.isIncoming(account, entry.renderType == .bubble)
+        let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
 
         
         let nameColor:(PeerId) -> NSColor = { peerId in
@@ -43,7 +43,7 @@ class ChatServiceItem: ChatRowItem {
             if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
                 if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                     return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
-                } else if account.peerId != peerId {
+                } else if context.peerId != peerId {
                     let value = abs(Int(peerId.id) % 7)
                     return theme.chat.peerName(value)
                 }
@@ -189,7 +189,7 @@ class ChatServiceItem: ChatRowItem {
                 case let .messageAutoremoveTimeoutUpdated(seconds):
                     
                     if let authorId = authorId {
-                        if authorId == account.peerId {
+                        if authorId == context.peerId {
                             if seconds > 0 {
                                 let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimerSelf(autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             } else {
@@ -222,7 +222,7 @@ class ChatServiceItem: ChatRowItem {
                             _ = attributedString.append(string: tr(L10n.chatListServiceCallMissed), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         case .hangup:
                             if let duration = duration {
-                                if message.author?.id == account.peerId {
+                                if message.author?.id == context.peerId {
                                     _ = attributedString.append(string: tr(L10n.chatListServiceCallOutgoing(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                                 } else {
                                     _ = attributedString.append(string: tr(L10n.chatListServiceCallIncoming(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -232,7 +232,7 @@ class ChatServiceItem: ChatRowItem {
                             _ = attributedString.append(string: tr(L10n.chatListServiceCallMissed), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         }
                     } else if let duration = duration {
-                        if authorId == account.peerId {
+                        if authorId == context.peerId {
                             _ = attributedString.append(string: tr(L10n.chatListServiceCallOutgoing(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         } else {
                             _ = attributedString.append(string: tr(L10n.chatListServiceCallIncoming(.durationTransformed(elapsed: Int(duration)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -276,6 +276,14 @@ class ChatServiceItem: ChatRowItem {
                 case let .botSentSecureValues(types):
                     let permissions = types.map({$0.rawValue}).joined(separator: ", ")
                      _ = attributedString.append(string: L10n.chatServiceSecureIdAccessGranted(peer.displayTitle, permissions), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                case .peerJoined:
+                    let _ =  attributedString.append(string: L10n.chatServicePeerJoinedTelegram(authorName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
                 default:
                     break
                 }
@@ -295,7 +303,7 @@ class ChatServiceItem: ChatRowItem {
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
         } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
             let isPhoto: Bool = message.media.first is TelegramMediaImage
-            if authorId == account.peerId {
+            if authorId == context.peerId {
                 _ = attributedString.append(string: isPhoto ? tr(L10n.serviceMessageDesturctingPhotoYou(authorName)) : tr(L10n.serviceMessageDesturctingVideoYou(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
             } else if let _ = authorId {
                 _ = attributedString.append(string:  isPhoto ? tr(L10n.serviceMessageDesturctingPhoto(authorName)) : tr(L10n.serviceMessageDesturctingVideo(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
@@ -307,7 +315,6 @@ class ChatServiceItem: ChatRowItem {
         text.mayItems = false
         text.interactions = globalLinkExecutor
         super.init(initialSize, chatInteraction, entry, downloadSettings)
-        self.account = account
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -350,7 +357,7 @@ class ChatServiceItem: ChatRowItem {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
                 }
-                if canDeleteMessage(message, account: account) {
+                if canDeleteMessage(message, account: context.account) {
                     items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: {
                         chatInteraction.deleteMessages([message.id])
                     }))
@@ -416,7 +423,7 @@ class ChatServiceRowView: TableRowView {
     override func mouseUp(with event: NSEvent) {
         if let imageView = imageView, imageView._mouseInside() {
             if let item = self.item as? ChatServiceItem {
-                showPhotosGallery(account: item.account, peerId: item.chatInteraction.peerId, firstStableId: item.stableId, item.table, nil)
+                showPhotosGallery(context: item.context, peerId: item.chatInteraction.peerId, firstStableId: item.stableId, item.table, nil)
             }
         } else {
             super.mouseUp(with: event)
@@ -429,7 +436,8 @@ class ChatServiceRowView: TableRowView {
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
-        
+        textView.disableBackgroundDrawing = true
+
         
         if let item = item as? ChatServiceItem, let arguments = item.imageArguments {
             if let image = item.image {
@@ -438,7 +446,7 @@ class ChatServiceRowView: TableRowView {
                     self.addSubview(imageView!)
                 }
                 imageView?.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor))
-                imageView?.setSignal( chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message!), media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                imageView?.setSignal( chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message!), media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor), cacheImage: { [weak self] signal in
                     if let strongSelf = self {
                         return cacheMedia(signal: signal, media: image, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: nil)
                     } else {

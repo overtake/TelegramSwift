@@ -52,6 +52,7 @@ class InstantVideoPIPView : GIFContainerView {
 
 class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     private var controller:APController
+    private var context: AccountContext
     private weak var tableView:TableView?
     private var listener:TableScrollListener!
     
@@ -59,15 +60,15 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     private var scrollTime: TimeInterval = CFAbsoluteTimeGetCurrent()
     private var alignment:InstantVideoPIPCornerAlignment = .topRight
     private var isShown:Bool = false
-    init(_ controller:APController, window:Window) {
+    init(_ controller:APController, context: AccountContext, window:Window) {
         self.controller = controller
-        
+        self.context = context
         super.init()
         listener = TableScrollListener({ [weak self] _ in
             self?.updateScrolled()
         })
         controller.add(listener: self)
-        (controller.account.context.mainNavigation as? MajorNavigationController)?.add(listener: WeakReference(value: self))
+        context.sharedContext.bindings.rootNavigation().add(listener: WeakReference(value: self))
     }
     
     override var window:Window? {
@@ -82,10 +83,10 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     }
     
     override func navigationWillChangeController() {
-        if let controller = controller.account.context.mainNavigation?.controller as? ChatController {
-            updateTableView(controller.genericView.tableView, controller: self.controller)
+        if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
+            updateTableView(controller.genericView.tableView, context: context, controller: self.controller)
         } else {
-            updateTableView(nil, controller: self.controller)
+            updateTableView(nil, context: context, controller: self.controller)
         }
     }
     
@@ -135,10 +136,9 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         isShown = true
         genericView.player.animatesAlphaOnFirstTransition = false
         if let message = currentMessage, let media = message.media.first as? TelegramMediaFile {
-            let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
-            signal = chatMessageVideo(postbox: controller.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
+            let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
             
-            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(150, 150), viewSize: NSMakeSize(150, 150), file: media, account: controller.account, table: nil, ignoreWindowKey: true, iconSignal: .complete())
+            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(150, 150), viewSize: NSMakeSize(150, 150), file: media, context: context, table: nil, ignoreWindowKey: true, iconSignal: .complete())
         }
 
         if let contentView = window?.contentView, genericView.superview == nil {
@@ -277,9 +277,10 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         }
     }
     
-    func updateTableView(_ tableView:TableView?, controller: APController) {
+    func updateTableView(_ tableView:TableView?, context: AccountContext, controller: APController) {
         self.tableView?.removeScroll(listener: listener)
         self.tableView = tableView
+        self.context = context
         self.tableView?.addScroll(listener: listener)
         if controller != self.controller {
             self.controller = controller

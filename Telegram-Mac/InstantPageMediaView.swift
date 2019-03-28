@@ -13,7 +13,7 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 
 final class InstantPageMediaView: View, InstantPageView {
-    private let account: Account
+    private let context: AccountContext
     let media: InstantPageMedia
     private let arguments: InstantPageMediaArguments
     private var iconView:ImageView?
@@ -60,8 +60,8 @@ final class InstantPageMediaView: View, InstantPageView {
         updatePlayerListenters()
     }
     
-    init(account: Account, media: InstantPageMedia, arguments: InstantPageMediaArguments) {
-        self.account = account
+    init(context: AccountContext, media: InstantPageMedia, arguments: InstantPageMediaArguments) {
+        self.context = context
         self.media = media
         self.arguments = arguments
         
@@ -98,15 +98,15 @@ final class InstantPageMediaView: View, InstantPageView {
                 switch status {
                 case .Remote:
                     if let image = media.media as? TelegramMediaImage {
-                        self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)).start())
+                        self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)).start())
                     } else if let file = media.media as? TelegramMediaFile {
-                        self.fetchedDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)).start())
+                        self.fetchedDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)).start())
                     }
                 case .Fetching:
                     if let image = media.media as? TelegramMediaImage {
-                        chatMessagePhotoCancelInteractiveFetch(account: account, photo: image)
+                        chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: image)
                     } else if let file = media.media as? TelegramMediaFile {
-                        cancelFreeMediaFileInteractiveFetch(account: account, resource: file.resource)
+                        cancelFreeMediaFileInteractiveFetch(context: context, resource: file.resource)
                     }
                 default:
                     break
@@ -127,30 +127,30 @@ final class InstantPageMediaView: View, InstantPageView {
         
         if let image = media.media as? TelegramMediaImage {
             
-            self.imageView.setSignal( chatMessagePhoto(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image), scale: backingScaleFactor))
-            self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)).start())
+            self.imageView.setSignal( chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image), scale: backingScaleFactor))
+            self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)).start())
             if let largest = largestImageRepresentation(image.representations) {
                 if arguments.isInteractive {
-                    statusDisposable.set((account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start(next: updateProgressState))
+                    statusDisposable.set((context.account.postbox.mediaBox.resourceStatus(largest.resource) |> deliverOnMainQueue).start(next: updateProgressState))
                 }
             }
             
         } else if let file = media.media as? TelegramMediaFile {
             if arguments.isInteractive {
-                statusDisposable.set((account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
+                statusDisposable.set((context.account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue).start(next: updateProgressState))
             }
-            self.fetchedDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)).start())
+            self.fetchedDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.webPage(webPage: WebpageReference(media.webpage), media: file)).start())
             
             if file.mimeType.hasPrefix("image/") && !file.mimeType.hasSuffix("gif") {
-                self.imageView.setSignal(instantPageImageFile(account: account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor, fetched: true))
+                self.imageView.setSignal(instantPageImageFile(account: context.account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor, fetched: true))
             } else {
-                self.imageView.setSignal(chatMessageVideo(postbox: account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+                self.imageView.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
             }
 
             switch arguments {
             case let .video(_, autoplay):
                 if autoplay {
-                    videoDataDisposable.set((account.postbox.mediaBox.resourceData(file.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil} |> deliverOnMainQueue).start(next: { [weak self] data in
+                    videoDataDisposable.set((context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil} |> deliverOnMainQueue).start(next: { [weak self] data in
                         self?.videoData = data
                     }))
                 }
@@ -180,14 +180,14 @@ final class InstantPageMediaView: View, InstantPageView {
             
             let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
             let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)
-            let signal = chatWebpageSnippetPhoto(account: account, imageReference: imageReference, scale: backingScaleFactor, small: false)
+            let signal = chatWebpageSnippetPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, small: false)
             self.imageView.setSignal(signal)
         } else if let webPage = media.media as? TelegramMediaWebpage, case let .Loaded(content) = webPage.content, let image = content.image {
             let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(webPage), media: image)
-            let signal = chatWebpageSnippetPhoto(account: account, imageReference: imageReference, scale: backingScaleFactor, small: false)
+            let signal = chatWebpageSnippetPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, small: false)
             self.imageView.setSignal(signal)
-            self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: imageReference).start())
-            statusDisposable.set((account.postbox.mediaBox.resourceStatus(image.representations.last!.resource) |> deliverOnMainQueue).start(next: updateProgressState))
+            self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: imageReference).start())
+            statusDisposable.set((context.account.postbox.mediaBox.resourceStatus(image.representations.last!.resource) |> deliverOnMainQueue).start(next: updateProgressState))
         }
         
     }

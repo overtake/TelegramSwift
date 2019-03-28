@@ -35,7 +35,7 @@ class ChatMessageItem: ChatRowItem {
     var unsupported: Bool {
 
         if let message = message, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
-            return true
+            return message.inlinePeer == nil
         } else {
             return false
         }
@@ -43,7 +43,7 @@ class ChatMessageItem: ChatRowItem {
     
     var actionButtonText: String? {
         if let webpage = webpageLayout, !webpage.hasInstantPage {
-            let link = inApp(for: webpage.content.url.nsstring, account: account, openInfo: chatInteraction.openInfo)
+            let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
             case let .followResolvedName(_, postId, _, _, _):
                 if let postId = postId, postId > 0 {
@@ -66,13 +66,13 @@ class ChatMessageItem: ChatRowItem {
     
     func invokeAction() {
         if let webpage = webpageLayout {
-            let link = inApp(for: webpage.content.url.nsstring, account: account, openInfo: chatInteraction.openInfo)
+            let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
         } else if unsupported {
             #if APP_STORE
             execute(inapp: inAppLink.external(link: "https://itunes.apple.com/us/app/telegram/id747648890", false))
             #else
-            (NSApp.delegate as? AppDelegate)?.checkForUpdates(self)
+            (NSApp.delegate as? AppDelegate)?.checkForUpdates("")
             #endif
         }
     }
@@ -81,23 +81,23 @@ class ChatMessageItem: ChatRowItem {
     
     var webpageLayout:WPLayout?
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ account:Account, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
          if let message = entry.message {
             
-            let isIncoming: Bool = message.isIncoming(account, entry.renderType == .bubble)
+            let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
 
             
             
             
 
             let messageAttr:NSMutableAttributedString
-            if message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
+            if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
                 _ = attr.append(string: L10n.chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, account:account, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag:account.context.globalSearch ?? {_ in }, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
+                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
 
                 messageAttr.fixUndefinedEmojies()
                 
@@ -150,7 +150,7 @@ class ChatMessageItem: ChatRowItem {
             
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
-                    copy.detectLinks(type: .Links, account: account, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble))
+                    copy.detectLinks(type: .Links, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble))
                 }
             }
             
@@ -191,16 +191,16 @@ class ChatMessageItem: ChatRowItem {
                         forceArticle = true
                     }
                     if content.file == nil || forceArticle {
-                        webpageLayout = WPArticleLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings)
+                        webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia)
                     } else {
-                        webpageLayout = WPMediaLayout(with: content, account:account, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings)
+                        webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia)
                     }
                 default:
                     break
                 }
             }
             
-            super.init(initialSize, chatInteraction, account, entry, downloadSettings)
+            super.init(initialSize, chatInteraction, context, entry, downloadSettings)
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
@@ -208,14 +208,14 @@ class ChatMessageItem: ChatRowItem {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif {
-                            showModal(with: WebpageModalController(content: content,account: account), for: mainWindow)
+                            showModal(with: WebpageModalController(content: content, context: context), for: mainWindow)
                             return
                         }
                     default:
                         break
                     }
                 }
-                showChatGallery(account: account, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
+                showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
             }
 
             textLayout.interactions = TextViewInteractions(processURL:{ link in
@@ -430,7 +430,7 @@ class ChatMessageItem: ChatRowItem {
         var items = super.menuItems(in: location)
         let text = messageText.string
         
-        let account = self.account!
+        let context = self.context
         
         var media: Media? = webpageLayout?.content.file ?? webpageLayout?.content.image
         
@@ -443,22 +443,22 @@ class ChatMessageItem: ChatRowItem {
         if let file = media as? TelegramMediaFile, let message = message {
             items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
                 var items = items
-                return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
+                return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
                     if data.complete {
                         items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
-                            saveAs(file, account: account)
+                            saveAs(file, account: context.account)
                         }))
                     }
                     
                     if file.isSticker, let fileId = file.id {
-                        return account.postbox.transaction { transaction -> [ContextMenuItem] in
+                        return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
                             let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
                             items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
                                 
                                 if !saved {
-                                    _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
+                                    _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
                                 } else {
-                                    _ = removeSavedSticker(postbox: account.postbox, mediaId: fileId).start()
+                                    _ = removeSavedSticker(postbox: context.account.postbox, mediaId: fileId).start()
                                 }
                             }))
                             
@@ -466,7 +466,7 @@ class ChatMessageItem: ChatRowItem {
                         }
                     } else if file.isVideo && file.isAnimated {
                         items.append(ContextMenuItem(tr(L10n.messageContextSaveGif), handler: {
-                            let _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
+                            let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
                         }))
                     }
                     
@@ -477,7 +477,7 @@ class ChatMessageItem: ChatRowItem {
             items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
                 var items = items
                 if let resource = image.representations.last?.resource {
-                    return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
+                    return context.account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
                         if data.complete {
                             items.append(ContextMenuItem(tr(L10n.galleryContextCopyToClipboard), handler: {
                                 if let path = link(path: data.path, ext: "jpg") {
@@ -556,7 +556,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, account:Account, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxyServerSettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode ) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxyServerSettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode ) -> NSAttributedString {
         var entities: TextEntitiesMessageAttribute?
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -578,7 +578,7 @@ class ChatMessageItem: ChatRowItem {
                     if nsString == nil {
                         nsString = text as NSString
                     }
-                    let link = inApp(for:nsString!.substring(with: range) as NSString, account:account, openInfo:openInfo, applyProxy: applyProxy)
+                    let link = inApp(for:nsString!.substring(with: range) as NSString, context:context, openInfo:openInfo, applyProxy: applyProxy)
                     string.addAttribute(NSAttributedString.Key.link, value: link, range: range)
                 case .Email:
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
@@ -592,7 +592,7 @@ class ChatMessageItem: ChatRowItem {
                         nsString = text as NSString
                     }
                     
-                    string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
                 case .Bold:
                     string.addAttribute(NSAttributedString.Key.font, value: NSFont.bold(fontSize), range: range)
                 case .Italic:
@@ -602,7 +602,7 @@ class ChatMessageItem: ChatRowItem {
                     if nsString == nil {
                         nsString = text as NSString
                     }
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(username:nsString!.substring(with: range), postId:nil, account:account, action:nil, callback: openInfo), range: range)
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(username:nsString!.substring(with: range), postId:nil, context:context, action:nil, callback: openInfo), range: range)
                 case let .TextMention(peerId):
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                     string.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
@@ -617,9 +617,9 @@ class ChatMessageItem: ChatRowItem {
                     string.addAttribute(.preformattedCode, value: 4.0, range: range)
                     string.addAttribute(NSAttributedString.Key.font, value: NSFont.code(fontSize), range: range)
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), { [weak account] link in
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
                         copyToClipboard(link)
-                        account?.context.mainNavigation?.controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                        context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
                     }), range: range)
                 case  .Pre:
                     string.addAttribute(.preformattedPre, value: 4.0, range: range)

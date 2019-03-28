@@ -13,13 +13,13 @@ import PostboxMac
 import TelegramCoreMac
 
 private final class ArchivedStickerPacksControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let openStickerPack: (StickerPackCollectionInfo) -> Void
     let removePack: (StickerPackCollectionInfo) -> Void
     
-    init(account: Account, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (StickerPackCollectionInfo) -> Void) {
-        self.account = account
+    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (StickerPackCollectionInfo) -> Void) {
+        self.context = context
         self.openStickerPack = openStickerPack
         self.removePack = removePack
     }
@@ -39,29 +39,6 @@ private enum ArchivedStickerPacksEntryId: Hashable {
             return id.hashValue
         case .loading:
             return -100
-        }
-    }
-    
-    static func ==(lhs: ArchivedStickerPacksEntryId, rhs: ArchivedStickerPacksEntryId) -> Bool {
-        switch lhs {
-        case let .index(index):
-            if case .index(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .loading:
-            if case .loading = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .pack(id):
-            if case .pack(id) = rhs {
-                return true
-            } else {
-                return false
-            }
         }
     }
 }
@@ -85,55 +62,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         }
     }
     
-    static func ==(lhs: ArchivedStickerPacksEntry, rhs: ArchivedStickerPacksEntry) -> Bool {
-        switch lhs {
-        case let .info(sectionId, text):
-            if case .info(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .loading(loading):
-            if case .loading(loading) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .pack(lhsSectionId, lhsIndex, lhsInfo, lhsTopItem, lhsCount, lhsEnabled, lhsEditing):
-            if case let .pack(rhsSectionId, rhsIndex, rhsInfo, rhsTopItem, rhsCount, rhsEnabled, rhsEditing) = rhs {
-                if lhsIndex != rhsIndex {
-                    return false
-                }
-                if lhsSectionId != rhsSectionId {
-                    return false
-                }
-                if lhsInfo != rhsInfo {
-                    return false
-                }
-                if lhsTopItem != rhsTopItem {
-                    return false
-                }
-                if lhsCount != rhsCount {
-                    return false
-                }
-                if lhsEnabled != rhsEnabled {
-                    return false
-                }
-                if lhsEditing != rhsEditing {
-                    return false
-                }
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
+
     
     var stableIndex:Int32 {
         switch self {
@@ -170,7 +99,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         case let .info(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .pack(_, _, info, topItem, count, enabled, editing):
-            return StickerSetTableRowItem(initialSize, account: arguments.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .remove, action: {
+            return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .remove, action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 
@@ -269,7 +198,7 @@ class ArchivedStickerPacksController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let statePromise = ValuePromise(ArchivedStickerPacksControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: ArchivedStickerPacksControllerState())
         let updateState: ((ArchivedStickerPacksControllerState) -> ArchivedStickerPacksControllerState) -> Void = { f in
@@ -285,13 +214,13 @@ class ArchivedStickerPacksController: TableViewController {
         actionsDisposable.add(removePackDisposables)
         
         let stickerPacks = Promise<[ArchivedStickerPackItem]?>()
-        stickerPacks.set(.single(nil) |> then(archivedStickerPacks(account: account) |> map { Optional($0) }))
+        stickerPacks.set(.single(nil) |> then(archivedStickerPacks(account: context.account) |> map { Optional($0) }))
         
         let installedStickerPacks = Promise<CombinedView>()
-        installedStickerPacks.set(account.postbox.combinedView(keys: [.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
+        installedStickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
         
-        let arguments = ArchivedStickerPacksControllerArguments(account: account, openStickerPack: { info in
-          showModal(with: StickersPackPreviewModalController(account, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+        let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
+          showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { info in
             confirm(for: mainWindow, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
                 var remove = false
@@ -322,7 +251,7 @@ class ArchivedStickerPacksController: TableViewController {
                             
                             return .complete()
                     }
-                    removePackDisposables.set((removeArchivedStickerPack(account: account, info: info) |> then(applyPacks) |> deliverOnMainQueue).start(completed: {
+                    removePackDisposables.set((removeArchivedStickerPack(account: context.account, info: info) |> then(applyPacks) |> deliverOnMainQueue).start(completed: {
                         updateState { state in
                             var removingPackIds = state.removingPackIds
                             removingPackIds.remove(info.id)

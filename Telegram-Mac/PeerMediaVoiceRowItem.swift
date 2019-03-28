@@ -18,14 +18,14 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
     fileprivate let inset: NSEdgeInsets = NSEdgeInsetsMake(0, 60, 0, 20)
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry) {
         let message = object.message!
         file = message.media[0] as! TelegramMediaFile
         
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         
-        let date = Date(timeIntervalSince1970: TimeInterval(object.message!.timestamp) - account.context.timeDifference)
+        let date = Date(timeIntervalSince1970: TimeInterval(object.message!.timestamp) - interface.context.timeDifference)
         
         
         titleLayout = TextViewLayout(.initialize(string: formatter.string(from: date), color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
@@ -40,7 +40,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         
         nameLayout = TextViewLayout(.initialize(string: title, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
 
-        super.init(initialSize, interface, account, object)
+        super.init(initialSize, interface, object)
         
     }
     
@@ -122,7 +122,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             controller.playOrPause()
         } else {
             
-            let controller:APController = APChatVoiceController(account: item.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
+            let controller:APController = APChatVoiceController(account: item.interface.context.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
             item.interface.inlineAudioPlayer(controller)
             controller.start()
         }
@@ -132,14 +132,14 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     
     func fetch() {
         if let item = item as? PeerMediaVoiceRowItem {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file)).start())
         }
     }
     
     
     func cancelFetching() {
         if let item = item as? PeerMediaVoiceRowItem {
-            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file))
+            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file))
         }
     }
     
@@ -167,7 +167,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     func delete() -> Void {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         let messageId = item.message.id
-        _ = item.account.postbox.transaction { transaction -> Void in
+        _ = item.interface.context.account.postbox.transaction { transaction -> Void in
             transaction.deleteMessages([messageId])
         }.start()
     }
@@ -278,12 +278,12 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             player.layer?.cornerRadius = player.frame.height / 2
             
             let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: item.file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
-            player.setSignal( chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image), scale: backingScaleFactor))
+            player.setSignal( chatMessagePhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image), scale: backingScaleFactor))
             let arguments = TransformImageArguments(corners: ImageCorners(radius: 20), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             player.set(arguments: arguments)
             
             
-            resourceDataDisposable.set((item.account.postbox.mediaBox.resourceData(item.file.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil} |> deliverOnMainQueue).start(next: { [weak self] data in
+            resourceDataDisposable.set((item.interface.context.account.postbox.mediaBox.resourceData(item.file.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil} |> deliverOnMainQueue).start(next: { [weak self] data in
                 self?.instantVideoData = data
             }))
             
@@ -301,7 +301,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         let file:TelegramMediaFile = item.file
         
         if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.account, file: file), item.account.pendingMessageManager.pendingMessageStatus(item.message.id))
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.interface.context.account, file: file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus {
                         return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -310,7 +310,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = chatMessageFileStatus(account: item.account, file: file) |> deliverOnMainQueue
+            updatedStatusSignal = chatMessageFileStatus(account: item.interface.context.account, file: file) |> deliverOnMainQueue
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in

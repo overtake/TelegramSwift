@@ -268,7 +268,7 @@ private class ProgressLayer : CALayer {
             let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
             basicAnimation.duration = 0.8
             basicAnimation.fromValue = fromValue
-            
+            basicAnimation.isRemovedOnCompletion = false
             basicAnimation.toValue = Double.pi * 2.0
             basicAnimation.repeatCount = Float.infinity
             basicAnimation.timingFunction = CAMediaTimingFunction(name: .linear)
@@ -303,6 +303,9 @@ private class ProgressLayer : CALayer {
 }
 
 public class ProgressIndicator : Control {
+    
+    public var alwaysAnimate: Bool = false
+    
     public var progressColor: NSColor? = nil {
         didSet {
             indicator.progressColor = progressColor
@@ -355,7 +358,10 @@ public class ProgressIndicator : Control {
     }
 
     private func updateWantsAnimation() {
-        indicator.update(window != nil && !isHidden && !inLiveResize)
+        if alwaysAnimate && indicator.animation(forKey: "progressRotation") != nil {
+            return
+        }
+        indicator.update((window != nil && !isHidden && !inLiveResize) || alwaysAnimate)
         indicator.setNeedsDisplay()
     }
     

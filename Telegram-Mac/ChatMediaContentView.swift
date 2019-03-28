@@ -21,7 +21,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     private var mouseDownPoint: NSPoint = NSZeroPoint
     var parent:Message?
     var media:Media?
-    var account:Account?
+    var context:AccountContext?
     var parameters:ChatMediaLayoutParameters?
     private(set) var fetchControls:FetchControls!
     var fetchStatus: MediaResourceStatus? 
@@ -34,7 +34,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) {
+                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) {
                     view.background = newValue
                 }
             }
@@ -80,7 +80,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     func delete() -> Void {
         cancel()
         if let parentId = parent?.id {
-            _ = account?.postbox.transaction({ transaction -> Void in
+            _ = context?.account.postbox.transaction({ transaction -> Void in
                 transaction.deleteMessages([parentId])
             }).start()
         }
@@ -95,6 +95,14 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     func fetch() -> Void {
+        
+    }
+    
+    func preloadStreamblePart() {
+        
+    }
+    
+    func updateMouse() {
         
     }
     
@@ -120,34 +128,59 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         }
     }
     
+    func previewMediaIfPossible() -> Bool {
+        return false
+    }
+    
     deinit {
         self.clean()
         dragDisposable.dispose()
     }
     
-    func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) -> Void  {
+    func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) -> Void  {
         self.setContent(size: size)
         self.parameters = parameters
         self.positionFlags = positionFlags
-        self.account = account
+        self.context = context
         self.parent = parent
         self.table = table
         
        
         
-        let updated = self.media == nil || !self.media!.isEqual(to: media)
         self.media = media
         
         if let parameters = parameters {
             if let parent = parent {
                 if parameters.automaticDownloadFunc(parent) {
                     fetch()
+                    preloadStreamblePart()
+                } else {
+                    if parameters.preload {
+                        preloadStreamblePart()
+                    }
                 }
             } else if parameters.automaticDownload {
                 fetch()
+                preloadStreamblePart()
+            } else if parameters.preload {
+                preloadStreamblePart()
             }
+            
         }
         
+    }
+    
+    var autoDownload: Bool {
+        if let parameters = parameters {
+            if let parent = parent {
+                if parameters.automaticDownloadFunc(parent) {
+                   return true
+                }
+            } else if parameters.automaticDownload {
+               return true
+            }
+        }
+        return false
     }
     
     func addSublayer(_ layer:CALayer) -> Void {
@@ -237,8 +270,8 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     return
                 }
                 
-                if let account = account, let resource = mediaResource(from: media), let mimeType = mediaResourceMIMEType(from: media) {
-                    let result = account.postbox.mediaBox.resourceData(resource) |> mapToSignal { [weak media] resource -> Signal<String?, NoError> in
+                if let context = context, let resource = mediaResource(from: media), let mimeType = mediaResourceMIMEType(from: media) {
+                    let result = context.account.postbox.mediaBox.resourceData(resource) |> mapToSignal { [weak media] resource -> Signal<String?, NoError> in
                         if resource.complete {
                             return resourceType( mimeType: mimeType) |> mapToSignal { [weak media] ext -> Signal<String?, NoError> in
                                 return putFileToTemp(from: resource.path, named:  mediaResourceName(from: media, ext: ext))
@@ -252,14 +285,14 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     dragDisposable.set(result.start(next: { [weak self] path in
                         if let strongSelf = self, let path = path {
                             strongSelf.dragpath = path
-                            if let copy = (strongSelf.copy() as? NSView), let cgImage = copy.layer?.contents {
-                                let image = NSImage(cgImage: cgImage as! CGImage, size: copy.frame.size)
+                            if let cgImage = strongSelf.contents {
+                                let image = NSImage(cgImage: cgImage as! CGImage, size: strongSelf.frame.size)
                                 
                                 let writer = NSPasteboardItem()
                                 
                                 writer.setDataProvider(strongSelf, forTypes: [.kFileUrl])
                                 let item = NSDraggingItem( pasteboardWriter: writer )
-                                item.setDraggingFrame(copy.bounds, contents: image)
+                                item.setDraggingFrame(strongSelf.bounds, contents: image)
                                 strongSelf.beginDraggingSession(with: [item], event: event, source: strongSelf)
                                 
                             }
@@ -291,6 +324,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         acceptDragging = false
     }
     
+    var contents: Any? {
+        return nil
+    }
     
     
 }

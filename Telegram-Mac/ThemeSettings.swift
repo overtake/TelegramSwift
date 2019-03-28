@@ -23,6 +23,26 @@ private func parseColor(_ decoder: PostboxDecoder, _ key: String) -> NSColor? {
 }
 
 
+struct DefaultWallpaper : Equatable, PostboxCoding {
+    let paletteName: String
+    let wallpaper: Wallpaper
+    
+    init(paletteName: String, wallpaper: Wallpaper) {
+        self.paletteName = paletteName
+        self.wallpaper = wallpaper
+    }
+    
+    init(decoder: PostboxDecoder) {
+        self.paletteName = decoder.decodeStringForKey("pn", orElse: dayClassic.name)
+        self.wallpaper = decoder.decodeObjectForKey("w", decoder: { Wallpaper(decoder: $0) }) as! Wallpaper
+    }
+    
+    func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeObject(self.wallpaper, forKey: "w")
+        encoder.encodeString(self.paletteName, forKey: "pn")
+    }
+}
+
 struct ThemePaletteSettings: PreferencesEntry, Equatable {
     let palette: ColorPalette
     let followSystemAppearance: Bool
@@ -31,13 +51,18 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     let defaultNightName: String
     let defaultDayName: String
     let wallpaper: Wallpaper
+    let customWallpaper: Wallpaper?
+    
+    fileprivate let defaultWallpapers: [DefaultWallpaper]
+    
     init(palette: ColorPalette,
          bubbled: Bool,
          fontSize: CGFloat,
          wallpaper: Wallpaper,
          defaultNightName: String,
          defaultDayName: String,
-         followSystemAppearance: Bool) {
+         followSystemAppearance: Bool,
+         customWallpaper: Wallpaper?, defaultWallpapers: [DefaultWallpaper]) {
         
         self.palette = palette
         self.bubbled = bubbled
@@ -46,6 +71,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         self.defaultNightName = defaultNightName
         self.defaultDayName = defaultDayName
         self.followSystemAppearance = followSystemAppearance
+        self.customWallpaper = customWallpaper
+        self.defaultWallpapers = defaultWallpapers
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -58,6 +85,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     init(decoder: PostboxDecoder) {
         
         self.wallpaper = (decoder.decodeObjectForKey("wallpaper", decoder: { Wallpaper(decoder: $0) }) as? Wallpaper) ?? .none
+        self.customWallpaper = (decoder.decodeObjectForKey("c_wallpaper", decoder: { Wallpaper(decoder: $0) }) as? Wallpaper)
+        self.defaultWallpapers = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("dw", decoder: {DefaultWallpaper(decoder: $0)})) ?? []
         
         let dark = decoder.decodeBoolForKey("dark", orElse: false)
         let name = decoder.decodeStringForKey("name", orElse: "Default")
@@ -190,31 +219,57 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         encoder.encodeBool(bubbled, forKey: "bubbled")
         encoder.encodeDouble(Double(fontSize), forKey: "fontSize")
         encoder.encodeObject(wallpaper, forKey: "wallpaper")
+        if let c_wallpaper = customWallpaper {
+             encoder.encodeObject(c_wallpaper, forKey: "c_wallpaper")
+        } else {
+            encoder.encodeNil(forKey: "c_wallpaper")
+        }
         encoder.encodeString(defaultDayName, forKey: "defaultDayName")
         encoder.encodeString(defaultNightName, forKey: "defaultNightName")
         encoder.encodeBool(followSystemAppearance, forKey: "fsa")
+        encoder.encodeObjectArray(defaultWallpapers, forKey: "dw")
     }
     
     func withUpdatedPalette(_ palette: ColorPalette) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
+        var wallpaper = self.wallpaper
+        if !bubbled {
+            wallpaper = .none
+        } else {
+            wallpaper = self.defaultWallpapers.first(where: {$0.paletteName == palette.name})?.wallpaper ?? wallpaper
+        }
+        
+        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     func withUpdatedBubbled(_ bubbled: Bool) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
+        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     func withUpdatedFontSize(_ fontSize: CGFloat) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     func withUpdatedFollowSystemAppearance(_ followSystemAppearance: Bool) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: followSystemAppearance)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     func withUpdatedWallpaper(_ wallpaper: Wallpaper) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
+        
+        var defaultWallpapers = self.defaultWallpapers
+        
+        if let index = defaultWallpapers.firstIndex(where: {$0.paletteName == self.palette.name}) {
+            defaultWallpapers[index] = DefaultWallpaper(paletteName: self.palette.name, wallpaper: wallpaper)
+        } else {
+            defaultWallpapers.append(DefaultWallpaper(paletteName: self.palette.name, wallpaper: wallpaper))
+        }
+        
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: defaultWallpapers)
     }
+    func withUpdatedCustomWallpaper(_ wallpaper: Wallpaper?) -> ThemePaletteSettings {
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: wallpaper, defaultWallpapers: self.defaultWallpapers)
+    }
+    
     func withUpdatedDefaultDayName(_ defaultDayName: String) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: defaultDayName, followSystemAppearance: self.followSystemAppearance)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     func withUpdatedDefaultNightName(_ defaultNightName: String) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     
     
@@ -228,24 +283,26 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             followSystemAppearance = false
             defaultNightName = nightBluePalette.name
         }
-        return ThemePaletteSettings(palette: dayClassic, bubbled: false, fontSize: 13, wallpaper: .none, defaultNightName: defaultNightName, defaultDayName: dayClassic.name, followSystemAppearance: followSystemAppearance)
+        return ThemePaletteSettings(palette: dayClassic, bubbled: false, fontSize: 13, wallpaper: .none, defaultNightName: defaultNightName, defaultDayName: dayClassic.name, followSystemAppearance: followSystemAppearance, customWallpaper: nil, defaultWallpapers: [])
     }
 }
 
 func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
-    return lhs.palette === rhs.palette &&
+    return lhs.palette == rhs.palette &&
     lhs.fontSize == rhs.fontSize &&
     lhs.bubbled == rhs.bubbled &&
     lhs.wallpaper == rhs.wallpaper &&
     lhs.defaultNightName == rhs.defaultNightName &&
     lhs.defaultDayName == rhs.defaultDayName &&
-    lhs.followSystemAppearance == rhs.followSystemAppearance
+    lhs.followSystemAppearance == rhs.followSystemAppearance &&
+    lhs.customWallpaper == rhs.customWallpaper &&
+    lhs.defaultWallpapers == rhs.defaultWallpapers
 }
 
 
-func themeSettingsView(postbox: Postbox)-> Signal<ThemePaletteSettings, NoError> {
-    return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings]) |> map { settings in
-        let settings = settings.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
+func themeSettingsView(accountManager: AccountManager)-> Signal<ThemePaletteSettings, NoError> {
+    
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.themeSettings]) |> map { $0.entries[ApplicationSharedPreferencesKeys.themeSettings] as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme } |> map { settings in
         if #available(OSX 10.14, *), settings.followSystemAppearance {
             let pallete: ColorPalette
             switch NSApp.effectiveAppearance.name {
@@ -278,17 +335,14 @@ func themeSettingsView(postbox: Postbox)-> Signal<ThemePaletteSettings, NoError>
     }
 }
 
-func themeUnmodifiedSettings(postbox: Postbox)-> Signal<ThemePaletteSettings, NoError> {
-    return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.themeSettings]) |> map { settings in
-        let settings = settings.values[ApplicationSpecificPreferencesKeys.themeSettings] as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
-        return settings
-    }
+func themeUnmodifiedSettings(accountManager: AccountManager)-> Signal<ThemePaletteSettings, NoError> {
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.themeSettings]) |> map { $0.entries[ApplicationSharedPreferencesKeys.themeSettings] as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme }
 }
 
 
-func updateThemeInteractivetly(postbox: Postbox, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, NoError> {
-    return postbox.transaction { transaction -> Void in
-        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.themeSettings, { entry in
+func updateThemeInteractivetly(accountManager: AccountManager, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, NoError> {
+    return accountManager.transaction { transaction -> Void in
+        transaction.updateSharedData(ApplicationSharedPreferencesKeys.themeSettings, { entry in
             return f(entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme)
         })
     }

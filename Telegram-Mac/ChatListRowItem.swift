@@ -92,7 +92,7 @@ class ChatListRowItem: TableRowItem {
 
     public private(set) var message:Message?
     
-    let account:Account
+    let context: AccountContext
     let peer:Peer?
     let renderedPeer:RenderedPeer
     let groupId: PeerGroupId?
@@ -182,7 +182,7 @@ class ChatListRowItem: TableRowItem {
     
     var isOutMessage:Bool {
         if let message = message {
-            return !message.flags.contains(.Incoming) && message.id.peerId != account.peerId
+            return !message.flags.contains(.Incoming) && message.id.peerId != context.peerId
         }
         return false
     }
@@ -191,7 +191,7 @@ class ChatListRowItem: TableRowItem {
             if let _ = peer.botInfo {
                 return true
             }
-            if peer.id == account.peerId {
+            if peer.id == context.peerId {
                 return true
             }
         }
@@ -237,7 +237,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     var isSavedMessage: Bool {
-        return peer?.id == account.peerId
+        return peer?.id == context.peerId
     }
     
     let hasDraft:Bool
@@ -245,14 +245,14 @@ class ChatListRowItem: TableRowItem {
     let pinnedType:ChatListPinnedType
     let state: ChatListRowState
     
-    init(_ initialSize:NSSize, account:Account, pinnedType: ChatListPinnedType, groupId: PeerGroupId, message: Message?, peers: [Peer], unreadCounters: GroupReferenceUnreadCounters, state: ChatListRowState = .plain) {
+    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, message: Message?, peers: [Peer], unreadCounters: GroupReferenceUnreadCounters, state: ChatListRowState = .plain) {
         self.groupId = groupId
         self.peers = peers
         self.peer = nil
         self.message = message
         self.chatListIndex = nil
         self.state = state
-        self.account = account
+        self.context = context
         self.groupUnreadCounters = unreadCounters
         self.mentionsCount = nil
         self.pinnedType = pinnedType
@@ -268,7 +268,7 @@ class ChatListRowItem: TableRowItem {
         titleText.setSelected(color: .white ,range: titleText.range)
         
         self.titleText = titleText
-        self.messageText = chatListText(account: account, location: .group(groupId), for: message, renderedPeer: nil, embeddedState: nil)
+        self.messageText = chatListText(account: context.account, location: .group(groupId), for: message, renderedPeer: nil, embeddedState: nil)
         hasDraft = false
         
         
@@ -282,7 +282,7 @@ class ChatListRowItem: TableRowItem {
         } else if let message = message {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
-            time -= account.context.timeDifference
+            time -= context.timeDifference
             let range = date.append(string: DateUtils.string(forMessageListDate: Int32(time)), color: theme.colors.grayText, font: .normal(.short))
             date.setSelected(color: .white,range: range)
             self.date = date.copy() as? NSAttributedString
@@ -307,7 +307,7 @@ class ChatListRowItem: TableRowItem {
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
 
-    init(_ initialSize:NSSize,  account:Account,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), state: ChatListRowState = .plain) {
+    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), state: ChatListRowState = .plain) {
         
         
         var embeddedState = embeddedState
@@ -320,7 +320,7 @@ class ChatListRowItem: TableRowItem {
         
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
-        self.account = account
+        self.context = context
         self.message = message
         self.state = state
         self.pinnedType = pinnedType
@@ -340,11 +340,11 @@ class ChatListRowItem: TableRowItem {
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: peer?.id == account.peerId ? L10n.peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
+        let _ = titleText.append(string: peer?.id == context.peerId ? L10n.peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: .white ,range: titleText.range)
 
         self.titleText = titleText
-        self.messageText = chatListText(account: account, location: .peer(renderedPeer.peerId), for: message, renderedPeer: renderedPeer, embeddedState:embeddedState)
+        self.messageText = chatListText(account: context.account, location: .peer(renderedPeer.peerId), for: message, renderedPeer: renderedPeer, embeddedState:embeddedState)
         
         
         if case .ad = pinnedType {
@@ -358,7 +358,7 @@ class ChatListRowItem: TableRowItem {
         } else if let message = message {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
-            time -= account.context.timeDifference
+            time -= context.timeDifference
             let range = date.append(string: DateUtils.string(forMessageListDate: Int32(time)), color: theme.colors.grayText, font: .normal(.short))
             date.setSelected(color: .white,range: range)
             self.date = date.copy() as? NSAttributedString
@@ -377,7 +377,7 @@ class ChatListRowItem: TableRowItem {
             self.mentionsCount = nil
         }
         
-        if let peer = peer, peer.id != account.peerId {
+        if let peer = peer, peer.id != context.peerId {
             self.photo = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, nil)
         } else {
             self.photo = .Empty
@@ -386,7 +386,7 @@ class ChatListRowItem: TableRowItem {
         super.init(initialSize)
         
         if let unreadCount = readState?.count, unreadCount > 0, mentionsCount == nil || (unreadCount > 1 || mentionsCount! != unreadCount)  {
-            if account.peerId != peerId {
+            if context.peerId != peerId {
                 badgeNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
                 badgeSelectedNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
             }
@@ -441,14 +441,14 @@ class ChatListRowItem: TableRowItem {
     
 
     func toggleUnread() {
-         _ = togglePeerUnreadMarkInteractively(postbox: self.account.postbox, viewTracker: self.account.viewTracker, peerId: self.peerId).start()
+         _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: self.peerId).start()
     }
     func toggleMuted() {
-        _ = togglePeerMuted(account: account, peerId: peerId).start()
+        _ = togglePeerMuted(account: context.account, peerId: peerId).start()
     }
     
     func togglePinned() {
-        _ = (toggleItemPinned(postbox: account.postbox, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
+        _ = (toggleItemPinned(postbox: context.account.postbox, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
             switch result {
             case .limitExceeded:
                 alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
@@ -459,7 +459,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     func delete() {
-        let signal = removeChatInteractively(account: account, peerId: peerId, userId: peer?.id)
+        let signal = removeChatInteractively(context: context, peerId: peerId, userId: peer?.id)
         _ = signal.start()
     }
     
@@ -472,16 +472,30 @@ class ChatListRowItem: TableRowItem {
                 self?.delete()
             }
             
-            let account = self.account
+            let context = self.context
             let peerId = self.peerId
             
             let clearHistory = { [weak self] in
-                if let strongSelf = self {
-                    modernConfirm(for: mainWindow, account: strongSelf.account, peerId: strongSelf.peer?.id, accessory: nil, information: strongSelf.peer is TelegramUser ? strongSelf.peerId == account.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, successHandler: { _ in
-                        account.context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
+                if let strongSelf = self, let peer = strongSelf.peer {
+                    
+                    var thridTitle: String? = nil
+                    
+                    var canRemoveGlobally: Bool = false
+                    if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId {
+                        if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+                            canRemoveGlobally = true
+                        }
+                    }
+                    
+                    if canRemoveGlobally {
+                        thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+                    }
+                    
+                    modernConfirm(for: mainWindow, account: strongSelf.context.account, peerId: strongSelf.peer?.id, information: strongSelf.peer is TelegramUser ? strongSelf.peerId == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+                        context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
                             switch status {
                             case .success:
-                                account.context.chatUndoManager.clearHistoryInteractively(postbox: account.postbox, peerId: peerId)
+                                context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
                                 break
                             default:
                                 break
@@ -492,9 +506,9 @@ class ChatListRowItem: TableRowItem {
             }
             
             let call = { [weak self] in
-                if let peerId = self?.peer?.id, let account = self?.account {
-                    self?.requestSessionId.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                        applyUIPCallResult(account, result)
+                if let peerId = self?.peer?.id, let context = self?.context {
+                    self?.requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                        applyUIPCallResult(context.sharedContext, result)
                     }))
                 }
             }
@@ -508,25 +522,25 @@ class ChatListRowItem: TableRowItem {
             }
             
             let leaveGroup = {
-                modernConfirm(for: mainWindow, account: account, peerId: peerId, accessory: nil, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
-                    _ = leftGroup(account: account, peerId: peerId).start()
+                modernConfirm(for: mainWindow, account: context.account, peerId: peerId, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
+                    _ = leftGroup(account: context.account, peerId: peerId).start()
                 })
             }
             
             let rGroup = {
-                _ = returnGroup(account: account, peerId: peerId).start()
+                _ = returnGroup(account: context.account, peerId: peerId).start()
             }
             
             if pinnedType != .ad {
                 items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             }
             
-            if account.peerId != peer.id, pinnedType != .ad {
+            if context.peerId != peer.id, pinnedType != .ad {
                 items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
             }
             
             if peer is TelegramUser {
-                if peer.canCall && peer.id != account.peerId {
+                if peer.canCall && peer.id != context.peerId {
                     items.append(ContextMenuItem(tr(L10n.chatListContextCall), handler: call))
                 }
                 items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: clearHistory))
@@ -537,14 +551,14 @@ class ChatListRowItem: TableRowItem {
                 if markAsUnread {
                     items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsUnread), handler: { [weak self] in
                         guard let `self` = self else {return}
-                        _ = togglePeerUnreadMarkInteractively(postbox: self.account.postbox, viewTracker: self.account.viewTracker, peerId: self.peerId).start()
+                        _ = togglePeerUnreadMarkInteractively(postbox: self.context.account.postbox, viewTracker: self.context.account.viewTracker, peerId: self.peerId).start()
                         
                     }))
                     
                 } else if badgeNode != nil || mentionsCount != nil || isUnreadMarked {
                     items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsRead), handler: { [weak self] in
                         guard let `self` = self else {return}
-                        _ = togglePeerUnreadMarkInteractively(postbox: self.account.postbox, viewTracker: self.account.viewTracker, peerId: self.peerId).start()
+                        _ = togglePeerUnreadMarkInteractively(postbox: self.context.account.postbox, viewTracker: self.context.account.viewTracker, peerId: self.peerId).start()
                     }))
                 }
             }
@@ -578,7 +592,7 @@ class ChatListRowItem: TableRowItem {
             let togglePin = {[weak self] in
                 if let strongSelf = self {
                     
-                    _ = (toggleItemPinned(postbox: strongSelf.account.postbox, itemId: strongSelf.chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
+                    _ = (toggleItemPinned(postbox: strongSelf.context.account.postbox, itemId: strongSelf.chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                         
                         switch result {
                         case .limitExceeded:
@@ -592,19 +606,20 @@ class ChatListRowItem: TableRowItem {
             if pinnedType != .ad {
                 items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             }
-            
         }
+        
+
         return .single(items)
     }
     
     var ctxDisplayLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && account.context.layout != .single {
+        if isSelected && context.sharedContext.layout != .single {
             return displaySelectedLayout
         }
         return displayLayout
     }
     var ctxMessageLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && account.context.layout != .single {
+        if isSelected && context.sharedContext.layout != .single {
             if let typingSelectedLayout = typingSelectedLayout {
                 return typingSelectedLayout
             }
@@ -616,14 +631,14 @@ class ChatListRowItem: TableRowItem {
         return messageLayout
     }
     var ctxDateLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && account.context.layout != .single {
+        if isSelected && context.sharedContext.layout != .single {
             return dateSelectedLayout
         }
         return dateLayout
     }
     
     var ctxBadgeNode:BadgeNode? {
-        if isSelected && account.context.layout != .single {
+        if isSelected && context.sharedContext.layout != .single {
             return badgeSelectedNode
         }
         return badgeNode

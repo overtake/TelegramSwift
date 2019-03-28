@@ -200,7 +200,7 @@ class AvatarControl: NSView {
         layer?.contentsScale = backingScaleFactor
         
         
-        if let account = account {
+        if let account = account, self.state != .Empty {
             if contentScale != backingScaleFactor {
                 contentScale = backingScaleFactor
                 
@@ -228,9 +228,11 @@ class AvatarControl: NSView {
                     photo = nil
                 }
                 if let photo = photo {
-                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions:frame.size, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous))
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: frame.size, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous))
                 } else {
+                    let content = self.layer?.contents
                     self.displaySuspended = false
+                    self.layer?.contents = content
                 }
                 
             }
@@ -261,7 +263,7 @@ class AvatarControl: NSView {
         trackingArea = nil
         
         if let _ = window {
-            let options:NSTrackingArea.Options = [.cursorUpdate, .mouseEnteredAndExited, .mouseMoved, .activeInKeyWindow, .inVisibleRect]
+            let options:NSTrackingArea.Options = [.cursorUpdate, .mouseEnteredAndExited, .mouseMoved, .activeAlways, .inVisibleRect]
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)

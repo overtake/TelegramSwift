@@ -25,7 +25,7 @@ private struct ChatMediaInputGridTransition {
 
 
 
-private func preparedChatMediaInputGridEntryTransition(account: Account, from fromEntries: [AppearanceWrapperEntry<ChatMediaInputGridEntry>], to toEntries: [AppearanceWrapperEntry<ChatMediaInputGridEntry>], update: StickerPacksCollectionUpdate, inputNodeInteraction: EStickersInteraction) -> ChatMediaInputGridTransition {
+private func preparedChatMediaInputGridEntryTransition(context: AccountContext, from fromEntries: [AppearanceWrapperEntry<ChatMediaInputGridEntry>], to toEntries: [AppearanceWrapperEntry<ChatMediaInputGridEntry>], update: StickerPacksCollectionUpdate, inputNodeInteraction: EStickersInteraction) -> ChatMediaInputGridTransition {
     var stationaryItems: GridNodeStationaryItems = .none
     var scrollToItem: GridNodeScrollToItem?
     var animated: Bool = false
@@ -62,8 +62,8 @@ private func preparedChatMediaInputGridEntryTransition(account: Account, from fr
     let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: fromEntries, rightList: toEntries)
     
     let deletions = deleteIndices
-    let insertions = indicesAndItems.map { GridNodeInsertItem(index: $0.0, item: $0.1.entry.item(account: account, inputNodeInteraction: inputNodeInteraction), previousIndex: $0.2) }
-    let updates = updateIndices.map { GridNodeUpdateItem(index: $0.0, previousIndex: $0.2, item: $0.1.entry.item(account: account, inputNodeInteraction: inputNodeInteraction)) }
+    let insertions = indicesAndItems.map { GridNodeInsertItem(index: $0.0, item: $0.1.entry.item(context: context, inputNodeInteraction: inputNodeInteraction), previousIndex: $0.2) }
+    let updates = updateIndices.map { GridNodeUpdateItem(index: $0.0, previousIndex: $0.2, item: $0.1.entry.item(context: context, inputNodeInteraction: inputNodeInteraction)) }
     
     var firstIndexInSectionOffset = 0
     if !toEntries.isEmpty {
@@ -390,7 +390,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     private var interactions:EntertainmentInteractions?
     private var chatInteraction:ChatInteraction?
-    private var account:Account
+    private let context: AccountContext
 
     private let peerIdPromise: Promise<PeerId> = Promise()
     
@@ -442,8 +442,8 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     }
     
     
-    init(account:Account) {
-        self.account = account
+    init(_ context: AccountContext) {
+        self.context = context
         super.init()
         self.bar = NavigationBarStyle(height: 0)
         
@@ -479,16 +479,16 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         }, sendSticker: { [weak self] file in
             self?.interactions?.sendSticker(file)
         }, previewStickerSet: { [weak self] reference in
-            if let eInteraction = self?.interactions, let account = self?.account {
-                self?.account.context.entertainment.popover?.hide()
-                showModal(with: StickersPackPreviewModalController(account, peerId: eInteraction.peerId, reference: reference), for: mainWindow)
+            if let eInteraction = self?.interactions, let context = self?.context {
+                context.sharedContext.bindings.entertainment().popover?.hide()
+                showModal(with: StickersPackPreviewModalController(context, peerId: eInteraction.peerId, reference: reference), for: mainWindow)
             }
         }, addStickerSet: { [weak self] reference in
             guard let `self` = self else {return}
             
             self.genericView.searchView.change(state: .None, true)
             
-            _ = showModalProgress(signal: loadedStickerPack(postbox: account.postbox, network: account.network, reference: reference, forceActualized: false)
+            _ = showModalProgress(signal: loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: reference, forceActualized: false)
                 |> filter { result in
                     switch result {
                     case .result:
@@ -501,7 +501,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                 |> mapToSignal { result -> Signal<ItemCollectionId, NoError> in
                     switch result {
                     case let .result(info, items, _):
-                        return addStickerPackInteractively(postbox: account.postbox, info: info, items: items) |> map { info.id }
+                        return addStickerPackInteractively(postbox: context.account.postbox, info: info, items: items) |> map { info.id }
                     default:
                         return .complete()
                     }
@@ -517,7 +517,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             let peerId = self.chatInteraction?.peerId
             switch reference {
             case let .id(id, _):
-                let signal = account.postbox.transaction { transaction -> Bool in
+                let signal = context.account.postbox.transaction { transaction -> Bool in
                     return transaction.getItemCollectionInfo(collectionId: ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)) != nil
                 } |> deliverOnMainQueue
 
@@ -525,12 +525,12 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                     if installed {
                         self?.inputNodeInteraction.navigateToCollectionId(.pack(ItemCollectionId(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
                     } else {
-                        showModal(with: StickersPackPreviewModalController(account, peerId: peerId, reference: reference), for: mainWindow)
+                        showModal(with: StickersPackPreviewModalController(context, peerId: peerId, reference: reference), for: mainWindow)
                         self?.closePopover()
                     }
                 })
             default:
-                showModal(with: StickersPackPreviewModalController(account, peerId: peerId, reference: reference), for: mainWindow)
+                showModal(with: StickersPackPreviewModalController(context, peerId: peerId, reference: reference), for: mainWindow)
                 self.closePopover()
             }
             
@@ -556,10 +556,8 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let chatInteraction = chatInteraction {
-            genericView.updateRestricion(chatInteraction.presentation.peer)
-        }
-        let account = self.account
+       
+        let context = self.context
         genericView.packsTable.delegate = self
         
         
@@ -601,14 +599,14 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                 if search.request.isEmpty {
                     switch position {
                     case .initial:
-                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: requestCount())
+                        return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: requestCount())
                             |> map { view  in
                                 return ((view, nil), .generic)
                         }
                     case let .scroll(aroundIndex):
                         var firstTime = true
                         
-                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: requestCount())
+                        return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: requestCount())
                             |> map { view  in
                                 let update: StickerPacksCollectionUpdate
                                 if firstTime {
@@ -621,7 +619,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                         }
                     case let .navigate(index):
                         var firstTime = true
-                        return account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: requestCount())
+                        return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: requestCount())
                             |> map { view in
                                 let update: StickerPacksCollectionUpdate
                                 if firstTime {
@@ -636,7 +634,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                 } else {
                     var firstTime = true
                     if search.request.isSingleEmoji {
-                        return searchStickers(account: account, query: search.request) |> map { stickers in
+                        return searchStickers(account: context.account, query: search.request) |> map { stickers in
                             //((ItemCollectionsView?, (FoundStickerSets?, Bool)?), StickerPacksCollectionUpdate)
                             var index:Int32 = 0
                             var items: [ItemCollectionItem] = []
@@ -656,9 +654,10 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                             return ((nil, (FoundStickerSets(entries: entries), false)), .generic)
                         }
                     } else {
-                        return searchEmojiClue(query: search.request, postbox: account.postbox) |> mapToSignal { clues in
+                        return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: search.request, completeMatch: false, checkPrediction: false)
+                        |> mapToSignal { clues in
                             if clues.isEmpty {
-                                return combineLatest(searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
+                                return combineLatest(searchStickerSets(postbox: context.account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: context.account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
                                     let update: StickerPacksCollectionUpdate
                                     if firstTime {
                                         firstTime = remote == nil
@@ -684,7 +683,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                                     return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
                                 }
                             } else {
-                                return combineLatest(combineLatest(clues.map({searchStickers(account: account, query: $0.emoji)})), searchStickerSets(postbox: account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: account.network, query: search.request) |> map {Optional($0)})) |> map { clueSets, local, remote in
+                                return combineLatest(combineLatest(clues.map({searchStickers(account: context.account, query: $0)})), searchStickerSets(postbox: context.account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: context.account.network, query: search.request) |> map {Optional($0)})) |> map { clueSets, local, remote in
                                     var index:Int32 = randomInt32()
                                    //
                                     var sortedStickers:[String : (Int32, [ItemCollectionViewEntry])] = [:]
@@ -708,7 +707,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                                     }
                                     var entries: [ItemCollectionViewEntry] = []
                                     for clue in clues {
-                                        if let stickers = sortedStickers[clue.emoji] {
+                                        if let stickers = sortedStickers[clue] {
                                             entries.append(contentsOf: stickers.1)
                                         }
                                     }
@@ -745,7 +744,6 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                         }
                         
                     }
-                    //searchStickerSetsRemotly(network: account.network, query: search.request)))
                    
                 }
                 
@@ -755,12 +753,12 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                 
         let inputNodeInteraction = self.inputNodeInteraction!
         let initialSize = atomicSize
-        
-        let transitions = combineLatest(itemCollectionsView |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, peerIdPromise.get() |> mapToSignal {
+        let queue = Queue()
+        let transitions = combineLatest(queue: queue, itemCollectionsView, appearanceSignal, peerIdPromise.get() |> mapToSignal {
             
-            combineLatest(account.viewTracker.peerView($0) |> take(1) |> map {peerViewMainPeer($0)}, peerSpecificStickerPack(postbox: account.postbox, network: account.network, peerId: $0))
+            combineLatest(context.account.viewTracker.peerView($0) |> take(1) |> map {peerViewMainPeer($0)}, peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: $0))
             
-        } |> deliverOnPrepareQueue)
+        })
         |> map { itemsView, appearance, specificData -> ((ItemCollectionsView?, (FoundStickerSets?, Bool)?), TableUpdateTransition, Bool, ChatMediaInputGridTransition, Bool) in
             
             let update: StickerPacksCollectionUpdate = itemsView.1
@@ -773,7 +771,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             
             let (previousPanelEntries, previousGridEntries) = previousEntries.swap((panelEntriesMapped, gridEntriesMapped))
             
-            return (itemsView.0, preparePackEntries(from: previousPanelEntries, to: panelEntriesMapped, account: account, initialSize: initialSize.modify({$0}), stickersInteraction:inputNodeInteraction),previousPanelEntries.isEmpty, preparedChatMediaInputGridEntryTransition(account: account, from: previousGridEntries, to: gridEntriesMapped, update: update, inputNodeInteraction: inputNodeInteraction), previousGridEntries.isEmpty)
+            return (itemsView.0, preparePackEntries(from: previousPanelEntries, to: panelEntriesMapped, account: context.account, initialSize: initialSize.modify({$0}), stickersInteraction:inputNodeInteraction),previousPanelEntries.isEmpty, preparedChatMediaInputGridEntryTransition(context: context, from: previousGridEntries, to: gridEntriesMapped, update: update, inputNodeInteraction: inputNodeInteraction), previousGridEntries.isEmpty)
            
         }
         
@@ -846,7 +844,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     }
     
     override var canBecomeResponder: Bool {
-        if let view = account.context.mainNavigation?.view as? SplitView {
+        if let view = context.sharedContext.bindings.rootNavigation().view as? SplitView {
             return view.state == .single
         }
         return false
@@ -862,6 +860,9 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -870,6 +871,10 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+    }
+    
+    override var supportSwipes: Bool {
+        return !genericView.packsTable._mouseInside()
     }
     
     override func scrollup() {
