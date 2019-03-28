@@ -28,10 +28,19 @@ open class MagnifyView : NSView {
     open var contentSize:NSSize = NSZeroSize {
         didSet {
             if oldValue != contentSize {
-                contentView.frame = focus(magnifiedSize)
+                contentView.frame = focus(magnifiedSize)//NSMakeRect(contentView.frame.minX, contentView.frame.minY, magnifiedSize.width, magnifiedSize.height)
             }
         }
     }
+    
+    public var contentFrame: NSRect {
+        return contentView.frame.apply(multiplier: NSMakeSize(1 / magnify, 1 / magnify))
+    }
+    
+    public var contentFrameMagnified: NSRect {
+        return contentView.frame
+    }
+    
     private var magnifiedSize:NSSize {
         return NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, contentSize.width * magnify), floorToScreenPixels(scaleFactor: backingScaleFactor, contentSize.height * magnify))
     }
@@ -66,6 +75,10 @@ open class MagnifyView : NSView {
         contentView.center()
     }
     
+    public func focusContentView() {
+        contentView.center()
+    }
+    
     public func zoomIn() {
         add(magnify: 0.5, for: NSMakePoint(containerView.frame.width/2, containerView.frame.height/2), animated: true)
     }
@@ -85,7 +98,7 @@ open class MagnifyView : NSView {
     }
     
     override open func magnify(with event: NSEvent) {
-        super.magnify(with: event)
+       // super.magnify(with: event)
         
         add(magnify: event.magnification, for: containerView.convert(event.locationInWindow, from: nil))
         
@@ -97,7 +110,7 @@ open class MagnifyView : NSView {
     }
     
     override open func smartMagnify(with event: NSEvent) {
-        super.smartMagnify(with: event)
+      //  super.smartMagnify(with: event)
         addSmart(for: containerView.convert(event.locationInWindow, from: nil))
         smartUpdater.set(.single(magnifiedSize) |> delay(0.2, queue: Queue.mainQueue()))
     }
@@ -186,10 +199,10 @@ open class MagnifyView : NSView {
         
         if magnify == minMagnify {
             super.scrollWheel(with: event)
-            return
+            //return
         }
         
-        if event.type == .smartMagnify ||  event.type == .magnify || (event.scrollingDeltaY == 0 && event.scrollingDeltaX == 0)  {
+        if event.type == .smartMagnify ||  event.type == .magnify  {
             return
         }
         
@@ -197,12 +210,12 @@ open class MagnifyView : NSView {
         let content_f = contentView.frame.origin
         if (content_f.x == 0 && event.scrollingDeltaX > 0) || (content_f.x == (frame.width - magnifiedSize.width) && event.scrollingDeltaX < 0) {
            // super.scrollWheel(with: event)
-            return
+         //  return
         }
         
         if (content_f.y == 0 && event.scrollingDeltaY < 0) || (content_f.y == (frame.height - magnifiedSize.height) && event.scrollingDeltaY > 0) {
            // super.scrollWheel(with: event)
-            return
+          //  return
         }
         
         var point = content_f

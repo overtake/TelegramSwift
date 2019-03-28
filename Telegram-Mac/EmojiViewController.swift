@@ -116,7 +116,7 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
                 }
             }
             
-            line.append(.initialize(string: e, font: .normal(26.0)))
+            line.append(.initialize(string: String(e.first!), font: .normal(26.0)))
             
             i += 1
             if i == 8 {
@@ -202,8 +202,8 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
  
     private var interactions:EntertainmentInteractions?
     
-    override init(_ account: Account) {
-        super.init(account)
+    override init(_ context: AccountContext) {
+        super.init(context)
         _frameRect = NSMakeRect(0, 0, 350, 300)
         self.bar = .init(height: 0)
     }
@@ -284,20 +284,20 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
         // DO NOT WRITE CODE OUTSIZE READY BLOCK
       
-        let ready:(RecentUsedEmoji, [EmojiClue]?)->Void = { [weak self] recent, search in
+        let ready:(RecentUsedEmoji, [String]?)->Void = { [weak self] recent, search in
             if let strongSelf = self {
                 strongSelf.readyForDisplay(recent, search)
                 strongSelf.readyOnce()
             }
         }
         
-        let postbox = account.postbox
+        let context = self.context
         
-        let s:Signal = combineLatest(loadResource() |> deliverOnMainQueue, recentUsedEmoji(postbox: account.postbox) |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, search.get() |> mapToSignal { state -> Signal<[EmojiClue]?, NoError> in
+        let s:Signal = combineLatest(loadResource() |> deliverOnMainQueue, recentUsedEmoji(postbox: context.account.postbox) |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, search.get() |> mapToSignal { state -> Signal<[String]?, NoError> in
             if state.request.isEmpty {
                 return .single(nil)
             } else {
-                return searchEmojiClue(query: state.request.lowercased(), postbox: postbox) |> map {Optional($0)}
+                return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: state.request, completeMatch: false, checkPrediction: false) |> map(Optional.init)
             }
         } |> deliverOnMainQueue)
         
@@ -321,7 +321,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         }))
     }
     
-    func readyForDisplay(_ recent: RecentUsedEmoji, _ search: [EmojiClue]?) -> Void {
+    func readyForDisplay(_ recent: RecentUsedEmoji, _ search: [String]?) -> Void {
         
        
         let initialSize = atomicSize.modify({$0})
@@ -332,10 +332,10 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         if let search = search {
             
             let lines = search.chunks(8).map({ clues -> [NSAttributedString] in
-                return clues.map({NSAttributedString.initialize(string: $0.emoji, font: .normal(26.0))})
+                return clues.map({NSAttributedString.initialize(string: $0, font: .normal(26.0))})
             })
             if lines.count > 0 {
-                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: lines, segment: .Recent, account: account, selectHandler: { [weak self] emoji in
+                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: lines, segment: .Recent, account: context.account, selectHandler: { [weak self] emoji in
                     self?.interactions?.sendEmoji(emoji)
                 }))
             }
@@ -347,6 +347,8 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             let seglist = seg.map { (key,_) -> EmojiSegment in
                 return key
             }.sorted(by: <)
+            
+            
             
             let w = floorToScreenPixels(scaleFactor: System.backingScale, frame.width / CGFloat(seg.count))
             
@@ -377,7 +379,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
                 if key != .Recent {
                     let _ = genericView.tableView.addItem(item: EStickItem(initialSize, segment:key, segmentName:key.localizedString))
                 }
-                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: seg[key]!, segment: key, account: account, selectHandler: { [weak self] emoji in
+                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: seg[key]!, segment: key, account: context.account, selectHandler: { [weak self] emoji in
                     self?.interactions?.sendEmoji(emoji)
                 }))
                 let _ = genericView.tabs.addItem(item: ETabRowItem(initialSize, icon: tabIcons[key.hashValue], iconSelected:tabIconsSelected[key.hashValue], stableId:key.rawValue, width:w, clickHandler:{[weak self] (stableId) in
@@ -393,6 +395,9 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         self.interactions = interactions
     }
     
+    override var supportSwipes: Bool {
+        return !genericView.tabs._mouseInside()
+    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

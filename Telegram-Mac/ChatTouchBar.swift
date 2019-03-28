@@ -12,13 +12,21 @@ import PostboxMac
 import TelegramCoreMac
 
 @available(OSX 10.12.2, *)
+extension NSTouchBar.CustomizationIdentifier {
+    static let windowBar  = NSTouchBar.CustomizationIdentifier("\(Bundle.main.bundleIdentifier!).windowBar")
+    static let popoverBar = NSTouchBar.CustomizationIdentifier("\(Bundle.main.bundleIdentifier!).popoverBar")
+}
+
+
+@available(OSX 10.12.2, *)
 private extension NSTouchBarItem.Identifier {
     static let chatNextAndPrev = NSTouchBarItem.Identifier("\(Bundle.main.bundleIdentifier!).touchBar.chat.chatNextAndPrev")
 
     static let chatStickersAndEmojiPicker = NSTouchBarItem.Identifier("\(Bundle.main.bundleIdentifier!).touchBar.chat.StickerAndEmojiPicker")
     
     static let chatInfoAndAttach = NSTouchBarItem.Identifier("\(Bundle.main.bundleIdentifier!).touchBar.chat.chatInfoAndAttach")
-    
+    static let markdown = NSTouchBarItem.Identifier("\(Bundle.main.bundleIdentifier!).touchBar.chat.markdown")
+
     static func chatInputAction(_ key:String) -> NSTouchBarItem.Identifier {
         return NSTouchBarItem.Identifier("\(Bundle.main.bundleIdentifier!).touchBar.chat.InputAction\(key)")
     }
@@ -73,9 +81,15 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
             }
             items.append(.flexibleSpace)
         }
+        if !presentation.effectiveInput.selectionRange.isEmpty {
+            items.append(.flexibleSpace)
+            items.append(.markdown)
+            items.append(.flexibleSpace)
+        }
         if isKeyWindow {
             items.append(.otherItemsProxy)
         }
+       
         return (items: items, escapeReplacement: .chatEditMessageCancel)
     } else {
         //if presentation.effectiveInput.inputText.isEmpty {
@@ -113,6 +127,13 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
                 }
                 items.append(.flexibleSpace)
             }
+            
+            if !presentation.effectiveInput.selectionRange.isEmpty {
+                //items.append(.flexibleSpace)
+                items.append(.markdown)
+                items.append(.flexibleSpace)
+            }
+            
             if isKeyWindow {
                 items.append(.otherItemsProxy)
             }
@@ -154,14 +175,14 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.textView = textView
         super.init()
         self.delegate = self
-        let result = touchBarChatItems(presentation: chatInteraction.presentation, layout: chatInteraction.account.context.layout, isKeyWindow: true)
+        let result = touchBarChatItems(presentation: chatInteraction.presentation, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: true)
         self.defaultItemIdentifiers = result.items
         self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
         self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
         self.textView.updateTouchBarItemIdentifiers()
         self.customizationIdentifier = .windowBar
         chatInteraction.add(observer: self)
-        layoutStateDisposable.set(chatInteraction.account.context.layoutHandler.get().start(next: { [weak self] _ in
+        layoutStateDisposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] _ in
             guard let `self` = self else {return}
             self.notify(with: self.chatInteraction.presentation, oldValue: self.chatInteraction.presentation, animated: true)
         }))
@@ -184,7 +205,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? ChatPresentationInterfaceState {
-            let result = touchBarChatItems(presentation: value, layout: chatInteraction.account.context.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
+            let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
             self.defaultItemIdentifiers = result.items
             self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
             self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
@@ -300,11 +321,11 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         if let segmentControl = sender as? NSSegmentedControl {
             switch segmentControl.selectedSegment {
             case 0:
-                loadRecentEmojiDisposable.set((recentUsedEmoji(postbox: chatInteraction.account.postbox) |> deliverOnPrepareQueue |> map { ($0, emojiesInstance)} |> take(1) |> deliverOnMainQueue).start(next: { [weak self] recent, segments in
+                loadRecentEmojiDisposable.set((recentUsedEmoji(postbox: chatInteraction.context.account.postbox) |> deliverOnPrepareQueue |> map { ($0, emojiesInstance)} |> take(1) |> deliverOnMainQueue).start(next: { [weak self] recent, segments in
                     self?.showEmojiPickerPopover(recent: recent.emojies, segments: segments)
                 }))
             case 1:
-                loadStickersDisposable.set((chatInteraction.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudRecentStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 200) |> take(1) |> deliverOnMainQueue).start(next: { [weak self] itemCollectionView in
+                loadStickersDisposable.set((chatInteraction.context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudRecentStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 200) |> take(1) |> deliverOnMainQueue).start(next: { [weak self] itemCollectionView in
                     self?.showStickersPopover(itemCollectionView)
                 }))
             default:
@@ -353,6 +374,20 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
                 mainWindow.sendKeyEvent(KeyboardKey.Tab, modifierFlags: [.control, .shift])
             case 1:
                 mainWindow.sendKeyEvent(KeyboardKey.Tab, modifierFlags: [.control])
+            default:
+                break
+            }
+        }
+    }
+    @objc private func markdown(_ sender: Any?) {
+        if let segmentControl = sender as? NSSegmentedControl {
+            switch segmentControl.selectedSegment {
+            case 0:
+                mainWindow.sendKeyEvent(KeyboardKey.B, modifierFlags: [.command])
+            case 1:
+                mainWindow.sendKeyEvent(KeyboardKey.I, modifierFlags: [.command])
+            case 2:
+                mainWindow.sendKeyEvent(KeyboardKey.U, modifierFlags: [.command])
             default:
                 break
             }
@@ -442,7 +477,24 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             segment.action = #selector(infoAndAttach(_:))
             item.collapsedRepresentation = segment
             return item
+        case .markdown:
+            let item = NSPopoverTouchBarItem(identifier: identifier)
+            
+            let segment = NSSegmentedControl()
+            segment.segmentStyle = .separated
+            segment.segmentCount = 3
+            segment.setImage(NSImage(named: NSImage.touchBarTextBoldTemplateName)!, forSegment: 0)
+            segment.setImage(NSImage(named: NSImage.touchBarTextItalicTemplateName)!, forSegment: 1)
+            segment.setImage(NSImage(named: NSImage.Name("Icon_ChatTouchBarAddLink"))!, forSegment: 2)
 
+                
+//            segment.setWidth(98, forSegment: 0)
+//            segment.setWidth(98, forSegment: 1)
+            segment.trackingMode = .momentary
+            segment.target = self
+            segment.action = #selector(markdown(_:))
+            item.collapsedRepresentation = segment
+            return item
         case .chatEditMessageDone:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let button = NSButton(title: L10n.navigationDone, target: self, action: #selector(saveEditingMessage))
@@ -513,7 +565,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             if let result = chatInteraction.presentation.inputQueryResult {
                 switch result {
                 case let .stickers(stickers):
-                    return StickersScrubberBarItem(identifier: identifier, account: chatInteraction.account, sendSticker: { [weak self] file in
+                    return StickersScrubberBarItem(identifier: identifier, account: chatInteraction.context.account, sendSticker: { [weak self] file in
                         self?.chatInteraction.sendAppFile(file)
                         self?.chatInteraction.clearInput()
                     }, entries: stickers.map({.sticker($0.file)}))

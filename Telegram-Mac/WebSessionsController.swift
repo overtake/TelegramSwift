@@ -14,51 +14,18 @@ import TGUIKit
 
 
 private final class WebSessionArguments {
-    let account: Account
+    let context: AccountContext
     let logoutSession:(WebAuthorization)->Void
     let logoutAll:()->Void
-    init(account: Account, logoutSession:@escaping(WebAuthorization)->Void, logoutAll:@escaping()->Void) {
-        self.account = account
+    init(context: AccountContext, logoutSession:@escaping(WebAuthorization)->Void, logoutAll:@escaping()->Void) {
+        self.context = context
         self.logoutAll = logoutAll
         self.logoutSession = logoutSession
     }
 }
 
 private enum WebSessionEntryStableId : Hashable {
-    static func ==(lhs: WebSessionEntryStableId, rhs: WebSessionEntryStableId) -> Bool {
-        switch lhs {
-        case let .sectionId(id):
-            if case .sectionId(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .logoutId:
-            if case .logoutId = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .loadingId:
-            if case .loadingId = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .descriptionId(let id):
-            if case .descriptionId(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .sessionId(let id):
-            if case .sessionId(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
+   
     case logoutId
     case descriptionId(Int32)
     case sessionId(Int64)
@@ -131,7 +98,7 @@ private enum WebSessionEntry : TableItemListNodeEntry {
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case let .session(_, _, authorization, peer):
-            return WebAuthorizationRowItem(initialSize, stableId: stableId, account: arguments.account, authorization: authorization, peer: peer, logout: {
+            return WebAuthorizationRowItem(initialSize, stableId: stableId, account: arguments.context.account, authorization: authorization, peer: peer, logout: {
                 arguments.logoutSession(authorization)
             })
         }
@@ -293,9 +260,9 @@ class WebSessionsController: TableViewController {
             stateValue.set(state.modify(f))
         }
         
-        let network = self.account.network
+        let network = context.account.network
         
-        let arguments = WebSessionArguments(account: account, logoutSession: { session in
+        let arguments = WebSessionArguments(context: context, logoutSession: { session in
             confirm(for: mainWindow, information: L10n.webAuthorizationsConfirmRevoke, successHandler: { result in
                 updateState { state in
                     return state.withUpdatedRemovingSessionId(session.hash)
@@ -320,7 +287,7 @@ class WebSessionsController: TableViewController {
         
         let previous: Atomic<[AppearanceWrapperEntry<WebSessionEntry>]> = Atomic(value: [])
         
-        let signal = combineLatest((Signal<([WebAuthorization], [PeerId: Peer])?, NoError>.single(defaultValue) |> deliverOnPrepareQueue |> then (webSessions(network: account.network) |> map {Optional($0)} |> deliverOnPrepareQueue)), appearanceSignal |> deliverOnPrepareQueue, stateValue.get() |> deliverOnPrepareQueue) |> map { values, appearance, state -> (TableUpdateTransition, ([WebAuthorization], [PeerId: Peer])?, WebSessionsControllerState) in
+        let signal = combineLatest((Signal<([WebAuthorization], [PeerId: Peer])?, NoError>.single(defaultValue) |> deliverOnPrepareQueue |> then (webSessions(network: network) |> map {Optional($0)} |> deliverOnPrepareQueue)), appearanceSignal |> deliverOnPrepareQueue, stateValue.get() |> deliverOnPrepareQueue) |> map { values, appearance, state -> (TableUpdateTransition, ([WebAuthorization], [PeerId: Peer])?, WebSessionsControllerState) in
             let entries = webAuthorizationEntries(authorizations: values?.0, peers: values?.1 ?? [:], state: state).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             return (prepareSessions(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: initialSize.modify{$0}), values, state)
             
@@ -348,10 +315,10 @@ class WebSessionsController: TableViewController {
     
     private let defaultValue: ([WebAuthorization], [PeerId : Peer])?
     private let updated: (([WebAuthorization], [PeerId : Peer])?) -> Void
-    init(_ account: Account, _ result: ([WebAuthorization], [PeerId : Peer])?, updated: @escaping(([WebAuthorization], [PeerId : Peer])?) -> Void) {
+    init(_ context: AccountContext, _ result: ([WebAuthorization], [PeerId : Peer])?, updated: @escaping(([WebAuthorization], [PeerId : Peer])?) -> Void) {
         self.defaultValue = result
         self.updated = updated
-        super.init(account)
+        super.init(context)
         
     }
     

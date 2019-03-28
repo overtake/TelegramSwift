@@ -170,10 +170,10 @@ func execute(inapp:inAppLink) {
             messageId = nil
         }
         callback(peerId, openChat, messageId, action)
-    case let .followResolvedName(username, postId, account, action, callback):
-        let _ = showModalProgress(signal: resolvePeerByName(account: account, name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
+    case let .followResolvedName(username, postId, context, action, callback):
+        let _ = showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
             if let peerId = peerId {
-                return account.postbox.loadedPeerWithId(peerId) |> map {Optional($0)}
+                return context.account.postbox.loadedPeerWithId(peerId) |> map {Optional($0)}
             }
             return .single(nil)
         } |> deliverOnMainQueue, for: mainWindow).start(next: { peer in
@@ -190,22 +190,22 @@ func execute(inapp:inAppLink) {
             }
             
         })
-    case let .inviteBotToGroup(username, account, action, callback):
+    case let .inviteBotToGroup(username, context, action, callback):
         
-        let _ = (showModalProgress(signal: resolvePeerByName(account: account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: mainWindow) |> mapToSignal { memberId -> Signal<PeerId, NoError> in
+        let _ = (showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: mainWindow) |> mapToSignal { memberId -> Signal<PeerId, NoError> in
             
-            return selectModalPeers(account: account, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            return selectModalPeers(context: context, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
-                    return account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
+                    return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                         return confirmSignal(for: mainWindow, information: L10n.confirmAddBotToGroup(peer.displayTitle))
                     }
                 }
                 return .single(false)
             }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { peerId -> Signal<PeerId, NoError> in
                 if peerId.namespace == Namespaces.Peer.CloudGroup {
-                    return showModalProgress(signal: addGroupMember(account: account, peerId: peerId, memberId: memberId), for: mainWindow) |> map {peerId} |> `catch` {_ in return .complete()}
+                    return showModalProgress(signal: addGroupMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map {peerId} |> `catch` {_ in return .complete()}
                 } else {
-                    return showModalProgress(signal: account.context.peerChannelMemberCategoriesContextsManager.addMember(account: account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId} |> `catch` {_ in return .complete()}
+                    return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId} |> `catch` {_ in return .complete()}
                 }
             }
             
@@ -216,13 +216,13 @@ func execute(inapp:inAppLink) {
         interaction(command)
     case let .hashtag(hashtag, interaction):
         interaction(hashtag)
-    case let .joinchat(hash, account, interaction):
-        _ = showModalProgress(signal: joinLinkInformation(hash, account: account), for: mainWindow).start(next: { (result) in
+    case let .joinchat(hash, context, interaction):
+        _ = showModalProgress(signal: joinLinkInformation(hash, account: context.account), for: mainWindow).start(next: { (result) in
             switch result {
             case let .alreadyJoined(peerId):
                 interaction(peerId, true, nil, nil)
             case .invite:
-                showModal(with: JoinLinkPreviewModalController(account, hash: hash, join: result, interaction: { peerId in
+                showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peerId in
                     if let peerId = peerId {
                         interaction(peerId, true, nil, nil)
                     }
@@ -237,18 +237,18 @@ func execute(inapp:inAppLink) {
         interaction(param)
     case let .logout(interaction):
         interaction()
-    case let .shareUrl(account, url):
+    case let .shareUrl(context, url):
         if !url.hasPrefix("@") {
-            showModal(with: ShareModalController(ShareLinkObject(account, link: url)), for: mainWindow)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: url)), for: mainWindow)
         }
-    case let .wallpaper(account, preview):
+    case let .wallpaper(context, preview):
         switch preview {
         case let .color(color):
             let wallpaper: TelegramWallpaper = .color(Int32(color.rgb))
-            showModal(with: WallpaperPreviewController(account: account, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: mainWindow)
-        case let .slug(slug, option):
-            _ = showModalProgress(signal: getWallpaper(account: account, slug: slug) |> deliverOnMainQueue, for: mainWindow).start(next: { wallpaper in
-                showModal(with: WallpaperPreviewController(account: account, wallpaper: Wallpaper(wallpaper).withUpdatedBlurrred(option == .blur), source: .link(wallpaper)), for: mainWindow)
+            showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: mainWindow)
+        case let .slug(slug, settings):
+            _ = showModalProgress(signal: getWallpaper(account: context.account, slug: slug) |> deliverOnMainQueue, for: mainWindow).start(next: { wallpaper in
+                showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper).withUpdatedSettings(settings), source: .link(wallpaper)), for: mainWindow)
             }, error: { error in
                 switch error {
                 case .generic:
@@ -256,11 +256,11 @@ func execute(inapp:inAppLink) {
                 }
             })
         }
-    case let .stickerPack(reference, account, peerId):
-        showModal(with: StickersPackPreviewModalController(account, peerId: peerId, reference: reference), for: mainWindow)
-    case let .confirmPhone(account, phone, hash):
-        _ = showModalProgress(signal: requestCancelAccountResetData(network: account.network, hash: hash) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
-            showModal(with: cancelResetAccountController(account: account, phone: phone, data: data), for: mainWindow)
+    case let .stickerPack(reference, context, peerId):
+        showModal(with: StickersPackPreviewModalController(context, peerId: peerId, reference: reference), for: mainWindow)
+    case let .confirmPhone(context, phone, hash):
+        _ = showModalProgress(signal: requestCancelAccountResetData(network: context.account.network, hash: hash) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
+            showModal(with: cancelResetAccountController(account: context.account, phone: phone, data: data), for: mainWindow)
         }, error: { error in
             switch error {
             case .limitExceeded:
@@ -273,17 +273,17 @@ func execute(inapp:inAppLink) {
         applyProxy(settings)
     case .nothing:
         break
-    case let .requestSecureId(account, value):
+    case let .requestSecureId(context, value):
         if value.nonce.isEmpty {
             alert(for: mainWindow, info: value.isModern ? "nonce is empty" : "payload is empty")
             return
         }
-        _ = showModalProgress(signal: (requestSecureIdForm(postbox: account.postbox, network: account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
-            return account.postbox.loadedPeerWithId(account.peerId) |> mapError {_ in return .generic} |> map { peer in
+        _ = showModalProgress(signal: (requestSecureIdForm(postbox: context.account.postbox, network: context.account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
+            return context.account.postbox.loadedPeerWithId(context.peerId) |> mapError {_ in return .generic} |> map { peer in
                 return (form, peer)
             }
         } |> deliverOnMainQueue), for: mainWindow).start(next: { form, peer in
-            let passport = PassportWindowController(account: account, peer: peer, request: value, form: form)
+            let passport = PassportWindowController(context: context, peer: peer, request: value, form: form)
             passport.show()
         }, error: { error in
             switch error {
@@ -295,8 +295,8 @@ func execute(inapp:inAppLink) {
                 updateAppAsYouWish(text: L10n.secureIdAppVersionOutdated, updateApp: true)
             }
         })
-    case let .applyLocalization(account, value):
-        _ = showModalProgress(signal: requestLocalizationPreview(network: account.network, identifier: value) |> deliverOnMainQueue, for: mainWindow).start(next: { info in
+    case let .applyLocalization(context, value):
+        _ = showModalProgress(signal: requestLocalizationPreview(network: context.account.network, identifier: value) |> deliverOnMainQueue, for: mainWindow).start(next: { info in
             if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
                 alert(for: mainWindow, info: L10n.applyLanguageChangeLanguageAlreadyActive(info.title))
             } else if info.totalStringCount == 0 {
@@ -309,7 +309,7 @@ func execute(inapp:inAppLink) {
                     }
                 })
             } else {
-                showModal(with: LocalizationPreviewModalController.init(account: account, info: info), for: mainWindow)
+                showModal(with: LocalizationPreviewModalController(context, info: info), for: mainWindow)
             }
            
         }, error: { error in
@@ -318,8 +318,8 @@ func execute(inapp:inAppLink) {
                 alert(for: mainWindow, info: L10n.localizationPreviewErrorGeneric)
             }
         })
-    case let .unsupportedScheme(account, path):
-        _ = (getDeepLinkInfo(network: account.network, path: path) |> deliverOnMainQueue).start(next: { info in
+    case let .unsupportedScheme(context, path):
+        _ = (getDeepLinkInfo(network: context.account.network, path: path) |> deliverOnMainQueue).start(next: { info in
             if let info = info {
                updateAppAsYouWish(text: info.message, updateApp: info.updateApp)
             }
@@ -335,7 +335,7 @@ private func updateAppAsYouWish(text: String, updateApp: Bool) {
             #if APP_STORE
             execute(inapp: inAppLink.external(link: "https://itunes.apple.com/us/app/telegram/id747648890", false))
             #else
-            (NSApp.delegate as? AppDelegate)?.checkForUpdates(text)
+            (NSApp.delegate as? AppDelegate)?.checkForUpdates(updateApp)
             #endif
         }
     })
@@ -405,36 +405,33 @@ struct inAppSecureIdRequest {
     let isModern: Bool
 }
 
-enum WallpaperPresentationOptions {
-    case blur
-    case none
-}
+
 
 enum WallpaperPreview {
     case color(NSColor)
-    case slug(String, WallpaperPresentationOptions)
+    case slug(String, WallpaperSettings)
 }
 
 enum inAppLink {
     case external(link:String, Bool) // link, confirm
     case peerInfo(peerId:PeerId, action:ChatInitialAction?, openChat:Bool, postId:Int32?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
-    case followResolvedName(username:String, postId:Int32?, account:Account, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
-    case inviteBotToGroup(username:String, account:Account, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
+    case followResolvedName(username:String, postId:Int32?, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
+    case inviteBotToGroup(username:String, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case botCommand(String, (String)->Void)
     case callback(String, (String)->Void)
     case code(String, (String)->Void)
     case hashtag(String, (String)->Void)
-    case shareUrl(Account, String)
-    case joinchat(String, account:Account, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
+    case shareUrl(AccountContext, String)
+    case joinchat(String, context: AccountContext, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case logout(()->Void)
-    case stickerPack(StickerPackReference, account:Account, peerId:PeerId?)
-    case confirmPhone(account: Account, phone: String, hash: String)
+    case stickerPack(StickerPackReference, context: AccountContext, peerId:PeerId?)
+    case confirmPhone(context: AccountContext, phone: String, hash: String)
     case nothing
     case socks(ProxyServerSettings, applyProxy:(ProxyServerSettings)->Void)
-    case requestSecureId(account: Account, value: inAppSecureIdRequest)
-    case unsupportedScheme(account: Account, path: String)
-    case applyLocalization(account: Account, value: String)
-    case wallpaper(account: Account, preview: WallpaperPreview)
+    case requestSecureId(context: AccountContext, value: inAppSecureIdRequest)
+    case unsupportedScheme(context: AccountContext, path: String)
+    case applyLocalization(context: AccountContext, value: String)
+    case wallpaper(context: AccountContext, preview: WallpaperPreview)
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
@@ -463,7 +460,7 @@ private let keyURLPass = "pass";
 
 let legacyPassportUsername = "telegrampassport"
 
-func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
+func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
     let external = url
     let url = url.lowercased.nsstring
     for domain in telegram_me {
@@ -475,17 +472,17 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                     let value = String(string[string.index(string.startIndex, offsetBy: action.length) ..< string.endIndex])
                     switch action {
                     case actions_me[0]:
-                        if let openInfo = openInfo, let account = account {
-                            return .joinchat(value, account: account, callback: openInfo)
+                        if let openInfo = openInfo, let context = context {
+                            return .joinchat(value, context: context, callback: openInfo)
                         }
                     case actions_me[1]:
-                        if let account = account {
-                            return .stickerPack(StickerPackReference.name(value), account: account, peerId: peerId)
+                        if let context = context {
+                            return .stickerPack(StickerPackReference.name(value), context: context, peerId: peerId)
                         }
                     case actions_me[2]:
                         let vars = urlVars(with: string)
-                        if let account = account, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
-                            return .confirmPhone(account: account, phone: phone, hash: hash)
+                        if let context = context, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
+                            return .confirmPhone(context: context, phone: phone, hash: hash)
                         }
                     case actions_me[3]:
                         let vars = urlVars(with: string)
@@ -503,30 +500,41 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                             return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
                         }
                     case actions_me[5]:
-                        if let account = account, !value.isEmpty {
-                            return .applyLocalization(account: account, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
+                        if let context = context, !value.isEmpty {
+                            return .applyLocalization(context: context, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
                         } else {
                             
                         }
                     case actions_me[6]:
                         if !value.isEmpty {
                             let component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
-                            if let account = account {
+                            if let context = context {
                                 if component.count == 6, component.rangeOfCharacter(from: CharacterSet(charactersIn: "0123456789abcdefABCDEF").inverted) == nil, let color = NSColor(hexString: component) {
-                                    return .wallpaper(account: account, preview: .color(color))
+                                    return .wallpaper(context: context, preview: .color(color))
                                 } else {
                                     let vars = urlVars(with: value)
-                                    var options: WallpaperPresentationOptions = .none
+                                    var blur: Bool = false
+                                    var intensity: Int32? = 0
+                                    var color: Int32? = nil
                                     
-                                    if let mode = vars["mode"], mode.contains("blur") {
-                                        options = .blur
+                                    if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: bgcolor)?.rgb {
+                                        color = Int32(bitPattern: rgb)
                                     }
+                                    if let intensityString = vars["intensity"] {
+                                        intensity = Int32(intensityString)
+                                    }
+                                    if let mode = vars["mode"] {
+                                        blur = mode.contains("blur")
+                                    }
+                                    
+                                    let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, intensity: intensity)
+                                    
                                     var slug = component
                                     if let index = component.range(of: "?") {
                                         slug = String(component[component.startIndex ..< index.lowerBound])
                                     }
 
-                                    return .wallpaper(account: account, preview: .slug(slug, options))
+                                    return .wallpaper(context: context, preview: .slug(slug, settings))
                                 }
                             }
                         }
@@ -548,8 +556,8 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                             action = .start(parameter: value, behavior: .none)
                             break loop;
                         case keyURLStartGroup:
-                            if let openInfo = openInfo, let account = account {
-                                return .inviteBotToGroup(username: username, account: account, action: nil, callback: openInfo)
+                            if let openInfo = openInfo, let context = context {
+                                return .inviteBotToGroup(username: username, context: context, action: nil, callback: openInfo)
                             }
                             break loop;
                         default:
@@ -561,8 +569,8 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                 if let openInfo = openInfo {
                     if username == "iv" {
                         return .external(link: url as String, false)
-                    } else if let account = account {
-                        return .followResolvedName(username: username, postId: nil, account: account, action: action, callback: openInfo)
+                    } else if let context = context {
+                        return .followResolvedName(username: username, postId: nil, context: context, action: action, callback: openInfo)
                     }
                 }
             } else if let openInfo = openInfo {
@@ -574,20 +582,20 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         return .external(link: url as String, false)
                     } else if name.hasPrefix("share") {
                         let params = urlVars(with: url as String)
-                        if let url = params["url"], let account = account {
-                            return .shareUrl(account, url)
+                        if let url = params["url"], let context = context {
+                            return .shareUrl(context, url)
                         }
                         return .external(link: url as String, false)
-                    } else if let account = account {
-                        return .followResolvedName(username: name, postId: post, account: account, action:nil, callback: openInfo)
+                    } else if let context = context {
+                        return .followResolvedName(username: name, postId: post, context: context, action:nil, callback: openInfo)
                     }
                 }
             }
         }
     }
     
-    if url.hasPrefix("@"), let openInfo = openInfo, let account = account {
-        return .followResolvedName(username: url.substring(from: 1), postId: nil, account: account, action:nil, callback: openInfo)
+    if url.hasPrefix("@"), let openInfo = openInfo, let context = context {
+        return .followResolvedName(username: url.substring(from: 1), postId: nil, context: context, action:nil, callback: openInfo)
     }
     
     if url.hasPrefix("/"), let command = command {
@@ -621,36 +629,36 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                             }
                         }
                         if username == legacyPassportUsername {
-                            return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, account: account, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
+                            return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, context: context, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
                             //return inapp
-                        } else if let account = account {
-                            return .followResolvedName(username: username, postId: post, account: account, action: action, callback:openInfo)
+                        } else if let context = context {
+                            return .followResolvedName(username: username, postId: post, context: context, action: action, callback:openInfo)
                         }
                     }
                 case known_scheme[1]:
                     if let url = vars[keyURLUrl] {
                         let url = url.nsstring.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
                         let text = vars[keyURLText]?.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
-                        if let url = url, let account = account {
+                        if let url = url, let context = context {
                             var applied = url
                             if let text = text {
                                 applied += "\n" + text
                             }
-                            return .shareUrl(account, applied)
+                            return .shareUrl(context, applied)
                             
                         }
                     }
                 case known_scheme[2]:
-                    if let invite = vars[keyURLInvite], let openInfo = openInfo, let account = account {
-                        return .joinchat(invite, account: account, callback: openInfo)
+                    if let invite = vars[keyURLInvite], let openInfo = openInfo, let context = context {
+                        return .joinchat(invite, context: context, callback: openInfo)
                     }
                 case known_scheme[3]:
-                    if let set = vars[keyURLSet], let account = account {
-                        return .stickerPack(.name(set), account:account, peerId:nil)
+                    if let set = vars[keyURLSet], let context = context {
+                        return .stickerPack(.name(set), context: context, peerId:nil)
                     }
                 case known_scheme[4]:
-                    if let account = account, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
-                        return .confirmPhone(account: account, phone: phone, hash: hash)
+                    if let context = context, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
+                        return .confirmPhone(context: context, phone: phone, hash: hash)
                     }
                 case known_scheme[5]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
@@ -664,7 +672,7 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         return .socks(ProxyServerSettings(host: server, port: port, connection: .mtp(secret:  ObjcUtils.data(fromHexString: rawSecret))), applyProxy: applyProxy)
                     }
                 case known_scheme[7]:
-                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let account = account {
+                    if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let context = context {
                         
                         
                         let scope = escape(with: scope, addPercent: false)
@@ -677,23 +685,35 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
                         let nonce = escape(with: nonceString, addPercent: false).data(using: .utf8) ?? Data()
                         
                         let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
-                        return .requestSecureId(account: account, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
+                        return .requestSecureId(context: context, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
                     }
                 case known_scheme[8]:
-                    if let account = account, let value = vars["lang"] {
-                        return .applyLocalization(account: account, value: value)
+                    if let context = context, let value = vars["lang"] {
+                        return .applyLocalization(context: context, value: value)
                     }
                 case known_scheme[9]:
-                    if let account = account, let value = vars["slug"] {
-                        var options: WallpaperPresentationOptions = .none
+                    if let context = context, let value = vars["slug"] {
                         
-                        if let mode = vars["mode"], mode.contains("blur") {
-                            options = .blur
+                        var blur: Bool = false
+                        var intensity: Int32? = 0
+                        var color: Int32? = nil
+                        
+                        if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: bgcolor)?.rgb {
+                            color = Int32(bitPattern: rgb)
                         }
-                        return .wallpaper(account: account, preview: .slug(value, options))
+                        if let mode = vars["mode"] {
+                            blur = mode.contains("blur")
+                        }
+                        if let intensityString = vars["intensity"] {
+                            intensity = Int32(intensityString)
+                        }
+                        
+                        let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, intensity: intensity)
+                        
+                        return .wallpaper(context: context, preview: .slug(value, settings))
                     }
-                    if let account = account, let value = vars["color"] {
-                        return .wallpaper(account: account, preview: .slug(value, .none))
+                    if let context = context, let value = vars["color"] {
+                        return .wallpaper(context: context, preview: .slug(value, WallpaperSettings()))
                     }
                 default:
                     break
@@ -703,11 +723,11 @@ func inApp(for url:NSString, account:Account? = nil, peerId:PeerId? = nil, openI
 
             }
         }
-        if let account = account {
+        if let context = context {
             var path = url.substring(from: telegram_scheme.length)
             let qLocation = path.nsstring.range(of: "?").location
             path = path.nsstring.substring(to: qLocation != NSNotFound ? qLocation : path.length)
-            return .unsupportedScheme(account: account, path: path)
+            return .unsupportedScheme(context: context, path: path)
         }
        
     }

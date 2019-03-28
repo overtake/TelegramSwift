@@ -14,13 +14,13 @@ import PostboxMac
 
 
 private final class SelectivePrivacyPeersControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let removePeer: (PeerId) -> Void
     let addPeer: () -> Void
     let openInfo:(Peer) -> Void
-    init(account: Account, removePeer: @escaping (PeerId) -> Void, addPeer: @escaping () -> Void, openInfo:@escaping(Peer) -> Void) {
-        self.account = account
+    init(context: AccountContext, removePeer: @escaping (PeerId) -> Void, addPeer: @escaping () -> Void, openInfo:@escaping(Peer) -> Void) {
+        self.context = context
         self.removePeer = removePeer
         self.addPeer = addPeer
         self.openInfo = openInfo
@@ -41,29 +41,6 @@ private enum SelectivePrivacyPeersEntryStableId: Hashable {
             return 1
         case .section(let id):
             return 100 + Int(id)
-        }
-    }
-    
-    static func ==(lhs: SelectivePrivacyPeersEntryStableId, rhs: SelectivePrivacyPeersEntryStableId) -> Bool {
-        switch lhs {
-        case let .peer(peerId):
-            if case .peer(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .add:
-            if case .add = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
         }
     }
 }
@@ -151,7 +128,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
                 arguments.openInfo(peer)
             })
 
@@ -233,17 +210,17 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
     private let updated:([PeerId])->Void
     private let statePromise = ValuePromise(SelectivePrivacyPeersControllerState(), ignoreRepeated: true)
     private let stateValue = Atomic(value: SelectivePrivacyPeersControllerState())
-    init(account: Account, title: String, initialPeerIds: [PeerId], updated: @escaping ([PeerId]) -> Void) {
+    init(_ context: AccountContext, title: String, initialPeerIds: [PeerId], updated: @escaping ([PeerId]) -> Void) {
         self.title = title
         self.initialPeerIds = initialPeerIds
         self.updated = updated
-        super.init(account)
+        super.init(context)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let title = self.title
         self.setCenterTitle(title)
         let initialPeerIds = self.initialPeerIds
@@ -262,7 +239,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         actionsDisposable.add(removePeerDisposable)
         
         let peersPromise = Promise<[Peer]>()
-        peersPromise.set(account.postbox.transaction { transaction -> [Peer] in
+        peersPromise.set(context.account.postbox.transaction { transaction -> [Peer] in
             var result: [Peer] = []
             for peerId in initialPeerIds {
                 if let peer = transaction.getPeer(peerId) {
@@ -274,7 +251,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         
         var currentPeerIds:[PeerId] = []
         
-        let arguments = SelectivePrivacyPeersControllerArguments(account: account, removePeer: { memberId in
+        let arguments = SelectivePrivacyPeersControllerArguments(context: context, removePeer: { memberId in
             let applyPeers: Signal<Void, NoError> = peersPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
@@ -295,12 +272,12 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
             removePeerDisposable.set(applyPeers.start())
         }, addPeer: {
             
-            addPeerDisposable.set(selectModalPeers(account: account, title: title, settings: [.contacts], excludePeerIds: currentPeerIds, limit: 0, confirmation: {_ in return .single(true)}).start(next: { peerIds in
+            addPeerDisposable.set(selectModalPeers(context: context, title: title, settings: [.contacts], excludePeerIds: currentPeerIds, limit: 0, confirmation: {_ in return .single(true)}).start(next: { peerIds in
                 
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[Peer], NoError> in
-                        return account.postbox.transaction { transaction -> [Peer] in
+                        return context.account.postbox.transaction { transaction -> [Peer] in
                             var updatedPeers = peers
                             var existingIds = Set(updatedPeers.map { $0.id })
                             for peerId in peerIds {
@@ -322,7 +299,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
                 removePeerDisposable.set(applyPeers.start())
             }))
         }, openInfo: { [weak self] peer in
-            self?.navigationController?.push(PeerInfoController(account: account, peerId: peer.id))
+            self?.navigationController?.push(PeerInfoController(context: context, peerId: peer.id))
         })
         
         let previous:Atomic<[AppearanceWrapperEntry<SelectivePrivacyPeersEntry>]> = Atomic(value: [])

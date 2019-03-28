@@ -39,6 +39,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private(set) var captionView:TextView?
     private var shareControl:ImageButton?
     private var nameView:TextView?
+    private var adminBadge: TextView?
     let rightView:ChatRightView = ChatRightView(frame:NSZeroRect)
     private(set) var selectingView:SelectingControl?
     private var mouseDragged: Bool = false
@@ -263,18 +264,75 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             } else  {
                 let location = self.convert(event.locationInWindow, from: nil)
                 if NSPointInRect(location, rightView.frame) {
-                    if item.isFailed {
-                        confirm(for: mainWindow, header: tr(L10n.alertSendErrorHeader), information: tr(L10n.alertSendErrorText), okTitle: tr(L10n.alertSendErrorResend), cancelTitle: tr(L10n.alertSendErrorIgnore), thridTitle: tr(L10n.alertSendErrorDelete), successHandler: { result in
+                    if item.isFailed,  let messageId = item.message?.id {
+                        
+                       
+                        
+                        let signal = item.context.account.postbox.transaction { transaction -> [MessageId] in
+                            return transaction.getMessageFailedGroup(messageId)?.compactMap({$0.id}) ?? []
+                        } |> deliverOnMainQueue
+
+                        
+                        _ = signal.start(next: { ids in
+                            let alert:NSAlert = NSAlert()
+                            alert.window.appearance = theme.appearance
+                            alert.alertStyle = .informational
+                            alert.messageText = L10n.alertSendErrorHeader
+                            alert.informativeText = L10n.alertSendErrorText
                             
-                            switch result {
-                            case .thrid:
-                                item.deleteMessage()
-                            default:
-                                item.resendMessage()
+                           
+                            
+                            alert.addButton(withTitle: L10n.alertSendErrorResend)
+                            
+                            if ids.count > 1 {
+                                alert.addButton(withTitle: L10n.alertSendErrorResendItemsCountable(ids.count))
                             }
                             
+                            alert.addButton(withTitle: L10n.alertSendErrorDelete)
                             
+                           
+                            
+                            alert.addButton(withTitle: L10n.alertSendErrorIgnore)
+                            
+                            
+                            alert.beginSheetModal(for: mainWindow, completionHandler: { [weak item] response in
+                                switch response.rawValue {
+                                case 1000:
+                                    item?.resendMessage([messageId])
+                                case 1001:
+                                    if ids.count > 1 {
+                                        item?.resendMessage(ids)
+                                    } else {
+                                        item?.deleteMessage()
+                                    }
+                                case 1002:
+                                    if ids.count > 1 {
+                                        item?.deleteMessage()
+                                    }
+                                default:
+                                    break
+                                }
+                            })
                         })
+                        
+//                        item.account.postbox.transaction { transaction -> T in
+//                            transaction
+//                        }
+//
+                      
+                        
+                        
+//                        confirm(for: mainWindow, header: L10n.alertSendErrorHeader, information: L10n.alertSendErrorText, okTitle: L10n.alertSendErrorResend, cancelTitle: L10n.alertSendErrorIgnore, thridTitle: L10n.alertSendErrorDelete, fourTitle: "Resend All", successHandler: { result in
+//
+//                            switch result {
+//                            case .thrid:
+//                                item.deleteMessage()
+//                            default:
+//                                item.resendMessage()
+//                            }
+//
+//
+//                        })
                     } else {
                         forceSelectItem(item, onRightClick: true)
                     }
@@ -292,6 +350,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func onShowContextMenu() {
         guard let item = item as? ChatRowItem else {return}
         renderLayoutType(item, animated: true)
+
         updateColors()
         item.chatInteraction.focusInputField()
         super.onCloseContextMenu()
@@ -300,6 +359,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func onCloseContextMenu() {
         guard let item = item as? ChatRowItem else {return}
         renderLayoutType(item, animated: true)
+        self.rowView.change(pos: NSZeroPoint, animated: true)
         updateColors()
         super.onCloseContextMenu()
     }
@@ -418,6 +478,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 } else {
                     rect.origin.x += 5
                     rect.origin.y -= 2
+                    rect.origin.x = max(20, rect.origin.x)
                 }
             }
             if item is ChatVideoMessageItem {
@@ -450,14 +511,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     var replyMarkupFrame: NSRect {
         guard let item = item as? ChatRowItem, let replyMarkup = item.replyMarkupModel else {return NSZeroRect}
 
-        var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset, replyMarkup.size.width, replyMarkup.size.height)
+        var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultReplyMarkupInset, replyMarkup.size.width, replyMarkup.size.height)
         
         if let captionLayout = item.captionLayout {
             frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
         }
         
         if item.hasBubble {
-            frame.origin.y = bubbleFrame.maxY + item.defaultContentInnerInset
+            frame.origin.y = bubbleFrame.maxY + item.defaultReplyMarkupInset
             frame.origin.x = bubbleFrame.minX + (item.isIncoming ? item.additionBubbleInset : 0)
         }
         
@@ -510,6 +571,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         point.x += item.elementsContentInset
         return point
         
+    }
+    
+    var adminBadgePoint: NSPoint {
+        guard let item = item as? ChatRowItem, let adminBadge = item.adminBadge, let authorText = item.authorText else {return NSZeroPoint}
+        
+        var point = NSMakePoint( item.isBubbled ? bubbleFrame.maxX - item.bubbleContentInset - adminBadge.layoutSize.width : namePoint.x + authorText.layoutSize.width, item.defaultContentTopOffset + 1)
+        if item.isBubbled {
+            point.y -= item.topInset
+        }
+        return point
     }
     
     var selectingPoint: NSPoint {
@@ -587,6 +658,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
             nameView?.setFrameOrigin(namePoint)
             
+            adminBadge?.setFrameOrigin(adminBadgePoint)
+            
             viaAccessory?.setFrameOrigin(viaAccesoryPoint)
             item.replyModel?.frame = replyFrame
 
@@ -606,7 +679,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             if let shareControl = shareControl {
                 if item.isBubbled {
-                    shareControl.setFrameOrigin(item.isIncoming ? bubbleFrame.maxX + 15 : bubbleFrame.minX - shareControl.frame.width - 15, bubbleFrame.maxY - shareControl.frame.height - (item is ChatVideoMessageItem ? rightFrame.height + 14 : 0))
+                    shareControl.setFrameOrigin(item.isIncoming ? max(bubbleFrame.maxX + 15, item.isStateOverlayLayout ? rightFrame.width + 15 : 0) : bubbleFrame.minX - shareControl.frame.width - 15, bubbleFrame.maxY - shareControl.frame.height - (item is ChatVideoMessageItem ? rightFrame.height + 14 : 0))
                 } else {
                     shareControl.setFrameOrigin(frame.width - 20.0 - shareControl.frame.width, rightView.frame.maxY )
                 }
@@ -639,6 +712,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     rowView.addSubview(forwardName!)
                 }
                 forwardName?.update(forwardNameLayout)
+                
+                forwardName?.toolTip = item.forwardHid
             }
             
         } else {
@@ -661,8 +736,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             avatar?.set(handler: { [weak item] control in
                 item?.openInfo()
             }, for: .Click)
-            
-            self.avatar?.setPeer(account: item.account, peer: peer, message: item.message)
+            avatar?.toolTip = item.nameHide
+            self.avatar?.setPeer(account: item.context.account, peer: peer, message: item.message)
             
         } else {
             avatar?.removeFromSuperview()
@@ -755,11 +830,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+    
     func fillName(_ item:ChatRowItem) -> Void {
         if let author = item.authorText {
             if item.isBubbled && !item.hasBubble {
                 nameView?.removeFromSuperview()
                 nameView = nil
+                
+                adminBadge?.removeFromSuperview()
+                adminBadge = nil
                 
                 if viaAccessory == nil {
                     viaAccessory = ChatBubbleViaAccessory(frame: NSZeroRect)
@@ -775,7 +854,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
                 
                 viaAccessory.updateText(layout: author)
-
+                
                 
             } else {
                 
@@ -788,7 +867,21 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     
                     rowView.addSubview(nameView!)
                 }
+                
+                if let adminBadge = item.adminBadge {
+                    if self.adminBadge == nil {
+                        self.adminBadge = TextView()
+                        self.adminBadge?.isSelectable = false
+                        rowView.addSubview(self.adminBadge!)
+                    }
+                    self.adminBadge?.update(adminBadge, origin: adminBadgePoint)
+                } else {
+                    adminBadge?.removeFromSuperview()
+                    adminBadge = nil
+                }
+                
                 nameView?.update(author, origin: namePoint)
+                nameView?.toolTip = item.nameHide
             }
             
         } else {
@@ -798,6 +891,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             nameView?.removeFromSuperview()
             nameView = nil
+            
+            adminBadge?.removeFromSuperview()
+            adminBadge = nil
         }
     }
     
@@ -942,6 +1038,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func forceClick(in location: NSPoint) {
         guard let item = item as? ChatRowItem else { return }
         
+        
         let hitTestView = self.hitTest(location)
         if hitTestView == nil || hitTestView == self || hitTestView == replyView || hitTestView?.isDescendant(of: contentView) == true || hitTestView == rowView {
             if let avatar = avatar {
@@ -957,14 +1054,20 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 result = item.replyAction()
             case .forward:
                 result = item.forwardAction()
+            case .previewMedia:
+                result = false
             }
             if result {
                 focusAnimation(nil)
             } else {
-                NSSound.beep()
+             //   NSSound.beep()
             }
         }
         
+    }
+    
+    func previewMediaIfPossible() -> Bool {
+        return false
     }
     
     deinit {

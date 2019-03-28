@@ -28,13 +28,15 @@
 #import "libjpeg-turbo/jerror.h"
 #import "libjpeg-turbo/turbojpeg.h"
 #import "libjpeg-turbo/jmorecfg.h"
-
+#import "FFMpegRemuxer.h"
+#import "FFMpegGlobals.h"
 #endif
+
+
 #import "RingBuffer.h"
 #import "ocr.h"
 #import "TGPassportMRZ.h"
 #import "EDSunriseSet.h"
-
 
 
 
@@ -74,6 +76,8 @@ CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 
 @end
 
+
+
 @interface ObjcUtils : NSObject
 + (NSData *)dataFromHexString:(NSString *)string;
 + (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention;
@@ -98,6 +102,8 @@ CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 int colorIndexForGroupId(int64_t groupId);
 int64_t TGPeerIdFromChannelId(int32_t channelId);
 int colorIndexForUid(int32_t uid, int32_t myUserId);
+
+NSArray<NSString *> * __nonnull currentAppInputSource();
 
 @interface NSData (TG)
 - (NSString *__nonnull)stringByEncodingInHex;
@@ -171,6 +177,7 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 @optional
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
+- (BOOL) supportContinuityCamera;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
 - (void)makeUrlOfRange: (NSRange)range;
 - (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
@@ -180,7 +187,7 @@ extern NSString *__nonnull const TGCustomLinkAttributeName;
 void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSString * _Nonnull key));
 void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
-@interface TGGrowingTextView : NSTextView
+@interface TGGrowingTextView : NSTextView<NSServicesMenuRequestor>
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
 @end
 
@@ -556,7 +563,7 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 @end
 
 @interface AudioDevice : NSObject
-@property(nonatomic, strong, readonly) NSString *deviceId;
+@property(nonatomic, strong, readonly) NSString *_Nullable deviceId;
 @property(nonatomic, strong, readonly) NSString *deviceName;
 -(id)initWithDeviceId:(NSString*)deviceId deviceName:(NSString *)deviceName;
 @end
@@ -580,11 +587,11 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 +(int32_t)voipMaxLayer;
 -(NSString *)currentOutputDeviceId;
 -(NSString *)currentInputDeviceId;
--(NSArray<AudioDevice *> *)outputDevices;
--(NSArray<AudioDevice *> *)inputDevices;
++(NSArray<AudioDevice *> *)outputDevices;
++(NSArray<AudioDevice *> *)inputDevices;
 -(void)setCurrentOutputDeviceId:(NSString *)deviceId;
 -(void)setCurrentInputDeviceId:(NSString *)deviceId;
-
+-(void)setMutedOtherSounds:(BOOL)mute;
 @property (nonatomic, copy) void (^stateChangeHandler)(int);
 
 @end

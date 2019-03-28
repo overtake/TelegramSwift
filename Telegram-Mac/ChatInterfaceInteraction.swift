@@ -41,7 +41,7 @@ final class ChatInteraction : InterfaceObserver  {
         return presentation.peer
     }
     
-    let account:Account
+    let context: AccountContext
     let isLogInteraction:Bool
     let disableSelectAbility: Bool
     private let modifyDisposable:MetaDisposable = MetaDisposable()
@@ -51,9 +51,9 @@ final class ChatInteraction : InterfaceObserver  {
     private let requestSessionId:MetaDisposable = MetaDisposable()
     private let disableProxyDisposable = MetaDisposable()
     private let enableProxyDisposable = MetaDisposable()
-    init(chatLocation: ChatLocation, account:Account, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
+    init(chatLocation: ChatLocation, context: AccountContext, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
         self.chatLocation = chatLocation
-        self.account = account
+        self.context = context
         self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
         self.presentation = ChatPresentationInterfaceState(chatLocation)
@@ -141,22 +141,18 @@ final class ChatInteraction : InterfaceObserver  {
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
     func addContact() {
-        addContactDisposable.set(addContactPeerInteractively(account: account, peerId: peerId, phone: (presentation.peer as? TelegramUser)?.phone).start())
+        addContactDisposable.set(addContactPeerInteractively(account: context.account, peerId: peerId, phone: (presentation.peer as? TelegramUser)?.phone).start())
     }
     
     func disableProxy() {
-        let account = self.account
-        disableProxyDisposable.set(updateProxySettingsInteractively(postbox: account.postbox, network: account.network, { current -> ProxySettings in
+        disableProxyDisposable.set(updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> ProxySettings in
             return current.withUpdatedEnabled(false)
         }).start())
         
     }
     
     func applyProxy(_ server:ProxyServerSettings) -> Void {
-        applyExternalProxy(server, postbox: account.postbox, network: account.network)
-//        disableProxyDisposable.set(updateProxySettingsInteractively(postbox: account.postbox, network: account.network, { current -> ProxySettings in
-//            return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
-//        }).start())
+        applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
     }
     
     
@@ -168,16 +164,17 @@ final class ChatInteraction : InterfaceObserver  {
             } else {
                 peerId = peer.id
             }
-            requestSessionId.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { [weak self] result in
+            let context = self.context
+            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { [weak self] result in
                 if let strongSelf = self {
-                    applyUIPCallResult(strongSelf.account, result)
+                    applyUIPCallResult(context.sharedContext, result)
                 }
             }))
         }
     }
     
     func startBot(_ payload:String? = nil) {
-        startBotDisposable.set((requestStartBot(account: self.account, botPeerId: self.peerId, payload: payload) |> deliverOnMainQueue).start(completed: { [weak self] in
+        startBotDisposable.set((requestStartBot(account: context.account, botPeerId: self.peerId, payload: payload) |> deliverOnMainQueue).start(completed: { [weak self] in
             self?.update({$0.updatedInitialAction(nil)})
         }))
     }
@@ -206,15 +203,22 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func updateInput(with text:String) {
-        let state = ChatTextInputState(inputText: text, selectionRange: text.length ..< text.length, attributes: [])
-        self.update({$0.updatedInterfaceState({$0.withUpdatedInputState(state)})})
+        if self.presentation.state == .normal {
+            let state = ChatTextInputState(inputText: text, selectionRange: text.length ..< text.length, attributes: [])
+            self.update({$0.updatedInterfaceState({$0.withUpdatedInputState(state)})})
+        }
     }
     
     func appendText(_ text:String, selectedRange:Range<Int>? = nil) -> Range<Int> {
+        
+      
+        
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
         let inputText = presentation.effectiveInput.attributedString.mutableCopy() as! NSMutableAttributedString
         
-        
+        if self.presentation.state != .normal && presentation.state != .editing {
+            return selectedRange.lowerBound ..< selectedRange.lowerBound
+        }
         
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
            // let minUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: selectedRange.lowerBound)
@@ -304,13 +308,20 @@ final class ChatInteraction : InterfaceObserver  {
                 if let strongSelf = self {
                     switch button.action {
                     case let .url(url):
-                        execute(inapp: inApp(for: url.nsstring, account: strongSelf.account, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
+                        execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
                     case .text:
-                        _ = (enqueueMessages(account: strongSelf.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], mediaReference: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil)]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
+                        _ = (enqueueMessages(context: strongSelf.context, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], mediaReference: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil)]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)
                         })
                     case .requestPhone:
-                        strongSelf.shareSelfContact(nil)
+                        FastSettings.requstPermission(with: .contact, for: keyboardMessage.id.peerId, success: { [weak strongSelf] in
+                            strongSelf?.shareSelfContact(nil)
+                            if attribute.flags.contains(.once) {
+                                strongSelf?.update({$0.updatedInterfaceState({$0.withUpdatedMessageActionsState({$0.withUpdatedClosedButtonKeyboardMessageId(keyboardMessage.id)})})})
+                            }
+                        })
+                        
+                        return
                     case .openWebApp:
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, true, nil)
                     case let .callback(data):
@@ -321,9 +332,9 @@ final class ChatInteraction : InterfaceObserver  {
                             strongSelf.updateInput(with: text)
                         } else {
                             if let peer = keyboardMessage.inlinePeer {
-                                strongSelf.account.context.mainNavigation?.set(modalAction: ShareInlineResultNavigationAction(payload: text, botName: peer.displayTitle), strongSelf.account.context.layout != .single)
-                                if strongSelf.account.context.layout == .single {
-                                    strongSelf.account.context.mainNavigation?.push(ForwardChatListController(strongSelf.account))
+                                strongSelf.context.sharedContext.bindings.rootNavigation().set(modalAction: ShareInlineResultNavigationAction(payload: text, botName: peer.displayTitle), strongSelf.context.sharedContext.layout != .single)
+                                if strongSelf.context.sharedContext.layout == .single {
+                                    strongSelf.context.sharedContext.bindings.rootNavigation().push(ForwardChatListController(strongSelf.context))
                                 }
                             }
                             
@@ -348,7 +359,7 @@ final class ChatInteraction : InterfaceObserver  {
         let timestamp = Int32(Date().timeIntervalSince1970)
         let interfaceState = presentation.interfaceState.withUpdatedTimestamp(timestamp).withUpdatedHistoryScrollState(scrollState)
         
-        var s:Signal<Void, NoError> = updatePeerChatInterfaceState(account: account, peerId: peerId, state: interfaceState)
+        var s:Signal<Void, NoError> = updatePeerChatInterfaceState(account: context.account, peerId: peerId, state: interfaceState)
         if !force {
             s = s |> delay(10, queue: Queue.mainQueue())
         }

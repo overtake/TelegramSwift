@@ -12,11 +12,13 @@ import SwiftSignalKitMac
 import TGUIKit
 
 private final class DownloadSettingsArguments {
-    let account: Account
+    let context: AccountContext
     let toggleCategory:(AutomaticMediaDownloadCategoryPeers)->Void
-    init(_ account: Account, toggleCategory: @escaping(AutomaticMediaDownloadCategoryPeers)->Void) {
-        self.account = account
+    let togglePreloadLargeVideos:(Bool)->Void
+    init(_ context: AccountContext, toggleCategory: @escaping(AutomaticMediaDownloadCategoryPeers)->Void, togglePreloadLargeVideos: @escaping(Bool)->Void) {
+        self.context = context
         self.toggleCategory = toggleCategory
+        self.togglePreloadLargeVideos = togglePreloadLargeVideos
     }
 }
 
@@ -27,6 +29,8 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
     case fileSizeLimitHeader(sectionId: Int32)
     case fileSizeLimitText(sectionId: Int32, limit: Int32)
     case fileSizeLimit(sectionId: Int32, limit: Int32, category: AutomaticMediaDownloadCategoryPeers)
+    case preloadLargeVideos(sectionId: Int32, Bool, Bool)
+    case preloadLargeVideosDesc(sectionId: Int32, String)
     case sectionId(Int32)
     
     var stableId: Int32 {
@@ -43,6 +47,10 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
             return 4
         case .fileSizeLimit:
             return 5
+        case .preloadLargeVideos:
+            return 6
+        case .preloadLargeVideosDesc:
+            return 7
         case .sectionId(let id):
             return 1000 + id
         }
@@ -73,6 +81,12 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
             return SelectSizeRowItem(initialSize, stableId: stableId, current: limit, sizes: list, hasMarkers: false, selectAction: { select in
                 arguments.toggleCategory(category.withUpdatedSizeLimit(list[select]))
             })
+        case let .preloadLargeVideos(_, enabled, value):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategoryPreloadLargeVideos, type: .switchable(value), action: {
+                arguments.togglePreloadLargeVideos(!value)
+            }, enabled: enabled)
+        case let .preloadLargeVideosDesc(_, limit):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.dataAndStorageCategoryPreloadLargeVideosDesc(limit))
         case .sectionId:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -92,6 +106,10 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
             return (sectionId * 1000) + stableId
         case let .fileSizeLimit(sectionId, _, _):
             return (sectionId * 1000) + stableId
+        case let .preloadLargeVideos(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .preloadLargeVideosDesc(sectionId, _):
+            return (sectionId * 1000) + stableId
         case .sectionId(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -102,56 +120,8 @@ private func <(lhs: DownloadSettingsEntry, rhs: DownloadSettingsEntry) -> Bool {
     return lhs.index < rhs.index
 }
 
-private func ==(lhs: DownloadSettingsEntry, rhs: DownloadSettingsEntry) -> Bool {
-    switch lhs {
-    case let .contacts(sectionId, enabled, category):
-        if case .contacts(sectionId, enabled, category) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .groupChats(sectionId, enabled, category):
-        if case .groupChats(sectionId, enabled, category) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .channels(sectionId, enabled, category):
-        if case .channels(sectionId, enabled, category) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .fileSizeLimitHeader(sectionId):
-        if case .fileSizeLimitHeader(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .fileSizeLimitText(sectionId, current):
-        if case .fileSizeLimitText(sectionId, current) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .fileSizeLimit(sectionId, limit, category):
-        if case .fileSizeLimit(sectionId, limit, category) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .sectionId(sectionId):
-        if case .sectionId(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
-
-
-private func downloadSettingsEntries(state: AutomaticMediaDownloadCategoryPeers) -> [DownloadSettingsEntry] {
+private func downloadSettingsEntries(state: AutomaticMediaDownloadCategoryPeers, isVideo: Bool, autoplayMedia: AutoplayMediaPreferences) -> [DownloadSettingsEntry] {
     var entries:[DownloadSettingsEntry] = []
     var sectionId:Int32 = 0
     entries.append(.sectionId(sectionId))
@@ -171,7 +141,18 @@ private func downloadSettingsEntries(state: AutomaticMediaDownloadCategoryPeers)
 
         entries.append(.fileSizeLimitText(sectionId: sectionId, limit: fileSizeLimit))
         entries.append(.fileSizeLimit(sectionId: sectionId, limit: fileSizeLimit, category: state))
+        
+        
+        if isVideo {
+            let preloadEnabled = fileSizeLimit >= 5 * 1024 * 1024
+            
+            entries.append(.preloadLargeVideos(sectionId: sectionId, preloadEnabled, autoplayMedia.preloadVideos))
+            entries.append(.preloadLargeVideosDesc(sectionId: sectionId, "\(fileSizeLimit / 1024 / 1024)"))
+        }
+       
     }
+    
+   
     
     return entries
     
@@ -192,12 +173,14 @@ class DownloadSettingsViewController: TableViewController {
     private let disposable = MetaDisposable()
     private let stateValue: ValuePromise<AutomaticMediaDownloadCategoryPeers>
     private let title: String
+    private let isVideo: Bool
     private let updateCategory:(AutomaticMediaDownloadCategoryPeers)->Void
-    init(_ account: Account, _ state: AutomaticMediaDownloadCategoryPeers, _ title: String, updateCategory:@escaping(AutomaticMediaDownloadCategoryPeers) -> Void) {
+    init(_ context: AccountContext, _ state: AutomaticMediaDownloadCategoryPeers, _ title: String, updateCategory:@escaping(AutomaticMediaDownloadCategoryPeers) -> Void) {
         self.stateValue = ValuePromise(state, ignoreRepeated: true)
         self.title = title
+        self.isVideo = L10n.dataAndStorageAutomaticDownloadVideo == title
         self.updateCategory = updateCategory
-        super.init(account)
+        super.init(context)
     }
     
     override var defaultBarTitle: String {
@@ -206,18 +189,24 @@ class DownloadSettingsViewController: TableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        let context = self.context
         
-        let arguments = DownloadSettingsArguments(account, toggleCategory: { [weak self] category in
+        let arguments = DownloadSettingsArguments(context, toggleCategory: { [weak self] category in
             self?.updateCategory(category)
             self?.stateValue.set(category)
+        }, togglePreloadLargeVideos: { enabled in
+            _ = updateAutoplayMediaSettingsInteractively(postbox: context.account.postbox, {
+                $0.withUpdatedAutoplayPreloadVideos(enabled)
+            }).start()
         })
         
         let initialSize = self.atomicSize
+        let isVideo = self.isVideo
         
         let previous: Atomic<[AppearanceWrapperEntry<DownloadSettingsEntry>]> = Atomic(value: [])
         
-        let signal = combineLatest(stateValue.get(), appearanceSignal) |> map { state, appearance -> TableUpdateTransition in
-            let entries = downloadSettingsEntries(state: state).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let signal = combineLatest(stateValue.get(), appearanceSignal, autoplayMediaSettings(postbox: context.account.postbox)) |> map { state, appearance, autoplayMedia -> TableUpdateTransition in
+            let entries = downloadSettingsEntries(state: state, isVideo: isVideo, autoplayMedia: autoplayMedia).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments)
         } |> deliverOnMainQueue
         

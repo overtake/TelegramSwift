@@ -13,7 +13,7 @@ import SwiftSignalKitMac
 import PostboxMac
 class ReplyModel: ChatAccessoryModel {
 
-    private var account:Account
+    private let account:Account
     private(set) var replyMessage:Message?
     private var disposable:MetaDisposable = MetaDisposable()
     private let isPinned:Bool
@@ -43,7 +43,7 @@ class ReplyModel: ChatAccessoryModel {
                 nodeReady.set(.single(true) |> then(messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
                     self?.make(with: message, isLoading: false, display: true)
                     return message != nil
-                    }))
+                }))
             } else {
                 nodeReady.set(.single(true))
             }

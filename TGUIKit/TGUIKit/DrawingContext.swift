@@ -9,8 +9,7 @@
 import Cocoa
 
 
-public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false) -> CGImage? {
-    let scale:CGFloat = 2.0
+public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = 2.0) -> CGImage? {
     let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
     let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
     let length = bytesPerRow * Int(scaledSize.height)
@@ -109,6 +108,11 @@ public class DrawingContext {
         if let _context = self._context {
             f(_context)
         }
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     public func withFlippedContext(isHighQuality: Bool = true, horizontal: Bool = false, vertical: Bool = false, _ f: (CGContext) -> ()) {

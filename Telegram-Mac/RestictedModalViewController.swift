@@ -14,12 +14,12 @@ import PostboxMac
 import SwiftSignalKitMac
 
 private final class RestrictedControllerArguments {
-    let account: Account
+    let context: AccountContext
     let toggleRight: (TelegramChatBannedRightsFlags, Bool) -> Void
     let changeUntil:()->Void
     let alertError:() -> Void
-    init(account: Account, toggleRight: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, changeUntil: @escaping () -> Void, alertError: @escaping() -> Void) {
-        self.account = account
+    init(context: AccountContext, toggleRight: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, changeUntil: @escaping () -> Void, alertError: @escaping() -> Void) {
+        self.context = context
         self.toggleRight = toggleRight
         self.changeUntil = changeUntil
         self.alertError = alertError
@@ -159,9 +159,9 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             
             if let presence = presence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                (string,_, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.account.context.timeDifference, relativeTo: Int32(timestamp))
+                (string,_, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
             }
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(50, 50), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, action: {})
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(50, 50), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, action: {})
         case let .rightItem(_, _, name, right, value, enabled):
             //ControlStyle(font: NSFont.)
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), action: {
@@ -355,7 +355,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<RestrictedEntry>
 
 class RestrictedModalViewController: TableModalViewController {
     private let initialParticipant:ChannelParticipant?
-    private let account:Account
+    private let context:AccountContext
     private let disposable = MetaDisposable()
     private let peerId:PeerId
     private let memberId: PeerId
@@ -364,9 +364,9 @@ class RestrictedModalViewController: TableModalViewController {
     private var okClicked:(()->Void)?
     private var cancelClicked:(()->Void)?
 
-    init(account:Account, peerId:PeerId, memberId: PeerId, initialParticipant:ChannelParticipant?, updated: @escaping(TelegramChatBannedRights)->Void) {
+    init(_ context: AccountContext, peerId:PeerId, memberId: PeerId, initialParticipant:ChannelParticipant?, updated: @escaping(TelegramChatBannedRights)->Void) {
         self.initialParticipant = initialParticipant
-        self.account = account
+        self.context = context
         self.updated = updated
         self.peerId = peerId
         self.memberId = memberId
@@ -384,7 +384,7 @@ class RestrictedModalViewController: TableModalViewController {
         let initialParticipant = self.initialParticipant
         let memberId = self.memberId
         let peerId = self.peerId
-        let account = self.account
+        let context = self.context
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -400,10 +400,10 @@ class RestrictedModalViewController: TableModalViewController {
 
 
         let peerView = Promise<PeerView>()
-        peerView.set(account.viewTracker.peerView(peerId))
+        peerView.set(context.account.viewTracker.peerView(peerId))
 
         
-        let arguments = RestrictedControllerArguments(account: account, toggleRight: { rights, value in
+        let arguments = RestrictedControllerArguments(context: context, toggleRight: { rights, value in
             let _ = (peerView.get()
                 |> take(1)
                 |> deliverOnMainQueue).start(next: { view in
@@ -493,14 +493,12 @@ class RestrictedModalViewController: TableModalViewController {
         let previous:Atomic<[AppearanceWrapperEntry<RestrictedEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        //state: RestrictedControllerState, accountPeerId: PeerId, channelView: PeerView, memberView: PeerView, initialParticipant: ChannelParticipant?, initialBannedBy: Peer?
-        
         
         var keys: [PostboxViewKey] = [.peer(peerId: peerId, components: .all), .peer(peerId: memberId, components: .all)]
         if let banInfo = initialParticipant?.banInfo {
             keys.append(.peer(peerId: banInfo.restrictedBy, components: []))
         }
-        let combinedView = account.postbox.combinedView(keys: keys)
+        let combinedView = context.account.postbox.combinedView(keys: keys)
         
         
         
@@ -513,7 +511,7 @@ class RestrictedModalViewController: TableModalViewController {
                 initialBannedByPeer = (combinedView.views[.peer(peerId: banInfo.restrictedBy, components: [])] as? PeerView)?.peers[banInfo.restrictedBy]
             }
             
-            let entries = restrictedEntries(state: state, accountPeerId: account.peerId, channelView: channelView, memberView: memberView, initialParticipant: initialParticipant, initialBannedBy: initialBannedByPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let entries = restrictedEntries(state: state, accountPeerId: context.account.peerId, channelView: channelView, memberView: memberView, initialParticipant: initialParticipant, initialBannedBy: initialBannedByPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             
            return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with {$0}, arguments: arguments), channelView, memberView)
         } |> deliverOnMainQueue

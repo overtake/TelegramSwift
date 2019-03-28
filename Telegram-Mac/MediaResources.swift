@@ -120,6 +120,8 @@ public struct LocalFileGifMediaResourceId: MediaResourceId {
     }
 }
 
+
+
 public final class LocalFileGifMediaResource: TelegramMediaResource {
     
     public func isEqual(to: MediaResource) -> Bool {
@@ -150,6 +152,60 @@ public final class LocalFileGifMediaResource: TelegramMediaResource {
     
     public var id: MediaResourceId {
         return LocalFileGifMediaResourceId(randomId: self.randomId)
+    }
+    
+}
+
+public struct LocalFileVideoMediaResourceId: MediaResourceId {
+    public let randomId: Int64
+    
+    public var uniqueId: String {
+        return "lmov-\(self.randomId)"
+    }
+    
+    public var hashValue: Int {
+        return self.randomId.hashValue
+    }
+    
+    public func isEqual(to: MediaResourceId) -> Bool {
+        if let to = to as? LocalFileVideoMediaResourceId {
+            return self.randomId == to.randomId
+        } else {
+            return false
+        }
+    }
+}
+
+public final class LocalFileVideoMediaResource: TelegramMediaResource {
+    
+    public func isEqual(to: MediaResource) -> Bool {
+        if let to = to as? LocalFileVideoMediaResource {
+            return self.randomId == to.randomId && self.path == to.path
+        } else {
+            return false
+        }
+    }
+    
+    public let randomId: Int64
+    public let path: String
+    
+    public init(randomId: Int64, path: String) {
+        self.randomId = randomId
+        self.path = path
+    }
+    
+    public required init(decoder: PostboxDecoder) {
+        self.randomId = decoder.decodeInt64ForKey("i", orElse: 0)
+        self.path = decoder.decodeStringForKey("p", orElse: "")
+    }
+    
+    public func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeInt64(self.randomId, forKey: "i")
+        encoder.encodeString(self.path, forKey: "p")
+    }
+    
+    public var id: MediaResourceId {
+        return LocalFileVideoMediaResourceId(randomId: self.randomId)
     }
     
 }

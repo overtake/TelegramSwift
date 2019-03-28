@@ -13,11 +13,6 @@ import PostboxMac
 import SwiftSignalKitMac
 import LocalAuthentication
 
-enum PasscodeInnerState {
-    case old
-    case new
-    case confirm
-}
 
 private class TouchIdContainerView : View {
     fileprivate let button: TitleButton = TitleButton()
@@ -75,19 +70,12 @@ private final class PasscodeField : NSSecureTextField {
     }
 }
 
-enum PasscodeViewState {
-    case login(hasTouchId: Bool)
-    case change(PasscodeInnerState)
-    case enable(PasscodeInnerState)
-    case disable(PasscodeInnerState)
-}
 
 private class PasscodeLockView : Control, NSTextFieldDelegate {
-    fileprivate let photoView:AvatarControl = AvatarControl(font: .avatar(23.0))
     fileprivate let nameView:TextView = TextView()
     fileprivate let input:PasscodeField
     private let nextButton:ImageButton = ImageButton()
-    private var state:PasscodeViewState?
+    private var hasTouchId:Bool = false
     private let touchIdContainer:TouchIdContainerView = TouchIdContainerView(frame: NSMakeRect(0, 0, 200, 76))
     fileprivate let logoutTextView:TextView = TextView()
     fileprivate let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
@@ -100,7 +88,6 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input = PasscodeField(frame: NSZeroRect)
         input.stringValue = ""
         super.init(frame: frameRect)
-        photoView.setFrameSize(NSMakeSize(80, 80))
         self.backgroundColor = .white
         
         nextButton.set(background: theme.colors.blueIcon, for: .Normal)
@@ -112,16 +99,17 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         nameView.isSelectable = false
         addSubview(nextButton)
 
-        addSubview(photoView)
         addSubview(nameView)
         addSubview(inputContainer)
         addSubview(logoutTextView)
         addSubview(touchIdContainer)
         input.isBordered = false
+        input.usesSingleLineMode = true
         input.isBezeled = false
         input.focusRingType = .none
         input.delegate = self
         input.drawsBackground = false
+        
         input.textView?.insertionPointColor = theme.colors.text
         
         inputContainer.backgroundColor = theme.colors.grayBackground
@@ -129,15 +117,19 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         inputContainer.addSubview(input)
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.passcodeEnterPasscodePlaceholder), color: theme.colors.grayText, font: .normal(.title))
+        _ = attr.append(string: L10n.passcodeEnterPasscodePlaceholder, color: theme.colors.grayText, font: .medium(17))
         //attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
+        input.cell?.usesSingleLineMode = true
+        input.cell?.wraps = false
+        input.cell?.isScrollable = true
         input.font = .normal(.title)
         input.textColor = theme.colors.text
         input.textView?.insertionPointColor = theme.colors.grayText
+        
         input.sizeToFit()
         
-        let logoutAttr = parseMarkdownIntoAttributedString(tr(L10n.passcodeLostDescription), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+        let logoutAttr = parseMarkdownIntoAttributedString(L10n.passcodeLostDescription, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
         }))
         
@@ -195,8 +187,8 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         self.fieldState = state
         switch state {
         case .Focus:
-            input._change(size: NSMakeSize(inputContainer.frame.width - 10, input.frame.height), animated: animated)
-            input._change(pos: NSMakePoint(5, input.frame.minY), animated: animated)
+            input._change(size: NSMakeSize(inputContainer.frame.width - 20, input.frame.height), animated: animated)
+            input._change(pos: NSMakePoint(10, input.frame.minY), animated: animated)
             nextButton.change(opacity: 1, animated: animated)
             nextButton._change(pos: NSMakePoint(inputContainer.frame.maxX + 10, nextButton.frame.minY), animated: animated)
         case .None:
@@ -212,51 +204,27 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         value.set(input.stringValue)
     }
     
-    func update(with state:PasscodeViewState, account:Account, peer:Peer) {
-        self.state = state
+    func update(hasTouchId: Bool) {
+        self.hasTouchId = hasTouchId
         
-        photoView.setPeer(account: account, peer: peer)
-        let layout = TextViewLayout(.initialize(string:peer.displayTitle, color: theme.colors.text, font:.normal(.title)))
+        let layout = TextViewLayout(.initialize(string: L10n.passlockEnterYourPasscode, color: theme.colors.text, font: .medium(17)))
         layout.measure(width: frame.width - 40)
         nameView.update(layout)
 
-        switch state {
-        case .login:
-            self.logoutTextView.isHidden = false
-        default:
+        let text = L10n.passcodeEnterPasscodePlaceholder
+        if hasTouchId {
+            showTouchIdUI()
+        } else {
             hideTouchIdUI()
-            self.logoutTextView.isHidden = true
         }
-        needsLayout = true
-        changeInput(state)
-
-    }
-    
-    fileprivate func changeInput(_ state:PasscodeViewState) {
-        let placeholder = NSMutableAttributedString()
-        let text:String
         
-        switch state {
-        case let .login(hasTouchId):
-            text = tr(L10n.passcodeEnterPasscodePlaceholder)
-            if hasTouchId {
-                showTouchIdUI()
-            } else {
-                hideTouchIdUI()
-            }
-        case let .change(inner), let .enable(inner), let .disable(inner):
-            switch inner {
-            case .old:
-                text = tr(L10n.passcodeEnterCurrentPlaceholder)
-            case .new:
-                text = tr(L10n.passcodeEnterNewPlaceholder)
-            case .confirm:
-                text = tr(L10n.passcodeReEnterPlaceholder)
-            }
-        }
         input.stringValue = ""
+        let placeholder = NSMutableAttributedString()
         _ = placeholder.append(string: text, color: theme.colors.grayText, font: .normal(.title))
         input.placeholderAttributedString = placeholder
+        
+        needsLayout = true
+
     }
     
     private func showTouchIdUI() {
@@ -267,26 +235,22 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         touchIdContainer.isHidden = true
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-    }
-    
+
     override func layout() {
         super.layout()
         
         inputContainer.setFrameSize(200, 36)
-        input.setFrameSize(input.frame.width, input.frame.height)
+        input.setFrameSize(inputContainer.frame.width - 20, input.frame.height)
         input.center()
         
+        inputContainer.layer?.cornerRadius = inputContainer.frame.height / 2
         
         logoutTextView.layout?.measure(width: frame.width - 40)
         logoutTextView.update(logoutTextView.layout)
         
-        photoView.center()
-        photoView.setFrameOrigin(photoView.frame.minX, photoView.frame.minY - floorToScreenPixels(scaleFactor: backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
-        nameView.centerX(y: photoView.frame.maxY + 20)
+        nameView.center()
+        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(scaleFactor: backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
         logoutTextView.centerX(y:frame.height - logoutTextView.frame.height - 20)
-        setNeedsDisplayLayer()
         
         inputContainer.centerX(y: nameView.frame.maxY + 30)
         
@@ -302,38 +266,30 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
 }
 
 class PasscodeLockController: ModalViewController {
-    private let account:Account
-    private var state: PasscodeViewState {
-        didSet {
-            self.genericView.changeInput(state)
-        }
-    }
+    let accountManager: AccountManager
+    private let useTouchId: Bool
     private let disposable:MetaDisposable = MetaDisposable()
     private let valueDisposable = MetaDisposable()
     private let logoutDisposable = MetaDisposable()
-    private var passcodeValues:[String] = []
     private let _doneValue:Promise<Bool> = Promise()
     private let laContext = LAContext()
     var doneValue:Signal<Bool, NoError> {
         return _doneValue.get()
     }
     
-    private let logoutImpl:() -> Void
-    init(_ account:Account, _ state: PasscodeViewState, logoutImpl:@escaping()->Void = {}) {
-        self.account = account
-        self.state = state
+    
+    
+    private let logoutImpl:() -> Signal<Never, NoError>
+    init(_ accountManager: AccountManager, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }) {
+        self.accountManager = accountManager
         self.logoutImpl = logoutImpl
+        self.useTouchId = useTouchId
         super.init(frame: NSMakeRect(0, 0, 340, 310))
         self.bar = .init(height: 0)
     }
     
     override var isFullScreen: Bool {
-        switch state {
-        case .login:
-            return true
-        default:
-            return false
-        }
+        return true
     }
     
     private var genericView:PasscodeLockView {
@@ -341,69 +297,11 @@ class PasscodeLockController: ModalViewController {
     }
     
     private func checkNextValue(_ passcode: String, _ current:String?) {
-        switch state {
-        case .login:
-            if current == passcode {
-                _doneValue.set(.single(true))
-                close()
-            } else {
-                genericView.input.shake()
-            }
-        case let .enable(inner):
-            switch inner {
-            case .new:
-                passcodeValues.append(passcode)
-                self.state = .enable(.confirm)
-            case .confirm:
-                if passcodeValues[0] == passcode {
-                    _doneValue.set(account.postbox.transaction { transaction -> Bool in
-                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: 60*60, attempts: nil))
-                        return true
-                    })
-                    close()
-                } else {
-                    genericView.input.shake()
-                }
-            default:
-                break
-            }
-        case let .disable(inner):
-            switch inner {
-            case .old:
-                if current == passcode {
-                    _doneValue.set(account.postbox.transaction { transaction -> Bool in
-                        transaction.setAccessChallengeData(.none)
-                        return true
-                    })
-                    close()
-                } else {
-                    genericView.input.shake()
-                }
-            default:
-                break
-            }
-        case let .change(inner):
-            switch inner {
-            case .new:
-                passcodeValues.append(passcode)
-                self.state = .change(.confirm)
-            case .confirm:
-                if passcodeValues[0] == passcode {
-                    _doneValue.set(account.postbox.transaction { transaction -> Bool in
-                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: transaction.getAccessChallengeData().timeout, attempts: nil))
-                        return true
-                    })
-                    close()
-                } else {
-                    genericView.input.shake()
-                }
-            case .old:
-                if current != passcode {
-                    genericView.input.shake()
-                } else {
-                    self.state = .change(.new)
-                }
-            }
+        if current == passcode {
+            _doneValue.set(.single(true))
+            close()
+        } else {
+            genericView.input.shake()
         }
     }
     
@@ -445,53 +343,48 @@ class PasscodeLockController: ModalViewController {
         
         
         
-        genericView.logoutImpl = logoutImpl
+        genericView.logoutImpl = { [weak self] in
+            guard let window = self?.window else { return }
+            
+            confirm(for: window, information: L10n.accountConfirmLogoutText, successHandler: { [weak self] _ in
+                guard let `self` = self else { return }
+                
+                _ = showModalProgress(signal: self.logoutImpl(), for: window).start(completed: { [weak self] in
+                    delay(0.2, closure: { [weak self] in
+                        self?.close()
+                    })
+                })
+            })
+           
+        }
         
         genericView.useTouchIdImpl = { [weak self] in
             self?.callTouchId()
         }
         
-        valueDisposable.set((genericView.value.get() |> mapToSignal { [weak self] value in
-            if let strongSelf = self {
-                return strongSelf.account.postbox.transaction { transaction -> (String, String?) in
-                    switch transaction.getAccessChallengeData() {
-                    case .none:
-                        return (value, nil)
-                    case let .plaintextPassword(passcode, _, _), let .numericalPassword(passcode, _, _):
-                        return (value, passcode)
-                    }
+        let accountManager = self.accountManager
+        
+        valueDisposable.set((genericView.value.get() |> mapToSignal { value in
+            return accountManager.transaction { transaction -> (String, String?) in
+                switch transaction.getAccessChallengeData() {
+                case .none:
+                    return (value, nil)
+                case let .plaintextPassword(passcode, _, _), let .numericalPassword(passcode, _, _):
+                    return (value, passcode)
                 }
             }
-            return .single(("", nil))
         } |> deliverOnMainQueue).start(next: { [weak self] value, current in
             self?.checkNextValue(value, current)
         }))
         
-        disposable.set(combineLatest(account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue, additionalSettings(postbox: account.postbox) |> take(1) |> deliverOnMainQueue).start(next: { [weak self] peer, additional in
-            if let strongSelf = self {
-                var state = strongSelf.state
-                if additional.useTouchId {
-                    switch strongSelf.state {
-                    case .login:
-                        state = .login(hasTouchId: true)
-                    default:
-                        break
-                    }
-                }
-                strongSelf.genericView.update(with: state, account: strongSelf.account, peer: peer)
-                strongSelf.readyOnce()
-            }
-        }))
+        genericView.update(hasTouchId: useTouchId)
+        readyOnce()
+        
         
     }
     
     override var closable: Bool {
-        switch self.state {
-        case .login:
-            return false
-        default:
-            return true
-        }
+        return false
     }
 
     
@@ -511,8 +404,17 @@ class PasscodeLockController: ModalViewController {
         
     }
     
+    override var handleEvents: Bool {
+        return true
+    }
+    
+    override var handleAllEvents: Bool {
+        return true
+    }
+    
+    
     override var responderPriority: HandlerPriority {
-        return .modal
+        return .supreme
     }
     
     deinit {

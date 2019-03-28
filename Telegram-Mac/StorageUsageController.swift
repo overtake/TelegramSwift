@@ -13,12 +13,12 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 
 private final class StorageUsageControllerArguments {
-    let account: Account
+    let context: AccountContext
     let updateKeepMedia: () -> Void
     let openPeerMedia: (PeerId) -> Void
     let clearAll:()->Void
-    init(account: Account, updateKeepMedia: @escaping () -> Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void) {
-        self.account = account
+    init(context: AccountContext, updateKeepMedia: @escaping () -> Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void) {
+        self.context = context
         self.updateKeepMedia = updateKeepMedia
         self.openPeerMedia = openPeerMedia
         self.clearAll = clearAll
@@ -180,7 +180,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .peersHeader(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .peer(_, _, peer, value):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, enabled: true, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: true, isLookSavedMessage: true, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), action: { 
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: true, isLookSavedMessage: true, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), action: {
                 arguments.openPeerMedia(peer.id)
             })
         case .section:
@@ -274,33 +274,26 @@ class StorageUsageController: TableViewController {
         readyOnce()
         
         
-        let account = self.account
+        let context = self.context
         let initialSize = self.atomicSize
         let cacheSettingsPromise = Promise<CacheStorageSettings>()
-        cacheSettingsPromise.set(account.postbox.preferencesView(keys: [PreferencesKeys.cacheStorageSettings])
+        cacheSettingsPromise.set(context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.cacheStorageSettings])
             |> map { view -> CacheStorageSettings in
-                let cacheSettings: CacheStorageSettings
-                if let value = view.values[PreferencesKeys.cacheStorageSettings] as? CacheStorageSettings {
-                    cacheSettings = value
-                } else {
-                    cacheSettings = CacheStorageSettings.defaultSettings
-                }
-                
-                return cacheSettings
+                return view.entries[SharedDataKeys.cacheStorageSettings] as? CacheStorageSettings ?? CacheStorageSettings.defaultSettings
             })
         
         let statsPromise = Promise<CacheUsageStatsResult?>()
-        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: account, additionalCachePaths: [], logFilesPath: "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/logs".nsstring.expandingTildeInPath) |> map { Optional($0) }))
+        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: context.account, additionalCachePaths: [], logFilesPath: "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/logs".nsstring.expandingTildeInPath) |> map { Optional($0) }))
         
         let actionDisposables = DisposableSet()
         
         let clearDisposable = MetaDisposable()
         actionDisposables.add(clearDisposable)
         
-        let arguments = StorageUsageControllerArguments(account: account, updateKeepMedia: { [weak self] in
+        let arguments = StorageUsageControllerArguments(context: context, updateKeepMedia: { [weak self] in
             if let strongSelf = self {
                 let timeoutAction: (Int32) -> Void = { timeout in
-                    let _ = updateCacheStorageSettingsInteractively(postbox: account.postbox, { current in
+                    let _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, { current in
                         return current.withUpdatedDefaultCacheStorageTimeout(timeout)
                     }).start()
                 }
@@ -352,7 +345,7 @@ class StorageUsageController: TableViewController {
                                 }
                                 statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers, otherSize: stats.otherSize, otherPaths: stats.otherPaths, cacheSize: stats.cacheSize, tempPaths: stats.tempPaths, tempSize: stats.tempSize, immutableSize: stats.immutableSize))))
                                 
-                                clearDisposable.set(clearCachedMediaResources(account: account, mediaResourceIds: clearResourceIds).start())
+                                clearDisposable.set(clearCachedMediaResources(account: context.account, mediaResourceIds: clearResourceIds).start())
                             }
 
                         }), for: mainWindow)
@@ -360,8 +353,8 @@ class StorageUsageController: TableViewController {
                 }
             })
         }, clearAll: {
-            let path = account.postbox.mediaBox.basePath
-            _ = showModalProgress(signal: combineLatest(clearImageCache(), account.postbox.mediaBox.fileConxtets() |> mapToSignal { clearCache(path, excludes: $0) }), for: mainWindow).start()
+            let path = context.account.postbox.mediaBox.basePath
+            _ = showModalProgress(signal: combineLatest(clearImageCache(), context.account.postbox.mediaBox.fileConxtets() |> mapToSignal { clearCache(path, excludes: $0) }), for: mainWindow).start()
             statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))))
         })
         

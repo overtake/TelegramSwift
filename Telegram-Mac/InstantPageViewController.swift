@@ -120,7 +120,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         }
     }
     let message: String?
-    init(_ account: Account, webPage: TelegramMediaWebpage, message: String?, messageId: MessageId? = nil, anchor: String? = nil, saveToRecent: Bool = true) {
+    init(_ context: AccountContext, webPage: TelegramMediaWebpage, message: String?, messageId: MessageId? = nil, anchor: String? = nil, saveToRecent: Bool = true) {
         self.webPage = webPage
         self.message = message
         self.pendingAnchor = anchor
@@ -130,19 +130,9 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         default:
             break
         }
-        super.init(account)
+        super.init(context)
         bar = .init(height: 0)
         noticeResizeWhenLoaded = false
-        if saveToRecent {
-            _ = updateReadArticlesPreferences(postbox: account.postbox) { current -> ReadArticlesListPreferences in
-                if current.list.first(where: {$0.id == webPage.webpageId}) == nil {
-                    return current.withAddedArticle(ReadArticle(webPage: webPage, messageId: messageId, percent: 0, date: Int32(Date().timeIntervalSince1970)))
-                } else {
-                    return current
-                }
-            }.start()
-        }
-        
     }
     
     override var defaultBarTitle: String {
@@ -204,7 +194,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 
     
     private func updateLayout() {
-        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), webEmbedHeights: self.currentWebEmbedHeights)
+        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: max(500, frame.width), safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), webEmbedHeights: self.currentWebEmbedHeights)
         
         updateInteractions()
         
@@ -300,10 +290,17 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         return false
     }
     
+    override var window: Window? {
+        if isLoaded() {
+            return self.view.window as? Window
+        } else {
+            return nil
+        }
+    }
     
     func updateInteractions() {
         if let window = window, let layout = currentLayout, let instantPage = instantPage {
-            selectManager?.initializeHandlers(for: window, instantLayout: layout, instantPage: instantPage, account: account, updateLayout: { [weak self] in
+            selectManager?.initializeHandlers(for: window, instantLayout: layout, instantPage: instantPage, context: context, updateLayout: { [weak self] in
                 guard let `self` = self else {return}
                 
                 self.updateVisibleItems(visibleBounds: self.genericView.contentView.bounds, animated: false)
@@ -358,16 +355,16 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         self.loadWebpageDisposable.set(nil)
         loadProgress.set(0.07)
         
-        let result = inApp(for: url.url.nsstring, account: account, openInfo: { [weak self] peerId, openChat, messageId, initialAction in
-            guard let `self` = self, let navigation = self.account.context.mainNavigation else {return}
+        let result = inApp(for: url.url.nsstring, context: context, openInfo: { [weak self] peerId, openChat, messageId, initialAction in
+            guard let `self` = self else {return}
             if openChat {
-                navigation.push(ChatController(account: self.account, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction))
+                self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction))
             } else {
-                navigation.push(PeerInfoController.init(account: self.account, peerId: peerId))
+                self.context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: self.context, peerId: peerId))
             }
         }, applyProxy: { [weak self] proxy in
             guard let `self` = self else {return}
-            applyExternalProxy(proxy, postbox: self.account.postbox, network: self.account.network)
+            applyExternalProxy(proxy, accountManager: self.context.sharedContext.accountManager)
         }, confirm: false)
         
         switch result {
@@ -377,14 +374,14 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 if let anchorRange = externalUrl.range(of: "#") {
                     anchor = String(externalUrl[anchorRange.upperBound...])
                 }
-                loadWebpageDisposable.set((webpagePreviewWithProgress(account: account, url: externalUrl, webpageId: webpageId) |> deliverOnMainQueue).start(next: { [weak self] result in
+                loadWebpageDisposable.set((webpagePreviewWithProgress(account: context.account, url: externalUrl, webpageId: webpageId) |> deliverOnMainQueue).start(next: { [weak self] result in
                     guard let `self` = self else {return}
                     
                     switch result {
                     case let .result(webpage):
                         if let webpage = webpage, case .Loaded = webpage.content {
                             self.loadProgress.set(1.0)
-                            showInstantPage(InstantPageViewController(self.account, webPage: webpage, message: nil, anchor: anchor))
+                            showInstantPage(InstantPageViewController(self.context, webPage: webpage, message: nil, anchor: anchor))
                         }
                         break
                     case let .progress(progress):
@@ -536,10 +533,10 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 
     func openInfo(_ peerId:PeerId, _ openChat: Bool, _ postId:MessageId?, _ action:ChatInitialAction?) {
         if openChat {
-            account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
             closeModal()
         } else {
-            account.context.mainNavigation?.push(PeerInfoController(account: account, peerId: peerId))
+            context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             closeModal()
         }
         
@@ -598,7 +595,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         
         var firstLoad: Bool = true
         
-        appearanceDisposable.set((ivAppearance(postbox: account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
+        appearanceDisposable.set((ivAppearance(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
             self?.appearance = appearance
             self?.reloadData()
             self?.readyOnce()
@@ -646,7 +643,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         }))
         
       
-        actualizeDisposable.set((actualizedWebpage(postbox: account.postbox, network: account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
+        actualizeDisposable.set((actualizedWebpage(postbox: context.account.postbox, network: context.account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
             self?.updateWebPage(webpage, anchor: self?.pendingAnchor)
         }))
 
@@ -769,7 +766,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                     let embedIndex = embedIndex
                     let detailsIndex = detailsIndex
 
-                    let arguments = InstantPageItemArguments(account: account, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), openMedia: { media in
+                    let arguments = InstantPageItemArguments(context: context, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), openMedia: { media in
                         
                     }, openPeer: { peerId in
                         
@@ -981,13 +978,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         let id = self.webPage.webpageId
         
         let percent = Int32((point.y + frame.height) / genericView.documentSize.height * 100.0)
-        saveProgressDisposable.set((updateReadArticlesPreferences(postbox: account.postbox, { pref in
-            var pref = pref
-            if let article = pref.list.first(where: {$0.id == id}) {
-                pref = pref.withUpdatedArticle(article.withUpdatedPercent(percent))
-            }
-            return pref
-        }) |> delay(0.2, queue: Queue.mainQueue())).start())
     }
     
     deinit {

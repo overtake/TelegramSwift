@@ -48,17 +48,16 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         
         let arguments = ChangePhoneNumberArguments(sendCode: { [weak self] phoneNumber in
-//            let data = ChangeAccountPhoneNumberData(type: SentAuthorizationCodeType.sms(length: 6), hash: "", timeout: 10, nextType: AuthorizationCodeNextType.call)
 //
 
             guard let strongSelf = self else {return}
             
-            strongSelf.actionDisposable.set(showModalProgress(signal: requestChangeAccountPhoneNumberVerification(account: account, phoneNumber: phoneNumber) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak strongSelf] data in
+            strongSelf.actionDisposable.set(showModalProgress(signal: requestChangeAccountPhoneNumberVerification(account: context.account, phoneNumber: phoneNumber) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak strongSelf] data in
                 
-                strongSelf?.navigationController?.push(PhoneNumberInputCodeController(account, data: data, formattedNumber: formatPhoneNumber(phoneNumber)))
+                strongSelf?.navigationController?.push(PhoneNumberInputCodeController(context, data: data, formattedNumber: formatPhoneNumber(phoneNumber)))
                 
             }, error: { error in
 

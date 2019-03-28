@@ -51,15 +51,15 @@ private struct ThemeGridEntryTransition {
     let scrollToItem: GridNodeScrollToItem?
 }
 
-private func preparedThemeGridEntryTransition(account: Account, from fromEntries: [ThemeGridControllerEntry], to toEntries: [ThemeGridControllerEntry], interaction: ThemeGridControllerInteraction) -> ThemeGridEntryTransition {
+private func preparedThemeGridEntryTransition(context: AccountContext, from fromEntries: [ThemeGridControllerEntry], to toEntries: [ThemeGridControllerEntry], interaction: ThemeGridControllerInteraction) -> ThemeGridEntryTransition {
     let stationaryItems: GridNodeStationaryItems = .none
     let scrollToItem: GridNodeScrollToItem? = nil
     
     let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: fromEntries, rightList: toEntries)
     
     let deletions = deleteIndices
-    let insertions = indicesAndItems.map { GridNodeInsertItem(index: $0.0, item: $0.1.item(account: account, interaction: interaction), previousIndex: $0.2) }
-    let updates = updateIndices.map { GridNodeUpdateItem(index: $0.0, previousIndex: $0.2, item: $0.1.item(account: account, interaction: interaction)) }
+    let insertions = indicesAndItems.map { GridNodeInsertItem(index: $0.0, item: $0.1.item(account: context.account, interaction: interaction), previousIndex: $0.2) }
+    let updates = updateIndices.map { GridNodeUpdateItem(index: $0.0, previousIndex: $0.2, item: $0.1.item(account: context.account, interaction: interaction)) }
     
     return ThemeGridEntryTransition(deletions: deletions, insertions: insertions, updates: updates, updateFirstIndexInSectionOffset: nil, stationaryItems: stationaryItems, scrollToItem: scrollToItem)
 }
@@ -84,7 +84,7 @@ private final class ChatWallpaperView : View {
 }
 
 class ChatWallpaperModalController: ModalViewController {
-    private let account: Account
+    private let context: AccountContext
     
 
     override func viewClass() -> AnyClass {
@@ -102,17 +102,15 @@ class ChatWallpaperModalController: ModalViewController {
     private var queuedTransitions: [ThemeGridEntryTransition] = []
     private var disposable: Disposable?
     
-    init(account: Account) {
-        self.account = account
+    init(_ context: AccountContext) {
+        self.context = context
 
         super.init(frame: NSMakeRect(0, 0, 380, 400))
     }
     
     override var modalInteractions: ModalInteractions? {
-        let account = self.account
-        let interactions = ModalInteractions(acceptTitle: L10n.modalCancel, accept: { [weak self] in
-            self?.close()
-        }, cancelTitle: L10n.appearanceCustomBackground, cancel: {
+        let context = self.context
+        let interactions = ModalInteractions(acceptTitle: L10n.chatWPSelectFromFile, accept: {
             filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
                 if let path = paths?.first {
                     let size = fs(path)
@@ -129,21 +127,23 @@ class ChatWallpaperModalController: ModalViewController {
                             CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
                             if CGImageDestinationFinalize(colorDestination) {
                                 let thumdResource = LocalFileMediaResource(fileId: arc4random64())
-                                account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                                representations.append(TelegramMediaImageRepresentation(dimensions: image.backingSize.aspectFitted(NSMakeSize(90, 90)), resource: thumdResource))
+                                context.account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
+                                representations.append(TelegramMediaImageRepresentation(dimensions: image.size.aspectFitted(NSMakeSize(90, 90)), resource: thumdResource))
                             }
                         }
                         
                         let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                        representations.append(TelegramMediaImageRepresentation(dimensions: image.backingSize, resource: resource))
+                        representations.append(TelegramMediaImageRepresentation(dimensions: image.size, resource: resource))
                         
-                        showModal(with: WallpaperPreviewController(account: account, wallpaper: .image(representations, blurred: false), source: .none), for: mainWindow)
+                        showModal(with: WallpaperPreviewController(context, wallpaper: .image(representations, settings: WallpaperSettings()), source: .none), for: mainWindow)
                         
                     } else {
                         alert(for: mainWindow, header: appName, info: L10n.appearanceCustomBackgroundFileError)
                     }
                 }
             })
+        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
+            self?.close()
         }, drawBorder: true, height: 50, alignCancelLeft: true)
        
         return interactions
@@ -152,9 +152,8 @@ class ChatWallpaperModalController: ModalViewController {
     override var dynamicSize: Bool {
         return true
     }
-    
-    override var modalHeader: String? {
-        return L10n.chatWPBackgroundTitle
+    public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: nil, center: ModalHeaderData(title: L10n.chatWPBackgroundTitle), right: nil)
     }
     
     override func measure(size: NSSize) {
@@ -167,28 +166,8 @@ class ChatWallpaperModalController: ModalViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        modal?.interactions?.updateDone { button in
-            button.set(color: theme.colors.redUI, for: .Normal)
-        }
-        modal?.interactions?.updateCancel { button in
-            button.set(color: theme.colors.blueUI, for: .Normal)
-        }
-        
     }
     
-    /*
-     //                if let representation = largestImageRepresentation(representations) {
-     //                    _ = showModalProgress(signal: fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.wallpaper(resource: representation.resource), reportResultStatus: true) |> `catch` { _ in return .complete() } |> mapToSignal { source in
-     //                        return moveWallpaperToCache(postbox: account.postbox, representation.resource)
-     //                    } |> mapToSignal { _ in
-     //                        return updateThemeInteractivetly(postbox: account.postbox, f: { settings in
-     //                            return settings.withUpdatedWallpaper(wallpaper)
-     //                        })
-     //                    } |> deliverOnMainQueue, for: mainWindow).start(next: { _ in
-     //                        close()
-     //                    })
-     //                }
- */
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -196,7 +175,7 @@ class ChatWallpaperModalController: ModalViewController {
     
        containerLayoutUpdated()
         
-        let account = self.account
+        let context = self.context
         let previousEntries = Atomic<[ThemeGridControllerEntry]?>(value: nil)
 
         let close = { [weak self] in
@@ -212,23 +191,23 @@ class ChatWallpaperModalController: ModalViewController {
         
         let interaction = ThemeGridControllerInteraction(openWallpaper: { wallpaper, telegramWallpaper in
             switch wallpaper {
-            case .image, .file:
-                showModal(with: WallpaperPreviewController(account: account, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: mainWindow)
+            case .image, .file, .color:
+                showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: mainWindow)
             default:
-                _ = updateThemeInteractivetly(postbox: account.postbox, f: { settings in
-                    return settings.withUpdatedWallpaper(wallpaper)
+                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    return settings.withUpdatedWallpaper(wallpaper).withUpdatedBubbled(true)
                 }).start()
                 close()
             }
             
         }, deleteWallpaper: { wallpaper, telegramWallpaper in
             if wallpaper.isSemanticallyEqual(to: theme.wallpaper) {
-                _ = updateThemeInteractivetly(postbox: account.postbox, f: {
-                    return $0.withUpdatedWallpaper(.builtin)
+                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
+                    return $0.withUpdatedWallpaper(.builtin).withUpdatedBubbled(true)
                 }).start()
             }
             
-            _ = deleteWallpaper(account: account, wallpaper: telegramWallpaper).start()
+            _ = deleteWallpaper(account: context.account, wallpaper: telegramWallpaper).start()
             
             updateDeleted { current in
                 return current + [wallpaper]
@@ -236,28 +215,64 @@ class ChatWallpaperModalController: ModalViewController {
         })
         
 
-        let transition = combineLatest(queue: prepareQueue, telegramWallpapers(postbox: account.postbox, network: account.network), deleted.get(), appearanceSignal)
+        let transition = combineLatest(queue: prepareQueue, telegramWallpapers(postbox: context.account.postbox, network: context.account.network), deleted.get(), appearanceSignal)
             |> map { wallpapers, deletedWallpapers, appearance -> (ThemeGridEntryTransition, Bool) in
                 var entries: [ThemeGridControllerEntry] = []
                 var index = 0
                 entries.append(ThemeGridControllerEntry(index: index, wallpaper: .none, telegramWallapper: nil, selected: appearance.presentation.wallpaper.isSemanticallyEqual(to: .none)))
                 index += 1
                 
-//                if !wallpapers.contains(where: {$0 == .builtin}) {
-//                    entries.append(ThemeGridControllerEntry(index: index, wallpaper: .builtin(blurred: false), , selected: appearance.presentation.wallpaper.isSemanticallyEqual(to: .builtin(blurred: false))))
-//                    index += 1
-//                }
                 
+                let telegramWallpaper: TelegramWallpaper? = wallpapers.first(where: { wallpaper -> Bool in
+                    let wallpaper: Wallpaper = Wallpaper(wallpaper)
+                    return wallpaper.isSemanticallyEqual(to: theme.wallpaper)
+                })
+                let selected: Wallpaper = theme.wallpaper
+                
+                
+                if let c_wallpaper = theme.c_wallpaper {
+                    switch c_wallpaper {
+                    case .color:
+                        entries.append(ThemeGridControllerEntry(index: index, wallpaper: c_wallpaper, telegramWallapper: nil, selected: theme.wallpaper.isSemanticallyEqual(to: c_wallpaper)))
+                        index += 1
+                    default:
+                        break
+                    }
+                    
+                } else {
+                    let wallpaper: Wallpaper = .color(Int32(bitPattern: theme.colors.blueUI.rgb))
+                    entries.append(ThemeGridControllerEntry(index: index, wallpaper: .color(Int32(bitPattern: theme.colors.blueUI.rgb)), telegramWallapper: nil, selected: theme.wallpaper.isSemanticallyEqual(to: wallpaper)))
+                }
+
+                
+                switch selected {
+                case .none, .color:
+                    break
+                default:
+                    entries.append(ThemeGridControllerEntry(index: index, wallpaper: selected, telegramWallapper: telegramWallpaper, selected: true))
+                    index += 1
+                }
                 
                 for item in wallpapers {
                     let wallpaper = Wallpaper(item)
                     if !deletedWallpapers.contains(where: {$0.isSemanticallyEqual(to: wallpaper)}) {
+                        switch item {
+                        case let .file(_, _, _, _, isPattern, _, _, _, settings):
+                            if isPattern, settings.color == nil {
+                                continue
+                            }
+                        default:
+                            break
+                        }
+                        if selected.isSemanticallyEqual(to: wallpaper) {
+                            continue
+                        }
                         entries.append(ThemeGridControllerEntry(index: index, wallpaper: wallpaper, telegramWallapper: item, selected: appearance.presentation.wallpaper.isSemanticallyEqual(to: wallpaper)))
                         index += 1
                     }
                 }
                 let previous = previousEntries.swap(entries)
-                return (preparedThemeGridEntryTransition(account: account, from: previous ?? [], to: entries, interaction: interaction), previous == nil)
+                return (preparedThemeGridEntryTransition(context: context, from: previous ?? [], to: entries, interaction: interaction), previous == nil)
         }
         
         self.disposable = (transition |> deliverOnMainQueue).start(next: { [weak self] (transition, _) in

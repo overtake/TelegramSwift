@@ -40,7 +40,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         } else {
             venueText = nil
         }
-        super.init(presentation: presentation, media: map, automaticDownload: automaticDownload)
+        super.init(presentation: presentation, media: map, automaticDownload: automaticDownload, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
     }
 }
 
@@ -51,13 +51,13 @@ func ==(lhs:ChatMediaMapLayoutParameters, rhs:ChatMediaMapLayoutParameters) -> B
 class ChatMapRowItem: ChatMediaItem {
     fileprivate var liveText: TextViewLayout?
     fileprivate var updatedText: TextViewLayout?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
-        super.init(initialSize, chatInteraction, account, object, downloadSettings)
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+        super.init(initialSize, chatInteraction, context, object, downloadSettings)
         let map = media as! TelegramMediaMap
       //  let isVenue = map.venue != nil
         let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2, zoom: 15)
         //let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
-        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
+        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!))
         
         if isLiveLocationView {
             liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .bold(.text)), maximumNumberOfLines: 1, truncationType: .end)
@@ -70,7 +70,7 @@ class ChatMapRowItem: ChatMediaItem {
             }
                         
             var time:TimeInterval = Date().timeIntervalSince1970
-            time -= account.context.timeDifference
+            time -= context.timeDifference
             let timeUpdated = Int32(time) - editedDate
                 
             updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
@@ -108,7 +108,7 @@ class ChatMapRowItem: ChatMediaItem {
         if let media = media as? TelegramMediaMap, let message = message {
             if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                 var time:TimeInterval = Date().timeIntervalSince1970
-                time -= account.context.timeDifference
+                time -= context.timeDifference
                 if Int32(time) < message.timestamp + liveBroadcastingTimeout {
                     return true
                 }
@@ -130,7 +130,7 @@ class ChatMapRowItem: ChatMediaItem {
         if let media = media as? TelegramMediaMap {
             if let liveBroadcastingTimeout = media.liveBroadcastingTimeout, let message = message {
                 var time:TimeInterval = Date().timeIntervalSince1970
-                time -= account.context.timeDifference
+                time -= context.timeDifference
                 return 100.0 - (Double(time) - Double(message.timestamp)) / Double(liveBroadcastingTimeout) * 100.0
             }
         }

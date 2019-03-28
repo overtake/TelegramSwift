@@ -31,11 +31,16 @@ enum ForceTouchAction: Int32 {
     case edit
     case reply
     case forward
+    case previewMedia
 }
 
 enum ContextTextTooltip : Int32 {
     case reply
     case edit
+}
+
+enum BotPemissionKey: String {
+    case contact = "PermissionInlineBotContact"
 }
 
 class FastSettings {
@@ -244,6 +249,70 @@ class FastSettings {
         return path
     }
     
+    
+    static func requstPermission(with permission: BotPemissionKey, for peerId: PeerId, success: @escaping()->Void) {
+                
+        let localizedHeader = _NSLocalizedString("Confirm.Header.\(permission.rawValue)")
+        let localizedDesc = _NSLocalizedString("Confirm.Desc.\(permission.rawValue)")
+        confirm(for: mainWindow, header: localizedHeader, information: localizedDesc, successHandler: { _ in
+            success()
+        })
+    }
+    
+    /*
+ 
+     +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {
+     
+     static NSMutableDictionary *denied;
+     
+     static dispatch_once_t onceToken;
+     dispatch_once(&onceToken, ^{
+     denied =  [NSMutableDictionary dictionary];
+     });
+     
+     
+     
+     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+     
+     NSString *key = [NSString stringWithFormat:@"%@:%d",permissionKey,peer_id];
+     
+     BOOL access = [defaults boolForKey:key];
+     
+     
+     if(access) {
+     if(handler)
+     handler(access);
+     } else {
+     
+     if([denied[key] boolValue]) {
+     if(handler)
+     handler(NO);
+     return;
+     }
+     
+     NSString *localizeHeaderKey = [NSString stringWithFormat:@"Confirm.Header.%@",permissionKey];
+     NSString *localizeDescKey = [NSString stringWithFormat:@"Confirm.Desc.%@",permissionKey];
+     confirm(NSLocalizedString(localizeHeaderKey, nil), NSLocalizedString(localizeDescKey, nil), ^{
+     if(handler)
+     handler(YES);
+     
+     [defaults setBool:YES forKey:key];
+     [defaults synchronize];
+     }, ^{
+     if(handler)
+     handler(NO);
+     
+     [denied setValue:@(YES) forKey:key];
+     
+     [defaults setBool:NO forKey:key];
+     [defaults synchronize];
+     });
+     }
+     
+     }
+
+ */
+    
 }
 
 fileprivate let TelegramFileMediaBoxPath:String = "TelegramFileMediaBoxPathAttributeKey"
@@ -274,25 +343,65 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
 }
 
 func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Void, NoError>  {
-    return downloadFilePath(file, postbox) |> deliverOn(resourcesQueue) |> map { (boxPath, adopted) in
-        var adopted = adopted
-        var i:Int = 1
-        let deletedPathExt = adopted.nsstring.deletingPathExtension
-        while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
-            let ext = adopted.nsstring.pathExtension
-            let box = FileManager.xattrStringValue(forKey: TelegramFileMediaBoxPath, at: URL(fileURLWithPath: adopted))
-            if box == boxPath {
-                return
+    
+    let path = downloadFilePath(file, postbox)
+    
+    return combineLatest(queue: resourcesQueue, path, downloadedFilePaths(postbox)) |> map { (expanded, paths) in
+        let (boxPath, adopted) = expanded
+        if let id = file.id {
+            do {
+                if let path = paths.path(for: id) {
+                    let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
+                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                        return
+                    }
+                    
+                }
+                
+                var adopted = adopted
+                var i:Int = 1
+                let deletedPathExt = adopted.nsstring.deletingPathExtension
+                while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+                    let ext = adopted.nsstring.pathExtension
+                    adopted = "\(deletedPathExt) (\(i)).\(ext)"
+                    i += 1
+                }
+                
+                try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+                
+                
+                let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
+                
+                let fs = fileSize(boxPath)
+                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
+
+                _ = updateDownloadedFilePaths(postbox, {
+                    $0.withAddedPath(path)
+                }).start()
+                
             }
-            
-            adopted = "\(deletedPathExt) (\(i)).\(ext)"
-            i += 1
         }
-        
-        try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-        FileManager.setXAttrStringValue(boxPath, forKey: TelegramFileMediaBoxPath, at: URL(fileURLWithPath: adopted))
     }
     
+//    return downloadFilePath(file, postbox) |> deliverOn(resourcesQueue) |> map { (boxPath, adopted) in
+//        var adopted = adopted
+//        var i:Int = 1
+//        let deletedPathExt = adopted.nsstring.deletingPathExtension
+//        while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+//            let ext = adopted.nsstring.pathExtension
+//            let box = FileManager.xattrStringValue(forKey: TelegramFileMediaBoxPath, at: URL(fileURLWithPath: adopted))
+//            if box == boxPath {
+//                return
+//            }
+//
+//            adopted = "\(deletedPathExt) (\(i)).\(ext)"
+//            i += 1
+//        }
+//
+//        try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+//        FileManager.setXAttrStringValue(boxPath, forKey: TelegramFileMediaBoxPath, at: URL(fileURLWithPath: adopted))
+//    }
+//
 }
 
 func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String), NoError> {
@@ -321,27 +430,45 @@ func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(
 func showInFinder(_ file:TelegramMediaFile, account:Account)  {
     let path = downloadFilePath(file, account.postbox) |> deliverOnMainQueue
     
-    _ = path.start(next: { (boxPath, adopted) in
-        do {
-            var adopted = adopted
-            
-            var i:Int = 1
-            let deletedPathExt = adopted.nsstring.deletingPathExtension
-            while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
-                let ext = adopted.nsstring.pathExtension
-                let box = FileManager.xattrStringValue(forKey: TelegramFileMediaBoxPath, at: URL(fileURLWithPath: adopted))
-                if box == boxPath {
-                    NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: adopted)])
-                    return
+    _ = combineLatest(path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
+        
+        let (boxPath, adopted) = expanded
+        if let id = file.id {
+            do {
+                
+                if let path = paths.path(for: id) {
+                    let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
+                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path.downloadedPath)])
+                        return
+                    }
+                
                 }
                 
-                adopted = "\(deletedPathExt) (\(i)).\(ext)"
-                i += 1
+                var adopted = adopted
+                var i:Int = 1
+                let deletedPathExt = adopted.nsstring.deletingPathExtension
+                while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+                    let ext = adopted.nsstring.pathExtension
+                    adopted = "\(deletedPathExt) (\(i)).\(ext)"
+                    i += 1
+                }
+                
+                try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+
+                
+                let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
+                
+                let fs = fileSize(boxPath)
+                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
+                
+                
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: adopted)])
+                _ = updateDownloadedFilePaths(account.postbox, {
+                    $0.withAddedPath(path)
+                }).start()
+                
             }
-            
-            try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-            FileManager.setXAttrStringValue(boxPath, forKey: TelegramFileMediaBoxPath, at: URL(fileURLWithPath: adopted))
-            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: adopted)])
         }
     })
 }
@@ -357,3 +484,5 @@ func putFileToTemp(from:String, named:String) -> Signal<String?, NoError> {
         return EmptyDisposable
     }
 }
+
+

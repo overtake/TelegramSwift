@@ -22,7 +22,8 @@ final class LoginAuthViewArguments {
     let checkPassword:(String)->Void
     let requestPasswordRecovery: (@escaping(PasswordRecoveryOption)-> Void)->Void
     let resetAccount: ()->Void
-    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(PasswordRecoveryOption)-> Void)->Void, resetAccount: @escaping()->Void) {
+    let signUp:(String, String, URL?) -> Void
+    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(PasswordRecoveryOption)-> Void)->Void, resetAccount: @escaping()->Void, signUp:@escaping(String, String, URL?) -> Void) {
         self.sendCode = sendCode
         self.resendCode = resendCode
         self.editPhone = editPhone
@@ -30,47 +31,165 @@ final class LoginAuthViewArguments {
         self.checkPassword = checkPassword
         self.requestPasswordRecovery = requestPasswordRecovery
         self.resetAccount = resetAccount
+        self.signUp = signUp
     }
 }
 
-private class SignupView : View {
-    let textView:TextView = TextView()
-    let button:TitleButton = TitleButton()
+private class SignupView : View, NSTextFieldDelegate {
+    
+    let firstName:NSTextField = NSTextField()
+    let lastName:NSTextField = NSTextField()
+    
+    private var photoUrl: URL?
+    
+    private let firstNameSeparator: View = View()
+    private let lastNameSeparator: View = View()
+
+    private let photoView = ImageView()
+    private let descView: TextView = TextView()
+    private let addPhotoView: TextView = TextView()
     var arguments: LoginAuthViewArguments?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(textView)
-        addSubview(button)
+        addSubview(firstName)
+        addSubview(lastName)
+        addSubview(firstNameSeparator)
+        addSubview(lastNameSeparator)
+        addSubview(addPhotoView)
+        addSubview(photoView)
+        addSubview(descView)
+        descView.userInteractionEnabled = false
+        descView.isSelectable = false
+        addPhotoView.userInteractionEnabled = false
+        addPhotoView.isSelectable = false
+
         
-        button.set(font: .medium(.title), for: .Normal)
-        button.set(text: L10n.alertOK, for: .Normal)
+        firstName.isBordered = false
+        firstName.usesSingleLineMode = true
+        firstName.isBezeled = false
+        firstName.focusRingType = .none
+        firstName.drawsBackground = false
         
-        _ = button.sizeToFit()
+        firstName.delegate = self
+        lastName.delegate = self
         
-        button.set(handler: { [weak self] _ in
-            self?.arguments?.editPhone()
-        }, for: .Click)
         
+        lastName.isBordered = false
+        lastName.usesSingleLineMode = true
+        lastName.isBezeled = false
+        lastName.focusRingType = .none
+        lastName.drawsBackground = false
+        
+        firstName.cell?.wraps = false
+        firstName.cell?.isScrollable = true
+        
+        firstName.nextKeyView = lastName
+        firstName.nextResponder = lastName.textView
+       // lastName.nextKeyView = firstName
+        
+        lastName.cell?.wraps = false
+        lastName.cell?.isScrollable = true
+        
+        lastName.font = .medium(14)
+        firstName.font = .medium(14)
+        
+        photoView.layer?.cornerRadius = 50
         updateLocalizationAndTheme()
+    }
+    
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        
+        if commandSelector == #selector(insertNewline(_:)) {
+            trySignUp()
+            return true
+        }
+        
+        return false
+    }
+    
+    func trySignUp() {
+        if firstName.stringValue.isEmpty {
+            firstName.shake()
+            
+            if firstName.textView != window?.firstResponder {
+                window?.makeFirstResponder(firstName.textView)
+            }
+        } else {
+            arguments?.signUp(firstName.stringValue, lastName.stringValue, self.photoUrl)
+        }
     }
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        button.set(color: theme.colors.blueUI, for: .Normal)
-        let layout = TextViewLayout(.initialize(string: L10n.loginPhoneNumberNotRegistred, color: theme.colors.text, font: .normal(.title)), alignment: .center)
-        layout.measure(width: frame.width - 20)
-        textView.update(layout)
-        textView.backgroundColor = theme.colors.background
         
+        firstNameSeparator.backgroundColor = theme.colors.border
+        lastNameSeparator.backgroundColor = theme.colors.border
+        
+        lastName.placeholderAttributedString = .initialize(string: L10n.loginRegisterLastNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
+        firstName.placeholderAttributedString = .initialize(string: L10n.loginRegisterFirstNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
+
+        lastName.textColor = theme.colors.text
+        firstName.textColor = theme.colors.text
+
+        let descLayout = TextViewLayout(.initialize(string: L10n.loginRegisterDesc, color: theme.colors.grayText, font: .normal(.text)))
+        descLayout.measure(width: frame.width)
+        descView.update(descLayout)
+        
+        let addPhotoLayout = TextViewLayout(.initialize(string: L10n.loginRegisterAddPhotoPlaceholder, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        addPhotoLayout.measure(width: 90)
+        addPhotoView.update(addPhotoLayout)
+        
+        photoView.layer?.borderColor = theme.colors.border.cgColor
+        photoView.layer?.borderWidth = 1.0
+
+    
         needsLayout = true
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        if photoView._mouseInside() {
+            
+            let updatePhoto:(URL) -> Void = { [weak self] url in
+                self?.photoView.image = NSImage.init(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                self?.photoUrl = url
+            }
+            
+            filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                    _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+                        let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                        showModal(with: controller, for: mainWindow)
+                        _ = (controller.result |> deliverOnMainQueue).start(next: { url, _ in
+                            updatePhoto(url)
+                            //arguments.updatePhoto(url.path)
+                        })
+                        
+                        controller.onClose = {
+                            removeFile(at: path)
+                        }
+                    })
+                }
+            })
+        } else {
+            super.mouseDown(with: event)
+        }
     }
     
     override func layout() {
         super.layout()
-        textView.layout?.measure(width: frame.width - 20)
-        textView.update(textView.layout)
-        textView.centerX(y: 30)
-        button.centerX(y: textView.frame.maxY + 35)
+        
+        photoView.frame = NSMakeRect(0, 0, 100, 100)
+        
+        addPhotoView.setFrameOrigin(NSMakePoint( floorToScreenPixels(scaleFactor: backingScaleFactor, (photoView.frame.width - addPhotoView.frame.width) / 2), floorToScreenPixels(scaleFactor: backingScaleFactor, (photoView.frame.height - addPhotoView.frame.height) / 2)))
+        
+        firstName.frame = NSMakeRect(photoView.frame.maxX + 10, 20, frame.width - (photoView.frame.maxX + 10), 20)
+        lastName.frame = NSMakeRect(photoView.frame.maxX + 10, 70, frame.width - (photoView.frame.maxX + 10), 20)
+
+        
+        firstNameSeparator.frame = NSMakeRect(photoView.frame.maxX + 10, 50, frame.width, .borderSize)
+        lastNameSeparator.frame = NSMakeRect(photoView.frame.maxX + 10, 100, frame.width, .borderSize)
+
+        descView.centerX(y: photoView.frame.maxY + 50)
     }
     
     required init?(coder: NSCoder) {
@@ -100,7 +219,7 @@ private class InputPasswordContainerView : View {
         input.action = #selector(action)
         input.target = self
         
-        addSubview(passwordLabel)
+      //  addSubview(passwordLabel)
     }
     
     override func updateLocalizationAndTheme() {
@@ -113,10 +232,10 @@ private class InputPasswordContainerView : View {
         input.textColor = theme.colors.text
         input.sizeToFit()
         
-        passwordLabel.attributedString = .initialize(string: L10n.loginYourPasswordLabel, color: theme.colors.grayText, font: .normal(.title))
-        passwordLabel.sizeToFit()
         
         needsDisplay = true
+        
+        
     }
     
     @objc func action() {
@@ -129,7 +248,7 @@ private class InputPasswordContainerView : View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(passwordLabel.frame.maxX + 20, frame.height - .borderSize, frame.width, .borderSize))
+        ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))
     }
     
     required init?(coder: NSCoder) {
@@ -190,8 +309,8 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         
         
         
-        addSubview(yourPhoneLabel)
-        addSubview(codeLabel)
+       // addSubview(yourPhoneLabel)
+     //   addSubview(codeLabel)
         addSubview(editControl)
         
       
@@ -247,7 +366,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         forgotPasswordView.set(handler: { [weak self]  _ in
             self?.arguments?.requestPasswordRecovery({ [weak self] option in
                 switch option {
-                case let .email(pattern):
+                case .email:
                     self?.resetAccountView.isHidden = false
                 case .none:
                     alert(for: mainWindow, info: L10n.loginRecoveryMailFailed)
@@ -309,7 +428,6 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    let defaultInset:CGFloat = 30
 
     
     fileprivate override func layout() {
@@ -318,29 +436,23 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         numberText.sizeToFit()
         
         
-        let maxInset = max(yourPhoneLabel.frame.width, codeLabel.frame.width)
-        let contentInset = maxInset + 20 + 5 + defaultInset
         
-        yourPhoneLabel.setFrameOrigin(maxInset - yourPhoneLabel.frame.width + defaultInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
-        codeLabel.setFrameOrigin(maxInset - codeLabel.frame.width + defaultInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeLabel.frame.height/2))
         
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        codeText.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
         
-        numberText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
+        numberText.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
         editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
         
         
         textView.centerX(y: codeText.frame.maxY + 50 + (passwordEnabled ? inputPassword.frame.height : 0))
         delayView.centerX(y: textView.frame.maxY + 20)
-        errorLabel.centerX(y: codeText.frame.maxY + 30 + (passwordEnabled ? inputPassword.frame.height : 0))
+        errorLabel.centerX(y: codeText.frame.maxY + 25 + (passwordEnabled ? inputPassword.frame.height : 0))
         
         forgotPasswordView.centerX(y: textView.frame.maxY + 10)
         resetAccountView.centerX(y: forgotPasswordView.frame.maxY + 5)
         
-        inputPassword.passwordLabel.centerY()
-        inputPassword.passwordLabel.setFrameOrigin(contentInset - inputPassword.passwordLabel.frame.width - 25, inputPassword.passwordLabel.frame.minY)
         inputPassword.input.setFrameSize(inputPassword.frame.width - inputPassword.passwordLabel.frame.minX, inputPassword.input.frame.height)
-        inputPassword.input.centerY(x:inputPassword.passwordLabel.frame.maxX + 25)
+        inputPassword.input.centerY()
 
         inputPassword.setFrameOrigin(0, 101)
     }
@@ -406,10 +518,10 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 if timeout > 0 {
                     switch nextType {
                     case .call:
-                        nextText = tr(L10n.loginWillCall(minutes, secValue))
+                        nextText = L10n.loginWillCall(minutes, secValue)
                         break
                     case .sms:
-                        nextText = tr(L10n.loginWillSendSms(minutes, secValue))
+                        nextText = L10n.loginWillSendSms(minutes, secValue)
                         break
                     default:
                         break
@@ -417,8 +529,8 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 } else {
                     switch nextType {
                     case .call:
-                        basic = tr(L10n.loginPhoneCalledCode)
-                        nextText = tr(L10n.loginPhoneDialed)
+                        basic = L10n.loginPhoneCalledCode
+                        nextText = L10n.loginPhoneDialed
                         break
                     default:
                         break
@@ -464,7 +576,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
 
     func update(number: String, type: SentAuthorizationCodeType, hash: String, timeout: Int32?, nextType: AuthorizationCodeNextType?, animated: Bool) {
         self.passwordEnabled = false
-        self.numberText.stringValue = number
+        self.numberText.stringValue = formatPhoneNumber(number)
         self.codeText.stringValue = ""
         self.codeText.isEditable = true
         self.codeText.isSelectable = true
@@ -570,10 +682,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         super.draw(layer, in: ctx)
         
         
-        let maxInset = max(yourPhoneLabel.frame.width, codeLabel.frame.width) + 20
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(defaultInset + maxInset, 50, frame.width - maxInset, .borderSize))
-        ctx.fill(NSMakeRect(defaultInset + maxInset, 100, frame.width - maxInset, .borderSize))
+        ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
+        ctx.fill(NSMakeRect(0, 100, frame.width, .borderSize))
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -614,8 +725,8 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         
        
         
-        addSubview(countryLabel)
-        addSubview(numberLabel)
+       // addSubview(countryLabel)
+       // addSubview(numberLabel)
         
         countrySelector.set(handler: { [weak self] _ in
             self?.showCountrySelector()
@@ -711,26 +822,26 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         codeText.sizeToFit()
         numberText.sizeToFit()
         
-        let maxInset = max(countryLabel.frame.width,numberLabel.frame.width)
-        let contentInset = maxInset + 20 + 5
-        countrySelector.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countrySelector.frame.height/2))
+      //  let maxInset: CGFloat = max(countryLabel.frame.width,numberLabel.frame.width)
+      //  let contentInset = maxInset + 20 + 5
+        countrySelector.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countrySelector.frame.height/2))
         
-        countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countryLabel.frame.height/2))
-        numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - numberLabel.frame.height/2))
+     //  countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countryLabel.frame.height/2))
+     //   numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - numberLabel.frame.height/2))
         
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
-        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
-        errorLabel.centerX(y: 120)
+        codeText.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        numberText.setFrameOrigin(separatorInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        errorLabel.centerX(y: 110)
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
         
-        let maxInset = max(countryLabel.frame.width,numberLabel.frame.width) + 20
+       // let maxInset = max(countryLabel.frame.width,numberLabel.frame.width) + 20
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(maxInset, 50, frame.width - maxInset, .borderSize))
-        ctx.fill(NSMakeRect(maxInset, 100, frame.width - maxInset, .borderSize))
+        ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
+        ctx.fill(NSMakeRect(0, 100, frame.width, .borderSize))
         //  ctx.fill(NSMakeRect(maxInset + separatorInset, 50, .borderSize, 50))
     }
     
@@ -763,7 +874,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
                 
                 
                 if code.length > 4 {
-                    let list = Array(code.characters).map {String($0)}
+                    let list = code.map {String($0)}
                     let reduced = list.reduce([], { current, value -> [String] in
                         var current = current
                         current.append((current.last ?? "") + value)
@@ -980,7 +1091,7 @@ private final class AwaitingResetConfirmationView : View {
     override func layout() {
         super.layout()
         textView.centerX()
-        reset.setFrameOrigin(10, textView.frame.maxY + 20)
+        reset.setFrameOrigin(0, textView.frame.maxY + 20)
     }
     
     required init?(coder: NSCoder) {
@@ -1009,6 +1120,9 @@ class LoginAuthInfoView : View {
     
     var phoneNumber:String {
         return phoneNumberContainer.codeText.stringValue + phoneNumberContainer.numberText.stringValue
+    }
+    func trySignUp() {
+        signupView.trySignUp()
     }
    
     var code:String {
@@ -1069,6 +1183,11 @@ class LoginAuthInfoView : View {
                 return codeInputContainer.inputPassword.input
             }
             return window?.firstResponder
+        case .signUp:
+            if window?.firstResponder != signupView.firstName.textView || window?.firstResponder != signupView.lastName.textView {
+                return signupView.firstName
+            }
+            return window?.firstResponder
         default:
             return nil
         }
@@ -1108,7 +1227,7 @@ class LoginAuthInfoView : View {
             resetAccountContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
 
-        case let .confirmationCodeEntry(number, type, hash, timeout, nextType, terms):
+        case let .confirmationCodeEntry(number, type, hash, timeout, nextType, _, _):
             codeInputContainer.updateLocalizationAndTheme()
             codeInputContainer.isHidden = false
             codeInputContainer.undo = []
@@ -1126,7 +1245,7 @@ class LoginAuthInfoView : View {
                     self?.resetAccountContainer.isHidden = true
                 }
             })
-        case let .passwordEntry(hint, number, code, suggestReset):
+        case let .passwordEntry(hint, number, code, _, _):
             codeInputContainer.updateLocalizationAndTheme()
             codeInputContainer.isHidden = false
             codeInputContainer.showPasswordInput(hint, number ?? "", code ?? "", animated: animated)
@@ -1156,10 +1275,10 @@ class LoginAuthInfoView : View {
                     self?.resetAccountContainer.isHidden = true
                 }
             })
-        case .passwordRecovery(let hint, let number, let code, let emailPattern):
+        case .passwordRecovery:
             //TODO
             break
-        case .awaitingAccountReset(let protectedUntil, let number):
+        case .awaitingAccountReset(let protectedUntil, let number, _):
             resetAccountContainer.isHidden = false
             
             resetAccountContainer.update(with: number ?? "", until: protectedUntil, reset: { [weak self] in
@@ -1186,6 +1305,11 @@ class LoginAuthInfoView : View {
         codeInputContainer.setFrameSize(newSize)
         signupView.setFrameSize(newSize)
         resetAccountContainer.setFrameSize(newSize)
+        
+        phoneNumberContainer.centerX()
+        codeInputContainer.centerX()
+        signupView.centerX()
+        resetAccountContainer.centerX()
     }
     
 

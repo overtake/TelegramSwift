@@ -28,7 +28,7 @@ extension MessageHistoryHole {
 
 
 extension NSMutableAttributedString {
-    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
+    func detectLinks(type:ParsingType, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
         let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
@@ -40,8 +40,8 @@ extension NSMutableAttributedString {
                 
                 if range.location != NSNotFound {
                     let sublink = (self.string as NSString).substring(with: range)
-                    if let account = account {
-                        self.addAttribute(NSAttributedString.Key.link, value: inApp(for: sublink as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy), range: range)
+                    if let context = context {
+                        self.addAttribute(NSAttributedString.Key.link, value: inApp(for: sublink as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy), range: range)
                     } else {
                         self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
                     }
@@ -95,8 +95,11 @@ public extension String {
         str = str.replacingOccurrences(of: "9⃣", with: "9️⃣")
         str = str.replacingOccurrences(of: "0⃣", with: "0️⃣")
         str = str.replacingOccurrences(of: "❤", with: "❤️")
+        str = str.replacingOccurrences(of: "♥", with: "❤️")
         str = str.replacingOccurrences(of: "☁", with: "☁️")
         str = str.replacingOccurrences(of: "✍", with: "✍️")
+        str = str.replacingOccurrences(of: "⁉", with: "⁉️")
+        str = str.replacingOccurrences(of: "❣", with: "❣️")
         return str
     }
     

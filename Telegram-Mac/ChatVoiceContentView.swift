@@ -43,16 +43,16 @@ class ChatVoiceContentView: ChatAudioContentView {
     }
     
     override func open() {
-        if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let account = account, let parent = parent  {
+        if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let context = context, let parent = parent  {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: parent) {
                 controller.playOrPause()
             } else {
                 
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, name: tr(L10n.audioControllerVoiceMessage), performer: parent.author?.displayTitle, id: parent.chatStableId), streamable: false)
+                    controller = APSingleResourceController(account: context.account, wrapper: APSingleWrapper(resource: parameters.resource, name: tr(L10n.audioControllerVoiceMessage), performer: parent.author?.displayTitle, id: parent.chatStableId), streamable: false)
                 } else {
-                    controller = APChatVoiceController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
+                    controller = APChatVoiceController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
                 parameters.showPlayer(controller)
                 controller.start()
@@ -161,8 +161,8 @@ class ChatVoiceContentView: ChatAudioContentView {
         acceptDragging = false
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
         
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>
@@ -170,7 +170,7 @@ class ChatVoiceContentView: ChatAudioContentView {
         let file:TelegramMediaFile = media as! TelegramMediaFile
  
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id))
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus {
                         return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -179,7 +179,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = chatMessageFileStatus(account: account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
+            updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in

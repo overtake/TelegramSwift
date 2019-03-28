@@ -225,7 +225,9 @@ public class UndoNavigationHeader : NavigationHeader {
                     let contentInset = navigation.controller.bar.height > 0 ? height : 0
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     CATransaction.begin()
-                    navigation.navigationBar.change(pos: NSMakePoint(0, height), animated: animated)
+                    if navigation.navigationBar.layer?.animation(forKey: "position") == nil {
+                        navigation.navigationBar.change(pos: NSMakePoint(navigation.navigationBar.frame.minX, height), animated: animated)
+                    }
                     
                     self.simpleHeader?.view.change(pos: NSMakePoint(0, height + navigation.controller.bar.height), animated: animated)
                     let completion = navigation.controller.navigationUndoHeaderDidNoticeAnimation(height, 0, animated)
@@ -321,7 +323,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     public private(set) var modalAction:NavigationModalAction?
     let shadowView:NavigationShadowView = NavigationShadowView(frame: NSMakeRect(0, 0, 20, 0))
     var stack:[ViewController] = [ViewController]()
-    var lock:Bool = false
+    var lock:Bool = false {
+        didSet {
+            var bp:Int = 0
+            bp += 1
+        }
+    }
     
     public var empty:ViewController {
         didSet {
@@ -437,9 +444,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         super.viewDidLoad()
         
         containerView.frame = bounds
-        self.view.autoresizesSubviews = true
-        containerView.autoresizesSubviews = true
-        containerView.autoresizingMask = [.width, .height]
+        //self.view.autoresizesSubviews = true
+        //containerView.autoresizesSubviews = true
+        //containerView.autoresizingMask = [.width, .height]
         self.view.addSubview(containerView, positioned: .below, relativeTo: self.view.subviews.first)
         controller._frameRect = bounds
         controller.viewWillAppear(false)
@@ -458,6 +465,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             self.controller.viewDidAppear(false)
         }
 
+    }
+    
+    open override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        containerView.frame = bounds
+        navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
     }
     
     public func cancelCurrentController() {
@@ -558,6 +571,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             controller.viewWillAppear(false)
             controller.viewDidAppear(false)
             _ = controller.becomeFirstResponder()
+            lock = false
             return;
         }
         
@@ -577,9 +591,13 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
         
 
-        let animatePosBar: Bool = controller.bar.height != self.navigationBar.frame.height && style != .none
-        self.navigationBar.frame = NSMakeRect(0, barInset, containerView.frame.width, animatePosBar && controller.bar.height == 0 ? self.navigationBar.frame.height : controller.bar.height)
+        let animatePosBar: Bool = controller.bar.height != previous.bar.height && style != .none
+        self.navigationBar.frame = NSMakeRect(0, barInset, containerView.frame.width, animatePosBar && controller.bar.height == 0 ? previous.bar.height : controller.bar.height)
         
+        if !animatePosBar {
+            var bp: Int = 0
+            bp += 1
+        }
         
         
         if let header = header, header.needShown {
@@ -620,43 +638,46 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         var sto: CGFloat = 0
         
-        
-        
         switch style {
         case .push:
-            nfrom = popInteractiveInset != nil ? popInteractiveInset! : containerView.frame.width
+            nfrom = popInteractiveInset != nil ? popInteractiveInset! : frame.width
             nto = 0
             pfrom = previous.view.frame.minX
             pto = -round(NSWidth(self.frame)/3.0)
             containerView.addSubview(controller.view, positioned: .above, relativeTo: previous.view)
             
             sto = -shadowView.frame.width
-            addShadowView(.right, updateOrigin: shadowView.superview == nil)
+            if controller.isOpaque {
+                addShadowView(.right, updateOrigin: shadowView.superview == nil)
+            }
             
             if animatePosBar {
                 navigationBar.layer?.animatePosition(from: NSMakePoint(nfrom, 0), to: NSMakePoint(nto, 0), duration: previous.animationStyle.duration, timingFunction: .spring)
             }
             
         case .pop:
-            nfrom = popInteractiveInset != nil ? popInteractiveInset! : -round(containerView.frame.width/3.0)
+            nfrom = popInteractiveInset != nil ? popInteractiveInset! : -round(frame.width/3.0)
             nto = 0
             pfrom = previous.view.frame.minX
-            pto = containerView.frame.width
+            pto = frame.width
             previous.view.setFrameOrigin(NSMakePoint(pto, previous.frame.minY))
             containerView.addSubview(controller.view, positioned: .below, relativeTo: previous.view)
             
             
             if animatePosBar {
-                navigationBar.layer?.animatePosition(from: NSMakePoint(pfrom, 0), to: NSMakePoint(pto, 0), duration: previous.animationStyle.duration, timingFunction: .spring, removeOnCompletion: false, completion: { [weak controller, weak navigationBar] completed in
-                    if let controller = controller {
-                        navigationBar?.frame = NSMakeRect(0, 0, controller.frame.width, controller.bar.height)
+                navigationBar.layer?.animatePosition(from: NSMakePoint(pfrom, barInset), to: NSMakePoint(pto, barInset), duration: previous.animationStyle.duration, timingFunction: .spring, removeOnCompletion: false, completion: { [weak controller, weak navigationBar] completed in
+                    if let controller = controller, completed {
+                        navigationBar?.frame = NSMakeRect(0, barInset, controller.frame.width, controller.bar.height)
                         navigationBar?.layer?.removeAllAnimations()
                     }
+
                 })
             }
             
-            sto = containerView.frame.width
-            addShadowView(.left, updateOrigin: shadowView.superview == nil)
+            sto = frame.width - shadowView.frame.width
+            if controller.isOpaque {
+                addShadowView(.left, updateOrigin: shadowView.superview == nil)
+            }
         case .none:
             previous.viewWillDisappear(false);
             previous.view.removeFromSuperview()
@@ -670,7 +691,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             lock = false
             
             navigationBar.removeFromSuperview()
-            navigationBar.frame = NSMakeRect(0, 0, controller.frame.width, controller.bar.height)
+            navigationBar.frame = NSMakeRect(0, barInset, controller.frame.width, controller.bar.height)
             containerView.addSubview(navigationBar)
             
             controller.view.restoreHierarchyDynamicContent()
@@ -724,24 +745,23 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
 
         
-         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak self, weak prevBackgroundView] completed in
+         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak prevBackgroundView] completed in
             if completed {
                 previous.view.removeFromSuperview()
                 previous.viewDidDisappear(true);
                 prevBackgroundView?.removeFromSuperview()
-            }
-            controller.view.restoreHierarchyDynamicContent()
-        
-            self?.lock = false
+            }        
         });
         
 
-        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak nextBackgroundView] completed in
+        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak nextBackgroundView, weak self] completed in
             if completed {
                 controller.viewDidAppear(true);
                 _ = controller.becomeFirstResponder()
                 nextBackgroundView?.removeFromSuperview()
             }
+            self?.lock = false
+            controller.view.restoreHierarchyDynamicContent()
 
         });
         
@@ -766,6 +786,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     open override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         navigationBar.updateLocalizationAndTheme()
+        callHeader?.view.updateLocalizationAndTheme()
+        header?.view.updateLocalizationAndTheme()
+        undoHeader?.view.updateLocalizationAndTheme()
     }
     
 

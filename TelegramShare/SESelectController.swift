@@ -12,30 +12,87 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
 
-
-extension Peer {
+class SelectAccountView: Control {
     
-    var canSendMessage: Bool {
-        if let channel = self as? TelegramChannel {
-            if case .broadcast(_) = channel.info {
-                return channel.hasPermission(.sendMessages)
-            } else if case .group(_) = channel.info  {
-                return channel.hasBannedPermission(.banSendMessages) == nil
+    init(_ accounts: [AccountWithInfo], primary: AccountRecordId, switchAccount: @escaping(AccountRecordId) -> Void, frame: NSRect) {
+        super.init(frame: frame)
+        backgroundColor = NSColor.black.withAlphaComponent(0.85)
+        
+        if let current = accounts.first(where: {$0.account.id == primary}) {
+            
+            let currentControl = AvatarControl(font: .avatar(12))
+            currentControl.frame = NSMakeRect(frame.width - 30 - 10, 10, 30, 30)
+            currentControl.setPeer(account: current.account, peer: current.peer)
+            addSubview(currentControl)
+            
+            
+            var y: CGFloat = currentControl.frame.maxY + 10
+            for current in accounts {
+                if current.account.id != primary {
+                    let container = Button()
+                    
+                    container.autohighlight = true
+                    
+                    container.backgroundColor = .white
+                    let nameView = TextView()
+                    nameView.userInteractionEnabled = false
+                    nameView.isSelectable = false
+                    
+                    let layout = TextViewLayout(.initialize(string: current.peer.compactDisplayTitle, color: .text, font: .medium(.text)), maximumNumberOfLines: 1)
+                    layout.measure(width: 150)
+                    
+                    nameView.background = .white
+                    nameView.update(layout)
+                    
+                    let control = AvatarControl(font: .avatar(12))
+                    control.setFrameSize(30, 30)
+                    control.setPeer(account: current.account, peer: current.peer)
+                    control.userInteractionEnabled = false
+                    
+                    container.addSubview(control)
+                    
+                    container.addSubview(nameView)
+                    
+                    container.setFrameSize(NSMakeSize(5 + nameView.frame.width + 5 + control.frame.width, 30))
+                    container.layer?.cornerRadius = container.frame.height / 2
+                    
+                    container.frame = NSMakeRect(frame.width - container.frame.width - 10, 10, container.frame.width, container.frame.height)
+                    
+                    control.centerY(x: container.frame.width - control.frame.width)
+                    nameView.centerY(x: 5)
+
+                    addSubview(container)
+                    
+                    container.set(handler: { [weak self] _ in
+                        self?.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { _ in
+                            switchAccount(current.account.id)
+                        })
+                       
+                    }, for: .Click)
+                    
+                    container._change(pos: NSMakePoint(container.frame.minX, y), animated: true, timingFunction: .spring)
+                    container.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .spring)
+                    y += container.frame.height + 10
+                }
             }
-        } else if let group = self as? TelegramGroup {
-            return group.membership == .Member && !group.hasBannedPermission(.banSendMessages)
-        } else if let secret = self as? TelegramSecretChat {
-            switch secret.embeddedState {
-            case .terminated:
-                return false
-            case .handshake:
-                return false
-            default:
-                return true
-            }
+            
+            set(handler: { [weak self] _ in
+                self?.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { [weak self] completed in
+                    self?.removeFromSuperview()
+                })
+            }, for: .SingleClick)
         }
         
-        return true
+    }
+    
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -45,6 +102,8 @@ class ShareModalView : View {
     let tableView:TableView = TableView()
     let acceptView:TitleButton = TitleButton()
     let cancelView:TitleButton = TitleButton()
+    private var photoView: AvatarControl?
+    private var control: Control = Control()
     let borderView:View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -52,11 +111,11 @@ class ShareModalView : View {
         borderView.backgroundColor = theme.colors.border
         
         acceptView.style = ControlStyle(font: .medium(.text),foregroundColor: theme.colors.blueUI)
-        acceptView.set(text: tr(L10n.shareExtensionShare), for: .Normal)
+        acceptView.set(text: L10n.shareExtensionShare, for: .Normal)
         _ = acceptView.sizeToFit()
         
         cancelView.style = ControlStyle(font:.medium(.text),foregroundColor: theme.colors.blueUI)
-        cancelView.set(text: tr(L10n.shareExtensionCancel), for: .Normal)
+        cancelView.set(text: L10n.shareExtensionCancel, for: .Normal)
         _ = cancelView.sizeToFit()
         
         addSubview(acceptView)
@@ -64,11 +123,47 @@ class ShareModalView : View {
         addSubview(searchView)
         addSubview(tableView)
         addSubview(borderView)
+        addSubview(control)
+    }
+    
+    func updateWithAccounts(_ accounts: (primary: AccountRecordId?, accounts: [AccountWithInfo]), context: AccountContext) -> Void {
+        if accounts.accounts.count > 1, let primary = accounts.primary {
+            if photoView == nil {
+                photoView = AvatarControl(font: .avatar(12))
+                photoView?.setFrameSize(NSMakeSize(30, 30))
+                addSubview(photoView!)
+            }
+            if let account = accounts.accounts.first(where: {$0.account.id == primary}) {
+                photoView?.setPeer(account: account.account, peer: account.peer)
+            }
+            photoView?.removeAllHandlers()
+            
+           
+            
+            photoView?.set(handler: { [weak self] _ in
+                guard let `self` = self else {return}
+                let view = SelectAccountView(accounts.accounts, primary: primary, switchAccount: { recordId in
+                    context.sharedContext.switchToAccount(id: recordId, action: nil)
+                }, frame: self.bounds)
+                self.addSubview(view)
+                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }, for: .Click)
+        } else {
+            photoView?.removeFromSuperview()
+            photoView = nil
+        }
+        needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        searchView.frame = NSMakeRect(10, 10, frame.width - 20, 30)
+        if let photoView = photoView {
+            photoView.setFrameOrigin(frame.width - photoView.frame.width - 10, 10)
+            searchView.frame = NSMakeRect(10, 10, frame.width - 20 - photoView.frame.width - 10, 30)
+        } else {
+            searchView.frame = NSMakeRect(10, 10, frame.width - 20, 30)
+        }
+        control.frame = NSMakeRect(frame.width - 30 - 30, 10, 30, 30)
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50 - 40)
         borderView.frame = NSMakeRect(0, tableView.frame.maxY, frame.width, .borderSize)
         acceptView.setFrameOrigin(frame.width - acceptView.frame.width - 30, floorToScreenPixels(scaleFactor: backingScaleFactor, tableView.frame.maxY + (40 - acceptView.frame.height) / 2.0))
@@ -83,11 +178,11 @@ class ShareModalView : View {
 
 
 class ShareObject {
-    let account:Account
-    let context:NSExtensionContext
-    init(_ account:Account, _ context:NSExtensionContext) {
-        self.account = account
+    let context: AccountContext
+    let shareContext:NSExtensionContext
+    init(_ context: AccountContext, _ shareContext:NSExtensionContext) {
         self.context = context
+        self.shareContext = shareContext
     }
     
     private let progressView = SEModalProgressView()
@@ -100,7 +195,7 @@ class ShareObject {
         
         var needWaitAsync = false
         var k:Int = 0
-        let total = context.inputItems.reduce(0) { (current, item) -> Int in
+        let total = shareContext.inputItems.reduce(0) { (current, item) -> Int in
             if let item = item as? NSExtensionItem {
                 if let _ = item.attributedContentText?.string {
                     return current + 1
@@ -128,7 +223,7 @@ class ShareObject {
                         
                         self.progressView.set(progress: CGFloat(min(progress / Float(total), 1)))
                      }, completed: {
-                        self.context.completeRequest(returningItems: nil, completionHandler: nil)
+                        self.shareContext.completeRequest(returningItems: nil, completionHandler: nil)
                      })
                     
                     self.progressView.cancelImpl = {
@@ -141,8 +236,8 @@ class ShareObject {
         }
         
         for peerId in entries {
-            for j in 0 ..< context.inputItems.count {
-                if let item = context.inputItems[j] as? NSExtensionItem {
+            for j in 0 ..< shareContext.inputItems.count {
+                if let item = shareContext.inputItems[j] as? NSExtensionItem {
                     if let text = item.attributedContentText?.string {
                         signals.append(sendText(text, to:peerId))
                         k += 1
@@ -180,7 +275,7 @@ class ShareObject {
     }
     
     private func sendText(_ text:String, to peerId:PeerId) -> Signal<Float, NoError> {
-        return Signal<Float, NoError>.single(0) |> then(standaloneSendMessage(account: self.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> `catch` {_ in return .complete()} |> map {_ in return 1})
+        return Signal<Float, NoError>.single(0) |> then(standaloneSendMessage(account: context.account, peerId: peerId, text: text, attributes: [], media: nil, replyToMessageId: nil) |> `catch` {_ in return .complete()} |> map {_ in return 1})
     }
     
     private let queue:Queue = Queue(name: "proccessShareFilesQueue")
@@ -243,13 +338,13 @@ class ShareObject {
     
     private func sendMedia(_ path:URL?, _ data: Data? = nil, to peerId:PeerId) -> Signal<Float, NoError> {
         return Signal<Float, NoError>.single(0) |> then(prepareMedia(path, data) |> mapToSignal { media -> Signal<Float, NoError> in
-            return standaloneSendMessage(account: self.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> `catch` {_ in return .complete()}
+            return standaloneSendMessage(account: self.context.account, peerId: peerId, text: "", attributes: [], media: media, replyToMessageId: nil) |> `catch` {_ in return .complete()}
         })
     }
     
     func cancel() {
         let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
-        context.cancelRequest(withError: cancelError)
+        shareContext.cancelRequest(withError: cancelError)
     }
 }
 
@@ -372,7 +467,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
     private let search:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     private let inSearchSelected:Atomic<[PeerId]> = Atomic(value:[])
     private let disposable:MetaDisposable = MetaDisposable()
-
+    private let accountsDisposable = MetaDisposable()
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? SelectPeerPresentation, let oldValue = oldValue as? SelectPeerPresentation {
@@ -387,6 +482,8 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         }
     }
     
+    
+    
     func isEqual(to other: Notifable) -> Bool {
         return false
     }
@@ -394,12 +491,18 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        let context = self.share.context
+        
+        accountsDisposable.set((self.share.context.sharedContext.activeAccountsWithInfo |> deliverOnMainQueue).start(next: { [weak self] accounts in
+            self?.genericView.updateWithAccounts(accounts, context: context)
+        }))
+        
         
         search.set(SearchState(state: .None, request: nil))
         
         let previous:Atomic<[SelectablePeersEntry]?> = Atomic(value: nil)
         let initialSize = self.atomicSize.modify({$0})
-        let account = share.account
+        let account = share.context.account
         let table = genericView.tableView
         let selectInteraction = self.selectInteractions
         selectInteraction.add(observer: self)
@@ -570,6 +673,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
     
     deinit {
         disposable.dispose()
+        accountsDisposable.dispose()
     }
     
 }

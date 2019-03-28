@@ -15,7 +15,7 @@ import TGUIKit
 class ChatMusicContentView: ChatAudioContentView {
     private let imageView: TransformImageView = TransformImageView(frame: NSMakeRect(0, 0, 40, 40))
     private var playAnimationView: PeerMediaPlayerAnimationView?
-
+    private let partHeaderDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView, positioned: .below, relativeTo: progressView)
@@ -56,8 +56,8 @@ class ChatMusicContentView: ChatAudioContentView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             textView.update(parameters.nameLayout)
@@ -77,7 +77,7 @@ class ChatMusicContentView: ChatAudioContentView {
         
         imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
         
-        imageView.setSignal( chatMessagePhotoThumbnail(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)), animate: true, cacheImage: { [weak self] image in
+        imageView.setSignal( chatMessagePhotoThumbnail(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)), animate: true, cacheImage: { [weak self] image in
             if let strongSelf = self {
                 return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
             } else {
@@ -94,7 +94,7 @@ class ChatMusicContentView: ChatAudioContentView {
             if song.entry.isEqual(to: parent) {
                 if playAnimationView == nil {
                     playAnimationView = PeerMediaPlayerAnimationView()
-    
+                    playAnimationView?.layer?.cornerRadius = 20
                     imageView.addSubview(playAnimationView!)
                 }
                 if case .playing = song.state {
@@ -113,6 +113,20 @@ class ChatMusicContentView: ChatAudioContentView {
             playAnimationView?.removeFromSuperview()
             playAnimationView = nil
         }
+    }
+    
+    override func preloadStreamblePart() {
+        if let context = context {
+            if let media = media as? TelegramMediaFile {
+                let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media)
+                partHeaderDisposable.set(fetchedMediaResource(postbox: context.account.postbox, reference: reference.resourceReference(media.resource), range: (0 ..< 500 * 1024, .default), statsCategory: .audio).start())
+                
+            }
+        }
+    }
+    
+    deinit {
+        partHeaderDisposable.dispose()
     }
     
     override func layout() {

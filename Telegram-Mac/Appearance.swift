@@ -772,6 +772,7 @@ struct TelegramIconsTheme {
     let callWindowUnmute: CGImage
     let callWindowClose: CGImage
     let callWindowDeviceSettings: CGImage
+    let callSettings: CGImage
     let callWindowCancel: CGImage
     
     let chatActionEdit: CGImage
@@ -826,6 +827,7 @@ struct TelegramIconsTheme {
     let settingsProxy: CGImage
     let settingsAppearance: CGImage
     let settingsPassport: CGImage
+    let settingsUpdate: CGImage
     
     let settingsAskQuestionActive: CGImage
     let settingsFaqActive: CGImage
@@ -838,6 +840,8 @@ struct TelegramIconsTheme {
     let settingsProxyActive: CGImage
     let settingsAppearanceActive: CGImage
     let settingsPassportActive: CGImage
+    let settingsUpdateActive: CGImage
+    
 
     let generalCheck: CGImage
     let settingsAbout: CGImage
@@ -1011,6 +1015,20 @@ struct TelegramIconsTheme {
     
     let chatUndoAction: CGImage
     
+    let appUpdate: CGImage
+    
+    let inlineVideoSoundOff: CGImage
+    let inlineVideoSoundOn: CGImage
+    
+    
+    let logoutOptionAddAccount: CGImage
+    let logoutOptionSetPasscode: CGImage
+    let logoutOptionClearCache: CGImage
+    let logoutOptionChangePhoneNumber: CGImage
+    let logoutOptionContactSupport: CGImage
+
+    
+    let disableEmojiPrediction: CGImage
    // let videoMessageChatCap: CGImage
 
 }
@@ -1082,12 +1100,24 @@ extension TelegramPresentationTheme {
     }
 }
 
+extension WallpaperSettings {
+    func withUpdatedBlur(_ blur: Bool) -> WallpaperSettings {
+        return WallpaperSettings(blur: blur, motion: self.motion, color: self.color, intensity: self.intensity)
+    }
+    func withUpdatedColor(_ color: Int32?) -> WallpaperSettings {
+        return WallpaperSettings(blur: self.blur, motion: self.motion, color: color, intensity: self.intensity)
+    }
+    
+    func isSemanticallyEqual(to other: WallpaperSettings) -> Bool {
+        return self.color == other.color && self.intensity == other.intensity
+    }
+}
 
 enum Wallpaper : Equatable, PostboxCoding {
     case builtin
     case color(Int32)
-    case image([TelegramMediaImageRepresentation], blurred: Bool)
-    case file(slug: String, file: TelegramMediaFile, blurred: Bool)
+    case image([TelegramMediaImageRepresentation], settings: WallpaperSettings)
+    case file(slug: String, file: TelegramMediaFile, settings: WallpaperSettings, isPattern: Bool)
     case none
     case custom(TelegramMediaImageRepresentation, blurred: Bool)
     
@@ -1097,10 +1127,10 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .builtin
         case let .color(color):
             self = .color(color)
-        case let .image(image):
-            self = .image(image, blurred: false)
+        case let .image(image, settings):
+            self = .image(image, settings: settings)
         case let .file(values):
-            self = .file(slug: values.slug, file: values.file, blurred: false)
+            self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
         }
     }
     
@@ -1111,9 +1141,11 @@ enum Wallpaper : Equatable, PostboxCoding {
         case 1:
             self = .color(decoder.decodeInt32ForKey("c", orElse: 0))
         case 2:
-            self = .image(decoder.decodeObjectArrayWithDecoderForKey("i"), blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
+            let settings = decoder.decodeObjectForKey("settings", decoder: { WallpaperSettings(decoder: $0) }) as? WallpaperSettings ?? WallpaperSettings()
+            self = .image(decoder.decodeObjectArrayWithDecoderForKey("i"), settings: settings)
         case 3:
-            self = .file(slug: decoder.decodeStringForKey("slug", orElse: ""), file: decoder.decodeObjectForKey("file", decoder: { TelegramMediaFile(decoder: $0) }) as! TelegramMediaFile, blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
+            let settings = decoder.decodeObjectForKey("settings", decoder: { WallpaperSettings(decoder: $0) }) as? WallpaperSettings ?? WallpaperSettings()
+            self = .file(slug: decoder.decodeStringForKey("slug", orElse: ""), file: decoder.decodeObjectForKey("file", decoder: { TelegramMediaFile(decoder: $0) }) as! TelegramMediaFile, settings: settings, isPattern: decoder.decodeInt32ForKey("p", orElse: 0) == 1)
         case 4:
             self = .custom(decoder.decodeObjectForKey("rep", decoder: { TelegramMediaImageRepresentation(decoder: $0) }) as! TelegramMediaImageRepresentation, blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
         case 5:
@@ -1132,15 +1164,16 @@ enum Wallpaper : Equatable, PostboxCoding {
         case let .color(color):
             encoder.encodeInt32(1, forKey: "v")
             encoder.encodeInt32(color, forKey: "c")
-        case let .image(representations, blurred):
+        case let .image(representations, settings):
             encoder.encodeInt32(2, forKey: "v")
             encoder.encodeObjectArray(representations, forKey: "i")
-            encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
-        case let .file(slug, file, blurred):
+            encoder.encodeObject(settings, forKey: "settings")
+        case let .file(slug, file, settings, isPattern):
             encoder.encodeInt32(3, forKey: "v")
             encoder.encodeString(slug, forKey: "slug")
             encoder.encodeObject(file, forKey: "file")
-            encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
+            encoder.encodeObject(settings, forKey: "settings")
+            encoder.encodeInt32(isPattern ? 1 : 0, forKey: "p")
         case let .custom(resource, blurred):
             encoder.encodeInt32(4, forKey: "v")
             encoder.encodeObject(resource, forKey: "rep")
@@ -1156,10 +1189,10 @@ enum Wallpaper : Equatable, PostboxCoding {
             return self
         case .color:
             return self
-        case let .image(representations, _):
-            return .image(representations, blurred: blurred)
+        case let .image(representations, settings):
+            return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, intensity: settings.intensity))
         case let .file(values):
-            return .file(slug: values.slug, file: values.file, blurred: blurred)
+            return .file(slug: values.slug, file: values.file, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, intensity: settings.intensity), isPattern: values.isPattern)
         case let .custom(path, _):
             return .custom(path, blurred: blurred)
         case .none:
@@ -1167,20 +1200,48 @@ enum Wallpaper : Equatable, PostboxCoding {
         }
     }
     
+    func withUpdatedSettings(_ settings: WallpaperSettings) -> Wallpaper {
+        switch self {
+        case .builtin:
+            return self
+        case .color:
+            return self
+        case let .image(representations, _):
+            return .image(representations, settings: settings)
+        case let .file(values):
+            return .file(slug: values.slug, file: values.file, settings: settings, isPattern: values.isPattern)
+        case .custom:
+            return self
+        case .none:
+            return self
+        }
+    }
+    
     var isBlurred: Bool {
         switch self {
-        case let .builtin:
+        case .builtin:
             return false
         case .color:
             return false
-        case let .image(_, blurred):
-            return blurred
+        case let .image(_, settings):
+            return settings.blur
         case let .file(values):
-            return values.blurred
+            return values.settings.blur
         case let .custom(_, blurred):
             return blurred
         case .none:
             return false
+        }
+    }
+    
+    var settings: WallpaperSettings {
+        switch self {
+        case let .image(_, settings):
+            return settings
+        case let .file(values):
+            return values.settings
+        default:
+            return WallpaperSettings()
         }
     }
     
@@ -1205,7 +1266,7 @@ enum Wallpaper : Equatable, PostboxCoding {
                 return false
             }
         case let .file(values):
-            if case .file(slug: values.slug, file: _, blurred: _) = other {
+            if case .file(slug: values.slug, _, _, _) = other {
                 return true
             } else {
                 return false
@@ -1228,9 +1289,9 @@ func getAverageColor(_ image: NSImage) -> NSColor {
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
-    saturation = min(1.0, saturation + 0.05 + 0.1 * (1.0 - saturation))
+    saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)
-    alpha = 0.4
+    alpha = 0.5
     color = NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
     
     return color
@@ -1242,9 +1303,9 @@ private func getAverageColor(_ color: NSColor) -> NSColor {
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
-    saturation = min(1.0, saturation + 0.05 + 0.1 * (1.0 - saturation))
+    saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)
-    alpha = 0.4
+    alpha = 0.5
     
     return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
 }
@@ -1258,12 +1319,13 @@ class TelegramPresentationTheme : PresentationTheme {
     let icons: TelegramIconsTheme
     let bubbled: Bool
     let wallpaper: Wallpaper
+    let c_wallpaper: Wallpaper?
     let backgroundMode: TableBackgroundMode
     let chatServiceItemColor: NSColor
     let chatServiceItemTextColor: NSColor
     let fontSize: CGFloat
     let followSystemAppearance: Bool
-    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: Wallpaper, followSystemAppearance: Bool) {
+    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: Wallpaper, c_wallpaper: Wallpaper?, followSystemAppearance: Bool) {
         self.chatList = chatList
         #if !SHARE
             self.chat = TelegramChatColors(colors, bubbled)
@@ -1271,6 +1333,7 @@ class TelegramPresentationTheme : PresentationTheme {
         self.tabBar = tabBar
         self.icons = icons
         self.wallpaper = wallpaper
+        self.c_wallpaper = c_wallpaper
         self.bubbled = bubbled
         self.fontSize = fontSize
         self.followSystemAppearance = followSystemAppearance
@@ -1280,16 +1343,46 @@ class TelegramPresentationTheme : PresentationTheme {
             backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
         case let.color(color):
             backgroundMode = .color(color: NSColor(UInt32(abs(color))))
-        case let .image(representation, blurred):
-            if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: blurred))) {
+        case let .image(representation, settings):
+            if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
                 backgroundMode = .background(image: image)
             } else {
                 backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
             }
             
-        case let .file(_, file, blurred):
-            if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: blurred))) {
-                backgroundMode = .background(image: image)
+        case let .file(_, file, settings, isPattern):
+            if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
+                if isPattern {
+                    let image = generateImage(image.size, contextGenerator: { size, ctx in
+                        let imageRect = NSMakeRect(0, 0, size.width, size.height)
+                        var _patternColor: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+                        
+                        var patternIntensity: CGFloat = 0.5
+                        if let color = settings.color {
+                            if let intensity = settings.intensity {
+                                patternIntensity = CGFloat(intensity) / 100.0
+                            }
+                            _patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
+                        }
+                        
+                        let color = _patternColor.withAlphaComponent(1.0)
+                        let intensity = _patternColor.alpha
+                        
+                        ctx.setBlendMode(.copy)
+                        ctx.setFillColor(color.cgColor)
+                        ctx.fill(imageRect)
+                        
+                        ctx.setBlendMode(.normal)
+                        ctx.interpolationQuality = .high
+                        
+                        ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
+                        ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                        ctx.fill(imageRect)
+                    })!
+                     backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
+                } else {
+                    backgroundMode = .background(image: image)
+                }
             } else {
                 backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
             }
@@ -1550,6 +1643,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                callWindowUnmute: #imageLiteral(resourceName: "Icon_CallMute_Inline").precomposed(),
                                                callWindowClose: #imageLiteral(resourceName: "Icon_CallWindowClose").precomposed(.white),
                                                callWindowDeviceSettings: #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(.white),
+                                               callSettings: #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(palette.blueIcon),
                                                callWindowCancel: #imageLiteral(resourceName: "Icon_CallCancelIcon").precomposed(.white),
                                                chatActionEdit: #imageLiteral(resourceName: "Icon_ChatActionEdit").precomposed(palette.blueIcon),
                                                chatActionInfo: #imageLiteral(resourceName: "Icon_ChatActionInfo").precomposed(palette.blueIcon),
@@ -1594,6 +1688,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsProxy: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(flipVertical: true)),
                                                settingsAppearance: generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)),
                                                settingsPassport: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)),
+                                               settingsUpdate: generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)),
                                                settingsAskQuestionActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsFaqActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsGeneralActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(.white, flipVertical: true), background: palette.blueSelect),
@@ -1605,6 +1700,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsProxyActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsAppearanceActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                settingsPassportActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect),
+                                               settingsUpdateActive: generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(.white, flipVertical: true), background: palette.blueSelect),
                                                generalCheck: #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon),
                                                settingsAbout: #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon),
                                                settingsLogout: #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI),
@@ -1727,13 +1823,22 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                peerInfoPermissions: NSImage(named: "Icon_ChatPermissions")!.precomposed(flipVertical: true),
                                                peerInfoBanned: NSImage(named: "Icon_ChatBanned")!.precomposed(flipVertical: true),
                                                peerInfoMembers: NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true),
-                                               chatUndoAction: NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF))
+                                               chatUndoAction: NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF)),
+                                               appUpdate: NSImage(named: "Icon_AppUpdate")!.precomposed(),
+                                               inlineVideoSoundOff: NSImage(named: "Icon_InlineVideoSoundOff")!.precomposed(),
+                                               inlineVideoSoundOn: NSImage(named: "Icon_InlineVideoSoundOn")!.precomposed(),
+                                               logoutOptionAddAccount: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_AddAccount")!.precomposed(flipVertical: true)),
+                                               logoutOptionSetPasscode: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_SetPasscode")!.precomposed(flipVertical: true)),
+                                               logoutOptionClearCache: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ClearCache")!.precomposed(flipVertical: true)),
+                                               logoutOptionChangePhoneNumber: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ChangePhoneNumber")!.precomposed(flipVertical: true)),
+                                               logoutOptionContactSupport: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ContactSupport")!.precomposed(flipVertical: true)),
+                                               disableEmojiPrediction: NSImage(named: "Icon_CallWindowClose")!.precomposed(palette.grayIcon)
                                                ///videoMessageChatCap: generateVideoMessageChatCap(backgroundColor: palette.background)
     )
 }
 
 
-private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: Wallpaper) -> TelegramPresentationTheme {
+private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: Wallpaper, c_wallpaper: Wallpaper?) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.blueSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,
@@ -1756,7 +1861,7 @@ private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFlo
                                          badgeMutedBackgroundColor: palette.badgeMuted)
     
     let tabBar = TelegramTabBarTheme(color: palette.grayIcon, selectedColor: palette.blueIcon, badgeTextColor: .white, badgeColor: palette.redUI)
-    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, followSystemAppearance: followSystemAppearance)
+    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, c_wallpaper: c_wallpaper, followSystemAppearance: followSystemAppearance)
 }
 
 
@@ -1796,7 +1901,7 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
     default:
         palette = settings.palette
     }
-    telegramUpdateTheme(generateTheme(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, followSystemAppearance: settings.followSystemAppearance, wallpaper: settings.wallpaper), window: window, animated: animated)
+    telegramUpdateTheme(generateTheme(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, followSystemAppearance: settings.followSystemAppearance, wallpaper: settings.wallpaper, c_wallpaper: settings.customWallpaper), window: window, animated: animated)
 }
 
 private let appearanceDisposable = MetaDisposable()
@@ -1836,7 +1941,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
 }
 
 func setDefaultTheme(for window: Window? = nil) {
-    telegramUpdateTheme(generateTheme(palette: dayClassic, bubbled: false, fontSize: 13.0, followSystemAppearance: true, wallpaper: .none), window: window, animated: false)
+    telegramUpdateTheme(generateTheme(palette: dayClassic, bubbled: false, fontSize: 13.0, followSystemAppearance: true, wallpaper: .none, c_wallpaper: nil), window: window, animated: false)
 }
 
 

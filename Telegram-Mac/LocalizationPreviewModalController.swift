@@ -73,11 +73,11 @@ private final class LocalizationPreviewView : Control {
 }
 
 class LocalizationPreviewModalController: ModalViewController {
-    private let account: Account
+    private let context: AccountContext
     private let info: LocalizationInfo
-    init(account: Account, info: LocalizationInfo) {
+    init(_ context: AccountContext, info: LocalizationInfo) {
         self.info = info
-        self.account = account
+        self.context = context
         super.init(frame: NSMakeRect(0, 0, 320, 200))
         bar = .init(height: 0)
     }
@@ -87,7 +87,7 @@ class LocalizationPreviewModalController: ModalViewController {
     
     private func applyLocalization() {
         close()
-        _ = showModalProgress(signal: downloadAndApplyLocalization(postbox: account.postbox, network: account.network, languageCode: info.languageCode), for: mainWindow).start()
+        _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: info.languageCode), for: mainWindow).start()
     }
     
     override var modalInteractions: ModalInteractions? {

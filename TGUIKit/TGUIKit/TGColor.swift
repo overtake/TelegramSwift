@@ -18,6 +18,21 @@ public extension NSColor {
         return NSColor.init(srgbRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha:alpha)
     }
     
+    public var alpha: CGFloat {
+        var alpha: CGFloat = 0
+        self.getHue(nil, saturation: nil, brightness: nil, alpha: &alpha)
+        return alpha
+    }
+    
+    public var hsv: (CGFloat, CGFloat, CGFloat) {
+        var hue: CGFloat = 0.0
+        var saturation: CGFloat = 0.0
+        var value: CGFloat = 0.0
+        self.getHue(&hue, saturation: &saturation, brightness: &value, alpha: nil)
+        return (hue, saturation, value)
+    }
+
+    
     public var brightnessAdjustedColor: NSColor{
         
         var components = self.cgColor.components

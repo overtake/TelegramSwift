@@ -25,17 +25,15 @@ class TextAndLabelItem: GeneralRowItem {
     var textLayout:TextViewLayout
     let isTextSelectable:Bool
     let callback:()->Void
-    let account:Account
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, text:String, account:Account, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false) {
-        self.account = account
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, text:String, context: AccountContext, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false) {
         self.callback = callback
         self.isTextSelectable = isTextSelectable
         self.label = NSAttributedString.initialize(string: label, color: theme.colors.blueUI, font: .normal(FontSize.text))
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text.trimmed.fullTrimmed, color: theme.colors.text, font: .normal(.title))
         if detectLinks {
-            attr.detectLinks(type: [.Links, .Hashtags, .Mentions], account: account, openInfo: openInfo, hashtag: hashtag, applyProxy: { settings in
-                applyExternalProxy(settings, postbox: account.postbox, network: account.network)
+            attr.detectLinks(type: [.Links, .Hashtags, .Mentions], context: context, openInfo: openInfo, hashtag: hashtag, applyProxy: { settings in
+                applyExternalProxy(settings, accountManager: context.sharedContext.accountManager)
             })
         }
         

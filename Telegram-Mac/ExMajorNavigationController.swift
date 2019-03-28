@@ -11,14 +11,18 @@ import TGUIKit
 import TelegramCoreMac
 
 class ExMajorNavigationController: MajorNavigationController {
-    private let account:Account
+    private let context:AccountContext
     
     override var sidebar: ViewController? {
-        return account.context.entertainment
+        return context.sharedContext.bindings.entertainment()
     }
     
-    public init(_ account: Account, _ majorClass:AnyClass, _ empty:ViewController) {
-        self.account = account
+    override var window: Window? {
+        return context.window
+    }
+    
+    public init(_ context: AccountContext, _ majorClass:AnyClass, _ empty:ViewController) {
+        self.context = context
         super.init(majorClass, empty)
     }
     

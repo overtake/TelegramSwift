@@ -32,17 +32,19 @@ private func valuesRequiringUpdate(state: EditInfoState, view: PeerView) -> ((fn
 }
 
 private final class EditInfoControllerArguments {
-    let account: Account
+    let context: AccountContext
     let uploadNewPhoto:()->Void
     let logout:()->Void
     let username:()->Void
     let changeNumber:()->Void
-    init(account: Account, uploadNewPhoto:@escaping()->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void) {
-        self.account = account
+    let addAccount: ()->Void
+    init(context: AccountContext, uploadNewPhoto:@escaping()->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void) {
+        self.context = context
         self.logout = logout
         self.username = username
         self.changeNumber = changeNumber
         self.uploadNewPhoto = uploadNewPhoto
+        self.addAccount = addAccount
     }
 }
 struct EditInfoState : Equatable {
@@ -111,15 +113,16 @@ private let _id_about = InputDataIdentifier("_id_about")
 private let _id_username = InputDataIdentifier("_id_username")
 private let _id_phone = InputDataIdentifier("_id_phone")
 private let _id_logout = InputDataIdentifier("_id_logout")
+private let _id_add_account = InputDataIdentifier("_id_add_account")
 
-private func editInfoEntries(state: EditInfoState, arguments: EditInfoControllerArguments, updateState:@escaping ((EditInfoState)->EditInfoState)->Void) -> [InputDataEntry] {
+private func editInfoEntries(state: EditInfoState, arguments: EditInfoControllerArguments, activeAccounts: [AccountWithInfo], updateState:@escaping ((EditInfoState)->EditInfoState)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_info, equatable: InputDataEquatable(state), item: { size, stableId -> TableRowItem in
-        return EditAccountInfoItem(size, stableId: stableId, account: arguments.account, state: state, updateText: { firstName, lastName in
+        return EditAccountInfoItem(size, stableId: stableId, account: arguments.context.account, state: state, updateText: { firstName, lastName in
             updateState { current in
                 return current.withUpdatedFirstName(firstName).withUpdatedLastName(lastName).withUpdatedInited(true)
             }
@@ -145,23 +148,31 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(InputDataEntry.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : "")))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), action: nil)))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : "")))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), action: nil)))
     index += 1
 
     entries.append(InputDataEntry.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, name: L10n.editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none))
+    if activeAccounts.count < 3 {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.editAccountAddAccount, color: theme.colors.blueUI, icon: nil, type: .none, action: {
+            arguments.addAccount()
+        })))
+        index += 1
+    }
+   
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: L10n.editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
     index += 1
     
     return entries
 }
 
 
-func editAccountInfoController(account: Account, accountManager: AccountManager, f: @escaping((ViewController)) -> Void) -> Void {
+func EditAccountInfoController(context: AccountContext, f: @escaping((ViewController)) -> Void) -> Void {
     let state: Promise<EditInfoState> = Promise()
     let stateValue: Atomic<EditInfoState> = Atomic(value: EditInfoState())
     let actionsDisposable = DisposableSet()
@@ -180,7 +191,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
     
     var peerView:PeerView? = nil
     
-    peerDisposable.set((account.postbox.peerView(id: account.peerId) |> deliverOnMainQueue).start(next: { pv in
+    peerDisposable.set((context.account.postbox.peerView(id: context.peerId) |> deliverOnMainQueue).start(next: { pv in
         peerView = pv
         updateState { current in
             return current.withUpdatedPeerView(pv)
@@ -188,7 +199,7 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
     }))
     
     
-    let arguments = EditInfoControllerArguments(account: account, uploadNewPhoto: {
+    let arguments = EditInfoControllerArguments(context: context, uploadNewPhoto: {
         
         filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
             if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
@@ -213,9 +224,9 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
                                 }
                             }
                         } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                            return updateAccountPhoto(account: account, resource: resource, mapResourceToAvatarSizes: { resource, representations in
-                                return mapResourceToAvatarSizes(postbox: account.postbox, resource: resource, representations: representations)
-                            }) //updatePeerPhoto(postbox: account.postbox, network: account.network, stateManager: account.stateManager, accountPeerId: account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: account.postbox, network: account.network, resource: resource))
+                            return updateAccountPhoto(account: context.account, resource: resource, mapResourceToAvatarSizes: { resource, representations in
+                                return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                            })
                         } |> deliverOnMainQueue
                     
                     photoDisposable.set(updateSignal.start(next: { status in
@@ -249,16 +260,17 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
         })
         
     }, logout: {
-        confirm(for: mainWindow, header: L10n.accountConfirmLogout, information: L10n.accountConfirmLogoutText, successHandler: { _ in
-            logoutDisposable.set(logoutFromAccount(id: account.id, accountManager: accountManager).start())
-        })
+        showModal(with: InputDataModalController(LogoutViewController(context: context, f: f), modalInteractions: ModalInteractions(acceptTitle: L10n.modalCancel)), for: mainWindow)
     }, username: {
-        f(UsernameSettingsViewController(account))
+        f(UsernameSettingsViewController(context))
     }, changeNumber: {
-        f(PhoneNumberIntroController(account))
+        f(PhoneNumberIntroController(context))
+    }, addAccount: {
+        let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
+        context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     })
     
-    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {editInfoEntries(state: $0.0, arguments: arguments, updateState: updateState)} |> map {($0, true)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map {($0, true)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -282,10 +294,10 @@ func editAccountInfoController(account: Account, accountManager: AccountManager,
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
                 if let names = updates.0 {
-                    signals.append(updateAccountPeerName(account: account, firstName: names.fn, lastName: names.ln))
+                    signals.append(updateAccountPeerName(account: context.account, firstName: names.fn, lastName: names.ln))
                 }
                 if let about = updates.1 {
-                    signals.append(updateAbout(account: account, about: about) |> `catch` { _ in .complete()})
+                    signals.append(updateAbout(account: context.account, about: about) |> `catch` { _ in .complete()})
                 }
                 updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: mainWindow).start(completed: {
                     updateState { $0 }

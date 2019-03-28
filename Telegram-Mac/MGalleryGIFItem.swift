@@ -13,8 +13,8 @@ import SwiftSignalKitMac
 import TGUIKit
 class MGalleryGIFItem: MGalleryItem {
 
-    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
-        super.init(account, entry, pagerSize)
+    override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
+        super.init(context, entry, pagerSize)
         
         let view = self.view
         let pathSignal = path.get() |> map { path in
@@ -31,7 +31,7 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
-        return chatMessageFileStatus(account: account, file: media)
+        return chatMessageFileStatus(account: context.account, file: media)
     }
     
     var media:TelegramMediaFile {
@@ -74,14 +74,14 @@ class MGalleryGIFItem: MGalleryItem {
     
     override func request(immediately: Bool) {
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
-        let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
+        let result = signal |> deliverOn(graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())
         }
         
     
-        path.set(account.postbox.mediaBox.resourceData(media.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
+        path.set(context.account.postbox.mediaBox.resourceData(media.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
             if resource.complete {
                 return .single(link(path:resource.path, ext:kMediaGifExt)!)
             }
@@ -100,7 +100,7 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        fetching.set(chatMessageFileInteractiveFetched(account: account, fileReference: entry.fileReference(media)).start())
+        fetching.set(chatMessageFileInteractiveFetched(account: context.account, fileReference: entry.fileReference(media)).start())
     }
 
     

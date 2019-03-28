@@ -52,6 +52,7 @@ class GroupNameRowView : GeneralInputRowView {
         tranparentView.setFrameSize(50, 50)
         photoView.animatesAlphaOnFirstTransition = true
         tranparentView.layer?.cornerRadius = 25
+        separator.isHidden = true
     }
     
     override func set(item: TableRowItem, animated: Bool) {

@@ -127,15 +127,13 @@ private class ChatRecorderOverlayView : Control {
 
 class ChatRecorderOverlayWindowController : NSObject {
     let window: Window
-    private let account: Account
     private let parent: Window
     private let disposable = MetaDisposable()
     private let chatInteraction: ChatInteraction
     private var state: ChatRecordingOverlayState
     private let startMouseLocation: NSPoint
     private let lockWindow: Window
-    init(account: Account, parent: Window, chatInteraction: ChatInteraction) {
-        self.account = account
+    init(parent: Window, chatInteraction: ChatInteraction) {
         self.parent = parent
         self.chatInteraction = chatInteraction
         self.state = chatInteraction.presentation.recordingState is ChatRecordingAudioState ? .voice : .video
@@ -187,7 +185,8 @@ class ChatRecorderOverlayWindowController : NSObject {
     }
     
     var minX: CGFloat {
-        if let navigation = account.context.mainNavigation as? MajorNavigationController, navigation.genericView.state == .dual, let sidebar = navigation.sidebar {
+        let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+        if navigation.genericView.state == .dual, let sidebar = navigation.sidebar {
             return parent.frame.maxX - window.frame.width - sidebar.frame.width + 35
         }
         return parent.frame.maxX - window.frame.width + 25

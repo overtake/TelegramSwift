@@ -49,9 +49,9 @@ public struct AdditionalSettings: PreferencesEntry, Equatable {
     }
 }
 
-func updateAdditionalSettingsInteractively(postbox: Postbox, _ f: @escaping (AdditionalSettings) -> AdditionalSettings) -> Signal<Void, NoError> {
-    return postbox.transaction { transaction -> Void in
-        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.additionalSettings, { entry in
+func updateAdditionalSettingsInteractively(accountManager: AccountManager, _ f: @escaping (AdditionalSettings) -> AdditionalSettings) -> Signal<Void, NoError> {
+    return accountManager.transaction { transaction -> Void in
+        transaction.updateSharedData(ApplicationSharedPreferencesKeys.additionalSettings, { entry in
             let currentSettings: AdditionalSettings
             if let entry = entry as? AdditionalSettings {
                 currentSettings = entry
@@ -63,9 +63,9 @@ func updateAdditionalSettingsInteractively(postbox: Postbox, _ f: @escaping (Add
     }
 }
 
-func additionalSettings(postbox: Postbox) -> Signal<AdditionalSettings, NoError> {
-    return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.additionalSettings]) |> map { preferences in
-        return (preferences.values[ApplicationSpecificPreferencesKeys.additionalSettings] as? AdditionalSettings) ?? AdditionalSettings.defaultSettings
+func additionalSettings(accountManager: AccountManager) -> Signal<AdditionalSettings, NoError> {
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.additionalSettings]) |> map { view in
+        return (view.entries[ApplicationSharedPreferencesKeys.additionalSettings] as? AdditionalSettings) ?? AdditionalSettings.defaultSettings
     }
 }
 

@@ -27,17 +27,17 @@ class ContextMediaRowItem: TableRowItem {
     
     let result:InputMediaContextRow
     private let _index:Int64
-    let account:Account
+    let context: AccountContext
     let arguments: ContextMediaArguments
     override var stableId: AnyHashable {
         return Int64(_index)
     }
     
-    init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ account:Account, _ arguments: ContextMediaArguments) {
+    init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ context: AccountContext, _ arguments: ContextMediaArguments) {
         self.result = result
         self.arguments = arguments
         self._index = index
-        self.account = account
+        self.context = context
         dif = 0
         super.init(initialSize)
     }
@@ -89,13 +89,13 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         stickerFetchedDisposable.dispose()
     }
     
-    func fileAtPoint(_ point: NSPoint) -> FileMediaReference? {
+    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
         guard let item = item as? ContextMediaRowItem else {return nil}
         for i in 0 ..< self.subviews.count {
             if NSPointInRect(point, self.subviews[i].frame) {
                 switch item.result.entries[i] {
                 case let .gif(data):
-                    return data.file
+                    return .file(data.file, GifPreviewModalView.self)
                 default:
                     break
                 }
@@ -115,20 +115,20 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 switch item.result.entries[i] {
                 case let .gif(data):
                     let view = GIFContainerView()
-                    let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError> =  chatMessageVideo(postbox: item.account.postbox, fileReference: data.file, scale: backingScaleFactor)
+                    let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     
                     view.set(handler: { _ in
                         item.arguments.sendResult(item.result.results[i])
                     }, for: .Click)
                     
-                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], file: data.file.media, account: item.account, table: item.table, iconSignal: signal)
+                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, iconSignal: signal)
                     container = view
                 case let .sticker(data):
                     let view = TransformImageView()
                     //TODO
                     let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
-                    view.setSignal(chatMessageSticker(account: item.account, fileReference: reference, type: .small, scale: backingScaleFactor))
-                    _ = fileInteractiveFetched(account: item.account, fileReference: reference).start()
+                    view.setSignal(chatMessageSticker(account: item.context.account, fileReference: reference, type: .small, scale: backingScaleFactor))
+                    _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
                     
                     let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
                     view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
@@ -138,8 +138,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 case let .photo(data):
                     let view = View()
                     let imageView = TransformImageView()
-                    imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: data), scale: backingScaleFactor, small:false))
-                    _ = chatMessagePhotoInteractiveFetched(account: item.account, imageReference: ImageMediaReference.standalone(media: data)).start()
+                    imageView.setSignal(chatWebpageSnippetPhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data), scale: backingScaleFactor, small:false))
+                    _ = chatMessagePhotoInteractiveFetched(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data)).start()
                     
                     let imageSize = item.result.sizes[i]
                     imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))

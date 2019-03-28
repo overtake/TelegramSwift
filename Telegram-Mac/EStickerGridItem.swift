@@ -118,7 +118,7 @@ final class StickerGridSectionNode: View {
 
 final class StickerGridItem: GridItem {
     
-    let account: Account
+    let context: AccountContext
     let index: ChatMediaInputGridIndex
     let file: TelegramMediaFile
     let selected: () -> Void
@@ -126,8 +126,8 @@ final class StickerGridItem: GridItem {
     let collectionId:ChatMediaGridCollectionStableId
     let section: GridSection?
     let packInfo: ChatMediaGridPackHeaderInfo
-    init(account: Account, collectionId: ChatMediaGridCollectionStableId, packInfo: ChatMediaGridPackHeaderInfo, index: ChatMediaInputGridIndex, file: TelegramMediaFile, inputNodeInteraction: EStickersInteraction, selected: @escaping () -> Void) {
-        self.account = account
+    init(context: AccountContext, collectionId: ChatMediaGridCollectionStableId, packInfo: ChatMediaGridPackHeaderInfo, index: ChatMediaInputGridIndex, file: TelegramMediaFile, inputNodeInteraction: EStickersInteraction, selected: @escaping () -> Void) {
+        self.context = context
         self.index = index
         self.file = file
         self.collectionId = collectionId
@@ -149,7 +149,8 @@ final class StickerGridItem: GridItem {
         if index.packIndex.collectionIndex >= 0 {
             self.section = StickerGridSection(collectionId: collectionId, packInfo: packInfo, inputInteraction: inputNodeInteraction, reference:  reference)
         } else if index.packIndex.collectionIndex <= -2 {
-            self.section = StickerGridSection(collectionId: collectionId, packInfo: ChatMediaGridPackHeaderInfo.pack(StickerPackCollectionInfo(id: index.packIndex.collectionId, flags: [], accessHash: 0, title: file.stickerText ?? "", shortName: "", hash: 0, count: 0), true), inputInteraction: inputNodeInteraction, reference:  nil)
+            
+            self.section = StickerGridSection(collectionId: collectionId, packInfo: ChatMediaGridPackHeaderInfo.pack(StickerPackCollectionInfo(id: index.packIndex.collectionId, flags: [], accessHash: 0, title: file.stickerText ?? "", shortName: "", thumbnail: nil, hash: 0, count: 0), true), inputInteraction: inputNodeInteraction, reference:  nil)
         } else {
             self.section = nil
         }
@@ -158,7 +159,7 @@ final class StickerGridItem: GridItem {
     func node(layout: GridNodeLayout, gridNode:GridNode, cachedNode: GridItemNode?) -> GridItemNode {
         let node = cachedNode as? StickerGridItemView ?? StickerGridItemView(gridNode)
         node.inputNodeInteraction = self.inputNodeInteraction
-        node.setup(account: self.account, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
+        node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
         node.selected = self.selected
         return node
     }
@@ -168,7 +169,7 @@ final class StickerGridItem: GridItem {
             assertionFailure()
             return
         }
-        node.setup(account: self.account, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
+        node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
         node.selected = self.selected
     }
 }
@@ -178,14 +179,15 @@ let eStickerSize:NSSize = NSMakeSize(60, 60)
 
 
 final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
-    private var currentState: (Account, TelegramMediaFile, CGSize, ChatMediaGridCollectionStableId?, ChatMediaGridPackHeaderInfo?)?
+    private var currentState: (AccountContext, TelegramMediaFile, CGSize, ChatMediaGridCollectionStableId?, ChatMediaGridPackHeaderInfo?)?
     
     
     private let imageView: TransformImageView = TransformImageView()
     
-    func fileAtPoint(_ point: NSPoint) -> FileMediaReference? {
+    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
         if let currentState = currentState {
-            return currentState.1.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1) : FileMediaReference.standalone(media: currentState.1)
+            let reference = currentState.1.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1) : FileMediaReference.standalone(media: currentState.1)
+            return .file(reference, StickerPreviewModalView.self)
         }
         return nil
     }
@@ -195,15 +197,22 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
             let menu = NSMenu()
             let file = currentState.1
             if let reference = file.stickerReference{
-                menu.addItem(ContextMenuItem(tr(L10n.contextViewStickerSet), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
                     self?.inputNodeInteraction?.showStickerPack(reference)
                 }))
             }
-             if state == .saved, let mediaId = file.id {
-                menu.addItem(ContextMenuItem(tr(L10n.contextRemoveFaveSticker), handler: {
-                    _ = removeSavedSticker(postbox: currentState.0.postbox, mediaId: mediaId).start()
-                }))
+            if let mediaId = file.id {
+                if state == .saved {
+                    menu.addItem(ContextMenuItem(L10n.contextRemoveFaveSticker, handler: {
+                        _ = removeSavedSticker(postbox: currentState.0.account.postbox, mediaId: mediaId).start()
+                    }))
+                } else {
+                    menu.addItem(ContextMenuItem(L10n.chatContextAddFavoriteSticker, handler: {
+                        _ = addSavedSticker(postbox: currentState.0.account.postbox, network: currentState.0.account.network, file: file).start()
+                    }))
+                }
             }
+            
             
             return menu
         }
@@ -223,29 +232,9 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
         addSubview(imageView)
 
         
-//        set(handler: { [weak self] _ in
-//            if let (_, file, _, _, packInfo) = self?.currentState {
-//                if let packInfo = packInfo {
-//                    switch packInfo {
-//                    case let .pack(_, installed):
-//                        if installed {
-//                            self?.inputNodeInteraction?.sendSticker(file)
-//                        } else if let reference = file.stickerReference {
-//                            self?.inputNodeInteraction?.previewStickerSet(reference)
-//                        }
-//                    default:
-//                        self?.inputNodeInteraction?.sendSticker(file)
-//                    }
-//                } else {
-//                    self?.inputNodeInteraction?.sendSticker(file)
-//                }
-//            }
-//        }, for: .Click)
-//
-        
         set(handler: { [weak self] (control) in
             if let window = self?.window as? Window, let currentState = self?.currentState, let grid = self?.grid {
-                _ = startModalPreviewHandle(grid, viewType: StickerPreviewModalView.self, window: window, account: currentState.0)
+                _ = startModalPreviewHandle(grid, window: window, context: currentState.0)
             }
         }, for: .LongMouseDown)
         set(handler: { [weak self] _ in
@@ -293,29 +282,24 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
         stickerFetchedDisposable.dispose()
     }
     
-    func setup(account: Account, file: TelegramMediaFile, collectionId: ChatMediaGridCollectionStableId? = nil, packInfo: ChatMediaGridPackHeaderInfo?) {
+    func setup(context: AccountContext, file: TelegramMediaFile, collectionId: ChatMediaGridCollectionStableId? = nil, packInfo: ChatMediaGridPackHeaderInfo?) {
         if let dimensions = file.dimensions {
-            
-//            set(image: theme.icons.stickerBackgroundActive, for: .Highlight)
-//            set(image: theme.icons.stickerBackground, for: .Normal)
-//            set(background: .random, for: .Normal)
-//            set(background: .random, for: .Hover)
-            
+
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets())
             imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
             
-            imageView.setSignal(chatMessageSticker(account: account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file), type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, NoError> in
+            imageView.setSignal(chatMessageSticker(account: context.account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file), type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, NoError> in
                 return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
             })
 
-            stickerFetchedDisposable.set(fileInteractiveFetched(account: account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)).start())
+            stickerFetchedDisposable.set(fileInteractiveFetched(account: context.account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)).start())
             
             let imageSize = dimensions.aspectFitted(eStickerSize)
             imageView.set(arguments: arguments)
 
             imageView.setFrameSize(imageSize)
-            currentState = (account, file, dimensions, collectionId, packInfo)
+            currentState = (context, file, dimensions, collectionId, packInfo)
         }
     }
     

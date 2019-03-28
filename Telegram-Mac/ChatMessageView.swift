@@ -9,7 +9,30 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
-class ChatMessageView: ChatRowView {
+class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
+    
+    
+    
+    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+        if let webpageContent = webpageContent {
+            return webpageContent.fileAtPoint(convert(point, from: self))
+        }
+        
+        return nil
+    }
+    
+    override func forceClick(in location: NSPoint) {
+        if previewMediaIfPossible() {
+            
+        } else {
+            super.forceClick(in: location)
+        }
+    }
+    
+    override func previewMediaIfPossible() -> Bool {
+        return webpageContent?.previewMediaIfPossible() ?? false
+    }
+    
     private let text:TextView = TextView()
 
     private(set) var webpageContent:WPContentView?
@@ -62,6 +85,11 @@ class ChatMessageView: ChatRowView {
 //            views += webpage.selectableTextViews
 //        }
         return views
+    }
+    
+    override func updateMouse() {
+        super.updateMouse()
+        webpageContent?.updateMouse()
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {

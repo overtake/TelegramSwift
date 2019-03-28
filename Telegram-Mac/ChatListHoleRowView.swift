@@ -8,6 +8,3 @@
 
 import Cocoa
 import TGUIKit
-class ChatListHoleRowView: TableRowView {
-
-}

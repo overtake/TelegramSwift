@@ -20,11 +20,6 @@ public struct AutomaticMediaDownloadCategoryPeers: PostboxCoding, Equatable {
         self.groupChats = groupChats
         self.channels = channels
         self.fileSize = fileSize
-        
-        if fileSize == 1 {
-            var bp:Int = 0
-            bp += 1
-        }
     }
     
     public init(decoder: PostboxDecoder) {
@@ -81,58 +76,54 @@ public struct AutomaticMediaDownloadCategoryPeers: PostboxCoding, Equatable {
 public struct AutomaticMediaDownloadCategories: PostboxCoding, Equatable {
     public let photo: AutomaticMediaDownloadCategoryPeers
     public let video: AutomaticMediaDownloadCategoryPeers
-    public let voice: AutomaticMediaDownloadCategoryPeers
     public let files: AutomaticMediaDownloadCategoryPeers
-    public let instantVideo: AutomaticMediaDownloadCategoryPeers
-    public let gif: AutomaticMediaDownloadCategoryPeers
+//    public let instantVideo: AutomaticMediaDownloadCategoryPeers
+//    public let gif: AutomaticMediaDownloadCategoryPeers
     
-    public init(photo: AutomaticMediaDownloadCategoryPeers, video: AutomaticMediaDownloadCategoryPeers, files: AutomaticMediaDownloadCategoryPeers, voice: AutomaticMediaDownloadCategoryPeers, instantVideo: AutomaticMediaDownloadCategoryPeers, gif: AutomaticMediaDownloadCategoryPeers) {
+    public init(photo: AutomaticMediaDownloadCategoryPeers, video: AutomaticMediaDownloadCategoryPeers, files: AutomaticMediaDownloadCategoryPeers) {
         self.photo = photo
         self.video = video
         self.files = files
-        self.voice = voice
-        self.instantVideo = instantVideo
-        self.gif = gif
+//        self.instantVideo = instantVideo
+//        self.gif = gif
     }
     
     public init(decoder: PostboxDecoder) {
         self.photo = decoder.decodeObjectForKey("p", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
         self.video = decoder.decodeObjectForKey("vd", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
         self.files = decoder.decodeObjectForKey("f", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
-        self.voice = decoder.decodeObjectForKey("v", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
-        self.instantVideo = decoder.decodeObjectForKey("iv", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
-        self.gif = decoder.decodeObjectForKey("g", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
+//        self.instantVideo = decoder.decodeObjectForKey("iv", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
+//        self.gif = decoder.decodeObjectForKey("g", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
     }
     
     public func encode(_ encoder: PostboxEncoder) {
         encoder.encodeObject(self.photo, forKey: "p")
         encoder.encodeObject(self.video, forKey: "vd")
         encoder.encodeObject(self.files, forKey: "f")
-        encoder.encodeObject(self.voice, forKey: "v")
-        encoder.encodeObject(self.instantVideo, forKey: "iv")
-        encoder.encodeObject(self.gif, forKey: "g")
+//        encoder.encodeObject(self.instantVideo, forKey: "iv")
+//        encoder.encodeObject(self.gif, forKey: "g")
     }
     
     public func withUpdatedPhoto(_ photo: AutomaticMediaDownloadCategoryPeers) -> AutomaticMediaDownloadCategories {
-        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files, voice: voice, instantVideo: instantVideo, gif: gif)
+        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files)
     }
     public func withUpdatedVideo(_ video: AutomaticMediaDownloadCategoryPeers) -> AutomaticMediaDownloadCategories {
-        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files, voice: voice, instantVideo: instantVideo, gif: gif)
+        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files)
     }
     public func withUpdatedFiles(_ files: AutomaticMediaDownloadCategoryPeers) -> AutomaticMediaDownloadCategories {
-        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files, voice: voice, instantVideo: instantVideo, gif: gif)
+        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files)
     }
     
     public func withUpdatedVoice(_ voice: AutomaticMediaDownloadCategoryPeers) -> AutomaticMediaDownloadCategories {
-        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files, voice: voice, instantVideo: instantVideo, gif: gif)
+        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files)
     }
     
     public func withUpdatedInstantVideo(_ instantVideo: AutomaticMediaDownloadCategoryPeers) -> AutomaticMediaDownloadCategories {
-        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files, voice: voice, instantVideo: instantVideo, gif: gif)
+        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files)
     }
     
     public func withUpdatedGif(_ gif: AutomaticMediaDownloadCategoryPeers) -> AutomaticMediaDownloadCategories {
-        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files, voice: voice, instantVideo: instantVideo, gif: gif)
+        return AutomaticMediaDownloadCategories(photo: photo, video: video, files: files)
     }
     
     public static func ==(lhs: AutomaticMediaDownloadCategories, rhs: AutomaticMediaDownloadCategories) -> Bool {
@@ -145,15 +136,6 @@ public struct AutomaticMediaDownloadCategories: PostboxCoding, Equatable {
         if lhs.files != rhs.files {
             return false
         }
-        if lhs.voice != rhs.voice {
-            return false
-        }
-        if lhs.instantVideo != rhs.instantVideo {
-            return false
-        }
-        if lhs.gif != rhs.gif {
-            return false
-        }
         return true
     }
 }
@@ -164,7 +146,7 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
     public let downloadFolder: String
     public let automaticSaveDownloadedFiles: Bool
     public static var defaultSettings: AutomaticMediaDownloadSettings {
-        let categories = AutomaticMediaDownloadCategories(photo: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), video: AutomaticMediaDownloadCategoryPeers(privateChats: false, groupChats: false, channels: false, fileSize: 10 * 1024 * 1024), files: AutomaticMediaDownloadCategoryPeers(privateChats: false, groupChats: false, channels: false, fileSize: 10 * 1024 * 1024), voice: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), instantVideo: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), gif: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: 10 * 1024 * 1024))
+        let categories = AutomaticMediaDownloadCategories(photo: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), video: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: 10 * 1024 * 1024), files: AutomaticMediaDownloadCategoryPeers(privateChats: false, groupChats: false, channels: false, fileSize: 10 * 1024 * 1024))
         return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: true, downloadFolder: FastSettings.downloadsFolder ?? "~/Downloads/".nsstring.expandingTildeInPath, automaticSaveDownloadedFiles: false)
     }
     

@@ -440,6 +440,7 @@ private final class AudioPlayerRendererContext {
         self.volume = max(min(1, volume), 0)
         if let outputAudioUnit = outputAudioUnit {
             AudioUnitSetParameter(outputAudioUnit, kHALOutputParam_Volume, kAudioUnitScope_Output, kOutputBus, self.volume, 0)
+           
         }
     }
     
@@ -648,7 +649,7 @@ final class MediaPlayerAudioRenderer {
     
     let audioTimebase: CMTimebase
     
-    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, timebase: CMTimebase?, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
         var audioClock: CMClock?
         
         var deviceId:AudioDeviceID = AudioDeviceID()
@@ -664,8 +665,6 @@ final class MediaPlayerAudioRenderer {
         }
         
         
-        
-        
         var audioTimebase: CMTimebase?
         if let audioClock = audioClock {
             CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: audioClock, timebaseOut: &audioTimebase)
@@ -676,10 +675,13 @@ final class MediaPlayerAudioRenderer {
             CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: CMClockGetHostTimeClock(), timebaseOut: &audioTimebase)
         }
         
-        self.audioTimebase = audioTimebase!
+        let timebase = timebase ?? audioTimebase!
+        
+        
+        self.audioTimebase = timebase
         CMTimebaseSetRate(self.audioTimebase, rate: baseRate)
         audioPlayerRendererQueue.async {
-            let context = AudioPlayerRendererContext(controlTimebase: audioTimebase!, playAndRecord: playAndRecord, forceAudioToSpeaker: forceAudioToSpeaker, baseRate: baseRate, volume: volume, updatedRate: updatedRate, audioPaused: audioPaused)
+            let context = AudioPlayerRendererContext(controlTimebase: timebase, playAndRecord: playAndRecord, forceAudioToSpeaker: forceAudioToSpeaker, baseRate: baseRate, volume: volume, updatedRate: updatedRate, audioPaused: audioPaused)
             self.contextRef = Unmanaged.passRetained(context)
             context.setVolume(volume)
         }

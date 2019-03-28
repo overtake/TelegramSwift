@@ -103,15 +103,13 @@ class AutoNightThemePreferences: PreferencesEntry, Equatable {
 }
 
 
-func autoNightSettings(postbox: Postbox) -> Signal<AutoNightThemePreferences, NoError> {
-    return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoNight]) |> map { prefs in
-        return prefs.values[ApplicationSpecificPreferencesKeys.autoNight] as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings
-    }
+func autoNightSettings(accountManager: AccountManager) -> Signal<AutoNightThemePreferences, NoError> {
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.autoNight]) |> map { $0.entries[ApplicationSharedPreferencesKeys.autoNight] as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings }
 }
 
-func updateAutoNightSettingsInteractively(postbox: Postbox, _ f: @escaping (AutoNightThemePreferences) -> AutoNightThemePreferences) -> Signal<AutoNightThemePreferences, NoError> {
-    return postbox.transaction { transaction -> Void in
-        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.autoNight, { entry in
+func updateAutoNightSettingsInteractively(accountManager: AccountManager, _ f: @escaping (AutoNightThemePreferences) -> AutoNightThemePreferences) -> Signal<AutoNightThemePreferences, NoError> {
+    return accountManager.transaction { transaction -> Void in
+        transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
             let currentSettings: AutoNightThemePreferences
             if let entry = entry as? AutoNightThemePreferences {
                 currentSettings = entry
@@ -121,6 +119,6 @@ func updateAutoNightSettingsInteractively(postbox: Postbox, _ f: @escaping (Auto
             return f(currentSettings)
         })
     } |> mapToSignal {
-        return autoNightSettings(postbox: postbox)
+        return autoNightSettings(accountManager: accountManager)
     }
 }

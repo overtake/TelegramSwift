@@ -12,11 +12,11 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry], account:Account,  initialSize:NSSize, chatInteraction: RecentGifsArguments?) -> TableUpdateTransition {
+private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry], context: AccountContext,  initialSize:NSSize, chatInteraction: RecentGifsArguments?) -> TableUpdateTransition {
    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
         switch entry {
         case let .contextMediaResult(collection, row, index):
-            return ContextMediaRowItem(initialSize, row, index, account, ContextMediaArguments(sendResult: { result in
+            return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { result in
                 if let collection = collection {
                     chatInteraction?.sendInlineResult(collection, result)
                 } else {
@@ -30,16 +30,16 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     }
                 }
             }, menuItems: { file in
-                return account.postbox.transaction { transaction -> [ContextMenuItem] in
+                return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
                     if let mediaId = file.id {
                         let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
                         if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
                             return [ContextMenuItem(L10n.messageContextRemoveGif, handler: {
-                                let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
+                                let _ = removeSavedGif(postbox: context.account.postbox, mediaId: mediaId).start()
                             })]
                         } else {
                             return [ContextMenuItem(L10n.messageContextSaveGif, handler: {
-                                let _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.savedGif(media: file)).start()
+                                let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.savedGif(media: file)).start()
                             })]
                         }
                     }
@@ -94,6 +94,8 @@ final class TableContainer : View {
         addSubview(emptyResults)
         
         updateLocalizationAndTheme()
+        
+        reinstall()
     }
     
     func updateRestricion(_ peer: Peer?) {
@@ -170,8 +172,8 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     private var interactions:EntertainmentInteractions?
     private var chatInteraction: ChatInteraction?
     private let disposable = MetaDisposable()
-    init(account:Account) {
-        super.init(account)
+    override init(_ context: AccountContext) {
+        super.init(context)
         bar = .init(height: 0)
     }
     
@@ -205,7 +207,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        genericView.deinstall()
+        genericView.tableView?.removeAll()
         ready.set(.single(false))
     }
     
@@ -219,7 +221,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     }
     
     override var canBecomeResponder: Bool {
-        if let view = account.context.mainNavigation?.view as? SplitView {
+        if let view = context.sharedContext.bindings.rootNavigation().view as? SplitView {
             return view.state == .single
         }
         return false
@@ -231,10 +233,11 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     
     override func viewWillAppear(_ animated: Bool) {
         
-        super.viewDidAppear(animated)
+        super.viewWillAppear(animated)
         
-        genericView.reinstall()
+        NSLog("viewWillAppear")
         
+        genericView.tableView?.removeAll()
         genericView.updateRestricion(chatInteraction?.presentation.peer)
         
         _ = atomicSize.swap(_frameRect.size)
@@ -243,18 +246,18 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         arguments.sendAppFile = { [weak self] file in
             self?.chatInteraction?.sendAppFile(file)
             self?.genericView.searchView.change(state: .None, true)
-            self?.account.context.entertainment.closePopover()
+            self?.context.sharedContext.bindings.entertainment().closePopover()
         }
         
         arguments.sendInlineResult = { [weak self] results, result in
             self?.chatInteraction?.sendInlineResult(results, result)
             self?.genericView.searchView.change(state: .None, true)
-            self?.account.context.entertainment.closePopover()
+            self?.context.sharedContext.bindings.entertainment().closePopover()
         }
         
         let previous:Atomic<[InputContextEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
-        let account = self.account
+        let context = self.context
         
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: genericView.searchView.state, request: genericView.searchView.query), ignoreRepeated: true)
         
@@ -279,16 +282,16 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         genericView.searchView.searchInteractions = searchInteractions
         
-        let signal = combineLatest( account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> mapToSignal { view, search -> Signal<TableUpdateTransition?, NoError> in
+        let signal = combineLatest( context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> mapToSignal { view, search -> Signal<TableUpdateTransition?, NoError> in
             
             if search.request.isEmpty {
                 let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView
                 let entries = recentEntries(for: postboxView, initialSize: initialSize.modify({$0})).sorted(by: <)
-                return .single(prepareEntries(left: previous.swap(entries), right: entries, account: account, initialSize: initialSize.modify({$0}), chatInteraction: arguments))
+                return .single(prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.modify({$0}), chatInteraction: arguments))
             } else {
-                return .single(nil) |> then(searchGifs(account: account, query: search.request.lowercased()) |> map { result in
+                return .single(nil) |> then(searchGifs(account: context.account, query: search.request.lowercased()) |> map { result in
                     let entries = gifEntries(for: result, initialSize: initialSize.modify({$0}))
-                    return prepareEntries(left: previous.swap(entries), right: entries, account: account, initialSize: initialSize.modify({$0}), chatInteraction: arguments)
+                    return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.modify({$0}), chatInteraction: arguments)
                 } |> delay(0.2, queue: Queue.concurrentDefaultQueue()))
             }
             

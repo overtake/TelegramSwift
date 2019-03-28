@@ -16,10 +16,10 @@ class ChatInvoiceItem: ChatRowItem {
     fileprivate let media:TelegramMediaInvoice
     fileprivate let textLayout:TextViewLayout
     fileprivate var arguments:TransformImageArguments?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         let message = object.message!
         
-        let isIncoming: Bool = message.isIncoming(account, object.renderType == .bubble)
+        let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
 
         self.media = message.media[0] as! TelegramMediaInvoice
         let attr = NSMutableAttributedString()
@@ -28,7 +28,7 @@ class ChatInvoiceItem: ChatRowItem {
         
         textLayout = TextViewLayout(attr)
         
-        super.init(initialSize, chatInteraction, account, object, downloadSettings)
+        super.init(initialSize, chatInteraction, context, object, downloadSettings)
         
     }
     
@@ -88,10 +88,10 @@ class ChatInvoiceView : ChatRowView {
             textView.update(item.textLayout)
             if let photo = item.media.photo, let arguments = item.arguments {
                 addSubview(imageView)
-                imageView.setSignal( chatMessageWebFilePhoto(account: item.account, photo: photo, scale: backingScaleFactor))
+                imageView.setSignal( chatMessageWebFilePhoto(account: item.context.account, photo: photo, scale: backingScaleFactor))
                 imageView.set(arguments: arguments)
                 imageView.setFrameSize(arguments.boundingSize)
-                _ = fetchedMediaResource(postbox: item.account.postbox, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
+                _ = fetchedMediaResource(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
               //  _ = item.account.postbox.mediaBox.fetchedResource(photo.resource, tag: nil).start()
 
             } else {

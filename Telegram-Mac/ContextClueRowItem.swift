@@ -12,29 +12,23 @@ import TGUIKit
 class ContextClueRowItem: TableRowItem {
 
     private let _stableId:AnyHashable
-    let clue:EmojiClue
-    
+    let clues:[String]
+    var selectedIndex:Int? = nil
+
     override var stableId: AnyHashable {
         return _stableId
     }
-    
-    fileprivate let clueLayout: TextViewLayout
-    fileprivate let emojiLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId:AnyHashable, clue: EmojiClue) {
+    fileprivate let context: AccountContext
+    fileprivate let canDisablePrediction: Bool
+    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], canDisablePrediction: Bool) {
         self._stableId = stableId
-        self.clue = clue
-        clueLayout = TextViewLayout(.initialize(string: clue.label, color: theme.colors.text, font: .normal(.title)))
-        emojiLayout = TextViewLayout(.initialize(string: clue.emoji, color: theme.colors.text, font: .normal(.title)))
-        emojiLayout.measure(width: .greatestFiniteMagnitude)
+        self.clues = clues
+        self.context = context
+        self.canDisablePrediction = canDisablePrediction
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
-    override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
-        let success = super.makeSize(width, oldWidth: oldWidth)
-        clueLayout.measure(width: width - 50)
-        return success
-    }
     
     override var height: CGFloat {
         return 40
@@ -46,26 +40,117 @@ class ContextClueRowItem: TableRowItem {
     
 }
 
-private class ContextClueRowView : TableRowView {
-    private let clueTextView:TextView = TextView()
-    private let emojiTextView: TextView = TextView()
+private final class ClueRowItem : TableRowItem {
+    private let _stableId = arc4random()
+    override var stableId: AnyHashable {
+        return _stableId
+    }
+    let layout: TextViewLayout
+    
+    init(_ initialSize: NSSize, clue: String) {
+        self.layout = TextViewLayout(.initialize(string: clue, color: nil, font: .normal(17)))
+        super.init(initialSize)
+        layout.measure(width: .greatestFiniteMagnitude)
+    }
+    
+    
+    override func viewClass() -> AnyClass {
+        return ClueRowView.self
+    }
+    
+    override var height: CGFloat {
+        return 40
+    }
+}
+
+private final class ClueRowView : HorizontalRowView {
+    private let textView: TextView = TextView()
+    private let containerView = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        layerContentsRedrawPolicy = .onSetNeedsDisplay
-        clueTextView.userInteractionEnabled = false
-        clueTextView.isSelectable = false
-        emojiTextView.userInteractionEnabled = false
-        emojiTextView.isSelectable = false
-        addSubview(clueTextView)
-        addSubview(emojiTextView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        addSubview(containerView)
+        addSubview(textView)
+        containerView.layer?.cornerRadius = .cornerRadius
     }
     
     override var backdorColor: NSColor {
-        if let item = item {
-            return item.isSelected ? theme.colors.blueSelect : theme.colors.background
-        } else {
-            return theme.colors.background
+        return theme.colors.background
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        containerView.backgroundColor = item?.isSelected == true ? theme.colors.grayForeground : theme.colors.background
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        if let item = item as? ClueRowItem {
+            textView.update(item.layout)
         }
+    }
+    
+    override func layout() {
+        super.layout()
+        containerView.frame = NSMakeRect(4, 4, frame.width - 8, frame.height - 8)
+        textView.center()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private class ContextClueRowView : TableRowView, TableViewDelegate {
+    func selectionDidChange(row: Int, item: TableRowItem, byClick: Bool, isNew: Bool) {
+        if let clues = self.item as? ContextClueRowItem {
+            clues.selectedIndex = row
+            if byClick, let window = window as? Window {
+                window.sendKeyEvent(.Return, modifierFlags: [])
+            }
+        }
+    }
+    
+    func selectionWillChange(row: Int, item: TableRowItem) -> Bool {
+        return true
+    }
+    
+    func isSelectable(row: Int, item: TableRowItem) -> Bool {
+        return true
+    }
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    private let button = ImageButton()
+    
+    private let tableView = HorizontalTableView(frame: NSZeroRect)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(tableView)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
+        tableView.delegate = self
+        addSubview(button)
+        
+        button.set(handler: { [weak self] _ in
+            self?.disablePrediction()
+        }, for: .Click)
+    }
+    
+    private func disablePrediction() {
+        guard let window = self.window as? Window, let item = item as? ContextClueRowItem else { return }
+        let sharedContext = item.context.sharedContext
+        confirm(for: window, information: L10n.generalSettingsEmojiPredictionDisableText, okTitle: L10n.generalSettingsEmojiPredictionDisable, successHandler: { _ in
+            _ = updateBaseAppSettingsInteractively(accountManager: sharedContext.accountManager, { current in
+                return current.withUpdatedPredictEmoji(false)
+            }).start()
+        })
+    }
+    
+    
+    override var backdorColor: NSColor {
+        return theme.colors.background
     }
     
     required init?(coder: NSCoder) {
@@ -74,36 +159,46 @@ private class ContextClueRowView : TableRowView {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        
-        if let item = item {
-            if !item.isSelected {
-                ctx.setFillColor(theme.colors.border.cgColor)
-                ctx.fill(NSMakeRect(40, frame.height - .borderSize, frame.width - 20, .borderSize))
-            }
-        }
     }
     
     override func layout() {
         super.layout()
-        clueTextView.update(clueTextView.layout)
-        clueTextView.centerY(x: 40)
-        
-        emojiTextView.update(emojiTextView.layout)
-        emojiTextView.centerY(x: 10)
+        tableView.frame = NSMakeRect(0, 0, frame.width - (button.isHidden ? 0 : button.frame.width), bounds.height)
+        button.centerY(x: frame.width - button.frame.width)
     }
     
     override func updateColors() {
         super.updateColors()
-        self.emojiTextView.backgroundColor = backdorColor
-        self.clueTextView.backgroundColor = backdorColor
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
+        
+        
+        
+        button.set(image: theme.icons.disableEmojiPrediction, for: .Normal)
+        _ = button.sizeToFit(NSZeroSize, NSMakeSize(40, 40), thatFit: true)
+        
+        tableView.beginTableUpdates()
+        tableView.removeAll(redraw: true, animation: .none)
         if let item = item as? ContextClueRowItem {
-            clueTextView.update(item.clueLayout)
-            emojiTextView.update(item.emojiLayout)
+            
+            button.isHidden = !item.canDisablePrediction
+            
+            for clue in item.clues {
+                _ = tableView.addItem(item: ClueRowItem(bounds.size, clue: clue), animation: .none)
+            }
+            if let selectedIndex = item.selectedIndex {
+                let item = tableView.item(at: selectedIndex)
+                _ = tableView.select(item: item)
+            }
         }
+        tableView.endTableUpdates()
+        
+        if let selectedItem = tableView.selectedItem() {
+            tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: false, inset: 0))
+        }
+        
         needsLayout = true
     }
 }

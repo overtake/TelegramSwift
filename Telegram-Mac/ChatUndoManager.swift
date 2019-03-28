@@ -398,15 +398,15 @@ final class ChatUndoManager  {
         return status
     }
     
-    func clearHistoryInteractively(postbox: Postbox, peerId: PeerId) {
-        _ = TelegramCoreMac.clearHistoryInteractively(postbox: postbox, peerId: peerId).start(completed: { [weak context] in
+    func clearHistoryInteractively(postbox: Postbox, peerId: PeerId, type: InteractiveMessagesDeletionType = .forLocalPeer) {
+        _ = TelegramCoreMac.clearHistoryInteractively(postbox: postbox, peerId: peerId, type: type).start(completed: { [weak context] in
             queue.async {
               context?.finishAction(for: peerId, type: .clearHistory)
             }
         })
     }
-    func removePeerChat(postbox: Postbox, peerId: PeerId, type: ChatUndoActionType, reportChatSpam: Bool, deleteGloballyIfPossible: Bool = false) {
-        _ = TelegramCoreMac.removePeerChat(postbox: postbox, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: deleteGloballyIfPossible).start(completed: { [weak context] in
+    func removePeerChat(account: Account, peerId: PeerId, type: ChatUndoActionType, reportChatSpam: Bool, deleteGloballyIfPossible: Bool = false) {
+        _ = TelegramCoreMac.removePeerChat(account: account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: deleteGloballyIfPossible).start(completed: { [weak context] in
             queue.async {
                 context?.finishAction(for: peerId, type: type)
             }
@@ -422,7 +422,7 @@ final class ChatUndoManager  {
 }
 
 
-func enqueueMessages(account: Account, peerId: PeerId, messages: [EnqueueMessage]) -> Signal<[MessageId?], NoError> {
-    account.context.chatUndoManager.invokeNow(for: peerId, type: .clearHistory)
-    return TelegramCoreMac.enqueueMessages(account: account, peerId: peerId, messages: messages)
+func enqueueMessages(context: AccountContext, peerId: PeerId, messages: [EnqueueMessage]) -> Signal<[MessageId?], NoError> {
+    context.chatUndoManager.invokeNow(for: peerId, type: .clearHistory)
+    return TelegramCoreMac.enqueueMessages(account: context.account, peerId: peerId, messages: messages)
 }

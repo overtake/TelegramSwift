@@ -237,7 +237,7 @@ class ServiceEventLogItem: TableRowItem {
             let date:NSAttributedString = .initialize(string: DateUtils.string(forMessageListDate: event.date), color: theme.colors.grayText, font: .normal(.short))
             var nameColor:NSColor
             
-            if chatInteraction.account.peerId == peer.id {
+            if chatInteraction.context.peerId == peer.id {
                 nameColor = theme.colors.link
             } else {
                 let value = abs(Int(peer.id.id) % 7)
@@ -334,7 +334,7 @@ class ServiceEventLogItem: TableRowItem {
                             
                             
                             message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
-                            message.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
+                            message.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                             
                             message.add(link: inAppLink.peerInfo(peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
                             self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
@@ -416,7 +416,7 @@ class ServiceEventLogItem: TableRowItem {
                             
                             
                             message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
-                            message.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
+                            message.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                             
                             message.add(link: inAppLink.peerInfo(peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
                             self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
@@ -517,11 +517,11 @@ class ServiceEventLogItem: TableRowItem {
     
                 let newContentAttributed = NSMutableAttributedString()
                 _ = newContentAttributed.append(string: changedInfo.new, color: theme.colors.text, font: .normal(.text))
-                newContentAttributed.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
+                newContentAttributed.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                 
                 let prevContentAttributed = NSMutableAttributedString()
                 _ = prevContentAttributed.append(string: changedInfo.prev, color: theme.colors.text, font: .normal(12.5))
-                prevContentAttributed.detectLinks(type: [.Mentions, .Hashtags], account: chatInteraction.account, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
+                prevContentAttributed.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                 
                 let panel:ServiceEventLogMessagePanel?
                 if let _ = changedInfo.panelText {
@@ -599,7 +599,7 @@ private class ServiceEventLogRowView : TableRowView {
                 if messageContent == nil {
                     messageContent = ServiceEventLogMessageContainerView(frame: NSZeroRect)
                 }
-                messageContent?.update(with: content, account: item.chatInteraction.account)
+                messageContent?.update(with: content, account: item.chatInteraction.context.account)
                 messageContent?.setFrameSize(frame.width - (defaultContentInset.left + defaultContentInset.right), content.height)
                 addSubview(messageContent!)
             } else {
@@ -614,7 +614,7 @@ private class ServiceEventLogRowView : TableRowView {
                     self.addSubview(imageView!)
                 }
                 
-                imageView?.setSignal(chatMessagePhoto(account: item.chatInteraction.account, imageReference: ImageMediaReference.standalone(media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
+                imageView?.setSignal(chatMessagePhoto(account: item.chatInteraction.context.account, imageReference: ImageMediaReference.standalone(media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor))
             } else {
                 imageView?.removeFromSuperview()
                 imageView = nil

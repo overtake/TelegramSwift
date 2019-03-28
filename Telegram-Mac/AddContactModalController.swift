@@ -12,150 +12,175 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 
-private class AddContactControllerView : View, NSTextFieldDelegate {
-    private let headerView:TextView = TextView()
-    fileprivate let firstName:NSTextField = NSTextField()
-    fileprivate let lastName:NSTextField = NSTextField()
-    fileprivate let phoneNumber:NSTextField = NSTextField()
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        let layout = TextViewLayout(.initialize(string: tr(L10n.contactsAddContact), color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
-        layout.measure(width: frameRect.width)
-        headerView.update(layout)
-        addSubview(headerView)
-        addSubview(firstName)
-        addSubview(lastName)
-        addSubview(phoneNumber)
-        
-        firstName.nextResponder = lastName
-        firstName.nextKeyView = lastName
-        
-        lastName.nextResponder = phoneNumber
-        lastName.nextKeyView = phoneNumber
-        
-        //phoneNumber.nextResponder = firstName
-        //phoneNumber.nextKeyView = firstName
-        
-        firstName.delegate = self
-        lastName.delegate = self
-        phoneNumber.delegate = self
-
-        
-        firstName.isBordered = false
-        firstName.isBezeled = false
-        firstName.focusRingType = .none
-        
-        lastName.isBordered = false
-        lastName.isBezeled = false
-        lastName.focusRingType = .none
-        
-        phoneNumber.isBordered = false
-        phoneNumber.isBezeled = false
-        phoneNumber.focusRingType = .none
-        
-        
-        firstName.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.contactsFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
-        lastName.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.contactsLastNamePlaceholder), color: theme.colors.grayText, font: .normal(13.5))
-        phoneNumber.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.contactsPhoneNumberPlaceholder), color: theme.colors.grayText, font: .normal(13.5))
-        
-        firstName.setFrameSize(NSMakeSize(frameRect.width - 40, 20))
-        lastName.setFrameSize(NSMakeSize(frameRect.width - 40, 20))
-        phoneNumber.setFrameSize(NSMakeSize(frameRect.width - 40, 20))
-        
-        updateLocalizationAndTheme()
+private struct AddContactState : Equatable {
+    let firstName: String
+    let lastName: String
+    let phoneNumber: String
+    
+    let errors: [InputDataIdentifier : InputDataValueError]
+    
+    init(firstName: String, lastName: String, phoneNumber: String, errors: [InputDataIdentifier : InputDataValueError]) {
+        self.firstName = firstName
+        self.lastName = lastName
+        self.phoneNumber = phoneNumber
+        self.errors = errors
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        backgroundColor = theme.colors.background
-        headerView.backgroundColor = theme.colors.background
-        firstName.backgroundColor = theme.colors.background
-        lastName.backgroundColor = theme.colors.background
-        phoneNumber.backgroundColor = theme.colors.background
+    func withUpdatedError(_ error: InputDataValueError?, for key: InputDataIdentifier) -> AddContactState {
+        var errors = self.errors
+        if let error = error {
+            errors[key] = error
+        } else {
+            errors.removeValue(forKey: key)
+        }
+        return AddContactState(firstName: self.firstName, lastName: self.lastName, phoneNumber: self.phoneNumber, errors: errors)
     }
     
-    
-    func controlTextDidChange(_ obj: Notification) {
-        firstName.stringValue = firstName.stringValue.nsstring.substring(with: NSMakeRange(0, min(firstName.stringValue.length, 20)))
-        lastName.stringValue = lastName.stringValue.nsstring.substring(with: NSMakeRange(0, min(lastName.stringValue.length, 20)))
-        phoneNumber.stringValue = formatPhoneNumber(phoneNumber.stringValue)
+    func withUpdatedFirstName(_ firstName: String) -> AddContactState {
+        return AddContactState(firstName: firstName, lastName: self.lastName, phoneNumber: self.phoneNumber, errors: self.errors)
     }
-    
-    
-    override func layout() {
-        super.layout()
-        headerView.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - headerView.frame.height)/2))
-        firstName.centerX(y: 50 + 35)
-        lastName.centerX(y: firstName.frame.maxY + 30)
-        phoneNumber.centerX(y: lastName.frame.maxY + 30)
+    func withUpdatedLastName(_ lastName: String) -> AddContactState {
+        return AddContactState(firstName: self.firstName, lastName: lastName, phoneNumber: self.phoneNumber, errors: self.errors)
     }
-    
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
-        ctx.fill(NSMakeRect(firstName.frame.minX, firstName.frame.maxY + 2, firstName.frame.width, .borderSize))
-        ctx.fill(NSMakeRect(lastName.frame.minX, lastName.frame.maxY + 2, lastName.frame.width, .borderSize))
-        ctx.fill(NSMakeRect(phoneNumber.frame.minX, phoneNumber.frame.maxY + 2, phoneNumber.frame.width, .borderSize))
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func withUpdatedPhoneNumber(_ phoneNumber: String) -> AddContactState {
+        return AddContactState(firstName: self.firstName, lastName: self.lastName, phoneNumber: phoneNumber, errors: self.errors)
     }
 }
 
-class AddContactModalController: ModalViewController {
+private let _id_input_first_name = InputDataIdentifier("_id_input_first_name")
+private let _id_input_last_name = InputDataIdentifier("_id_input_last_name")
+private let _id_input_phone_number = InputDataIdentifier("_id_input_phone_number")
 
-    private let account:Account
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        readyOnce()
-    }
+private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
+    var entries: [InputDataEntry] = []
     
-    override func viewClass() -> AnyClass {
-        return AddContactControllerView.self
-    }
+    var sectionId: Int32 = 0
+    var index: Int32 = 0
     
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsFirstNamePlaceholder.uppercased()), color: theme.colors.text, detectBold: true))
+    index += 1
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.firstName), error: state.errors[_id_input_first_name], identifier: _id_input_first_name, mode: .plain, placeholder: nil, inputPlaceholder: L10n.contactsFirstNamePlaceholder, filter: { $0 }, limit: 255))
+    index += 1
 
     
-    override func firstResponder() -> NSResponder? {
-        if genericView.window?.firstResponder == genericView.firstName.textView || genericView.window?.firstResponder == genericView.lastName.textView || genericView.window?.firstResponder == genericView.phoneNumber.textView {
-            return genericView.window?.firstResponder
-        }
-        return genericView.firstName
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsLastNamePlaceholder.uppercased()), color: theme.colors.text, detectBold: true))
+    index += 1
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.lastName), error: state.errors[_id_input_last_name], identifier: _id_input_last_name, mode: .plain, placeholder: nil, inputPlaceholder: L10n.contactsLastNamePlaceholder, filter: { $0 }, limit: 255))
+    index += 1
+    
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsPhoneNumberPlaceholder.uppercased()), color: theme.colors.text, detectBold: true))
+    index += 1
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.phoneNumber), error: state.errors[_id_input_phone_number], identifier: _id_input_phone_number, mode: .plain, placeholder: nil, inputPlaceholder: L10n.contactsPhoneNumberPlaceholder, filter: { text in
+        return text.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321+ ").inverted)
+    }, limit: 30))
+    index += 1
+    
+    
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
+    
+    return entries
+}
+
+func AddContactModalController(_ context: AccountContext) -> InputDataModalController {
+    
+    
+    let initialState = AddContactState(firstName: "", lastName: "", phoneNumber: "", errors: [:])
+    
+    let statePromise = ValuePromise(initialState, ignoreRepeated: false)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((AddContactState) -> AddContactState) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
     }
     
-    private var genericView:AddContactControllerView {
-        return self.view as! AddContactControllerView
+    let dataSignal = statePromise.get() |> map { state in
+        return addContactEntries(state: state)
     }
     
-    init(account: Account) {
-        self.account = account
-        super.init(frame: NSMakeRect(0, 0, 300, 240))
-        bar = .init(height: 0)
-    }
+    var close: (() -> Void)?
     
-    func importAndCloseIfPossible() {
-        if genericView.firstName.stringValue.length == 0 {
-            genericView.firstName.shake()
-        } else if genericView.phoneNumber.stringValue.length == 0 {
-            genericView.phoneNumber.shake()
-        } else {
-            close()
-            _ = (showModalProgress(signal: importContact(account: account, firstName: genericView.firstName.stringValue , lastName: genericView.lastName.stringValue, phoneNumber: genericView.phoneNumber.stringValue), for: mainWindow) |> deliverOnMainQueue).start(next: { [weak self]  peerId in
-                if let peerId = peerId, let account = self?.account {
-                    account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(peerId)))
-                } else {
-                    alert(for: mainWindow, header: tr(L10n.contactsNotRegistredTitle), info: tr(L10n.contactsNotRegistredDescription))
+    var shouldMakeNextResponderAfterTransition: InputDataIdentifier? = nil
+    
+    let controller = InputDataController(dataSignal: dataSignal |> map { ($0, true) }, title: L10n.contactsAddContact, validateData: { data in
+        
+        return .fail(.doSomething { f in
+            let state = stateValue.with {$0}
+            
+            var fields: [InputDataIdentifier : InputDataValidationFailAction] = [:]
+            
+            if state.firstName.isEmpty {
+                fields[_id_input_first_name] = .shake
+                shouldMakeNextResponderAfterTransition = _id_input_first_name
+            }
+            
+            if state.phoneNumber.isEmpty {
+                fields[_id_input_phone_number] = .shake
+                if shouldMakeNextResponderAfterTransition == nil {
+                    shouldMakeNextResponderAfterTransition = _id_input_phone_number
                 }
-            })
+                updateState {
+                    $0.withUpdatedError(InputDataValueError(description: L10n.contactsPhoneNumberInvalid, target: .data), for: _id_input_phone_number)
+                }
+            }
+            
+            if !fields.isEmpty {
+                f(.fail(.fields(fields)))
+            } else {
+                _ = (showModalProgress(signal: importContact(account: context.account, firstName: state.firstName, lastName: state.lastName, phoneNumber: state.phoneNumber), for: mainWindow) |> deliverOnMainQueue).start(next: { peerId in
+                    if let peerId = peerId {
+                        context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                        close?()
+                    } else {
+                        updateState {
+                            $0.withUpdatedError(InputDataValueError(description: L10n.contactsPhoneNumberNotRegistred, target: .data), for: _id_input_phone_number)
+                        }
+                    }
+                })
+            }
+            
+            updateState {
+                $0
+            }
+        })
+        
+       
+    }, updateDatas: { data in
+        updateState { state in
+            return state
+                .withUpdatedFirstName(data[_id_input_first_name]?.stringValue ?? "")
+                .withUpdatedLastName(data[_id_input_last_name]?.stringValue ?? "")
+                .withUpdatedPhoneNumber(formatPhoneNumber(data[_id_input_phone_number]?.stringValue ?? ""))
+                .withUpdatedError(nil, for: _id_input_first_name)
+                .withUpdatedError(nil, for: _id_input_last_name)
+                .withUpdatedError(nil, for: _id_input_phone_number)
         }
+
+        return .none
+    }, afterDisappear: {
+        
+    }, afterTransaction: { controller in
+        if let identifier = shouldMakeNextResponderAfterTransition {
+            controller.makeFirstResponderIfPossible(for: identifier)
+        }
+        shouldMakeNextResponderAfterTransition = nil
+    })
+    
+    
+    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak controller] in
+        controller?.validateInputValues()
+    }, cancelTitle: L10n.modalCancel)
+    
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    close = { [weak modalController] in
+        modalController?.close()
     }
     
-    override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(L10n.contactsAddContact), accept: { [weak self] in
-            self?.importAndCloseIfPossible()
-        }, cancelTitle: tr(L10n.modalCancel), drawBorder: false)
-    }
-    
+    return modalController
 }

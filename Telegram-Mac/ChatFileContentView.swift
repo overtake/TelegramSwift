@@ -35,6 +35,12 @@ class ChatFileContentView: ChatMediaContentView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func previewMediaIfPossible() -> Bool {
+        guard let context = self.context, let window = self.kitWindow, let table = self.table, media?.isGraphicFile == true, fetchStatus == .Local else {return false}
+        _ = startModalPreviewHandle(table, window: window, context: context)
+        return true
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
         actionText.isSelectable = false
@@ -49,8 +55,8 @@ class ChatFileContentView: ChatMediaContentView {
             if let link = link as? String, link.hasSuffix("download") {
                 self?.executeInteraction(false)
             } else if let link = link as? String, link.hasSuffix("finder") {
-                if let account = self?.account, let file = self?.media as? TelegramMediaFile {
-                    showInFinder(file, account:account)
+                if let context = self?.context, let file = self?.media as? TelegramMediaFile {
+                    showInFinder(file, account: context.account)
                 }
             }
         }
@@ -66,35 +72,35 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile {
+        if let context = context, let media = media as? TelegramMediaFile {
             if let parent = parent {
-                fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
             } else {
-                fetchDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.standalone(media: media)).start())
+                fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
             }
         }
     }
     
     override func open() {
-        if let account = account, let media = media as? TelegramMediaFile, let parent = parent  {
+        if let context = context, let media = media as? TelegramMediaFile, let parent = parent  {
             if media.isGraphicFile {
-                showChatGallery(account: account, message: parent, table, parameters as? ChatMediaGalleryParameters)
+                showChatGallery(context: context, message: parent, table, parameters as? ChatMediaGalleryParameters)
             } else {
-                QuickLookPreview.current.show(account: account, with: media, stableId:parent.chatStableId, table)
+                QuickLookPreview.current.show(context: context, with: media, stableId:parent.chatStableId, table)
             }
         }
     }
 
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile {
+        if let context = context, let media = media as? TelegramMediaFile {
             if let parent = parent {
-                messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
+                messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
             } else {
-                cancelFreeMediaFileInteractiveFetch(account: account, resource: media.resource)
+                cancelFreeMediaFileInteractiveFetch(context: context, resource: media.resource)
             }
             if let resource = media.resource as? LocalFileArchiveMediaResource {
-                account.context.archiver.remove(.resource(resource))
+                archiver.remove(.resource(resource))
             }
         }
     }
@@ -186,14 +192,14 @@ class ChatFileContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size:NSSize, account:Account, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+    override func update(with media: Media, size:NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
         let semanticMedia = self.media?.id == media.id
         
         let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
+        super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         var updatedStatusSignal: Signal<(MediaResourceStatus, ArchiveStatus?), NoError>?
         let parameters = parameters as? ChatFileLayoutParameters
@@ -201,10 +207,10 @@ class ChatFileContentView: ChatMediaContentView {
         
         var archiveSignal:Signal<ArchiveStatus?, NoError> = .single(nil)
         if let resource = file.resource as? LocalFileArchiveMediaResource {
-            archiveSignal = account.context.archiver.archive(.resource(resource)) |> map {Optional($0)}
+            archiveSignal = archiver.archive(.resource(resource)) |> map {Optional($0)}
         }
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file), account.pendingMessageManager.pendingMessageStatus(parent.id), archiveSignal)
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id), archiveSignal)
                 |> map { resourceStatus, pendingStatus, archiveStatus in
                     if let archiveStatus = archiveStatus {
                         switch archiveStatus {
@@ -221,7 +227,7 @@ class ChatFileContentView: ChatMediaContentView {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: file, approximateSynchronousValue: approximateSynchronousValue), archiveSignal) |> map { resourceStatus, archiveStatus in
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue), archiveSignal) |> map { resourceStatus, archiveStatus in
                 if let archiveStatus = archiveStatus {
                     switch archiveStatus {
                     case let .progress(progress):
@@ -247,7 +253,7 @@ class ChatFileContentView: ChatMediaContentView {
             thumbView.setSignal(signal: cachedMedia(messageId: stableId, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
-            thumbView.setSignal(chatMessageImageFile(account: account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue), clearInstantly: false, synchronousLoad: approximateSynchronousValue, cacheImage: { [weak self] image in
+            thumbView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { [weak self] image in
                 if let strongSelf = self {
                     return cacheMedia(signal: image, messageId: stableId, arguments: arguments, scale: strongSelf.backingScaleFactor)
                 } else {
@@ -262,9 +268,7 @@ class ChatFileContentView: ChatMediaContentView {
         }
         
         self.setNeedsDisplay()
-        
-        self.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
-        
+                
         if let updatedStatusSignal = updatedStatusSignal {
             self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status, archiveStatus in
                 guard let `self` = self else {return}
@@ -355,6 +359,10 @@ class ChatFileContentView: ChatMediaContentView {
             return thumbView.copy()
         }
         return progressView.copy()
+    }
+    
+    override var contents: Any? {
+        return (copy() as? NSView)?.layer?.contents
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {

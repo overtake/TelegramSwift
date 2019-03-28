@@ -32,13 +32,17 @@ open class TransformImageView: NSView {
     
     
     
-    var image: Any? {
+    var image: CGImage? {
         set {
             layer?.contents = newValue
             imageUpdated?(newValue)
         }
         get {
-            return layer?.contents
+            if let any = layer?.contents {
+                return any as! CGImage
+            } else {
+                return nil
+            }
         }
     }
     
@@ -96,11 +100,12 @@ open class TransformImageView: NSView {
         let result = combine |> mapToThrottled { transform, arguments -> Signal<(CGImage?, Bool), NoError> in
             return deferred {
                 let context = transform(arguments)
-                return Signal<(CGImage?, Bool), NoError>.single((context?.generateImage(), context?.isHighQuality ?? true))
+                let image = context?.generateImage()
+                return Signal<(CGImage?, Bool), NoError>.single((image, context?.isHighQuality ?? true))
             }
-        }
+        } |> deliverOnMainQueue
         
-        self.disposable.set((result |> deliverOnMainQueue |> beforeNext { [weak self] (next, isThumb) in
+        self.disposable.set(result.start(next: { [weak self] (next, isThumb) in
             if let strongSelf = self  {
                 if strongSelf.image == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -110,9 +115,9 @@ open class TransformImageView: NSView {
                     self?.layer?.animateContents()
                 }
                 strongSelf.first = false
-                _ = cacheImage(.single((next, isThumb))).start()
+                strongSelf.cachedDisposable.set(cacheImage(.single((next, isThumb))).start())
             }
-        }).start())
+        }))
 
     }
     

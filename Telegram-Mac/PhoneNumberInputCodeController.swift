@@ -167,10 +167,10 @@ class PhoneNumberInputCodeController: TelegramGenericViewController<PhoneNumberI
     private let changePhoneDisposable = MetaDisposable()
     private let formattedNumber: String
     private var arguments: ConfirmCodeArguments?
-    init(_ account: Account, data: ChangeAccountPhoneNumberData, formattedNumber: String) {
+    init(_ context: AccountContext, data: ChangeAccountPhoneNumberData, formattedNumber: String) {
         self.data = data
         self.formattedNumber = formattedNumber
-        super.init(account)
+        super.init(context)
     }
     
     override var defaultBarTitle: String {
@@ -179,7 +179,7 @@ class PhoneNumberInputCodeController: TelegramGenericViewController<PhoneNumberI
     
     private func checkCode(_ code:String)->Void {
                 
-        changePhoneDisposable.set(showModalProgress(signal: requestChangeAccountPhoneNumber(account: account, phoneNumber: formattedNumber, phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: mainWindow).start(error: { [weak self] error in
+        changePhoneDisposable.set(showModalProgress(signal: requestChangeAccountPhoneNumber(account: context.account, phoneNumber: formattedNumber, phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: mainWindow).start(error: { [weak self] error in
             var alertText: String = ""
             switch error {
             case .generic:

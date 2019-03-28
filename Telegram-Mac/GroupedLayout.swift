@@ -148,35 +148,37 @@ class GroupedLayout {
                         photos[1].positionFlags = [.top, .right, .bottom]
                     }
                 } else if photos.count == 3 {
-                    if proportions == "www" {
-                        var width: CGFloat = maxSize.width
-                        let firstHeight: CGFloat = min(width / photos[0].aspectRatio, (maxSize.height - spacing) * 0.66)
-                        photos[0].layoutFrame = NSMakeRect(0.0, 0.0, width, firstHeight)
+                    if proportions.hasPrefix("n") {
+                        let firstHeight = maxSize.height
+                        
+                        let thirdHeight = min((maxSize.height - spacing) * 0.5, round(photos[1].aspectRatio * (maxSize.width - spacing) / (photos[2].aspectRatio + photos[1].aspectRatio)))
+                        let secondHeight = maxSize.height - thirdHeight - spacing
+                        let rightWidth = max(minWidth, min((maxSize.width - spacing) * 0.5, round(min(thirdHeight * photos[2].aspectRatio, secondHeight * photos[1].aspectRatio))))
+                        
+                        let leftWidth = round(min(firstHeight * photos[0].aspectRatio, (maxSize.width - spacing - rightWidth)))
+                        photos[0].layoutFrame = CGRect(x: 0.0, y: 0.0, width: leftWidth, height: firstHeight)
+                        photos[0].positionFlags = [.top, .left, .bottom]
+                        
+                        photos[1].layoutFrame = CGRect(x: leftWidth + spacing, y: 0.0, width: rightWidth, height: secondHeight)
+                        photos[1].positionFlags = [.right, .top]
+                        
+                        photos[2].layoutFrame = CGRect(x: leftWidth + spacing, y: secondHeight + spacing, width: rightWidth, height: thirdHeight)
+                        photos[2].positionFlags = [.right, .bottom]
+                    } else {
+                        var width = maxSize.width
+                        let firstHeight = floor(min(width / photos[0].aspectRatio, (maxSize.height - spacing) * 0.66))
+                        photos[0].layoutFrame = CGRect(x: 0.0, y: 0.0, width: width, height: firstHeight)
                         photos[0].positionFlags = [.top, .left, .right]
                         
                         width = (maxSize.width - spacing) / 2.0
-                        let secondHeight: CGFloat = min(maxSize.height - firstHeight - spacing, min(width / photos[1].aspectRatio, width / photos[2].aspectRatio))
-                        photos[1].layoutFrame = NSMakeRect(0.0, firstHeight + spacing, width, secondHeight)
+                        let secondHeight = min(maxSize.height - firstHeight - spacing, round(min(width / photos[1].aspectRatio, width / photos[2].aspectRatio)))
+                        photos[1].layoutFrame = CGRect(x: 0.0, y: firstHeight + spacing, width: width, height: secondHeight)
                         photos[1].positionFlags = [.left, .bottom]
                         
-                        photos[2].layoutFrame = NSMakeRect(width + spacing, firstHeight + spacing, width, secondHeight)
-                        photos[2].positionFlags = [.right, .bottom]
-                    } else {
-                        let firstHeight: CGFloat = maxSize.height
-                        let leftWidth: CGFloat = min(firstHeight * photos[0].aspectRatio, (maxSize.width - spacing) * 0.6)
-                        photos[0].layoutFrame = NSMakeRect(0.0, 0.0, leftWidth, firstHeight)
-                        photos[0].positionFlags = [.top, .left, .bottom]
-                        
-                        
-                        let thirdHeight: CGFloat = min((maxSize.height - spacing) * 0.66, photos[1].aspectRatio * (maxSize.width - spacing) / (photos[2].aspectRatio + photos[1].aspectRatio))
-                        let secondHeight: CGFloat = maxSize.height - thirdHeight - spacing
-                        let rightWidth: CGFloat = min(maxSize.width - leftWidth - spacing, min(thirdHeight * photos[2].aspectRatio, secondHeight * photos[1].aspectRatio))
-                        photos[1].layoutFrame = NSMakeRect(leftWidth + spacing, 0.0, rightWidth, secondHeight)
-                        photos[1].positionFlags = [.right, .top]
-                        
-                        photos[2].layoutFrame = NSMakeRect(leftWidth + spacing, secondHeight + spacing, rightWidth, thirdHeight)
+                        photos[2].layoutFrame = CGRect(x: width + spacing, y: firstHeight + spacing, width: width, height: secondHeight)
                         photos[2].positionFlags = [.right, .bottom]
                     }
+
                 } else if photos.count == 4 {
                     if proportions == "www" || proportions.hasPrefix("w") {
                         let w: CGFloat = maxSize.width

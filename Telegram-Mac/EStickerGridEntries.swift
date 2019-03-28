@@ -121,35 +121,6 @@ enum ChatMediaGridCollectionStableId : Hashable {
         }
     }
     
-    
-    static func ==(lhs: ChatMediaGridCollectionStableId, rhs: ChatMediaGridCollectionStableId) -> Bool {
-        switch lhs {
-        case let .pack(lhsCollectionId):
-            if case let .pack(rhsCollectionId) = rhs {
-                return lhsCollectionId == rhsCollectionId
-            } else {
-                return false
-            }
-        case .recent:
-            if case .recent = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .saved:
-            if case .saved = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .specificPack(collectionId):
-            if case .specificPack(collectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 enum ChatMediaInputGridIndex : Hashable, Comparable {
@@ -273,7 +244,7 @@ struct ChatMediaInputGridEntry: Comparable, Identifiable {
         return lhs.index < rhs.index
     }
     
-    func item(account: Account, inputNodeInteraction: EStickersInteraction) -> GridItem {
-        return StickerGridItem(account: account, collectionId: self.collectionId, packInfo: packInfo, index: self.index, file: self.file, inputNodeInteraction: inputNodeInteraction, selected: {  })
+    func item(context: AccountContext, inputNodeInteraction: EStickersInteraction) -> GridItem {
+        return StickerGridItem(context: context, collectionId: self.collectionId, packInfo: packInfo, index: self.index, file: self.file, inputNodeInteraction: inputNodeInteraction, selected: {  })
     }
 }

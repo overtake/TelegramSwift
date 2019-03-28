@@ -172,6 +172,7 @@ func clearImageCache() -> Signal<Void, NoError> {
     return Signal<Void, NoError> { subscriber -> Disposable in
         photosCache.clearAll()
         photoThumbsCache.clearAll()
+        peerPhotoCache.clearAll()
         subscriber.putNext(Void())
         subscriber.putCompletion()
         return EmptyDisposable

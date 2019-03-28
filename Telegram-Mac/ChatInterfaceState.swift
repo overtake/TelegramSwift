@@ -191,10 +191,6 @@ struct ChatTextInputState: PostboxCoding, Equatable {
     let attributes:[ChatTextInputAttribute]
     let selectionRange: Range<Int>
     
-    static func ==(lhs: ChatTextInputState, rhs: ChatTextInputState) -> Bool {
-        return lhs.inputText == rhs.inputText && lhs.selectionRange == rhs.selectionRange  && lhs.attributes == rhs.attributes
-    }
-    
     init() {
         self.inputText = ""
         self.selectionRange = 0 ..< 0
@@ -569,17 +565,13 @@ final class ChatEditState : Equatable {
 
 
 
-final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
+struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     
     
     var associatedMessageIds: [MessageId] {
         return []
     }
-    
-    deinit {
-        var bp:Int = 0
-        bp += 1
-    }
+
     
     
     var historyScrollMessageIndex: MessageIndex? {
@@ -614,7 +606,13 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     }
     
     func withUpdatedSynchronizeableInputState(_ state: SynchronizeableChatInputState?) -> SynchronizeableChatInterfaceState {
-        return self.withUpdatedInputState(ChatTextInputState(inputText: state?.text ?? "")).withUpdatedReplyMessageId(state?.replyToMessageId)
+        var result = self.withUpdatedInputState(ChatTextInputState(inputText: state?.text ?? "")).withUpdatedReplyMessageId(state?.replyToMessageId)
+        
+        if let timestamp = state?.timestamp {
+            result = result.withUpdatedTimestamp(timestamp)
+        }
+
+        return result
     }
     
     
@@ -646,7 +644,7 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     
     init(decoder: PostboxDecoder) {
         self.timestamp = decoder.decodeInt32ForKey("ts", orElse: 0)
-        if let inputState = decoder.decodeObjectForKey("is", decoder: { return ChatTextInputState(decoder: $0) }) as? ChatTextInputState {
+        if let inputState = decoder.decodeObjectForKey("is", decoder: { ChatTextInputState(decoder: $0) }) as? ChatTextInputState {
             self.inputState = inputState
         } else {
             self.inputState = ChatTextInputState()
@@ -768,10 +766,6 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         } else {
             return false
         }
-    }
-    
-    static func ==(lhs: ChatInterfaceState, rhs: ChatInterfaceState) -> Bool {
-        return lhs.inputState == rhs.inputState && lhs.replyMessageId == rhs.replyMessageId && lhs.forwardMessageIds == rhs.forwardMessageIds && lhs.messageActionsState == rhs.messageActionsState && lhs.timestamp == rhs.timestamp && lhs.dismissedPinnedMessageId == rhs.dismissedPinnedMessageId && lhs.composeDisableUrlPreview == rhs.composeDisableUrlPreview && lhs.historyScrollState == rhs.historyScrollState && lhs.dismissedForceReplyId == rhs.dismissedForceReplyId && lhs.editState == rhs.editState
     }
     
     func withUpdatedInputState(_ inputState: ChatTextInputState) -> ChatInterfaceState {

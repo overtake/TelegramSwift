@@ -43,14 +43,21 @@ class ChatLayoutUtils: NSObject {
             }
             
             if file.isSticker {
-                size = contentSize.aspectFitted(NSMakeSize(180, 180))
+                size = contentSize.aspectFitted(NSMakeSize(210, 210))
             } else if file.isInstantVideo {
                 size = NSMakeSize(200, 200)
-            } else if file.isVideo || file.isAnimated {
-                size = contentSize.fitted(maxSize)
-                if hasText {
-                    size.width = max(maxSize.width, size.width)
+            } else if file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif")) {
+
+                if file.isVideo && contentSize.width > contentSize.height {
+                    size = contentSize.aspectFitted(NSMakeSize(min(420, width), contentSize.height))
+                } else {
+                    size = contentSize.fitted(maxSize)
+                    if hasText {
+                        size.width = max(maxSize.width, size.width)
+                    }
                 }
+                
+                
             } else if contentSize.height > 0 {
                 size = NSMakeSize(width, 70)
             } else if !file.previewRepresentations.isEmpty {
@@ -83,7 +90,7 @@ class ChatLayoutUtils: NSObject {
                 return ChatVideoMessageContentView.self
             } else if file.isVideo && !file.isAnimated {
                 return ChatInteractiveContentView.self
-            }  else if file.isAnimated {
+            }  else if file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif") {
                 return ChatGIFContentView.self
             } else if file.isVoice {
                 return ChatVoiceContentView.self

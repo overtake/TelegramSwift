@@ -16,10 +16,10 @@ public class InputDataModalController : ModalViewController {
     private let controller: InputDataController
     private let _modalInteractions: ModalInteractions?
     private let closeHandler: (@escaping()-> Void) -> Void
-    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }) {
+    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(350, 300)) {
         self.controller = controller
         self._modalInteractions = modalInteractions
-        self.controller._frameRect = NSMakeRect(0, 0, 350, 300)
+        self.controller._frameRect = NSMakeRect(0, 0, size.width, size.height)
         self.closeHandler = closeHandler
         super.init(frame: controller._frameRect)
     }
@@ -34,9 +34,10 @@ public class InputDataModalController : ModalViewController {
         super.close()
     }
     
-    public override var modalHeader: String? {
-        return controller.defaultBarTitle
+    public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: nil, center: ModalHeaderData(title: controller.defaultBarTitle), right: nil)
     }
+    
     
     public override var modalInteractions: ModalInteractions? {
         return _modalInteractions
@@ -327,6 +328,10 @@ class InputDataController: GenericViewController<TableView> {
         case .none:
             break
         }
+    }
+    
+    func validateInputValues() {
+        self.proccessValidation(self.validateData(self.fetchData()))
     }
     
     private func validateInput(data: [InputDataIdentifier : InputDataValue]) {

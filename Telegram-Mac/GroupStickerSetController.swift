@@ -13,12 +13,12 @@ import PostboxMac
 import SwiftSignalKitMac
 
 private final class GroupStickersArguments {
-    let account: Account
+    let context: AccountContext
     let textChanged:(String, String)->Void
     let installStickerset:((StickerPackCollectionInfo, [ItemCollectionItem], Int32))->Void
     let openChat:(PeerId)->Void
-    init(account: Account, textChanged:@escaping(String, String)->Void, installStickerset:@escaping((StickerPackCollectionInfo, [ItemCollectionItem], Int32))->Void, openChat:@escaping(PeerId)->Void) {
-        self.account = account
+    init(context: AccountContext, textChanged:@escaping(String, String)->Void, installStickerset:@escaping((StickerPackCollectionInfo, [ItemCollectionItem], Int32))->Void, openChat:@escaping(PeerId)->Void) {
+        self.context = context
         self.textChanged = textChanged
         self.installStickerset = installStickerset
         self.openChat = openChat
@@ -35,79 +35,12 @@ private enum GroupStickersetEntryId: Hashable {
     var hashValue: Int {
         return 0
     }
-    
-    static func ==(lhs: GroupStickersetEntryId, rhs: GroupStickersetEntryId) -> Bool {
-        switch lhs {
-        case let .section(index):
-            if case .section(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .pack(id):
-            if case .pack(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .status:
-            if case .status = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .input:
-            if case .input = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .description(index):
-            if case .description(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum GroupStickersetLoadingStatus : Equatable {
     case loaded(StickerPackCollectionInfo, StickerPackItem?, Int32)
     case loading
     case failed
-}
-
-private func ==(lhs: GroupStickersetLoadingStatus, rhs: GroupStickersetLoadingStatus) -> Bool {
-    switch lhs {
-    case .loading:
-        if case .loading = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .failed:
-        if case .failed = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .loaded(lhsInfo, lhsPackItem, lhsCount):
-        if case let .loaded(rhsInfo, rhsPackItem, rhsCount) = rhs {
-            if lhsInfo != rhsInfo {
-                return false
-            }
-            if lhsPackItem != rhsPackItem {
-                return false
-            }
-            if lhsCount != rhsCount {
-                return false
-            }
-            return true
-        } else {
-            return false
-        }
-    }
 }
 
 private enum GroupStickersetEntry : TableItemListNodeEntry {
@@ -186,21 +119,21 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.text))
             
-            attr.detectLinks(type: [.Mentions, .Hashtags], account: arguments.account, color: theme.colors.link, openInfo: { peerId, _, _, _ in
+            attr.detectLinks(type: [.Mentions, .Hashtags], context: arguments.context, color: theme.colors.link, openInfo: { peerId, _, _, _ in
                 arguments.openChat(peerId)
             })
             return GeneralTextRowItem(initialSize, stableId: stableId, text: attr)
         case let .status(_, status):
             switch status {
             case let .loaded(info, topItem, count):
-                return StickerSetTableRowItem(initialSize, account: arguments.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .empty, action: {})
+                return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .empty, action: {})
             case .loading:
                 return LoadingTableItem(initialSize, height: 50, stableId: stableId)
             case .failed:
                 return EmptyGroupstickerSearchRowItem(initialSize, height: 50, stableId: stableId)
             }
         case let .pack(_, _, info, topItem, count, selected):
-            return StickerSetTableRowItem(initialSize, account: arguments.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: selected ? .selected : .empty, action: {
+            return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: selected ? .selected : .empty, action: {
                 if let topItem = topItem {
                     arguments.installStickerset((info, [topItem], count))
                 }
@@ -208,62 +141,6 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
         }
     }
     
-}
-
-private func ==(lhs: GroupStickersetEntry, rhs: GroupStickersetEntry) -> Bool {
-    switch lhs {
-    case .section(let id):
-        if case .section(id) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .input(index, text):
-        if case .input(index, text) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .status(index, status):
-        if case .status(index, status: status) = rhs {
-            return true
-        } else {
-            return false
-        }
-        
-    case let .description(section, id, text):
-        if case .description(section, id, text: text) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .pack(lhsSectionId, lhsIndex, lhsInfo, lhsTopItem, lhsCount, lhsSelected):
-        if case let .pack(rhsSectionId, rhsIndex, rhsInfo, rhsTopItem, rhsCount, rhsSelected) = rhs {
-            
-            if lhsSectionId != rhsSectionId {
-                return false
-            }
-            if lhsIndex != rhsIndex {
-                return false
-            }
-            if lhsInfo != rhsInfo {
-                return false
-            }
-            if lhsTopItem != rhsTopItem {
-                return false
-            }
-            if lhsCount != rhsCount {
-                return false
-            }
-            if lhsSelected != rhsSelected {
-                return false
-            }
-            return true
-        } else {
-            return false
-        }
-    }
-
 }
 
 private func groupStickersEntries(state: GroupStickerSetControllerState, view: CombinedView, peerId: PeerId, specificPack: (StickerPackCollectionInfo, [ItemCollectionItem])?) -> [GroupStickersetEntry] {
@@ -380,15 +257,15 @@ private struct GroupStickerSetControllerState: Equatable {
 class GroupStickerSetController: TableViewController {
     private let peerId: PeerId
     private var saveGroupStickerSet:(()->Void)? = nil
-    init( account: Account, peerId:PeerId) {
+    init(_ context: AccountContext, peerId:PeerId) {
         self.peerId = peerId
-        super.init(account)
+        super.init(context)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         
         let statePromise = ValuePromise(GroupStickerSetControllerState(), ignoreRepeated: true)
@@ -404,12 +281,12 @@ class GroupStickerSetController: TableViewController {
         let resolveDisposable = MetaDisposable()
         actionsDisposable.add(resolveDisposable)
         
-        let arguments = GroupStickersArguments(account: account, textChanged: { current, updated in
+        let arguments = GroupStickersArguments(context: context, textChanged: { current, updated in
             updateState({$0.withUpdatedLoadedPack(nil).withUpdatedFailed(false).withUpdatedText(updated)})
             if updated.isEmpty {
                 resolveDisposable.set(nil)
             } else {
-                resolveDisposable.set((loadedStickerPack(postbox: account.postbox, network: account.network, reference: .name(updated), forceActualized: false) |> deliverOnMainQueue).start(next: { result in
+                resolveDisposable.set((loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: .name(updated), forceActualized: false) |> deliverOnMainQueue).start(next: { result in
                     switch result {
                     case .fetching:
                         updateState({$0.withUpdatedLoadedPack(nil).withUpdatedLoading(true)})
@@ -423,12 +300,12 @@ class GroupStickerSetController: TableViewController {
         }, installStickerset: { info in
             updateState({$0.withUpdatedLoadedPack(info).withUpdatedText(info.0.shortName)})
         }, openChat: { [weak self] peerId in
-            self?.navigationController?.push(ChatController(account: account, chatLocation: .peer(peerId)))
+            self?.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId)))
         })
         
         saveGroupStickerSet = { [weak self] in
             if let strongSelf = self {
-                actionsDisposable.add(showModalProgress(signal: updateGroupSpecificStickerset(postbox: account.postbox, network: account.network, peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: mainWindow).start(next: { [weak strongSelf] _ in
+                actionsDisposable.add(showModalProgress(signal: updateGroupSpecificStickerset(postbox: context.account.postbox, network: context.account.network, peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: mainWindow).start(next: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
                 }, error: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
@@ -438,14 +315,14 @@ class GroupStickerSetController: TableViewController {
         }
         
         let stickerPacks = Promise<CombinedView>()
-        stickerPacks.set(account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
+        stickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
         
         let featured = Promise<[FeaturedStickerPackItem]>()
-        featured.set(account.viewTracker.featuredStickerPacks())
+        featured.set(context.account.viewTracker.featuredStickerPacks())
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<GroupStickersetEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
-        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, stickerPacks.get() |> deliverOnMainQueue, peerSpecificStickerPack(postbox: account.postbox, network: account.network, peerId: peerId) |> deliverOnMainQueue, appearanceSignal)
+        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, stickerPacks.get() |> deliverOnMainQueue, peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: peerId) |> deliverOnMainQueue, appearanceSignal)
             |> map { state, view, specificPack, appearance -> TableUpdateTransition in
                 let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack.packInfo).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)

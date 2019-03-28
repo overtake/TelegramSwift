@@ -86,9 +86,9 @@ open class TableRowItem: NSObject {
         return .single([])
     }
     
-    public func redraw()->Void {
+    public func redraw(animated: Bool = false)->Void {
         if index != -1 {
-            table?.reloadData(row: index)
+            table?.reloadData(row: index, animated: animated)
         }
     }
     

@@ -16,13 +16,13 @@ import MtProtoKitMac
 
 
 final class StickerPackArguments {
-    let account: Account
+    let context: AccountContext
     let send:(TelegramMediaFile)->Void
     let addpack:(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void
     let share:(String)->Void
     let close:()->Void
-    init(account:Account, send:@escaping(Media)->Void, addpack:@escaping(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void) {
-        self.account = account
+    init(context: AccountContext, send:@escaping(Media)->Void, addpack:@escaping(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void) {
+        self.context = context
         self.send = send
         self.addpack = addpack
         self.share = share
@@ -111,13 +111,13 @@ private class StickersModalView : View {
             let attr = NSMutableAttributedString()
             
             _ = attr.append(string: info.title, color: theme.colors.text, font: .medium(16.0))
-            attr.detectLinks(type: [.Mentions], account: arguments.account, color: .blueUI, openInfo: { (peerId, _, _, _) in
-                _ = (arguments.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
+            attr.detectLinks(type: [.Mentions], context: arguments.context, color: .blueUI, openInfo: { (peerId, _, _, _) in
+                _ = (arguments.context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
                     arguments.close()
                     if peer.isUser || peer.isBot {
-                        arguments.account.context.mainNavigation?.push(PeerInfoController(account: arguments.account, peerId: peerId))
+                        arguments.context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: arguments.context, peerId: peerId))
                     } else {
-                        arguments.account.context.mainNavigation?.push(ChatAdditionController(account: arguments.account, chatLocation: .peer(peer.id)))
+                        arguments.context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: arguments.context, chatLocation: .peer(peer.id)))
                     }
                 })
             })
@@ -131,7 +131,7 @@ private class StickersModalView : View {
             let items = collectionItems.filter({ item -> Bool in
                 return item is StickerPackItem
             }).map ({ item -> StickerPackGridItem in
-                return StickerPackGridItem(account: arguments.account, file: (item as! StickerPackItem).file, send: arguments.send, selected: {})
+                return StickerPackGridItem(context: arguments.context, file: (item as! StickerPackItem).file, send: arguments.send, selected: {})
             })
             
             var insert:[GridNodeInsertItem] = []
@@ -199,19 +199,19 @@ private class StickersModalView : View {
 
 
 class StickersPackPreviewModalController: ModalViewController {
-    private let account:Account
+    private let context:AccountContext
     private let peerId:PeerId?
     private let reference:StickerPackReference
     private let disposable: MetaDisposable = MetaDisposable()
     private var arguments:StickerPackArguments!
    
-    init(_ account:Account, peerId:PeerId?, reference:StickerPackReference) {
-        self.account = account
+    init(_ context: AccountContext, peerId:PeerId?, reference:StickerPackReference) {
+        self.context = context
         self.peerId = peerId
         self.reference = reference
         super.init(frame: NSMakeRect(0, 0, 360, 400))
         bar = .init(height: 0)
-        arguments = StickerPackArguments(account: account, send: { [weak self] media in
+        arguments = StickerPackArguments(context: context, send: { [weak self] media in
             self?.close()
             if let peerId = peerId, let strongSelf = self {
                 
@@ -220,21 +220,31 @@ class StickersPackPreviewModalController: ModalViewController {
                     attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
                 }
                 
-                _ = (strongSelf.account.postbox.loadedPeerWithId(peerId) |> filter { $0.canSendMessage && permissionText(from: $0, for: .banSendStickers) == nil } |> mapToSignal { _ -> Signal<[MessageId?], NoError> in
-                    let enqueue = EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.stickerPack(stickerPack: reference, media: media), replyToMessageId: nil, localGroupingKey: nil)
-                    let value = enqueueMessages(account: account, peerId: peerId, messages: [enqueue])
-                    return value
-                }) .start()
+                let interactions = (context.sharedContext.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
                 
+                if let interactions = interactions, interactions.peerId == peerId, let media = media as? TelegramMediaFile {
+                    interactions.sendAppFile(media)
+                } else {
+                    _ = (strongSelf.context.account.postbox.loadedPeerWithId(peerId) |> filter { $0.canSendMessage && permissionText(from: $0, for: .banSendStickers) == nil } |> mapToSignal { _ -> Signal<[MessageId?], NoError> in
+                        let enqueue = EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.stickerPack(stickerPack: reference, media: media), replyToMessageId: nil, localGroupingKey: nil)
+                        let value = enqueueMessages(context: context, peerId: peerId, messages: [enqueue])
+                        return value
+                    }) .start()
+                }
+            } else {
+                let interactions = (context.sharedContext.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
+                
+                if let interactions = interactions, let media = media as? TelegramMediaFile {
+                    interactions.sendAppFile(media)
+                }
             }
         }, addpack: { [weak self] info, items, installed in
             self?.close()
             self?.disposable.dispose()
-            //installStickerSetInteractively(account: account, info: info, items: items)
-            _ = (!installed ? addStickerPackInteractively(postbox: account.postbox, info: info, items: items) : removeStickerPackInteractively(postbox: account.postbox, id: info.id, option: .archive)).start()
+            _ = (!installed ? addStickerPackInteractively(postbox: context.account.postbox, info: info, items: items) : removeStickerPackInteractively(postbox: context.account.postbox, id: info.id, option: .archive)).start()
         }, share: { [weak self] link in
             self?.close()
-            showModal(with: ShareModalController(ShareLinkObject(account, link: link)), for: mainWindow)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: mainWindow)
         }, close: { [weak self] in
             self?.close()
         })
@@ -263,7 +273,7 @@ class StickersPackPreviewModalController: ModalViewController {
         super.viewDidLoad()
         
         
-        disposable.set((loadedStickerPack(postbox: account.postbox, network: account.network, reference: reference, forceActualized: true) |> deliverOnMainQueue).start(next: { [weak self] result in
+        disposable.set((loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: reference, forceActualized: true) |> deliverOnMainQueue).start(next: { [weak self] result in
             guard let `self` = self else {return}
             switch result {
             case .none:

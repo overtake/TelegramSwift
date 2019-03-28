@@ -91,7 +91,7 @@ public class TimableProgressView: View {
         ctx.setFillColor(theme.backgroundColor.cgColor)
         ctx.fill(bounds)
         
-        let center = NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width/2), floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height/2))
+        let center = NSMakePoint(frame.width/2, frame.height/2)
         
         let startAngle: CGFloat = 90
         
@@ -99,7 +99,7 @@ public class TimableProgressView: View {
         ctx.scaleBy(x: 1.0, y: -1.0)
         ctx.translateBy(x: -frame.width / 2.0, y: -frame.height / 2.0)
         
-        let radius: CGFloat = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width/2) - theme.outer
+        let radius: CGFloat = frame.width/2 - theme.outer
         let angle = CGFloat(_progress / 100 * 360)
       
         if theme.border {

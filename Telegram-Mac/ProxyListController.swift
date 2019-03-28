@@ -30,6 +30,27 @@ private struct ProxyListState : Equatable {
 //    return lhs.pref == rhs.pref && lhs.current == rhs.current
 //}
 
+extension ProxyServerSettings {
+    func withHexedStringData() -> ProxyServerSettings {
+        switch self.connection {
+        case let .mtp(secret):
+            return ProxyServerSettings(host: host, port: port, connection: .mtp(secret: (secret as NSData).hexString.data(using: .utf8) ?? Data()))
+        default:
+            return self
+        }
+    }
+    
+    func withDataHextString() -> ProxyServerSettings {
+        switch self.connection {
+        case let .mtp(secret):
+            return ProxyServerSettings(host: host, port: port, connection: .mtp(secret: ObjcUtils.data(fromHexString: String(data: secret, encoding: .utf8))))
+        default:
+            return self
+        }
+    }
+}
+
+
 
 private func proxyListSettingsEntries(_ state: ProxyListState, status: ConnectionStatus, statuses: [ProxyServerSettings : ProxyServerStatus], arguments: ProxyListArguments, showUseCalls: Bool) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
@@ -158,7 +179,7 @@ private extension ProxyServerConnection {
     }
 }
 
-func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool = true, share:@escaping([ProxyServerSettings])->Void = {_ in}) -> (@escaping(InputDataController) -> Void) -> Void {
+func proxyListController(accountManager: AccountManager, network: Network, showUseCalls: Bool = true, share:@escaping([ProxyServerSettings])->Void = {_ in}) -> (@escaping(InputDataController) -> Void) -> Void {
     return { f in
         
         let actionsDisposable = DisposableSet()
@@ -166,7 +187,7 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
         let updateDisposable = MetaDisposable()
         actionsDisposable.add(updateDisposable)
         
-        let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettingsSignal(postbox) |> map { $0.servers})
+        let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettings(accountManager: accountManager) |> map { $0.servers})
         
         weak var _controller: ViewController? = nil
         
@@ -176,7 +197,7 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
             statePromise.set(stateValue.modify(f))
         }
         
-        actionsDisposable.add((proxySettingsSignal(postbox) |> deliverOnPrepareQueue).start(next: { settings in
+        actionsDisposable.add((proxySettings(accountManager: accountManager) |> deliverOnPrepareQueue).start(next: { settings in
             updateState { current in
                 return current.withUpdatedSettings(settings)
             }
@@ -184,23 +205,23 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
         
         let arguments = ProxyListArguments(edit: { proxy in
             if let proxy = proxy {
-                f(addProxyController(postbox: postbox, network: network, settings: proxy, type: proxy.connection.type))
+                f(addProxyController(accountManager: accountManager, network: network, settings: proxy, type: proxy.connection.type))
             } else {
                 let values: [ValuesSelectorValue<ProxyType>] = [ValuesSelectorValue(localized: L10n.proxySettingsSocks5, value: .socks5), ValuesSelectorValue(localized: L10n.proxySettingsMTP, value: .mtp)]
                 showModal(with: ValuesSelectorModalController(values: values, selected: nil, title: L10n.proxySettingsType, onComplete: { selected in
-                     f(addProxyController(postbox: postbox, network: network, settings: nil, type: selected.value))
+                     f(addProxyController(accountManager: accountManager, network: network, settings: nil, type: selected.value))
                 }), for: mainWindow)
             }
         }, delete: { proxy in
-            updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, { current in
+            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, { current in
                 return current.withRemovedServer(proxy)
             }).start())
         }, connect: { proxy in
-            updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, {$0.withUpdatedActiveServer(proxy).withUpdatedEnabled(true)}).start())
+            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedActiveServer(proxy).withUpdatedEnabled(true)}).start())
         }, disconnect: {
-            updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, {$0.withUpdatedEnabled(false)}).start())
+            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedEnabled(false)}).start())
         }, reconnectLatest: {
-           updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, { current in
+           updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, { current in
                 if !current.enabled, let _ = current.activeServer {
                     return current.withUpdatedEnabled(true)
                 } else if let first = current.servers.first {
@@ -210,7 +231,7 @@ func proxyListController(postbox: Postbox, network: Network, showUseCalls: Bool 
             }
             }).start())
         }, enableForCalls: { enable in
-            updateDisposable.set(updateProxySettingsInteractively(postbox: postbox, network: network, {$0.withUpdatedUseForCalls(enable)}).start())
+            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedUseForCalls(enable)}).start())
         })
         
         let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map {($0, true)}, title: L10n.proxySettingsTitle, validateData: {
@@ -258,11 +279,11 @@ private enum ProxyType {
     }
 }
 
-private func addProxyController(postbox: Postbox, network: Network, settings: ProxyServerSettings?, type: ProxyType) -> (InputDataController) {
+private func addProxyController(accountManager: AccountManager, network: Network, settings: ProxyServerSettings?, type: ProxyType) -> (InputDataController) {
     
     let actionsDisposable = DisposableSet()
 
-    let new = settings ?? ProxyServerSettings(host: "", port: 0, connection: type.defaultConnection)
+    let new = settings?.withHexedStringData() ?? ProxyServerSettings(host: "", port: 0, connection: type.defaultConnection)
     
     let stateValue:Atomic<ProxySettingsState> = Atomic(value: ProxySettingsState(server: new))
     let statePromise:ValuePromise<ProxySettingsState> = ValuePromise(ProxySettingsState(server: new), ignoreRepeated: false)
@@ -285,7 +306,7 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
     } |> map {($0, true)}, title: title, validateData: { data -> InputDataValidation in
             if data[_id_export] != nil {
                 updateState { current in
-                    copyToClipboard(current.server.link)
+                    copyToClipboard(current.server.withDataHextString().link)
                     _controller?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
                     return current
                 }
@@ -314,11 +335,11 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
                         return current
                     }
                     
-                    actionsDisposable.add((updateProxySettingsInteractively(postbox: postbox, network: network, { proxySetting in
+                    actionsDisposable.add((updateProxySettingsInteractively(accountManager: accountManager, { proxySetting in
                         if let settings = settings {
-                            return proxySetting.withUpdatedServer(settings, with: current.server)
+                            return proxySetting.withUpdatedServer(settings, with: current.server.withDataHextString())
                         } else {
-                            return proxySetting.withAddedServer(current.server).withUpdatedActiveServer(current.server).withUpdatedEnabled(true)
+                            return proxySetting.withAddedServer(current.server.withDataHextString()).withUpdatedActiveServer(current.server.withDataHextString()).withUpdatedEnabled(true)
                         }
                     }) |> deliverOnMainQueue).start(next: { _ in
                         f(.success(.navigationBack))
@@ -331,7 +352,8 @@ private func addProxyController(postbox: Postbox, network: Network, settings: Pr
             let port = data[_id_port]!.stringValue!
             switch current.server.connection {
             case .mtp:
-                return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .mtp(secret: ObjcUtils.data(fromHexString: data[_id_secret]?.stringValue ?? ""))))
+                let secret = data[_id_secret]?.stringValue?.data(using: .utf8) ?? Data()
+                return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .mtp(secret: secret)))
             case .socks5:
                 return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .socks5(username: data[_id_username]?.stringValue, password: data[_id_pass]?.stringValue)))
             }
@@ -400,7 +422,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     
     switch server.connection {
     case let .mtp(secret):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string((secret as NSData).hexString), error: nil, identifier: _id_secret, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.proxySettingsSecret), inputPlaceholder: L10n.proxySettingsSecret, filter: {$0}, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(String(data: secret, encoding: .utf8)), error: nil, identifier: _id_secret, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.proxySettingsSecret), inputPlaceholder: L10n.proxySettingsSecret, filter: {$0}, limit: 255))
         index += 1
     case let .socks5(username, password):
         entries.append(.sectionId(sectionId))
@@ -422,7 +444,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     if !server.host.isEmpty && server.port > 0 {
         entries.append(.sectionId(sectionId))
         sectionId += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, name: L10n.proxySettingsCopyLink, color: theme.colors.blueUI, icon: nil, type: .none))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, data: InputDataGeneralData(name: L10n.proxySettingsCopyLink, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
     }
     
     return entries

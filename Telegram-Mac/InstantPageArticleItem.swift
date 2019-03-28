@@ -53,7 +53,7 @@ final class InstantPageArticleItem: InstantPageItem {
     }
     
     func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
-        return InstantPageArticleView(account: arguments.account, item: self, webPage: self.webPage, contentItems: self.contentItems, contentSize: self.contentSize, cover: self.cover, url: self.url, webpageId: self.webpageId, rtl: self.rtl, openUrl: arguments.openUrl)
+        return InstantPageArticleView(context: arguments.context, item: self, webPage: self.webPage, contentItems: self.contentItems, contentSize: self.contentSize, cover: self.cover, url: self.url, webpageId: self.webpageId, rtl: self.rtl, openUrl: arguments.openUrl)
     }
     
     func matchesAnchor(_ anchor: String) -> Bool {
@@ -160,7 +160,7 @@ final class InstantPageArticleView: Button, InstantPageView {
     
     private var fetchedDisposable = MetaDisposable()
     
-    init(account: Account, item: InstantPageArticleItem, webPage: TelegramMediaWebpage, contentItems: [InstantPageItem], contentSize: CGSize, cover: TelegramMediaImage?, url: String, webpageId: MediaId, rtl: Bool, openUrl: @escaping (InstantPageUrlItem) -> Void) {
+    init(context: AccountContext, item: InstantPageArticleItem, webPage: TelegramMediaWebpage, contentItems: [InstantPageItem], contentSize: CGSize, cover: TelegramMediaImage?, url: String, webpageId: MediaId, rtl: Bool, openUrl: @escaping (InstantPageUrlItem) -> Void) {
         self.item = item
         self.url = url
         self.webpageId = webpageId
@@ -180,8 +180,8 @@ final class InstantPageArticleView: Button, InstantPageView {
             let imageView = TransformImageView()
             
             let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(webPage), media: image)
-            imageView.setSignal(chatMessagePhoto(account: account, imageReference: imageReference, scale: backingScaleFactor))
-            self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: imageReference).start())
+            imageView.setSignal(chatMessagePhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor))
+            self.fetchedDisposable.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: imageReference).start())
             
             self.imageView = imageView
             self.addSubview(imageView)

@@ -209,7 +209,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         super.viewDidLoad()
         
         
-        mediaPlayer.attachPlayerNode(genericView.mediaPlayer)
+        mediaPlayer.attachPlayerView(genericView.mediaPlayer)
         genericView.isStreamable = reference.media.isStreamable
         hideControlsDisposable.set(hideControls.get().start(next: { [weak self] hide in
             self?.genericView.hideControls(hide, animated: true)

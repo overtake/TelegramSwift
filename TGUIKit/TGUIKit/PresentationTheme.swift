@@ -503,7 +503,7 @@ public final class ColorPalette : Equatable {
 }
 
 public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
-    return lhs.name == rhs.name && lhs.isDark == rhs.isDark
+    return lhs.name == rhs.name && lhs.isDark == rhs.isDark && lhs.blueUI.hexString == rhs.blueUI.hexString
 }
 
 

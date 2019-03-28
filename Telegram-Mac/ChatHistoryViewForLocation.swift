@@ -99,6 +99,8 @@ public struct ChatHistoryCombinedInitialData {
     let cachedDataMessages:[MessageId: Message]?
     let readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?
     let limitsConfiguration: LimitsConfiguration
+    let autoplayMedia: AutoplayMediaPreferences
+    let autodownloadSettings: AutomaticMediaDownloadSettings
 }
 
 enum ChatHistoryViewUpdateType {
@@ -131,8 +133,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
             signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocation, count: count, clipHoles: true, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         }
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration) = extractAdditionalData(view: view, chatLocation: chatLocation)
-            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
 
             
             if preloaded {
@@ -161,7 +163,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                                     switch entry {
                                     case .HoleEntry:
                                         break inner
-                                    case let .MessageEntry(message, _, _, _):
+                                    case let .MessageEntry(message, _, _, _, _):
                                         if message.flags.contains(.Incoming) {
                                             incomingCount += 1
                                         }
@@ -209,8 +211,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
         }
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration) = extractAdditionalData(view: view, chatLocation: chatLocation)
-            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
 
             
             if preloaded {
@@ -255,8 +257,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
         
         return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, clipHoles: true, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
             
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration) = extractAdditionalData(view: view, chatLocation: chatLocation)
-            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
             
             let genericType: ViewUpdateType
             if first {
@@ -273,8 +275,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
         var first = true
         
         return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, clipHoles: true, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration) = extractAdditionalData(view: view, chatLocation: chatLocation)
-            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
             
             let genericType: ViewUpdateType
             let scrollPosition: ChatHistoryViewScrollPosition? = first ? chatScrollPosition : nil
@@ -293,13 +295,17 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
     cachedData: CachedPeerData?,
     cachedDataMessages: [MessageId: Message]?,
     readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?,
-    limitsConfiguration: LimitsConfiguration
+    limitsConfiguration: LimitsConfiguration,
+    autoplayMedia: AutoplayMediaPreferences,
+    autodownloadSettings: AutomaticMediaDownloadSettings
     ) {
         var cachedData: CachedPeerData?
         var cachedDataMessages: [MessageId: Message]?
         var readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData] = [:]
         var notificationSettings: PeerNotificationSettings?
         var limitsConfiguration: LimitsConfiguration = LimitsConfiguration.defaultValue
+        var autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings
+        var autodownloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings
         loop: for data in view.additionalData {
             switch data {
             case let .peerNotificationSettings(value):
@@ -326,7 +332,14 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
                 if key == PreferencesKeys.limitsConfiguration {
                     limitsConfiguration = value as? LimitsConfiguration ?? LimitsConfiguration.defaultValue
                 }
-
+                if key == ApplicationSpecificPreferencesKeys.autoplayMedia {
+                    autoplayMedia = value as? AutoplayMediaPreferences ?? AutoplayMediaPreferences.defaultSettings
+                    
+                }
+                
+                if key == ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings {
+                    autodownloadSettings = value as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
+                }
             case let .totalUnreadState(unreadState):
                 
                 switch chatLocation {
@@ -345,5 +358,8 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
             }
         }
         
-        return (cachedData, cachedDataMessages, readStateData, limitsConfiguration)
+        autoplayMedia = autoplayMedia.withUpdatedAutoplayPreloadVideos(autoplayMedia.preloadVideos && autodownloadSettings.automaticDownload && (autodownloadSettings.categories.video.fileSize ?? 0) >= 5 * 1024 * 1024)
+
+        
+        return (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings)
 }

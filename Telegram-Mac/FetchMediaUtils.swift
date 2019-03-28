@@ -4,23 +4,24 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-func freeMediaFileInteractiveFetched(account: Account, fileReference: FileMediaReference) -> Signal<FetchResourceSourceType, NoError> {
-    return fetchedMediaResource(postbox: account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), statsCategory: fileReference.media.isVideo ? .video : .file) |> `catch` { _ in return .complete() }
+func freeMediaFileInteractiveFetched(context: AccountContext, fileReference: FileMediaReference, range: Range<Int>? = nil) -> Signal<FetchResourceSourceType, NoError> {
+    return fetchedMediaResource(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), range: range != nil ? (range!, .default) : nil, statsCategory: fileReference.media.isVideo ? .video : .file) |> `catch` { _ in return .complete() }
 }
 
-func cancelFreeMediaFileInteractiveFetch(account: Account, resource: MediaResource) {
-    account.postbox.mediaBox.cancelInteractiveResourceFetch(resource)
+func cancelFreeMediaFileInteractiveFetch(context: AccountContext, resource: MediaResource) {
+    context.account.postbox.mediaBox.cancelInteractiveResourceFetch(resource)
 }
 
-func messageMediaFileInteractiveFetched(account: Account, messageId: MessageId, fileReference: FileMediaReference) -> Signal<Void, NoError> {
-    return account.context.fetchManager.interactivelyFetched(category: .file, location: .chat(messageId.peerId), locationKey: .messageId(messageId), reference: fileReference.resourceReference(fileReference.media.resource), fetchTag: fileReference.media.isVideo ? .video : .file, elevatedPriority: false, userInitiated: true)
+func messageMediaFileInteractiveFetched(context: AccountContext, messageId: MessageId, fileReference: FileMediaReference, range: Range<Int>? = nil) -> Signal<Void, NoError> {
+    return context.fetchManager.interactivelyFetched(category: .file, location: .chat(messageId.peerId), locationKey: .messageId(messageId), downloadRange: range, reference: fileReference.resourceReference(fileReference.media.resource), fetchTag: fileReference.media.isVideo ? .video : .file, elevatedPriority: false, userInitiated: true)
 }
 
-func messageMediaFileCancelInteractiveFetch(account: Account, messageId: MessageId, fileReference: FileMediaReference) {
-    account.context.fetchManager.cancelInteractiveFetches(category: .file, location: .chat(messageId.peerId), locationKey: .messageId(messageId), reference: fileReference.resourceReference(fileReference.media.resource))
+
+func messageMediaFileCancelInteractiveFetch(context: AccountContext, messageId: MessageId, fileReference: FileMediaReference) {
+    context.fetchManager.cancelInteractiveFetches(category: .file, location: .chat(messageId.peerId), locationKey: .messageId(messageId), reference: fileReference.resourceReference(fileReference.media.resource))
     
 }
 
-func messageMediaFileStatus(account: Account, messageId: MessageId, fileReference: FileMediaReference) -> Signal<MediaResourceStatus, NoError> {
-    return account.context.fetchManager.fetchStatus(category: .file, location: .chat(messageId.peerId), locationKey: .messageId(messageId), reference: fileReference.resourceReference(fileReference.media.resource))
+func messageMediaFileStatus(context: AccountContext, messageId: MessageId, fileReference: FileMediaReference) -> Signal<MediaResourceStatus, NoError> {
+    return context.fetchManager.fetchStatus(category: .file, location: .chat(messageId.peerId), locationKey: .messageId(messageId), reference: fileReference.resourceReference(fileReference.media.resource))
 }

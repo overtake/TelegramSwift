@@ -9,6 +9,7 @@
 import TGUIKit
 import TelegramCoreMac
 import SwiftSignalKitMac
+import PostboxMac
 
 fileprivate final class SelectAccentColorView : View {
     
@@ -62,7 +63,7 @@ fileprivate final class SelectAccentColorView : View {
 class AccentColorModalController: ModalViewController {
 
     fileprivate let current: NSColor
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
 
     
     private let colorList: [NSColor] = [
@@ -76,8 +77,9 @@ class AccentColorModalController: ModalViewController {
         NSColor(0xff5da2)  // pink
     ]
     
-    init(_ account: Account, current: NSColor) {
-        self.account = account
+    
+    init(_ context: AccountContext, current: NSColor) {
+        self.context = context
         self.current = current
         
         super.init(frame: NSMakeRect(0, 0, 40 * 4 + 20 * 5, 40 * 2 + 50 + 20 * 3))
@@ -90,10 +92,10 @@ class AccentColorModalController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let postbox = self.account.postbox
+        let context = self.context
         
         genericView.update(colorList, selected: current, callback: { [weak self] color in
-            _ = updateThemeInteractivetly(postbox: postbox, f: { settings in
+            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 if color == whitePalette.blueUI {
                     return settings.withUpdatedPalette(whitePalette)
                 } else {

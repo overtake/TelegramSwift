@@ -15,9 +15,9 @@ import SwiftSignalKitMac
 private final class RecentCallsArguments {
     let call:(PeerId)->Void
     let removeCalls:([MessageId]) -> Void
-    let account:Account
-    init(account: Account, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId]) ->Void ) {
-        self.account = account
+    let context:AccountContext
+    init(context: AccountContext, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId]) ->Void ) {
+        self.context = context
         self.removeCalls = removeCalls
         self.call = call
     }
@@ -140,7 +140,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             }
             
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
                 if !editing {
                     arguments.call(peer.id)
                 }
@@ -155,8 +155,8 @@ private enum RecentCallEntry : TableItemListNodeEntry {
 
 class RecentCallsViewController: NavigationViewController {
     private var layoutController:LayoutRecentCallsViewController
-    init(_ account:Account) {
-        self.layoutController = LayoutRecentCallsViewController(account)
+    init(_ context:AccountContext) {
+        self.layoutController = LayoutRecentCallsViewController(context)
         super.init(layoutController)
         bar = .init(height: 0)
     }
@@ -311,7 +311,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     }
     
     override var enableBack: Bool {
-        return false
+        return true
     }
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
@@ -325,7 +325,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         
         let previous = self.previous
         let initialSize = self.atomicSize
-        let account = self.account
+        let context = self.context
         
         
         let updateState: ((RecentCallsControllerState) -> RecentCallsControllerState) -> Void = { [weak self] f in
@@ -334,12 +334,12 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
             }
         }
         
-        let arguments = RecentCallsArguments(account: account, call: { [weak self] peerId in
-            self?.callDisposable.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(account, result)
+        let arguments = RecentCallsArguments(context: context, call: { [weak self] peerId in
+            self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context.sharedContext, result)
             }))
             }, removeCalls: { [weak self] messageIds in
-                _ = deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
+                _ = deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
                 updateState({$0.withAdditionalIgnoringIds(messageIds)})
                 
                 if let strongSelf = self {
@@ -357,10 +357,10 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         
         let first:Atomic<Bool> = Atomic(value: true)
         let signal: Signal<CallListView, NoError> = location.get() |> distinctUntilChanged |> mapToSignal { index in
-            return account.viewTracker.callListView(type: .all, index: index, count: 200)
+            return context.account.viewTracker.callListView(type: .all, index: index, count: 200)
         }
         
-        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(signal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result in
+        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: queue, signal, statePromise.get(), appearanceSignal) |> map { result in
             _ = callListView.swap(result.0)
             let entries = makeEntries(from: result.0.entries, state: result.1).map({AppearanceWrapperEntry(entry: $0, appearance: result.2)})
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false))
@@ -408,6 +408,13 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         updateLocalizationAndTheme()
     }
     
+    override func backSettings() -> (String, CGImage?) {
+        return ("", theme.icons.callSettings)
+    }
+    
+    override func executeReturn() {
+        showModal(with: InputDataModalController(CallSettingsModalController(context.sharedContext), modalInteractions: ModalInteractions(acceptTitle: L10n.modalOK)), for: mainWindow)
+    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

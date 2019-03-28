@@ -34,7 +34,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     var chatInteraction:ChatInteraction
     
     var accessory:ChatInputAccessory!
-    var account:Account!
     
     private var _ts:View!
     
@@ -58,7 +57,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private let emojiReplacementDisposable:MetaDisposable = MetaDisposable()
 
-    private var formatterPopover: InputFormatterPopover?
     
     private var replyMarkupModel:ReplyMarkupNode?
     override var isFlipped: Bool {
@@ -91,7 +89,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         
         actionsView = ChatInputActionsView(frame: NSMakeRect(contentView.frame.width - 100, 0, 100, contentView.frame.height), chatInteraction:chatInteraction);
-        contentView.addSubview(actionsView)
         
         attachView = ChatInputAttachView(frame: NSMakeRect(0, 0, 60, contentView.frame.height), chatInteraction:chatInteraction)
         contentView.addSubview(attachView)
@@ -103,6 +100,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         
         contentView.addSubview(textView)
+        contentView.addSubview(actionsView)
         self.background = theme.colors.background
         
         accessory = ChatInputAccessory(accessoryView, chatInteraction:chatInteraction)
@@ -122,9 +120,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return textView.inputView
     }
     
-    func updateInterface(with interaction:ChatInteraction, account:Account) -> Void {
+    func updateInterface(with interaction:ChatInteraction) -> Void {
         self.chatInteraction = interaction
-        self.account = account
         actionsView.prepare(with: chatInteraction)
         needUpdateChatState(with: chatState, false)
         needUpdateReplyMarkup(with: interaction.presentation, false)
@@ -171,7 +168,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
         replyMarkupModel?.layout()
-        accessory.update(with: chatInteraction.presentation, account: chatInteraction.account, animated: false)
+        accessory.update(with: chatInteraction.presentation, account: chatInteraction.context.account, animated: false)
         accessoryView.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
     }
@@ -234,6 +231,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             replyMarkupModel?.measureSize(frame.width - 40)
             replyMarkupModel?.redraw()
             replyMarkupModel?.layout()
+            bottomView.contentView.scroll(to: NSZeroPoint)
         } 
     }
     
@@ -341,7 +339,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        accessory.update(with: state, account: account, animated: animated)
+        accessory.update(with: state, account: chatInteraction.context.account, animated: animated)
         
         accessoryDispose.set(accessory.nodeReady.get().start(next: { [weak self] (animated) in
             if let strongSelf = self {
@@ -408,9 +406,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         super.layout()
         let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
         bottomView.setFrameOrigin(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight)
-        
-       contentView.setFrameOrigin(0, bottomInset)
-        actionsView.setFrameOrigin(NSMaxX(textView.frame), 0)
+        textView.setFrameSize(NSMakeSize(frame.width - actionsView.frame.width - attachView.frame.width, textView.frame.height))
+        contentView.setFrameOrigin(0, bottomInset)
+        actionsView.setFrameOrigin(frame.width - actionsView.frame.width, 0)
         attachView.setFrameOrigin(0, 0)
         _ts.setFrameOrigin(0, frame.height - .borderSize)
 
@@ -496,7 +494,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage()
-                chatInteraction.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
+                chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
                 markNextTextChangeToFalseActivity = true
             }
             
@@ -562,9 +560,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
         
-        formatterPopover?.close()
-        formatterPopover = nil
-
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
         chatInteraction.update({ current in
             var current = current
@@ -577,11 +572,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             return current
         })
         
-        if chatInteraction.account.peerId != chatInteraction.peerId, let peer = chatInteraction.presentation.peer, !peer.isChannel && !markNextTextChangeToFalseActivity {
+        if chatInteraction.context.peerId != chatInteraction.peerId, let peer = chatInteraction.presentation.peer, !peer.isChannel && !markNextTextChangeToFalseActivity {
             
-            sendActivityDisposable.set((Signal<Bool, NoError>.single(true) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
+            sendActivityDisposable.set((Signal<Bool, NoError>.single(!state.inputText.isEmpty) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
                 if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel && chatInteraction.presentation.state != .editing {
-                    chatInteraction.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: isPresent)
+                    chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: isPresent)
                 }
             }))
         }
@@ -611,35 +606,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func makeUrl(of range: NSRange) {
-        guard range.min != range.max else {
+        guard range.min != range.max, let window = kitWindow else {
             return
         }
         
-        let close:()->Void = { [weak self] in
-            if let strongSelf = self {
-                strongSelf.formatterPopover?.close()
-                strongSelf.textView.setSelectedRange(NSMakeRange(strongSelf.textView.selectedRange().max, 0))
-                strongSelf.formatterPopover = nil
-            }
-        }
+        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: range), completion: { [weak self] url in
+            self?.textView.addLink(url)
+        }), for: window)
         
-        if formatterPopover == nil {
-            self.formatterPopover = InputFormatterPopover(InputFormatterArguments(bold: { [weak self] in
-                self?.textView.boldWord()
-                close()
-                }, italic: {  [weak self] in
-                    self?.textView.italicWord()
-                    close()
-                }, code: {  [weak self] in
-                    self?.textView.codeWord()
-                    close()
-                }, link: { [weak self] url in
-                    self?.textView.addLink(url)
-                    close()
-            }), window: mainWindow)
-        }
-        
-        formatterPopover?.show(relativeTo: textView.inputView.selectedRangeRect, of: textView, preferredEdge: .maxY)
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
@@ -649,6 +623,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     @available(OSX 10.12.2, *)
     func textView(_ textView: NSTextView!, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItem.Identifier]!) -> [NSTouchBarItem.Identifier]! {
         return inputChatTouchBarItems(presentation: chatInteraction.presentation)
+    }
+    
+    func supportContinuityCamera() -> Bool {
+        return true
     }
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
@@ -667,7 +645,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 }
             }
             
-            return !InputPasteboardParser.proccess(pasteboard: pasteboard, account: self.account, chatInteraction:self.chatInteraction, window: window)
+            return !InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
         }
         
         

@@ -8,9 +8,50 @@
 
 import Cocoa
 import TGUIKit
+import TelegramCoreMac
+
 class WPMediaContentView: WPContentView {
     
     private(set) var contentNode:ChatMediaContentView?
+    
+    
+    override func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+        if let contentNode = contentNode {
+            if contentNode is ChatStickerContentView {
+                if let file = contentNode.media as? TelegramMediaFile {
+                    let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
+                    return .file(reference, StickerPreviewModalView.self)
+                }
+            } else if contentNode is ChatGIFContentView {
+                if let file = contentNode.media as? TelegramMediaFile {
+                    let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
+                    return .file(reference, GifPreviewModalView.self)
+                }
+            } else if contentNode is ChatInteractiveContentView {
+                if let image = contentNode.media as? TelegramMediaImage {
+                    let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
+                    return .image(reference, ImagePreviewModalView.self)
+                }
+            } else if contentNode is ChatFileContentView {
+                if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
+                    var representations: [TelegramMediaImageRepresentation] = []
+                    representations.append(contentsOf: file.previewRepresentations)
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
+                    let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
+                    let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
+                    return .image(reference, ImagePreviewModalView.self)
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    override func previewMediaIfPossible() -> Bool {
+        guard  let window = self.kitWindow, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let contentNode = contentNode, contentNode.mouseInside() else {return false}
+        _ = startModalPreviewHandle(table, window: window, context: content.context)
+        return true
+    }
     
     override func draw(_ dirtyRect: NSRect) {
         
@@ -36,8 +77,12 @@ class WPMediaContentView: WPContentView {
                 self.addSubview(self.contentNode!)
             }
             
-            self.contentNode?.update(with: layout.media, size: layout.mediaSize, account: layout.account, parent:layout.parent, table:layout.table, parameters: layout.parameters, approximateSynchronousValue: layout.approximateSynchronousValue)
+            self.contentNode?.update(with: layout.media, size: layout.mediaSize, context: layout.context, parent:layout.parent, table:layout.table, parameters: layout.parameters, approximateSynchronousValue: layout.approximateSynchronousValue)
         }
+    }
+    
+    override func updateMouse() {
+        contentNode?.updateMouse()
     }
     
     override func layout() {

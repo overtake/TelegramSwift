@@ -15,10 +15,10 @@ import LocalAuthentication
 
 private enum PasscodeEntry : Comparable, Identifiable {
     case turnOn(sectionId:Int)
-    case turnOff(sectionId:Int)
+    case turnOff(sectionId:Int, current: String)
     case turnOnDescription(sectionId:Int)
     case turnOffDescription(sectionId:Int)
-    case change(sectionId:Int)
+    case change(sectionId:Int, current: String)
     case autoLock(sectionId:Int, time:Int32?)
     case turnTouchId(sectionId:Int, enabled: Bool)
     case section(sectionId:Int)
@@ -48,13 +48,13 @@ private enum PasscodeEntry : Comparable, Identifiable {
         switch self {
         case let .turnOn(sectionId):
             return (sectionId * 1000) + stableId
-        case let .turnOff(sectionId):
+        case let .turnOff(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .turnOnDescription(sectionId):
             return (sectionId * 1000) + stableId
         case let .turnOffDescription(sectionId):
             return (sectionId * 1000) + stableId
-        case let .change(sectionId):
+        case let .change(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .autoLock(sectionId, _):
             return (sectionId * 1000) + stableId
@@ -83,9 +83,9 @@ private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, _ addi
     case .none:
         entries.append(.turnOn(sectionId: sectionId))
         entries.append(.turnOnDescription(sectionId: sectionId))
-    case .plaintextPassword, .numericalPassword:
-        entries.append(.turnOff(sectionId: sectionId))
-        entries.append(.change(sectionId: sectionId))
+    case let .plaintextPassword(value), let .numericalPassword(value):
+        entries.append(.turnOff(sectionId: sectionId, current: value.value))
+        entries.append(.change(sectionId: sectionId, current: value.value))
         entries.append(.turnOffDescription(sectionId: sectionId))
         
         entries.append(.section(sectionId: sectionId))
@@ -116,16 +116,16 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeTurnOn), nameStyle: actionStyle, type: .none, action: { 
                 arguments.turnOn()
             })
-        case .turnOff:
+        case let .turnOff(_, current):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeTurnOff), nameStyle: actionStyle, type: .none, action: {
-                arguments.turnOff()
+                arguments.turnOff(current)
             })
-        case .change:
+        case let .change(_, current):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeChange), nameStyle: actionStyle, type: .none, action: {
-                arguments.change()
+                arguments.change(current)
             })
         case .turnOnDescription, .turnOffDescription:
-            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: tr(L10n.passcodeTurnOnDescription))
+            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: L10n.passcodeControllerText)
         case .turnTouchId(_, let enabled):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeUseTouchId), type: .switchable(enabled), action: {
                 arguments.toggleTouchId(!enabled)
@@ -158,14 +158,14 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
 
 
 private final class PasscodeSettingsArguments {
-    let account:Account
+    let context: AccountContext
     let turnOn:()->Void
-    let turnOff:()->Void
-    let change:()->Void
+    let turnOff:(String)->Void
+    let change:(String)->Void
     let ifAway:()->Void
     let toggleTouchId:(Bool)->Void
-    init(_ account:Account, turnOn: @escaping()->Void, turnOff: @escaping()->Void, change:@escaping()->Void, ifAway: @escaping()-> Void, toggleTouchId:@escaping(Bool)->Void) {
-        self.account = account
+    init(_ context: AccountContext, turnOn: @escaping()->Void, turnOff: @escaping(String)->Void, change:@escaping(String)->Void, ifAway: @escaping()-> Void, toggleTouchId:@escaping(Bool)->Void) {
+        self.context = context
         self.turnOn = turnOn
         self.turnOff = turnOff
         self.change = change
@@ -176,17 +176,17 @@ private final class PasscodeSettingsArguments {
 
 class PasscodeSettingsViewController: TableViewController {
     
-    private let actionUpdate:Promise<Bool> = Promise(false)
+    private let disposable = MetaDisposable()
+    private func show(mode: PasscodeMode) {
+        self.navigationController?.push(PasscodeController(sharedContext: context.sharedContext, mode: mode))
+    }
     
-    private func show(with state: PasscodeViewState) {
-        let controller = PasscodeLockController(account, state)
-        actionUpdate.set(controller.doneValue)
-        showModal(with: controller, for: mainWindow)
+    deinit {
+        disposable.dispose()
     }
     
     func updateAwayTimeout(_ timeout:Int32?) {
-        self.actionUpdate.set(account.postbox.transaction { transaction -> Bool in
-            
+        disposable.set(context.sharedContext.accountManager.transaction { transaction -> Bool in
             switch transaction.getAccessChallengeData() {
             case .none:
                 break
@@ -196,7 +196,7 @@ class PasscodeSettingsViewController: TableViewController {
                 transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: timeout, attempts: attempts))
             }
             return true
-        })
+        }.start())
     }
     
     func showIfAwayOptions() {
@@ -207,13 +207,6 @@ class PasscodeSettingsViewController: TableViewController {
             items.append(SPopoverItem(tr(L10n.passcodeAutoLockDisabled), { [weak self] in
                 self?.updateAwayTimeout(nil)
             }))
-            
-            if isDebug {
-                //
-                items.append(SPopoverItem(tr(L10n.passcodeAutoLockIfAway(tr(L10n.timerSecondsCountable(5)))), { [weak self] in
-                    self?.updateAwayTimeout(5)
-                }))
-            }
             
             
             
@@ -238,17 +231,17 @@ class PasscodeSettingsViewController: TableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let account = self.account
-        let arguments = PasscodeSettingsArguments(account, turnOn: { [weak self] in
-            self?.show(with: .enable(.new))
-        }, turnOff: { [weak self] in
-            self?.show(with: .disable(.old))
-        }, change: { [weak self] in
-            self?.show(with: .change(.old))
+        let context = self.context
+        let arguments = PasscodeSettingsArguments(context, turnOn: { [weak self] in
+            self?.show(mode: .install)
+        }, turnOff: { [weak self] current in
+            self?.show(mode: .disable(current))
+        }, change: { [weak self] current in
+            self?.show(mode: .change(current))
         }, ifAway: { [weak self] in
             self?.showIfAwayOptions()
         }, toggleTouchId: { enabled in
-            _ = updateAdditionalSettingsInteractively(postbox: account.postbox, { current -> AdditionalSettings in
+            _ = updateAdditionalSettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> AdditionalSettings in
                 return current.withUpdatedTouchId(enabled)
             }).start()
         })
@@ -258,12 +251,8 @@ class PasscodeSettingsViewController: TableViewController {
        
         let previous:Atomic<[AppearanceWrapperEntry<PasscodeEntry>]> = Atomic(value: [])
         
-        genericView.merge(with: combineLatest(actionUpdate.get() |> mapToSignal { _ in
-            return account.postbox.transaction { transaction -> PostboxAccessChallengeData in
-                return transaction.getAccessChallengeData()
-            }
-        } |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue), additionalSettings(postbox: account.postbox) |> deliverOnPrepareQueue) |> map { passcode, appearance, additional in
-            let entries = passcodeSettinsEntry(passcode, additional).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        genericView.merge(with: combineLatest(queue: self.queue, context.sharedContext.accountManager.accessChallengeData(), appearanceSignal, additionalSettings(accountManager: context.sharedContext.accountManager)) |> map { passcode, appearance, additional in
+            let entries = passcodeSettinsEntry(passcode.data, additional).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize, arguments: arguments)
         } |> deliverOnMainQueue)
         

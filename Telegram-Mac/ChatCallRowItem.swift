@@ -24,11 +24,11 @@ class ChatCallRowItem: ChatRowItem {
         return ChatCallRowView.self
     }
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         let message = object.message!
         let action = message.media[0] as! TelegramMediaAction
-        let isIncoming: Bool = message.isIncoming(account, object.renderType == .bubble)
+        let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
         outgoing = !message.flags.contains(.Incoming)
         headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(L10n.chatCallOutgoing) : tr(L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
         switch action.action {
@@ -61,7 +61,7 @@ class ChatCallRowItem: ChatRowItem {
             failed = true
         }
         
-        super.init(initialSize, chatInteraction, account, object, downloadSettings)
+        super.init(initialSize, chatInteraction, context, object, downloadSettings)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -75,10 +75,10 @@ class ChatCallRowItem: ChatRowItem {
     
     func requestCall() {
         if let peerId = message?.id.peerId {
-            let account = self.account!
+            let context = self.context
             
-            requestSessionId.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(account, result)
+            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context.sharedContext, result)
             }))
         }
     }

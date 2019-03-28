@@ -16,9 +16,9 @@ import SwiftSignalKitMac
 
 class ChatSwitchInlineController: ChatController {
     private let fallbackId:PeerId
-    init(account:Account, peerId:PeerId, fallbackId:PeerId, initialAction:ChatInitialAction? = nil) {
+    init(context:AccountContext, peerId:PeerId, fallbackId:PeerId, initialAction:ChatInitialAction? = nil) {
         self.fallbackId = fallbackId
-        super.init(account: account, chatLocation: .peer(peerId), initialAction: initialAction)
+        super.init(context: context, chatLocation: .peer(peerId), initialAction: initialAction)
     }
     
     override var removeAfterDisapper: Bool {
@@ -41,7 +41,7 @@ class ChatSwitchInlineController: ChatController {
                                 for button in row.buttons {
                                     if case let .switchInline(samePeer: _, query: query) = button.action {
                                         let text = "@\(message.inlinePeer?.username ?? "") \(query)"
-                                        self.navigationController?.push(ChatController(account: account, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic)))
+                                        self.navigationController?.push(ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic)))
                                     }
                                 }
                             }

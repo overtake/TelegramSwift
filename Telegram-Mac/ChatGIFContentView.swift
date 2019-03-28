@@ -15,8 +15,7 @@ class ChatGIFContentView: ChatMediaContentView {
     
     private var player:GIFPlayerView = GIFPlayerView()
     private var progressView:RadialProgressView?
-    
-    private var canPlayForce: Bool = FastSettings.gifsAutoPlay
+
     
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
@@ -37,11 +36,16 @@ class ChatGIFContentView: ChatMediaContentView {
         }
     }
     
+    override func previewMediaIfPossible() -> Bool {
+        guard let context = self.context, let window = self.kitWindow, let table = self.table, fetchStatus == .Local else {return false}
+        _ = startModalPreviewHandle(table, window: window, context: context)
+        return true
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(player)
         player.layer?.cornerRadius = .cornerRadius
-       // player.set
     }
     
     required init?(coder: NSCoder) {
@@ -60,12 +64,12 @@ class ChatGIFContentView: ChatMediaContentView {
     }
     
     override func open() {
-        if let parent = parent {
-            if !canPlayForce {
-                canPlayForce = true
+        if let parent = parent, let parameters = parameters {
+            if !parameters.autoplay {
+                parameters.autoplay = true
                 updatePlayerIfNeeded()
             } else if !(parent.media.first is TelegramMediaGame) {
-                parameters?.showMedia(parent)
+                parameters.showMedia(parent)
             }
         }
     }
@@ -78,21 +82,21 @@ class ChatGIFContentView: ChatMediaContentView {
     }
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile {
+        if let context = context, let media = media as? TelegramMediaFile {
             if let parent = parent {
-                messageMediaFileCancelInteractiveFetch(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
+                messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
             } else {
-                cancelFreeMediaFileInteractiveFetch(account: account, resource: media.resource)
+                cancelFreeMediaFileInteractiveFetch(context: context, resource: media.resource)
             }
         }
     }
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile {
+        if let context = context, let media = media as? TelegramMediaFile {
             if let parent = parent {
-                fetchDisposable.set(messageMediaFileInteractiveFetched(account: account, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
             } else {
-                fetchDisposable.set(freeMediaFileInteractiveFetched(account: account, fileReference: FileMediaReference.standalone(media: media)).start())
+                fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
             }
         }
     }
@@ -100,6 +104,7 @@ class ChatGIFContentView: ChatMediaContentView {
     override func layout() {
         super.layout()
         player.frame = bounds
+
         self.player.positionFlags = positionFlags
         progressView?.center()
     }
@@ -114,9 +119,16 @@ class ChatGIFContentView: ChatMediaContentView {
     }
 
     @objc func updatePlayerIfNeeded() {
-         let accept = canPlayForce && window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
+         let accept = parameters?.autoplay == true && window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         player.set(data: accept ? data : nil, timebase: nextTimebase.swap(nil))
-        progressView?.isHidden = !FastSettings.gifsAutoPlay && canPlayForce
+        if let parameters = parameters, let status = fetchStatus {
+            switch status {
+            case .Local:
+                progressView?.isHidden = parameters.autoplay == true
+            default:
+                progressView?.isHidden = false
+            }
+        }
     }
     
     
@@ -146,11 +158,11 @@ class ChatGIFContentView: ChatMediaContentView {
         player.set(data: nil)
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         let mediaUpdated = self.media == nil || !self.media!.isSemanticallyEqual(to: media)
         
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
+        super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
 
         var topLeftRadius: CGFloat = .cornerRadius
@@ -183,14 +195,14 @@ class ChatGIFContentView: ChatMediaContentView {
             var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media)
-            let fitted = dimensions.fitted(NSMakeSize(320, 320))
+            let fitted = dimensions.aspectFilled(size)
             player.setVideoLayerGravity(fitted.width == size.width ? .resizeAspectFill : .resizeAspect)
-            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: fitted, boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: .fill(theme.colors.grayBackground))
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: fitted, boundingSize: size, intrinsicInsets: NSEdgeInsets())
 
             player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: mediaUpdated)
 
             
-            player.setSignal(chatMessageVideo(postbox: account.postbox, fileReference: reference, scale: backingScaleFactor), cacheImage: { [weak self] image in
+            player.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor), animate: true, cacheImage: { [weak self] image in
                 if let strongSelf = self {
                     return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
                 } else {
@@ -200,7 +212,7 @@ class ChatGIFContentView: ChatMediaContentView {
             player.set(arguments: arguments)
             
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: media), account.pendingMessageManager.pendingMessageStatus(parent.id))
+                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                         if let pendingStatus = pendingStatus {
                             return .Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100))
@@ -209,13 +221,13 @@ class ChatGIFContentView: ChatMediaContentView {
                         }
                     } |> deliverOnMainQueue
             } else {
-                updatedStatusSignal = chatMessageFileStatus(account: account, file: media, approximateSynchronousValue: approximateSynchronousValue)
+                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: media, approximateSynchronousValue: approximateSynchronousValue)
             }
             
             if let updatedStatusSignal = updatedStatusSignal {
                 
                 
-                self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnResourceQueue |> map {  status, resource -> (MediaResourceStatus, AVGifData?) in
+                self.statusDisposable.set((combineLatest(updatedStatusSignal, context.account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnResourceQueue |> map {  status, resource -> (MediaResourceStatus, AVGifData?) in
                     if resource.complete {
                         return (status, AVGifData.dataFrom(resource.path))
                     } else if status == .Local, let resource = media.resource as? LocalFileReferenceMediaResource {
@@ -227,9 +239,10 @@ class ChatGIFContentView: ChatMediaContentView {
                         if let strongSelf = self {
                             strongSelf.data = data
                             strongSelf.fetchStatus = status
-                            if case .Local = status, FastSettings.gifsAutoPlay {
+                            let needSetStatus: Bool
+                            if case .Local = status, parameters?.autoplay == true {
                                 if let progressView = strongSelf.progressView {
-                                    progressView.state = .Fetching(progress: 1, force: false)
+                                    progressView.state = parent == nil ? .ImpossibleFetching(progress: 1, force: false) : .Fetching(progress: 1, force: false)
                                     strongSelf.progressView = nil
                                     progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
                                         if completed {
@@ -237,9 +250,9 @@ class ChatGIFContentView: ChatMediaContentView {
                                         }
                                     })
                                 }
-                                
+                                needSetStatus = false
                             } else {
-                                if strongSelf.progressView == nil, parent != nil {
+                                if strongSelf.progressView == nil {
                                     let progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
                                     progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: 40.0, height: 40.0))
                                     strongSelf.progressView = progressView
@@ -247,15 +260,21 @@ class ChatGIFContentView: ChatMediaContentView {
                                     strongSelf.progressView?.center()
                                     strongSelf.progressView?.fetchControls = strongSelf.fetchControls
                                 }
+                                needSetStatus = true
                             }
-                            
-                            switch status {
-                            case let .Fetching(_, progress):
-                                strongSelf.progressView?.state = .Fetching(progress: progress, force: false)
-                            case .Local:
-                                strongSelf.progressView?.state = .Play
-                            case .Remote:
-                                strongSelf.progressView?.state = .Remote
+                            if needSetStatus {
+                                switch status {
+                                case let .Fetching(_, progress):
+                                    strongSelf.progressView?.state = parent == nil ? .ImpossibleFetching(progress: progress, force: false) : .Fetching(progress: progress, force: false)
+                                case .Local:
+                                    if parent != nil {
+                                        strongSelf.progressView?.state = .Play
+                                    }
+                                case .Remote:
+                                    if parent != nil {
+                                        strongSelf.progressView?.state = .Remote
+                                    }
+                                }
                             }
                         }
                     }))
@@ -268,6 +287,10 @@ class ChatGIFContentView: ChatMediaContentView {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         var bp:Int = 0
         bp += 1
+    }
+    
+    override var contents: Any? {
+        return player.layer?.contents
     }
     
     override open func copy() -> Any {

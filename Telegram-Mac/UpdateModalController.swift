@@ -117,7 +117,7 @@ class UpdateModalController: ModalViewController {
             #else
             (NSApp.delegate as? AppDelegate)?.checkForUpdates("")
             #endif
-        }, cancelTitle: "Cancel", cancel: { [weak self] in
+        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
             self?.close()
         }, drawBorder: true, height: 50, alignCancelLeft: true)
         

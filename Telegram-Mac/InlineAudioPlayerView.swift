@@ -42,6 +42,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             self.playingSpeed.isHidden = !(controller is APChatVoiceController)
         }
     }
+    private var context: AccountContext?
     private var message:Message?
     private(set) var instantVideoPip:InstantVideoPIP?
     private var ranges: (IndexSet, Int)?
@@ -134,13 +135,13 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     private func showAudioPlayerList() {
-        guard let window = kitWindow else {return}
+        guard let window = kitWindow, let context = context else {return}
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         if NSPointInRect(point, textView.frame) {
-            if let song = controller?.currentSong, let controller = controller as? APChatMusicController {
+            if let song = controller?.currentSong {
                 switch song.stableId {
                 case let .message(message):
-                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, account: controller.account, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: context, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
                 default:
                     break
                 }
@@ -211,27 +212,28 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     private func gotoMessage() {
-        if let message = message, let controller = controller, let navigation = controller.account.context.mainNavigation {
-            if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
+        if let message = message, let context = context {
+            if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
                 controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: false, inset: 0))
             } else {
-                navigation.push(ChatController(account: controller.account, chatLocation: .peer(message.id.peerId), messageId: message.id))
+                context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
             }
         }
     }
     
-    func update(with controller:APController, tableView:TableView?, supportTableView: TableView? = nil) {
+    func update(with controller:APController, context: AccountContext, tableView:TableView?, supportTableView: TableView? = nil) {
         self.controller?.remove(listener: self)
         self.controller = controller
+        self.context = context
         self.controller?.add(listener: self)
         self.ready.set(controller.ready.get())
         
         repeatControl.isHidden = !(controller is APChatMusicController)
         if let tableView = tableView {
             if self.instantVideoPip == nil {
-                self.instantVideoPip = InstantVideoPIP(controller, window: mainWindow)
+                self.instantVideoPip = InstantVideoPIP(controller, context: context, window: mainWindow)
             }
-            self.instantVideoPip?.updateTableView(tableView, controller: controller)
+            self.instantVideoPip?.updateTableView(tableView, context: context, controller: controller)
             addGlobalAudioToVisible(tableView: tableView)
         }
         if let supportTableView = supportTableView {

@@ -15,14 +15,14 @@ import SwiftSignalKitMac
 
 
 private final class ChannelMembersControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let removePeer: (PeerId) -> Void
     let addMembers:()-> Void
     let inviteLink:()-> Void
     let openInfo:(Peer)->Void
-    init(account: Account, removePeer: @escaping (PeerId) -> Void, addMembers:@escaping()->Void, inviteLink:@escaping()->Void, openInfo:@escaping(Peer)->Void) {
-        self.account = account
+    init(context: AccountContext, removePeer: @escaping (PeerId) -> Void, addMembers:@escaping()->Void, inviteLink:@escaping()->Void, openInfo:@escaping(Peer)->Void) {
+        self.context = context
         self.removePeer = removePeer
         self.addMembers = addMembers
         self.inviteLink = inviteLink
@@ -118,7 +118,7 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
             
                 if case .plain = interactionType {
                     arguments.openInfo(participant.peer)
@@ -180,7 +180,7 @@ private struct ChannelMembersControllerState: Equatable {
     }
 }
 
-private func channelMembersControllerEntries(view: PeerView, account:Account, state: ChannelMembersControllerState, participants: [RenderedChannelParticipant]?) -> [ChannelMembersEntry] {
+private func channelMembersControllerEntries(view: PeerView, context: AccountContext, state: ChannelMembersControllerState, participants: [RenderedChannelParticipant]?) -> [ChannelMembersEntry] {
     
     var entries: [ChannelMembersEntry] = []
     
@@ -200,10 +200,6 @@ private func channelMembersControllerEntries(view: PeerView, account:Account, st
                 entries.append(.addMembers(sectionId: sectionId, isChannel: peer.isChannel))
                 usersManage = true
             }
-            if peer.hasPermission(.manageInviteLink) {
-                entries.append(.inviteLink(sectionId: sectionId))
-                usersManage = true
-            }
             
             if usersManage {
                 entries.append(.membersDesc(sectionId: sectionId))
@@ -221,7 +217,7 @@ private func channelMembersControllerEntries(view: PeerView, account:Account, st
                     if let adminInfo = adminInfo {
                         editable = adminInfo.canBeEditedByAccountPeer
                     } else {
-                        editable = participant.participant.peerId != account.peerId
+                        editable = participant.participant.peerId != context.account.peerId
                     }
                 default:
                     editable = false
@@ -265,9 +261,9 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     private let removePeerDisposable:MetaDisposable = MetaDisposable()
     
     private let disposable:MetaDisposable = MetaDisposable()
-    init(account:Account, peerId:PeerId) {
+    init(_ context: AccountContext, peerId:PeerId) {
         self.peerId = peerId
-        super.init(account)
+        super.init(context)
     }
     
     override var defaultBarTitle: String {
@@ -290,7 +286,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         
         let updateState: ((ChannelMembersControllerState) -> ChannelMembersControllerState) -> Void = { [weak self] f in
@@ -302,21 +298,21 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let actionsDisposable = DisposableSet()
         let peersPromise = Promise<[RenderedChannelParticipant]?>(nil)
         
-        let arguments = ChannelMembersControllerArguments(account: account, removePeer: { [weak self] memberId in
+        let arguments = ChannelMembersControllerArguments(context: context, removePeer: { [weak self] memberId in
             
             updateState {
                 return $0.withUpdatedRemovingPeerId(memberId)
             }
             
-            self?.removePeerDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)) |> deliverOnMainQueue).start(completed: {
+            self?.removePeerDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)) |> deliverOnMainQueue).start(completed: {
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }
                 
             }))
         }, addMembers: {
-            let signal = selectModalPeers(account: account, title: L10n.channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
-                return showModalProgress(signal: account.context.peerChannelMemberCategoriesContextsManager.addMembers(account: account, peerId: peerId, memberIds: peers), for: mainWindow)
+            let signal = selectModalPeers(context: context, title: L10n.channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
+                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: peers), for: mainWindow)
             } |> deliverOnMainQueue
             
             actionsDisposable.add(signal.start(error: { error in
@@ -335,15 +331,15 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             }))
         }, inviteLink: { [weak self] in
             if let strongSelf = self {
-                strongSelf.navigationController?.push(LinkInvationController(account: strongSelf.account, peerId: strongSelf.peerId))
+                strongSelf.navigationController?.push(LinkInvationController(strongSelf.context, peerId: strongSelf.peerId))
             }
         }, openInfo: { [weak self] peer in
-             self?.navigationController?.push(PeerInfoController(account: account, peerId: peer.id))
+             self?.navigationController?.push(PeerInfoController(context: context, peerId: peer.id))
         })
         
-        let peerView = account.viewTracker.peerView(peerId)
+        let peerView = context.account.viewTracker.peerView(peerId)
         
-        let (disposable, _) = account.context.peerChannelMemberCategoriesContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, updated: { state in
+        let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, updated: { state in
             peersPromise.set(.single(state.list))
         })
         actionsDisposable.add(disposable)
@@ -356,7 +352,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let signal = combineLatest(statePromise.get(), peerView, peersPromise.get(), appearanceSignal)
             |> deliverOnMainQueue
             |> map { state, view, peers, appearance -> TableUpdateTransition in
-                let entries = channelMembersControllerEntries(view: view, account: account, state: state, participants: peers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = channelMembersControllerEntries(view: view, context: context, state: state, participants: peers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()
@@ -381,9 +377,9 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     }
     
     private func searchChannelUsers() {
-        _ = (selectModalPeers(account: account, title: "", behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
-            if let peerId = peerId, let account = self?.account {
-                self?.navigationController?.push(PeerInfoController.init(account: account, peerId: peerId))
+        _ = (selectModalPeers(context: context, title: "", behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+            if let peerId = peerId, let context = self?.context {
+                self?.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
             }
         })
     }

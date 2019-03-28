@@ -19,41 +19,6 @@ enum ItemListStickerPackItemControl: Equatable {
     case remove
     case empty
     case selected
-    static func ==(lhs: ItemListStickerPackItemControl, rhs: ItemListStickerPackItemControl) -> Bool {
-        switch lhs {
-        case .none:
-            if case .none = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .remove:
-            if case .remove = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .selected:
-            if case .selected = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .empty:
-            if case .empty = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .installation(installed):
-            if case .installation(installed) = rhs {
-                return true
-            } else {
-                return false
-            }
-            
-        }
-    }
 }
 
 class StickerSetTableRowItem: TableRowItem {

@@ -12,15 +12,60 @@ import TGUIKit
 import SwiftSignalKitMac
 
 
+enum QuickPreviewMedia : Equatable {
+    case file(FileMediaReference, ModalPreviewControllerView.Type)
+    case image(ImageMediaReference, ModalPreviewControllerView.Type)
+    
+    static func ==(lhs: QuickPreviewMedia, rhs: QuickPreviewMedia) -> Bool {
+        switch lhs {
+        case let .file(lhsReference, _):
+            if case let .file(rhsReference, _) = rhs {
+                return lhsReference.media.isEqual(to: rhsReference.media)
+            } else {
+                return false
+            }
+        case let .image(lhsReference, _):
+            if case let .image(rhsReference, _) = rhs {
+                return lhsReference.media.isEqual(to: rhsReference.media)
+            } else {
+                return false
+            }
+        }
+    }
+    
+    var fileReference: FileMediaReference? {
+        switch self {
+        case let .file(reference, _):
+            return reference
+        default:
+            return nil
+        }
+    }
+    var imageReference: ImageMediaReference? {
+        switch self {
+        case let .image(reference, _):
+            return reference
+        default:
+            return nil
+        }
+    }
+    
+    var viewType: ModalPreviewControllerView.Type {
+        switch self {
+        case let .file(_, type), let .image(_, type):
+            return type
+        }
+    }
+}
+
 extension GridNode : ModalPreviewProtocol {
-    func fileAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
+    func fileAtLocationInWindow(_ point: NSPoint) -> QuickPreviewMedia? {
         let point = self.documentView!.convert(point, from: nil)
-        var reference: FileMediaReference? = nil
+        var reference: QuickPreviewMedia? = nil
         self.forEachItemNode { node in
             if NSPointInRect(point, node.frame) {
                 if let c = node as? ModalPreviewRowViewProtocol {
                     reference = c.fileAtPoint(node.convert(point, from: nil))
-                    return
                 }
             }
         }
@@ -29,7 +74,7 @@ extension GridNode : ModalPreviewProtocol {
 }
 
 extension TableView : ModalPreviewProtocol {
-    func fileAtLocationInWindow(_ point: NSPoint) -> FileMediaReference? {
+    func fileAtLocationInWindow(_ point: NSPoint) -> QuickPreviewMedia? {
         let index = self.row(at: documentView!.convert(point, from: nil))
         if index != -1 {
             let item = self.item(at: index)
@@ -43,37 +88,38 @@ extension TableView : ModalPreviewProtocol {
 }
 
 protocol ModalPreviewRowViewProtocol {
-    func fileAtPoint(_ point:NSPoint) -> FileMediaReference?
+    func fileAtPoint(_ point:NSPoint) -> QuickPreviewMedia?
 }
 
 protocol ModalPreviewProtocol {
-    func fileAtLocationInWindow(_ point:NSPoint) -> FileMediaReference?
+    func fileAtLocationInWindow(_ point:NSPoint) -> QuickPreviewMedia?
     
 }
 
 protocol ModalPreviewControllerView : class {
-    func update(with reference: FileMediaReference, account:Account)
+    func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool)
 }
 
 fileprivate var handler:ModalPreviewHandler?
 
 
 
-func startModalPreviewHandle(_ global:ModalPreviewProtocol, viewType: ModalPreviewControllerView.Type, window:Window, account:Account) {
-    handler = ModalPreviewHandler(global, viewType: viewType, window: window, account: account)
+func startModalPreviewHandle(_ global:ModalPreviewProtocol, window:Window, context: AccountContext) {
+    handler = ModalPreviewHandler(global, window: window, context: context)
     handler?.startHandler()
 }
 
 class ModalPreviewHandler : NSObject {
     private let global:ModalPreviewProtocol
-    private let account:Account
+    private let context:AccountContext
     private let window:Window
     private let modal:PreviewModalController
-    init(_ global:ModalPreviewProtocol, viewType: ModalPreviewControllerView.Type, window:Window, account:Account) {
+    init(_ global:ModalPreviewProtocol, window:Window, context: AccountContext) {
         self.global = global
         self.window = window
-        self.account = account
-        self.modal = PreviewModalController(account, viewType: viewType)
+        self.context = context
+        
+        self.modal = PreviewModalController(context)
     }
     
     func startHandler() {
@@ -85,12 +131,12 @@ class ModalPreviewHandler : NSObject {
             if let strongSelf = self, let reference = strongSelf.global.fileAtLocationInWindow(strongSelf.window.mouseLocationOutsideOfEventStream) {
                 strongSelf.modal.update(with: reference)
             }
-            return .invokeNext
-            }, with: self, for: .leftMouseDragged, priority: .modal)
+            return .invoked
+        }, with: self, for: .leftMouseDragged, priority: .modal)
         
         window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
             self?.stopHandler()
-            return .invokeNext
+            return .invoked
         }, with: self, for: .leftMouseUp, priority: .modal)
     }
     
@@ -104,19 +150,59 @@ class ModalPreviewHandler : NSObject {
     deinit {
         stopHandler()
     }
-    
 }
 
 
-class PreviewModalController: ModalViewController {
-    fileprivate let account:Account
-    fileprivate var reference:FileMediaReference?
-    private let viewType: ModalPreviewControllerView.Type
-    init(_ account:Account, viewType: ModalPreviewControllerView.Type) {
-        self.viewType = viewType
-        self.account = account
+private final class PreviewModalView: View {
+    private var contentView: NSView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    override func layout() {
+        super.layout()
+    }
+    
+    func update(with preview: QuickPreviewMedia, context: AccountContext, animated: Bool) {
         
-        super.init(frame: NSMakeRect(0, 0, 360, 400))
+        let viewType = preview.viewType
+        var changed = false
+        if contentView == nil || !contentView!.isKind(of: viewType)  {
+            if animated {
+                let current = self.contentView
+                current?.layer?.animateScaleSpring(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak current] completed in
+                    if completed {
+                        current?.removeFromSuperview()
+                    }
+                })
+            } else {
+                self.contentView?.removeFromSuperview()
+            }
+            
+            self.contentView = (viewType as! NSView.Type).init(frame:NSZeroRect)
+            self.addSubview(self.contentView!)
+            changed = true
+        }
+        contentView?.frame = bounds
+        (contentView as? ModalPreviewControllerView)?.update(with: preview, context: context, animated: animated && !changed)
+        
+        if animated {
+            contentView?.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+class PreviewModalController: ModalViewController {
+    fileprivate let context:AccountContext
+    fileprivate var reference:QuickPreviewMedia?
+    init(_ context: AccountContext) {
+        self.context = context
+        
+        super.init(frame: NSMakeRect(0, 0, min(context.window.frame.width - 60, 450), min(450, context.window.frame.height - 60)))
         bar = .init(height: 0)
     }
     
@@ -131,26 +217,26 @@ class PreviewModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         if let reference = reference {
-            genericView.update(with: reference, account: account)
+            genericView.update(with: reference, context: context, animated: false)
         }
         readyOnce()
     }
     
-    func update(with reference:FileMediaReference?) {
-        if self.reference?.media != reference?.media {
+    func update(with reference:QuickPreviewMedia?) {
+        if self.reference != reference {
             self.reference = reference
             if isLoaded(), let reference = reference {
-                genericView.update(with: reference, account: account)
+                genericView.update(with: reference, context: context, animated: true)
             }
         }
     }
     
-    fileprivate var genericView:ModalPreviewControllerView {
-        return view as! ModalPreviewControllerView
+    fileprivate var genericView:PreviewModalView {
+        return view as! PreviewModalView
     }
     
     override func viewClass() -> AnyClass {
-        return viewType
+        return PreviewModalView.self
     }
     
     //    override var isFullScreen: Bool {

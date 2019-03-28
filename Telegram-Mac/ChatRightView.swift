@@ -29,7 +29,7 @@ class ChatRightView: View {
     func set(item:ChatRowItem, animated:Bool) {
         self.item = item
         self.toolTip = item.fullDate
-        if !item.isIncoming
+        if !item.isIncoming || item.isUnsent || item.isFailed
             && !item.chatInteraction.isLogInteraction {
             if item.isUnsent {
                 stateView?.removeFromSuperview()
@@ -47,7 +47,7 @@ class ChatRightView: View {
                 sendingView = nil
                 
                 
-                if let peer = item.peer as? TelegramChannel, case .broadcast = peer.info {
+                if let peer = item.peer as? TelegramChannel, peer.isChannel && !item.isFailed {
                     stateView?.removeFromSuperview()
                     stateView = nil
                     readImageView?.removeFromSuperview()
@@ -155,7 +155,7 @@ class ChatRightView: View {
                 let icon = theme.chat.channelViewsIcon(item)
                 ctx.draw(icon, in: NSMakeRect(channelViews.0.size.width + 2 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
                 
-                channelViews.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 0) : 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                channelViews.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
                 
                 if let postAuthor = item.postAuthor {

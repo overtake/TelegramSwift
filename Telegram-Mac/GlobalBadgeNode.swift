@@ -29,6 +29,7 @@ class GlobalBadgeNode: Node {
                 textLayout = nil
                 size = NSZeroSize
             }
+            setNeedDisplay()
             if let superview = view?.superview as? View {
                 superview.customHandler.layout = { [weak self] view in
                     if let strongSelf = self {
@@ -36,26 +37,35 @@ class GlobalBadgeNode: Node {
                             var origin:NSPoint = NSZeroPoint
                             let center = view.focus(strongSelf.size)
                             origin = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, center.midX) + strongSelf.xInset, 4)
+                            origin.x = min(view.frame.width - strongSelf.size.width - 4, origin.x)
                             strongSelf.frame = NSMakeRect(origin.x,origin.y,strongSelf.size.width,strongSelf.size.height)
                         } else {
                             strongSelf.view?.setFrameSize(strongSelf.size)
                         }
                     }
                 }
-                setNeedDisplay()
-                superview.needsLayout = true
             }
-            
+            view?.superview?.needsLayout = true
         }
     }
     
+    override func update() {
+        let attributedString = self.attributedString
+        self.attributedString = attributedString
+    }
     
+    override func setNeedDisplay() {
+        super.setNeedDisplay()
+    }
     
-    init(_ account:Account, excludePeerId:PeerId? = nil, layoutChanged:(()->Void)? = nil) {
+    private let getColor: () -> NSColor
+    
+    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping() -> NSColor = { theme.colors.redUI }) {
         self.account = account
         self.excludePeerId = excludePeerId
         self.layoutChanged = layoutChanged
-        super.init(View())
+        self.getColor = getColor
+        super.init(view)
         
         var items:[UnreadMessageCountsItem] = []
         let peerSignal: Signal<(Peer, Bool)?, NoError>
@@ -69,18 +79,24 @@ class GlobalBadgeNode: Node {
             peerSignal = .single(nil)
         }
         
+        let signal: Signal<[(Int32, RenderedTotalUnreadCountType)], NoError>
+        if collectAllAccounts {
+            signal = sharedContext.activeAccountsWithInfo |> mapToSignal { primaryId, accounts in
+                return combineLatest(accounts.filter { $0.account.id != account.id }.map { renderedTotalUnreadCount(accountManager: sharedContext.accountManager, postbox: $0.account.postbox) })
+            }
+        } else {
+            signal = renderedTotalUnreadCount(accountManager: sharedContext.accountManager, postbox: account.postbox) |> map { [$0] }
+        }
         
-        
-        
-        self.disposable.set((combineLatest(renderedTotalUnreadCount(postbox: account.postbox), account.postbox.unreadMessageCountsView(items: items), appNotificationSettings(postbox: account.postbox), peerSignal) |> deliverOnMainQueue).start(next: { [weak self] (count, view, inAppSettings, peerSettings) in
+        self.disposable.set((combineLatest(signal, account.postbox.unreadMessageCountsView(items: items), appNotificationSettings(accountManager: sharedContext.accountManager), peerSignal) |> deliverOnMainQueue).start(next: { [weak self] (counts, view, inAppSettings, peerSettings) in
             if let strongSelf = self {
                 
                 var excludeTotal: Int32 = 0
                 
-                var dockTile: String?
-                let totalValue = max(0, count.0)
+                var dockText: String?
+                let totalValue = max(0, counts.reduce(0, { $0 + $1.0 }))
                 if totalValue > 0 {
-                     dockTile = "\(totalValue)"
+                     dockText = "\(totalValue)"
                 }
                 
                 excludeTotal = totalValue
@@ -115,8 +131,9 @@ class GlobalBadgeNode: Node {
                     strongSelf.attributedString = .initialize(string: Int(excludeTotal).prettyNumber, color: .white, font: .bold(.small))
                 }
                 strongSelf.layoutChanged?()
-                
-                NSApplication.shared.dockTile.badgeLabel = dockTile
+                if dockTile {
+                    NSApplication.shared.dockTile.badgeLabel = dockText
+                }
             }
         }))
     }
@@ -124,7 +141,7 @@ class GlobalBadgeNode: Node {
     override public func draw(_ layer: CALayer, in ctx: CGContext) {
         
         if let view = view {
-            ctx.setFillColor(theme.colors.redUI.cgColor)
+            ctx.setFillColor(getColor().cgColor)
             
             ctx.round(self.size, self.size.height/2.0)
             ctx.fill(layer.bounds)

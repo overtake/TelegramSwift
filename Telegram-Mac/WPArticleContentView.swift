@@ -33,7 +33,18 @@ class WPArticleContentView: WPContentView {
         }
     }
     
-   
+    override func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+        if let _ = imageView, let content = content as? WPArticleLayout, content.isFullImageSize, let image = content.content.image {
+            return .image(ImageMediaReference.webPage(webPage: WebpageReference(content.webPage), media: image), ImagePreviewModalView.self)
+        }
+        return nil
+    }
+    
+    override func previewMediaIfPossible() -> Bool {
+        guard  let window = self.kitWindow, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let imageView = imageView, imageView._mouseInside(), playIcon == nil, !content.hasInstantPage else {return false}
+        _ = startModalPreviewHandle(table, window: window, context: content.context)
+        return true
+    }
     
     required public init() {
         super.init()
@@ -65,11 +76,18 @@ class WPArticleContentView: WPContentView {
         fatalError("init(frame:) has not been implemented")
     }
     
+    override func updateMouse() {
+        super.updateMouse()
+        for content in groupedContentView.subviews.compactMap({$0 as? ChatMediaContentView}) {
+            content.updateMouse()
+        }
+    }
+    
     func open() {
         if let content = content?.content, let layout = self.content, let window = kitWindow {
             
             if layout.hasInstantPage {
-                showInstantPage(InstantPageViewController(layout.account, webPage: layout.parent.media[0] as! TelegramMediaWebpage, message: layout.parent.text))
+                showInstantPage(InstantPageViewController(layout.context, webPage: layout.parent.media[0] as! TelegramMediaWebpage, message: layout.parent.text))
                 return
             }
             
@@ -80,7 +98,7 @@ class WPArticleContentView: WPContentView {
                         case .fail:
                             execute(inapp: .external(link: content.url, false))
                         case .loaded:
-                            showChatGallery(account: layout.account, message: layout.parent, layout.table)
+                            showChatGallery(context: layout.context, message: layout.parent, layout.table)
                         default:
                             break
                         }
@@ -91,9 +109,9 @@ class WPArticleContentView: WPContentView {
                 return
             }
             if content.embedType == "iframe" {
-                showModal(with: WebpageModalController(content:content,account:layout.account), for: window)
+                showModal(with: WebpageModalController(content:content, context: layout.context), for: window)
             } else if layout.isGalleryAssemble {
-                showChatGallery(account: layout.account, message: layout.parent, layout.table, type: .alone)
+                showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
             } else if let wallpaper = layout.wallpaper {
                 execute(inapp: wallpaper)
             } else if !content.url.isEmpty {
@@ -106,9 +124,9 @@ class WPArticleContentView: WPContentView {
     func fetch() {
         if let layout = content as? WPArticleLayout {
             if let _ = layout.wallpaper, let file = layout.content.file {
-                fetchDisposable.set(fetchedMediaResource(postbox: layout.account.postbox, reference: MediaResourceReference.wallpaper(resource: file.resource)).start())
+                fetchDisposable.set(fetchedMediaResource(postbox: layout.context.account.postbox, reference: MediaResourceReference.wallpaper(resource: file.resource)).start())
             } else if let image = layout.content.image {
-                fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
+                fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
             }
         }
     }
@@ -116,9 +134,9 @@ class WPArticleContentView: WPContentView {
     func cancelFetching() {
          if let layout = content as? WPArticleLayout {
             if let _ = layout.wallpaper, let file = layout.content.file {
-                fileCancelInteractiveFetch(account: layout.account, file: file)
+                fileCancelInteractiveFetch(account: layout.context.account, file: file)
             } else if let image = layout.content.image {
-                chatMessagePhotoCancelInteractiveFetch(account: layout.account, photo: image)
+                chatMessagePhotoCancelInteractiveFetch(account: layout.context.account, photo: image)
             }
             fetchDisposable.set(nil)
         }
@@ -187,7 +205,7 @@ class WPArticleContentView: WPContentView {
                     let positionFlags: LayoutPositionFlags = groupLayout.position(at: i)
 
                     
-                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, account: layout.account, parent: layout.parent.withUpdatedGroupingKey(groupLayout.messages[i].groupingKey), table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags, approximateSynchronousValue: synchronousLoad)
+                    groupedContents[i].update(with: groupLayout.messages[i].media[0], size: groupLayout.frame(at: i).size, context: layout.context, parent: layout.parent.withUpdatedGroupingKey(groupLayout.messages[i].groupingKey), table: layout.table, parameters: layout.parameters[i], animated: false, positionFlags: positionFlags, approximateSynchronousValue: synchronousLoad)
                     
                     groupedContents[i].change(pos: groupLayout.frame(at: i).origin, animated: false)
                 }
@@ -237,7 +255,11 @@ class WPArticleContentView: WPContentView {
             }
             var updateImageSignal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
             if let image = image {
-                updateImageSignal = chatWebpageSnippetPhoto(account: layout.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
+                if let _ = layout.wallpaper {
+                    updateImageSignal = chatWallpaper(account: layout.context.account, representations: image.representations, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false)
+                } else {
+                    updateImageSignal = chatWebpageSnippetPhoto(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
+                }
                 
                 if imageView == nil {
                     imageView = TransformImageView()
@@ -247,7 +269,7 @@ class WPArticleContentView: WPContentView {
                 let closestRepresentation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280))//(largestImageRepresentation(image.representations))
                 
                 if let closestRepresentation = closestRepresentation {
-                    statusDisposable.set((layout.account.postbox.mediaBox.resourceStatus(closestRepresentation.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue).start(next: { [weak self] status in
+                    statusDisposable.set((layout.context.account.postbox.mediaBox.resourceStatus(closestRepresentation.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue).start(next: { [weak self] status in
                         
                         guard let `self` = self else {return}
                         
@@ -331,11 +353,11 @@ class WPArticleContentView: WPContentView {
                 
                 
                 if let arguments = layout.imageArguments, let imageView = imageView {
-                    imageView.set(arguments: arguments)
-                    imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: newLayout)
+                   imageView.set(arguments: arguments)
+                    imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
                     
                     if let updateImageSignal = updateImageSignal {
-                        imageView.setSignal(updateImageSignal, clearInstantly: false, animate: true, cacheImage: { [weak self] signal in
+                        imageView.setSignal(updateImageSignal, animate: true, cacheImage: { [weak self] signal in
                             if let strongSelf = self {
                                 return cacheMedia(signal: signal, media: image, arguments: arguments, scale: strongSelf.backingScaleFactor)
                             } else {
@@ -346,8 +368,33 @@ class WPArticleContentView: WPContentView {
                 }
                 
             } else {
-                imageView?.removeFromSuperview()
-                imageView = nil
+                
+                var removeImageView: Bool = true
+                if let wallpaper = layout.wallpaper {
+                    switch wallpaper {
+                    case let .wallpaper(_, preview):
+                        switch preview {
+                        case let .color(color):
+                            if imageView == nil {
+                                imageView = TransformImageView()
+                                self.addSubview(imageView!)
+                            }
+                            imageView?.layer?.cornerRadius = .cornerRadius
+                            imageView?.background = color
+                            removeImageView = false
+                        default:
+                            break
+                        }
+                    default:
+                        break
+                    }
+                }
+                if removeImageView {
+                    imageView?.removeFromSuperview()
+                    imageView = nil
+                }
+                downloadIndicator?.removeFromSuperview()
+                downloadIndicator = nil
             }
             
 
@@ -405,8 +452,6 @@ class WPArticleContentView: WPContentView {
             }
             
             if let imageView = imageView {
-                
-              
                 
                 if let arguments = layout.imageArguments {
                     imageView.set(arguments: arguments)

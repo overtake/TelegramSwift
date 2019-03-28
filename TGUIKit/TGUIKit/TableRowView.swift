@@ -40,7 +40,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.layer?.backgroundColor = backdorColor.cgColor
     }
     
-
+    open override func smartMagnify(with event: NSEvent) {
+        super.smartMagnify(with: event)
+    }
     
     open func layerClass() ->AnyClass {
         return CALayer.self;

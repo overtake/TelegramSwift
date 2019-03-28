@@ -9,8 +9,15 @@
 import Cocoa
 
 
+public enum ImageViewTransition {
+    case `default`
+    case modern
+}
+
 open class ImageView: NSView {
 
+    
+    public var animationTransition: ImageViewTransition = .default
     open var animates:Bool = false
     
     open var image:CGImage? {
@@ -34,6 +41,9 @@ open class ImageView: NSView {
         }
     }
 
+    open override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
     
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

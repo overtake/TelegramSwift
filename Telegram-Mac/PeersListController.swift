@@ -13,8 +13,167 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 
 
+/*
+ 
+ class PeerListContainerView : View {
+ var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
+ didSet {
+ oldValue.removeFromSuperview()
+ addSubview(tableView)
+ }
+ }
+ let searchView:SearchView = SearchView(frame:NSZeroRect)
+ fileprivate let proxyButton:ImageButton = ImageButton()
+ private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
+ 
+ private let titleView = TextView()
+ 
+ private let separatorView = View()
+ 
+ let compose:ImageButton = ImageButton()
+ private let headerContainerView = View()
+ private let searchContainerView = View()
+ private var searchState: SearchFieldState = .None
+ 
+ var mode: PeerListMode = .plain {
+ didSet {
+ switch mode {
+ case .feedChannels:
+ compose.isHidden = true
+ case .plain:
+ compose.isHidden = false
+ }
+ needsLayout = true
+ }
+ }
+ required init(frame frameRect: NSRect) {
+ super.init(frame: frameRect)
+ self.border = [.Right]
+ compose.autohighlight = false
+ autoresizesSubviews = false
+ addSubview(tableView)
+ headerContainerView.addSubview(compose)
+ headerContainerView.addSubview(proxyButton)
+ headerContainerView.addSubview(titleView)
+ searchContainerView.addSubview(searchView)
+ addSubview(separatorView)
+ addSubview(headerContainerView)
+ addSubview(searchContainerView)
+ 
+ proxyButton.addSubview(proxyConnecting)
+ setFrameSize(frameRect.size)
+ updateLocalizationAndTheme()
+ proxyButton.disableActions()
+ 
+ 
+ }
+ 
+ fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {
+ proxyButton.isHidden = pref.servers.isEmpty && pref.effectiveActiveServer == nil
+ switch connection {
+ case .connecting, .waitingForNetwork:
+ proxyConnecting.isHidden = !pref.enabled
+ proxyButton.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnable, for: .Normal)
+ case .online, .updating:
+ proxyConnecting.isHidden = true
+ if pref.enabled  {
+ proxyButton.set(image: theme.icons.proxyEnabled, for: .Normal)
+ } else {
+ proxyButton.set(image: theme.icons.proxyEnable, for: .Normal)
+ }
+ }
+ proxyConnecting.isEventLess = true
+ proxyConnecting.userInteractionEnabled = false
+ _ = proxyButton.sizeToFit()
+ proxyConnecting.centerX()
+ needsLayout = true
+ }
+ 
+ func searchStateChanged(_ state: SearchFieldState, animated: Bool) {
+ self.searchState = state
+ 
+ searchContainerView.change(pos: NSMakePoint(0, state == .Focus ? 10 : headerContainerView.frame.height), animated: animated)
+ headerContainerView.change(pos: NSMakePoint(0, state == .Focus ? -headerContainerView.frame.height : 0), animated: animated)
+ 
+ //  searchView.change(size: NSMakeSize(state == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (!mode.isFeedChannels ? 36 + compose.frame.width : 20) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
+ // compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
+ // proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
+ }
+ 
+ override func updateLocalizationAndTheme() {
+ self.backgroundColor = theme.colors.background
+ compose.background = .clear
+ compose.set(background: .clear, for: .Normal)
+ compose.set(background: .clear, for: .Hover)
+ compose.set(background: theme.colors.blueFill, for: .Highlight)
+ compose.set(image: theme.icons.composeNewChat, for: .Normal)
+ compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
+ compose.layer?.cornerRadius = .cornerRadius
+ compose.setFrameSize(NSMakeSize(40, 30))
+ proxyConnecting.progressColor = theme.colors.blueIcon
+ proxyConnecting.lineWidth = 1.0
+ 
+ separatorView.backgroundColor = theme.colors.border
+ 
+ headerContainerView.border = [.Right]
+ searchContainerView.border = [.Right]
+ headerContainerView.backgroundColor = theme.colors.background
+ searchContainerView.backgroundColor = theme.colors.background
+ 
+ let titleLayout = TextViewLayout.init(.initialize(string: "Chats", color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+ titleLayout.measure(width: .greatestFiniteMagnitude)
+ 
+ titleView.update(titleLayout)
+ 
+ super.updateLocalizationAndTheme()
+ }
+ 
+ required init?(coder: NSCoder) {
+ fatalError("init(coder:) has not been implemented")
+ }
+ 
+ override func layout() {
+ super.layout()
+ 
+ 
+ headerContainerView.frame = NSMakeRect(0, searchState == .Focus ? -headerContainerView.frame.height : 0, frame.width, 50)
+ searchContainerView.frame = NSMakeRect(0, searchState == .Focus ? 10 : headerContainerView.frame.maxY, frame.width, 40)
+ 
+ let offset: CGFloat = searchState == .Focus ? searchContainerView.frame.height : headerContainerView.frame.height + searchContainerView.frame.height
+ 
+ 
+ searchView.frame = NSMakeRect(10, 0, searchContainerView.frame.width - 20, 30)
+ 
+ 
+ tableView.frame = NSMakeRect(0, offset, frame.width, frame.height - offset)
+ 
+ //        searchView.isHidden = frame.width < 200
+ //        if searchView.isHidden {
+ //            compose.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - compose.frame.height)/2.0))
+ //            proxyButton.setFrameOrigin(-proxyButton.frame.width, 0)
+ //        } else {
+ //            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - compose.frame.height)/2.0))
+ //            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
+ //        }
+ 
+ proxyConnecting.centerX()
+ proxyConnecting.centerY(addition: -(backingScaleFactor == 2.0 ? 0.5 : 0))
+ 
+ titleView.center()
+ compose.centerY(x: frame.width - compose.frame.width - 10)
+ 
+ separatorView.frame = NSMakeRect(0, searchContainerView.frame.maxY, frame.width, .borderSize)
+ 
+ self.needsDisplay = true
+ }
+ 
+ }
+
+ */
+
 
 class PeerListContainerView : View {
+    private let backgroundView = BackgroundView(frame: NSZeroRect)
     var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
         didSet {
             oldValue.removeFromSuperview()
@@ -51,8 +210,8 @@ class PeerListContainerView : View {
         setFrameSize(frameRect.size)
         updateLocalizationAndTheme()
         proxyButton.disableActions()
-        
-        
+        addSubview(backgroundView)
+        backgroundView.isHidden = true
     }
     
     fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {
@@ -131,6 +290,9 @@ class PeerListContainerView : View {
         
         proxyConnecting.centerX()
         proxyConnecting.centerY(addition: -(backingScaleFactor == 2.0 ? 0.5 : 0))
+        
+        backgroundView.frame = bounds
+        
         self.needsDisplay = true
     }
     
@@ -178,7 +340,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         didSet {
             if let controller = searchController {
                 genericView.customHandler.size = { [weak controller] size in
-                    controller?.view.setFrameSize(NSMakeSize(size.width, size.height - 50))
+                    controller?.view.setFrameSize(NSMakeSize(size.width, size.height - 49))
                 }
                 progressDisposable.set((controller.isLoading.get() |> deliverOnMainQueue).start(next: { [weak self] isLoading in
                     self?.genericView.searchView.isLoading = isLoading
@@ -187,11 +349,11 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         }
     }
     
-    init(_ account:Account, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
+    init(_ context: AccountContext, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
         self.followGlobal = followGlobal
         self.mode = mode
         self.searchOptions = searchOptions
-        super.init(account)
+        super.init(context)
 
     }
     
@@ -211,17 +373,17 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         super.viewDidLoad()
         
         
-        let account = self.account
+        let context = self.context
         let actionsDisposable = self.actionsDisposable
         
-        actionsDisposable.add((account.context.cancelGlobalSearch.get() |> deliverOnMainQueue).start(next: { [weak self] animated in
+        actionsDisposable.add((context.cancelGlobalSearch.get() |> deliverOnMainQueue).start(next: { [weak self] animated in
             self?.genericView.searchView.cancel(animated)
         }))
         
         genericView.mode = mode
         
         if followGlobal, mode.groupId == nil {
-            actionsDisposable.add((globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
+            actionsDisposable.add((context.globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
                 guard let `self` = self else {return}
                 self.changeSelection(location)
                 if location == nil {
@@ -246,14 +408,13 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         
         
         
-        actionsDisposable.add(combineLatest(proxySettingsSignal(account.postbox) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), NoError> in
-            return account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
+        actionsDisposable.add(combineLatest(proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), NoError> in
+            return context.account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
                 return (ps, status)
             }
         } |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue).start(next: { [weak self] pref, _ in
             settings = (pref.0, pref.1)
             self?.genericView.updateProxyPref(pref.0, pref.1)
-            self?.readyOnce()
         }))
         
         let pushController:(ViewController)->Void = { [weak self] c in
@@ -266,14 +427,14 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                     return
                 }
             }
-            proxyListController(postbox: account.postbox, network: account.network, share: { servers in
+            proxyListController(accountManager: context.sharedContext.accountManager, network: context.account.network, share: { servers in
                 var message: String = ""
                 for server in servers {
                     message += server.link + "\n\n"
                 }
                 message = message.trimmed
 
-                showModal(with: ShareModalController(ShareLinkObject(account, link: message)), for: mainWindow)
+                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
             })( { controller in
                 pushController(controller)
             })
@@ -284,7 +445,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                 if settings.0.enabled {
                     openProxySettings()
                 } else {
-                    actionsDisposable.add(updateProxySettingsInteractively(postbox: account.postbox, network: account.network, { current -> ProxySettings in
+                    actionsDisposable.add(updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> ProxySettings in
                         if let first = current.servers.first {
                             return current.withUpdatedActiveServer(first).withUpdatedEnabled(true)
                         } else {
@@ -301,13 +462,13 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                 
                 let items = [SPopoverItem(tr(L10n.composePopoverNewGroup), { [weak strongSelf] in
                     guard let strongSelf = strongSelf else {return}
-                    strongSelf.account.context.composeCreateGroup(strongSelf.account)
+                    strongSelf.context.composeCreateGroup()
                 }, theme.icons.composeNewGroup),SPopoverItem(tr(L10n.composePopoverNewSecretChat), { [weak strongSelf] in
                     guard let strongSelf = strongSelf else {return}
-                    strongSelf.account.context.composeCreateSecretChat(strongSelf.account)
+                    strongSelf.context.composeCreateSecretChat()
                 }, theme.icons.composeNewSecretChat),SPopoverItem(tr(L10n.composePopoverNewChannel), { [weak strongSelf] in
                     guard let strongSelf = strongSelf else {return}
-                    strongSelf.account.context.composeCreateChannel(strongSelf.account)
+                    strongSelf.context.composeCreateChannel()
                 }, theme.icons.composeNewChannel)];
                 
                 showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(-138,  -(strongSelf.genericView.compose.frame.maxY + 10)))
@@ -360,7 +521,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
     private func showSearchController(animated: Bool) {
         
         if searchController == nil {
-            let searchController = SearchController(account: self.account, open:{ [weak self] (peerId, message, close) in
+            let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, message, close) in
                 if let peerId = peerId {
                     self?.open(with: .peer(peerId), message:message, close:close)
                 } else {
@@ -424,10 +585,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
             genericView.tableView.layoutItems()
         }
         
-        if account.context.layout == .single && animated {
-            globalPeerHandler.set(.single(nil))
+        if context.sharedContext.layout == .single && animated {
+            context.globalPeerHandler.set(.single(nil))
         }
-        layoutDisposable.set(account.context.layoutHandler.get().start(next: { [weak self] state in
+        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self, case .minimisize = state {
                 if strongSelf.genericView.searchView.state == .Focus {
                     strongSelf.genericView.searchView.change(state: .None,  false)
@@ -437,41 +598,12 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
             self?.genericView.tableView.reloadData()
         }))
         
-        account.context.globalSearch = { [weak self] query in
-            if let strongSelf = self {
-                _ = (strongSelf.account.context.layoutHandler.get() |> take(1)).start(next: { [weak strongSelf] state in
-                    if let strongSelf = strongSelf {
-                        
-                        let invoke = { [weak strongSelf] in
-                            strongSelf?.genericView.searchView.change(state: .Focus, false)
-                            strongSelf?.genericView.searchView.setString(query)
-                        }
-                        
-                        switch state {
-                        case .single:
-                            strongSelf.account.context.mainNavigation?.back()
-                            Queue.mainQueue().justDispatch(invoke)
-                        case .minimisize:
-                            (strongSelf.window?.contentView?.subviews.first as? SplitView)?.needFullsize()
-                            Queue.mainQueue().justDispatch {
-                                if strongSelf.navigationController?.controller is ChatController {
-                                    strongSelf.navigationController?.back()
-                                    Queue.mainQueue().justDispatch(invoke)
-                                }
-                            }
-                        default:
-                            invoke()
-                        }
-                        
-                    }
-                })
-            }
-        }
+
         
     }
     
     public override func escapeKeyAction() -> KeyHandlerResult {
-        guard account.context.layout != .minimisize else {
+        guard context.sharedContext.layout != .minimisize else {
             return .invoked
         }
         if genericView.tableView.highlightedItem() != nil {
@@ -498,14 +630,14 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
     func open(with chatLocation: ChatLocation, message:Message? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
         if let navigation = navigationController {
             
-            if let modalAction = navigation.modalAction as? FWDNavigationAction, chatLocation.peerId == account.peerId {
-                _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, account: account, peerId: account.peerId).start()
+            if let modalAction = navigation.modalAction as? FWDNavigationAction, chatLocation.peerId == context.peerId {
+                _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
                 _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
                 modalAction.afterInvoke()
                 navigation.removeModalAction()
             } else {
-                let chat:ChatController = addition ? ChatAdditionController(account: self.account, chatLocation: chatLocation, messageId: message?.id) : ChatController(account: self.account, chatLocation: chatLocation, messageId: message?.id, initialAction: initialAction)
-                navigation.push(chat, self.account.context.layout == .single)
+                let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: chatLocation, messageId: message?.id) : ChatController(context: self.context, chatLocation: chatLocation, messageId: message?.id, initialAction: initialAction)
+                navigation.push(chat, context.sharedContext.layout == .single)
             }
         }
         if close {

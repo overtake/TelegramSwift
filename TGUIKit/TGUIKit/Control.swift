@@ -137,6 +137,10 @@ open class Control: View {
         
     }
     
+    open override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
+    
     open override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
         updateTrackingAreas()
@@ -237,9 +241,9 @@ open class Control: View {
         if userInteractionEnabled {
             send(event: .Down)
             updateState()
-            
-            let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
-                if let inside = self?.mouseInside(), inside {
+            let point = event.locationInWindow
+            let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.35, queue: Queue.mainQueue())).start(next: { [weak self] in
+                if let inside = self?.mouseInside(), inside, let wPoint = self?.window?.mouseLocationOutsideOfEventStream, NSPointInRect(point, NSMakeRect(wPoint.x - 2, wPoint.y - 2, 4, 4)) {
                     self?.longInvoked = true
                     self?.send(event: .LongMouseDown)
                 }
@@ -287,8 +291,9 @@ open class Control: View {
     }
     
     override open func mouseMoved(with event: NSEvent) {
+        updateState()
         if userInteractionEnabled {
-            updateState()
+            
         } else {
             super.mouseMoved(with: event)
         }
@@ -320,6 +325,7 @@ open class Control: View {
     public var continuesAction: Bool = false
     
     override open func mouseEntered(with event: NSEvent) {
+        updateState()
         if userInteractionEnabled {
             
             let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
@@ -329,7 +335,6 @@ open class Control: View {
             })
             longOverHandleDisposable.set(disposable)
             
-            updateState()
         } else {
             super.mouseEntered(with: event)
         }
@@ -337,10 +342,9 @@ open class Control: View {
     
     
     override open func mouseExited(with event: NSEvent) {
+        updateState()
         longOverHandleDisposable.set(nil)
         if userInteractionEnabled {
-            
-            updateState()
         } else {
             super.mouseExited(with: event)
         }

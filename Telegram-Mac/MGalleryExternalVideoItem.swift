@@ -47,6 +47,8 @@ private final class GAVPlayer : AVPlayer {
         return _playerState.get() |> deliverOnMainQueue
     }
     
+    var bufferingValue: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
+    
     override func pause() {
         super.pause()
     }
@@ -59,6 +61,10 @@ private final class GAVPlayer : AVPlayer {
             addObserver(self, forKeyPath: "timeControlStatus", options: [.new, .initial], context: &playerStatusContext)
         }
         NotificationCenter.default.addObserver(self, selector: #selector(playerDidEnd(_:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
+        
+        item?.addObserver(self, forKeyPath: "playbackBufferEmpty", options: [.new, .initial], context: nil)
+        item?.addObserver(self, forKeyPath: "playbackLikelyToKeepUp", options: [.new, .initial], context: nil)
+        item?.addObserver(self, forKeyPath: "playbackBufferFull", options: [.new, .initial], context: nil)
     }
     
     override init() {
@@ -80,12 +86,30 @@ private final class GAVPlayer : AVPlayer {
             //  Status is not unknown
             
         }
+        
+        if object is AVPlayerItem {
+            switch keyPath {
+            case "playbackBufferEmpty":
+                bufferingValue.set(true)
+            case "playbackLikelyToKeepUp":
+                 bufferingValue.set(false)
+            case "playbackBufferFull":
+                 bufferingValue.set(false)
+            default:
+                break
+            }
+        }
     }
     
     deinit {
         if #available(OSX 10.12, *) {
             removeObserver(self, forKeyPath: "timeControlStatus")
         }
+        self.currentItem?.removeObserver(self, forKeyPath: "playbackBufferEmpty")
+        self.currentItem?.removeObserver(self, forKeyPath: "playbackLikelyToKeepUp")
+        self.currentItem?.removeObserver(self, forKeyPath: "playbackBufferFull")
+
+        
         NotificationCenter.default.removeObserver(self)
     }
 }
@@ -189,7 +213,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
     var playerState: Signal<AVPlayerState, NoError> {
         return _playerItem.get() |> mapToSignal { $0.playerState }
     }
-    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {        
+    override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         
         
         
@@ -206,7 +230,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
         } else {
             fatalError("content for external video not found")
         }
-        super.init(account, entry, pagerSize)
+        super.init(context, entry, pagerSize)
         self.startTime = startTime
         
         _playerItem.set((path.get() |> distinctUntilChanged |> deliverOnMainQueue) |> map { path -> GAVPlayer in
@@ -345,7 +369,11 @@ class MGalleryExternalVideoItem: MGalleryItem {
     }
     
     override var status: Signal<MediaResourceStatus, NoError> {
-        return .single(.Local)
+        return _playerItem.get() |> mapToSignal { value in
+            return value.bufferingValue.get() |> map { buffering in
+                return buffering ? .Fetching(isActive: true, progress: 0.8) : .Local
+            }
+        }
     }
  
     override var sizeValue: NSSize {
@@ -357,9 +385,9 @@ class MGalleryExternalVideoItem: MGalleryItem {
         let webpage = entry.webpage!
 
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(webpage), media: _media), scale: System.backingScale)
+        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(webpage), media: _media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
-        let result = signal |> deliverOn(account.graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
+        let result = signal |> deliverOn(graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
             return .single(transform(arguments)?.generateImage())
         }
         

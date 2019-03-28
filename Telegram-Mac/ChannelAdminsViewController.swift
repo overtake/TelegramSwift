@@ -13,13 +13,13 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 
 fileprivate final class ChannelAdminsControllerArguments {
-    let account: Account
+    let context: AccountContext
     let addAdmin: () -> Void
     let openAdmin: (RenderedChannelParticipant) -> Void
     let removeAdmin: (PeerId) -> Void
     let eventLogs:() -> Void
-    init(account:Account, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void) {
-        self.account = account
+    init(context: AccountContext, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void) {
+        self.context = context
         self.addAdmin = addAdmin
         self.openAdmin = openAdmin
         self.removeAdmin = removeAdmin
@@ -36,23 +36,6 @@ fileprivate enum ChannelAdminsEntryStableId: Hashable {
             return index.hashValue
         case let .peer(peerId):
             return peerId.hashValue
-        }
-    }
-    
-    static func ==(lhs: ChannelAdminsEntryStableId, rhs: ChannelAdminsEntryStableId) -> Bool {
-        switch lhs {
-        case let .index(index):
-            if case .index(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .peer(peerId):
-            if case .peer(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
         }
     }
 }
@@ -310,7 +293,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.account, stableId: entry.stableId, status: peerText, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: entry.stableId, status: peerText, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
                 if editing == nil {
                     arguments.openAdmin(participant)
                 }
@@ -349,9 +332,9 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
     private let disposable:MetaDisposable = MetaDisposable()
     private let removeAdminDisposable:MetaDisposable = MetaDisposable()
     private let openPeerDisposable:MetaDisposable = MetaDisposable()
-    init(account:Account, peerId:PeerId) {
+    init( _ context:AccountContext, peerId:PeerId) {
         self.peerId = peerId
-        super.init(account)
+        super.init(context)
     }
     
     let actionsDisposable = DisposableSet()
@@ -361,7 +344,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let peerId = self.peerId
         
         
@@ -383,10 +366,10 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
         let viewValue:Atomic<PeerView?> = Atomic(value: nil)
         
         
-        let arguments = ChannelAdminsControllerArguments(account: account, addAdmin: {
+        let arguments = ChannelAdminsControllerArguments(context: context, addAdmin: {
             let behavior = peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1) : SelectChannelMembersBehavior(peerId: peerId, limit: 1)
             
-            _ = (selectModalPeers(account: account, title: "", limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(context: context, title: "", limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let participant = behavior.participants[peerId] {
                     switch participant.participant {
                     case .creator:
@@ -400,13 +383,13 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
             }) |> map {$0.first}).start(next: { adminId in
                 if let adminId = adminId {
                     
-                    showModal(with: ChannelAdminController(account: account, peerId: peerId, adminId: adminId, initialParticipant: behavior.participants[adminId]?.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: mainWindow)
+                    showModal(with: ChannelAdminController(context, peerId: peerId, adminId: adminId, initialParticipant: behavior.participants[adminId]?.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: mainWindow)
                 }
             })
         
         }, openAdmin: { participant in
-            if participant.peer.id != account.peerId {
-                showModal(with: ChannelAdminController(account: account, peerId: peerId, adminId: participant.peer.id, initialParticipant: participant.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: mainWindow)
+            if participant.peer.id != context.peerId {
+                showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peer.id, initialParticipant: participant.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: mainWindow)
             }
         }, removeAdmin: { [weak self] adminId in
             
@@ -414,14 +397,14 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                 return $0.withUpdatedRemovingPeerId(adminId)
             }
             if peerId.namespace == Namespaces.Peer.CloudGroup {
-                self?.removeAdminDisposable.set((removeGroupAdmin(account: account, peerId: peerId, adminId: adminId)
+                self?.removeAdminDisposable.set((removeGroupAdmin(account: context.account, peerId: peerId, adminId: adminId)
                     |> deliverOnMainQueue).start(completed: {
                         updateState {
                             return $0.withUpdatedRemovingPeerId(nil)
                         }
                     }))
             } else {
-                self?.removeAdminDisposable.set((account.context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: []))
+                self?.removeAdminDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: []))
                     |> deliverOnMainQueue).start(completed: {
                         updateState {
                             return $0.withUpdatedRemovingPeerId(nil)
@@ -430,17 +413,17 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
             }
 
         }, eventLogs: { [weak self] in
-            self?.navigationController?.push(ChannelEventLogController(account, peerId: peerId))
+            self?.navigationController?.push(ChannelEventLogController(context, peerId: peerId))
         })
         
         let peerView = Promise<PeerView>()
-        peerView.set(account.viewTracker.peerView(peerId))
+        peerView.set(context.account.viewTracker.peerView(peerId))
 
        
 
         let membersAndLoadMoreControl: (Disposable, PeerChannelMemberCategoryControl?)
         if peerId.namespace == Namespaces.Peer.CloudChannel {
-            membersAndLoadMoreControl = account.context.peerChannelMemberCategoriesContextsManager.admins(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId) { membersState in
+            membersAndLoadMoreControl = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId) { membersState in
                 if case .loading = membersState.loadingState, membersState.list.isEmpty {
                     adminsPromise.set(.single(nil))
                 } else {
@@ -477,7 +460,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                                 var peers: [PeerId: Peer] = [:]
                                 peers[creator.id] = creator
                                 peers[peer.id] = peer
-                                result.append(RenderedChannelParticipant(participant: .member(id: peer.id, invitedAt: 0, adminInfo: ChannelParticipantAdminInfo(rights: TelegramChatAdminRights(flags: .groupSpecific), promotedBy: creator.id, canBeEditedByAccountPeer: creator.id == account.peerId), banInfo: nil), peer: peer, peers: peers))
+                                result.append(RenderedChannelParticipant(participant: .member(id: peer.id, invitedAt: 0, adminInfo: ChannelParticipantAdminInfo(rights: TelegramChatAdminRights(flags: .groupSpecific), promotedBy: creator.id, canBeEditedByAccountPeer: creator.id == context.account.peerId), banInfo: nil), peer: peer, peers: peers))
                             case .member:
                                 break
                             }
@@ -509,7 +492,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                     isSupergroup = channel.isSupergroup
                 }
                 _ = viewValue.swap(view)
-                let entries = channelAdminsControllerEntries(accountPeerId: account.peerId, view: view, state: state, participants: admins, isCreator: isCreator).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = channelAdminsControllerEntries(accountPeerId: context.peerId, view: view, state: state, participants: admins, isCreator: isCreator).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, isSupergroup: isSupergroup), isCreator)
         }
         
@@ -525,14 +508,14 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                 return
             }
 
-            let chatController = ChatController(account: account, chatLocation: .peer(upgradedPeerId))
+            let chatController = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
             
             navigationController.removeAll()
             navigationController.push(chatController, false, style: .none)
             let signal = chatController.ready.get() |> filter {$0} |> take(1) |> deliverOnMainQueue |> ignoreValues
             
             _ = signal.start(completed: { [weak navigationController] in
-                navigationController?.push(ChannelAdminsViewController(account: account, peerId: upgradedPeerId), false, style: .none)
+                navigationController?.push(ChannelAdminsViewController(context, peerId: upgradedPeerId), false, style: .none)
             })
             
         }

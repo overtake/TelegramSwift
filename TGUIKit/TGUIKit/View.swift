@@ -297,6 +297,9 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
             }
         }
     }
+    open override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)

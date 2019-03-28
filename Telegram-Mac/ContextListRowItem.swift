@@ -19,7 +19,7 @@ class ContextListRowItem: TableRowItem {
     let result:ChatContextResult
     let results:ChatContextResultCollection
     private let _index:Int64
-    let account:Account
+    let context: AccountContext
     let iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>
     let arguments:TransformImageArguments?
     var textLayout:(TextNodeLayout, TextNode)?
@@ -34,18 +34,16 @@ class ContextListRowItem: TableRowItem {
         return Int64(_index)
     }
     
-    init(_ initialSize: NSSize, _ results:ChatContextResultCollection, _ result:ChatContextResult, _ index:Int64, _ account:Account, _ chatInteraction:ChatInteraction) {
+    init(_ initialSize: NSSize, _ results:ChatContextResultCollection, _ result:ChatContextResult, _ index:Int64, _ context: AccountContext, _ chatInteraction:ChatInteraction) {
         self.result = result
         self.results = results
         self.chatInteraction = chatInteraction
         self._index = index
-        self.account = account
+        self.context = context
         var representation: TelegramMediaImageRepresentation?
         var iconText:NSAttributedString? = nil
         switch result {
-            //    case externalReference(id: String, type: String, title: String?, description: String?, url: String?, content: TelegramMediaWebFile?, thumbnail: TelegramMediaWebFile?, message: ChatContextResultMessage)
-
-        case let .externalReference(_, _, type, title, description, url, content, thumbnail, _):
+        case let .externalReference(_, _, _, title, description, url, content, thumbnail, _):
             if let thumbnail = thumbnail {
                 representation = TelegramMediaImageRepresentation(dimensions: NSMakeSize(50, 50), resource: thumbnail.resource)
             }
@@ -88,7 +86,7 @@ class ContextListRowItem: TableRowItem {
         
         if let representation = representation {
             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
-            iconSignal = chatWebpageSnippetPhoto(account: account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: 2.0, small:true)
+            iconSignal = chatWebpageSnippetPhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: 2.0, small:true)
             
             let iconSize = representation.dimensions.aspectFilled(CGSize(width: 50, height: 50))
             
@@ -275,7 +273,7 @@ class ContextListGIFView : ContextListRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
-            player.update(with: MediaResourceReference.standalone(resource: resource), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), file: item.file, account: item.account, table: item.table, iconSignal: item.iconSignal)
+            player.update(with: MediaResourceReference.standalone(resource: resource), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), file: item.file, context: item.context, table: item.table, iconSignal: item.iconSignal)
             player.needsLayout = true
         }
     }
@@ -309,7 +307,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
                     if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: wrapper) {
                         controller.playOrPause()
                     } else {
-                        let controller = APSingleResourceController(account: item.account, wrapper: wrapper, streamable: false)
+                        let controller = APSingleResourceController(account: item.context.account, wrapper: wrapper, streamable: false)
                         controller.add(listener: self)
                         item.chatInteraction.inlineAudioPlayer(controller)
                         controller.start()
@@ -366,7 +364,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
             
-            let updatedStatusSignal = item.account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue
+            let updatedStatusSignal = item.context.account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue
 
             statusDisposable.set(updatedStatusSignal.start(next: { [weak self] status in
                 if let strongSelf = self {

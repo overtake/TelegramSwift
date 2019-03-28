@@ -15,13 +15,13 @@ import PostboxMac
 
 
 private final class ChannelFilterArguments {
-    let account:Account
+    let context: AccountContext
     let toggleFlags:(FilterEvents)->Void
     let toggleAdmin:(PeerId)->Void
     let toggleAllAdmins:()->Void
     let toggleAllEvents:()->Void
-    init(account:Account, toggleFlags:@escaping(FilterEvents)->Void, toggleAdmin:@escaping(PeerId)->Void, toggleAllAdmins:@escaping()->Void, toggleAllEvents:@escaping()->Void) {
-        self.account = account
+    init(context: AccountContext, toggleFlags:@escaping(FilterEvents)->Void, toggleAdmin:@escaping(PeerId)->Void, toggleAllAdmins:@escaping()->Void, toggleAllEvents:@escaping()->Void) {
+        self.context = context
         self.toggleFlags = toggleFlags
         self.toggleAdmin = toggleAdmin
         self.toggleAllAdmins = toggleAllAdmins
@@ -53,52 +53,6 @@ private enum ChannelEventFilterEntryId : Hashable {
             return 5
         case .adminsLoading:
             return 6
-        }
-    }
-    static func ==(lhs: ChannelEventFilterEntryId, rhs: ChannelEventFilterEntryId) -> Bool {
-        switch lhs {
-        case .section(let value):
-            if case .section(value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .header(let value):
-            if case .header(value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .allEvents:
-            if case .allEvents = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .filter(let value):
-            if case .filter(value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .allAdmins:
-            if case .allAdmins = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .admin(let value):
-            if case .admin(value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .adminsLoading:
-            if case .adminsLoading = rhs {
-                return true
-            } else {
-                return false
-            }
         }
     }
 }
@@ -178,56 +132,9 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
             case .member:
                 status = tr(L10n.adminsAdmin)
             }
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), action: {
                 arguments.toggleAdmin(participant.peer.id)
             })
-        }
-    }
-}
-
-private func ==(lhs:ChannelEventFilterEntry, rhs:ChannelEventFilterEntry) -> Bool {
-    switch lhs {
-    case let .section(section):
-        if case .section(section) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .header(section, index, text):
-        if case .header(section, index, text) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .allEvents(section, index, enabled):
-        if case .allEvents(section, index, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .filter(section, index, flags, text, enabled):
-        if case .filter(section, index, flags, text, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .allAdmins(section, index, enabled):
-        if case .allAdmins(section, index, enabled) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .adminsLoading(section, index):
-            if case .adminsLoading(section, index) = rhs {
-                return true
-            } else {
-                return false
-            }
-    case let .admin(section, index, participant, enabled):
-        if case .admin(section, index, participant, enabled) = rhs {
-            return true
-        } else {
-            return false
         }
     }
 }
@@ -425,14 +332,14 @@ fileprivate func prepareTransition(left:[ChannelEventFilterEntry], right: [Chann
 
 class ChannelEventFilterModalController: ModalViewController {
     private let peerId:PeerId
-    private let account:Account
+    private let context:AccountContext
     private let stateValue = Atomic(value: ChannelEventFilterState())
     
     private let disposable = MetaDisposable()
     private let updated:(ChannelEventFilterState) -> Void
     private let admins: [RenderedChannelParticipant]
-    init(account:Account, peerId:PeerId, admins: [RenderedChannelParticipant], state: ChannelEventFilterState = ChannelEventFilterState(), updated:@escaping(ChannelEventFilterState) -> Void) {
-        self.account = account
+    init(context: AccountContext, peerId:PeerId, admins: [RenderedChannelParticipant], state: ChannelEventFilterState = ChannelEventFilterState(), updated:@escaping(ChannelEventFilterState) -> Void) {
+        self.context = context
         self.peerId = peerId
         self.admins = admins
         self.updated = updated
@@ -474,7 +381,7 @@ class ChannelEventFilterModalController: ModalViewController {
             statePromise.set(stateValue.modify { f($0) })
         }
         
-        let arguments = ChannelFilterArguments(account: account, toggleFlags: { flags in
+        let arguments = ChannelFilterArguments(context: context, toggleFlags: { flags in
             updateState({$0.withToggledEventsException(flags)})
         }, toggleAdmin: { peerId in
             updateState({$0.withToggledAdminsException(peerId)})
@@ -489,7 +396,7 @@ class ChannelEventFilterModalController: ModalViewController {
         
         let adminsSignal = Signal<[RenderedChannelParticipant], NoError>.single(admins)
         let updatedSize:Atomic<Bool> = Atomic(value: false)
-        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(statePromise.get(), account.postbox.loadedPeerWithId(peerId), adminsSignal) |> map { state, peer, admins -> (ChannelEventFilterState, Peer, [RenderedChannelParticipant]?) in
+        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(statePromise.get(), context.account.postbox.loadedPeerWithId(peerId), adminsSignal) |> map { state, peer, admins -> (ChannelEventFilterState, Peer, [RenderedChannelParticipant]?) in
             
             let state = stateValue.swap(state.withUpdatedAllAdmins(Set(admins.map {$0.peer.id})).withUpdatedAllEvents(Set(eventFilters(peer.isChannel))))
             
@@ -522,7 +429,7 @@ class ChannelEventFilterModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
             self?.noticeUpdated()
-        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 40)
     }
     
     deinit {

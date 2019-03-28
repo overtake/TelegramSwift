@@ -17,10 +17,10 @@ private final class PhotoRectView : View {
 }
 
 class PhotoRectController: ModalViewController {
-    private let account: Account
+    private let context: AccountContext
     private let path: String
-    init(account: Account, path: String) {
-        self.account = account
+    init(context: AccountContext, path: String) {
+        self.context = context
         self.path = path
         super.init(frame: NSMakeRect(0, 0, 380, 350))
     }

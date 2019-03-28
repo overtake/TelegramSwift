@@ -15,47 +15,42 @@ import PostboxMac
 
 class ChatMessageAccessoryView: Control {
 
-    private var text:(TextNodeLayout, TextNode)?
-    private var textNode:TextNode?
+    private let textView:TextView = TextView()
+    private let backgroundView = View()
     private var maxWidth: CGFloat = 0
+    private let unread = View()
     private var stringValue: String = ""
     private let progress: RadialProgressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, cancelFetchingIcon: stopFetchStreamableControl), twist: true, size: NSMakeSize(24, 24))
+    private let bufferingIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 10, 10))
     private let download: ImageButton = ImageButton(frame: NSMakeRect(0, 0, 24, 24))
 
     private var status: MediaResourceStatus?
     private var isStreamable: Bool = true
     private var isCompact: Bool = false
     
-    private let progressCap: View = View()
-    var isUnread: Bool = false {
+    private var imageView: ImageView?
+    
+    var soundOffOnImage: CGImage? {
         didSet {
-            needsDisplay = true
+            if let soundOffOnImage = soundOffOnImage {
+                if imageView == nil {
+                    imageView = ImageView()
+                    imageView?.animates = true
+                    addSubview(imageView!)
+                }
+                imageView?.image = soundOffOnImage
+                imageView?.sizeToFit()
+            } else {
+                imageView?.removeFromSuperview()
+                imageView = nil
+            }
         }
     }
+    
+    private let progressCap: View = View()
+    var isUnread: Bool = false
     override func draw(_ layer: CALayer, in ctx: CGContext) {
 
-        ctx.round(frame.size, isStreamable ? 8 : frame.height / 2)
-
-        ctx.setFillColor(NSColor.blackTransparent.cgColor)
-        ctx.fill(bounds)
-        
-        if let text = text {
-            var rect = focus(text.0.size)
-            rect.origin.x = 6
-            if hasStremingControls  {
-                rect.origin.x += download.frame.width + 6
-            }
-            if backingScaleFactor == 2 {
-                rect.origin.y += 0.5
-            }
-          //  rect.origin.y += 1
-            text.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-            
-            if isUnread {
-                ctx.setFillColor(.white)
-                ctx.fillEllipse(in: NSMakeRect(rect.maxX + 3, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - 5)/2), 5, 5))
-            }
-        }
     }
     
     
@@ -63,6 +58,28 @@ class ChatMessageAccessoryView: Control {
         super.layout()
         download.centerY(x: 6)
         progress.centerY(x: 6)
+        backgroundView.frame = bounds
+        
+        bufferingIndicator.centerY(x: frame.width - bufferingIndicator.frame.width - 7)
+        if let imageView = imageView {
+            imageView.centerY(x: frame.width - imageView.frame.width - 6)
+        }
+        
+        if let textLayout = textView.layout {
+            var rect = focus(textLayout.layoutSize)
+            rect.origin.x = 6
+            if hasStremingControls  {
+                rect.origin.x += download.frame.width + 6
+            }
+            if backingScaleFactor == 2 {
+                rect.origin.y += 0.5
+            }
+            textView.frame = rect
+            
+            unread.centerY(x: rect.maxX + 2)
+
+        }
+        
     }
     
     var hasStremingControls: Bool {
@@ -71,18 +88,30 @@ class ChatMessageAccessoryView: Control {
     
     private var fetch:(()->Void)?
     private var cancelFetch:(()->Void)?
-    func updateText(_ text: String, maxWidth: CGFloat, status: MediaResourceStatus?, isStreamable: Bool, isCompact: Bool = false, fetch: @escaping()-> Void = { }, cancelFetch: @escaping()-> Void = { }) -> Void {
-        let updatedText = TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
+    private var click:(()->Void)?
+    func updateText(_ text: String, maxWidth: CGFloat, status: MediaResourceStatus?, isStreamable: Bool, isCompact: Bool = false, soundOffOnImage: CGImage? = nil, isBuffering: Bool = false, isUnread: Bool = false, animated: Bool = false, fetch: @escaping()-> Void = { }, cancelFetch: @escaping()-> Void = { }, click: @escaping()-> Void = { }) -> Void {
+        
+        
+        let animated = animated && self.isCompact != isCompact
+        
+        let updatedText = TextViewLayout.init(.initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: .white, font: .normal(10.0)), maximumNumberOfLines: isStreamable && !isCompact ? 2 : 1, truncationType: .end, alwaysStaticItems: true) //TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
+        updatedText.measure(width: maxWidth)
+        textView.update(updatedText)
+        
         self.isStreamable = isStreamable
         self.status = status
-        self.text = updatedText
         self.stringValue = text
         self.maxWidth = maxWidth
         self.fetch = fetch
         self.isCompact = isCompact
         self.cancelFetch = cancelFetch
-        
-        
+        self.click = click
+        self.soundOffOnImage = soundOffOnImage
+        self.isUnread = isUnread
+
+        self.bufferingIndicator.isHidden = !isBuffering
+        self.unread.isHidden = !isUnread
+
         if let status = status, isStreamable {
             
             download.set(image: isCompact ? theme.icons.videoCompactFetching : theme.icons.streamingVideoDownload, for: .Normal)
@@ -103,17 +132,46 @@ class ChatMessageAccessoryView: Control {
                 download.isHidden = !isCompact
                 download.set(image: isCompact ? theme.icons.compactStreamingFetchingCancel : theme.icons.streamingVideoDownload, for: .Normal)
             }
-            
-            _ = download.sizeToFit()
-            
+            if isCompact {
+                download.setFrameSize(10, 10)
+            } else {
+                download.setFrameSize(28, 28)
+
+            }
         } else {
             progress.isHidden = true
             download.isHidden = true
             progress.state = .None
         }
         
-        setFrameSize(NSMakeSize(min(updatedText.0.size.width + 12 + (isUnread ? 8 : 0) + (hasStremingControls ? download.frame.width + 6 : 0), maxWidth), hasStremingControls && !isCompact ? 36 : updatedText.0.size.height + 6))
-        needsDisplay = true
+        let newSize = NSMakeSize(min(max(soundOffOnImage != nil ? 30 : updatedText.layoutSize.width, updatedText.layoutSize.width) + 12 + (isUnread ? 8 : 0) + (hasStremingControls ? download.frame.width + 6 : 0) + (soundOffOnImage != nil ? soundOffOnImage!.backingSize.width + 2 : 0) + (isBuffering ? bufferingIndicator.frame.width + 4 : 0), maxWidth), hasStremingControls && !isCompact ? 36 : updatedText.layoutSize.height + 6)
+        change(size: newSize, animated: animated)
+        backgroundView.change(size: newSize, animated: animated)
+        
+        
+        backgroundView.layer?.cornerRadius = isStreamable ? 8 : newSize.height / 2
+
+        
+        var rect = focus(updatedText.layoutSize)
+        rect.origin.x = 6
+        if hasStremingControls  {
+            rect.origin.x += download.frame.width + 6
+        }
+        if backingScaleFactor == 2 {
+            rect.origin.y += 0.5
+        }
+        textView.change(pos: rect.origin, animated: animated)
+        
+        if animated, let layer = backgroundView.layer {
+            let cornerAnimation = CABasicAnimation(keyPath: "cornerRadius")
+            cornerAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            cornerAnimation.fromValue = layer.presentation()?.cornerRadius ?? layer.cornerRadius
+            cornerAnimation.toValue =  isStreamable ? 8 : newSize.height / 2
+            cornerAnimation.duration = 0.2
+            layer.add(cornerAnimation, forKey: "cornerRadius")
+        }
+        
+        needsLayout = true
     }
     
     override func copy() -> Any {
@@ -124,11 +182,30 @@ class ChatMessageAccessoryView: Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
+        backgroundView.backgroundColor = .blackTransparent
+        
+        unread.setFrameSize(NSMakeSize(6, 6))
+        unread.layer?.cornerRadius = 3
+        unread.backgroundColor = .white
+        textView.isSelectable = false
+        textView.userInteractionEnabled = false
+        textView.disableBackgroundDrawing = true
+        
+        addSubview(backgroundView)
+        addSubview(textView)
         addSubview(progress)
         addSubview(download)
-        
+        addSubview(unread)
+        bufferingIndicator.alwaysAnimate = true
+        bufferingIndicator.background = .clear
+        bufferingIndicator.progressColor = .white
+        bufferingIndicator.layer?.cornerRadius = bufferingIndicator.frame.height / 2
+        bufferingIndicator.lineWidth = 1.0
+        bufferingIndicator.isHidden = true
         progress.isHidden = true
         download.isHidden = true
+        download.autohighlight = false
         progress.fetchControls = FetchControls(fetch: { [weak self] in
             self?.cancelFetch?()
         })
@@ -139,6 +216,9 @@ class ChatMessageAccessoryView: Control {
         progressCap.layer?.cornerRadius = progressCap.frame.width / 2
 
         progress.addSubview(progressCap)
+        
+        addSubview(bufferingIndicator)
+
         
         download.set(handler: { [weak self] _ in
             guard let `self` = self, let status = self.status else {return}
@@ -160,7 +240,7 @@ class ChatMessageAccessoryView: Control {
             case .Fetching:
                 self.cancelFetch?()
             default:
-                break
+                self.click?()
             }
         }, for: .Click)
     }

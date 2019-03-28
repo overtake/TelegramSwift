@@ -27,6 +27,7 @@ extern NSString * _Nonnull const TGCustomLinkAttributeName;
 @optional
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
+- (BOOL) supportContinuityCamera;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
 - (void)makeUrlOfRange: (NSRange)range;
 - (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
@@ -37,11 +38,11 @@ extern NSString * _Nonnull const TGCustomLinkAttributeName;
 void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSString * _Nonnull key));
 void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
-@interface TGGrowingTextView : NSTextView
+@interface TGGrowingTextView : NSTextView<NSServicesMenuRequestor>
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
 @end
 
-@interface TGModernGrowingTextView : NSView
+@interface TGModernGrowingTextView : NSView<NSServicesMenuRequestor>
 
 -(instancetype)initWithFrame:(NSRect)frameRect unscrollable:(BOOL)unscrollable;
 

@@ -206,12 +206,12 @@ class ChatPollItem: ChatRowItem {
     
     
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
         
         let poll = object.message!.media[0] as! TelegramMediaPoll
         self.poll = poll
         
-        super.init(initialSize, chatInteraction, account, object, downloadSettings)
+        super.init(initialSize, chatInteraction, context, object, downloadSettings)
     
         
         
@@ -288,7 +288,7 @@ class ChatPollItem: ChatRowItem {
                         index += 1
                     }
                     if message.forwardInfo == nil {
-                        var canClose: Bool = message.author?.id == self.account.peerId
+                        var canClose: Bool = message.author?.id == self.context.peerId
                         if let peer = self.peer as? TelegramChannel {
                             canClose = peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
                         }

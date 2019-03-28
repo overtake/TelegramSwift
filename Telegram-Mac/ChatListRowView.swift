@@ -32,11 +32,11 @@ private class ChatListDraggingContainerView : View {
             if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
                 _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak item] path in
                     guard let item = item else {return}
-                    item.account.context.mainNavigation?.push(ChatController(account: item.account, chatLocation: .peer(item.peerId), initialAction: .files(list: [path], behavior: .automatic)))
+                    item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: .peer(item.peerId), initialAction: .files(list: [path], behavior: .automatic)))
                 })
             } else {
                 let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
-                if let item = item, let context = item.account.applicationContext as? TelegramApplicationContext, let list = list {
+                if let item = item, let list = list {
                     let list = list.filter { path -> Bool in
                         if let size = fs(path) {
                             return size <= 1500 * 1024 * 1024
@@ -44,7 +44,7 @@ private class ChatListDraggingContainerView : View {
                         return false
                     }
                     if !list.isEmpty {
-                        context.mainNavigation?.push(ChatController(account: item.account, chatLocation: .peer(item.peerId), initialAction: .files(list: list, behavior: .automatic)))
+                        item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: .peer(item.peerId), initialAction: .files(list: list, behavior: .automatic)))
                     }
                 }
             }
@@ -111,7 +111,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
     
     /*
      let theme:ChatActivitiesTheme
-     if item.isSelected && item.account.context.layout != .single {
+     if item.isSelected && item.context.sharedContext.layout != .single {
      theme = ChatActivitiesWhiteTheme()
      } else if item.isSelected || item.isPinned {
      theme = ChatActivitiesTheme(backgroundColor: .grayUI)
@@ -140,7 +140,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                 }
                 
                 let activity:ActivitiesTheme
-                if item.isSelected && item.account.context.layout != .single {
+                if item.isSelected && item.context.sharedContext.layout != .single {
                     activity = theme.activity(key: 10 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
                 } else if item.isSelected {
                     activity = theme.activity(key: 11 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.singleLayoutSelectedBackgroundColor)
@@ -158,7 +158,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                     self?.containerView.needsDisplay = true
                 })
                 
-                activitiesModel?.view?.isHidden = item.account.context.layout == .minimisize
+                activitiesModel?.view?.isHidden = item.context.sharedContext.layout == .minimisize
             } else {
                 activitiesModel?.clean()
                 activitiesModel?.view?.removeFromSuperview()
@@ -218,7 +218,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             if item.isHighlighted && !item.isSelected {
                 return theme.colors.grayForeground
             }
-            if item.account.context.layout == .single, item.isSelected {
+            if item.context.sharedContext.layout == .single, item.isSelected {
                 return theme.chatList.singleLayoutSelectedBackgroundColor
             }
             if !item.isSelected && containerView.activeDragging {
@@ -250,10 +250,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                     ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
                 } else {
                     
-                    if let context = item.account.applicationContext as? TelegramApplicationContext {
-                        if context.layout == .minimisize {
-                            return
-                        }
+                    if item.context.sharedContext.layout == .minimisize {
+                        return
                     }
                     
                     if backingScaleFactor == 1.0 {
@@ -266,19 +264,17 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                 }
             }
             
-            if let context = item.account.applicationContext as? TelegramApplicationContext {
-                if context.layout == .minimisize {
-                    return
-                }
+            if item.context.sharedContext.layout == .minimisize {
+                return
             }
             
             if layer == containerView.layer {
                 
-                let highlighted = item.isSelected && item.account.context.layout != .single
+                let highlighted = item.isSelected && item.context.sharedContext.layout != .single
                 
                 
                 if item.ctxBadgeNode == nil && (item.pinnedType == .some || item.pinnedType == .last) {
-                    ctx.draw(highlighted ? theme.icons.pinnedImageSelected : theme.icons.pinnedImage, in: NSMakeRect(frame.width - theme.icons.pinnedImage.backingSize.width - item.margin, frame.height - theme.icons.pinnedImage.backingSize.height - item.margin + 1, theme.icons.pinnedImage.backingSize.width, theme.icons.pinnedImage.backingSize.height))
+                    ctx.draw(highlighted ? theme.icons.pinnedImageSelected : theme.icons.pinnedImage, in: NSMakeRect(frame.width - theme.icons.pinnedImage.backingSize.width - item.margin, frame.height - theme.icons.pinnedImage.backingSize.height - (item.margin + 1), theme.icons.pinnedImage.backingSize.width, theme.icons.pinnedImage.backingSize.height))
                 }
                 
                 if let displayLayout = item.ctxDisplayLayout {
@@ -308,7 +304,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                     }
                     
                     if let _ = item.mentionsCount {
-                        ctx.draw(highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention, in: NSMakeRect(frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - theme.icons.chatListMentionActive.backingSize.width - item.margin, frame.height - theme.icons.chatListMention.backingSize.height - item.margin + 1, theme.icons.chatListMention.backingSize.width, theme.icons.chatListMention.backingSize.height))
+                        ctx.draw(highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention, in: NSMakeRect(frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - theme.icons.chatListMentionActive.backingSize.width - item.margin, frame.height - theme.icons.chatListMention.backingSize.height - (item.margin + 1), theme.icons.chatListMention.backingSize.width, theme.icons.chatListMention.backingSize.height))
                     }
                     
                     if let dateLayout = item.ctxDateLayout, !item.hasDraft, item.state == .plain {
@@ -352,7 +348,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         
         photo.userInteractionEnabled = false
-        photo.frame = NSMakeRect(10, 8, 50, 50)
+        photo.frame = NSMakeRect(10, 10, 50, 50)
         containerView.addSubview(photo)
         addSubview(containerView)
         
@@ -405,10 +401,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             }
             
             
-            photo.setState(account: item.account, state: item.photo)
+            photo.setState(account: item.context.account, state: item.photo)
 
             if item.isSavedMessage {
                 let icon = theme.icons.searchSaved
+                photo.setState(account: item.context.account, state: .Empty)
                 photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)))) |> map {($0, false)})
             } 
             if let badgeNode = item.ctxBadgeNode {
@@ -461,11 +458,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             }
             
             if !(item is ChatListMessageRowItem) {
-                let postbox = item.account.postbox
+                let postbox = item.context.account.postbox
                 let peerId = item.peerId
                 
                 let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
-                self.peerInputActivitiesDisposable.set((item.account.peerInputActivities(peerId: peerId)
+                self.peerInputActivitiesDisposable.set((item.context.account.peerInputActivities(peerId: peerId)
                     |> mapToSignal { activities -> Signal<[(Peer, PeerInputActivity)], NoError> in
                         var foundAllPeers = true
                         var cachedResult: [(Peer, PeerInputActivity)] = []
@@ -497,7 +494,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                         }
                     }
                     |> deliverOnMainQueue).start(next: { [weak self, weak item] activities in
-                        if item?.account.peerId != item?.peerId {
+                        if item?.context.peerId != item?.peerId {
                             self?.inputActivities = (peerId, activities)
                         } else {
                             self?.inputActivities = (peerId, [])
@@ -845,7 +842,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             self.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
             
             if let badgeNode = item.ctxBadgeNode {
-                badgeView?.setFrameOrigin(self.frame.width - badgeNode.size.width - item.margin, self.frame.height - badgeNode.size.height - item.margin + 1)
+                badgeView?.setFrameOrigin(self.frame.width - badgeNode.size.width - item.margin, self.frame.height - badgeNode.size.height - (item.margin + 1))
             }
         }
         

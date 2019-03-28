@@ -98,23 +98,23 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private let loadFwdMessagesDisposable = MetaDisposable()
     private let loadSelectionMessagesDisposable = MetaDisposable()
     private let currentModeValue:ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
-    init(account:Account, peerId:PeerId, tagMask:MessageTags) {
+    init(context: AccountContext, peerId:PeerId, tagMask:MessageTags) {
         self.peerId = peerId
         self.tagMask = tagMask
         
-        interactions = ChatInteraction(chatLocation: .peer(peerId), account: account)
+        interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         
         
-        mediaGrid = PeerMediaGridController(account: account, chatLocation: .peer(peerId), messageId: nil, tagMask: tagMask, chatInteraction: interactions)
+        mediaGrid = PeerMediaGridController(context: context, chatLocation: .peer(peerId), messageId: nil, tagMask: tagMask, chatInteraction: interactions)
         
         var listControllers: [PeerMediaListController] = []
         for _ in tagsList {
-            listControllers.append(PeerMediaListController(account: account, chatLocation: .peer(peerId), chatInteraction: interactions))
+            listControllers.append(PeerMediaListController(context: context, chatLocation: .peer(peerId), chatInteraction: interactions))
         }
         self.listControllers = listControllers
         
         
-        super.init(account)
+        super.init(context)
     }
     
     private var temporaryTouchBar: Any?
@@ -171,18 +171,18 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             
-            let account = self.account
+            let context = self.context
             if value.selectionState != oldValue.selectionState {
                 if let selectionState = value.selectionState {
                     let ids = Array(selectionState.selectedIds)
-                    loadSelectionMessagesDisposable.set((account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
+                    loadSelectionMessagesDisposable.set((context.account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
                         var canDelete:Bool = !ids.isEmpty
                         var canForward:Bool = !ids.isEmpty
                         for message in messages {
-                            if !canDeleteMessage(message, account: account) {
+                            if !canDeleteMessage(message, account: context.account) {
                                 canDelete = false
                             }
-                            if !canForwardMessage(message, account: account) {
+                            if !canForwardMessage(message, account: context.account) {
                                 canForward = false
                             }
                         }
@@ -222,34 +222,15 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         super.viewDidLoad()
         genericView.updateInteraction(interactions)
         
+        let context = self.context
         
-        interactions.forwardMessages = { [weak self] messageIds in
-            if let strongSelf = self {
-                showModal(with: ShareModalController.init(ForwardMessagesObject(strongSelf.account, messageIds: messageIds)), for: mainWindow)
-//                strongSelf.loadFwdMessagesDisposable.set((strongSelf.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue).start(next: { [weak strongSelf] messages in
-//                    if let strongSelf = strongSelf {
-//
-//                        let displayName:String = strongSelf.peer?.compactDisplayTitle ?? "Unknown"
-//                        let action = FWDNavigationAction(messages: messages, displayName: displayName)
-//                        navigation.set(modalAction: action, strongSelf.account.context.layout != .single)
-//
-//                        if strongSelf.account.context.layout == .single {
-//                            navigation.push(ForwardChatListController(strongSelf.account))
-//                        }
-//
-//                        action.afterInvoke = { [weak strongSelf] in
-//                            strongSelf?.interactions.update(animated: false, {$0.withoutSelectionState()})
-//                            strongSelf?.interactions.saveState()
-//                        }
-//
-//                    }
-//                }))
-            }
+        interactions.forwardMessages = { messageIds in
+            showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: mainWindow)
         }
         
         interactions.focusMessageId = { [weak self] _, focusMessageId, animated in
             if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(strongSelf.peerId), messageId: focusMessageId))
+                strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(strongSelf.peerId), messageId: focusMessageId))
             }
         }
         
@@ -259,7 +240,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                     header.show(true)
                     if let view = header.view as? InlineAudioPlayerView {
                         let tableView = (navigation.first { $0 is ChatController} as? ChatController)?.genericView.tableView
-                        view.update(with: controller, tableView: tableView, supportTableView: self.currentTable)
+                        view.update(with: controller, context: context, tableView: tableView, supportTableView: self.currentTable)
                     }
                 }
             }
@@ -268,31 +249,31 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         interactions.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
                 if toChat {
-                    strongSelf.navigationController?.push(ChatController(account: strongSelf.account, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                    strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
                 } else {
-                    strongSelf.navigationController?.push(PeerInfoController(account: strongSelf.account, peerId: peerId))
+                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
                 }
             }
         }
         
         interactions.deleteMessages = { [weak self] messageIds in
             if let strongSelf = self, let peer = strongSelf.peer {
-                let channelAdmin:Signal<[ChannelParticipant]?, NoError> = peer.isSupergroup ? channelAdmins(account: strongSelf.account, peerId: strongSelf.interactions.peerId)
+                let channelAdmin:Signal<[ChannelParticipant]?, NoError> = peer.isSupergroup ? channelAdmins(account: context.account, peerId: strongSelf.interactions.peerId)
                     |> `catch` {_ in .complete()} |> map { admins -> [ChannelParticipant]? in
                         return admins.map({$0.participant})
                     } : .single(nil)
                 
                 
-                self?.messagesActionDisposable.set(combineLatest(strongSelf.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue, channelAdmin |> deliverOnMainQueue).start( next:{ [weak strongSelf] messages, admins in
+                self?.messagesActionDisposable.set(combineLatest(context.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue, channelAdmin |> deliverOnMainQueue).start( next:{ [weak strongSelf] messages, admins in
                     if let strongSelf = strongSelf {
                         var canDelete:Bool = true
                         var canDeleteForEveryone = true
                         
                         for message in messages {
-                            if !canDeleteMessage(message, account: strongSelf.account) {
+                            if !canDeleteMessage(message, account: strongSelf.context.account) {
                                 canDelete = false
                             }
-                            if !canDeleteForEveryoneMessage(message, account: strongSelf.account) {
+                            if !canDeleteForEveryoneMessage(message, context: strongSelf.context) {
                                 canDeleteForEveryone = false
                             }
                         }
@@ -303,15 +284,15 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                         
                         if canDelete {
                             let isAdmin = admins?.filter({$0.peerId == messages[0].author?.id}).first != nil
-                            if mustManageDeleteMessages(messages, for: peer, account: strongSelf.account), let memberId = messages[0].author?.id, !isAdmin {
-                                showModal(with: DeleteSupergroupMessagesModalController(account: strongSelf.account, messageIds: messages.map {$0.id}, peerId: peer.id, memberId: memberId, onComplete: { [weak strongSelf] in
+                            if mustManageDeleteMessages(messages, for: peer, account: strongSelf.context.account), let memberId = messages[0].author?.id, !isAdmin {
+                                showModal(with: DeleteSupergroupMessagesModalController(context: strongSelf.context, messageIds: messages.map {$0.id}, peerId: peer.id, memberId: memberId, onComplete: { [weak strongSelf] in
                                     strongSelf?.interactions.update({$0.withoutSelectionState()})
                                 }), for: mainWindow)
                             } else {
                                 let thrid:String? = canDeleteForEveryone ? peer.isUser ? tr(L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle)) : tr(L10n.chatConfirmDeleteMessagesForEveryone) : nil
                                 var okTitle: String? = tr(L10n.confirmDelete)
                                 if peer.isUser || peer.isGroup {
-                                    okTitle = peer.id == strongSelf.account.peerId ? tr(L10n.confirmDelete) : tr(L10n.chatMessageDeleteForMe)
+                                    okTitle = peer.id == strongSelf.context.peerId ? tr(L10n.confirmDelete) : tr(L10n.chatMessageDeleteForMe)
                                 } else {
                                     okTitle = tr(L10n.chatMessageDeleteForEveryone)
                                 }
@@ -324,7 +305,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                                         case .thrid:
                                             type = .forEveryone
                                         }
-                                        _ = deleteMessagesInteractively(postbox: strongSelf.account.postbox, messageIds: messageIds, type: type).start()
+                                        _ = deleteMessagesInteractively(postbox: strongSelf.context.account.postbox, messageIds: messageIds, type: type).start()
                                         strongSelf.interactions.update({$0.withoutSelectionState()})
                                     })
                                 }
@@ -335,7 +316,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
             }
         }
         
-        let peerSignal = account.viewTracker.peerView(peerId) |> deliverOnMainQueue |> beforeNext({ [weak self] peerView in
+        let peerSignal = context.account.viewTracker.peerView(peerId) |> deliverOnMainQueue |> beforeNext({ [weak self] peerView in
             self?.peer = peerView.peers[peerView.peerId]
         }) |> map { view -> Bool in
             return true

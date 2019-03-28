@@ -37,7 +37,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
     fileprivate var titleHeight: CGFloat = 15
     fileprivate var secondHeight: CGFloat = 0
     
-    let account:Account
+    let context: AccountContext
     let peer:Peer?
     let isVerified: Bool
     let peerView:PeerView
@@ -46,25 +46,25 @@ class PeerInfoHeaderItem: GeneralRowItem {
     let updatingPhotoState:PeerInfoUpdatingPhotoState?
     let textChangeHandler:(String, String?)->Void
     let canCall:Bool
-    init(_ initialSize:NSSize, stableId:AnyHashable, account:Account, peerView:PeerView, editable:Bool = false, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, firstNameEditableText:String? = nil, lastNameEditableText:String? = nil, textChangeHandler:@escaping (String, String?)->Void = {_,_  in}) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, peerView:PeerView, editable:Bool = false, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, firstNameEditableText:String? = nil, lastNameEditableText:String? = nil, textChangeHandler:@escaping (String, String?)->Void = {_,_  in}) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.peerView = peerView
         self.editable = editable
-        self.account = account
+        self.context = context
         self.updatingPhotoState = updatingPhotoState
         self.textChangeHandler = textChangeHandler
         self.firstTextEdited = firstNameEditableText
         self.lastTextEdited = lastNameEditableText
         
-        canCall = peer != nil && (peer!.canCall && peer!.id != account.peerId && !editable)
+        canCall = peer != nil && (peer!.canCall && peer!.id != context.peerId && !editable)
         
         isVerified = peer?.isVerified ?? false
         
         if let peer = peer {
-            photo = peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions:NSMakeSize(photoDimension, photoDimension))
+            photo = peerAvatarImage(account: context.account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions:NSMakeSize(photoDimension, photoDimension))
         }
-        self.result = stringStatus(for: peerView, account: account, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false))
+        self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false))
         
         super.init(initialSize, stableId:stableId)
         
@@ -130,7 +130,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
         
         image.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeaderItem, let peer = item.peer, let _ = peer.largeProfileImage {
-                showPhotosGallery(account: item.account, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
+                showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
             }
         }, for: .Click)
         
@@ -162,9 +162,9 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
         
         callButton.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeaderItem, let peerId = item.peer?.id  {
-                let account = item.account
-                self?.callDisposable.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                    applyUIPCallResult(account, result)
+                let context = item.context
+                self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                    applyUIPCallResult(context.sharedContext, result)
                 }))
             }
             }, for: .SingleClick)
@@ -286,7 +286,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
             
           
             if let peer = item.peer {
-                image.setPeer(account: item.account, peer: peer)
+                image.setPeer(account: item.context.account, peer: peer)
                 if let peer = peer as? TelegramUser {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.firstName ?? "", animated: false)
                     lastNameTextView.setString(item.lastTextEdited ?? peer.lastName ?? "", animated: false)

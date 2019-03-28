@@ -162,7 +162,7 @@ class InstantPageSelectText : NSObject {
         return nil
     }
     
-    func initializeHandlers(for window:Window, instantLayout: InstantPageLayout, instantPage: InstantPage, account: Account, updateLayout: @escaping()->Void, openUrl:@escaping(InstantPageUrlItem) -> Void, itemsInRect:@escaping(NSRect) -> [InstantPageItem], effectiveRectForItem:@escaping(InstantPageItem)-> NSRect) {
+    func initializeHandlers(for window:Window, instantLayout: InstantPageLayout, instantPage: InstantPage, context: AccountContext, updateLayout: @escaping()->Void, openUrl:@escaping(InstantPageUrlItem) -> Void, itemsInRect:@escaping(NSRect) -> [InstantPageItem], effectiveRectForItem:@escaping(InstantPageItem)-> NSRect) {
         window.removeAllHandlers(for: self)
         
 
@@ -328,7 +328,7 @@ class InstantPageSelectText : NSObject {
                                 if view.controller != nil {
                                     view.controller?.playOrPause()
                                 } else {
-                                    let audio = APSingleResourceController(account: account, wrapper: view.wrapper, streamable: true)
+                                    let audio = APSingleResourceController(account: context.account, wrapper: view.wrapper, streamable: true)
                                     view.controller = audio
                                     audio.start()
                                 }
@@ -351,7 +351,7 @@ class InstantPageSelectText : NSObject {
                         }
                         
                         
-                        showInstantViewGallery(account: account, medias: medias, firstIndex: index, self.interactive)
+                        showInstantViewGallery(context: context, medias: medias, firstIndex: index, self.interactive)
                         
                         result = .rejected
                         

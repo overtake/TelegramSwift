@@ -244,7 +244,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
 
         
                 } else {
-                    entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_set_password, name: L10n.twoStepAuthSetPassword, color: theme.colors.text, icon: nil, type: .none))
+                    entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_set_password, data: InputDataGeneralData(name: L10n.twoStepAuthSetPassword, color: theme.colors.text, icon: nil, type: .none, action: nil)))
                     index += 1
                     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetPasswordHelp), color: theme.colors.grayText, detectBold: true))
                     index += 1
@@ -268,11 +268,11 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
         }
     case let .manage(_, emailSet, pendingEmail, _):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_change_pwd, name: L10n.twoStepAuthChangePassword, color: theme.colors.text, icon: nil, type: .none))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_change_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthChangePassword, color: theme.colors.text, icon: nil, type: .none, action: nil)))
         index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_remove_pwd, name: L10n.twoStepAuthRemovePassword, color: theme.colors.text, icon: nil, type: .none))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_remove_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthRemovePassword, color: theme.colors.text, icon: nil, type: .none, action: nil)))
         index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_setup_email, name: emailSet ? L10n.twoStepAuthChangeEmail : L10n.twoStepAuthSetupEmail, color: theme.colors.text, icon: nil, type: .none))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_setup_email, data: InputDataGeneralData(name: emailSet ? L10n.twoStepAuthChangeEmail : L10n.twoStepAuthSetupEmail, color: theme.colors.text, icon: nil, type: .none, action: nil)))
         index += 1
         
         
@@ -280,7 +280,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
             entries.append(.sectionId(sectionId))
             sectionId += 1
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_enter_email_code, name: L10n.twoStepAuthEnterEmailCode, color: theme.colors.text, icon: nil, type: .none))
+            entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_enter_email_code, data: InputDataGeneralData(name: L10n.twoStepAuthEnterEmailCode, color: theme.colors.text, icon: nil, type: .none, action: nil)))
             index += 1
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthEmailSent), color: theme.colors.grayText, detectBold: true))
             index += 1
@@ -299,7 +299,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
 
 
 
-func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerificationUnlockSettingsControllerMode, presentController:@escaping((controller: ViewController, root:Bool, animated: Bool))->Void) -> InputDataController {
+func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepVerificationUnlockSettingsControllerMode, presentController:@escaping((controller: ViewController, root:Bool, animated: Bool))->Void) -> InputDataController {
     
     let actionsDisposable = DisposableSet()
     
@@ -333,7 +333,7 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
     
     switch mode {
     case .access:
-        actionsDisposable.add((twoStepVerificationConfiguration(account: account) |> map { TwoStepVerificationUnlockSettingsControllerData.access(configuration: TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)) } |> deliverOnMainQueue).start(next: { data in
+        actionsDisposable.add((twoStepVerificationConfiguration(account: context.account) |> map { TwoStepVerificationUnlockSettingsControllerData.access(configuration: TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)) } |> deliverOnMainQueue).start(next: { data in
             updateState {
                 $0.withUpdatedControllerData(data)
             }
@@ -368,17 +368,17 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
                             return state.withUpdatedChecking(true)
                         }
                     }
-                    account.context.mainViewController.settings.passportPromise.set(.single(false))
+                    context.hasPassportSettings.set(.single(false))
                     
                     if disablePassword {
-                        let resetPassword = updateTwoStepVerificationPassword(network: account.network, currentPassword: password, updatedPassword: .none) |> deliverOnMainQueue
+                        let resetPassword = updateTwoStepVerificationPassword(network: context.account.network, currentPassword: password, updatedPassword: .none) |> deliverOnMainQueue
                         
                         setupDisposable.set(resetPassword.start(next: { value in
                             updateState {
                                 $0.withUpdatedChecking(false)
                             }
-                            account.context.resetTemporaryPwd()
-                            presentController((controller: twoStepVerificationUnlockController(account: account, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
+                            context.resetTemporaryPwd()
+                            presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
                             _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
                         }, error: { error in
                             alert(for: mainWindow, info: L10n.unknownError)
@@ -421,7 +421,7 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
                     return state
                 }
                 if let code = code {
-                    setupDisposable.set((confirmTwoStepRecoveryEmail(network: account.network, code: code)
+                    setupDisposable.set((confirmTwoStepRecoveryEmail(network: context.account.network, code: code)
                         |> deliverOnMainQueue).start(error: { error in
                             updateState { state in
                                 return state.withUpdatedChecking(false)
@@ -447,12 +447,12 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
                             switch data {
                             case .access:
                                 if let password = pendingEmail.password {
-                                    presentController((controller: twoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: "", pendingEmail: nil, hasSecureValues: false), presentController: presentController), root: true, animated: true))
+                                    presentController((controller: twoStepVerificationUnlockController(context: context, mode: .manage(password: password, email: "", pendingEmail: nil, hasSecureValues: false), presentController: presentController), root: true, animated: true))
                                 } else {
-                                    presentController((controller: twoStepVerificationUnlockController(account: account, mode: .access(.set(hint: "", hasRecoveryEmail: true, hasSecureValues: false)), presentController: presentController), root: true, animated: true))
+                                    presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.set(hint: "", hasRecoveryEmail: true, hasSecureValues: false)), presentController: presentController), root: true, animated: true))
                                 }
                             case let .manage(manage):
-                                presentController((controller: twoStepVerificationUnlockController(account: account, mode: .manage(password: manage.password, email: "", pendingEmail: nil, hasSecureValues: manage.hasSecureValues), presentController: presentController), root: true, animated: true))
+                                presentController((controller: twoStepVerificationUnlockController(context: context, mode: .manage(password: manage.password, email: "", pendingEmail: nil, hasSecureValues: manage.hasSecureValues), presentController: presentController), root: true, animated: true))
                             }
                             
                             updateState { state in
@@ -482,9 +482,9 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
             
             return .fail(.doSomething(next: { f in
                 
-                checkDisposable.set((requestTwoStepVerifiationSettings(network: account.network, password: password)
+                checkDisposable.set((requestTwoStepVerifiationSettings(network: context.account.network, password: password)
                     |> mapToSignal { settings -> Signal<(TwoStepVerificationSettings, TwoStepVerificationPendingEmail?), AuthorizationPasswordVerificationError> in
-                        return twoStepVerificationConfiguration(account: account)
+                        return twoStepVerificationConfiguration(account: context.account)
                             |> mapError { _ -> AuthorizationPasswordVerificationError in
                                 return .generic
                             }
@@ -500,7 +500,7 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
                         updateState {
                             $0.withUpdatedChecking(false)
                         }
-                        presentController((controller: twoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: settings.email, pendingEmail: pendingEmail, hasSecureValues: settings.secureSecret != nil), presentController: presentController), root: true, animated: true))
+                        presentController((controller: twoStepVerificationUnlockController(context: context, mode: .manage(password: password, email: settings.email, pendingEmail: pendingEmail, hasSecureValues: settings.secureSecret != nil), presentController: presentController), root: true, animated: true))
                         f(.none)
                     }, error: { error in
                         let text: String
@@ -533,7 +533,7 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
     let proccessEntryResult:(SetupTwoStepVerificationStateUpdate) -> Void = { update in
         switch update {
         case .noPassword:
-            presentController((controller: twoStepVerificationUnlockController(account: account, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
+            presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
         case let .awaitingEmailConfirmation(password, pattern, codeLength):
             
             let data = stateValue.with {$0.data}
@@ -551,12 +551,12 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
             
             let pendingEmail = TwoStepVerificationPendingEmail(pattern: pattern, codeLength: codeLength)
 
-            let root = twoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: "", pendingEmail: pendingEmail, hasSecureValues: hasSecureValues), presentController: presentController)
+            let root = twoStepVerificationUnlockController(context: context, mode: .manage(password: password, email: "", pendingEmail: pendingEmail, hasSecureValues: hasSecureValues), presentController: presentController)
             
             presentController((controller: root, root: true, animated: false))
             
-            presentController((controller: twoStepVerificationPasswordEntryController(network: account.network, mode: .enterCode(codeLength: pendingEmail.codeLength, pattern: pendingEmail.pattern), initialStage: nil, result: { _ in
-                presentController((controller: twoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: "email", pendingEmail: nil, hasSecureValues: hasSecureValues), presentController: presentController), root: true, animated: true))
+            presentController((controller: twoStepVerificationPasswordEntryController(network: context.account.network, mode: .enterCode(codeLength: pendingEmail.codeLength, pattern: pendingEmail.pattern), initialStage: nil, result: { _ in
+                presentController((controller: twoStepVerificationUnlockController(context: context, mode: .manage(password: password, email: "email", pendingEmail: nil, hasSecureValues: hasSecureValues), presentController: presentController), root: true, animated: true))
                 _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
             }, presentController: presentController), root: false, animated: true))
             
@@ -566,29 +566,29 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
             
             switch data {
             case let .manage(password, _, _, hasSecureValues):
-                presentController((controller: twoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: "email", pendingEmail: nil, hasSecureValues: hasSecureValues), presentController: presentController), root: true, animated: true))
+                presentController((controller: twoStepVerificationUnlockController(context: context, mode: .manage(password: password, email: "email", pendingEmail: nil, hasSecureValues: hasSecureValues), presentController: presentController), root: true, animated: true))
                 _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
             default:
                 break
             }
         case let .passwordSet(password, hasRecoveryEmail, hasSecureValues):
             if let password = password {
-                presentController((controller: twoStepVerificationUnlockController(account: account, mode: .manage(password: password, email: hasRecoveryEmail ? "email" : "", pendingEmail: nil, hasSecureValues: hasSecureValues), presentController: presentController), root: true, animated: true))
+                presentController((controller: twoStepVerificationUnlockController(context: context, mode: .manage(password: password, email: hasRecoveryEmail ? "email" : "", pendingEmail: nil, hasSecureValues: hasSecureValues), presentController: presentController), root: true, animated: true))
                 _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
             } else {
-                presentController((controller: twoStepVerificationUnlockController(account: account, mode: .access(.set(hint: "", hasRecoveryEmail: hasRecoveryEmail, hasSecureValues: hasSecureValues)), presentController: presentController), root: true, animated: true))
+                presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.set(hint: "", hasRecoveryEmail: hasRecoveryEmail, hasSecureValues: hasSecureValues)), presentController: presentController), root: true, animated: true))
             }
         }
     }
     
     let setupPassword:() -> InputDataValidation = {
-        let controller = twoStepVerificationPasswordEntryController(network: account.network, mode: .setup, initialStage: nil, result: proccessEntryResult, presentController: presentController)
+        let controller = twoStepVerificationPasswordEntryController(network: context.account.network, mode: .setup, initialStage: nil, result: proccessEntryResult, presentController: presentController)
         presentController((controller: controller, root: false, animated: true))
         return .none
     }
     
     let changePassword: (_ current: String) -> InputDataValidation = { current in
-        let controller = twoStepVerificationPasswordEntryController(network: account.network, mode: .change(current: current), initialStage: nil, result: proccessEntryResult, presentController: presentController)
+        let controller = twoStepVerificationPasswordEntryController(network: context.account.network, mode: .change(current: current), initialStage: nil, result: proccessEntryResult, presentController: presentController)
         presentController((controller: controller, root: false, animated: true))
         return .none
     }
@@ -601,7 +601,7 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
         case .access:
             break
         case let .manage(password, emailSet, _, _):
-            let controller = twoStepVerificationPasswordEntryController(network: account.network, mode: .setupEmail(password: password, change: emailSet), initialStage: nil, result: proccessEntryResult, presentController: presentController)
+            let controller = twoStepVerificationPasswordEntryController(network: context.account.network, mode: .setupEmail(password: password, change: emailSet), initialStage: nil, result: proccessEntryResult, presentController: presentController)
             presentController((controller: controller, root: false, animated: true))
         }
         
@@ -616,7 +616,7 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
             break
         case let .manage(_, _, pendingEmail, _):
             if let pendingEmail = pendingEmail {
-                let controller = twoStepVerificationPasswordEntryController(network: account.network, mode: .enterCode(codeLength: pendingEmail.codeLength, pattern: pendingEmail.pattern), initialStage: nil, result: proccessEntryResult, presentController: presentController)
+                let controller = twoStepVerificationPasswordEntryController(network: context.account.network, mode: .enterCode(codeLength: pendingEmail.codeLength, pattern: pendingEmail.pattern), initialStage: nil, result: proccessEntryResult, presentController: presentController)
                 presentController((controller: controller, root: false, animated: true))
             }
         }
@@ -637,15 +637,15 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
                             return state.withUpdatedChecking(true)
                         }
                         
-                        setupResultDisposable.set((requestTwoStepVerificationPasswordRecoveryCode(network: account.network)
+                        setupResultDisposable.set((requestTwoStepVerificationPasswordRecoveryCode(network: context.account.network)
                             |> deliverOnMainQueue).start(next: { emailPattern in
                                 
                                 updateState { state in
                                     return state.withUpdatedChecking(false)
                                 }
                                 
-                                presentController((controller: twoStepVerificationResetPasswordController(account: account, emailPattern: emailPattern, success: {
-                                    presentController((controller: twoStepVerificationUnlockController(account: account, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
+                                presentController((controller: twoStepVerificationResetPasswordController(context: context, emailPattern: emailPattern, success: {
+                                    presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
                                 }), root: false, animated: true))
                               
                             }, error: { _ in
@@ -671,11 +671,11 @@ func twoStepVerificationUnlockController(account: Account, mode: TwoStepVerifica
     
     let abort: () -> Void = {
         updateState { $0.withUpdatedChecking(true) }
-        let resetPassword = updateTwoStepVerificationPassword(network: account.network, currentPassword: nil, updatedPassword: .none) |> deliverOnMainQueue
+        let resetPassword = updateTwoStepVerificationPassword(network: context.account.network, currentPassword: nil, updatedPassword: .none) |> deliverOnMainQueue
         
         setupDisposable.set(resetPassword.start(next: { value in
             updateState { $0.withUpdatedChecking(false) }
-            presentController((controller: twoStepVerificationUnlockController(account: account, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
+            presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
         }, error: { error in
             alert(for: mainWindow, info: L10n.unknownError)
         }))
@@ -860,7 +860,7 @@ private func twoStepVerificationResetPasswordEntries( state: TwoStepVerification
 
 
 
-private func twoStepVerificationResetPasswordController(account: Account, emailPattern: String, success: @escaping()->Void) -> InputDataController {
+private func twoStepVerificationResetPasswordController(context: AccountContext, emailPattern: String, success: @escaping()->Void) -> InputDataController {
     
 
     
@@ -887,7 +887,7 @@ private func twoStepVerificationResetPasswordController(account: Account, emailP
                 return $0.withUpdatedChecking(true)
             }
             
-            resetDisposable.set((recoverTwoStepVerificationPassword(network: account.network, code: code) |> deliverOnMainQueue).start(error: { error in
+            resetDisposable.set((recoverTwoStepVerificationPassword(network: context.account.network, code: code) |> deliverOnMainQueue).start(error: { error in
                 
                 let errorText: String
                 switch error {

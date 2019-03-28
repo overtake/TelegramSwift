@@ -114,7 +114,7 @@ public class TitleButton: ImageButton {
             }
         }
        
-        var maxWidth:CGFloat = !thatFit ? ( maxSize.width > 0 ? maxSize.width : msize.width ) : maxSize.width
+        var maxWidth:CGFloat = !thatFit || maxSize.width == 0 ? ( maxSize.width > 0 ? maxSize.width : msize.width ) : maxSize.width
 
         
         
@@ -136,7 +136,7 @@ public class TitleButton: ImageButton {
             textSize =  min(size.width, textSize)
         }
        
-        if thatFit {
+        if thatFit && maxSize.width > 0 {
             maxWidth = maxSize.width
         } else {
             maxWidth += addition.width

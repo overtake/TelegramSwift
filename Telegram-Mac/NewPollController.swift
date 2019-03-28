@@ -153,7 +153,7 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     }
     
     if state.options.count < optionsLimit {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, name: L10n.newPollOptionsAddOption, color: theme.colors.blueUI, icon: theme.icons.pollAddOption, type: .none))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: L10n.newPollOptionsAddOption, color: theme.colors.blueUI, icon: theme.icons.pollAddOption, type: .none, action: nil)))
         index += 1
     }
 
@@ -173,7 +173,7 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     return entries
 }
 
-func newPollController(account: Account, chatInteraction: ChatInteraction) -> InputDataModalController {
+func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalController {
     
     
     let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: ""), NewPollOption(identifier: _id_input_option(), text: "")], random: arc4random())

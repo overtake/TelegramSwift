@@ -35,10 +35,10 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
     
  
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_disabled, name: L10n.autoNightSettingsDisabled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule == nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_disabled, data: InputDataGeneralData(name: L10n.autoNightSettingsDisabled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule == nil), action: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, name: L10n.autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, data: InputDataGeneralData(name: L10n.autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), action: nil)))
     index += 1
     
 
@@ -55,13 +55,13 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
             sunriseEnabled = false
         }
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sunrise, name: L10n.autoNightSettingsSunsetAndSunrise, color: theme.colors.text, icon: nil, type: .switchable(sunriseEnabled)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sunrise, data: InputDataGeneralData(name: L10n.autoNightSettingsSunsetAndSunrise, color: theme.colors.text, icon: nil, type: .switchable(sunriseEnabled), action: nil)))
         index += 1
         
         switch schedule {
         case let .sunrise(latitude, longitude):
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_update, name: L10n.autoNightSettingsUpdateLocation, color: theme.colors.blueUI, icon: nil, type: .none))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_update, data: InputDataGeneralData(name: L10n.autoNightSettingsUpdateLocation, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
             index += 1
             
             let sunriseSet = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: latitude, longitude: longitude)
@@ -80,9 +80,9 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
             
             
         case let .timeSensitive(from, to):
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_from, name: L10n.autoNightSettingsFrom, color: theme.colors.text, icon: nil, type: .nextContext(from < 10 ? "0\(from):00" : "\(from):00")))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_from, data: InputDataGeneralData(name: L10n.autoNightSettingsFrom, color: theme.colors.text, icon: nil, type: .nextContext(from < 10 ? "0\(from):00" : "\(from):00"), action: nil)))
             index += 1
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_to, name: L10n.autoNightSettingsTo, color: theme.colors.text, icon: nil, type: .nextContext(to < 10 ? "0\(to):00" : "\(to):00")))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_to, data: InputDataGeneralData(name: L10n.autoNightSettingsTo, color: theme.colors.text, icon: nil, type: .nextContext(to < 10 ? "0\(to):00" : "\(to):00"), action: nil)))
             index += 1
         }
         
@@ -93,9 +93,9 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
         let darkKey = "AppearanceSettings.ColorTheme." + darkPalette.name.lowercased().replacingOccurrences(of: " ", with: "_")
 
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_night_blue, name: localizedString(nightBlueKey), color: theme.colors.text, icon: nil, type: .selectable(settings.themeName == _id_night_blue.identifier)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_night_blue, data: InputDataGeneralData(name: localizedString(nightBlueKey), color: theme.colors.text, icon: nil, type: .selectable(settings.themeName == _id_night_blue.identifier), action: nil)))
         index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_dark, name: localizedString(darkKey), color: theme.colors.text, icon: nil, type: .selectable(settings.themeName == _id_dark.identifier)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_dark, data: InputDataGeneralData(name: localizedString(darkKey), color: theme.colors.text, icon: nil, type: .selectable(settings.themeName == _id_dark.identifier), action: nil)))
         index += 1
         
     }
@@ -105,9 +105,9 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
     return entries
 }
 
-func autoNightSettingsController(_ postbox: Postbox) -> InputDataController {
+func autoNightSettingsController(_ sharedContext: SharedAccountContext) -> InputDataController {
     
-    let signal: Signal<[InputDataEntry], NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, autoNightSettings(postbox: postbox) |> deliverOnPrepareQueue) |> mapToSignal { _, settings in
+    let signal: Signal<[InputDataEntry], NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, autoNightSettings(accountManager: sharedContext.accountManager) |> deliverOnPrepareQueue) |> mapToSignal { _, settings in
         if let schedule = settings.schedule {
             switch schedule {
             case let .sunrise(location):
@@ -118,7 +118,7 @@ func autoNightSettingsController(_ postbox: Postbox) -> InputDataController {
                             return .single(nil)
                         } |> mapToSignal { value in
                             if let value = value {
-                                return updateAutoNightSettingsInteractively(postbox: postbox, { pref -> AutoNightThemePreferences in
+                                return updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { pref -> AutoNightThemePreferences in
                                     switch value {
                                     case let .success(location):
                                         return pref.withUpdatedSchedule(.sunrise(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude))
@@ -146,25 +146,25 @@ func autoNightSettingsController(_ postbox: Postbox) -> InputDataController {
     controller = InputDataController(dataSignal: signal |> map {($0, true)}, title: L10n.autoNightSettingsTitle, validateData: { data in
         
         if let _ = data[_id_disabled] {
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 return current.withUpdatedSchedule(nil)
             }).start()
         }
         
         if let _ = data[_id_enabled] {
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 return current.withUpdatedSchedule(.timeSensitive(from: 22, to: 9))
             }).start()
         }
         
         if let _ = data[_id_update] {
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 return current.withUpdatedSchedule(.sunrise(latitude: 0, longitude: 0))
             }).start()
         }
         
         if let _ = data[_id_sunrise] {
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 if let schedule = current.schedule {
                     switch schedule {
                     case .sunrise:
@@ -179,19 +179,19 @@ func autoNightSettingsController(_ postbox: Postbox) -> InputDataController {
         
         
         if let _ = data[_id_night_blue] {
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 return current.withUpdatedName(nightBluePalette.name)
             }).start()
         }
         if let _ = data[_id_dark] {
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 return current.withUpdatedName(darkPalette.name)
             }).start()
         }
         
         
         let selectedFrom:(Int32)->Void = { selected in
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 if let schedule = current.schedule {
                     switch schedule {
                     case .sunrise:
@@ -205,7 +205,7 @@ func autoNightSettingsController(_ postbox: Postbox) -> InputDataController {
             }).start()
         }
         let selectedTo:(Int32)->Void = { selected in
-            _ = updateAutoNightSettingsInteractively(postbox: postbox, { current in
+            _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 if let schedule = current.schedule {
                     switch schedule {
                     case .sunrise:

@@ -12,7 +12,7 @@ import PostboxMac
 
 
 final class InstantPageItemArguments {
-    let account: Account
+    let context: AccountContext
     let theme: InstantPageTheme
     let openMedia:(InstantPageMedia)->Void
     let openPeer:(PeerId) -> Void
@@ -21,8 +21,8 @@ final class InstantPageItemArguments {
     let updateDetailsExpanded: (Bool) -> Void
     let isExpandedItem: (InstantPageDetailsItem) -> Bool
     let effectiveRectForItem: (InstantPageItem) -> NSRect
-    init(account: Account, theme: InstantPageTheme, openMedia: @escaping (InstantPageMedia) -> Void, openPeer: @escaping (PeerId) -> Void, openUrl: @escaping (InstantPageUrlItem) -> Void, updateWebEmbedHeight: @escaping (CGFloat) -> Void, updateDetailsExpanded: @escaping (Bool) -> Void, isExpandedItem: @escaping(InstantPageDetailsItem) -> Bool, effectiveRectForItem: @escaping(InstantPageItem) -> NSRect) {
-        self.account = account
+    init(context: AccountContext, theme: InstantPageTheme, openMedia: @escaping (InstantPageMedia) -> Void, openPeer: @escaping (PeerId) -> Void, openUrl: @escaping (InstantPageUrlItem) -> Void, updateWebEmbedHeight: @escaping (CGFloat) -> Void, updateDetailsExpanded: @escaping (Bool) -> Void, isExpandedItem: @escaping(InstantPageDetailsItem) -> Bool, effectiveRectForItem: @escaping(InstantPageItem) -> NSRect) {
+        self.context = context
         self.theme = theme
         self.openMedia = openMedia
         self.openPeer = openPeer

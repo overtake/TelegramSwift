@@ -23,7 +23,7 @@ enum InputContextEntry : Comparable, Identifiable {
     case contextMediaResult(ChatContextResultCollection?, InputMediaContextRow, Int64)
     case command(PeerCommand, Int64, Int64)
     case sticker(InputMediaStickersRow, Int64)
-    case emoji(EmojiClue, Int32)
+    case emoji([String], Bool, Int32)
     case hashtag(String, Int64)
     case inlineRestricted(String)
     var stableId: Int64 {
@@ -44,8 +44,8 @@ enum InputContextEntry : Comparable, Identifiable {
             return stableId
         case let .hashtag(hashtag, _):
             return Int64(hashtag.hashValue)
-        case let .emoji(clue, _):
-            return clue.hashValue
+        case let .emoji(clue, _, _):
+            return Int64(clue.joined().hashValue)
         case .inlineRestricted:
             return -1000
         }
@@ -67,7 +67,7 @@ enum InputContextEntry : Comparable, Identifiable {
             return index //result.maybeId | ((Int64(index) << 40))
         case let .hashtag(_, index):
             return index
-        case let .emoji(_, index):
+        case let .emoji(_, _, index):
             return Int64(index) //result.maybeId | ((Int64(index) << 40))
         case .inlineRestricted:
             return 0
@@ -119,9 +119,9 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
             return  lhsHashtag == rhsHashtag && lhsIndex == rhsIndex
         }
         return false
-    case let .emoji(lhsClue, lhsIndex):
-        if case let .emoji(rhsClue, rhsIndex) = rhs {
-            return  lhsClue == rhsClue && lhsIndex == rhsIndex
+    case let .emoji(lhsClue, lhsFirstWord, lhsIndex):
+        if case let .emoji(rhsClue, rhsFirstWord, rhsIndex) = rhs {
+            return  lhsClue == rhsClue && lhsIndex == rhsIndex && lhsFirstWord == rhsFirstWord
         }
         return false
     case let .inlineRestricted(lhsText):
@@ -139,13 +139,13 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
     }
 }
 
-fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]?, right:[AppearanceWrapperEntry<InputContextEntry>], account:Account,initialSize:NSSize, chatInteraction:ChatInteraction) -> TableUpdateTransition {
+fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]?, right:[AppearanceWrapperEntry<InputContextEntry>], context: AccountContext, initialSize:NSSize, chatInteraction:ChatInteraction) -> TableUpdateTransition {
     
     let (removed,inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
     
         switch entry.entry {
         case let .switchPeer(peerId, switchPeer):
-            return ContextSwitchPeerRowItem(initialSize, peerId:peerId, switchPeer:switchPeer, account:account, callback: {
+            return ContextSwitchPeerRowItem(initialSize, peerId:peerId, switchPeer:switchPeer, account: context.account, callback: {
                 chatInteraction.switchInlinePeer(peerId, .start(parameter: switchPeer.startParam, behavior: .automatic))
             })
         case let .peer(peer, _, _):
@@ -157,27 +157,27 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             let statusStyle:ControlStyle = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, backgroundColor: theme.colors.background, highlightColor:.white)
             
 
-            return ShortPeerRowItem(initialSize, peer: peer, account: account, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
+            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
         case let .contextResult(results,result,index):
-            return ContextListRowItem(initialSize, results, result, index, account, chatInteraction)
+            return ContextListRowItem(initialSize, results, result, index, context, chatInteraction)
         case let .contextMediaResult(results,result,index):
-            return ContextMediaRowItem(initialSize, result, index, account, ContextMediaArguments(sendResult: { result in
+            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { result in
                 if let results = results {
                     chatInteraction.sendInlineResult(results, result)
                 }
             }))
         case let .command(command,_, stableId):
-            return ContextCommandRowItem(initialSize, account, command, stableId)
-        case let .emoji(clue, _):
-            return ContextClueRowItem(initialSize, stableId: entry.stableId, clue: clue)
+            return ContextCommandRowItem(initialSize, context.account, command, stableId)
+        case let .emoji(clues, firstWord, _):
+            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, canDisablePrediction: firstWord)
         case let .hashtag(hashtag, _):
             return ContextHashtagRowItem(initialSize, hashtag: "#\(hashtag)")
         case let .sticker(result, stableId):
-            return ContextStickerRowItem(initialSize, account, result, stableId, chatInteraction)
+            return ContextStickerRowItem(initialSize, context, result, stableId, chatInteraction)
         case let .inlineRestricted(text):
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, height: 40, text: text, alignment: .center, centerViewAlignment: true)
         case let .message(_, message, searchText):
-            return ContextSearchMessageItem(initialSize, account: account, message: message, searchText: searchText, action: {
+            return ContextSearchMessageItem(initialSize, context: context, message: message, searchText: searchText, action: {
                 
             })
         }
@@ -200,7 +200,7 @@ class InputContextView : TableView {
         }
     }
     
-    public required init(frame frameRect: NSRect, isFlipped: Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
+    public override init(frame frameRect: NSRect) {
         // tableView = TableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         separatorView = View(frame: NSMakeRect(0, 0, frameRect.width, .borderSize))
         super.init(frame: frameRect)
@@ -244,7 +244,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     fileprivate var markAsNeedShown: Bool = false
     
-    private let account:Account
+    private let context:AccountContext
     private let chatInteraction:ChatInteraction
     private let highlightInsteadOfSelect: Bool
     
@@ -257,9 +257,9 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         view.layer?.opacity = 0
     }
     
-    init(account:Account,chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool) {
-        self.account = account
+    init(context: AccountContext, chatInteraction: ChatInteraction, highlightInsteadOfSelect: Bool) {
         self.chatInteraction = chatInteraction
+        self.context = context
         self.highlightInsteadOfSelect = highlightInsteadOfSelect
         super.init()
     }
@@ -273,46 +273,50 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         
         mainWindow.set(handler: { [weak self] () -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
-            let prev = self.deselectSelectedSticker()
+            let prev = self.deselectSelectedHorizontalItem()
             self.highlightInsteadOfSelect ? self.genericView.highlightNext(true,true) : self.genericView.selectNext(true,true)
-            self.selectFirstInRowIfCan(prev)
+            self.selectFirstInRowIfCan(prev, false)
             return .invoked
-        }, with: self, for: .DownArrow, priority: .high)
+        }, with: self, for: .DownArrow, priority: .modal)
         
         mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
-            let prev = self.deselectSelectedSticker()
+            let prev = self.deselectSelectedHorizontalItem()
             self.highlightInsteadOfSelect ? self.genericView.highlightPrev(true,true) : self.genericView.selectPrev(true,true)
-            self.selectFirstInRowIfCan(prev)
+            self.selectFirstInRowIfCan(prev, true)
             return .invoked
-        }, with: self, for: .UpArrow, priority: .high)
+        }, with: self, for: .UpArrow, priority: .modal)
         
         mainWindow.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectPreviousSticker()
                     return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
+                } else if case .emoji = strongSelf.chatInteraction.presentation.inputContext {
+                     return strongSelf.selectPrevEmojiClue()
                 }
             }
             return .invokeNext
-        }, with: self, for: .LeftArrow, priority: .high)
+        }, with: self, for: .LeftArrow, priority: .modal)
         
         mainWindow.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectNextSticker()
                     return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
+                } else if case .emoji = strongSelf.chatInteraction.presentation.inputContext {
+                    return strongSelf.selectNextEmojiClue()
                 }
             }
             return .invokeNext
-        }, with: self, for: .RightArrow, priority: .high)
+        }, with: self, for: .RightArrow, priority: .modal)
         
         mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.invoke()
             }
             return .invokeNext
-        }, with: self, for: .Return, priority: .high)
+        }, with: self, for: .Return, priority: .modal)
         
         
         mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
@@ -320,11 +324,11 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 return strongSelf.invokeTab()
             }
             return .invokeNext
-        }, with: self, for: .Tab, priority: .high)
+        }, with: self, for: .Tab, priority: .modal)
         
         mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             if self?.genericView.selectedItem() != nil {
-                _ = self?.deselectSelectedSticker()
+                _ = self?.deselectSelectedHorizontalItem()
                 self?.genericView.cancelSelection()
                 return .invoked
             }
@@ -341,17 +345,19 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             } else if let selectedItem = selectedItem as? ContextCommandRowItem {
                 chatInteraction.sendCommand(selectedItem.command)
             } else if let selectedItem = selectedItem as? ContextClueRowItem {
-                let clue = selectedItem.clue
-                
-                let textInputState = chatInteraction.presentation.effectiveInput
-                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
-                    let inputText = textInputState.inputText
-                    
-                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
-                    let replacementText = clue.emoji
-                    
-                    let atLength = 1
-                    _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                if let clue = selectedItem.selectedIndex != nil ? selectedItem.clues[selectedItem.selectedIndex!] : nil {
+                    let textInputState = chatInteraction.presentation.effectiveInput
+                    if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                        let inputText = textInputState.inputText
+                        
+                        let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                        let replacementText = clue
+                        
+                        let atLength = range.lowerBound > inputText.startIndex && inputText[inputText.index(before: range.lowerBound)] == ":" ? 1 : 0
+                        _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                    }
+                } else {
+                    return .rejected
                 }
             } else if let selectedItem = selectedItem as? ContextHashtagRowItem {
                 let textInputState = chatInteraction.presentation.effectiveInput
@@ -400,14 +406,46 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         return .invokeNext
     }
     
-    func deselectSelectedSticker() -> Int? {
+    func deselectSelectedHorizontalItem() -> Int? {
         var prev:Int? = nil
         if let selectedItem = genericView.selectedItem() as? ContextStickerRowItem {
             prev = selectedItem.selectedIndex
             selectedItem.selectedIndex = nil
-            selectedItem.redraw()
+            selectedItem.redraw(animated: true)
+        }
+        if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
+            prev = selectedItem.selectedIndex
+            selectedItem.selectedIndex = nil
+            selectedItem.redraw(animated: true)
         }
         return prev
+    }
+    
+    func selectNextEmojiClue() -> KeyHandlerResult {
+        if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
+            if let selectedIndex = selectedItem.selectedIndex {
+                var index = selectedIndex
+                index += 1
+                selectedItem.selectedIndex = max(min(index, selectedItem.clues.count - 1), 0)
+                selectedItem.redraw(animated: true)
+            }
+            
+            return selectedItem.selectedIndex != nil ? .invoked : .rejected
+        }
+        return .rejected
+
+    }
+    func selectPrevEmojiClue() -> KeyHandlerResult {
+        if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
+            if let selectedIndex = selectedItem.selectedIndex {
+                var index = selectedIndex
+                index -= 1
+                selectedItem.selectedIndex = max(min(index, selectedItem.clues.count - 1), 0)
+                selectedItem.redraw(animated: true)
+            }
+            return selectedItem.selectedIndex != nil ? .invoked : .rejected
+        }
+        return .rejected
     }
     
     func selectPreviousSticker() {
@@ -420,7 +458,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             }
             
             if selectedItem.selectedIndex! < 0 {
-                _ = deselectSelectedSticker()
+                _ = deselectSelectedHorizontalItem()
                 genericView.selectPrev(true,true)
                 selectLastInRowIfCan()
             } else {
@@ -439,7 +477,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             }
             
             if selectedItem.selectedIndex! > selectedItem.result.entries.count - 1 {
-                _ = deselectSelectedSticker()
+                _ = deselectSelectedHorizontalItem()
                 genericView.selectNext(true,true)
                 selectFirstInRowIfCan()
             } else {
@@ -448,12 +486,23 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         }
     }
     
-    func selectFirstInRowIfCan(_ start:Int? = nil) {
+    func selectFirstInRowIfCan(_ start:Int? = nil, _ bottom: Bool = false) {
         if let selectedItem = genericView.selectedItem() as? ContextStickerRowItem {
             var index = start ?? 0
             index = max(index, 0)
             selectedItem.selectedIndex = index
             selectedItem.redraw()
+        }
+        if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
+            var index: Int
+            if let start = start {
+                index = start + (bottom ? -1 : 1)
+            } else {
+                index = bottom ? selectedItem.clues.count - 1 : 0
+            }
+            index = min(max(index, 0), selectedItem.clues.count - 1)
+            selectedItem.selectedIndex = index
+            selectedItem.redraw(animated: true)
         }
     }
     
@@ -462,7 +511,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             var index = start ?? selectedItem.result.entries.count - 1
             index = min(index, selectedItem.result.entries.count - 1)
             selectedItem.selectedIndex = index
-            selectedItem.redraw()
+            selectedItem.redraw(animated: true)
         }
     }
     
@@ -504,7 +553,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         layout(animated)
         if !genericView.isEmpty, let result = result {
             switch result {
-            case .mentions, .searchMessages:
+            case .mentions, .searchMessages, .emoji:
                 if !highlightInsteadOfSelect {
                     _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
                 } else {
@@ -522,7 +571,11 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            let future = NSMakeSize(frame.width, min(genericView.listHeight, min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 3))))
+            var height = min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 3))
+            if genericView.firstItem is ContextClueRowItem {
+                height = min(height, 120)
+            }
+            let future = NSMakeSize(frame.width, min(genericView.listHeight, height))
             //  genericView.change(size: future, animated: animated)
             //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
             
@@ -554,14 +607,14 @@ class InputContextHelper: NSObject {
     private let disposable:MetaDisposable = MetaDisposable()
 
     let controller:InputContextViewController
-    private let account:Account
+    private let context:AccountContext
     private let chatInteraction:ChatInteraction
     private let entries:Atomic<[AppearanceWrapperEntry<InputContextEntry>]?> = Atomic(value:nil)
     private let loadMoreDisposable = MetaDisposable()
-    init(account:Account, chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false) {
-        self.account = account
+    init(chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false) {
         self.chatInteraction = chatInteraction
-        controller = InputContextViewController(account:account,chatInteraction:chatInteraction, highlightInsteadOfSelect: highlightInsteadOfSelect)
+        self.context = chatInteraction.context
+        controller = InputContextViewController(context: chatInteraction.context, chatInteraction: chatInteraction, highlightInsteadOfSelect: highlightInsteadOfSelect)
     }
 
     public var accessoryView:NSView? {
@@ -583,7 +636,7 @@ class InputContextHelper: NSObject {
         
         let initialSize = controller.atomicSize
         let previosEntries = self.entries
-        let account = self.account
+        let context = self.chatInteraction.context
         let chatInteraction = self.chatInteraction
         
         let entriesValue: Promise<[InputContextEntry]> = Promise()
@@ -599,7 +652,7 @@ class InputContextHelper: NSObject {
                     messages.2(messages.1)
                 case let .contextRequestResult(peer, oldCollection):
                     if let oldCollection = oldCollection, let nextOffset = oldCollection.nextOffset {
-                        self.loadMoreDisposable.set((requestChatContextResults(account: self.account, botId: oldCollection.botId, peerId: self.chatInteraction.peerId, query: oldCollection.query, offset: nextOffset) |> delay(0.5, queue: Queue.mainQueue())).start(next: { [weak self] collection in
+                        self.loadMoreDisposable.set((requestChatContextResults(account: context.account, botId: oldCollection.botId, peerId: self.chatInteraction.peerId, query: oldCollection.query, offset: nextOffset) |> delay(0.5, queue: Queue.mainQueue())).start(next: { [weak self] collection in
                             guard let `self` = self else {return}
                             
                             if let collection = collection {
@@ -623,7 +676,7 @@ class InputContextHelper: NSObject {
             let entries = entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             let previous = previosEntries.swap(entries)
             let previousIsEmpty:Bool = previous?.isEmpty ?? true
-            return (prepareEntries(left: previous, right: entries, account: account, initialSize: initialSize.modify({$0}), chatInteraction:chatInteraction),!entries.isEmpty, previousIsEmpty)
+            return (prepareEntries(left: previous, right: entries, context: context, initialSize: initialSize.modify({$0}), chatInteraction:chatInteraction),!entries.isEmpty, previousIsEmpty)
         } |> deliverOnMainQueue
         
         disposable.set((makeSignal |> map { [weak self, weak view, weak relativeView] transition, show, previousIsEmpty in
@@ -747,12 +800,13 @@ class InputContextHelper: NSObject {
                         entries.append(.sticker(mediaRows[i], Int64(arc4random()) | ((Int64(entries.count) << 40))))
                     }
                     
-                case let .emoji(clues):
+                case let .emoji(clues, firstWord):
                     var index:Int32 = 0
-                    for clue in clues {
-                        entries.append(.emoji(clue, index))
+                    if !clues.isEmpty {
+                        entries.append(.emoji(clues, firstWord, index))
                         index += 1
                     }
+                   
                 case let .searchMessages(messages, searchText):
                     var index: Int64 = 0
                     for message in messages.0 {

@@ -57,13 +57,13 @@ struct DeleteSupergroupMessagesSet : OptionSet {
 class DeleteSupergroupMessagesModalController: TableModalViewController {
     private let peerId:PeerId
     private let messageIds:[MessageId]
-    private let account:Account
+    private let context:AccountContext
     private let memberId:PeerId
     private var options:DeleteSupergroupMessagesSet = DeleteSupergroupMessagesSet(.deleteMessages)
     private let onComplete:()->Void
     private let peerViewDisposable = MetaDisposable()
-    init(account:Account, messageIds:[MessageId], peerId:PeerId, memberId: PeerId, onComplete: @escaping() -> Void) {
-        self.account = account
+    init(context: AccountContext, messageIds:[MessageId], peerId:PeerId, memberId: PeerId, onComplete: @escaping() -> Void) {
+        self.context = context
         self.messageIds = messageIds
         self.peerId = peerId
         self.memberId = memberId
@@ -83,7 +83,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
         
         let update: Promise<Void> = Promise(Void())
         
-        peerViewDisposable.set(combineLatest(account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue, update.get()).start(next: { [weak self] peerView, _ in
+        peerViewDisposable.set(combineLatest(context.account.viewTracker.peerView( peerId) |> take(1) |> deliverOnMainQueue, update.get()).start(next: { [weak self] peerView, _ in
             if let strongSelf = self, let peer = peerViewMainPeer(peerView) as? TelegramChannel {
                 
                 _ = strongSelf.genericView.removeAll()
@@ -153,16 +153,16 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
     }
     
     private func perform() {
-        var signals:[Signal<Void, NoError>] = [deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forEveryone)]
+        var signals:[Signal<Void, NoError>] = [deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: .forEveryone)]
         if options.contains(.banUser) {
             
-            signals.append(account.context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)))
+            signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)))
         }
         if options.contains(.reportSpam) {
-            signals.append(reportSupergroupPeer(account: account, peerId: memberId, memberId: memberId, messageIds: messageIds))
+            signals.append(reportSupergroupPeer(account: context.account, peerId: memberId, memberId: memberId, messageIds: messageIds))
         }
         if options.contains(.deleteAllMessages) {
-            signals.append(clearAuthorHistory(account: account, peerId: peerId, memberId: memberId))
+            signals.append(clearAuthorHistory(account: context.account, peerId: peerId, memberId: memberId))
         }
         _ = combineLatest(signals).start()
         onComplete()

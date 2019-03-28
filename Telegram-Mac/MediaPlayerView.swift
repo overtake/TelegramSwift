@@ -69,6 +69,50 @@ final class MediaPlayerView: View {
         }
     }
     
+    private let maskLayer = CAShapeLayer()
+    
+    var positionFlags: LayoutPositionFlags? {
+        didSet {
+            if let positionFlags = positionFlags {
+                let path = CGMutablePath()
+                
+                let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+                let miny:CGFloat = 0, midy = frame.height/2.0, maxy = frame.height
+                
+                path.move(to: NSMakePoint(minx, midy))
+                
+                var topLeftRadius: CGFloat = .cornerRadius
+                var bottomLeftRadius: CGFloat = .cornerRadius
+                var topRightRadius: CGFloat = .cornerRadius
+                var bottomRightRadius: CGFloat = .cornerRadius
+                
+                
+                if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                    topLeftRadius = topLeftRadius * 3 + 2
+                }
+                if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                    topRightRadius = topRightRadius * 3 + 2
+                }
+                if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                    bottomLeftRadius = bottomLeftRadius * 3 + 2
+                }
+                if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                    bottomRightRadius = bottomRightRadius * 3 + 2
+                }
+                
+                path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
+                path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
+                
+                maskLayer.path = path
+                layer?.mask = maskLayer
+            } else {
+                layer?.mask = nil
+            }
+        }
+    }
+    
     private func updateState() {
         if let (timebase, requestFrames, rotationAngle, aspect) = self.state {
             if let videoLayer = self.videoLayer {

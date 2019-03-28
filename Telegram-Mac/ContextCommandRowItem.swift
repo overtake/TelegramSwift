@@ -15,7 +15,7 @@ import SwiftSignalKitMac
 class ContextCommandRowItem: TableRowItem {
 
     fileprivate let _stableId:Int64
-    fileprivate let account:Account
+    fileprivate let account: Account
     let command:PeerCommand
     
     private let title:TextViewLayout

@@ -27,7 +27,7 @@ class PassportWindowController  {
     let window: Window
     let controller: PassportController
     let navigationController: MajorNavigationController
-    init(account: Account, peer: Peer, request: inAppSecureIdRequest, form: EncryptedSecureIdForm) {
+    init(context: AccountContext, peer: Peer, request: inAppSecureIdRequest, form: EncryptedSecureIdForm) {
         
         
         let screen = NSScreen.main!
@@ -40,7 +40,7 @@ class PassportWindowController  {
         
 
         
-        controller = PassportController(account, peer, request: request, form)
+        controller = PassportController(context, peer, request: request, form)
         navigationController = MajorNavigationController(PassportController.self, controller)
         
         

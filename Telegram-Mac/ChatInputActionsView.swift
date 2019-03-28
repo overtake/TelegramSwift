@@ -83,7 +83,7 @@ class ChatInputActionsView: View, Notifable {
         addHoverObserver()
         addClickObserver()
         entertaiments.canHighlight = false
-        
+        muteChannelMessages.hideAnimated = false
         
         updateLocalizationAndTheme()
     }
@@ -117,13 +117,13 @@ class ChatInputActionsView: View, Notifable {
     
     var entertaimentsPopover: ViewController {
         if chatInteraction.presentation.state == .editing {
-            let emoji = EmojiViewController(chatInteraction.account)
-            if let interactions = chatInteraction.account.context.entertainment.interactions {
+            let emoji = EmojiViewController(chatInteraction.context)
+            if let interactions = chatInteraction.context.sharedContext.bindings.entertainment().interactions {
                 emoji.update(with: interactions)
             }
             return emoji
         }
-        return chatInteraction.account.context.entertainment
+        return chatInteraction.context.sharedContext.bindings.entertainment()
     }
     
     private func addHoverObserver() {
@@ -136,7 +136,7 @@ class ChatInputActionsView: View, Notifable {
             if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
                 enabled = sidebarEnabled
             }
-            if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
+            if !((mainWindow.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize)) || !enabled {
                 self.showEntertainment()
             }
         }, for: .Hover)
@@ -154,7 +154,7 @@ class ChatInputActionsView: View, Notifable {
             if let strongSelf = self {
                 let chatInteraction = strongSelf.chatInteraction
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual || mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize {
+                    if mainWindow.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual || mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize {
                         
                         chatInteraction.toggleSidebar()
                     }
@@ -162,7 +162,9 @@ class ChatInputActionsView: View, Notifable {
             }
         }, for: .Click)
     }
-    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
     
     func toggleKeyboard() {
         let keyboardId = chatInteraction.presentation.keyboardButtonsMessage?.id
@@ -175,7 +177,7 @@ class ChatInputActionsView: View, Notifable {
     override func layout() {
         super.layout()
         inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset)
-        inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 4)
+        inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 8)
         voice.centerY(x:frame.width - voice.frame.width - iconsInset)
         send.centerY(x: frame.width - send.frame.width - iconsInset)
         entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - 0)
@@ -214,20 +216,20 @@ class ChatInputActionsView: View, Notifable {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || value.interfaceState.editState != oldValue.interfaceState.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout {
+            if value.interfaceState != oldValue.interfaceState || value.interfaceState.editState != oldValue.interfaceState.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown {
             
-                var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width + iconsInset * 2, frame.height)
+                var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
                 
                 if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
                     size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
                 }
               
                 if let peer = value.peer {
-                    muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage
+                    muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage || !value.effectiveInput.inputText.isEmpty
                 }
                 
                 if !muteChannelMessages.isHidden {
-                    size.width += muteChannelMessages.frame.width + iconsInset
+                    size.width += muteChannelMessages.frame.width
                 }
                 
                 var newInlineRequest = value.inputQueryResult != oldValue.inputQueryResult
@@ -236,7 +238,7 @@ class ChatInputActionsView: View, Notifable {
                 var oldInlineLoading: Bool = false
                 
                 if let query = value.inputQueryResult, case .contextRequestResult(_, let data) = query {
-                    newInlineLoading = data == nil
+                    newInlineLoading = data == nil && !value.effectiveInput.inputText.isEmpty
                 }
                 
                 if let query = value.inputQueryResult, case .contextRequestResult = query, newInlineRequest || first {
@@ -320,7 +322,7 @@ class ChatInputActionsView: View, Notifable {
                 }
        
                 entertaiments.apply(state: .Normal)
-                entertaiments.isSelected = value.isShowSidebar || (chatInteraction.account.context.entertainment.popover?.isShown ?? false)
+                entertaiments.isSelected = value.isShowSidebar 
                 
                 keyboard.isHidden = !value.isKeyboardActive
                 
@@ -335,11 +337,10 @@ class ChatInputActionsView: View, Notifable {
                     }
 
                 }
-                self.change(size: size, animated: false)
                 
+                setFrameSize(size)
                 updateEntertainmentIcon()
-                
-                self.needsLayout = true
+                needsLayout = true
             } else if value.isEmojiSection != oldValue.isEmojiSection {
                 updateEntertainmentIcon()
             }

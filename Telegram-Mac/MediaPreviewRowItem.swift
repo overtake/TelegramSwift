@@ -13,24 +13,27 @@ import SwiftSignalKitMac
 import PostboxMac
 
 class MediaPreviewRowItem: TableRowItem {
+    
+    
+
 
     fileprivate let media: Media
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     private let _stableId = arc4random()
     fileprivate let parameters: ChatMediaLayoutParameters?
     fileprivate let chatInteraction: ChatInteraction
     fileprivate let edit:()->Void
     fileprivate let delete: (()->Void)?
     fileprivate let hasEditedData: Bool
-    init(_ initialSize: NSSize, media: Media, account: Account, hasEditedData: Bool = false, edit:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+    init(_ initialSize: NSSize, media: Media, context: AccountContext, hasEditedData: Bool = false, edit:@escaping()->Void = {}, delete: (()->Void)? = nil) {
         self.edit = edit
         self.delete = delete
         self.media = media
-        self.account = account
+        self.context = context
         self.hasEditedData = hasEditedData
-        self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), account: account)
+        self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context)
         if let media = media as? TelegramMediaFile {
-            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false)
+            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
         } else {
             parameters = nil
         }
@@ -85,8 +88,34 @@ class MediaPreviewRowItem: TableRowItem {
     }
 }
 
-fileprivate class MediaPreviewRowView : TableRowView {
+fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
     
+    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+        if let contentNode = contentNode {
+            if contentNode is ChatGIFContentView {
+                if let file = contentNode.media as? TelegramMediaFile {
+                    let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
+                    return .file(reference, GifPreviewModalView.self)
+                }
+            } else if contentNode is ChatInteractiveContentView {
+                if let image = contentNode.media as? TelegramMediaImage {
+                    let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
+                    return .image(reference, ImagePreviewModalView.self)
+                }
+            } else if contentNode is ChatFileContentView {
+                if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
+                    var representations: [TelegramMediaImageRepresentation] = []
+                    representations.append(contentsOf: file.previewRepresentations)
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
+                    let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
+                    let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
+                    return .image(reference, ImagePreviewModalView.self)
+                }
+            }
+        }
+        
+        return nil
+    }
     
     var contentNode:ChatMediaContentView?
     let editControl: MediaPreviewEditControl = MediaPreviewEditControl()
@@ -98,6 +127,10 @@ fileprivate class MediaPreviewRowView : TableRowView {
             super.needsDisplay = true
             contentNode?.needsDisplay = true
         }
+    }
+    
+    override func forceClick(in location: NSPoint) {
+        _ = contentNode?.previewMediaIfPossible()
     }
     
     override func draw(_ dirtyRect: NSRect) {
@@ -146,7 +179,7 @@ fileprivate class MediaPreviewRowView : TableRowView {
             item?.delete?()
         }, hasEditedData: item.hasEditedData)
         
-        self.contentNode?.update(with: item.media, size: item.contentSize, account: item.account, parent: nil, table: item.table, parameters: item.parameters, animated: animated)
+        self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent: nil, table: item.table, parameters: item.parameters, animated: animated)
         
     }
     

@@ -17,11 +17,11 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
     fileprivate private(set) var file:TelegramMediaFile!
     fileprivate private(set) var thumbResource: ExternalMusicAlbumArtResource!
     fileprivate let isCompactPlayer: Bool
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false) {
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false) {
         self.isCompactPlayer = isCompactPlayer
-        super.init(initialSize,interface,account,object)
+        super.init(initialSize,interface,object)
         
-        file = message.media[0] as! TelegramMediaFile
+        file = message.media[0] as? TelegramMediaFile
         let attr = NSMutableAttributedString()
         let music = file.musicText
         _ = attr.append(string: music.0, color: theme.colors.text, font: .medium(.header))
@@ -183,13 +183,13 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             
             let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: item.thumbResource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
             
-            thumbView.setSignal(chatMessagePhotoThumbnail(account: item.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
+            thumbView.setSignal(chatMessagePhotoThumbnail(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
             
             thumbView.set(arguments: arguments)
 
             
             if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
-                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.account, file: item.file), item.account.pendingMessageManager.pendingMessageStatus(item.message.id))
+                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.interface.context.account, file: item.file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                         if let pendingStatus = pendingStatus {
                             return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -198,7 +198,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                         }
                     } |> deliverOnMainQueue
             } else {
-                updatedStatusSignal = chatMessageFileStatus(account: item.account, file: item.file) |> deliverOnMainQueue
+                updatedStatusSignal = chatMessageFileStatus(account: item.interface.context.account, file: item.file) |> deliverOnMainQueue
             }
             
             
@@ -217,7 +217,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: item.message) {
                 controller.playOrPause()
             } else {
-                let controller = APChatMusicController(account: item.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
+                let controller = APChatMusicController(account: item.interface.context.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
                 item.interface.inlineAudioPlayer(controller)
                 controller.start()
             }
@@ -228,7 +228,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func fetch() {
         if let item = item as? PeerMediaMusicRowItem {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file)).start())
         }
         open()
     }
@@ -236,7 +236,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func cancelFetching() {
         if let item = item as? PeerMediaMusicRowItem {
-            messageMediaFileCancelInteractiveFetch(account: item.account, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file))
+            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file))
         }
     }
     

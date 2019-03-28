@@ -639,10 +639,10 @@ public extension CGSize {
     public func fitted(_ size: CGSize) -> CGSize {
         var fittedSize = self
         if fittedSize.width > size.width {
-            fittedSize = CGSize(width: size.width, height: floor((fittedSize.height * size.width / max(fittedSize.width, 1.0))))
+            fittedSize = CGSize(width: size.width, height: ceil((fittedSize.height * size.width / max(fittedSize.width, 1.0))))
         }
         if fittedSize.height > size.height {
-            fittedSize = CGSize(width: floor((fittedSize.width * size.height / max(fittedSize.height, 1.0))), height: size.height)
+            fittedSize = CGSize(width: ceil((fittedSize.width * size.height / max(fittedSize.height, 1.0))), height: size.height)
         }
         return fittedSize
     }
@@ -1457,7 +1457,11 @@ public extension String {
         if nsstring.length <= 2 {
             return self
         } else if nsstring.length == 4 {
-            return nsstring.substring(to: nsstring.length - 2)
+            if emojiSkinToneModifiers.contains(nsstring.substring(from: 2)) {
+                 return nsstring.substring(to: nsstring.length - 2)
+            } else {
+                return self
+            }
         } else if nsstring.length == 5 {
             if emojiSkinToneModifiers.contains(nsstring.substring(with: NSMakeRange(2, 2))) {
                 return nsstring.substring(to: 2)
@@ -1545,18 +1549,21 @@ public extension String {
             previousScalar = scalar
         }
         
+
         scalars.append(currentScalarSet)
+        let value = scalars.map({ $0.map{ String($0) } }).reduce("", { current, value in
+            return current + value.reduce("", +)
+        })
         
-        return scalars.map { $0.map{ String($0) } .reduce("", +) }
+        return value.components(separatedBy: "")//scalars.map { $0.map{ String($0) } .reduce("", +) }
     }
     
+    
     fileprivate var emojiScalars: [UnicodeScalar] {
-        
         var chars: [UnicodeScalar] = []
         var previous: UnicodeScalar?
         for cur in unicodeScalars {
-            
-            if let previous = previous, previous.isZeroWidthJoiner && cur.isEmoji {
+            if let previous = previous, previous.isZeroWidthJoiner, cur.isEmoji {
                 chars.append(previous)
                 chars.append(cur)
                 
@@ -1569,26 +1576,27 @@ public extension String {
         
         return chars
     }
-
 }
 
 extension UnicodeScalar {
     
     var isEmoji: Bool {
-        
         switch value {
-        case 0x1F600...0x1F64F, // Emoticons
-        0x1F300...0x1F5FF, // Misc Symbols and Pictographs
-        0x1F680...0x1F6FF, // Transport and Map
-        0x1F1E6...0x1F1FF, // Regional country flags
-       // 0x2600...0x26FF,   // Misc symbols
-      //  0x2700...0x27BF,   // Dingbats
-        0xFE00...0xFE0F,   // Variation Selectors
-        0x1F900...0x1F9FF:  // Supplemental Symbols and Pictographs
-      // 127000...127600, // Various asian characters
-       // 65024...65039: // Variation selector
-      //  9100...9300, // Misc items
-       // 8400...8447: // Combining Diacritical Marks for Symbols
+        case 0x1F600...0x1F64F:
+            return true// Emoticons
+        case 0x1F300...0x1F5FF:
+            return true// Misc Symbols and Pictographs
+        case 0x1F680...0x1F6FF:
+            return true// Transport and Map
+        case 0x2600...0x26FF:
+            return true// Misc symbols
+        case 0x2700...0x27BF:
+            return true// Dingbats
+        case 0xFE00...0xFE0F:
+            return true// Variation Selectors
+        case 0x1F900...0x1F9FF:
+            return true// Supplemental Symbols and Pictographs
+        case 0x1F1E6...0x1F1FF: // Flags
             return true
             
         default: return false
@@ -1606,18 +1614,31 @@ extension UnicodeScalar {
 
 public extension Sequence where Iterator.Element: Hashable {
     var uniqueElements: [Iterator.Element] {
-        return Array( Set(self) )
+        return self.reduce([], { current, value in
+            if current.contains(value) {
+                return current
+            } else {
+                return current + [value]
+            }
+        })
     }
 }
 public extension Sequence where Iterator.Element: Equatable {
     var uniqueElements: [Iterator.Element] {
-        return self.reduce([]){
-            uniqueElements, element in
-            
-            uniqueElements.contains(element)
-                ? uniqueElements
-                : uniqueElements + [element]
-        }
+        return self.reduce([], { current, value in
+            if current.contains(value) {
+                return current
+            } else {
+                return current + [value]
+            }
+        })
+//        return self.reduce([]){
+//            uniqueElements, element in
+//
+//            uniqueElements.contains(element)
+//                ? uniqueElements
+//                : uniqueElements + [element]
+//        }
     }
 }
 public extension String {

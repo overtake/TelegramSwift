@@ -10,7 +10,8 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 
-struct SPopoverItem {
+
+struct SPopoverItem : Equatable {
     let title:String
     let image:CGImage?
     let textColor: NSColor
@@ -21,10 +22,16 @@ struct SPopoverItem {
         self.textColor = textColor
         self.handler = handler
     }
+    
+    static func ==(lhs: SPopoverItem, rhs: SPopoverItem) -> Bool {
+        return lhs.title == rhs.title && lhs.textColor.hexString == rhs.textColor.hexString
+    }
 }
 
+
+
 class SPopoverViewController: GenericViewController<TableView> {
-    private let items:[SPopoverRowItem]
+    private let items:[TableRowItem]
     private let disposable = MetaDisposable()
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,10 +43,10 @@ class SPopoverViewController: GenericViewController<TableView> {
         readyOnce()
     }
     
-    init(items:[SPopoverItem], visibility:Int = 4, handlerDelay: Double = 0.15) {
+    init(items:[SPopoverItem], visibility:Int = 4, handlerDelay: Double = 0.15, headerItems: [TableRowItem] = []) {
         weak var controller:SPopoverViewController?
         let alignAsImage = !items.filter({$0.image != nil}).isEmpty
-        self.items = items.map({ item in SPopoverRowItem(NSZeroSize, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
+        let items = items.map({ item in SPopoverRowItem(NSZeroSize, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
             Queue.mainQueue().justDispatch {
                 controller?.popover?.hide()
 
@@ -53,8 +60,30 @@ class SPopoverViewController: GenericViewController<TableView> {
                
             }
         })})
-        let width: CGFloat = self.items.max(by: {$0.title.layoutSize.width < $1.title.layoutSize.width})!.title.layoutSize.width
-        let height = min(visibility * 40 + 20, items.count * 40)
+        
+        
+        
+        let width: CGFloat = items.isEmpty ? 200 : items.max(by: {$0.title.layoutSize.width < $1.title.layoutSize.width})!.title.layoutSize.width
+        
+        for item in headerItems {
+            _ = item.makeSize(width + 48 + 18)
+        }
+        
+        
+        
+        self.items = headerItems + (headerItems.isEmpty ? [] : [SPopoverSeparatorItem(NSZeroSize)]) + items
+        
+        var height: CGFloat = 0
+        for (i, item) in self.items.enumerated() {
+            if i < visibility {
+                height += item.height
+            } else {
+                height += item.height / 2
+                break
+            }
+        }
+        
+      //  let height = min(visibility * 40 + 20, items.count * 40)
         super.init(frame: NSMakeRect(0, 0, width + 45 + 18, CGFloat(height)))
         bar = .init(height: 0)
         controller = self

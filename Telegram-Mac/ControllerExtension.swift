@@ -14,13 +14,18 @@ import TGUIKit
 
 class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView {
 
-    let account:Account
+    let context:AccountContext
+    let queue: Queue = Queue(name: "Controller Interface Queue", qos: DispatchQoS.default)
     private let languageDisposable:MetaDisposable = MetaDisposable()
-    init(_ account:Account) {
-        self.account = account
+    init(_ context:AccountContext) {
+        self.context = context
         super.init()
     }
     
+    
+    override var window: Window? {
+        return context.window
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -171,8 +176,8 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
         }, for:.Click)
     }
     
-    override init(_ account:Account) {
-        super.init(account)
+    override init(_ context:AccountContext) {
+        super.init(context)
         editBar = TextButtonBarView(controller: self, text: "", style: navigationButtonStyle, alignment:.Right)
         addHandler()
     }
@@ -233,7 +238,40 @@ var appAppearance:Appearance {
 }
 
 var appearanceSignal:Signal<Appearance, NoError> {
-    return combineLatest(languageSignal, themeSignal) |> map {
+    
+    var timestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+    
+    let dateSignal:Signal<Bool, NoError> = Signal { subscriber in
+        
+        let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+
+        
+        var now: time_t = time_t(nowTimestamp)
+        var timeinfoNow: tm = tm()
+        localtime_r(&now, &timeinfoNow)
+        
+        
+        var t: time_t = time_t(timestamp)
+        var timeinfo: tm = tm()
+        localtime_r(&t, &timeinfo)
+        
+      
+        if timeinfo.tm_year != timeinfoNow.tm_year || timeinfo.tm_yday != timeinfoNow.tm_yday {
+            timestamp = nowTimestamp
+            subscriber.putNext(true)
+        } else {
+            subscriber.putNext(false)
+        }
+        subscriber.putCompletion()
+        
+        return EmptyDisposable
+    }
+    
+    let dateUpdateSignal: Signal<Bool, NoError> = .single(true) |> then(dateSignal |> delay(1.0, queue: resourcesQueue) |> restart)
+    
+    let updateSignal = dateUpdateSignal |> filter {$0}
+    
+    return combineLatest(languageSignal, themeSignal, updateSignal |> deliverOnMainQueue) |> map {
         return Appearance(language: $0.0, presentation: $0.1)
     }
 }

@@ -39,7 +39,7 @@ final class SettingsThemeWallpaperView: View {
     
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = NSMenu(title: "")
-        if let wallpaper = self.wallpaper {
+        if let wallpaper = self.wallpaper, wallpaper != theme.c_wallpaper {
             switch wallpaper {
             case .file:
                 menu.addItem(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
@@ -69,6 +69,10 @@ final class SettingsThemeWallpaperView: View {
     func setWallpaper(account: Account, wallpaper: Wallpaper, size: CGSize) {
         self.imageView.frame = CGRect(origin: CGPoint(), size: size)
         
+        
+        
+
+        
         self.wallpaper = wallpaper
         switch wallpaper {
         case .builtin:
@@ -95,13 +99,25 @@ final class SettingsThemeWallpaperView: View {
         case let .image(representations, _):
             self.label.isHidden = true
             self.imageView.isHidden = false
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, autoFetchFullSize: true, scale: backingScaleFactor))
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, autoFetchFullSize: true, scale: backingScaleFactor))
+            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil))
             
-            fetchDisposable.set(fetchCachedResourceRepresentation(account: account, resource: largestImageRepresentation(representations)!.resource, representation: CachedBlurredWallpaperRepresentation()).start())
-        case let .file(_, file, _):
+            fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
+        case let .file(_, file, settings, isPattern):
             self.label.isHidden = true
             self.imageView.isHidden = false
+            
+            var patternColor: NSColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+
+            if isPattern {
+                var patternIntensity: CGFloat = 0.5
+                if let color = settings.color {
+                    if let intensity = settings.intensity {
+                        patternIntensity = CGFloat(intensity) / 100.0
+                    }
+                    patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
+                }
+            }
             
             var representations:[TelegramMediaImageRepresentation] = []
             representations.append(contentsOf: file.previewRepresentations)
@@ -109,11 +125,11 @@ final class SettingsThemeWallpaperView: View {
                 representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource))
             }
             
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, autoFetchFullSize: true, scale: backingScaleFactor))
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, autoFetchFullSize: true, scale: backingScaleFactor))
+            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
             
             
-            fetchDisposable.set(fetchCachedResourceRepresentation(account: account, resource: largestImageRepresentation(representations)!.resource, representation: CachedBlurredWallpaperRepresentation()).start())
+            fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
         default:
             break
         }

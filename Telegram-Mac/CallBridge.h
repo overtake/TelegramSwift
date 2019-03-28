@@ -19,8 +19,8 @@
 @end
 
 @interface AudioDevice : NSObject
-@property(nonatomic, strong, readonly) NSString *deviceId;
-@property(nonatomic, strong, readonly) NSString *deviceName;
+@property(nonatomic, strong, readonly) NSString * deviceId;
+@property(nonatomic, strong, readonly) NSString * deviceName;
 -(id)initWithDeviceId:(NSString*)deviceId deviceName:(NSString *)deviceName;
 @end
 
@@ -33,12 +33,15 @@
 
 -(NSString *)currentOutputDeviceId;
 -(NSString *)currentInputDeviceId;
--(NSArray<AudioDevice *> *)outputDevices;
--(NSArray<AudioDevice *> *)inputDevices;
+
 -(void)setCurrentOutputDeviceId:(NSString *)deviceId;
 -(void)setCurrentInputDeviceId:(NSString *)deviceId;
+-(void)setMutedOtherSounds:(BOOL)mute;
+
 @property (nonatomic, copy) void (^stateChangeHandler)(int);
 
 +(int32_t)voipMaxLayer;
 
++(NSArray<AudioDevice *> *)outputDevices;
++(NSArray<AudioDevice *> *)inputDevices;
 @end

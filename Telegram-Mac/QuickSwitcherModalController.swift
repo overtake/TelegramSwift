@@ -13,9 +13,9 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 
 private class QuickSwitcherArguments {
-    let account:Account
-    init(_ account:Account) {
-        self.account = account
+    let context: AccountContext
+    init(_ context:AccountContext) {
+        self.context = context
     }
 }
 
@@ -39,28 +39,6 @@ private enum QuickSwitcherStableId : Hashable {
         }
     }
     
-    static func ==(lhs:QuickSwitcherStableId, rhs: QuickSwitcherStableId) -> Bool {
-        switch lhs {
-        case .peerId(let peerId):
-            if case .peerId(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .separator(let id):
-            if case .separator(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .empty:
-            if case .empty = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum QuickSwitcherEntry : TableItemListNodeEntry {
@@ -92,7 +70,7 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
     func item(_ arguments: QuickSwitcherArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .peer(_, let peer, let drawSeparator):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: drawSeparator, isLookSavedMessage: true, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: drawSeparator, isLookSavedMessage: true, action: {
                 
             })
         case .separator(_, let id):
@@ -240,15 +218,15 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         return nil
     }
     
-    private let account:Account
+    private let context:AccountContext
     private let search:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     private let disposable = MetaDisposable()
-    fileprivate func start(account: Account, recentlyUsed:[PeerId], search:Signal<SearchState, NoError>) -> Signal<([QuickSwitcherEntry], Bool), NoError> {
+    fileprivate func start(context: AccountContext, recentlyUsed:[PeerId], search:Signal<SearchState, NoError>) -> Signal<([QuickSwitcherEntry], Bool), NoError> {
         
         return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), NoError> in
             
             if search.request.isEmpty {
-                return combineLatest(recentPeers(account: account), account.postbox.multiplePeersView(recentlyUsed) |> take(1))
+                return combineLatest(recentPeers(account: context.account), context.account.postbox.multiplePeersView(recentlyUsed) |> take(1))
                     |> deliverOn(prepareQueue)
                     |> mapToSignal { recentPeers, view -> Signal<([QuickSwitcherEntry], Bool), NoError> in
                         
@@ -270,24 +248,18 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                         }
                         
                         
-                        return .single((searchEntriesForPeers(peers, account: account, recentlyUsed: recentl, isLoading: false), false))
+                        return .single((searchEntriesForPeers(peers, account: context.account, recentlyUsed: recentl, isLoading: false), false))
                 }
                 
             } else  {
                 
-                let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
+                let foundLocalPeers = context.account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
                     return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
                 }
                 
-                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then( searchPeers(account: account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
+                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then( searchPeers(account: context.account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
                 
-              //  return combineLatest(localPeers, remotePeers) |> map {$0 + $1}
-                
-               // let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
-                
-              //  let foundRemotePeers = searchPeers(account: account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} }
-                
-                return combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, account.postbox.loadedPeerWithId(account.peerId)) |> map { values -> ([Peer], Bool) in
+                return combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values -> ([Peer], Bool) in
                     var peers = values.0
                     if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(search.request.lowercased()) {
                         peers.insert(values.1, at: 0)
@@ -298,7 +270,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 |> runOn(prepareQueue)
                 |> map { values -> ([QuickSwitcherEntry], Bool) in
                     
-                    return (searchEntriesForPeers(values.0, account: account, recentlyUsed: [], isLoading: values.1), values.1)
+                    return (searchEntriesForPeers(values.0, account: context.account, recentlyUsed: [], isLoading: values.1), values.1)
                 }
             }
             
@@ -307,8 +279,8 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
     }
     
     
-    init(account:Account) {
-        self.account = account
+    init(_ context: AccountContext) {
+        self.context = context
         super.init(frame: NSMakeRect(0, 0, 300, 360))
         bar = .init(height: 0)
     }
@@ -362,7 +334,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
             self?.search.set(state)
         })
         
-        let arguments = QuickSwitcherArguments(account)
+        let arguments = QuickSwitcherArguments(context)
         
         genericView.searchView.searchInteractions = searchInteractions
         
@@ -371,7 +343,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         
         let previous:Atomic<[AppearanceWrapperEntry<QuickSwitcherEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        disposable.set((combineLatest(start(account: account, recentlyUsed: account.context.recentlyPeerUsed, search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
+        disposable.set((combineLatest(start(context: context, recentlyUsed: context.recentlyPeerUsed, search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
             let entries = value.0.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments), value.1)
         } |> deliverOnMainQueue).start(next: { [weak self] value in
@@ -386,7 +358,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let selectedItem = genericView.tableView.selectedItem() as? ShortPeerRowItem {
-            account.context.mainNavigation?.push(ChatController(account: account, chatLocation: .peer(selectedItem.peer.id)))
+            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(selectedItem.peer.id)))
             close()
         }
         return .invoked

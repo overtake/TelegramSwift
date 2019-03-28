@@ -13,7 +13,7 @@ import PostboxMac
 import TelegramCoreMac
 
 private final class InstalledStickerPacksControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let openStickerPack: (StickerPackCollectionInfo) -> Void
     let removePack: (ItemCollectionId) -> Void
@@ -21,8 +21,8 @@ private final class InstalledStickerPacksControllerArguments {
     let openFeatured: () -> Void
     let openArchived: () -> Void
     let openSuggestionOptions: () -> Void
-    init(account: Account, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping () -> Void, openSuggestionOptions: @escaping() -> Void) {
-        self.account = account
+    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping () -> Void, openSuggestionOptions: @escaping() -> Void) {
+        self.context = context
         self.openStickerPack = openStickerPack
         self.removePack = removePack
         self.openStickersBot = openStickersBot
@@ -169,7 +169,7 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
         case let .packsTitle(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .pack(_, _, info, topItem, count, enabled, editing):
-            return StickerSetTableRowItem(initialSize, account: arguments.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .none, action: {
+            return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .none, action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 
@@ -279,8 +279,9 @@ private func prepareTransition(left:[AppearanceWrapperEntry<InstalledStickerPack
 class InstalledStickerPacksController: TableViewController {
 
     
+    private let disposbale = MetaDisposable()
     private func openSuggestionOptions() {
-        let postbox: Postbox = account.postbox
+        let postbox: Postbox = context.account.postbox
         if let view = (genericView.item(stableId: InstalledStickerPacksEntryId.index(0))?.view as? GeneralInteractedRowView)?.textView {
             showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(L10n.stickersSuggestAll, {
                 _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.all)}).start()
@@ -291,11 +292,15 @@ class InstalledStickerPacksController: TableViewController {
             })]), edge: .minX, inset: NSMakePoint(0,-30))
         }
     }
+    
+    deinit {
+        disposbale.dispose()
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let statePromise = ValuePromise(InstalledStickerPacksControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: InstalledStickerPacksControllerState())
         let updateState: ((InstalledStickerPacksControllerState) -> InstalledStickerPacksControllerState) -> Void = { f in
@@ -308,46 +313,47 @@ class InstalledStickerPacksController: TableViewController {
         let resolveDisposable = MetaDisposable()
         actionsDisposable.add(resolveDisposable)
         
-        let arguments = InstalledStickerPacksControllerArguments(account: account, openStickerPack: { info in
-            showModal(with: StickersPackPreviewModalController(account, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+        let arguments = InstalledStickerPacksControllerArguments(context: context, openStickerPack: { info in
+            showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { id in
             
             confirm(for: mainWindow, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in
                 switch result {
                 case .basic:
-                    _ = removeStickerPackInteractively(postbox: account.postbox, id: id, option: RemoveStickerPackOption.archive).start()
+                    _ = removeStickerPackInteractively(postbox: context.account.postbox, id: id, option: RemoveStickerPackOption.archive).start()
                 case .thrid:
                     break
                 }
             })
             
         }, openStickersBot: {
-            resolveDisposable.set((resolvePeerByName(account: account, name: "stickers") |> deliverOnMainQueue).start(next: { peerId in
+            resolveDisposable.set((resolvePeerByName(account: context.account, name: "stickers") |> deliverOnMainQueue).start(next: { peerId in
                 if let peerId = peerId {
                    // navigateToChatControllerImpl?(peerId)
                 }
             }))
         }, openFeatured: { [weak self] in
-            self?.navigationController?.push(FeaturedStickerPacksController(account))
+            self?.navigationController?.push(FeaturedStickerPacksController(context))
         }, openArchived: { [weak self] in
-            self?.navigationController?.push(ArchivedStickerPacksController(account))
+            self?.navigationController?.push(ArchivedStickerPacksController(context))
         }, openSuggestionOptions: { [weak self] in
             self?.openSuggestionOptions()
         })
         let stickerPacks = Promise<CombinedView>()
-        stickerPacks.set(account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
+        stickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
         
         let featured = Promise<[FeaturedStickerPackItem]>()
-       featured.set(account.viewTracker.featuredStickerPacks())
+       featured.set(context.account.viewTracker.featuredStickerPacks())
         
         
         let stickerSettingsKey = ApplicationSpecificPreferencesKeys.stickerSettings
         let preferencesKey: PostboxViewKey = .preferences(keys: Set([stickerSettingsKey]))
-        let preferencesView = account.postbox.combinedView(keys: [preferencesKey])
+        let preferencesView = context.account.postbox.combinedView(keys: [preferencesKey])
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InstalledStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
-        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, stickerPacks.get() |> deliverOnMainQueue, featured.get() |> deliverOnMainQueue, appearanceSignal, preferencesView)
+        
+        let signal = combineLatest(statePromise.get() |> deliverOnMainQueue, stickerPacks.get() |> deliverOnMainQueue, featured.get() |> deliverOnMainQueue, appearanceSignal, preferencesView)
             |> map { state, view, featured, appearance, preferencesView -> TableUpdateTransition in
                 
                 var stickerSettings = StickerSettings.defaultSettings
@@ -359,11 +365,115 @@ class InstalledStickerPacksController: TableViewController {
                 
                 let entries = installedStickerPacksControllerEntries(state: state, stickerSettings: stickerSettings, view: view, featured: featured).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
-            } |> beforeNext { [weak self] _ in
+        } |> beforeNext { [weak self] _ in
                 self?.readyOnce()
-            } |> afterDisposed {
-                actionsDisposable.dispose()
-        } )
+        } |> afterDisposed {
+            actionsDisposable.dispose()
+        } |> deliverOnMainQueue
+        
+        
+        disposbale.set(signal.start(next: { [weak self] transition in
+            guard let `self` = self else {return}
+            
+            self.genericView.merge(with: transition)
+            
+            if !transition.isEmpty {
+                var start: Int? = nil
+                var length: Int = 0
+                self.genericView.enumerateItems(with: { item -> Bool in
+                    if item is StickerSetTableRowItem {
+                        if start == nil {
+                            start = item.index
+                        }
+                        length += 1
+                    } else if start != nil {
+                        return false
+                    }
+                    return true
+                })
+                if let start = start {
+                    self.genericView.resortController = TableResortController(resortRange: NSMakeRange(start, length), startTimeout: 0.2, start: { _ in }, resort: { _ in }, complete: { fromIndex, toIndex in
+                        
+                        
+                        if fromIndex == toIndex {
+                            return
+                        }
+                        
+                        let entries = previousEntries.with {$0}.map( {$0.entry })
+                        
+                        
+                        let fromEntry = entries[fromIndex]
+                        guard case let .pack(_, _, fromPackInfo, _, _, _, _) = fromEntry else {
+                            return
+                        }
+                        
+                        var referenceId: ItemCollectionId?
+                        var beforeAll = false
+                        var afterAll = false
+                        if toIndex < entries.count {
+                            switch entries[toIndex] {
+                            case let .pack(_, _, toPackInfo, _, _, _, _):
+                                referenceId = toPackInfo.id
+                            default:
+                                if entries[toIndex] < fromEntry {
+                                    beforeAll = true
+                                } else {
+                                    afterAll = true
+                                }
+                            }
+                        } else {
+                            afterAll = true
+                        }
+                        
+                        
+                        let _ = (context.account.postbox.transaction { transaction -> Void in
+                            var infos = transaction.getItemCollectionsInfos(namespace: Namespaces.ItemCollection.CloudStickerPacks)
+                            var reorderInfo: ItemCollectionInfo?
+                            for i in 0 ..< infos.count {
+                                if infos[i].0 == fromPackInfo.id {
+                                    reorderInfo = infos[i].1
+                                    infos.remove(at: i)
+                                    break
+                                }
+                            }
+                            if let reorderInfo = reorderInfo {
+                                if let referenceId = referenceId {
+                                    var inserted = false
+                                    for i in 0 ..< infos.count {
+                                        if infos[i].0 == referenceId {
+                                            if fromIndex < toIndex {
+                                                infos.insert((fromPackInfo.id, reorderInfo), at: i + 1)
+                                            } else {
+                                                infos.insert((fromPackInfo.id, reorderInfo), at: i)
+                                            }
+                                            inserted = true
+                                            break
+                                        }
+                                    }
+                                    if !inserted {
+                                        infos.append((fromPackInfo.id, reorderInfo))
+                                    }
+                                } else if beforeAll {
+                                    infos.insert((fromPackInfo.id, reorderInfo), at: 0)
+                                } else if afterAll {
+                                    infos.append((fromPackInfo.id, reorderInfo))
+                                }
+                                addSynchronizeInstalledStickerPacksOperation(transaction: transaction, namespace: Namespaces.ItemCollection.CloudStickerPacks, content: .sync)
+                                transaction.replaceItemCollectionInfos(namespace: Namespaces.ItemCollection.CloudStickerPacks, itemCollectionInfos: infos)
+                            }
+                        }).start()
+                        
+                    })
+                } else {
+                    self.genericView.resortController = nil
+                }
+            }
+            
+           
+            
+        }))
+        
+        
     }
     
 }

@@ -14,10 +14,10 @@ import TGUIKit
 
 class MGalleryPeerPhotoItem: MGalleryItem {
     let media:TelegramMediaImage
-    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
+    override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         
         self.media = entry.photo!
-        super.init(account, entry, pagerSize)
+        super.init(context, entry, pagerSize)
     }
     
     override var sizeValue: NSSize {
@@ -36,7 +36,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     
     override var status:Signal<MediaResourceStatus, NoError> {
         if let largestRepresentation = media.representationForDisplayAtSize(NSMakeSize(640, 640)) {
-            return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource)
+            return context.account.postbox.mediaBox.resourceStatus(largestRepresentation.resource)
         } else {
             return .never()
         }
@@ -45,7 +45,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     override func request(immediately: Bool) {
         
         
-        let account = self.account
+        let context = self.context
         let media = self.media
         let entry = self.entry
         
@@ -63,7 +63,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             }
             
         } |> mapToSignal { size, orientation -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments, ImageOrientation?), NoError> in
-            return chatMessagePhoto(account: account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, synchronousLoad: true)
+            return chatMessagePhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, synchronousLoad: true)
                 |> map { transform in
                     return (transform, TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()), orientation)
                 }
@@ -76,15 +76,15 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         }
         
 
-        if let representation = media.representations.last {
-            path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
+        if let representation = media.representationForDisplayAtSize(NSMakeSize(640, 640))  {
+            path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
                 
                 if resource.complete {
                     return .single(link(path:resource.path, ext:kMediaImageExt)!)
                 }
                 return .never()
             })
-        }
+        } 
         
         self.image.set(result |> deliverOnMainQueue)
         
@@ -93,12 +93,12 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        fetching.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640)).start())
+        fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640)).start())
     }
     
     override func cancel() -> Void {
         super.cancel()
-        chatMessagePhotoCancelInteractiveFetch(account: account, photo: media)
+        chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
     }
 
 }

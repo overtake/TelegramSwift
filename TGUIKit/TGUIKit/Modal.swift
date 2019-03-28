@@ -11,8 +11,9 @@ import SwiftSignalKitMac
 
 
 private class ModalBackground : Control {
+    var isOverlay: Bool = false
     fileprivate override func scrollWheel(with event: NSEvent) {
-        
+      //  super.scrollWheel(with: event)
     }
     override func cursorUpdate(with event: NSEvent) {
         NSCursor.arrow.set()
@@ -28,7 +29,9 @@ private class ModalBackground : Control {
     override func mouseExited(with event: NSEvent) {
         
     }
-
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return false
+    }
 }
 
 private var activeModals:[WeakReference<Modal>] = []
@@ -90,12 +93,12 @@ private class ModalInteractionsContainer : View {
         acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
         acceptView.set(text: interactions.acceptTitle, for: .Normal)
         acceptView.disableActions()
-        _ = acceptView.sizeToFit()
+        _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
         if let cancelTitle = interactions.cancelTitle {
             cancelView = TitleButton()
             cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
             cancelView?.set(text: cancelTitle, for: .Normal)
-            _ = cancelView?.sizeToFit()
+            _ = cancelView?.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
             
         } else {
             cancelView = nil
@@ -163,17 +166,17 @@ private class ModalInteractionsContainer : View {
     }
     
     public func updateDone() {
-        _ = acceptView.sizeToFit()
+        _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
         needsLayout = true
     }
     
     public func updateCancel() {
-        _ = cancelView?.sizeToFit()
+        _ = cancelView?.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
         needsLayout = true
     }
     public func updateThrid(_ text:String) {
         acceptView.set(text: text, for: .Normal)
-        _ = acceptView.sizeToFit()
+        _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
         
         needsLayout = true
     }
@@ -207,19 +210,41 @@ private class ModalInteractionsContainer : View {
 
 private final class ModalHeaderView: View {
     let titleView: TextView = TextView()
-    required init(frame frameRect: NSRect, title: String) {
+    var leftButton: ImageButton?
+    var rightButton: ImageButton?
+    required init(frame frameRect: NSRect, data: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)) {
         super.init(frame: frameRect)
         
-        titleView.update(TextViewLayout(.initialize(string: title, color: presentation.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
+        titleView.update(TextViewLayout(.initialize(string: data.center?.title, color: presentation.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         border = [.Bottom]
+        
+        if let right = data.right {
+            rightButton = ImageButton()
+            if let image = right.image {
+                rightButton?.set(image: image, for: .Normal)
+            }
+            rightButton?.set(handler: { _ in
+                right.handler?()
+            }, for: .Click)
+            
+            _ = rightButton?.sizeToFit()
+            addSubview(rightButton!)
+        }
+        
         addSubview(titleView)
     }
     
     override func layout() {
         super.layout()
-        titleView.layout?.measure(width: frame.width - 40)
+        var additionalSize: CGFloat = 0
+        if let rightButton = rightButton {
+            additionalSize += rightButton.frame.width * 2
+            rightButton.centerY(x: frame.width - rightButton.frame.width - 20)
+        }
+        
+        titleView.layout?.measure(width: frame.width - 40 - additionalSize)
         titleView.update(titleView.layout)
         titleView.center()
     }
@@ -228,7 +253,7 @@ private final class ModalHeaderView: View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required public init(frame frameRect: NSRect) {
+    required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
 }
@@ -255,6 +280,10 @@ private class ModalContainerView: View {
     }
 }
 
+extension Modal : ObservableViewDelegate {
+    
+}
+
 public class Modal: NSObject {
     
     private var background:ModalBackground
@@ -275,6 +304,7 @@ public class Modal: NSObject {
         self.animated = animated
         self.isOverlay = isOverlay
         background = ModalBackground()
+        background.isOverlay = isOverlay
         background.backgroundColor = controller.background
         background.layer?.disableActions()
         self.interactions = controller.modalInteractions
@@ -285,7 +315,7 @@ public class Modal: NSObject {
             interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
         }
         if let header = controller.modalHeader {
-            headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), title: header)
+            headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), data: header)
         }
        
         if controller.isFullScreen {
@@ -309,7 +339,10 @@ public class Modal: NSObject {
             container.addSubview(interactionsView)
         }
         
-      
+        
+//        if isOverlay {
+//            (window.contentView as? ObervableView)?.add(listener: self)
+//        }
         
         background.addSubview(container)
         
@@ -318,12 +351,12 @@ public class Modal: NSObject {
         if controller.handleEvents {
             window.set(responder: { [weak controller] () -> NSResponder? in
                 return controller?.firstResponder()
-            }, with: self, priority: .high)
+            }, with: self, priority: controller.responderPriority)
             
             if controller.handleAllEvents {
                 window.set(handler: { () -> KeyHandlerResult in
                     return .invokeNext
-                }, with: self, for: .All, priority: .high)
+                }, with: self, for: .All, priority: controller.responderPriority)
             }
             
             window.set(escape: {[weak self] () -> KeyHandlerResult in
@@ -331,14 +364,14 @@ public class Modal: NSObject {
                     self?.controller?.close()
                 }
                 return .invoked
-            }, with: self, priority: .high)
+            }, with: self, priority: controller.responderPriority)
             
             window.set(handler: { [weak self] () -> KeyHandlerResult in
                 if let controller = self?.controller {
                     return controller.returnKeyAction()
                 }
                 return .invokeNext
-            }, with: self, for: .Return, priority: .high)
+            }, with: self, for: .Return, priority: controller.responderPriority)
         }
         
        
@@ -354,9 +387,25 @@ public class Modal: NSObject {
                 self?.controller?.measure(size: size)
             }
         }
+        
+        
         activeModals.append(WeakReference(value: self))
     }
     
+    func observableView(_ view: NSView, didAddSubview: NSView) {
+        if isOverlay {
+            var subviews = self.window.contentView!.subviews
+            if let index = subviews.firstIndex(of: self.background) {
+                subviews.remove(at: index)
+                subviews.append(self.background)
+            }
+            self.window.contentView?.subviews = subviews
+        }
+    }
+    
+    func observableview(_ view: NSView, willRemoveSubview: NSView) {
+        
+    }
     
     public func resize(with size:NSSize, animated:Bool = true) {
         let focus:NSRect
@@ -364,14 +413,18 @@ public class Modal: NSObject {
         var headerOffset: CGFloat = 0
         if let headerView = headerView {
             headerOffset += headerView.frame.height
+            headerView.setFrameSize(size.width, headerView.frame.height)
         }
         
         if let interactions = controller?.modalInteractions {
             focus = background.focus(NSMakeSize(size.width, size.height + interactions.height + headerOffset))
             interactionsView?.change(pos: NSMakePoint(0, size.height + headerOffset), animated: animated)
+            interactionsView?.setFrameSize(NSMakeSize(size.width, interactions.height))
         } else {
             focus = background.focus(NSMakeSize(size.width, size.height + headerOffset))
         }
+        
+        
         if focus != container.frame {
             container.change(size: focus.size, animated: animated)
             container.change(pos: focus.origin, animated: animated)
@@ -424,6 +477,7 @@ public class Modal: NSObject {
     
     deinit {
         disposable.dispose()
+        (window.contentView as? ObervableView)?.remove(listener: self)
         for i in stride(from: activeModals.count - 1, to: -1, by: -1) {
             if activeModals[i].value == self {
                 activeModals.remove(at: i)
@@ -446,7 +500,7 @@ public class Modal: NSObject {
         // if let view
         if let controller = controller {
             disposable.set((controller.ready.get() |> take(1)).start(next: { [weak self, weak controller] ready in
-                if let strongSelf = self, let view = (strongSelf.isOverlay ? strongSelf.window.contentView?.superview : strongSelf.window.contentView), let controller = controller {
+                if let strongSelf = self, let view = strongSelf.window.contentView, let controller = controller {
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.background.frame = view.bounds
                     strongSelf.container.center()
@@ -469,10 +523,25 @@ public class Modal: NSObject {
                             strongSelf?.container.setFrameSize(size)
                         }
                     }
-    
-                    view.addSubview(strongSelf.background)
+                    
+                    var belowView: NSView?
+                    
+                    for subview in view.subviews.reversed() {
+                        if let subview = subview as? ModalBackground {
+                            if subview.isOverlay {
+                                belowView = subview
+
+                            }
+                        }
+                    }
+                    
+                    if let belowView = belowView {
+                        view.addSubview(strongSelf.background, positioned: .below, relativeTo: belowView)
+                    } else {
+                        view.addSubview(strongSelf.background)
+                    }
                     if let value = strongSelf.controller?.becomeFirstResponder(), value {
-                        strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                        _ = strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
                     }
                     
                     if strongSelf.animated {
@@ -521,7 +590,7 @@ public func closeAllModals() {
     }
 }
 
-public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false) -> Void {
+public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
         if weakModal.value?.controller?.className == controller.className {
@@ -529,7 +598,7 @@ public func showModal(with controller:ModalViewController, for window:Window, is
         }
     }
     
-    controller.modal = Modal(controller: controller, for: window, isOverlay: isOverlay)
+    controller.modal = Modal(controller: controller, for: window, animated: animated, isOverlay: isOverlay)
     if #available(OSX 10.12.2, *) {
         window.touchBar = nil
     }
@@ -541,12 +610,11 @@ public func closeModal(_ type: ModalViewController.Type) -> Void {
         let weakModal = activeModals[i]
         if let controller = weakModal.value?.controller, controller.isKind(of: type) {
             weakModal.value?.close()
-            activeModals.remove(at: i)
         }
     }
 }
 
-public func showModal(with controller: NavigationViewController, for window:Window, isOverlay: Bool = false) -> Void {
+public func showModal(with controller: NavigationViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
         if weakModal.value?.controller?.className == controller.className {
@@ -554,7 +622,7 @@ public func showModal(with controller: NavigationViewController, for window:Wind
         }
     }
     
-    controller.modal = Modal(controller: ModalController(controller), for: window, isOverlay: isOverlay)
+    controller.modal = Modal(controller: ModalController(controller), for: window, animated: animated, isOverlay: isOverlay)
     controller.modal?.show()
 }
 

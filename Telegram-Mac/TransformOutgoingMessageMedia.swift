@@ -95,9 +95,8 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                             
                             let options = NSMutableDictionary()
                             options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
-                            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                             
-                            let colorQuality: Float = 0.6
+                            let colorQuality: Float = 0.2
                             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
                             
                             

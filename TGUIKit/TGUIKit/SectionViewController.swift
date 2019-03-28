@@ -17,9 +17,9 @@ private final class SectionControllerArguments {
 }
 
 public class SectionControllerView : View {
-    private var header: View = View()
-    private let selector:View = View()
-    private let container: View = View()
+    fileprivate let header: View = View()
+    fileprivate let selector:View = View()
+    fileprivate let container: View = View()
     private weak var current: ViewController?
     
     public var selectorIndex:Int = 0 {
@@ -68,21 +68,26 @@ public class SectionControllerView : View {
         needsLayout = true
     }
     
-    fileprivate func select(controller: ViewController, index: Int, animated: Bool) {
+    
+    fileprivate func select(controller: ViewController, index: Int, animated: Bool, notifyApper: Bool = true) {
         let previousIndex = self.selectorIndex
         let previous = self.current
         self.current = controller
         selectorIndex = index
         
         controller.view.frame = container.bounds
-        previous?.viewWillDisappear(animated)
+        if notifyApper {
+            previous?.viewWillDisappear(animated)
+        }
+        
+        let duration: Double = 0.2
         
         container.addSubview(controller.view)
         
         if animated {
             CATransaction.begin()
             let container = header.subviews[index]
-            selector.change(pos: NSMakePoint(container.frame.minX, selector.frame.minY), animated: animated, timingFunction: CAMediaTimingFunctionName.spring)
+            selector.change(pos: NSMakePoint(container.frame.minX, selector.frame.minY), animated: animated, duration: duration, timingFunction: .spring)
             
             
             let pto: NSPoint
@@ -97,14 +102,14 @@ public class SectionControllerView : View {
                 nfrom = NSMakePoint(-container.frame.width, 0)
             }
             
-            previous?.view._change(pos: pto, animated: animated, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak previous, weak controller] complete in
+            previous?.view._change(pos: pto, animated: animated, duration: duration, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak previous, weak controller] complete in
                 if complete {
                     previous?.view.removeFromSuperview()
                     previous?.viewDidDisappear(animated)
                     controller?.viewDidAppear(animated)
                 }
             })
-            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, timingFunction: CAMediaTimingFunctionName.spring)
+            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
             CATransaction.commit()
         } else {
             container.removeAllSubviews()
@@ -200,7 +205,7 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         disposable.dispose()
     }
     
-    fileprivate func select(_ index:Int, _ animated: Bool) {
+    fileprivate func select(_ index:Int, _ animated: Bool, notifyApper: Bool = true) {
         if selectedIndex != index || !animated {
             selectedSection = sections[index]
             sections[index].controller._frameRect = NSMakeRect(0, 0, frame.width, frame.height - 50)
@@ -208,10 +213,12 @@ public class SectionViewController: GenericViewController<SectionControllerView>
             let controller = sections[index].controller
             selectedIndex = index
             selectionUpdateHandler?(index)
-            sections[index].controller.viewWillAppear(animated)
+            if notifyApper {
+                sections[index].controller.viewWillAppear(animated)
+            }
             disposable.set((sections[index].controller.ready.get() |> filter {$0} |> take(1)).start(next: { [weak self, weak controller] ready in
                 if let strongSelf = self, let controller = controller {
-                    strongSelf.genericView.select(controller: controller, index: index, animated: animated)
+                    strongSelf.genericView.select(controller: controller, index: index, animated: animated, notifyApper: notifyApper)
                 }
             }))
         }
@@ -246,7 +253,112 @@ public class SectionViewController: GenericViewController<SectionControllerView>
             }
             
             return .invoked
-        }, with: self, for: .Tab)
+        }, with: self, for: .Tab, priority: .high)
+        
+        
+        window?.add(swipe: { [weak self] direction -> SwipeHandlerResult in
+            guard let `self` = self, !self.sections.isEmpty else {return .nothing}
+
+            if !self.selectedSection.controller.supportSwipes {
+                return .nothing
+            }
+            
+            switch direction {
+            case let .left(state):
+                
+                switch state {
+                case .start:
+                    if self.selectedIndex > 0 {
+                        let new = self.sections[self.selectedIndex - 1].controller
+                        new._frameRect = self.genericView.container.bounds
+                        new.view.frame = self.genericView.container.bounds
+                        new.viewWillAppear(false)
+                        self.genericView.container.addSubview(new.view, positioned: .below, relativeTo: self.selectedSection.controller.view)
+                        
+                        return .success(new)
+                    }
+                case let .swiping(delta, controller):
+                    
+                    let delta = min(max(0, delta), controller.frame.width)
+                    
+                   // self.genericView.selector.change(pos: NSMakePoint(container.frame.minX, genericView.selector.frame.minY), animated: animated, timingFunction: CAMediaTimingFunctionName.spring)
+
+                    let selectorFrame = self.genericView.header.subviews[self.selectedIndex].frame
+
+                    self.genericView.selector.setFrameOrigin(NSMakePoint(selectorFrame.minX - selectorFrame.width * (delta / controller.frame.width), self.genericView.selector.frame.minY))
+                    self.selectedSection.controller.frame = NSMakeRect(delta, self.selectedSection.controller.frame.minY, self.selectedSection.controller.frame.width, self.selectedSection.controller.frame.height)
+                    controller.frame = NSMakeRect(delta - controller.frame.width, controller.frame.minY, controller.frame.width, controller.frame.height)
+                    return .deltaUpdated(available: delta)
+                case let .success(_, controller):
+                    controller.view._change(pos: NSMakePoint(0, controller.frame.minY), animated: true)
+                    let selectorFrame = self.genericView.header.subviews[self.selectedIndex - 1].frame
+                    self.genericView.selector.change(pos: NSMakePoint(selectorFrame.minX, self.genericView.selector.frame.minY), animated: animated)
+                    self.selectedSection.controller.view._change(pos: NSMakePoint(self.selectedSection.controller.frame.width, self.selectedSection.controller.frame.minY), animated: true, completion: { [weak self] completed in
+                        if completed, let index = self?.sections.lastIndex(where: {$0.controller == controller}) {
+                            self?.select(index, false, notifyApper: false)
+                        }
+                    })
+                case let .failed(_, controller):
+                    controller.view._change(pos: NSMakePoint(-controller.frame.width, controller.frame.minY), animated: true)
+                    let selectorFrame = self.genericView.header.subviews[self.selectedIndex].frame
+                    self.genericView.selector.change(pos: NSMakePoint(selectorFrame.minX, self.genericView.selector.frame.minY), animated: animated)
+                    self.selectedSection.controller.view._change(pos: NSMakePoint(0, self.selectedSection.controller.frame.minY), animated: true, completion: { [weak controller] completed in
+                        if completed {
+                            controller?.removeFromSuperview()
+                        }
+                    })
+                }
+                
+                break
+            case let .right(state):
+                switch state {
+                case .start:
+                    if self.selectedIndex < self.sections.count - 1 {
+                        let new = self.sections[self.selectedIndex + 1].controller
+                        new._frameRect = self.genericView.container.bounds
+                        new.view.frame = self.genericView.container.bounds
+                        new.viewWillAppear(false)
+                        self.genericView.container.addSubview(new.view, positioned: .below, relativeTo: self.selectedSection.controller.view)
+                        return .success(new)
+                    }
+                case let .swiping(delta, controller):
+                    
+                    let delta = min(max(0, delta), controller.frame.width)
+                    
+                    
+                    let selectorFrame = self.genericView.header.subviews[self.selectedIndex].frame
+                    self.genericView.selector.setFrameOrigin(NSMakePoint(selectorFrame.minX + selectorFrame.width * ( delta / controller.frame.width), self.genericView.selector.frame.minY))
+                    
+                    self.selectedSection.controller.frame = NSMakeRect(-delta, self.selectedSection.controller.frame.minY, self.selectedSection.controller.frame.width, self.selectedSection.controller.frame.height)
+                    controller.frame = NSMakeRect(controller.frame.width - delta, controller.frame.minY, controller.frame.width, controller.frame.height)
+                    return .deltaUpdated(available: delta)
+                case let .success(_, controller):
+                    controller.view._change(pos: NSMakePoint(0, controller.frame.minY), animated: true)
+                    let selectorFrame = self.genericView.header.subviews[self.selectedIndex + 1].frame
+                    self.genericView.selector.change(pos: NSMakePoint(selectorFrame.minX, self.genericView.selector.frame.minY), animated: true)
+                    self.selectedSection.controller.view._change(pos: NSMakePoint(-self.selectedSection.controller.frame.width, self.selectedSection.controller.frame.minY), animated: true, completion: { [weak self] completed in
+                        if completed, let index = self?.sections.lastIndex(where: {$0.controller == controller}) {
+                            self?.select(index, false, notifyApper: false)
+                        }
+                    })
+                case let .failed(_, controller):
+                    controller.view._change(pos: NSMakePoint(controller.frame.width, controller.frame.minY), animated: true)
+                    let selectorFrame = self.genericView.header.subviews[self.selectedIndex].frame
+                    self.genericView.selector.change(pos: NSMakePoint(selectorFrame.minX, self.genericView.selector.frame.minY), animated: true)
+                    self.selectedSection.controller.view._change(pos: NSMakePoint(0, self.selectedSection.controller.frame.minY), animated: true, completion: { [weak controller] completed in
+                        if completed {
+                            controller?.removeFromSuperview()
+                        }
+                    })
+                }
+            case .none:
+                break
+            }
+            
+            return .nothing
+            
+        }, with: self.genericView, identifier: SwipeIdentifier("section-swipe"))
+        
     }
     override public func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)

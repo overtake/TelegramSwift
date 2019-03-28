@@ -16,6 +16,8 @@ enum SelectivePrivacySettingsKind {
     case presence
     case groupInvitations
     case voiceCalls
+    case profilePhoto
+    case forwards
 }
 
 private enum SelectivePrivacySettingType {
@@ -42,14 +44,14 @@ enum SelectivePrivacySettingsPeerTarget {
 
 
 private final class SelectivePrivacySettingsControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let updateType: (SelectivePrivacySettingType) -> Void
     let openEnableFor: (SelectivePrivacySettingsPeerTarget) -> Void
     let openDisableFor: (SelectivePrivacySettingsPeerTarget) -> Void
     let p2pMode: (SelectivePrivacySettingType) -> Void
-    init(account: Account, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void) {
-        self.account = account
+    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void) {
+        self.context = context
         self.updateType = updateType
         self.openEnableFor = openEnableFor
         self.openDisableFor = openDisableFor
@@ -279,6 +281,17 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
         settingInfoText = L10n.privacySettingsControllerPhoneCallDescription
         disableForText = L10n.privacySettingsControllerNeverAllow
         enableForText = L10n.privacySettingsControllerAlwaysAllow
+    case .profilePhoto:
+        settingTitle = L10n.privacySettingsControllerProfilePhotoWhoCanSeeMyPhoto
+        settingInfoText = L10n.privacySettingsControllerProfilePhotoCustomHelp
+        disableForText = L10n.privacySettingsControllerNeverShareWith
+        enableForText = L10n.privacySettingsControllerAlwaysShareWith
+    case .forwards:
+        settingTitle = L10n.privacySettingsControllerForwardsWhoCanForward
+        settingInfoText = L10n.privacySettingsControllerForwardsCustomHelp
+        disableForText = L10n.privacySettingsControllerNeverAllow
+        enableForText = L10n.privacySettingsControllerAlwaysAllow
+
     }
     
     entries.append(.settingHeader(sectionId, settingTitle))
@@ -286,9 +299,9 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
     entries.append(.everybody(sectionId, state.setting == .everybody))
     entries.append(.contacts(sectionId, state.setting == .contacts))
     switch kind {
-    case .presence, .voiceCalls:
+    case .presence, .voiceCalls, .forwards:
         entries.append(.nobody(sectionId, state.setting == .nobody))
-    case .groupInvitations:
+    case .groupInvitations, .profilePhoto:
         break
     }
     entries.append(.settingInfo(sectionId, settingInfoText))
@@ -356,12 +369,12 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
     private let updated: (SelectivePrivacySettings, SelectivePrivacySettings?) -> Void
     private var savePressed:(()->Void)?
     private let callSettings: SelectivePrivacySettings?
-    init(account: Account, kind: SelectivePrivacySettingsKind, current: SelectivePrivacySettings, callSettings: SelectivePrivacySettings?, updated: @escaping (SelectivePrivacySettings, SelectivePrivacySettings?) -> Void) {
+    init(_ context: AccountContext, kind: SelectivePrivacySettingsKind, current: SelectivePrivacySettings, callSettings: SelectivePrivacySettings? = nil, updated: @escaping (SelectivePrivacySettings, SelectivePrivacySettings?) -> Void) {
         self.kind = kind
         self.current = current
         self.updated = updated
         self.callSettings = callSettings
-        super.init(account)
+        super.init(context)
     }
     
     override func changeState() {
@@ -375,7 +388,7 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
 
     
     override func viewDidLoad() {
-        let account = self.account
+        let context = self.context
         let kind = self.kind
         let current = self.current
         let updated = self.updated
@@ -429,7 +442,7 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
         actionsDisposable.add(updateSettingsDisposable)
         
         
-        let arguments = SelectivePrivacySettingsControllerArguments(account: account, updateType: { type in
+        let arguments = SelectivePrivacySettingsControllerArguments(context: context, updateType: { type in
             updateState {
                 $0.withUpdatedSetting(type)
             }
@@ -442,13 +455,18 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
                 title = L10n.privacySettingsControllerAlwaysAllow
             case .voiceCalls:
                 title = L10n.privacySettingsControllerAlwaysAllow
+            case .profilePhoto:
+                title = L10n.privacySettingsControllerAlwaysShare
+            case .forwards:
+                title = L10n.privacySettingsControllerAlwaysAllow
+
             }
             var peerIds = Set<PeerId>()
             updateState { state in
                 peerIds = state.enableFor
                 return state
             }
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(account: account, title: title, initialPeerIds: Array(peerIds), updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeerIds: Array(peerIds), updated: { updatedPeerIds in
                 updateState { state in
                     switch target {
                     case .main:
@@ -467,13 +485,18 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
                 title = L10n.privacySettingsControllerNeverAllow
             case .voiceCalls:
                 title = L10n.privacySettingsControllerNeverAllow
+            case .profilePhoto:
+                title = L10n.privacySettingsControllerNeverShareWith
+            case .forwards:
+                title = L10n.privacySettingsControllerNeverAllow
+
             }
             var peerIds = Set<PeerId>()
             updateState { state in
                 peerIds = state.disableFor
                 return state
             }
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(account: account, title: title, initialPeerIds: Array(peerIds), updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeerIds: Array(peerIds), updated: { updatedPeerIds in
                 updateState { state in
                     switch target {
                     case .main:
@@ -535,9 +558,13 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
                                 type = .groupInvitations
                             case .voiceCalls:
                                 type = .voiceCalls
+                            case .profilePhoto:
+                                type = .profilePhoto
+                            case .forwards:
+                                type = .forwards
                             }
                             
-                            updateSettingsDisposable.set((updateSelectiveAccountPrivacySettings(account: account, type: type, settings: settings) |> deliverOnMainQueue).start(completed: {
+                            updateSettingsDisposable.set((updateSelectiveAccountPrivacySettings(account: context.account, type: type, settings: settings) |> deliverOnMainQueue).start(completed: {
                                 updateState { state in
                                     return state.withUpdatedSaving(false)
                                 }
@@ -556,6 +583,10 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
                     title = L10n.privacySettingsGroups
                 case .voiceCalls:
                     title = L10n.privacySettingsVoiceCalls
+                case .profilePhoto:
+                    title = L10n.privacySettingsProfilePhoto
+                case .forwards:
+                    title = L10n.privacySettingsForwards
                 }
                 
                 self?.setCenterTitle(title)

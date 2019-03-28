@@ -12,7 +12,7 @@ import PostboxMac
 import TelegramCoreMac
 class ChatListHoleRowItem: TableRowItem {
 
-    private var account:Account
+    private var context: AccountContext
     private var hole:ChatListHole
     
     override var stableId: AnyHashable {
@@ -23,16 +23,18 @@ class ChatListHoleRowItem: TableRowItem {
         return 20
     }
     
-    public init(_ initialSize:NSSize, _ account:Account, _ object: ChatListHole) {
+    public init(_ initialSize:NSSize, _ context: AccountContext, _ object: ChatListHole) {
         self.hole = object
-        self.account = account
+        self.context = context
         super.init(initialSize)
     }
     
     override func viewClass() -> AnyClass {
         return ChatListHoleRowView.self
     }
-    
-    
+}
+
+
+class ChatListHoleRowView: TableRowView {
     
 }

@@ -8,7 +8,7 @@
 
 import Cocoa
 
-open class BarView: OverlayControl {
+open class BarView: Control {
     
     
     public var clickHandler:()->Void = {}

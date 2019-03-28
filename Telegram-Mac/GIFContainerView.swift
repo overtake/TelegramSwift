@@ -25,7 +25,7 @@ class GIFContainerView: Control {
     private let playerDisposable = MetaDisposable()
     
     private var reference:MediaResourceReference?
-    private var account:Account?
+    private var context: AccountContext?
     private var size:NSSize = NSZeroSize
     private var ignoreWindowKey: Bool = false
     private weak var tableView:TableView?
@@ -50,8 +50,8 @@ class GIFContainerView: Control {
         player.setVideoLayerGravity(.resizeAspectFill)
         
         set(handler: { [weak self] control in
-            if let `self` = self, let window = self.window as? Window, let table = self.tableView, let account = self.account {
-                _ = startModalPreviewHandle(table, viewType: GifPreviewModalView.self, window: window, account: account)
+            if let `self` = self, let window = self.window as? Window, let table = self.tableView, let context = self.context {
+                _ = startModalPreviewHandle(table, window: window, context: context)
             }
         }, for: .LongMouseDown)
         
@@ -80,14 +80,14 @@ class GIFContainerView: Control {
     
     func cancelFetching() {
         if let reference = reference {
-            account?.postbox.mediaBox.cancelInteractiveResourceFetch(reference.resource)
+            context?.account.postbox.mediaBox.cancelInteractiveResourceFetch(reference.resource)
         }
     }
     
     
     func fetch() {
-        if let account = account, let reference = reference {
-            fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: reference, statsCategory: .file).start())
+        if let context = context, let reference = reference {
+            fetchDisposable.set(fetchedMediaResource(postbox: context.account.postbox, reference: reference, statsCategory: .file).start())
         }
     }
     
@@ -163,10 +163,10 @@ class GIFContainerView: Control {
         updatePlayerIfNeeded()
     }
     
-    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, file: TelegramMediaFile?, account: Account, table: TableView?, ignoreWindowKey: Bool = false, iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>) {
+    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, file: TelegramMediaFile?, context: AccountContext, table: TableView?, ignoreWindowKey: Bool = false, iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>) {
         let updated = self.reference == nil || !self.reference!.resource.id.isEqual(to: reference.resource.id)
         self.tableView = table
-        self.account = account
+        self.context = context
         self.reference = reference
         self.size = size
         self.setFrameSize(size)
@@ -202,9 +202,9 @@ class GIFContainerView: Control {
 
         player.set(arguments: arguments)
         
-        let updatedStatusSignal = account.postbox.mediaBox.resourceStatus(reference.resource)
+        let updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(reference.resource)
         
-        self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(reference.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil}) |> deliverOnMainQueue).start(next: { [weak self] status, data in
+        self.statusDisposable.set((combineLatest(updatedStatusSignal, context.account.postbox.mediaBox.resourceData(reference.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil}) |> deliverOnMainQueue).start(next: { [weak self] status, data in
             if let strongSelf = self {
                 if case .Local = status {
                     

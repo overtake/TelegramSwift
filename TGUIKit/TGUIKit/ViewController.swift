@@ -144,7 +144,7 @@ public class ControllerToaster {
 }
 
 open class ViewController : NSObject {
-    fileprivate var _view:NSView?;
+    fileprivate var _view:NSView?
     public var _frameRect:NSRect
     
     private var toaster:ControllerToaster?
@@ -161,7 +161,7 @@ open class ViewController : NSObject {
     
     public var noticeResizeWhenLoaded: Bool = true
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:CAMediaTimingFunctionName.spring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:CAMediaTimingFunctionName.spring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
     public var leftBarView:BarView!
@@ -585,7 +585,9 @@ open class ViewController : NSObject {
     }
     
     public func removeFromSuperview() ->Void {
-        self.view.removeFromSuperview()
+        if isLoaded() {
+            self.view.removeFromSuperview()
+        }
     }
     
     
@@ -668,11 +670,21 @@ open class GenericViewController<T> : ViewController where T:NSView {
     open func initializer() -> T {
         let vz = T.self as NSView.Type
         //controller.bar.height
-        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)) as! T;
+        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)) as! T
     }
     
 }
 
+public struct ModalHeaderData {
+    public let title: String?
+    public let image: CGImage?
+    public let handler: (()-> Void)?
+    public init(title: String? = nil, image: CGImage? = nil, handler: (()->Void)? = nil) {
+        self.title = title
+        self.image = image
+        self.handler = handler
+    }
+}
 
 open class ModalViewController : ViewController {
     
@@ -724,7 +736,7 @@ open class ModalViewController : ViewController {
     open var modalInteractions:ModalInteractions? {
         return nil
     }
-    open var modalHeader: String? {
+    open var modalHeader: (left:ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
         return nil
     }
     
@@ -768,39 +780,44 @@ open class ModalViewController : ViewController {
 
 }
 
-public class ModalController : ModalViewController {
+open class ModalController : ModalViewController {
     private let controller: NavigationViewController
-    init(_ controller: NavigationViewController) {
+    public init(_ controller: NavigationViewController) {
         self.controller = controller
         super.init(frame: controller._frameRect)
     }
     
-    public override var handleEvents: Bool {
+    open override var handleEvents: Bool {
         return true
     }
     
-    public override func firstResponder() -> NSResponder? {
+    
+    open override func firstResponder() -> NSResponder? {
         return controller.controller.firstResponder()
     }
     
-    public override func returnKeyAction() -> KeyHandlerResult {
+    open override func returnKeyAction() -> KeyHandlerResult {
         return controller.controller.returnKeyAction()
     }
     
-    public override var haveNextResponder: Bool {
+    open override func escapeKeyAction() -> KeyHandlerResult {
+        return controller.controller.escapeKeyAction()
+    }
+    
+    open override var haveNextResponder: Bool {
         return true
     }
     
-    public override func nextResponder() -> NSResponder? {
+    open override func nextResponder() -> NSResponder? {
         return controller.controller.nextResponder()
     }
     
-    public override func viewDidLoad() {
+    open override func viewDidLoad() {
         super.viewDidLoad()
         ready.set(controller.controller.ready.get())
     }
     
-    public override func loadView() {
+    open override func loadView() {
         self._view = controller.view
         NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
         

@@ -45,12 +45,12 @@ class ChatMapContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         var mediaUpdated = true
         iconView.image = theme.icons.chatMapPin
         iconView.sizeToFit()
 
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
+        super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
         if let positionFlags = positionFlags {
             let path = CGMutablePath()
@@ -98,7 +98,7 @@ class ChatMapContentView: ChatMediaContentView {
             imageView.setSignal(signal: cachedMedia(media: media, arguments: parameters.arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
             mediaUpdated = mediaUpdated && !self.imageView.hasImage
             
-            imageView.setSignal( chatWebpageSnippetPhoto(account: account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: parameters.image) : ImageMediaReference.standalone(media: parameters.image), scale: backingScaleFactor, small: parameters.isVenue), animate: mediaUpdated, cacheImage: { [weak self] image in
+            imageView.setSignal( chatWebpageSnippetPhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: parameters.image) : ImageMediaReference.standalone(media: parameters.image), scale: backingScaleFactor, small: parameters.isVenue), animate: mediaUpdated, cacheImage: { [weak self] image in
                 if let strongSelf = self {
                     return cacheMedia(signal: image, media: media, arguments: parameters.arguments, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
                 } else {
