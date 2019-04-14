@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -15,9 +15,7 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="Telegram" customModuleProvider="target">
             <connections>
-                <outlet property="aboutAction" destination="5kV-Vb-QxS" id="Jbc-RA-ysB"/>
                 <outlet property="checkForUpdates" destination="xey-M7-XVy" id="7ii-1E-tIe"/>
-                <outlet property="preferences" destination="BOF-NM-1cW" id="iiN-GN-soF"/>
                 <outlet property="showQuickSwitcher" destination="sZh-ct-GQS" id="loY-ub-t4u"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
@@ -25,65 +23,58 @@
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
         <menu title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
             <items>
-                <menuItem title="TelegramMac" identifier="1Xt-HY-uBw" id="1Xt-HY-uBw" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                <menuItem title="Telegram" identifier="1Xt-HY-uBw" id="cn5-jO-DSb">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="TelegramMac" systemMenu="apple" identifier="uQy-DD-JDr" id="uQy-DD-JDr" customClass="MMMenu" customModule="Telegram" customModuleProvider="target">
+                    <menu key="submenu" title="Telegram" id="RQr-l4-pSp">
                         <items>
-                            <menuItem title="About Telegram" identifier="5kV-Vb-QxS" id="5kV-Vb-QxS" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                            <menuItem title="About Telegram" identifier="5kV-Vb-QxS" id="Lda-Xv-z5I">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="aboutAction:" target="Voe-Tx-rLC" id="O7X-lz-vtu"/>
+                                    <action selector="aboutAction:" target="Voe-Tx-rLC" id="aoe-4r-h63"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="sE9-sf-sdU"/>
-                            <menuItem title="Preferences…" keyEquivalent="," identifier="BOF-NM-1cW" id="BOF-NM-1cW" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
-                                <connections>
-                                    <action selector="preferencesAction:" target="Voe-Tx-rLC" id="7BZ-fj-knq"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="wFC-TO-SCJ"/>
-                            <menuItem title="Check for Updates" tag="1000" identifier="1000" id="xey-M7-XVy" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                            <menuItem title="Check for Updates…" tag="1000" identifier="1000" id="xey-M7-XVy" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="checkForUpdates:" target="Voe-Tx-rLC" id="Ang-sr-P90"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="4je-JR-u6R"/>
-                            <menuItem title="Quick Switcher" keyEquivalent="k" identifier="sZh-ct-GQS" id="sZh-ct-GQS" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                            <menuItem isSeparatorItem="YES" id="LTF-r1-w7x"/>
+                            <menuItem title="Preferences…" keyEquivalent="," identifier="BOF-NM-1cW" id="Wbo-Mf-iFJ">
                                 <connections>
-                                    <action selector="showQuickSwitcher:" target="Voe-Tx-rLC" id="OFA-D5-XK6"/>
+                                    <action selector="preferencesAction:" target="Voe-Tx-rLC" id="iq2-3Q-meR"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Hide" keyEquivalent="w" identifier="Olw-nP-bQN" id="Olw-nP-bQN" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                            <menuItem isSeparatorItem="YES" id="j1h-py-oFA"/>
+                            <menuItem title="Services" id="YcR-bu-ROC">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Services" systemMenu="services" id="FXE-a1-KOc"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="VOU-1z-IFc"/>
+                            <menuItem title="Hide Telegram" keyEquivalent="h" identifier="Cag-YX-WT6" id="flI-Q3-zUb">
                                 <connections>
-                                    <action selector="closeWindow:" target="Voe-Tx-rLC" id="IKs-t5-kxH"/>
+                                    <action selector="hide:" target="-1" id="bsw-TW-aCA"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Hide Telegram" keyEquivalent="h" identifier="Cag-YX-WT6" id="Cag-YX-WT6" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
-                                <connections>
-                                    <action selector="hide:" target="-1" id="KWr-rt-JTa"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Hide Others" keyEquivalent="h" identifier="Vdr-fp-XzO" id="Vdr-fp-XzO" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                            <menuItem title="Hide Others" keyEquivalent="h" identifier="Vdr-fp-XzO" id="ZlT-gw-1JV">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
-                                    <action selector="hideOtherApplications:" target="-1" id="VT4-aY-XCT"/>
+                                    <action selector="hideOtherApplications:" target="-1" id="Uey-Th-RWl"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show All" identifier="Kd2-mp-pUS" id="Kd2-mp-pUS" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                            <menuItem title="Show All" identifier="Kd2-mp-pUS" id="Z2Z-qd-QK7">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="unhideAllApplications:" target="-1" id="Dhg-Le-xox"/>
+                                    <action selector="unhideAllApplications:" target="-1" id="y8L-1F-Noh"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="kCx-OE-vgT"/>
-                            <menuItem title="Quit Telegram" keyEquivalent="q" identifier="4sb-4s-VLi" id="4sb-4s-VLi" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                            <menuItem isSeparatorItem="YES" id="ZFK-kl-x8Q"/>
+                            <menuItem title="Quit Telegram" keyEquivalent="q" identifier="4sb-4s-VLi" id="sMV-hR-zoM">
                                 <connections>
-                                    <action selector="terminate:" target="-1" id="Te7-pn-YzF"/>
+                                    <action selector="terminate:" target="-1" id="Tbw-oV-xTV"/>
                                 </connections>
                             </menuItem>
                         </items>
-                        <accessibility identifier="uQy-DD-JDr"/>
                     </menu>
                 </menuItem>
                 <menuItem title="Edit" identifier="5QF-Oa-p0T" id="5QF-Oa-p0T" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
@@ -248,6 +239,18 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="Chats" id="6au-7c-WPr">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Chats" id="S6B-4K-RTG">
+                        <items>
+                            <menuItem title="Quick Switcher" keyEquivalent="k" identifier="sZh-ct-GQS" id="sZh-ct-GQS" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                                <connections>
+                                    <action selector="showQuickSwitcher:" target="Voe-Tx-rLC" id="OFA-D5-XK6"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
                 <menuItem title="View" identifier="H8h-7b-M4v" id="H8h-7b-M4v" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="View" identifier="HyV-fh-RgO" id="HyV-fh-RgO" customClass="MMMenu" customModule="Telegram" customModuleProvider="target">
@@ -265,6 +268,11 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Window" systemMenu="window" identifier="Td7-aD-5lo" id="Td7-aD-5lo" customClass="MMMenu" customModule="Telegram" customModuleProvider="target">
                         <items>
+                            <menuItem title="Close" keyEquivalent="w" identifier="Olw-nP-bQN" id="Olw-nP-bQN" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
+                                <connections>
+                                    <action selector="closeWindow:" target="Voe-Tx-rLC" id="IKs-t5-kxH"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Minimize" keyEquivalent="m" identifier="OY7-WF-poV" id="OY7-WF-poV" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <connections>
                                     <action selector="performMiniaturize:" target="-1" id="VwT-WD-YPe"/>
@@ -292,13 +300,21 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="Help" id="GKO-ZQ-bd4">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Help" id="yJE-Jt-t2F">
+                        <items>
+                            <menuItem title="Telegram Help" keyEquivalent="?" id="tTg-ww-GN5"/>
+                        </items>
+                    </menu>
+                </menuItem>
             </items>
         </menu>
         <window title="Telegram" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" id="QvC-M9-y7g" customClass="Window" customModule="TGUIKit">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="480" height="360"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
                 <autoresizingMask key="autoresizingMask"/>
