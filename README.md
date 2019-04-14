@@ -46,7 +46,7 @@ Telegram for macOS is licensed under the GNU Public License, version 2.0. See [L
 You can fork this application and make something awesome! Make sure that your fork follows these five requirements:
 
 1. **Do** [get your own API ID](https://core.telegram.org/api/obtaining_api_id).
-2. **Don’t** call your fork **Telegram** — or at least make sure your users understand that yours is unofficial.
+2. **Don’t** call your fork **Telegram** — or at least make sure your users understand that yours is unofficial.
 3. **Don’t** use our standard logo (white paper plane in a blue circle) for your fork.
 3. **Do** read and follow our [security guidelines](https://core.telegram.org/mtproto/security_guidelines) to make sure you take good care of your users’ data and protect their privacy.
 4. **Do** publish your code. The [GPL license](https://github.com/overtake/TelegramSwift/blob/master/LICENSE) requires it!
