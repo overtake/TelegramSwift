@@ -1,9 +1,6 @@
-<p style="text-align:center">
-
-<img src="https://github.com/overtake/TelegramSwift/raw/master/Telegram-Mac/Assets.xcassets/AppIcon.appiconset/icon2_128.png">
-
-<h1 style="text-align:center"><a href="https://macos.telegram.org">Telegram for macOS</a></h1>
-
+<p align="center">
+  <img src="https://github.com/overtake/TelegramSwift/raw/master/Telegram-Mac/Assets.xcassets/AppIcon.appiconset/icon2_128.png">
+  <h2 align="center">Telegram for macOS</h2>
 </p>
 
 [**Telegram**](https://telegram.org) is a messaging app with a focus on speed and security. It’s superfast, simple, and free! This repo contains the official source code for [Telegram for macOS](https://macos.telegram.org/).
