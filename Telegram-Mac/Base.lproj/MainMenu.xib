@@ -25,9 +25,9 @@
             <items>
                 <menuItem title="Telegram" identifier="1Xt-HY-uBw" id="cn5-jO-DSb">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="Telegram" id="RQr-l4-pSp">
+                    <menu key="submenu" title="Telegram" id="RQr-l4-pSp" customClass="MMMenu" customModule="Telegram" customModuleProvider="target">
                         <items>
-                            <menuItem title="About Telegram" identifier="5kV-Vb-QxS" id="Lda-Xv-z5I">
+                            <menuItem title="About Telegram" identifier="5kV-Vb-QxS" id="Lda-Xv-z5I" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="aboutAction:" target="Voe-Tx-rLC" id="aoe-4r-h63"/>
@@ -40,36 +40,36 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="LTF-r1-w7x"/>
-                            <menuItem title="Preferences…" keyEquivalent="," identifier="BOF-NM-1cW" id="Wbo-Mf-iFJ">
+                            <menuItem title="Preferences…" keyEquivalent="," identifier="BOF-NM-1cW" id="Wbo-Mf-iFJ" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <connections>
                                     <action selector="preferencesAction:" target="Voe-Tx-rLC" id="iq2-3Q-meR"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="j1h-py-oFA"/>
-                            <menuItem title="Services" id="YcR-bu-ROC">
+                            <menuItem title="Services" id="YcR-bu-ROC" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Services" systemMenu="services" id="FXE-a1-KOc"/>
+                                <menu key="submenu" title="Services" systemMenu="services" id="FXE-a1-KOc" customClass="MMMenu" customModule="Telegram" customModuleProvider="target"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="VOU-1z-IFc"/>
-                            <menuItem title="Hide Telegram" keyEquivalent="h" identifier="Cag-YX-WT6" id="flI-Q3-zUb">
+                            <menuItem title="Hide Telegram" keyEquivalent="h" identifier="Cag-YX-WT6" id="flI-Q3-zUb" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <connections>
                                     <action selector="hide:" target="-1" id="bsw-TW-aCA"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Hide Others" keyEquivalent="h" identifier="Vdr-fp-XzO" id="ZlT-gw-1JV">
+                            <menuItem title="Hide Others" keyEquivalent="h" identifier="Vdr-fp-XzO" id="ZlT-gw-1JV" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="hideOtherApplications:" target="-1" id="Uey-Th-RWl"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show All" identifier="Kd2-mp-pUS" id="Z2Z-qd-QK7">
+                            <menuItem title="Show All" identifier="Kd2-mp-pUS" id="Z2Z-qd-QK7" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="unhideAllApplications:" target="-1" id="y8L-1F-Noh"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="ZFK-kl-x8Q"/>
-                            <menuItem title="Quit Telegram" keyEquivalent="q" identifier="4sb-4s-VLi" id="sMV-hR-zoM">
+                            <menuItem title="Quit Telegram" keyEquivalent="q" identifier="4sb-4s-VLi" id="sMV-hR-zoM" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <connections>
                                     <action selector="terminate:" target="-1" id="Tbw-oV-xTV"/>
                                 </connections>
@@ -241,7 +241,7 @@
                 </menuItem>
                 <menuItem title="Chats" id="6au-7c-WPr">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="Chats" id="S6B-4K-RTG">
+                    <menu key="submenu" title="Chats" id="S6B-4K-RTG" customClass="MMMenu" customModule="Telegram" customModuleProvider="target">
                         <items>
                             <menuItem title="Quick Switcher" keyEquivalent="k" identifier="sZh-ct-GQS" id="sZh-ct-GQS" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target">
                                 <connections>
@@ -302,9 +302,9 @@
                 </menuItem>
                 <menuItem title="Help" id="GKO-ZQ-bd4">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="Help" id="yJE-Jt-t2F">
+                    <menu key="submenu" title="Help" id="yJE-Jt-t2F" customClass="MMMenu" customModule="Telegram" customModuleProvider="target">
                         <items>
-                            <menuItem title="Telegram Help" keyEquivalent="?" id="tTg-ww-GN5"/>
+                            <menuItem title="Telegram Help" keyEquivalent="?" id="tTg-ww-GN5" customClass="MMMenuItem" customModule="Telegram" customModuleProvider="target"/>
                         </items>
                     </menu>
                 </menuItem>
