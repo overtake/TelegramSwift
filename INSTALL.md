@@ -24,4 +24,4 @@
 
 ## Disable Sparkle
 
-The Sparkle auto-updater can overwrite your build by automatically updating to the latest official Telegram version on quit. If you wish to disable this, comment out the contents of `resetUpdater()` function on [lines 403–430 of `ui/updater/AppUpdateViewController.swift`](https://github.com/overtake/TelegramSwift/blob/master/Telegram-Mac/AppUpdateViewController.swift#L403-L430) file.  If you just want to make it update from somewhere else, you can change the HockeyApp URL in project settings.
+The Sparkle auto-updater can overwrite your build by automatically updating to the latest official Telegram version on quit. If you wish to disable this, comment out the contents of the `resetUpdater()` function on [lines 403–430 of `ui/updater/AppUpdateViewController.swift`](https://github.com/overtake/TelegramSwift/blob/master/Telegram-Mac/AppUpdateViewController.swift#L403-L430).  If you just want to make it update from somewhere else, you can change the HockeyApp URL in project settings.
