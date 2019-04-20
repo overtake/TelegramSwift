@@ -51,6 +51,6 @@ You can fork this application and make something awesome! Make sure that your fo
 3. **Do** read and follow our [security guidelines](https://core.telegram.org/mtproto/security_guidelines) to make sure you take good care of your users’ data and protect their privacy.
 4. **Do** publish your code. The [GPL license](https://github.com/overtake/TelegramSwift/blob/master/LICENSE) requires it!
 
-## How to build
+## How to Build
 
-TODO, will be moved to INSTALL.md
+[Instructions for building Telegram for macOS are in INSTALL.md](https://github.com/s0ph0s-2/TelegramSwift/blob/docs/better-readme/INSTALL.md).
