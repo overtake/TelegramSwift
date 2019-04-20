@@ -22,6 +22,6 @@
 5. Change product team and bundle ID in project, as well as `appGroupName` on [line 86 of `AppDelegate.swift`](https://github.com/overtake/TelegramSwift/blob/master/Telegram-Mac/AppDelegate.swift#L86) to your custom name and bundle ID.  This ensures that your container folder will be different from the official application’s, avoiding potential state corruption problems.
 6. You're all set up! Click **Run** and start developing.
 
-## Disable Sparkle
+## Disable Sparkle Auto-Updater
 
 The Sparkle auto-updater can overwrite your build by automatically updating to the latest official Telegram version on quit. If you wish to disable this, comment out the contents of the `resetUpdater()` function on [lines 403–430 of `ui/updater/AppUpdateViewController.swift`](https://github.com/overtake/TelegramSwift/blob/master/Telegram-Mac/AppUpdateViewController.swift#L403-L430).  If you just want to make it update from somewhere else, you can change the HockeyApp URL in project settings.
