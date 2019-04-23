@@ -3,15 +3,13 @@
   <h2 align="center">Telegram for macOS</h2>
 </div>
 
+![Telegram macOS screenshot](https://github.com/s0ph0s-2/TelegramSwift/raw/docs/better-readme/images/tg.png)
+
 [**Telegram**](https://telegram.org) is a messaging app with a focus on speed and security. It’s superfast, simple, and free! This repo contains the official source code for [Telegram for macOS](https://macos.telegram.org/).
-
-## Screenshots
-
-*TODO*
 
 ## Get it
 
-[![Download on the Mac App Store](https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-mac-app-store.svg)](https://itunes.apple.com/us/app/telegram/id747648890?mt=12)
+[![Download on the Mac App Store](https://github.com/s0ph0s-2/TelegramSwift/raw/docs/better-readme/images/mas_badge.png)](https://itunes.apple.com/us/app/telegram/id747648890?mt=12)
 
 If you would like, you can [download the non-MAS version](https://telegram.org/dl/macos). It removes some restrictions (like banned chats), but also lacks some functionality (like the share extension and sandboxing).
 
@@ -53,4 +51,4 @@ You can fork this application and make something awesome! Make sure that your fo
 
 ## How to Build
 
-[Instructions for building Telegram for macOS are in INSTALL.md](https://github.com/s0ph0s-2/TelegramSwift/blob/docs/better-readme/INSTALL.md).
+Instructions for building Telegram for macOS are in [INSTALL.md](https://github.com/s0ph0s-2/TelegramSwift/blob/docs/better-readme/INSTALL.md).
