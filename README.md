@@ -51,4 +51,4 @@ You can fork this application and make something awesome! Make sure that your fo
 
 ## How to Build
 
-Instructions for building Telegram for macOS are in [INSTALL.md](https://github.com/s0ph0s-2/TelegramSwift/blob/docs/better-readme/INSTALL.md).
+Instructions for building Telegram for macOS are in [INSTALL.md](https://github.com/overtake/TelegramSwift/blob/master/INSTALL.md).
