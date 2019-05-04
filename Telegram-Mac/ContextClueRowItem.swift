@@ -183,7 +183,7 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         tableView.removeAll(redraw: true, animation: .none)
         if let item = item as? ContextClueRowItem {
             
-            button.isHidden = !item.canDisablePrediction
+            button.isHidden = false
             
             for clue in item.clues {
                 _ = tableView.addItem(item: ClueRowItem(bounds.size, clue: clue), animation: .none)
