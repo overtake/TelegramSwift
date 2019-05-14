@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Window Controller-->
+        <scene sceneID="8U8-dt-6ih">
+            <objects>
+                <windowController storyboardIdentifier="TGAboutWindowController" showSeguePresentationStyle="single" id="4IT-0F-a13" sceneMemberID="viewController">
+                    <window key="window" title="About Telegram" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="none" frameAutosaveName="" titleVisibility="hidden" id="aS8-cw-954" customClass="TGAboutWindow" customModule="Telegram" customModuleProvider="target">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
+                        <windowCollectionBehavior key="collectionBehavior" fullScreenAuxiliary="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="245" y="301" width="328" height="270"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
+                        <value key="minSize" type="size" width="328" height="270"/>
+                        <value key="maxSize" type="size" width="328" height="270"/>
+                        <connections>
+                            <outlet property="delegate" destination="4IT-0F-a13" id="bEo-h0-miV"/>
+                        </connections>
+                    </window>
+                    <connections>
+                        <segue destination="iy1-iR-ByA" kind="relationship" relationship="window.shadowedContentViewController" id="VVL-Rp-1w7"/>
+                    </connections>
+                </windowController>
+                <customObject id="Yvc-Cg-iyP" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-142" y="95"/>
+        </scene>
+        <!--About View Controller-->
+        <scene sceneID="5vI-X5-baF">
+            <objects>
+                <viewController showSeguePresentationStyle="single" id="iy1-iR-ByA" customClass="TGAboutViewController" customModule="Telegram" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" id="o0x-fS-ZFt">
+                        <rect key="frame" x="0.0" y="0.0" width="314" height="247"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UNb-tG-O6e">
+                                <rect key="frame" x="123" y="157" width="70" height="70"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Mif-HA-K2L"/>
+                            </imageView>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uoh-fZ-hcn">
+                                <rect key="frame" x="122" y="128" width="72" height="21"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="Telegram" id="aqa-g8-PkV">
+                                    <font key="font" metaFont="systemBold" size="14"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IPB-WT-oMo">
+                                <rect key="frame" x="28" y="20" width="260" height="28"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" id="oKE-Kn-Sj8">
+                                    <font key="font" metaFont="smallSystem"/>
+                                    <string key="title">Copyright © 2019 TELEGRAM MESSENGER LLP.
+All rights reserved.</string>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="g12-WR-g1L">
+                                <rect key="frame" x="103" y="67" width="109" height="19"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="roundRect" title="Copy to Clipboard" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="jkx-4l-Bvo">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="smallSystem"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="copyButtonClicked:" target="iy1-iR-ByA" id="qOf-IX-dv2"/>
+                                </connections>
+                            </button>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="7wx-9O-ZxV">
+                                <rect key="frame" x="87" y="94" width="141" height="28"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" id="P7E-x4-hJQ">
+                                    <font key="font" metaFont="smallSystem"/>
+                                    <string key="title">Version 5.0.1 (123456)
+Mac App Store</string>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                    </view>
+                    <connections>
+                        <outlet property="appIconImageView" destination="UNb-tG-O6e" id="6f3-nn-6gG"/>
+                        <outlet property="versionLabel" destination="7wx-9O-ZxV" id="Tdz-bV-kc5"/>
+                    </connections>
+                </viewController>
+                <customObject id="9H5-yz-bWK" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-142" y="500.5"/>
+        </scene>
+    </scenes>
+</document>
