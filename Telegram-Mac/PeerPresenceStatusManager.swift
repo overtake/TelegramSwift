@@ -23,12 +23,12 @@ final class PeerPresenceStatusManager {
         self.timer?.invalidate()
     }
     
-    func reset(presence: TelegramUserPresence) {
+    func reset(presence: TelegramUserPresence, timeDifference: Int32) {
         timer?.invalidate()
         timer = nil
         
         let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-        let timeout = userPresenceStringRefreshTimeout(presence, relativeTo: Int32(timestamp))
+        let timeout = userPresenceStringRefreshTimeout(presence, timeDifference: timeDifference, relativeTo: Int32(timestamp))
         if timeout.isFinite {
             self.timer = SwiftSignalKitMac.Timer(timeout: timeout, repeat: false, completion: { [weak self] in
                 if let strongSelf = self {

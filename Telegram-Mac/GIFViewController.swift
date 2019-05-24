@@ -261,7 +261,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: genericView.searchView.state, request: genericView.searchView.query), ignoreRepeated: true)
         
-        let searchInteractions = SearchInteractions({ [weak self] state in
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
             search.set(state)
             switch state.state {
             case .None:

@@ -31,7 +31,6 @@ class ShareViewController: NSViewController {
         super.viewDidLoad()
         
         
-       
         
         declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
         declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
@@ -44,10 +43,14 @@ class ShareViewController: NSViewController {
         
         let rootPath = containerUrl.path
         
+        let deviceSpecificEncryptionParameters = BuildConfig.deviceSpecificEncryptionParameters(rootPath, baseAppBundleId: Bundle.main.bundleIdentifier!)
+        let encryptionParameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
+
+        
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
         let networkArguments = NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos", appVersion: "", voipMaxLayer: 90, appData: nil)
         
-        let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath)
+        let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: { _ in })
         
         let logger = Logger(basePath: containerUrl.path + "/sharelogs")
         logger.logToConsole = false

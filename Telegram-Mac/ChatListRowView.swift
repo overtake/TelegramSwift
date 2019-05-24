@@ -12,6 +12,8 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
 
+
+
 private class ChatListDraggingContainerView : View {
     fileprivate var item: ChatListRowItem?
     fileprivate var activeDragging:Bool = false
@@ -31,8 +33,8 @@ private class ChatListDraggingContainerView : View {
             needsDisplay = true
             if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
                 _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak item] path in
-                    guard let item = item else {return}
-                    item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: .peer(item.peerId), initialAction: .files(list: [path], behavior: .automatic)))
+                    guard let item = item, let chatLocation = item.chatLocation else {return}
+                    item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: [path], behavior: .automatic)))
                 })
             } else {
                 let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
@@ -43,8 +45,8 @@ private class ChatListDraggingContainerView : View {
                         }
                         return false
                     }
-                    if !list.isEmpty {
-                        item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: .peer(item.peerId), initialAction: .files(list: list, behavior: .automatic)))
+                    if !list.isEmpty, let chatLocation = item.chatLocation {
+                        item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: list, behavior: .automatic)))
                     }
                 }
             }
@@ -65,6 +67,8 @@ private class ChatListDraggingContainerView : View {
         
     }
     
+    
+    
     override public func draggingExited(_ sender: NSDraggingInfo?) {
         activeDragging = false
         needsDisplay = true
@@ -78,27 +82,70 @@ private class ChatListDraggingContainerView : View {
     }
 }
 
-class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
+private final class ChatListExpandView: View {
+    private let titleView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+
+        self.addSubview(titleView)
+    }
+    override func updateLocalizationAndTheme() {
+        let titleLayout = TextViewLayout(.initialize(string: L10n.chatListArchivedChats, color: theme.colors.grayText, font: .medium(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        titleLayout.measure(width: .greatestFiniteMagnitude)
+        titleView.update(titleLayout)
+        needsLayout = true
+    }
     
-    private let swipingLeftView: View = View()
-    private let swipingRightView: View = View()
+    override func layout() {
+        super.layout()
+        titleView.center()
+    }
+    
+    func animateOnce() {
+        titleView.layer?.animateScaleSpring(from: 0.7, to: 1, duration: 0.35, removeOnCompletion: true, bounce: true, completion: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
+    
+    private let revealLeftView: View = View()
+    private let revealRightView: View = View()
     
     private var titleText:TextNode = TextNode()
     private var messageText:TextNode = TextNode()
     private var badgeView:View?
+    private var additionalBadgeView:View?
+    
+    private var activeImage: ImageView?
+
     private var activitiesModel:ChatActivitiesModel?
     private var photo:AvatarControl = AvatarControl(font: .avatar(22))
     private var hiddemMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
     private var animatedView: ChatRowAnimateView?
+    private var archivedPhoto: LAnimationButton?
     private let containerView: ChatListDraggingContainerView = ChatListDraggingContainerView(frame: NSZeroRect)
-    var endSwipingState: SwipeDirection? {
+    private var expandView: ChatListExpandView?
+    private var revealActionInvoked: Bool = false {
         didSet {
-            if let oldValue = oldValue, endSwipingState == nil  {
+            animateOnceAfterDelta = true
+        }
+    }
+    var endRevealState: SwipeDirection? {
+        didSet {
+            if let oldValue = oldValue, endRevealState == nil  {
                 switch oldValue {
                 case .left, .right:
-                    completeSwiping(direction: .none)
+                    revealActionInvoked = true
+                    completeReveal(direction: .none)
                 default:
                     break
                 }
@@ -131,7 +178,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                     activitiesModel?.clean()
                     activitiesModel?.view?.removeFromSuperview()
                     activitiesModel = nil
-                    self.needsLayout = true
                     self.hiddemMessage = false
                     containerView.needsDisplay = true
                 } else if activitiesModel == nil {
@@ -153,7 +199,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                 }
                 
                 activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
-                    self?.needsLayout = true
+                    if let item = self?.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
+                        self?.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
+                    }
                     self?.hiddemMessage = show
                     self?.containerView.needsDisplay = true
                 })
@@ -215,6 +263,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
     
     override var backdorColor: NSColor {
         if let item = item as? ChatListRowItem {
+            if item.isCollapsed {
+                return theme.colors.grayBackground
+            }
             if item.isHighlighted && !item.isSelected {
                 return theme.colors.grayForeground
             }
@@ -227,6 +278,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             if item.pinnedType != .none && !item.isSelected {
                 return theme.chatList.pinnedBackgroundColor
             }
+            
             return item.isSelected ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : theme.colors.background
         }
         return theme.colors.background
@@ -295,6 +347,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                         mutedInset += theme.icons.verifiedImage.backingSize.width + 3
                     }
                     
+                    if item.isScam {
+                        ctx.draw(highlighted ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                        mutedInset += theme.icons.scam.backingSize.width + 3
+                    }
+                    
                     if let messageLayout = item.ctxMessageLayout, !hiddemMessage {
                         messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 3 , messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     }
@@ -304,7 +361,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                     }
                     
                     if let _ = item.mentionsCount {
-                        ctx.draw(highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention, in: NSMakeRect(frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - theme.icons.chatListMentionActive.backingSize.width - item.margin, frame.height - theme.icons.chatListMention.backingSize.height - (item.margin + 1), theme.icons.chatListMention.backingSize.width, theme.icons.chatListMention.backingSize.height))
+                        let icon: CGImage
+                        if item.associatedGroupId == .root {
+                            icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
+                        } else {
+                            icon = highlighted ? theme.icons.chatListMentionArchivedActive : theme.icons.chatListMentionArchived
+                        }
+                        ctx.draw(icon, in: NSMakeRect(frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin, frame.height - icon.backingSize.height - (item.margin + 1), icon.backingSize.width, icon.backingSize.height)) 
                     }
                     
                     if let dateLayout = item.ctxDateLayout, !item.hasDraft, item.state == .plain {
@@ -343,10 +406,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
         
         super.init(frame: frameRect)
         
-        addSubview(swipingRightView)
-        addSubview(swipingLeftView)
+        addSubview(revealRightView)
+        addSubview(revealLeftView)
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-        
         photo.userInteractionEnabled = false
         photo.frame = NSMakeRect(10, 10, 50, 50)
         containerView.addSubview(photo)
@@ -386,14 +448,70 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
 
     override func updateColors() {
         super.updateColors()
+        expandView?.backgroundColor = theme.colors.grayBackground
     }
 
     override func set(item:TableRowItem, animated:Bool = false) {
         
+        if let item = item as? ChatListRowItem {
+            if item.isCollapsed {
+                if expandView == nil {
+                    expandView = ChatListExpandView(frame: NSMakeRect(0, frame.height, frame.width, item.height))
+                    self.addSubview(expandView!, positioned: .below, relativeTo: containerView)
+                }
+                expandView?.updateLocalizationAndTheme()
+            }
+        }
         
+         let wasHidden: Bool = (self.item as? ChatListRowItem)?.isCollapsed ?? false
          super.set(item:item, animated:animated)
+        
                 
-         if let item = self.item as? ChatListRowItem {
+         if let item = item as? ChatListRowItem {
+            
+            
+            if item.isCollapsed != wasHidden {
+                expandView?.change(pos: NSMakePoint(0, item.isCollapsed ? 0 : item.height), animated: animated)
+                containerView.change(pos: NSMakePoint(0, item.isCollapsed ? -70 : 0), animated: !revealActionInvoked && animated)
+            }
+
+            if let isOnline = item.isOnline, item.context.sharedContext.layout != .minimisize {
+                if isOnline {
+                    var animate: Bool = false
+                    if activeImage == nil {
+                        activeImage = ImageView()
+                        self.containerView.addSubview(activeImage!)
+                        animate = true
+                    }
+                    guard let activeImage = self.activeImage else { return }
+                    activeImage.image = item.isSelected && item.context.sharedContext.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
+                    activeImage.sizeToFit()
+
+                    activeImage.setFrameOrigin(photo.frame.maxX - activeImage.frame.width - 3, photo.frame.maxY - 12)
+
+                    if animated && animate {
+                        activeImage.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                        activeImage.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                    }
+                } else {
+                    if animated {
+                        let activeImage = self.activeImage
+                        self.activeImage = nil
+                        activeImage?.layer?.animateAlpha(from: 1, to: 0.5, duration: 0.2)
+                        activeImage?.layer?.animateScaleSpring(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: { [weak activeImage] completed in
+                            activeImage?.removeFromSuperview()
+                        })
+                    } else {
+                        activeImage?.removeFromSuperview()
+                        activeImage = nil
+                    }
+                }
+            } else {
+                activeImage?.removeFromSuperview()
+                activeImage = nil
+            }
+            
+            
             containerView.item = item
             if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
                 self.animatedView?.removeFromSuperview()
@@ -404,10 +522,37 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             photo.setState(account: item.context.account, state: item.photo)
 
             if item.isSavedMessage {
+                self.archivedPhoto?.removeFromSuperview()
+                self.archivedPhoto = nil
                 let icon = theme.icons.searchSaved
                 photo.setState(account: item.context.account, state: .Empty)
-                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)))) |> map {($0, false)})
-            } 
+                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
+            } else if case .ArchivedChats = item.photo {
+                if self.archivedPhoto == nil {
+                    self.archivedPhoto = LAnimationButton(animation: "archiveAvatar", keysToColor: ["box2.box2.Fill 1"], color: theme.colors.grayForeground, scale: 0.14, offset: 0)
+                    containerView.addSubview(self.archivedPhoto!, positioned: .above, relativeTo: self.photo)
+                }
+                self.archivedPhoto?.frame = self.photo.frame
+                self.archivedPhoto?.userInteractionEnabled = false
+                self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background)
+                self.archivedPhoto?.background = item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background
+                self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
+
+                if item.animateArchive && animated {
+                    archivedPhoto?.loop()
+                    if item.isCollapsed {
+                        self.expandView?.animateOnce()
+                    }
+                }
+                
+             //   let icon = theme.icons.archivedChats
+                photo.setState(account: item.context.account, state: .Empty)
+              //  photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: (theme.colors.grayForeground, theme.colors.grayForeground), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 17, photo.frame.size.height - 17)), cornerRadius: nil)) |> map {($0, false)})
+            } else {
+                self.archivedPhoto?.removeFromSuperview()
+                self.archivedPhoto = nil
+            }
+            
             if let badgeNode = item.ctxBadgeNode {
                 if badgeView == nil {
                     badgeView = View()
@@ -419,6 +564,19 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             } else {
                 badgeView?.removeFromSuperview()
                 badgeView = nil
+            }
+            
+            if let badgeNode = item.ctxAdditionalBadgeNode {
+                if additionalBadgeView == nil {
+                    additionalBadgeView = View()
+                    containerView.addSubview(additionalBadgeView!)
+                }
+                additionalBadgeView?.setFrameSize(badgeNode.size)
+                badgeNode.view = additionalBadgeView
+                badgeNode.setNeedDisplay()
+            } else {
+                additionalBadgeView?.removeFromSuperview()
+                additionalBadgeView = nil
             }
 
             switch item.state {
@@ -461,37 +619,39 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                 let postbox = item.context.account.postbox
                 let peerId = item.peerId
                 
-                let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
-                self.peerInputActivitiesDisposable.set((item.context.account.peerInputActivities(peerId: peerId)
-                    |> mapToSignal { activities -> Signal<[(Peer, PeerInputActivity)], NoError> in
-                        var foundAllPeers = true
-                        var cachedResult: [(Peer, PeerInputActivity)] = []
-                        previousPeerCache.with { dict -> Void in
-                            for (peerId, activity) in activities {
-                                if let peer = dict[peerId] {
-                                    cachedResult.append((peer, activity))
-                                } else {
-                                    foundAllPeers = false
-                                    break
-                                }
-                            }
-                        }
-                        if foundAllPeers {
-                            return .single(cachedResult)
-                        } else {
-                            return postbox.transaction { transaction -> [(Peer, PeerInputActivity)] in
-                                var result: [(Peer, PeerInputActivity)] = []
-                                var peerCache: [PeerId: Peer] = [:]
+                
+                if let peerId = peerId {
+                    let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
+                    self.peerInputActivitiesDisposable.set((item.context.account.peerInputActivities(peerId: peerId)
+                        |> mapToSignal { activities -> Signal<[(Peer, PeerInputActivity)], NoError> in
+                            var foundAllPeers = true
+                            var cachedResult: [(Peer, PeerInputActivity)] = []
+                            previousPeerCache.with { dict -> Void in
                                 for (peerId, activity) in activities {
-                                    if let peer = transaction.getPeer(peerId) {
-                                        result.append((peer, activity))
-                                        peerCache[peerId] = peer
+                                    if let peer = dict[peerId] {
+                                        cachedResult.append((peer, activity))
+                                    } else {
+                                        foundAllPeers = false
+                                        break
                                     }
                                 }
-                                _ = previousPeerCache.swap(peerCache)
-                                return result
                             }
-                        }
+                            if foundAllPeers {
+                                return .single(cachedResult)
+                            } else {
+                                return postbox.transaction { transaction -> [(Peer, PeerInputActivity)] in
+                                    var result: [(Peer, PeerInputActivity)] = []
+                                    var peerCache: [PeerId: Peer] = [:]
+                                    for (peerId, activity) in activities {
+                                        if let peer = transaction.getPeer(peerId) {
+                                            result.append((peer, activity))
+                                            peerCache[peerId] = peer
+                                        }
+                                    }
+                                    _ = previousPeerCache.swap(peerCache)
+                                    return result
+                                }
+                            }
                     }
                     |> deliverOnMainQueue).start(next: { [weak self, weak item] activities in
                         if item?.context.peerId != item?.peerId {
@@ -500,6 +660,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
                             self?.inputActivities = (peerId, [])
                         }
                     }))
+                } else {
+                    self.inputActivities = nil
+                }
+                
                 
                 let inputActivities = self.inputActivities
                 self.inputActivities = inputActivities
@@ -510,142 +674,267 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             
          }
         
-        if let _ = endSwipingState {
-            initSwipingState()
+        if let _ = endRevealState {
+            initRevealState()
+        }
+        containerView.needsDisplay = true
+        
+        containerView.customHandler.layout = { [weak self] _ in
+            guard let `self` = self else { return }
+            
+            if let item = self.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
+                self.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
+                
+                var additionalOffset: CGFloat = 0
+                
+                if let badgeNode = item.ctxAdditionalBadgeNode {
+                    self.additionalBadgeView?.setFrameOrigin(self.containerView.frame.width - badgeNode.size.width - item.margin, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
+                    additionalOffset += (badgeNode.size.width + item.margin)
+                }
+                
+                if let badgeNode = item.ctxBadgeNode {
+                    self.badgeView?.setFrameOrigin(self.containerView.frame.width - badgeNode.size.width - item.margin - additionalOffset, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
+                }
+                if let activeImage = self.activeImage {
+                    activeImage.setFrameOrigin(self.photo.frame.maxX - activeImage.frame.width - 3, self.photo.frame.maxY - 12)
+                }
+            }
         }
         
-        containerView.needsDisplay = true
+        containerView.needsLayout = true
+        revealActionInvoked = false
         needsDisplay = true
     }
     
-    func initSwipingState() {
-        guard let item = item as? ChatListRowItem else {return}
+    func initRevealState() {
+        guard let item = item as? ChatListRowItem, endRevealState == nil else {return}
         
-        swipingLeftView.removeAllSubviews()
-        swipingRightView.removeAllSubviews()
+        revealLeftView.removeAllSubviews()
+        revealRightView.removeAllSubviews()
         
+        revealLeftView.backgroundColor = backdorColor
+        revealRightView.backgroundColor = backdorColor
         
-        let unread: TitleButton = TitleButton()
-        unread.setFrameSize(frame.height, frame.height)
-        unread.autohighlight = false
-        unread.direction = .top
+        if item.groupId == .root {
+            
+            let unreadBackground = !item.markAsUnread ? theme.colors.revealAction_inactive_background : theme.colors.revealAction_accent_background
+            let unreadForeground = !item.markAsUnread ? theme.colors.revealAction_inactive_foreground : theme.colors.revealAction_accent_foreground
+
+            let unread: LAnimationButton = LAnimationButton(animation: !item.markAsUnread ? "anim_read" : "anim_unread", keysToColor: !item.markAsUnread ? nil : ["Oval.Oval.Stroke 1"], color: unreadBackground, scale: 0.33, offset: 0, autoplaySide: .right)
+            let unreadTitle = TextViewLabel()
+            unreadTitle.attributedString = .initialize(string: !item.markAsUnread ? L10n.chatListSwipingRead : L10n.chatListSwipingUnread, color: unreadForeground, font: .medium(12))
+            unreadTitle.sizeToFit()
+            unread.addSubview(unreadTitle)
+            unread.set(background: unreadBackground, for: .Normal)
+            unread.customHandler.layout = { [weak unreadTitle] view in
+                if let unreadTitle = unreadTitle {
+                    unreadTitle.centerX(y: view.frame.height - unreadTitle.frame.height - 10)
+                }
+            }
+            
+            let mute: LAnimationButton = LAnimationButton(animation: item.isMuted ? "anim_unmute" : "anim_mute", keysToColor: item.isMuted ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_neutral2_background, scale: 0.33, offset: 0, autoplaySide: .right)
+            let muteTitle = TextViewLabel()
+            muteTitle.attributedString = .initialize(string: item.isMuted ? L10n.chatListSwipingUnmute : L10n.chatListSwipingMute, color: theme.colors.revealAction_neutral2_foreground, font: .medium(12))
+            muteTitle.sizeToFit()
+            mute.addSubview(muteTitle)
+            mute.set(background: theme.colors.revealAction_neutral2_background, for: .Normal)
+            mute.customHandler.layout = { [weak muteTitle] view in
+                if let muteTitle = muteTitle {
+                    muteTitle.centerX(y: view.frame.height - muteTitle.frame.height - 10)
+                }
+            }
+            
+            
+            let pin: LAnimationButton = LAnimationButton(animation: item.pinnedType == .none ? "anim_pin" : "anim_unpin", keysToColor: item.pinnedType == .none ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_constructive_background, scale: 0.33, offset: 0, autoplaySide: .left)
+            let pinTitle = TextViewLabel()
+            pinTitle.attributedString = .initialize(string: item.pinnedType == .none ? L10n.chatListSwipingPin : L10n.chatListSwipingUnpin, color: theme.colors.revealAction_constructive_foreground, font: .medium(12))
+            pinTitle.sizeToFit()
+            pin.addSubview(pinTitle)
+            pin.set(background: theme.colors.revealAction_constructive_background, for: .Normal)
+            pin.customHandler.layout = { [weak pinTitle] view in
+                if let pinTitle = pinTitle {
+                    pinTitle.centerX(y: view.frame.height - pinTitle.frame.height - 10)
+                }
+            }
+            
+            pin.set(handler: { [weak self] _ in
+                guard let item = self?.item as? ChatListRowItem else {return}
+                item.togglePinned()
+                self?.endRevealState = nil
+            }, for: .Click)
+            unread.set(handler: { [weak self] _ in
+                guard let item = self?.item as? ChatListRowItem else {return}
+                item.toggleUnread()
+                self?.endRevealState = nil
+            }, for: .Click)
+            
+            
+            
+            
+            
+            
+            let archive: LAnimationButton = LAnimationButton(animation: item.associatedGroupId != .root ? "anim_unarchive" : "anim_archive", keysToColor: ["box2.box2.Fill 1"], color: theme.colors.revealAction_inactive_background, scale: item.associatedGroupId != .root ? 0.2 : 0.33, offset: item.associatedGroupId != .root ? 9.0 : 0.0, autoplaySide: .left)
+            let archiveTitle = TextViewLabel()
+            archiveTitle.attributedString = .initialize(string: item.associatedGroupId != .root ? L10n.chatListSwipingUnarchive : L10n.chatListSwipingArchive, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+            archiveTitle.sizeToFit()
+            archive.addSubview(archiveTitle)
+            archive.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
+            archive.customHandler.layout = { [weak archiveTitle] view in
+                if let archiveTitle = archiveTitle {
+                    archiveTitle.centerX(y: view.frame.height - archiveTitle.frame.height - 10)
+                }
+            }
+            
+            
+            
+            
+            let delete: LAnimationButton = LAnimationButton(animation: "anim_delete", keysToColor: nil, scale: 0.33, offset: 0, autoplaySide: .left)
+            let deleteTitle = TextViewLabel()
+            deleteTitle.attributedString = .initialize(string: L10n.chatListSwipingDelete, color: theme.colors.revealAction_destructive_foreground, font: .medium(12))
+            deleteTitle.sizeToFit()
+            delete.addSubview(deleteTitle)
+            delete.set(background: theme.colors.revealAction_destructive_background, for: .Normal)
+            delete.customHandler.layout = { [weak deleteTitle] view in
+                if let deleteTitle = deleteTitle {
+                    deleteTitle.centerX(y: view.frame.height - deleteTitle.frame.height - 10)
+                }
+            }
+            
+            
+            archive.set(handler: { [weak self] _ in
+                guard let item = self?.item as? ChatListRowItem else {return}
+                item.toggleArchive()
+                self?.endRevealState = nil
+            }, for: .Click)
+            
+            mute.set(handler: { [weak self] _ in
+                guard let item = self?.item as? ChatListRowItem else {return}
+                item.toggleMuted()
+                self?.endRevealState = nil
+            }, for: .Click)
+            
+            delete.set(handler: { [weak self] _ in
+                guard let item = self?.item as? ChatListRowItem else {return}
+                item.delete()
+                self?.endRevealState = nil
+            }, for: .Click)
+            
+            
+            
+            revealRightView.addSubview(pin)
+            revealRightView.addSubview(delete)
+            revealRightView.addSubview(archive)
+            
+            
+            revealLeftView.addSubview(mute)
+            revealLeftView.addSubview(unread)
+            
+            
+            
+            revealLeftView.backgroundColor = unreadBackground
+            revealRightView.backgroundColor = theme.colors.revealAction_inactive_background
+            
+            
+            unread.setFrameSize(frame.height, frame.height)
+            mute.setFrameSize(frame.height, frame.height)
+            
+            
+            archive.setFrameSize(frame.height, frame.height)
+            pin.setFrameSize(frame.height, frame.height)
+            delete.setFrameSize(frame.height, frame.height)
+            
+            delete.setFrameOrigin(archive.frame.maxX, 0)
+            archive.setFrameOrigin(delete.frame.maxX, 0)
+            
+            
+            mute.setFrameOrigin(unread.frame.maxX, 0)
+            
+            
+            revealRightView.setFrameSize(rightRevealWidth, frame.height)
+            revealLeftView.setFrameSize(leftRevealWidth, frame.height)
+        } else {
+            
+            
+            let collapse: LAnimationButton = LAnimationButton(animation: "anim_hide", keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_inactive_background, scale: 0.33, offset: 0, autoplaySide: .left)
+            let collapseTitle = TextViewLabel()
+            collapseTitle.attributedString = .initialize(string: L10n.chatListRevealActionCollapse, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+            collapseTitle.sizeToFit()
+            collapse.addSubview(collapseTitle)
+            collapse.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
+            collapse.customHandler.layout = { [weak collapseTitle] view in
+                if let collapseTitle = collapseTitle {
+                    collapseTitle.centerX(y: view.frame.height - collapseTitle.frame.height - 10)
+                }
+            }
+            
+            collapse.setFrameSize(frame.height, frame.height)
+            revealRightView.addSubview(collapse)
+            revealRightView.backgroundColor = theme.colors.revealAction_inactive_background
+            revealRightView.setFrameSize(rightRevealWidth, frame.height)
+            
+            collapse.set(handler: { [weak self] _ in
+                guard let item = self?.item as? ChatListRowItem else {return}
+                item.collapseOrExpandArchive()
+                self?.endRevealState = nil
+            }, for: .Click)
+            
+            
+            
+            if let archiveStatus = item.archiveStatus {
+                
+
+                let hideOrPin: LAnimationButton
+                let hideOrPinTitle = TextViewLabel()
+
+                switch archiveStatus {
+                case .hidden:
+                    hideOrPin = LAnimationButton(animation: "anim_hide", keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_accent_background, scale: 0.33, offset: 20, autoplaySide: .left, rotated: true)
+                    hideOrPinTitle.attributedString = .initialize(string: L10n.chatListRevealActionPin, color: theme.colors.revealAction_accent_foreground, font: .medium(12))
+                    hideOrPin.set(background: theme.colors.revealAction_accent_background, for: .Normal)
+                default:
+                    hideOrPin = LAnimationButton(animation: "anim_hide", keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_inactive_background, scale: 0.33, offset: 0, autoplaySide: .left, rotated: false)
+                    hideOrPinTitle.attributedString = .initialize(string: L10n.chatListRevealActionHide, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+                    hideOrPin.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
+                }
+                
+                hideOrPinTitle.sizeToFit()
+                hideOrPin.addSubview(hideOrPinTitle)
+                hideOrPin.customHandler.layout = { [weak hideOrPinTitle] view in
+                    if let hideOrPinTitle = hideOrPinTitle {
+                        hideOrPinTitle.centerX(y: view.frame.height - hideOrPinTitle.frame.height - 10)
+                    }
+                }
+                
+                hideOrPin.setFrameSize(frame.height, frame.height)
+                revealLeftView.addSubview(hideOrPin)
+                revealLeftView.backgroundColor = item.archiveStatus?.isHidden == true ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background
+                revealLeftView.setFrameSize(leftRevealWidth, frame.height)
+                
+                hideOrPin.set(handler: { [weak self] _ in
+                    guard let item = self?.item as? ChatListRowItem else {return}
+                    item.toggleHideArchive()
+                    self?.endRevealState = nil
+                }, for: .Click)
+                
+            }
+            
+            
+        }
         
-        swipingLeftView.addSubview(unread)
-        
-        unread.set(handler: { [weak self] _ in
-            guard let item = self?.item as? ChatListRowItem else {return}
-            item.toggleUnread()
-            self?.endSwipingState = nil
-        }, for: .Click)
-        
-        
-        let pin: TitleButton = TitleButton()
-        let mute: TitleButton = TitleButton()
-        let delete: TitleButton = TitleButton()
-        
-      
-        
-        pin.set(handler: { [weak self] _ in
-            guard let item = self?.item as? ChatListRowItem else {return}
-            item.togglePinned()
-            self?.endSwipingState = nil
-        }, for: .Click)
-        
-        mute.set(handler: { [weak self] _ in
-            guard let item = self?.item as? ChatListRowItem else {return}
-            item.toggleMuted()
-            self?.endSwipingState = nil
-        }, for: .Click)
-        
-        delete.set(handler: { [weak self] _ in
-            guard let item = self?.item as? ChatListRowItem else {return}
-            item.delete()
-            self?.endSwipingState = nil
-        }, for: .Click)
-        
-        
-        pin.autohighlight = false
-        mute.autohighlight = false
-        delete.autohighlight = false
-        
-        pin.direction = .top
-        mute.direction = .top
-        delete.direction = .top
-        
-        swipingRightView.addSubview(pin)
-        swipingRightView.addSubview(mute)
-        swipingRightView.addSubview(delete)
         
 
         
-        swipingLeftView.backgroundColor = item.markAsUnread ? theme.chatList.badgeBackgroundColor : theme.colors.grayForeground
-        swipingRightView.backgroundColor = theme.colors.redUI
-        
-        pin.setFrameSize(frame.height, frame.height)
-        mute.setFrameSize(frame.height, frame.height)
-        delete.setFrameSize(frame.height, frame.height)
-        
-        mute.setFrameOrigin(pin.frame.maxX, 0)
-        delete.setFrameOrigin(mute.frame.maxX, 0)
-        
-        
-        swipingRightView.setFrameSize(rightSwipingWidth, frame.height)
-        swipingLeftView.setFrameSize(leftSwipingWidth, frame.height)
-
-        unread.set(color: .white, for: .Normal)
-        unread.set(font: .normal(.text), for: .Normal)
-        unread.set(text: !item.markAsUnread ? L10n.chatListSwipingRead : L10n.chatListSwipingUnread, for: .Normal)
-        unread.set(image: !item.markAsUnread ? theme.icons.chatSwiping_read : theme.icons.chatSwiping_unread, for: .Normal)
-        unread.set(background: item.markAsUnread ? theme.chatList.badgeBackgroundColor : theme.colors.grayForeground, for: .Normal)
-        _ = unread.sizeToFit(NSZeroSize, NSMakeSize(frame.height, frame.height), thatFit: true)
-        
-        
-        var hue: CGFloat = 0.0
-        var saturation: CGFloat = 0.0
-        var brightness: CGFloat = 0.0
-        
-        theme.colors.grayForeground.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil)
-        let pinUnpin = NSColor(hue: hue, saturation: saturation, brightness: brightness * 0.93, alpha: 1.0)
-        
-        pin.set(color: .white, for: .Normal)
-        pin.set(font: .normal(.text), for: .Normal)
-        pin.set(text: item.pinnedType == .none ? L10n.chatListSwipingPin : L10n.chatListSwipingUnpin, for: .Normal)
-        pin.set(image: item.pinnedType == .none ? theme.icons.chatSwiping_pin : theme.icons.chatSwiping_unpin, for: .Normal)
-        pin.set(background: pinUnpin, for: .Normal)
-        _ = pin.sizeToFit(NSZeroSize, NSMakeSize(frame.height, frame.height), thatFit: true)
-        
-        
-       
-        theme.colors.grayForeground.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil)
-        let muteUnmute = NSColor(hue: hue, saturation: saturation, brightness: brightness * 0.86, alpha: 1.0)
-        
-        mute.set(color: .white, for: .Normal)
-        mute.set(font: .normal(.text), for: .Normal)
-        mute.set(text: item.isMuted ? L10n.chatListSwipingUnmute : L10n.chatListSwipingMute, for: .Normal)
-        mute.set(image: item.isMuted ? theme.icons.chatSwiping_unmute : theme.icons.chatSwiping_mute, for: .Normal)
-        mute.set(background: muteUnmute, for: .Normal)
-        _ = mute.sizeToFit(NSZeroSize, NSMakeSize(frame.height, frame.height), thatFit: true)
-
-        
-        
-        delete.set(color: .white, for: .Normal)
-        delete.set(font: .normal(.text), for: .Normal)
-        delete.set(text: L10n.chatListSwipingDelete, for: .Normal)
-        delete.set(image: theme.icons.chatSwiping_delete, for: .Normal)
-        delete.set(background: theme.colors.redUI, for: .Normal)
-        _ = delete.sizeToFit(NSZeroSize, NSMakeSize(frame.height, frame.height), thatFit: true)
-        
-
+        needsLayout = true
     }
     
-    var additionalSwipingDelta: CGFloat {
+    var additionalRevealDelta: CGFloat {
         let additionalDelta: CGFloat
-        if let state = endSwipingState {
+        if let state = endRevealState {
             switch state {
             case .left:
-                additionalDelta = -leftSwipingWidth
+                additionalDelta = -leftRevealWidth
             case .right:
-                additionalDelta = rightSwipingWidth
+                additionalDelta = rightRevealWidth
             case .none:
                 additionalDelta = 0
             }
@@ -663,173 +952,305 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
         return containerView.frame.width
     }
 
-    var rightSwipingWidth: CGFloat {
-        return swipingRightView.subviewsSize.width
+    var rightRevealWidth: CGFloat {
+        return revealRightView.subviewsSize.width
     }
     
-    var leftSwipingWidth: CGFloat {
-        return swipingLeftView.subviewsSize.width
+    var leftRevealWidth: CGFloat {
+        return revealLeftView.subviewsSize.width
     }
     
     private var animateOnceAfterDelta: Bool = true
-    func moveSwiping(delta: CGFloat) {
+    func moveReveal(delta: CGFloat) {
         
-        if swipingLeftView.subviews.isEmpty || swipingRightView.subviews.isEmpty {
-            initSwipingState()
+        if revealLeftView.subviews.isEmpty && revealRightView.subviews.isEmpty {
+            initRevealState()
         }
       
-        let delta = delta// - additionalSwipingDelta
-        
+        let delta = delta// - additionalRevealDelta
         
         containerView.change(pos: NSMakePoint(delta, containerView.frame.minY), animated: false)
-        swipingLeftView.change(pos: NSMakePoint(min(-frame.height + delta, 0), swipingLeftView.frame.minY), animated: false)
-        swipingRightView.change(pos: NSMakePoint(frame.width + delta, swipingRightView.frame.minY), animated: false)
+        revealLeftView.change(pos: NSMakePoint(min(-leftRevealWidth + delta, 0), revealLeftView.frame.minY), animated: false)
+        revealRightView.change(pos: NSMakePoint(frame.width + delta, revealRightView.frame.minY), animated: false)
         
         
-        swipingLeftView.change(size: NSMakeSize(max(leftSwipingWidth, delta), swipingLeftView.frame.height), animated: false)
+        revealLeftView.change(size: NSMakeSize(max(leftRevealWidth, delta), revealLeftView.frame.height), animated: false)
         
-        swipingRightView.change(size: NSMakeSize(max(rightSwipingWidth, abs(delta)), swipingRightView.frame.height), animated: false)
+        revealRightView.change(size: NSMakeSize(max(rightRevealWidth, abs(delta)), revealRightView.frame.height), animated: false)
 
         
-        if delta > 0 {
-            let action = swipingLeftView.subviews[0]
-            if delta > frame.width / 2 {
-                
+        
+        if delta > 0, !revealLeftView.subviews.isEmpty {
+            let action = revealLeftView.subviews.last!
+            
+            let subviews = revealLeftView.subviews
+            let leftPercent: CGFloat = max(min(delta / leftRevealWidth, 1), 0)
+
+            if delta > frame.width - (frame.width / 3) {
                 if animateOnceAfterDelta {
                     animateOnceAfterDelta = false
-                    action.layer?.animatePosition(from: NSMakePoint(-(swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
-                    NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .default)
+                    action.layer?.animatePosition(from: NSMakePoint(-(revealLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                    
+                    for i in 0 ..< subviews.count - 1 {
+                        let action = revealLeftView.subviews[i]
+                        action.layer?.animatePosition(from: NSMakePoint(-(action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                    }
+                    
+                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
                 }
-                action.setFrameOrigin(NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY))
-            } else {
-                if !animateOnceAfterDelta {
-                    animateOnceAfterDelta = true
-                    action.layer?.animatePosition(from: NSMakePoint((swipingLeftView.frame.width - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
-                }
-                action.setFrameOrigin(NSMakePoint(0, action.frame.minY))
                 
+                for i in 0 ..< subviews.count - 1 {
+                    revealLeftView.subviews[i].setFrameOrigin(NSMakePoint(revealLeftView.frame.width, 0))
+                }
+                
+                action.setFrameOrigin(NSMakePoint((revealLeftView.frame.width - action.frame.width), action.frame.minY))
+
+                
+            } else {
+                
+                 if !animateOnceAfterDelta {
+                    animateOnceAfterDelta = true
+                    action.layer?.animatePosition(from: NSMakePoint(revealLeftView.frame.width - action.frame.width - (leftRevealWidth - action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                  
+                    for i in stride(from: revealLeftView.subviews.count - 1, to: 0, by: -1) {
+                        let action = revealLeftView.subviews[i]
+                        action.layer?.animatePosition(from: NSMakePoint((action.frame.width), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                    }
+                    
+                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+                }
+                if subviews.count == 1 {
+                    action.setFrameOrigin(NSMakePoint(min(revealLeftView.frame.width - action.frame.width, 0), action.frame.minY))
+                } else {
+                    action.setFrameOrigin(NSMakePoint(action.frame.width - action.frame.width * leftPercent, action.frame.minY))
+                    for i in 0 ..< subviews.count - 1 {
+                        let action = subviews[i]
+                        subviews[i].setFrameOrigin(NSMakePoint(revealLeftView.frame.width - action.frame.width, 0))
+                    }
+                }
             }
         }
         
       
+
         
-        
-        var rightPercent: CGFloat = delta / rightSwipingWidth
-        if rightPercent < 0 {
+        var rightPercent: CGFloat = delta / rightRevealWidth
+        if rightPercent < 0, !revealRightView.subviews.isEmpty {
             rightPercent = 1 - min(1, abs(rightPercent))
-            let subviews = swipingRightView.subviews
-            subviews[0].setFrameOrigin(0, 0)
-            subviews[1].setFrameOrigin(subviews[0].frame.width - subviews[1].frame.width * rightPercent, 0)
+            let subviews = revealRightView.subviews
             
-            let action = subviews[2]
+
+            let action = subviews.last!
             
             if rightPercent == 0 , delta < 0 {
-                if delta + subviews[1].frame.maxX < -frame.midX {
+                if delta + action.frame.width * CGFloat(max(1, revealRightView.subviews.count - 1)) - 35 < -frame.midX {
                     if animateOnceAfterDelta {
                         animateOnceAfterDelta = false
-                        NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .default)
-                        action.layer?.animatePosition(from: NSMakePoint((swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
+                        action.layer?.animatePosition(from: NSMakePoint((revealRightView.frame.width - rightRevealWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                        
+                        for i in 0 ..< subviews.count - 1 {
+                            subviews[i].layer?.animatePosition(from: NSMakePoint((subviews[i].frame.width * CGFloat(i + 1)), subviews[i].frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                        }
+                        
                     }
-                    action.setFrameOrigin(NSMakePoint(subviews[1].frame.maxX, action.frame.minY))
+                    
+                    for i in 0 ..< subviews.count - 1 {
+                         subviews[i].setFrameOrigin(NSMakePoint(-subviews[i].frame.width, 0))
+                    }
+                    
+                    action.setFrameOrigin(NSMakePoint(0, action.frame.minY))
+                    
                 } else {
                     if !animateOnceAfterDelta {
                         animateOnceAfterDelta = true
-                        action.layer?.animatePosition(from: NSMakePoint(-(swipingRightView.frame.width - rightSwipingWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
+
+                        action.layer?.animatePosition(from: NSMakePoint(-(revealRightView.frame.width - rightRevealWidth), action.frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                        
+                        for i in 0 ..< subviews.count - 1 {
+                            subviews[i].layer?.animatePosition(from: NSMakePoint(-(subviews[i].frame.width * CGFloat(i + 1)), subviews[i].frame.minY), to: NSMakePoint(0, 0), duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: true, additive: true)
+                        }
+                        
                     }
-                    action.setFrameOrigin(NSMakePoint((swipingRightView.frame.width - action.frame.width), action.frame.minY))
+                    action.setFrameOrigin(NSMakePoint((revealRightView.frame.width - action.frame.width), action.frame.minY))
+                    
+                    for i in 0 ..< subviews.count - 1 {
+                        subviews[i].setFrameOrigin(NSMakePoint(CGFloat(i) * subviews[i].frame.width, 0))
+                    }
                 }
             } else {
-                subviews[2].setFrameOrigin((subviews[0].frame.width * 2) - (subviews[2].frame.width * 2) * rightPercent, 0)
+                for (i, subview) in subviews.enumerated() {
+                    let i = CGFloat(i)
+                    subview.setFrameOrigin(subview.frame.width * i - subview.frame.width * i * rightPercent, 0)
+                }
+//                subviews[0].setFrameOrigin(0, 0)
+//                subviews[1].setFrameOrigin(subviews[0].frame.width - subviews[1].frame.width * rightPercent, 0)
+//                subviews[2].setFrameOrigin((subviews[0].frame.width * 2) - (subviews[2].frame.width * 2) * rightPercent, 0)
             }
         }
     }
     
-    func completeSwiping(direction: SwipeDirection) {
-        self.endSwipingState = direction
+    func completeReveal(direction: SwipeDirection) {
+        self.endRevealState = direction
         
-        if swipingLeftView.subviews.isEmpty || swipingRightView.subviews.isEmpty {
-            initSwipingState()
+        if revealLeftView.subviews.isEmpty || revealRightView.subviews.isEmpty {
+            initRevealState()
         }
-        
-         CATransaction.begin()
+
         
         let updateRightSubviews:(Bool) -> Void = { [weak self] animated in
             guard let `self` = self else {return}
-            let subviews = self.swipingRightView.subviews
-            subviews[0]._change(pos: NSMakePoint(0, 0), animated: animated)
-            subviews[1]._change(pos: NSMakePoint(subviews[0].frame.width, 0), animated: animated)
-            subviews[2]._change(pos: NSMakePoint(subviews[0].frame.width * 2, 0), animated: animated)
+            let subviews = self.revealRightView.subviews
+            var x: CGFloat = 0
+            for subview in subviews {
+                if subview != subviews.last {
+                    subview._change(pos: NSMakePoint(x, 0), animated: animated, timingFunction: .spring)
+                    x += subview.frame.width
+                } else {
+                    subview._change(pos: NSMakePoint(self.rightRevealWidth - subview.frame.width, 0), animated: animated, timingFunction: .spring)
+                }
+            }
+        }
+        
+        let updateLeftSubviews:(Bool) -> Void = { [weak self] animated in
+            guard let `self` = self else {return}
+            let subviews = self.revealLeftView.subviews
+            var x: CGFloat = 0
+            for subview in subviews.reversed() {
+                subview._change(pos: NSMakePoint(x, 0), animated: animated, timingFunction: .spring)
+                x += subview.frame.width
+            }
         }
         
         let failed:(@escaping(Bool)->Void)->Void = { [weak self] completion in
             guard let `self` = self else {return}
-            self.containerView.change(pos: NSMakePoint(0, self.containerView.frame.minY), animated: true)
-            self.swipingLeftView.change(pos: NSMakePoint(-self.leftSwipingWidth, self.swipingLeftView.frame.minY), animated: true)
-            self.swipingRightView.change(pos: NSMakePoint(self.frame.width, self.swipingRightView.frame.minY), animated: true, completion: completion)
+            self.containerView.change(pos: NSMakePoint(0, self.containerView.frame.minY), animated: true, timingFunction: .spring)
+            self.revealLeftView.change(pos: NSMakePoint(-self.revealLeftView.frame.width, self.revealLeftView.frame.minY), animated: true, timingFunction: .spring)
+            self.revealRightView.change(pos: NSMakePoint(self.frame.width, self.revealRightView.frame.minY), animated: true, timingFunction: .spring, completion: completion)
             
-           updateRightSubviews(true)
-            
-            self.endSwipingState = nil
+            updateRightSubviews(true)
+            updateLeftSubviews(true)
+            self.endRevealState = nil
         }
        
+        let animateRightLongReveal:(@escaping(Bool)->Void)->Void = { [weak self] completion in
+            guard let `self` = self else {return}
+            updateRightSubviews(true)
+            self.endRevealState = nil
+            let duration: Double = 0.2
+
+            self.containerView.change(pos: NSMakePoint(-self.containerView.frame.width, self.containerView.frame.minY), animated: true, duration: duration, timingFunction: .spring)
+            self.revealRightView.change(size: NSMakeSize(self.frame.width + self.rightRevealWidth, self.revealRightView.frame.height), animated: true, duration: duration, timingFunction: .spring)
+            self.revealRightView.change(pos: NSMakePoint(-self.rightRevealWidth, self.revealRightView.frame.minY), animated: true, duration: duration, timingFunction: .spring, completion: completion)
+            
+        }
+        
         
        
         
         switch direction {
         case let .left(state):
+            
+            if revealLeftView.subviews.isEmpty {
+                failed( { [weak self] _ in
+                    self?.revealRightView.removeAllSubviews()
+                    self?.revealLeftView.removeAllSubviews()
+                } )
+                return
+            }
+            
             switch state {
             case .success:
                 
-                let invokeLeftAction = containerX > frame.midX
+                let invokeLeftAction = containerX > frame.width - (frame.width / 3)
+
+                let duration: Double = 0.2
 
                 
-                containerView.change(pos: NSMakePoint(leftSwipingWidth, containerView.frame.minY), animated: true)
-                swipingLeftView.change(pos: NSMakePoint(0, swipingLeftView.frame.minY), animated: true, completion: { [weak self] completed in
+                containerView.change(pos: NSMakePoint(leftRevealWidth, containerView.frame.minY), animated: true, duration: duration, timingFunction: .spring)
+                revealLeftView.change(size: NSMakeSize(leftRevealWidth, revealLeftView.frame.height), animated: true, duration: duration, timingFunction: .spring)
+                
+                revealRightView.change(pos: NSMakePoint(frame.width, revealRightView.frame.minY), animated: true)
+                updateLeftSubviews(true)
+                
+                var last = self.revealLeftView.subviews.last as? Control
+                
+                revealLeftView.change(pos: NSMakePoint(0, revealLeftView.frame.minY), animated: true, duration: duration, timingFunction: .spring, completion: { [weak self] completed in
                     if completed, invokeLeftAction {
-                        (self?.swipingLeftView.subviews.first as? Control)?.send(event: .Click)
+                        last?.send(event: .Click)
+                        last = nil
+                        self?.needsLayout = true
                     }
                 })
-                swipingLeftView.change(size: NSMakeSize(leftSwipingWidth, swipingLeftView.frame.height), animated: true)
-                swipingRightView.change(pos: NSMakePoint(frame.width, swipingRightView.frame.minY), animated: true)
-                updateRightSubviews(true)
             case .failed:
-                failed({_ in})
+                failed( { [weak self] _ in
+                    self?.revealRightView.removeAllSubviews()
+                    self?.revealLeftView.removeAllSubviews()
+                } )
             default:
                 break
             }
         case let .right(state):
+            
+            if revealRightView.subviews.isEmpty {
+                failed( { [weak self] _ in
+                    self?.revealRightView.removeAllSubviews()
+                    self?.revealLeftView.removeAllSubviews()
+                } )
+                return
+            }
+            
             switch state {
             case .success:
+                let invokeRightAction = containerX + revealRightView.subviews.last!.frame.minX < -frame.midX
                 
-                let invokeRightAction = containerX + swipingRightView.subviews[1].frame.maxX < -frame.midX//delta + subviews[1].frame.maxX < -frame.midX
+                var last = self.revealRightView.subviews.last as? Control
+
+                
                 if invokeRightAction {
-                    failed({ [weak self] completed in
+                    animateRightLongReveal({ completed in
                         if invokeRightAction {
-                            (self?.swipingRightView.subviews.last as? Control)?.send(event: .Click)
+                            last?.send(event: .Click)
+                            last = nil
                         }
                     })
                 } else {
-                    swipingRightView.change(pos: NSMakePoint(frame.width - rightSwipingWidth, swipingRightView.frame.minY), animated: true)
-                    containerView.change(pos: NSMakePoint(-rightSwipingWidth, containerView.frame.minY), animated: true)
-                    swipingLeftView.change(pos: NSMakePoint(-leftSwipingWidth, swipingLeftView.frame.minY), animated: true)
+                    revealRightView.change(pos: NSMakePoint(frame.width - rightRevealWidth, revealRightView.frame.minY), animated: true, timingFunction: .spring)
+                    revealRightView.change(size: NSMakeSize(rightRevealWidth, revealRightView.frame.height), animated: true, timingFunction: .spring)
+                    containerView.change(pos: NSMakePoint(-rightRevealWidth, containerView.frame.minY), animated: true, timingFunction: .spring)
+                    revealLeftView.change(pos: NSMakePoint(-leftRevealWidth, revealLeftView.frame.minY), animated: true, timingFunction: .spring)
+                    
+                    
+                    let handler = (revealRightView.subviews.last as? Control)?.removeLastHandler()
+                    (revealRightView.subviews.last as? Control)?.set(handler: { control in
+                        var _control:Control? = control
+                        animateRightLongReveal({ completed in
+                            if let control = _control {
+                                handler?(control)
+                                _control = nil
+                            }
+                        })
+                    }, for: .Click)
                     
                 }
-                
-                
-                
-                
-                updateRightSubviews(true)
+               updateRightSubviews(true)
             case .failed:
-                failed({_ in})
+                failed( { [weak self] _ in
+                    self?.revealRightView.removeAllSubviews()
+                    self?.revealLeftView.removeAllSubviews()
+                } )
             default:
                 break
             }
         default:
-            self.endSwipingState = nil
-            failed({_ in})
+            self.endRevealState = nil
+            failed( { [weak self] _ in
+                self?.revealRightView.removeAllSubviews()
+                self?.revealLeftView.removeAllSubviews()
+            } )
         }
-        
-        CATransaction.commit()
+        //
     }
     
     deinit {
@@ -838,21 +1259,18 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
     
     override func layout() {
         super.layout()
-        if let item = self.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
-            self.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
-            
-            if let badgeNode = item.ctxBadgeNode {
-                badgeView?.setFrameOrigin(self.frame.width - badgeNode.size.width - item.margin, self.frame.height - badgeNode.size.height - (item.margin + 1))
-            }
-        }
+       
+        guard let item = item as? ChatListRowItem else { return }
+        
+        expandView?.frame = NSMakeRect(0, item.isCollapsed ? 0 : item.height, frame.width - .borderSize, frame.height)
         
         let additionalDelta: CGFloat
-        if let state = endSwipingState {
+        if let state = endRevealState {
             switch state {
             case .left:
-                additionalDelta = -leftSwipingWidth
+                additionalDelta = -leftRevealWidth
             case .right:
-                additionalDelta = rightSwipingWidth
+                additionalDelta = rightRevealWidth
             case .none:
                 additionalDelta = 0
             }
@@ -860,9 +1278,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, SwipingTableView {
             additionalDelta = 0
         }
         
-        containerView.frame = NSMakeRect(-additionalDelta, 0, frame.width - .borderSize, frame.height)
-        swipingLeftView.frame = NSMakeRect(-frame.height - additionalDelta, 0, leftSwipingWidth, frame.height)
-        swipingRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightSwipingWidth, frame.height)
+        containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -70 : 0, frame.width - .borderSize, 70)
+        revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)
+        revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
 
     }
     

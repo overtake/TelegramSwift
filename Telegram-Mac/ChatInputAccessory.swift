@@ -68,6 +68,7 @@ class ChatInputAccessory: Node {
         dismiss.isHidden = false
         progress?.isHidden = true
       
+        
         displayNode = nil
         dismiss.removeAllHandlers()
         container.removeAllHandlers()
@@ -93,8 +94,14 @@ class ChatInputAccessory: Node {
             dismiss.set(handler: { [weak self] _ in
                 self?.dismissForward()
             }, for: .Click)
+            
+            container.set(handler: { [weak self] _ in
+                self?.chatInteraction.forwardMessages(state.interfaceState.forwardMessageIds)
+                self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
+            }, for: .Click)
+            
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId, account:account)
+            displayNode = ReplyModel(replyMessageId: replyMessageId, account:account, replyMessage: state.interfaceState.replyMessage)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
             }, for: .Click)

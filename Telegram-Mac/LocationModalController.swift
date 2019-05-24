@@ -324,7 +324,7 @@ private enum MapItemEntry : TableItemListNodeEntry {
                 }
             })
         case .search:
-            return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state in
+            return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state, _ in
                 arguments.searchVenues(state.request)
             }, { state in
                 arguments.searchVenues(state.request)

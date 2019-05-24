@@ -102,6 +102,32 @@ class UserInfoArguments : PeerInfoArguments {
         }))
     }
     
+    func shareMyInfo() {
+        
+        
+        let context = self.context
+        let peerId = self.peerId
+        
+        
+        let peer = context.account.postbox.transaction { transaction -> Peer? in
+            return transaction.getPeer(peerId)
+        } |> deliverOnMainQueue
+        
+        _ = peer.start(next: { [weak self] peer in
+            if let peer = peer {
+                confirm(for: mainWindow, information: L10n.peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
+                    let signal: Signal<Void, NoError> = context.account.postbox.loadedPeerWithId(context.peerId) |> map { $0 as! TelegramUser } |> mapToSignal { peer in
+                        let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil), context: context, peerId: peerId)
+                        return signal  |> map { _ in}
+                    }
+                    self?.shareDisposable.set(showModalProgress(signal: signal, for: mainWindow).start())
+                })
+            }
+        })
+        
+        
+    }
+    
     func addContact() {
         shareDisposable.set(addContactPeerInteractively(account: context.account, peerId: peerId, phone: nil).start())
     }
@@ -282,10 +308,12 @@ enum UserInfoEntry: PeerInfoEntry {
     case info(sectionId:Int, PeerView, editable:Bool)
     case about(sectionId:Int, text: String)
     case bio(sectionId:Int, text: String)
+    case scam(sectionId:Int, text: String)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel)
     case userName(sectionId:Int, value: String)
     case sendMessage(sectionId:Int)
     case shareContact(sectionId:Int)
+    case shareMyInfo(sectionId:Int)
     case addContact(sectionId:Int)
     case botAddToGroup(sectionId: Int)
     case botShare(sectionId: Int, name: String)
@@ -365,6 +393,13 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
+        case let .scam(sectionId, text):
+            switch entry {
+            case .scam(sectionId, text):
+                return true
+            default:
+                return false
+            }
         case let .phoneNumber(lhsSectionId, lhsIndex, lhsValue):
             switch entry {
             case let .phoneNumber(rhsSectionId, rhsIndex, rhsValue) where lhsIndex == rhsIndex && lhsValue == rhsValue && lhsSectionId == rhsSectionId:
@@ -423,6 +458,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .shareContact(sectionId):
             switch entry {
             case .shareContact(sectionId):
+                return true
+            default:
+                return false
+            }
+        case let .shareMyInfo(sectionId):
+            switch entry {
+            case .shareMyInfo(sectionId):
                 return true
             default:
                 return false
@@ -512,46 +554,50 @@ enum UserInfoEntry: PeerInfoEntry {
         switch self {
         case .info:
             return 0
-        case .about:
+        case .scam:
             return 1
-        case .phoneNumber:
+        case .about:
             return 2
-        case .bio:
+        case .phoneNumber:
             return 3
-        case .userName:
+        case .bio:
             return 4
-        case .sendMessage:
+        case .userName:
             return 5
-        case .botAddToGroup:
+        case .sendMessage:
             return 6
-        case .botShare:
+        case .botAddToGroup:
             return 7
-        case .botSettings:
+        case .botShare:
             return 8
-        case .botHelp:
+        case .botSettings:
             return 9
-        case .botPrivacy:
+        case .botHelp:
             return 10
-        case .shareContact:
+        case .botPrivacy:
             return 11
-        case .addContact:
+        case .shareContact:
             return 12
-        case .startSecretChat:
+        case .shareMyInfo:
             return 13
-        case .sharedMedia:
+        case .addContact:
             return 14
-        case .notifications:
+        case .startSecretChat:
             return 15
-        case .encryptionKey:
+        case .sharedMedia:
             return 16
-        case .groupInCommon:
+        case .notifications:
             return 17
-        case .block:
+        case .encryptionKey:
             return 18
-        case .deleteChat:
+        case .groupInCommon:
             return 19
-        case .deleteContact:
+        case .block:
             return 20
+        case .deleteChat:
+            return 21
+        case .deleteContact:
+            return 22
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -569,6 +615,8 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _):
             return (sectionId * 1000) + stableIndex
+        case let .scam(sectionId, _):
+            return (sectionId * 1000) + stableIndex
         case let .sendMessage(sectionId):
             return (sectionId * 1000) + stableIndex
         case let .botAddToGroup(sectionId):
@@ -582,6 +630,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botHelp(sectionId):
             return (sectionId * 1000) + stableIndex
         case let .shareContact(sectionId):
+            return (sectionId * 1000) + stableIndex
+        case let .shareMyInfo(sectionId):
             return (sectionId * 1000) + stableIndex
         case let .addContact(sectionId):
             return (sectionId * 1000) + stableIndex
@@ -640,6 +690,8 @@ enum UserInfoEntry: PeerInfoEntry {
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, text:formatPhoneNumber(value.number), context: arguments.context)
         case let .userName(_, value):
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoUsername, text:"@\(value)", context: arguments.context)
+        case let .scam(_, text):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, detectLinks:false)
         case .sendMessage:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSendMessage, nameStyle: blueActionButton, type: .none, action: {
                 arguments.peerChat(arguments.peerId)
@@ -667,6 +719,10 @@ enum UserInfoEntry: PeerInfoEntry {
         case .shareContact:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareContact, nameStyle: blueActionButton, type: .none, action: {
                 arguments.shareContact()
+            })
+        case .shareMyInfo:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareMyInfo, nameStyle: blueActionButton, type: .none, action: {
+                arguments.shareMyInfo()
             })
         case .addContact:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddContact, nameStyle: blueActionButton, type: .none, action: {
@@ -730,18 +786,24 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
     
     if let peer = view.peers[view.peerId] {
         
-        if let cachedUserData = view.cachedData as? CachedUserData, state.editingState == nil {
-            if let about = cachedUserData.about, !about.isEmpty {
-                if peer.isBot {
-                    entries.append(UserInfoEntry.about(sectionId: sectionId, text: about))
-                } else {
-                    entries.append(UserInfoEntry.bio(sectionId: sectionId, text: about))
-                }
-            }
-        }
+        
         if let user = peerViewMainPeer(view) as? TelegramUser {
-            
             if state.editingState == nil {
+                
+                if user.isScam {
+                    entries.append(UserInfoEntry.scam(sectionId: sectionId, text: L10n.peerInfoScamWarning))
+                }
+                
+                if let cachedUserData = view.cachedData as? CachedUserData {
+                    if let about = cachedUserData.about, !about.isEmpty, !user.isScam {
+                        if peer.isBot {
+                            entries.append(UserInfoEntry.about(sectionId: sectionId, text: about))
+                        } else {
+                            entries.append(UserInfoEntry.bio(sectionId: sectionId, text: about))
+                        }
+                    }
+                }
+                
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
                     entries.append(UserInfoEntry.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: tr(L10n.peerInfoPhone), number: phoneNumber)))
                 }
@@ -749,16 +811,21 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                     entries.append(UserInfoEntry.userName(sectionId: sectionId, value: username))
                 }
                 
+                
                 entries.append(UserInfoEntry.section(sectionId: sectionId))
                 sectionId += 1
                 
                 if !(peer is TelegramSecretChat) {
                     entries.append(UserInfoEntry.sendMessage(sectionId: sectionId))
-                    if !user.isBot, let phone = user.phone, !phone.isEmpty {
-                        if view.peerIsContact {
-                            entries.append(UserInfoEntry.shareContact(sectionId: sectionId))
-                        } else {
-                            entries.append(UserInfoEntry.addContact(sectionId: sectionId))
+                    if !user.isBot {
+                        if let phone = user.phone, !phone.isEmpty {
+                            if view.peerIsContact {
+                                entries.append(UserInfoEntry.shareContact(sectionId: sectionId))
+                            } else {
+                                entries.append(UserInfoEntry.addContact(sectionId: sectionId))
+                            }
+                        } else if let cachedData = view.cachedData as? CachedUserData, let hasAccountPeerPhone = cachedData.hasAccountPeerPhone, !hasAccountPeerPhone {
+                            entries.append(UserInfoEntry.shareMyInfo(sectionId: sectionId))
                         }
                     } else if let botInfo = user.botInfo {
                         if botInfo.flags.contains(.worksWithGroups) {

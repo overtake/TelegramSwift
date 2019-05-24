@@ -336,7 +336,6 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     }
    
     
-    
     for item in state.items {
         if item.versionString != currentItem?.versionString {
             let text = "**" + item.versionTitle + "**" + "\n" + item.updateText
@@ -344,7 +343,6 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
                 return GeneralTextRowItem(initialSize, stableId: stableId, text: text, textColor: theme.colors.text, fontSize: 13, isTextSelectable: true)
             }))
             index += 1
-            
             entries.append(.sectionId(sectionId))
             sectionId += 1
         }

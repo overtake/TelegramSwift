@@ -56,12 +56,13 @@ class MGalleryGIFItem: MGalleryItem {
         fatalError("")
     }
     
-    override var maxMagnify:CGFloat {
-        return 1.0
-    }
+//    override var maxMagnify:CGFloat {
+//        return 1.0
+//    }
 
     override func singleView() -> NSView {
         let player = GIFPlayerView()
+        player.layerContentsRedrawPolicy = .duringViewResize
         return player
     }
     
@@ -88,7 +89,7 @@ class MGalleryGIFItem: MGalleryItem {
             return .never()
         })
 
-        self.image.set(result |> deliverOnMainQueue)
+        self.image.set(result |> map { .image($0) } |> deliverOnMainQueue)
     
         fetch()
     }

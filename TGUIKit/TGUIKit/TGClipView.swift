@@ -91,9 +91,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     
-    override public func setNeedsDisplay(_ invalidRect: NSRect) {
-        
-    }
+//    override public func setNeedsDisplay(_ invalidRect: NSRect) {
+//        
+//    }
     
     public func draw(_ layer: CALayer, in ctx: CGContext) {
        // ctx.clear(bounds)
@@ -219,7 +219,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             if ((fabs(o.x - lastOrigin.x) < 0.1 && fabs(o.y - lastOrigin.y) < 0.1)) {
                 if destination.x == o.x && destination.y == o.y {
                     self.endScroll()
-                   
+                    super.scroll(to: o)
                     handleCompletionIfNeeded(withSuccess: true)
                 } else {
                     _ = destination.x - o.x
@@ -230,10 +230,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
                         let incY = abs(ydif) - abs(ydif + 1)
                         o.y -= incY
                     }
-
+                    super.scroll(to: o)
                 }
                 
-                super.scroll(to: o)
                 
             }
         }
@@ -314,12 +313,17 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     
+    public override var bounds: NSRect {
+        didSet {
+        }
+    }
+    
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
         if self.scrollCompletion != nil {
+          //  super.scroll(to: bounds.origin)
             self.scrollCompletion!(success)
             self.scrollCompletion = nil
-            super.scroll(to: bounds.origin)
         }
     }
     

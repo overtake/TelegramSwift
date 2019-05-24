@@ -43,12 +43,14 @@ open class Control: View {
     open var hideAnimated:Bool = false
     
     
+    public var appTooltip: String?
 
     public var isSelected:Bool {
         didSet {
             if isSelected != oldValue {
                 apply(state: isSelected ? .Highlight : self.controlState)
             }
+            updateState()
         }
     }
     
@@ -90,7 +92,7 @@ open class Control: View {
         updateTrackingAreas()
     }
     
-    public private(set) var controlState:ControlState = .Normal {
+    public var controlState:ControlState = .Normal {
         didSet {
             if oldValue != controlState {
                 apply(state: isSelected ? .Highlight : controlState)
@@ -100,7 +102,10 @@ open class Control: View {
                         handler(self)
                     }
                 }
-                
+
+                if let tp = appTooltip, controlState == .Hover {
+                    tooltip(for: self, text: tp)
+                }
             }
         }
     }
@@ -207,9 +212,11 @@ open class Control: View {
         self.setNeedsDisplayLayer()
     }
     
-    public func removeLastHandler() -> Void {
+    public func removeLastHandler() -> ((Control)->Void)? {
         if !handlers.isEmpty {
-            handlers.removeLast()
+            return handlers.removeLast().1
+        } else {
+            return nil
         }
     }
     
@@ -288,6 +295,7 @@ open class Control: View {
                 handler(self)
             }
         }
+       
     }
     
     override open func mouseMoved(with event: NSEvent) {
@@ -320,6 +328,7 @@ open class Control: View {
         } else {
             self.controlState = .Normal
         }
+        
     }
     
     public var continuesAction: Bool = false
@@ -383,6 +392,9 @@ open class Control: View {
             layer?.opacity = 0.99
             return
         }
+        
+      
+        
         //self.wantsLayer = true
         //self.layer?.isOpaque = true
     }
@@ -392,10 +404,14 @@ open class Control: View {
         super.init(frame: NSZeroRect)
         animates = false
         layer?.disableActions()
+
         guard #available(OSX 10.12, *) else {
             layer?.opacity = 0.99
             return
         }
+        
+      
+        
         //self.wantsLayer = true
         //self.layer?.isOpaque = true
     }

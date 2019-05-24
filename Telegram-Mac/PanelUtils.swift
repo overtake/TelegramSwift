@@ -251,7 +251,7 @@ func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, header
             alert.icon = nil
             if peerId == account.peerId {
                 let icon = theme.icons.searchSaved
-                let signal = generateEmptyPhoto(NSMakeSize(70, 70), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(50, 50)))) |> deliverOnMainQueue
+                let signal = generateEmptyPhoto(NSMakeSize(70, 70), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(50, 50)), cornerRadius: nil)) |> deliverOnMainQueue
                 disposable = signal.start(next: { image in
                     if let image = image {
                         alert.icon = NSImage(cgImage: image, size: NSMakeSize(70, 70))
@@ -262,7 +262,7 @@ func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, header
                 })
 
             } else {
-                disposable = (peerAvatarImage(account: account, photo: PeerPhoto.peer(peer.id, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(70, 70), scale: System.backingScale, font: .avatar(30), genCap: true) |> deliverOnMainQueue).start(next: { image, _ in
+                disposable = (peerAvatarImage(account: account, photo: PeerPhoto.peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(70, 70), scale: System.backingScale, font: .avatar(30), genCap: true) |> deliverOnMainQueue).start(next: { image, _ in
                     if let image = image {
                         alert.icon = NSImage(cgImage: image, size: NSMakeSize(70, 70))
                         delay(0.2, closure: {

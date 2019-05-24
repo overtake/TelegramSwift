@@ -13,6 +13,8 @@ import AVFoundation
 import AVKit
 import TelegramCoreMac
 import PostboxMac
+import Lottie
+
 fileprivate class GMagnifyView : MagnifyView  {
     private var progressView: RadialProgressView?
 
@@ -449,7 +451,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     transitionCallFunc?(self.thumbsControl.layoutItems(with: self.items, selectedIndex: controller.selectedIndex, animated: animated), selectedItem)
                 }
             }
-            
+            if let item = selectedItem {
+                (controller.selectedViewController?.view as? GMagnifyView)?.updateStatus(item.status)
+            }
             afterTransaction?()
 
             return items.isEmpty
@@ -503,6 +507,33 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             magnigy.zoomOut()
         }
     }
+    
+    func decreaseSpeed() {
+        let speeds:[CGFloat] = [0.1, 0.3, 0.5, 0.7, 1.0]
+        if let magnigy = controller.selectedViewController?.view as? MagnifyView {
+            if let animation = magnigy.contentView as? AnimationView {
+                if let index = speeds.index(of: animation.animationSpeed) {
+                    animation.animationSpeed = speeds[max(0, index - 1)]
+                }
+            } else {
+                zoomOut()
+            }
+        }
+    }
+    
+    func increaseSpeed() {
+        let speeds:[CGFloat] = [0.1, 0.3, 0.5, 0.7, 1.0]
+        if let magnigy = controller.selectedViewController?.view as? MagnifyView {
+            if let animation = magnigy.contentView as? AnimationView {
+                if let index = speeds.index(of: animation.animationSpeed) {
+                    animation.animationSpeed = speeds[min(speeds.count - 1, index + 1)]
+                }
+            } else {
+                zoomIn()
+            }
+        }
+    }
+    
     
     func rotateLeft() {
         guard let item = self.selectedItem else {return}
@@ -749,15 +780,15 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             if let oldView = from(item.stableId), let oldWindow = oldView.window {
                 selectedView.isHidden = true
                 
-                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(nil))).start(next: { [weak self, weak selectedView] image in
+                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
                     
-                    if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame {
+                    if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame, let oldView = oldView {
                         let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                         let oldRect = oldWindow.convertToScreen(oldView.convert(oldView.bounds, to: nil))
                         
                         selectedView?.contentSize = item.sizeValue.fitted(contentFrame.size)
-                        if let _ = image, let strongSelf = self {
-                            self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: image, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
+                        if value.hasValue, let strongSelf = self {
+                            self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false
                                 strongSelf?.lockedTransition = false
                                 strongSelf?.captionView.change(opacity: 1.0)
@@ -797,16 +828,26 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }
     }
     
-    func animate(oldRect:NSRect, newRect:NSRect, newAlphaFrom:CGFloat, newAlphaTo:CGFloat, oldAlphaFrom:CGFloat, oldAlphaTo:CGFloat, contents:CGImage?, oldView:NSView, completion:@escaping ()->Void, stableId: AnyHashable, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) {
+    func animate(oldRect:NSRect, newRect:NSRect, newAlphaFrom:CGFloat, newAlphaTo:CGFloat, oldAlphaFrom:CGFloat, oldAlphaTo:CGFloat, contents:GPreviewValue, oldView:NSView, completion:@escaping ()->Void, stableId: AnyHashable, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil) {
         
         lockedTransition = true
         
         
         let view = self.view
         
-        let newView:NSView = NSView(frame: newRect) //
-        newView.wantsLayer = true
-        newView.layer?.contents = contents
+        
+        let newView:NSView //
+
+        switch contents {
+        case let .image(contents):
+            newView = NSView(frame: newRect)
+            newView.wantsLayer = true
+            newView.layer?.contents = contents
+        case let .view(view):
+            newView = view ?? NSView(frame: newRect)
+            newView.frame = newRect
+        }
+        
      //   newView.layer?.backgroundColor = NSColor.red.cgColor//self.selectedItem is MGalleryVideoItem ? .black : theme.colors.transparentBackground.cgColor
         
         
@@ -829,6 +870,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let timingFunction: CAMediaTimingFunctionName = .spring
         
         
+        
+        
         newView.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         newView.layer?.animateAlpha(from: newAlphaFrom, to: newAlphaTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         
@@ -840,6 +883,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         copyView.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+
         
         
         //.animateBounds(from: NSMakeRect(0, 0, oldRect.width, oldRect.height), to: NSMakeRect(0, 0, newRect.width, newRect.height), duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
@@ -870,8 +914,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 let newRect = window.convertToScreen(oldView.convert(oldView.bounds, to: nil))
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
-                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(nil))).start(next: { [weak self] (image) in
-                    self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: image, oldView: oldView, completion: {
+                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self] value in
+                    self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: value, oldView: oldView, completion: {
                         completion?((true, item.stableId))
                     }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                 }))

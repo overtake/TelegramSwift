@@ -103,12 +103,12 @@ class TabAllBadgeItem: TabItem {
         let context = self.context
         
         let semaphore = DispatchSemaphore(value: 0)
-        var isMultiple = false
+        var isMultiple = true
         _ = (context.sharedContext.activeAccounts |> take(1)).start(next: { accounts in
             isMultiple = accounts.accounts.count > 1
             semaphore.signal()
         })
-        
+
         semaphore.wait()
         
         if !isMultiple {

@@ -22,14 +22,9 @@ class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView 
         super.init()
     }
     
-    
-    override var window: Window? {
-        return context.window
-    }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        let ignore:Atomic<Bool> = Atomic(value: true)
         languageDisposable.set(appearanceSignal.start(next: { [weak self] _ in
             self?.updateLocalizationAndTheme()
         }))
@@ -74,7 +69,7 @@ class TableViewController: TelegramGenericViewController<TableView>, TableViewDe
     func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         
     }
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return false
     }
     func isSelectable(row:Int, item:TableRowItem) -> Bool {
@@ -279,7 +274,10 @@ var appearanceSignal:Signal<Appearance, NoError> {
 struct AppearanceWrapperEntry<E>: Comparable, Identifiable where E: Comparable, E:Identifiable {
     let entry: E
     let appearance: Appearance
-    
+    init(entry: E, appearance: Appearance) {
+        self.entry = entry
+        self.appearance = appearance
+    }
     var stableId: AnyHashable {
         return entry.stableId
     }

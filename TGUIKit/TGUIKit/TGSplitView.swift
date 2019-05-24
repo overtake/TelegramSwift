@@ -51,6 +51,10 @@ fileprivate class SplitMinimisizeView : Control {
         checkCursor()
     }
     
+    override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        checkCursor()
+    }
     
     
     fileprivate override func mouseExited(with event: NSEvent) {
@@ -78,6 +82,8 @@ fileprivate class SplitMinimisizeView : Control {
                 } else if current.x - startPoint.x >= 100, splitView.state == .minimisize {
                     splitView.needFullsize()
                     startPoint = current
+                } else {
+                    splitView.resize(to: current)
                 }
             }
             
@@ -314,29 +320,16 @@ public class SplitView : View {
             let startSize:NSSize = _startSize[obj.internalId]!;
             var size:NSSize = NSMakeSize(x, frame.height);
             var min:CGFloat  = startSize.width;
-            
-            
-            
             min = proportion.min;
-            
             if(proportion.max == CGFloat.greatestFiniteMagnitude && index != _controllers.count-1) {
-                
                 var m2:CGFloat = 0;
-                
                 for i:Int in index + 1 ..< _controllers.count - index  {
-                    
                     let split:ViewController = _controllers[i];
-                    
                     let proportion:SplitProportion = _proportions[split.internalId]!;
-                    
                     m2+=proportion.min;
                 }
-                
                 min = frame.width - x - m2;
-                
             }
-            
-
             if(index == _controllers.count - 1) {
                 min = frame.width - x;
             }
@@ -381,6 +374,10 @@ public class SplitView : View {
         self.state = .minimisize
         self.needsLayout = true
         
+    }
+    
+    func resize(to point: NSPoint) {
+        //NSLog("\(point)")
     }
     
 

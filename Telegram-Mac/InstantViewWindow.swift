@@ -247,8 +247,6 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     private let appearanceDisposable = MetaDisposable()
     private let loadProgressDisposable = MetaDisposable()
     init( page: InstantPageViewController, context: AccountContext) {
-        navigation = MajorNavigationController(ViewController.self, page)
-        navigation.alwaysAnimate = true
         let screen = NSScreen.main!
         
         self.page = page
@@ -257,7 +255,9 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         let center = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - 720)/2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - height)/2), 720, height)
         
         _window = Window(contentRect: center, styleMask: [.closable, .resizable, .miniaturizable, .fullSizeContentView, .titled, .unifiedTitleAndToolbar, .texturedBackground], backing: .buffered, defer: true)
-       
+        navigation = MajorNavigationController(ViewController.self, page, _window)
+        navigation.alwaysAnimate = true
+
         super.init(context)
         _window.isMovableByWindowBackground = false
         _window.name = "Telegram.InstantViewWindow"
@@ -446,7 +446,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                 if !NSEqualRects(frame, titleView.frame) {
                     titleView.frame = frame
                 }
-                if let controls = titleView.subviews.first?.subviews {
+                if let controls = (HackUtils.findElements(byClass: "NSTitlebarView", in: titleView)?.first as? NSView)?.subviews {
                     var xs:[CGFloat] = [18, 58, 38]
                     for i in 0 ..< min(controls.count, xs.count) {
                         let view = controls[i]

@@ -217,6 +217,10 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         }
     }
     
+    override func backKeyAction() -> KeyHandlerResult {
+        return .invokeNext
+    }
+    
     
     
 }

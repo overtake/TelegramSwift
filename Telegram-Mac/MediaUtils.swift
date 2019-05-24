@@ -695,6 +695,104 @@ func chatMessageSticker(account: Account, fileReference: FileMediaReference, typ
     }
 }
 
+
+
+private func chatMessageStickerPackThumbnailData(postbox: Postbox, representation: TelegramMediaImageRepresentation, synchronousLoad: Bool) -> Signal<Data?, NoError> {
+    let resource = representation.resource
+    
+    let maybeFetched = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedStickerAJpegRepresentation(size: CGSize(width: 160.0, height: 160.0)), complete: false, fetch: false, attemptSynchronously: synchronousLoad)
+    
+    return maybeFetched
+        |> take(1)
+        |> mapToSignal { maybeData in
+            if maybeData.complete {
+                let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
+                return .single(loadedData)
+            } else {
+                let fullSizeData = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedStickerAJpegRepresentation(size: CGSize(width: 160.0, height: 160.0)), complete: false)
+                    |> map { next in
+                        return ((next.size == 0 || !next.complete) ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: .mappedIfSafe), next.complete)
+                }
+                
+                return Signal { subscriber in
+                    let fetch: Disposable? = nil
+                    let disposable = fullSizeData.start(next: { next in
+                        subscriber.putNext(next.0)
+                    }, error: { error in
+                        subscriber.putError(error)
+                    }, completed: {
+                        subscriber.putCompletion()
+                    })
+                    
+                    return ActionDisposable {
+                        fetch?.dispose()
+                        disposable.dispose()
+                    }
+                }
+            }
+    }
+}
+
+
+func chatMessageStickerResource(file: TelegramMediaFile, small: Bool) -> MediaResource {
+    let resource: MediaResource
+    if small, let smallest = largestImageRepresentation(file.previewRepresentations) {
+        resource = smallest.resource
+    } else {
+        resource = file.resource
+    }
+    return resource
+}
+
+
+
+public func chatMessageStickerPackThumbnail(postbox: Postbox, representation: TelegramMediaImageRepresentation, scale: CGFloat, synchronousLoad: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+    let signal = chatMessageStickerPackThumbnailData(postbox: postbox, representation: representation, synchronousLoad: synchronousLoad)
+    
+    return signal
+        |> map { fullSizeData in
+            return { arguments in
+                let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: arguments.emptyColor == nil)
+                
+                let drawingRect = arguments.drawingRect
+                let fittedSize = arguments.imageSize
+                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                
+                var fullSizeImage: (CGImage, CGImage)?
+                if let fullSizeData = fullSizeData {
+                    if let image = imageFromAJpeg(data: fullSizeData) {
+                        fullSizeImage = image
+                    }
+                }
+                
+                context.withFlippedContext { c in
+                    if let color = arguments.emptyColor {
+                        c.setBlendMode(.normal)
+                        c.setFillColor(color.cgColor)
+                        c.fill(drawingRect)
+                    } else {
+                        c.setBlendMode(.copy)
+                    }
+                    
+                    if let fullSizeImage = fullSizeImage {
+                        let cgImage = fullSizeImage.0
+                        let cgImageAlpha = fullSizeImage.1
+                        c.setBlendMode(.normal)
+                        c.interpolationQuality = .medium
+                        
+                        let mask = CGImage(maskWidth: cgImageAlpha.width, height: cgImageAlpha.height, bitsPerComponent: cgImageAlpha.bitsPerComponent, bitsPerPixel: cgImageAlpha.bitsPerPixel, bytesPerRow: cgImageAlpha.bytesPerRow, provider: cgImageAlpha.dataProvider!, decode: nil, shouldInterpolate: true)
+                        
+                        c.draw(cgImage.masking(mask!)!, in: fittedRect)
+                    }
+                }
+                
+                return context
+            }
+    }
+}
+
+
+
 func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaReference, small:Bool) -> Signal<Data?, NoError> {
     if let closestRepresentation = (small ? imageRefence.media.representationForDisplayAtSize(CGSize(width: 120.0, height: 120.0)) : largestImageRepresentation(imageRefence.media.representations)) {
         let resourceData = account.postbox.mediaBox.resourceData(closestRepresentation.resource) |> map { next in
@@ -2715,3 +2813,49 @@ func solidColor(_ color: NSColor, scale: CGFloat) -> Signal<(TransformImageArgum
     })
 }
 
+
+
+func prepareTextAttachments(_ attachments: [NSTextAttachment]) -> Signal<[URL], NoError> {
+    return Signal { subscriber in
+        
+        var cancelled: Bool = false
+        
+        resourcesQueue.async {
+            var urls:[URL] = []
+
+            for attachment in attachments {
+                if cancelled {
+                    for url in urls {
+                        try? FileManager.default.removeItem(at: url)
+                    }
+                    subscriber.putCompletion()
+                    return
+                }
+                if let fileWrapper = attachment.fileWrapper {
+                    if let data = fileWrapper.regularFileContents {
+                        if let fileName = fileWrapper.filename {
+                            let path = NSTemporaryDirectory() + fileName
+                            var newPath = path
+                            var i:Int = 0
+                            if FileManager.default.fileExists(atPath: newPath) {
+                                newPath = path.nsstring.deletingPathExtension + "\(i)." + path.nsstring.pathExtension
+                                i += 1
+                            }
+                            let url = URL(fileURLWithPath: newPath)
+                            do {
+                                try data.write(to: url)
+                                urls.append(url)
+                            } catch {}
+                        }
+                    }
+                }
+            }
+            subscriber.putNext(urls)
+            subscriber.putCompletion()
+        }
+        
+        return ActionDisposable {
+            cancelled = true
+        }
+    } |> runOn(prepareQueue)
+}

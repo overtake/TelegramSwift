@@ -10,12 +10,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import "DateUtils.h"
 #import "ObjcUtils.h"
-@interface MarkdownUndoItem : NSObject
-    @property (nonatomic, strong) NSAttributedString *was;
-    @property (nonatomic, strong) NSAttributedString *be;
-    @property (nonatomic, assign) NSRange inRange;
-    -(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be inRange:(NSRange)inRange;
-@end
+
 
 @implementation MarkdownUndoItem
     -(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be inRange:(NSRange)inRange {
@@ -26,6 +21,24 @@
         }
         return self;
     }
+@end
+
+
+@implementation SimpleUndoItem
+-(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be wasRange:(NSRange)wasRange beRange:(NSRange)beRange {
+    if (self = [super init]) {
+        self.was = was;
+        self.be = be;
+        self.wasRange = wasRange;
+        self.beRange = beRange;
+    }
+    return self;
+}
+
+-(void)setWas:(NSAttributedString *)was {
+    self->_was = was;
+}
+
 @end
 
 static NSString* (^localizationFunc)(NSString *key);
@@ -205,6 +218,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                                 [self.transformItems enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                                     [item.submenu insertItem:obj atIndex:0];
                                 }];
+                           //     [item.submenu insertItem:[[NSMenuItem alloc] initWithTitle:@"Remove All Transformations" action:nil keyEquivalent:nil] atIndex:0];
                             }
                         } else {
                             [removeItems addObject:item];
@@ -238,7 +252,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.URL", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
     [url setKeyEquivalentModifierMask: NSCommandKeyMask];
     
-    return @[code, italic, bold, url];
+    NSMenuItem *removeAll = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.RemoveAll", nil) action:@selector(removeAll:) keyEquivalent:@""];
+
+    
+    return @[removeAll, code, italic, bold, url];
 }
 
 
@@ -246,6 +263,18 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     return textViewEnableTouchBar ?  [super makeTouchBar] : nil;
 }
 
+-(void)removeAll:(id)sender {
+    NSRange selectedRange = self.selectedRange;
+    NSMutableAttributedString *attr = [self.attributedString mutableCopy];
+    [attr removeAttribute:TGCustomLinkAttributeName range:selectedRange];
+    [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.font.pointSize] range: selectedRange];
+    
+    [self.textStorage setAttributedString:attr];
+    [self setSelectedRange:NSMakeRange(selectedRange.location + selectedRange.length, 0)];
+//    [attr enumerateAttributesInRange:selectedRange options:nil usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+//
+//    }];
+}
 
 -(void)boldWord:(id)sender {
      [self changeFontMarkdown:[NSFont boldSystemFontOfSize:self.font.pointSize]];
@@ -260,6 +289,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 -(void)addLink:(NSString *)link {
     [self.textStorage addAttribute:NSLinkAttributeName value: link range:self.selectedRange];
+}
+
+-(void)addLink:(NSString *)link range: (NSRange)range {
+    [self.textStorage addAttribute:NSLinkAttributeName value: link range: range];
 }
 
 -(void)italicWord:(id)sender {
@@ -366,6 +399,28 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     }
 }
 
+- (void)addSimpleItem:(SimpleUndoItem *)item {
+    [[self undoManager] registerUndoWithTarget:self selector:@selector(removeSimpleItem:) object:item];
+    if (![[self undoManager] isUndoing]) {
+        [[self undoManager] setActionName:NSLocalizedString(@"actions.add-item", @"Add Item")];
+    }
+    [[self textStorage] setAttributedString:item.be];
+    [self setSelectedRange:item.beRange];
+    [self.weakd textViewTextDidChangeSelectedRange:self.selectedRange];
+}
+
+- (void)removeSimpleItem:(SimpleUndoItem *)item {
+    [[self undoManager] registerUndoWithTarget:self selector:@selector(addSimpleItem:) object:item];
+    if (![[self undoManager] isUndoing]) {
+        [[self undoManager] setActionName:NSLocalizedString(@"actions.remove-item", @"Remove Item")];
+    }
+    NSLog(@"%@", item.was);
+    [[self textStorage] setAttributedString:item.was];
+    [self setSelectedRange:item.wasRange];
+    [self.weakd textViewTextDidChangeSelectedRange:item.wasRange];
+}
+
+
 
 -(BOOL)validateMenuItem:(NSMenuItem *)menuItem {
     if(menuItem.action == @selector(changeLayoutOrientation:)) {
@@ -373,15 +428,21 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     }
     
     if(menuItem.action == @selector(copy:)) {
-        return self.string.length > 0;
+        return self.selectedRange.length > 0;
     }
     
     return [super validateMenuItem:menuItem];
 }
 
 -(void)copy:(id)sender {
-    if (self.string.length > 0) {
-        [super copy:sender];
+    if (self.selectedRange.length > 0) {
+        if ([self.weakd respondsToSelector:@selector(copyTextWithRTF:)]) {
+            if (![self.weakd copyTextWithRTF: [self.attributedString attributedSubstringFromRange:self.selectedRange]]) {
+                [super copy:sender];
+            }
+        } else {
+            [super copy:sender];
+        }
     }
 }
 
@@ -1283,10 +1344,13 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 -(void)setAttributedString:(NSAttributedString *)attributedString animated:(BOOL)animated {
+    int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit: self];
+
+    NSAttributedString *string = [attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit, attributedString.string.length))];
     
-    NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString:attributedString];
+    NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
     
-    [attributedString enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, attributedString.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
+    [string enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
     
@@ -1307,7 +1371,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 -(void)setString:(NSString *)string {
 
     if (![string isEqualToString:[self textWithDefault:self.string]]) {
-        [self setString:string animated:YES];
+        [self setString:string animated:self.animates];
     }
 }
 
@@ -1330,6 +1394,11 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [_textView insertText:aString replacementRange:self.selectedRange];
 }
 
+- (void)addSimpleItem:(SimpleUndoItem *)item {
+    [self.inputView addSimpleItem:item];
+    [self update: YES];
+}
+
 -(void)addInputTextTag:(TGInputTextTag *)tag range:(NSRange)range {
     NSAttributedString *was = [self.textView.textStorage attributedSubstringFromRange:range];
     [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tag range:range];
@@ -1344,6 +1413,14 @@ static int64_t nextId = 0;
         return;
     id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
     [self addInputTextTag:tag range:self.selectedRange];
+    [self update:YES];
+}
+
+-(void)addLink:(NSString *)link range: (NSRange)range {
+    if (range.length == 0)
+        return;
+    id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
+    [self addInputTextTag:tag range:range];
     [self update:YES];
 }
 

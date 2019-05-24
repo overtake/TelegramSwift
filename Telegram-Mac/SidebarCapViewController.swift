@@ -99,8 +99,6 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
         globalPeerDisposable.set((context.globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, NoError> in
             if let value = value {
                 switch value {
-                case .group:
-                    return .single(false)
                 case let .peer(peerId):
                     return postbox.transaction { transaction -> Bool in
                         return transaction.getPeer(peerId)?.canSendMessage ?? false

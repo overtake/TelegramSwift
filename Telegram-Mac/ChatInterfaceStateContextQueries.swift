@@ -84,14 +84,40 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
 //        })
     case let .emoji(query, firstWord):
         if !query.isEmpty {
-            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(0.3, queue: .concurrentDefaultQueue())
-            
-            return (inputQuery, .single({ _ in return nil }) |> then(signal |> map { matches -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                return { _ in return .emoji(matches, firstWord) }
-            }))
+            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
+
+            if firstWord {
+                return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    let sorted = matches.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
+                        let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    return { _ in return .emoji(sorted, firstWord) }
+                }))
+            } else {
+                return (inputQuery, combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    let sorted = matches.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
+                        let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    
+                    return { _ in return .emoji(sorted, firstWord) }
+                })
+            }
+           
             
         } else {
-           return (nil, .single({ _ in return nil }))
+            if firstWord {
+                return (nil, .single({ _ in return nil }))
+            } else {
+                return (inputQuery, recentUsedEmoji(postbox: context.account.postbox) |> map { emojis -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    return { _ in return .emoji(emojis.emojies, firstWord) }
+                })
+            }
         }
 
     case let .mention(query: query, includeRecent: includeRecent):
@@ -114,17 +140,12 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
             
             let participants = combineLatest(inlineSignal, searchPeerMembers(context: context, peerId: global.id, query: query) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                        switch entry {
-                        case let .MessageEntry(message, _, _, _, _):
-                            if message.media.first is TelegramMediaAction {
-                                return nil
-                            }
-                            return message.author?.id
-                        default:
+                        if entry.message.media.first is TelegramMediaAction {
                             return nil
                         }
+                        return entry.message.author?.id
                     })
                     
                     let sorted = participants.sorted{ lhs, rhs in
@@ -287,17 +308,12 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         
                         if let global = chatPresentationInterfaceState.peer {
                             return searchPeerMembers(context: context, peerId: global.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                                        switch entry {
-                                        case let .MessageEntry(message, _, _, _, _):
-                                            if message.media.first is TelegramMediaAction {
-                                                return nil
-                                            }
-                                            return message.author?.id
-                                        default:
+                                        if entry.message.media.first is TelegramMediaAction {
                                             return nil
                                         }
+                                        return entry.message.author?.id
                                     })
                                     
                                     let sorted = participants.sorted{ lhs, rhs in
@@ -373,17 +389,12 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
         }
         
         let participants = searchPeerMembers(context: context, peerId: peer.id, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peer.id), count: 100, clipHoles: true, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peer.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                 let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                    switch entry {
-                    case let .MessageEntry(message, _, _, _, _):
-                        if message.media.first is TelegramMediaAction {
-                            return nil
-                        }
-                        return message.author?.id
-                    default:
+                    if entry.message.media.first is TelegramMediaAction {
                         return nil
                     }
+                    return entry.message.author?.id
                 })
                 
                 var sorted = participants.sorted{ lhs, rhs in
@@ -450,14 +461,40 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
         return (inputQuery, signal |> then(participants))
     case let .emoji(query, firstWord):
         if !query.isEmpty {
-            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(0.3, queue: .concurrentDefaultQueue())
+            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
             
-            return (inputQuery, .single({ _ in return nil }) |> then(signal |> map { matches -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                return { _ in return .emoji(matches, firstWord) }
-            }))
+            if firstWord {
+                return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    let sorted = matches.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
+                        let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    return { _ in return .emoji(sorted, firstWord) }
+                    }))
+            } else {
+                return (inputQuery, combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    let sorted = matches.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
+                        let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    
+                    return { _ in return .emoji(sorted, firstWord) }
+                    })
+            }
+            
             
         } else {
-            return (nil, .single({ _ in return nil }))
+            if firstWord {
+                return (nil, .single({ _ in return nil }))
+            } else {
+                return (inputQuery, recentUsedEmoji(postbox: context.account.postbox) |> map { emojis -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    return { _ in return .emoji(emojis.emojies, firstWord) }
+                    })
+            }
         }
     default:
         return (nil, .single({ _ in return nil }))

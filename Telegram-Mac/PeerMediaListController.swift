@@ -164,18 +164,22 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
     }
 
     if update.updateType == .search {
-        converted.append(.searchEntry(false))
+        if update.searchState.state == .None {
+            converted.append(.searchEntry(false))
+        }
         if update.messages.isEmpty {
             converted.append(.emptySearchEntry(false))
         }
     } else if update.updateType == .loading {
-        if !tags.contains(.voiceOrInstantVideo) {
-            converted.append(.searchEntry(true))
+        if update.searchState.state == .None {
+            if !tags.contains(.voiceOrInstantVideo) {
+                converted.append(.searchEntry(true))
+            }
         }
         if update.messages.isEmpty {
             converted.append(.emptySearchEntry(true))
         }
-    } else if update.laterId == nil {
+    } else if update.searchState.state == .None {
         if !update.messages.isEmpty && !tags.contains(.voiceOrInstantVideo) {
             converted.append(.searchEntry(false))
         }
@@ -232,20 +236,28 @@ struct PeerMediaUpdate {
     let laterId: MessageIndex?
     let earlierId: MessageIndex?
     let automaticDownload: AutomaticMediaDownloadSettings
-    init (messages: [Message] = [], updateType:PeerMediaUpdateState = .loading, laterId:MessageIndex? = nil, earlierId:MessageIndex? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings) {
+    let searchState: SearchState
+    init (messages: [Message] = [], updateType:PeerMediaUpdateState = .loading, laterId:MessageIndex? = nil, earlierId:MessageIndex? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings, searchState: SearchState = SearchState(state: .None, request: nil)) {
         self.messages = messages
         self.updateType = updateType
         self.laterId = laterId
         self.earlierId = earlierId
         self.automaticDownload = automaticDownload
+        self.searchState = searchState
     }
     
     func withUpdatedUpdatedType(_ updateType:PeerMediaUpdateState) -> PeerMediaUpdate {
-        return PeerMediaUpdate.init(messages: self.messages, updateType: updateType, laterId: self.laterId, earlierId: self.earlierId, automaticDownload: self.automaticDownload)
+        return PeerMediaUpdate(messages: self.messages, updateType: updateType, laterId: self.laterId, earlierId: self.earlierId, automaticDownload: self.automaticDownload, searchState: self.searchState)
     }
 }
 
 
+struct MediaSearchState : Equatable {
+    let state: SearchState
+    let animated: Bool
+    let isLoading: Bool
+    let view: SearchView?
+}
 
 class PeerMediaListController: GenericViewController<TableView> {
     
@@ -255,7 +267,14 @@ class PeerMediaListController: GenericViewController<TableView> {
     private let disposable: MetaDisposable = MetaDisposable()
     private let entires = Atomic<[AppearanceWrapperEntry<PeerMediaSharedEntry>]?>(value: nil)
     private let updateView = Atomic<PeerMediaUpdate?>(value: nil)
+    private let mediaSearchState:ValuePromise<MediaSearchState> = ValuePromise(ignoreRepeated: true)
     private let searchState:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
+
+    var mediaSearchValue:Signal<MediaSearchState, NoError> {
+        return mediaSearchState.get()
+    }
+
+    
     public init(context: AccountContext, chatLocation: ChatLocation, chatInteraction: ChatInteraction) {
         self.context = context
         self.chatLocation = chatLocation
@@ -298,6 +317,10 @@ class PeerMediaListController: GenericViewController<TableView> {
         searchState.set(SearchState(state: .None, request: nil))
         genericView.emptyItem = PeerMediaEmptyRowItem(atomicSize.modify {$0}, tags: tagMask)
 
+        genericView.set(stickClass: PeerMediaDateItem.self, handler: { item in
+            
+        })
+        
         let historyPromise: Promise<PeerMediaUpdate> = Promise(PeerMediaUpdate())
         
         
@@ -305,45 +328,31 @@ class PeerMediaListController: GenericViewController<TableView> {
          |> mapToSignal { [weak self] location, searchState -> Signal<PeerMediaUpdate, NoError> in
             if let strongSelf = self {
                 if searchState.request.isEmpty {
-                    return combineLatest(chatHistoryViewForLocation(location, account: strongSelf.context.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []) |> deliverOnPrepareQueue, automaticDownloadSettings(postbox: strongSelf.context.account.postbox) |> deliverOnPrepareQueue) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
+                    return combineLatest(queue: prepareQueue, chatHistoryViewForLocation(location, account: strongSelf.context.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []), automaticDownloadSettings(postbox: strongSelf.context.account.postbox)) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
                         switch view {
                         case .Loading:
                             return .single(PeerMediaUpdate())
                         case let .HistoryView(view: view, type: _, scrollPosition: _, initialData: _):
                             var messages:[Message] = []
                             for entry in view.entries {
-                                switch entry {
-                                case let .MessageEntry(message, _, _, _, _):
-                                    messages.append(message)
-                                default:
-                                    break
-                                }
+                                messages.append(entry.message)
                             }
                             
-                            var laterId = view.laterId
-                            var earlierId = view.earlierId
-                            
-                            if let last = view.entries.last, case .HoleEntry = last {
-                                laterId = nil
-                            }
-                            if let first = view.entries.first, case .HoleEntry = first {
-                                earlierId = nil
-                            }
-                            
-                            return .single(PeerMediaUpdate(messages: messages, updateType: .history, laterId: laterId, earlierId: earlierId, automaticDownload: settings))
+                            let laterId = view.laterId
+                            let earlierId = view.earlierId
+
+                            return .single(PeerMediaUpdate(messages: messages, updateType: .history, laterId: laterId, earlierId: earlierId, automaticDownload: settings, searchState: searchState))
                         }
                     }
                 } else {
                     let searchMessagesLocation: SearchMessagesLocation
                     switch strongSelf.chatLocation {
-                    case let .group(groupId):
-                        searchMessagesLocation = .group(groupId)
                     case let .peer(peerId):
                         searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask)
                     }
                     
                     let signal = searchMessages(account: strongSelf.context.account, location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
-                        return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil)
+                        return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil, searchState: searchState)
                     }
                     
                     let update = strongSelf.updateView.modify {$0?.withUpdatedUpdatedType(.loading)} ?? PeerMediaUpdate()
@@ -362,7 +371,7 @@ class PeerMediaListController: GenericViewController<TableView> {
         
         let animated:Atomic<Bool> = Atomic(value:false)
         
-        let searchInteractions = SearchInteractions({ [weak self] state in
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
             if let strongSelf = self {
                 strongSelf.searchState.set(state)
             }
@@ -379,23 +388,38 @@ class PeerMediaListController: GenericViewController<TableView> {
         
         
         
-        let historyViewTransition = combineLatest(historyPromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { update, appearance -> TableUpdateTransition in
+        let historyViewTransition = combineLatest(queue: prepareQueue,historyPromise.get(), appearanceSignal) |> map { update, appearance -> (transition: TableUpdateTransition, previousUpdate: PeerMediaUpdate?, currentUpdate: PeerMediaUpdate) in
             let animated = animated.swap(true)
             let scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
             
             let entries = convertEntries(from: update, tags: tagMask, timeDifference: context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = _entries.swap(entries)
-            _ = _updateView.swap(update)
+            let previousUpdate = _updateView.swap(update)
             
-            return preparedMediaTransition(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: false, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
+            let transition = preparedMediaTransition(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: previousUpdate?.searchState.state != update.searchState.state, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
+            
+            return (transition: transition, previousUpdate: previousUpdate, currentUpdate: update)
 
         } |> deliverOnMainQueue
         
         
-        disposable.set(historyViewTransition.start(next: { [weak self] transition in
-            self?.genericView.merge(with: transition)
-            
+        disposable.set(historyViewTransition.start(next: { [weak self] values in
             guard let `self` = self else {return}
+
+           // CATransaction.begin()
+//            CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
+//            CATransaction.setAnimationDuration(0.2)
+            
+            let searchView: SearchView? = (self.genericView.firstItem?.view as? SearchRowView)?.searchView
+            
+            
+            searchView?.searchInteractions = searchInteractions
+            
+            let state = MediaSearchState(state: values.currentUpdate.searchState, animated: values.currentUpdate.searchState != values.previousUpdate?.searchState, isLoading: values.currentUpdate.updateType == .loading, view: searchView)
+            self.genericView.merge(with: values.transition)
+            self.mediaSearchState.set(state)
+          // CATransaction.commit()
+            
             if let controller = globalAudio {
                 (self.navigationController?.header?.view as? InlineAudioPlayerView)?.update(with: controller, context: context, tableView: (self.navigationController?.first {$0 is ChatController} as? ChatController)?.genericView.tableView, supportTableView: self.genericView)
             }

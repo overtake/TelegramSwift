@@ -19,13 +19,6 @@ extension Message {
     }
 }
 
-extension MessageHistoryHole {
-    
-    var chatStableId:ChatHistoryEntryId {
-        return ChatHistoryEntryId.hole(self)
-    }
-}
-
 
 extension NSMutableAttributedString {
     func detectLinks(type:ParsingType, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
@@ -64,8 +57,8 @@ extension NSMutableAttributedString {
             }
             return false
         }
-        
-        let symbols:[(from: String, to: String)] = [(from: "✌", to: "✌️"), (from: "☺", to: "☺️"), (from: "☝", to: "☝️"), (from: "1⃣", to: "1️⃣"), (from: "2⃣", to: "2️⃣"), (from: "3⃣", to: "3️⃣"), (from: "4⃣", to: "4️⃣"), (from: "5⃣", to: "5️⃣"), (from: "6⃣", to: "6️⃣"), (from: "7⃣", to: "7️⃣"), (from: "8⃣", to: "8️⃣"), (from: "9⃣", to: "9️⃣"), (from: "0⃣", to: "0️⃣"), (from: "❤", to: "❤️"), (from: "☁", to: "☁️"), (from: "ℹ", to: "ℹ️"), (from: "✍", to: "✍️")]
+
+        let symbols:[(from: String, to: String)] = [(from: "✌", to: "✌️"), (from: "☺", to: "☺️"), (from: "☝", to: "☝️"), (from: "1⃣", to: "1️⃣"), (from: "2⃣", to: "2️⃣"), (from: "3⃣", to: "3️⃣"), (from: "4⃣", to: "4️⃣"), (from: "5⃣", to: "5️⃣"), (from: "6⃣", to: "6️⃣"), (from: "7⃣", to: "7️⃣"), (from: "8⃣", to: "8️⃣"), (from: "9⃣", to: "9️⃣"), (from: "0⃣", to: "0️⃣"), (from: "❤", to: "❤️"), (from: "☁", to: "☁️"), (from: "ℹ", to: "ℹ️"), (from: "✍", to: "✍️"), (from: "♥", to: "❤️"), (from: "⁉", to: "⁉️"), (from: "❣", to: "❣️"), (from: "⬅", to: "⬅️"), (from: "◻", to: "◻️"), (from: "➡", to: "➡️"), (from: "◼", to: "◼️")]
         for symbol in symbols {
             while changeSymbol(symbol.from, to: symbol.to) {
                 
@@ -100,6 +93,12 @@ public extension String {
         str = str.replacingOccurrences(of: "✍", with: "✍️")
         str = str.replacingOccurrences(of: "⁉", with: "⁉️")
         str = str.replacingOccurrences(of: "❣", with: "❣️")
+        str = str.replacingOccurrences(of: "⬅", with: "⬅️")
+        str = str.replacingOccurrences(of: "◻", with: "◻️")
+        str = str.replacingOccurrences(of: "◼", with: "◼️")
+        str = str.replacingOccurrences(of: "➡", with: "➡️")
+        
+
         return str
     }
     
@@ -1571,6 +1570,7 @@ private let emojiReplacements:[String:String] = {
     dictionary[":>"] = "😆"
     dictionary[":->"] = "😆"
     dictionary["XD"] = "😆"
+    dictionary["xD"] = "😂"
     dictionary["O:)"] = "😇"
     dictionary["3-)"] = "😌"
     dictionary[":P"] = "😛"
@@ -2192,3 +2192,91 @@ extension Date {
 }
 
 
+
+
+public extension NSAttributedString {
+
+    func applyRtf() -> (NSAttributedString, [NSTextAttachment]) {
+        let string = self.mutableCopy() as! NSMutableAttributedString
+        
+        let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
+        
+        var attachments:[NSTextAttachment] = []
+        
+        string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
+            if let url = attr[.link] {
+                var string: String?
+                if let url = url as? NSURL, let link = url.absoluteString {
+                    string = link
+                } else if let link = url as? String {
+                    string = link
+                }
+                if let string = string {
+                    let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
+                    modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
+                }
+            } else if let font = attr[.font] as? NSFont {
+                let newFont: NSFont
+                if font.fontDescriptor.symbolicTraits.contains(.bold) {
+                    newFont = .bold(theme.fontSize)
+                } else if font.fontDescriptor.symbolicTraits.contains(.italic) {
+                    newFont = .italic(theme.fontSize)
+                } else if font.fontDescriptor.symbolicTraits.contains(NSFontDescriptor.SymbolicTraits.monoSpace) {
+                    newFont = .code(theme.fontSize)
+                } else {
+                    newFont = .normal(theme.fontSize)
+                }
+                modified.addAttribute(.font, value: newFont, range: range)
+            }
+            for key in attr.keys {
+                switch key {
+                case .font, .link:
+                    break
+                case .attachment:
+                    modified.removeAttribute(key, range: range)
+                    attachments.append(attr[key] as! NSTextAttachment)
+                default:
+                    modified.removeAttribute(key, range: range)
+                }
+            }
+        })
+        
+        let crossTagsRemove = modified.mutableCopy() as! NSMutableAttributedString
+        modified.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: modified.range, options: [], using: { value, range, _ in
+            if value != nil {
+                crossTagsRemove.addAttribute(.font, value: NSFont.normal(theme.fontSize), range: range)
+            }
+        })
+        crossTagsRemove.addAttribute(.foregroundColor, value: theme.colors.text, range: modified.range)
+        return (crossTagsRemove.trimmed, attachments)
+    }
+    
+    func appendAttributedString(_ string: NSAttributedString, selectedRange: NSRange = NSMakeRange(0, 0)) -> (NSAttributedString, NSRange) {
+        let inputText = self.mutableCopy() as! NSMutableAttributedString
+        
+        
+        var range: NSRange = NSMakeRange(selectedRange.location + string.string.length, 0);
+        if selectedRange.upperBound - selectedRange.lowerBound > 0 {
+            inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: string)
+        } else {
+            inputText.insert(string, at: selectedRange.lowerBound)
+        }
+        return (inputText, range)
+    }
+}
+
+
+extension Date {
+    
+    static var kernelBootTimeSecs:Int32 {
+        var mib = [ CTL_KERN, KERN_BOOTTIME ]
+        var bootTime = timeval()
+        var bootTimeSize = MemoryLayout<timeval>.size
+        
+        if 0 != sysctl(&mib, UInt32(mib.count), &bootTime, &bootTimeSize, nil, 0) {
+            fatalError("Could not get boot time, errno: \(errno)")
+        }
+        
+        return Int32(bootTime.tv_sec)
+    }
+}

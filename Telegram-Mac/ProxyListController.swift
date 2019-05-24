@@ -179,90 +179,86 @@ private extension ProxyServerConnection {
     }
 }
 
-func proxyListController(accountManager: AccountManager, network: Network, showUseCalls: Bool = true, share:@escaping([ProxyServerSettings])->Void = {_ in}) -> (@escaping(InputDataController) -> Void) -> Void {
-    return { f in
+func proxyListController(accountManager: AccountManager, network: Network, showUseCalls: Bool = true, share:@escaping([ProxyServerSettings])->Void = {_ in}, pushController:@escaping(ViewController) -> Void = { _ in }) -> ViewController {
+    let actionsDisposable = DisposableSet()
+    
+    let updateDisposable = MetaDisposable()
+    actionsDisposable.add(updateDisposable)
+    
+    let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettings(accountManager: accountManager) |> map { $0.servers})
+    
+    weak var _controller: ViewController? = nil
+    
+    let stateValue:Atomic<ProxyListState> = Atomic(value: ProxyListState())
+    let statePromise:ValuePromise<ProxyListState> = ValuePromise(ignoreRepeated: true)
+    let updateState:(_ f:(ProxyListState)->ProxyListState)-> Void = { f in
+        statePromise.set(stateValue.modify(f))
+    }
+    
+    actionsDisposable.add((proxySettings(accountManager: accountManager) |> deliverOnPrepareQueue).start(next: { settings in
+        updateState { current in
+            return current.withUpdatedSettings(settings)
+        }
+    }))
+    
+    let arguments = ProxyListArguments(edit: { proxy in
+        if let proxy = proxy {
+            pushController(addProxyController(accountManager: accountManager, network: network, settings: proxy, type: proxy.connection.type))
+        } else {
+            let values: [ValuesSelectorValue<ProxyType>] = [ValuesSelectorValue(localized: L10n.proxySettingsSocks5, value: .socks5), ValuesSelectorValue(localized: L10n.proxySettingsMTP, value: .mtp)]
+            showModal(with: ValuesSelectorModalController(values: values, selected: nil, title: L10n.proxySettingsType, onComplete: { selected in
+                pushController(addProxyController(accountManager: accountManager, network: network, settings: nil, type: selected.value))
+            }), for: mainWindow)
+        }
+    }, delete: { proxy in
+        updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, { current in
+            return current.withRemovedServer(proxy)
+        }).start())
+    }, connect: { proxy in
+        updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedActiveServer(proxy).withUpdatedEnabled(true)}).start())
+    }, disconnect: {
+        updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedEnabled(false)}).start())
+    }, reconnectLatest: {
+        updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, { current in
+            if !current.enabled, let _ = current.activeServer {
+                return current.withUpdatedEnabled(true)
+            } else if let first = current.servers.first {
+                return current.withUpdatedActiveServer(first).withUpdatedEnabled(true)
+            } else {
+                return current
+            }
+        }).start())
+    }, enableForCalls: { enable in
+        updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedUseForCalls(enable)}).start())
+    })
+    
+    let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map {($0, true)}, title: L10n.proxySettingsTitle, validateData: {
+        data in
         
-        let actionsDisposable = DisposableSet()
-        
-        let updateDisposable = MetaDisposable()
-        actionsDisposable.add(updateDisposable)
-        
-        let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettings(accountManager: accountManager) |> map { $0.servers})
-        
-        weak var _controller: ViewController? = nil
-        
-        let stateValue:Atomic<ProxyListState> = Atomic(value: ProxyListState())
-        let statePromise:ValuePromise<ProxyListState> = ValuePromise(ignoreRepeated: true)
-        let updateState:(_ f:(ProxyListState)->ProxyListState)-> Void = { f in
-            statePromise.set(stateValue.modify(f))
+        if data[_p_id_add] != nil {
+            arguments.edit(nil)
         }
         
-        actionsDisposable.add((proxySettings(accountManager: accountManager) |> deliverOnPrepareQueue).start(next: { settings in
-            updateState { current in
-                return current.withUpdatedSettings(settings)
-            }
-        }))
         
-        let arguments = ProxyListArguments(edit: { proxy in
-            if let proxy = proxy {
-                f(addProxyController(accountManager: accountManager, network: network, settings: proxy, type: proxy.connection.type))
-            } else {
-                let values: [ValuesSelectorValue<ProxyType>] = [ValuesSelectorValue(localized: L10n.proxySettingsSocks5, value: .socks5), ValuesSelectorValue(localized: L10n.proxySettingsMTP, value: .mtp)]
-                showModal(with: ValuesSelectorModalController(values: values, selected: nil, title: L10n.proxySettingsType, onComplete: { selected in
-                     f(addProxyController(accountManager: accountManager, network: network, settings: nil, type: selected.value))
-                }), for: mainWindow)
-            }
-        }, delete: { proxy in
-            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, { current in
-                return current.withRemovedServer(proxy)
-            }).start())
-        }, connect: { proxy in
-            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedActiveServer(proxy).withUpdatedEnabled(true)}).start())
-        }, disconnect: {
-            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedEnabled(false)}).start())
-        }, reconnectLatest: {
-           updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, { current in
-                if !current.enabled, let _ = current.activeServer {
-                    return current.withUpdatedEnabled(true)
-                } else if let first = current.servers.first {
-                    return current.withUpdatedActiveServer(first).withUpdatedEnabled(true)
-                } else {
+        return .fail(.none)
+    }, afterDisappear: {
+        actionsDisposable.dispose()
+    }, removeAfterDisappear: false, hasDone: false, identifier: "proxy", customRightButton: { controller in
+        let view = ImageBarView(controller: controller, theme.icons.webgameShare)
+        
+        view.button.set(handler: { control in
+            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.proxySettingsShareProxyList, {
+                updateState { current in
+                    share(Array(current.settings.servers.prefix(20)))
                     return current
-            }
-            }).start())
-        }, enableForCalls: { enable in
-            updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedUseForCalls(enable)}).start())
-        })
-        
-        let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map {($0, true)}, title: L10n.proxySettingsTitle, validateData: {
-            data in
-            
-            if data[_p_id_add] != nil {
-                arguments.edit(nil)
-            }
-            
-            
-            return .fail(.none)
-        }, afterDisappear: {
-            actionsDisposable.dispose()
-        }, removeAfterDisappear: false, hasDone: false, identifier: "proxy", customRightButton: { controller in
-            let view = ImageBarView(controller: controller, theme.icons.webgameShare)
-            
-            view.button.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.proxySettingsShareProxyList, {
-                    updateState { current in
-                        share(Array(current.settings.servers.prefix(20)))
-                        return current
-                    }
-                })]), edge: .minX, inset: NSMakePoint(0,-50))
-            }, for: .Click)
-            view.set(image: theme.icons.webgameShare, highlightImage: nil)
-            return view
-        })
-        
-        _controller = controller
-        f(controller)
-    }
+                }
+            })]), edge: .minX, inset: NSMakePoint(0,-50))
+        }, for: .Click)
+        view.set(image: theme.icons.webgameShare, highlightImage: nil)
+        return view
+    })
+    
+    return controller
 }
 
 
@@ -391,6 +387,7 @@ private let _id_port = InputDataIdentifier("port")
 private let _id_username = InputDataIdentifier("username")
 private let _id_secret = InputDataIdentifier("secret")
 private let _id_pass = InputDataIdentifier("pass")
+private let _id_qrcode = InputDataIdentifier("_id_qrcode")
 
 private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -441,11 +438,26 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
         index += 1
     }
     
-    if !server.host.isEmpty && server.port > 0 {
+    if !server.isEmpty {
+        
         entries.append(.sectionId(sectionId))
         sectionId += 1
         entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, data: InputDataGeneralData(name: L10n.proxySettingsCopyLink, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
+        index += 1
+        
+        entries.append(.sectionId(sectionId))
+        sectionId += 1
+        
+        let link = server.withDataHextString().link
+        
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_qrcode, equatable: InputDataEquatable(link), item: { initialSize, stableId in
+            return ProxyQRCodeRowItem(initialSize, stableId: stableId, link: link)
+        }))
+        index += 1
     }
+    
+   
+    
     
     return entries
 }

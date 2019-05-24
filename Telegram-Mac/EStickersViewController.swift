@@ -406,7 +406,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         return true
     }
 //    
-    func selectionWillChange(row: Int, item: TableRowItem) -> Bool {
+    func selectionWillChange(row: Int, item: TableRowItem, byClick: Bool) -> Bool {
         return true
     }
 //    
@@ -563,7 +563,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
         
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
 
-        let searchInteractions = SearchInteractions({ [weak self] state in
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
             search.set(state)
             if state.request.isEmpty {
                 self?.itemCollectionsViewPosition.set(.single(.initial))

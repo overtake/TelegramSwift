@@ -135,11 +135,32 @@ class EStickerPackRowView: HorizontalRowView {
 
         if let item = item as? EStickerPackRowItem, mediaUpdated {
             if let topItem = item.topItem, let dimensions = topItem.file.dimensions {
-                imageView.setSignal( chatMessageSticker(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file), type: .thumb, scale: backingScaleFactor))
+                
+                
+                var thumbnailItem: TelegramMediaImageRepresentation?
+                var resourceReference: MediaResourceReference?
+                if let thumbnail = item.info.thumbnail {
+                    thumbnailItem = thumbnail
+                    resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
+                } else if let item = item.topItem, let dimensions = item.file.dimensions, let resource = chatMessageStickerResource(file: item.file, small: true) as? TelegramMediaResource {
+                    thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource)
+                    resourceReference = MediaResourceReference.media(media: .standalone(media: item.file), resource: resource)
+                }
+
+                if let thumbnailItem = thumbnailItem {
+                    imageView.setSignal( chatMessageStickerPackThumbnail(postbox: item.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false))
+
+                }
+             //   imageView.setSignal( chatMessageStickerPackThumbnail(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file), type: .thumb, scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:dimensions.aspectFitted(imageSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
                 imageView.set(arguments:arguments)
                 imageView.setFrameSize(arguments.imageSize)
-                _ = fileInteractiveFetched(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file)).start()
+               // _ = fileInteractiveFetched(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file)).start()
+             //   _ = fileInteractiveFetched(account: item.account, fileReference: resourceReference).start()
+                if let resourceReference = resourceReference {
+                    _ = fetchedMediaResource(postbox: item.account.postbox, reference: resourceReference, statsCategory: .file).start()
+                }
+
             }
             self.needsLayout = true
         }

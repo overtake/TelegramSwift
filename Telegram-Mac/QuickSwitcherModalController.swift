@@ -253,7 +253,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 
             } else  {
                 
-                let foundLocalPeers = context.account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {
+                let foundLocalPeers = context.account.postbox.searchPeers(query: search.request.lowercased()) |> map {
                     return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
                 }
                 
@@ -309,7 +309,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         return true
     }
     
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return item is ShortPeerRowItem
     }
     
@@ -328,7 +328,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         genericView.tableView.delegate = self
         search.set(SearchState(state: .None, request: nil))
         
-        let searchInteractions = SearchInteractions({ [weak self] state in
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
             self?.search.set(state)
         }, { [weak self] state in
             self?.search.set(state)
@@ -358,7 +358,20 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let selectedItem = genericView.tableView.selectedItem() as? ShortPeerRowItem {
-            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(selectedItem.peer.id)))
+            let query = self.genericView.searchView.query
+            let peerId = selectedItem.peer.id
+            var messageId: MessageId? = nil
+            let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+            switch link {
+            case let .followResolvedName(_, _, postId, _, _, _):
+                if let postId = postId {
+                    messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: postId)
+                }
+            default:
+                break
+            }
+            
+            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(selectedItem.peer.id), messageId: messageId))
             close()
         }
         return .invoked

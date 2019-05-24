@@ -343,7 +343,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case .loading:
             return SearchEmptyRowItem.init(initialSize, stableId: stableId, isLoading: true)
         case let .search(_, _, value, _, update):
-            return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state in
+            return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state, _ in
                 update(state)
             }, { state in
                 update(state)

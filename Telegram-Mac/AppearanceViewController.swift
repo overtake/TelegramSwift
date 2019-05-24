@@ -145,7 +145,7 @@ private func <(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
     return lhs.index < rhs.index
 }
 
-private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSettings: ThemePaletteSettings, selfPeer: Peer) -> [AppearanceViewEntry] {
+private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSettings: ThemePaletteSettings) -> [AppearanceViewEntry] {
     var entries:[AppearanceViewEntry] = []
     
     var sectionId:Int32 = 1
@@ -390,7 +390,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
             }), updateAutoNightSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedBubbled(enabled).withUpdatedWallpaper(enabled ? settings.wallpaper : .none)
+                return settings.withUpdatedBubbled(enabled)//.withUpdatedWallpaper(enabled ? settings.wallpaper : .none)
             }).start()
         }, toggleFontSize: { size in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
@@ -413,15 +413,14 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
         
-        let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager), context.account.postbox.loadedPeerWithId(context.account.peerId)) |> map { appearance, themeSettings, selfPeer in
-            let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings, selfPeer: selfPeer).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager)) |> map { appearance, themeSettings in
+            let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
-        } |> deliverOnMainQueue |> beforeNext { [weak self] _ in
-            self?.readyOnce()
-        }
+        } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition, wallpaper in
             self?.genericView.tableView.merge(with: transition)
+            self?.readyOnce()
         }))
         
         

@@ -17,10 +17,10 @@ func createGroup(with context: AccountContext, for navigation:NavigationViewCont
     
     let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true) }
     let chooseName = { CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context) }
-    let signal = execute(navigation:navigation, select, chooseName) |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), NoError> in
+    let signal = execute(navigation:navigation, select, chooseName) |> mapError { _ in return CreateGroupError.generic } |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), CreateGroupError> in
         let signal = showModalProgress(signal: createGroup(account: context.account, title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
         return signal
-    } |> mapToSignal{ peerId, picture -> Signal<(PeerId?, Bool), NoError> in
+    } |> mapToSignal{ peerId, picture -> Signal<(PeerId?, Bool), CreateGroupError> in
             if let peerId = peerId, let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
                 let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
@@ -34,7 +34,7 @@ func createGroup(with context: AccountContext, for navigation:NavigationViewCont
                     }
                 }
                 
-                return .single((peerId, true)) |> then(signal)
+                return .single((peerId, true)) |> then(signal |> mapError { _ in return CreateGroupError.generic})
             }
             return .single((peerId, true))
         } |> deliverOnMainQueue |> filter {$0.1}
@@ -44,7 +44,56 @@ func createGroup(with context: AccountContext, for navigation:NavigationViewCont
         if let peerId = peerId, complete {
             navigation?.push(ChatController(context: context, chatLocation: .peer(peerId)))
         }
+    }, error: { error in
+        let text: String
+        switch error {
+        case .privacy:
+            text = L10n.privacyGroupsAndChannelsInviteToChannelMultipleError
+        case .generic:
+            text = L10n.unknownError
+        }
+        alert(for: mainWindow, info: text)
     })
+}
+
+
+func createSupergroup(with context: AccountContext, for navigation:NavigationViewController) -> Signal<PeerId?, NoError> {
+    let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true) }
+    let chooseName = { CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context) }
+    let signal = execute(navigation:navigation, select, chooseName) |> mapToSignal { (_, result) -> Signal<(PeerId?, [PeerId], String?), NoError> in
+        
+        let signal = showModalProgress(signal: createSupergroup(account: context.account, title: result.title, description: nil) |> map { return ($0, result.peerIds, result.picture) }, for: mainWindow, disposeAfterComplete: false)
+        
+        return signal
+        } |> mapToSignal{ peerId, peerIds, picture -> Signal<(PeerId?, Bool), NoError> in
+            if let peerId = peerId {
+                
+                let addMembers: Signal<Void, NoError> = context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: peerIds)
+                |> `catch` { _ in return .complete() }
+                
+
+                var additionalSignals:[Signal<Void, NoError>] = []
+                additionalSignals.append(addMembers)
+                
+                if let picture = picture {
+                    let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
+                    let signal:Signal<Void, NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                        return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                    }) |> `catch` { _ in .complete() } |> map { _ in }
+                    additionalSignals.append(signal)
+                }
+                
+                let combined:Signal<(PeerId?, Bool), NoError> = combineLatest(additionalSignals) |> map { _ in (nil, false) }
+                
+                
+                
+                return .single((peerId, true)) |> then(combined)
+            }
+            return .single((peerId, true))
+        } |> deliverOnMainQueue |> filter {$0.1}
+    
+    
+    return signal |> filter { $0.1 } |> map { $0.0 }
 }
 
 func createChannel(with context: AccountContext, for navigation:NavigationViewController) {

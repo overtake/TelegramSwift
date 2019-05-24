@@ -159,7 +159,7 @@ class WPArticleContentView: WPContentView {
 
     
     override func update(with layout: WPLayout) {
-        let newLayout = self.content === layout
+        let newLayout = self.content !== layout
         if let layout = layout as? WPArticleLayout {
             
             let synchronousLoad = layout.approximateSynchronousValue
@@ -250,7 +250,7 @@ class WPArticleContentView: WPContentView {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)
                 representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
-                image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
+                image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: arc4random64()), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
                 
             }
             var updateImageSignal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
@@ -354,7 +354,7 @@ class WPArticleContentView: WPContentView {
                 
                 if let arguments = layout.imageArguments, let imageView = imageView {
                    imageView.set(arguments: arguments)
-                    imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
+                    imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: newLayout)
                     
                     if let updateImageSignal = updateImageSignal {
                         imageView.setSignal(updateImageSignal, animate: true, cacheImage: { [weak self] signal in
@@ -372,7 +372,7 @@ class WPArticleContentView: WPContentView {
                 var removeImageView: Bool = true
                 if let wallpaper = layout.wallpaper {
                     switch wallpaper {
-                    case let .wallpaper(_, preview):
+                    case let .wallpaper(_, _, preview):
                         switch preview {
                         case let .color(color):
                             if imageView == nil {

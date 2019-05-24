@@ -198,6 +198,7 @@ class InputPasteboardParser: NSObject {
    
         }
         
+        
         return true
     }
     

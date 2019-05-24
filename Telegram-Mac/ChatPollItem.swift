@@ -43,6 +43,9 @@ private func adjustPercentCount(_ items: [PercentCounterItem], left: Int) -> [Pe
             }
             j += 1
         }
+        if items[i].remainder == 0 {
+            break
+        }
         let equal = j - i
         if equal <= left {
             left -= equal
@@ -263,7 +266,12 @@ class ChatPollItem: ChatRowItem {
         self.options = options
         
         let totalCount = poll.results.totalVoters ?? 0
-        self.totalVotesText = TextViewLayout(.initialize(string: totalCount > 0 ? L10n.chatPollTotalVotesCountable(Int(totalCount)) : poll.isClosed ? L10n.chatPollTotalVotesResultEmpty : L10n.chatPollTotalVotesEmpty, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        
+        var totalText = L10n.chatPollTotalVotesCountable(Int(totalCount))
+        totalText = totalText.replacingOccurrences(of: "\(totalCount)", with: Int(totalCount).separatedNumber)
+        
+        
+        self.totalVotesText = TextViewLayout(.initialize(string: totalCount > 0 ? totalText : poll.isClosed ? L10n.chatPollTotalVotesResultEmpty : L10n.chatPollTotalVotesEmpty, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
 
         
         self.titleText = TextViewLayout(.initialize(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text)), alwaysStaticItems: true)
@@ -546,8 +554,10 @@ private final class PollOptionView : Control {
         progressView.style = ControlStyle(foregroundColor: option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled), backgroundColor: .clear)
 
         if let progress = option.percent {
+            var totalOptionVotes = L10n.chatPollTooltipVotesCountable(Int(option.voteCount))
+            totalOptionVotes = totalOptionVotes.replacingOccurrences(of: "\(option.voteCount)", with: Int(option.voteCount).separatedNumber)
             
-            toolTip = option.voteCount == 0 ? L10n.chatPollTooltipNoVotes : L10n.chatPollTooltipVotesCountable(Int(option.voteCount))
+            toolTip = option.voteCount == 0 ? L10n.chatPollTooltipNoVotes : totalOptionVotes
 
             
             progressView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5, frame.width - nameView.frame.minX - defaultInset, progressView.frame.height)

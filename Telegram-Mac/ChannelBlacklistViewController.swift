@@ -359,7 +359,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         let peerView = context.account.viewTracker.peerView(peerId)
         
         
-        let (listDisposable, _) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
+        let (listDisposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
             if case .loading(true) = listState.loadingState, listState.list.isEmpty {
                 blacklistPromise.set(.single(nil))
             } else {
@@ -392,6 +392,17 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                 }
             }
         }))
+        
+        genericView.setScrollHandler { position in
+            if let loadMoreControl = loadMoreControl {
+                switch position.direction {
+                case .bottom:
+                    context.peerChannelMemberCategoriesContextsManager.loadMore(peerId: peerId, control: loadMoreControl)
+                default:
+                    break
+                }
+            }
+        }
     }
     
     deinit {

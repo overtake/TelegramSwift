@@ -13,7 +13,7 @@ import SwiftSignalKitMac
 import AVFoundation
 import QuickLook
 
-class MediaSenderContainer {
+class MediaSenderContainer : Equatable {
     let path:String
     let caption:String
     let isFile:Bool
@@ -21,6 +21,22 @@ class MediaSenderContainer {
         self.path = path
         self.caption = caption
         self.isFile = isFile
+    }
+    
+    static func ==(lhs: MediaSenderContainer, rhs: MediaSenderContainer) -> Bool {
+        return lhs.path == rhs.path && lhs.caption == rhs.caption && lhs.isFile == rhs.isFile
+    }
+}
+
+class ArchiverSenderContainer : MediaSenderContainer {
+    let files: [URL]
+    public init(path:String, caption:String = "", isFile:Bool = true, files: [URL] = []) {
+        self.files = files
+        super.init(path: path, caption: caption, isFile: isFile)
+    }
+    
+    static func ==(lhs: ArchiverSenderContainer, rhs: ArchiverSenderContainer) -> Bool {
+        return lhs.path == rhs.path && lhs.caption == rhs.caption && lhs.isFile == rhs.isFile && lhs.files == rhs.files
     }
 }
 
@@ -416,18 +432,39 @@ class Sender: NSObject {
         return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, chatInteraction: chatInteraction)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false, additionText: ChatTextInputState? = nil) ->Signal<[MessageId?],NoError> {
                 
         var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: caption.messageTextEntities)]
-
+        let caption = Atomic(value: caption)
         if FastSettings.isChannelMessagesMuted(peerId) {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
+        let replyId = chatInteraction.presentation.interfaceState.replyMessageId
+        
         let localGroupingKey = isCollage ? arc4random64() : nil
         
-        let messages = media.map({EnqueueMessage.message(text: caption.inputText, attributes: attributes, mediaReference: AnyMediaReference.standalone(media: $0), replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: localGroupingKey)})
-        
+        var messages = media.map({EnqueueMessage.message(text: caption.swap(ChatTextInputState()).inputText, attributes: attributes, mediaReference: AnyMediaReference.standalone(media: $0), replyToMessageId: replyId, localGroupingKey: localGroupingKey)})
+        if let input = additionText {
+            var inset:Int = 0
+            var input:ChatTextInputState = input
+            
+            if input.attributes.isEmpty {
+                input = ChatTextInputState(inputText: input.inputText.trimmed)
+            }
+            let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
+                let subState = input.subInputState(from: NSMakeRange(inset, message.length))
+                inset += message.length
+                
+                var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities)]
+                
+                if FastSettings.isChannelMessagesMuted(peerId) {
+                    attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+                }
+                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil)
+            }
+            messages.insert(contentsOf: mapped, at: 0)
+        }
         return enqueueMessages(context: context, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
         } |> take(1)

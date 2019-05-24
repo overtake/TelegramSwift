@@ -15,16 +15,20 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
     let showCallsTab: Bool
     let latestArticles: Bool
     let predictEmoji: Bool
+    let bigEmoji: Bool
+    let statusBar: Bool
     static var defaultSettings: BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: false, sidebar: true, showCallsTab: true, latestArticles: true, predictEmoji: true)
+        return BaseApplicationSettings(handleInAppKeys: false, sidebar: true, showCallsTab: true, latestArticles: true, predictEmoji: true, bigEmoji: true, statusBar: true)
     }
     
-    init(handleInAppKeys: Bool, sidebar: Bool, showCallsTab: Bool, latestArticles: Bool, predictEmoji: Bool) {
+    init(handleInAppKeys: Bool, sidebar: Bool, showCallsTab: Bool, latestArticles: Bool, predictEmoji: Bool, bigEmoji: Bool, statusBar: Bool) {
         self.handleInAppKeys = handleInAppKeys
         self.sidebar = sidebar
         self.showCallsTab = showCallsTab
         self.latestArticles = latestArticles
         self.predictEmoji = predictEmoji
+        self.bigEmoji = bigEmoji
+        self.statusBar = statusBar
     }
     
     required init(decoder: PostboxDecoder) {
@@ -33,6 +37,8 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
         self.sidebar = decoder.decodeInt32ForKey("e", orElse: 0) != 0
         self.latestArticles = decoder.decodeInt32ForKey("la", orElse: 1) != 0
         self.predictEmoji = decoder.decodeInt32ForKey("pe", orElse: 1) != 0
+        self.bigEmoji = decoder.decodeInt32ForKey("bi", orElse: 1) != 0
+        self.statusBar = decoder.decodeInt32ForKey("sb", orElse: 1) != 0
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -41,27 +47,38 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
         encoder.encodeInt32(self.sidebar ? 1 : 0, forKey: "e")
         encoder.encodeInt32(self.latestArticles ? 1 : 0, forKey: "la")
         encoder.encodeInt32(self.predictEmoji ? 1 : 0, forKey: "pe")
+        encoder.encodeInt32(self.bigEmoji ? 1 : 0, forKey: "bi")
+        encoder.encodeInt32(self.statusBar ? 1 : 0, forKey: "sb")
     }
     
     func withUpdatedShowCallsTab(_ showCallsTab: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
     }
     
     func withUpdatedSidebar(_ sidebar: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
     }
     
     func withUpdatedInAppKeyHandle(_ handleInAppKeys: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji)
+        return BaseApplicationSettings(handleInAppKeys: handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
     }
     
     func withUpdatedLatestArticles(_ latestArticles: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: latestArticles, predictEmoji: self.predictEmoji)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
     }
     
     func withUpdatedPredictEmoji(_ predictEmoji: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: predictEmoji)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
     }
+    
+    func withUpdatedBigEmoji(_ bigEmoji: Bool) -> BaseApplicationSettings {
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: bigEmoji, statusBar: self.statusBar)
+    }
+    
+    func withUpdatedStatusBar(_ statusBar: Bool) -> BaseApplicationSettings {
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: statusBar)
+    }
+
     
     func isEqual(to: PreferencesEntry) -> Bool {
         if let to = to as? BaseApplicationSettings {
@@ -85,6 +102,12 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
             return false
         }
         if lhs.predictEmoji != rhs.predictEmoji {
+            return false
+        }
+        if lhs.bigEmoji != rhs.bigEmoji {
+            return false
+        }
+        if lhs.statusBar != rhs.statusBar {
             return false
         }
         return true

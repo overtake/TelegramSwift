@@ -25,9 +25,9 @@ public class ContextSeparatorItem : ContextMenuItem {
 
 public class ContextMenuItem : NSMenuItem {
     
-    fileprivate var handler:()->Void = {() in}
+    let handler:()->Void
     
-    public init(_ title:String, handler:@escaping()->Void, image:NSImage? = nil) {
+    public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil) {
         self.handler = handler
         
         super.init(title: title, action: nil, keyEquivalent: "")
@@ -85,3 +85,8 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     }
     
 }
+
+
+
+
+

@@ -172,7 +172,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
         
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
 
-        let searchInteractions = SearchInteractions({ s in
+        let searchInteractions = SearchInteractions({ s, _ in
             search.set(s)
         }, { s in
             search.set(s)

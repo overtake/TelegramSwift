@@ -1,12 +1,17 @@
 #import <Foundation/Foundation.h>
 
-#import "ffmpeg/include/libavutil/avutil.h"
-#import "ffmpeg/include/libavutil/channel_layout.h"
-#import "ffmpeg/include/libswresample/swresample.h"
 
-@interface FFMpegSwResample : NSObject
+#import "FFMpegAVSampleFormat.h"
 
-- (instancetype)initWithSourceChannelCount:(NSInteger)sourceChannelCount sourceSampleRate:(NSInteger)sourceSampleRate sourceSampleFormat:(enum AVSampleFormat)sourceSampleFormat destinationChannelCount:(NSInteger)destinationChannelCount destinationSampleRate:(NSInteger)destinationSampleRate destinationSampleFormat:(enum AVSampleFormat)destinationSampleFormat;
-- (NSData *)resample:(AVFrame *)frame;
+NS_ASSUME_NONNULL_BEGIN
+
+@class FFMpegAVFrame;
+
+@interface FFMpegSWResample : NSObject
+
+- (instancetype)initWithSourceChannelCount:(NSInteger)sourceChannelCount sourceSampleRate:(NSInteger)sourceSampleRate sourceSampleFormat:(enum FFMpegAVSampleFormat)sourceSampleFormat destinationChannelCount:(NSInteger)destinationChannelCount destinationSampleRate:(NSInteger)destinationSampleRate destinationSampleFormat:(enum FFMpegAVSampleFormat)destinationSampleFormat;
+- (NSData * _Nullable)resample:(FFMpegAVFrame *)frame;
 
 @end
+
+NS_ASSUME_NONNULL_END

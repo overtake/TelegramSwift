@@ -45,8 +45,16 @@ class ChatInputActionsView: View, Notifable {
         muteChannelMessages.autohighlight = false
         
         voice.set(handler: { [weak self] _ in
+            guard let `self` = self else { return }
+            
             FastSettings.toggleRecordingState()
-            self?.voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
+            
+            self.voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
+            
+            getAppTooltip(for: FastSettings.recordingState == .voice ? .voiceRecording : .videoRecording, callback: { value in
+                tooltip(for: self.voice, text: value)
+            })
+            
         }, for: .Click)
         
         

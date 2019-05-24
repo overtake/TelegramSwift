@@ -186,13 +186,17 @@ public final class TextViewInteractions {
     public var isDomainLink:(Any)->Bool
     public var makeLinkType:((Any, String))->LinkType
     public var localizeLinkCopy:(LinkType)-> String
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}) {
+    public var resolveLink:(Any)->String?
+    public var copyAttributedString:(NSAttributedString)->Bool
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
         self.isDomainLink = isDomainLink
         self.makeLinkType = makeLinkType
         self.localizeLinkCopy = localizeLinkCopy
+        self.resolveLink = resolveLink
+        self.copyAttributedString = copyAttributedString
     }
 }
 
@@ -201,11 +205,13 @@ public final class TextViewLine {
     public let frame: NSRect
     public let range: NSRange
     public var penFlush: CGFloat
-    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat) {
+    let isBlocked: Bool
+    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat, isBlocked: Bool = false) {
         self.line = line
         self.frame = frame
         self.range = range
         self.penFlush = penFlush
+        self.isBlocked = isBlocked
     }
     
 }
@@ -238,6 +244,7 @@ public final class TextViewLayout : Equatable {
     public fileprivate(set) var constrainedWidth:CGFloat = 0
     public var interactions:TextViewInteractions = TextViewInteractions()
     public var selectedRange:TextSelectedRange
+    public var additionalSelections:[TextSelectedRange] = []
     public var penFlush:CGFloat
     public var insets:NSSize = NSZeroSize
     public fileprivate(set) var lines:[TextViewLine] = []
@@ -256,10 +263,14 @@ public final class TextViewLayout : Equatable {
     fileprivate var selectText: NSColor
     public var strokeLinks: Bool
     fileprivate var strokeRects: [(NSRect, NSColor)] = []
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false) {
+    
+    fileprivate var toolTipRects:[NSRect] = []
+    private let disableTooltips: Bool
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
         self.cutout = cutout
+        self.disableTooltips = disableTooltips
         self.attributedString = attributedString
         self.constrainedWidth = constrainedWidth
         self.selectText = selectText
@@ -277,7 +288,7 @@ public final class TextViewLayout : Equatable {
         self.lineSpacing = lineSpacing
     }
     
-    func calculateLayout() -> Void {
+    func calculateLayout(isBigEmoji: Bool = false) -> Void {
         
         isPerfectSized = true
         
@@ -297,7 +308,7 @@ public final class TextViewLayout : Equatable {
         let fontAscent = CTFontGetAscent(font)
         let fontDescent = CTFontGetDescent(font)
        
-        let fontLineHeight = floor(fontAscent + fontDescent) + (lineSpacing ?? 0)
+        let fontLineHeight = floor(fontAscent + (isBigEmoji ? fontDescent / 3 : fontDescent)) + (lineSpacing ?? 0)
         
         var monospacedRects:[NSRect] = []
         
@@ -339,11 +350,7 @@ public final class TextViewLayout : Equatable {
 
             var isPreformattedLine: CGFloat? = nil
             
-            fontLineSpacing = floor(fontLineHeight * 0.12)
-            
-            
-            
-
+            fontLineSpacing = isBigEmoji ? 0 : floor(fontLineHeight * 0.12)
             
             
             if attributedString.length > 0, let space = (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber), mayBlocked {
@@ -401,7 +408,7 @@ public final class TextViewLayout : Equatable {
             var lineHeight = fontLineHeight
             
             let lineString = attributedString.attributedSubstring(from: NSMakeRange(lastLineCharacterIndex, lineCharacterCount))
-            if !lineString.string.emojiString.isEmpty {
+            if lineString.string.containsEmoji, !isBigEmoji {
                 lineHeight += floor(fontDescent)
                 if first {
                     lineOriginY += floor(fontDescent)
@@ -439,7 +446,7 @@ public final class TextViewLayout : Equatable {
                 layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush))
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted))
                 
                 break
             } else {
@@ -456,7 +463,7 @@ public final class TextViewLayout : Equatable {
                     
                   
                     let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
-                    let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
+                    let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY - (isBigEmoji ? fontDescent / 3 : 0), width: lineWidth, height: lineHeight)
                     layoutSize.height += lineHeight
                     layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                     
@@ -469,7 +476,7 @@ public final class TextViewLayout : Equatable {
                     }
 
 
-                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush))
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
@@ -591,39 +598,42 @@ public final class TextViewLayout : Equatable {
         selectedRange.range = NSMakeRange(location, length)
     }
     
-    public func measure(width: CGFloat = 0) -> Void {
+    public func measure(width: CGFloat = 0, isBigEmoji: Bool = false) -> Void {
         
         if width != 0 {
             constrainedWidth = width
         }
-        calculateLayout()
+        
+        toolTipRects.removeAll()
+        
+        calculateLayout(isBigEmoji: isBigEmoji)
 
         strokeRects.removeAll()
-        if strokeLinks {
-            attributedString.enumerateAttribute(NSAttributedString.Key.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
-                if let value = value, self.interactions.isDomainLink(value) {
-                    
-                    for line in self.lines {
-                        let lineRange = NSIntersectionRange(range, line.range)
-                        if lineRange.length != 0 {
-                            var leftOffset: CGFloat = 0.0
-                            if lineRange.location != line.range.location {
-                                leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
-                            }
-                            let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
-                            
-                            
-                            let color: NSColor = self.attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
+        attributedString.enumerateAttribute(NSAttributedString.Key.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
+            if let value = value {
+                for line in lines {
+                    let lineRange = NSIntersectionRange(range, line.range)
+                    if lineRange.length != 0 {
+                        var leftOffset: CGFloat = 0.0
+                        if lineRange.location != line.range.location {
+                            leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
+                        }
+                        let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
+                        
+                        
+                        let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
+                        if interactions.isDomainLink(value), strokeLinks {
                             let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
-                            
-                            self.strokeRects.append((rect, color))
+                            strokeRects.append((rect, color))
+                        }
+                        if !disableTooltips, interactions.resolveLink(value) != attributedString.string.nsstring.substring(with: range) {
+                            toolTipRects.append(NSMakeRect(line.frame.minX + leftOffset, line.frame.minY - line.frame.height, rightOffset - leftOffset, line.frame.height))
                         }
                     }
                 }
-    
-            })
-        }
-        
+            }
+            
+        })
         
         
     }
@@ -641,6 +651,8 @@ public final class TextViewLayout : Equatable {
             
             let startSelectLineIndex = findIndex(location: startPoint)
             let currentSelectLineIndex = findIndex(location: currentPoint)
+            
+            
             let dif = abs(startSelectLineIndex - currentSelectLineIndex)
             let isReversed = currentSelectLineIndex < startSelectLineIndex
             var i = startSelectLineIndex
@@ -690,7 +702,7 @@ public final class TextViewLayout : Equatable {
         } else if location.y == 0 {
             return 0
         }
-        
+        //var previous:NSRect = lines[0].frame
         for idx in 0 ..< lines.count {
             if  isCurrentLine(pos: location, index: idx) {
                 return idx
@@ -719,6 +731,10 @@ public final class TextViewLayout : Equatable {
         
         rect.origin.y = rect.minY - rect.height + ceil(descent - leading)
         rect.size.height += ceil(descent - leading)
+        
+        if line.isBlocked {
+            rect.size.height += 2
+        }
         
         return (pos.y > rect.minY) && pos.y < rect.maxY
         
@@ -764,7 +780,6 @@ public final class TextViewLayout : Equatable {
             if let link = link {
                 let startOffset = CTLineGetOffsetForStringIndex(line.line, range.location, nil);
                 let endOffset = CTLineGetOffsetForStringIndex(line.line, range.location + range.length, nil);
-                
                 return (link, interactions.makeLinkType((link, attributedString.attributedSubstring(from: range).string)), range, NSMakeRect(startOffset, line.frame.minY, endOffset - startOffset, ceil(ascent + ceil(descent) + leading)))
             }
         }
@@ -848,7 +863,10 @@ public final class TextViewLayout : Equatable {
             }
             if(next == string.length - 1) {
                 nextValid = false
-                range.length += 1
+                let nextChar = string.substring(with: NSMakeRange(next, 1))
+                if nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || nextChar == "_" {
+                    range.length += 1
+                }
             }
             if !prevValid && !nextValid {
                 break
@@ -880,7 +898,7 @@ public struct TextSelectedRange: Equatable {
     public var color:NSColor = presentation.colors.selectText
     public var def:Bool = true
     
-    init(range: NSRange = NSMakeRange(NSNotFound, 0), color: NSColor = presentation.colors.selectText, def: Bool = true, cursorAlignment: CursorSelectAlignment = .min(0)) {
+    public init(range: NSRange = NSMakeRange(NSNotFound, 0), color: NSColor = presentation.colors.selectText, def: Bool = true, cursorAlignment: CursorSelectAlignment = .min(0)) {
         self.range = range
         self.color = color
         self.def = def
@@ -895,11 +913,25 @@ public struct TextSelectedRange: Equatable {
 }
 
 public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
-    return lhs.def == rhs.def && lhs.range.location == rhs.range.location && lhs.range.length == rhs.range.length
+    return lhs.def == rhs.def && lhs.range.location == rhs.range.location && lhs.range.length == rhs.range.length && lhs.color.hexString == rhs.color.hexString
 }
 
 
-public class TextView: Control {
+public class TextView: Control, NSViewToolTipOwner {
+    
+    
+    public func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData data: UnsafeMutableRawPointer?) -> String {
+        
+        guard let layout = self.layout else { return "" }
+        
+        if let link = layout.link(at: point), let resolved = layout.interactions.resolveLink(link.0)?.removingPercentEncoding {
+            return resolved.prefixWithDots(70)
+        }
+        
+        return ""
+
+    }
+    
     
     private let menuDisposable = MetaDisposable()
     
@@ -918,12 +950,14 @@ public class TextView: Control {
             }
         }
     }
+
     
     
     public override init() {
         super.init();
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
+
 //        wantsLayer = false
 //        self.layer?.delegate = nil
     }
@@ -936,6 +970,9 @@ public class TextView: Control {
         super.init(frame:frameRect)
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
+        
+        
+        
 //        wantsLayer = false
 //        self.layer?.delegate = nil
        // self.layer?.drawsAsynchronously = System.drawAsync
@@ -968,74 +1005,80 @@ public class TextView: Control {
             }
             
             
+            var ranges:[(TextSelectedRange, Bool)] = [(layout.selectedRange, true)]
+            ranges += layout.additionalSelections.map { ($0, false) }
             
-            if layout.selectedRange.range.location != NSNotFound && isSelectable {
-                
-                var lessRange = layout.selectedRange.range
-                
-                var lines:[TextViewLine] = layout.lines
-
-                let beginIndex:Int = 0
-                let endIndex:Int = layout.lines.count - 1
-
-                
-                let isReversed = endIndex < beginIndex
-                
-                var i:Int = beginIndex
-                
-                while isReversed ? i >= endIndex : i <= endIndex {
+            for range in ranges {
+                if range.0.range.location != NSNotFound && (range.1 && isSelectable || !range.1) {
+                    
+                    var lessRange = range.0.range
+                    
+                    var lines:[TextViewLine] = layout.lines
+                    
+                    let beginIndex:Int = 0
+                    let endIndex:Int = layout.lines.count - 1
                     
                     
-                    let line = lines[i].line
-                    var rect:NSRect = lines[i].frame
-                    let lineRange = CTLineGetStringRange(line)
+                    let isReversed = endIndex < beginIndex
                     
-                    var beginLineIndex:CFIndex = 0
-                    var endLineIndex:CFIndex = 0
+                    var i:Int = beginIndex
                     
-                    if (lineRange.location + lineRange.length >= lessRange.location) && lessRange.length > 0 {
-                        beginLineIndex = lessRange.location
-                        let max = lineRange.length + lineRange.location
-                        let maxSelect = max - beginLineIndex
-                        
-                        let selectLength = min(maxSelect,lessRange.length)
-                        
-                        lessRange.length-=selectLength
-                        lessRange.location+=selectLength
-                        
-                        endLineIndex = beginLineIndex + selectLength
-                        
-                        var ascent:CGFloat = 0
-                        var descent:CGFloat = 0
-                        var leading:CGFloat = 0
-                        
-                        var width:CGFloat = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, &leading));
-                        
-                        let startOffset = CTLineGetOffsetForStringIndex(line, beginLineIndex, nil);
-                        let endOffset = CTLineGetOffsetForStringIndex(line, endLineIndex, nil);
-                        
-                        width = endOffset - startOffset;
-                        
-                        let blockValue:CGFloat = layout.mayBlocked ? CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0) : 0
+                    while isReversed ? i >= endIndex : i <= endIndex {
                         
                         
-
-                        rect.size.width = width - blockValue / 2
-
-                        rect.origin.x = startOffset + blockValue
-                        rect.origin.y = rect.minY - rect.height + blockValue / 2
-                        rect.size.height += ceil(descent - leading)
-                        let color:NSColor = window?.isKeyWindow == true ? layout.selectText : NSColor.lightGray
+                        let line = lines[i].line
+                        var rect:NSRect = lines[i].frame
+                        let lineRange = CTLineGetStringRange(line)
                         
-                        ctx.setFillColor(color.cgColor)
-                        ctx.fill(rect)
+                        var beginLineIndex:CFIndex = 0
+                        var endLineIndex:CFIndex = 0
+                        
+                        if (lineRange.location + lineRange.length >= lessRange.location) && lessRange.length > 0 {
+                            beginLineIndex = lessRange.location
+                            let max = lineRange.length + lineRange.location
+                            let maxSelect = max - beginLineIndex
+                            
+                            let selectLength = min(maxSelect,lessRange.length)
+                            
+                            lessRange.length-=selectLength
+                            lessRange.location+=selectLength
+                            
+                            endLineIndex = beginLineIndex + selectLength
+                            
+                            var ascent:CGFloat = 0
+                            var descent:CGFloat = 0
+                            var leading:CGFloat = 0
+                            
+                            var width:CGFloat = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, &leading));
+                            
+                            let startOffset = CTLineGetOffsetForStringIndex(line, beginLineIndex, nil);
+                            let endOffset = CTLineGetOffsetForStringIndex(line, endLineIndex, nil);
+                            
+                            width = endOffset - startOffset;
+                            
+                            let blockValue:CGFloat = layout.mayBlocked ? CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0) : 0
+                            
+                            
+                            
+                            rect.size.width = width - blockValue / 2
+                            
+                            rect.origin.x = startOffset + blockValue
+                            rect.origin.y = rect.minY - rect.height + blockValue / 2
+                            rect.size.height += ceil(descent - leading)
+                            let color:NSColor = window?.isKeyWindow == true || !range.1 ? range.0.color : NSColor.lightGray
+                            
+                            ctx.setFillColor(color.cgColor)
+                            ctx.fill(rect)
+                        }
+                        
+                        i += isReversed ? -1 : 1
+                        
                     }
-
-                    i += isReversed ? -1 : 1
                     
                 }
-                
             }
+            
+            
             
             let textMatrix = ctx.textMatrix
             let textPosition = ctx.textPosition
@@ -1096,10 +1139,17 @@ public class TextView: Control {
                     }))
                 } else {
                     let link = layout.link(at: location)
+                    let resolved: String? = link != nil ? layout.interactions.resolveLink(link!.0) : nil
                     let menu = NSMenu()
                     let copy = ContextMenuItem(link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), handler: { [weak self] in
                         guard let `self` = self else {return}
-                        self.copy(self)
+                        if let resolved = resolved {
+                            let pb = NSPasteboard.general
+                            pb.declareTypes([.string], owner: self)
+                            pb.setString(resolved, forType: .string)
+                        } else {
+                            self.copy(self)
+                        }
                     })
                    // let copy = NSMenuItem(title: , action: #selector(copy(_:)), keyEquivalent: "")
                     menu.addItem(copy)
@@ -1136,9 +1186,13 @@ public class TextView: Control {
     public func isEqual(to layout:TextViewLayout) -> Bool {
         return self.layout == layout
     }
+
+    //
     
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
         self.layout = layout
+        
+        
         
         if let layout = layout {
             self.set(selectedRange: layout.selectedRange.range, display: false)
@@ -1149,10 +1203,20 @@ public class TextView: Control {
                 point = frame.origin
             }
             self.frame = NSMakeRect(point.x, point.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
+            
+            removeAllToolTips()
+            for rect in layout.toolTipRects {
+                addToolTip(rect, owner: self, userData: nil)
+            }
+            
         } else {
             self.set(selectedRange: NSMakeRange(NSNotFound, 0), display: false)
             self.frame = NSZeroRect
         }
+        
+       
+
+        
         self.setNeedsDisplayLayer()
     }
     
@@ -1286,13 +1350,13 @@ public class TextView: Control {
         
         if let layout = layout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
-            if event.clickCount == 3 {
+            if event.clickCount == 3, isSelectable {
                 layout.selectAll(at: point)
                 layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
-            } else if event.clickCount == 2 || (event.type == .rightMouseUp  && !layout.selectedRange.hasSelectText) {
+            } else if isSelectable, event.clickCount == 2 || (event.type == .rightMouseUp && !layout.selectedRange.hasSelectText) {
                 layout.selectWord(at : point)
                 layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
-            } else if !layout.selectedRange.hasSelectText || !isSelectable && event.clickCount == 1 {
+            } else if !layout.selectedRange.hasSelectText || !isSelectable && (event.clickCount == 1 || !isSelectable) {
                 if let (link, _, _, _) = layout.link(at: point) {
                     layout.interactions.processURL(link)
                 } else {
@@ -1382,14 +1446,18 @@ public class TextView: Control {
         if let layout = layout {
             if let copy = layout.interactions.copy {
                 if !copy() && layout.selectedRange.range.location != NSNotFound {
+                    if !layout.interactions.copyAttributedString(layout.attributedString.attributedSubstring(from: layout.selectedRange.range)) {
+                        let pb = NSPasteboard.general
+                        pb.declareTypes([.string], owner: self)
+                        pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
+                    }
+                }
+            } else if layout.selectedRange.range.location != NSNotFound {
+                if !layout.interactions.copyAttributedString(layout.attributedString.attributedSubstring(from: layout.selectedRange.range)) {
                     let pb = NSPasteboard.general
                     pb.declareTypes([.string], owner: self)
                     pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                 }
-            } else if layout.selectedRange.range.location != NSNotFound {
-                let pb = NSPasteboard.general
-                pb.declareTypes([.string], owner: self)
-                pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
             }
         }
     }

@@ -12,59 +12,6 @@ import PostboxMac
 import TelegramCoreMac
 import SwiftSignalKitMac
 
-class InstantPageModalBrowser : ModalViewController {
-    
-    private let navigation: NavigationViewController
-    
-    init(_ page: InstantPageViewController) {
-        self.navigation = NavigationViewController(page)
-        page._frameRect = NSMakeRect(0, 0, 400, 365)
-        navigation._frameRect = NSMakeRect(0, 0, 400, 400)
-        super.init(frame: page._frameRect)
-        
-    }
-    
-    override func escapeKeyAction() -> KeyHandlerResult {
-        if navigation.controller == navigation.empty {
-            return .rejected
-        }
-        navigation.back()
-        return .invoked
-    }
-    
-    var currentInstantController:InstantPageViewController {
-        return navigation.controller as! InstantPageViewController
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        self.ready.set(currentInstantController.ready.get())
-    }
-    
-    
-
-    
-    override var handleEvents: Bool {
-        return true
-    }
-    
-    override var dynamicSize: Bool {
-        return true
-    }
-    
-    override func measure(size: NSSize) {
-        updateSize(size)
-    }
-    
-    private func updateSize(_ size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(min(size.width - 120, 600), min(size.height - 40, currentInstantController.genericView.documentSize.height)), animated: false)
-    }
-    
-    override func initializer() -> NSView {
-        return navigation.view
-    }
-}
-
 class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     
     

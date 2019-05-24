@@ -2498,6 +2498,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         
     }
     
+    
     override var enableBack: Bool {
         return true
     }

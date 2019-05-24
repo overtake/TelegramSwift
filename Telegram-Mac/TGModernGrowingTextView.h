@@ -12,6 +12,22 @@
 extern NSString * _Nonnull const TGCustomLinkAttributeName;
 @class TGModernGrowingTextView;
 
+@interface MarkdownUndoItem : NSObject
+@property (nonatomic, strong) NSAttributedString *was;
+@property (nonatomic, strong) NSAttributedString *be;
+@property (nonatomic, assign) NSRange inRange;
+-(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be inRange:(NSRange)inRange;
+@end
+
+
+@interface SimpleUndoItem : NSObject
+@property (nonatomic, strong) NSAttributedString *was;
+@property (nonatomic, strong) NSAttributedString *be;
+@property (nonatomic, assign) NSRange wasRange;
+@property (nonatomic, assign) NSRange beRange;
+-(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be wasRange:(NSRange)wasRange beRange:(NSRange)beRange;
+@end
+
 @protocol TGModernGrowingDelegate <NSObject>
 
 -(void) textViewHeightChanged:(CGFloat)height animated:(BOOL)animated;
@@ -30,6 +46,7 @@ extern NSString * _Nonnull const TGCustomLinkAttributeName;
 - (BOOL) supportContinuityCamera;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
 - (void)makeUrlOfRange: (NSRange)range;
+- (BOOL)copyTextWithRTF:(NSAttributedString *)rtf;
 - (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
 //func textView(_ textView: NSTextView, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItemIdentifier]) -> [NSTouchBarItemIdentifier] {
 @end
@@ -40,6 +57,8 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 @interface TGGrowingTextView : NSTextView<NSServicesMenuRequestor>
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
+
+
 @end
 
 @interface TGModernGrowingTextView : NSView<NSServicesMenuRequestor>
@@ -97,5 +116,8 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 -(void)italicWord;
 -(void)boldWord;
 -(void)addLink:(NSString *_Nonnull)link;
+-(void)addLink:(NSString *_Nonnull)link range: (NSRange)range;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
+
+- (void)addSimpleItem:(SimpleUndoItem *)item;
 @end

@@ -100,6 +100,14 @@ public class TitleButton: ImageButton {
         
     }
     
+    public var isEmpty: Bool {
+        if let string = text.string as? String {
+            return string.isEmpty
+        } else {
+            return true
+        }
+    }
+    
     public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
         _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         
@@ -155,18 +163,23 @@ public class TitleButton: ImageButton {
         
         let textFocus:NSRect = focus(self.text.frame.size)
         if let _ = imageView.image {
-            let imageFocus:NSRect = focus(self.imageView.frame.size)
-            switch direction {
-            case .left:
-                self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
-                self.text.frame = NSMakeRect(imageView.frame.maxX + 6.0, textFocus.minY, textFocus.width, textFocus.height)
-            case .right:
-                self.imageView.frame = NSMakeRect(round(frame.width - imageFocus.width - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
-                self.text.frame = NSMakeRect(0, textFocus.minY, textFocus.width, textFocus.height)
-            case .top:
-                self.imageView.frame = NSMakeRect(imageFocus.minX, imageFocus.minY - textFocus.height / 2 - 2, imageFocus.width, imageFocus.height)
-                self.text.frame = NSMakeRect(textFocus.minX, self.imageView.frame.maxY, textFocus.width, textFocus.height)
+            if let string = self.text.string as? String, !string.isEmpty {
+                let imageFocus:NSRect = focus(self.imageView.frame.size)
+                switch direction {
+                case .left:
+                    self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
+                    self.text.frame = NSMakeRect(imageView.frame.maxX + 6.0, textFocus.minY, textFocus.width, textFocus.height)
+                case .right:
+                    self.imageView.frame = NSMakeRect(round(frame.width - imageFocus.width - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
+                    self.text.frame = NSMakeRect(0, textFocus.minY, textFocus.width, textFocus.height)
+                case .top:
+                    self.imageView.frame = NSMakeRect(imageFocus.minX, imageFocus.minY - textFocus.height / 2 - 2, imageFocus.width, imageFocus.height)
+                    self.text.frame = NSMakeRect(textFocus.minX, self.imageView.frame.maxY, textFocus.width, textFocus.height)
+                }
+            } else {
+                self.imageView.center()
             }
+            
             
         } else {
             self.text.frame = textFocus
@@ -251,6 +264,10 @@ public class TitleButton: ImageButton {
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public var textSize: NSSize {
+        return self.text.frame.size
     }
     
 }

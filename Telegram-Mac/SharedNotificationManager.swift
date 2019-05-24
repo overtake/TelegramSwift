@@ -110,13 +110,13 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         
         _ = (activeAccounts |> deliverOnMainQueue).start(next: { accounts in
             for account in accounts.accounts {
-                self.startNotifyListener(with: account.1, primary: account.0 == account.1.id)
+                self.startNotifyListener(with: account.1, primary: account.0 == accounts.primary?.id)
             }
             self.activeAccounts = accounts
         })
         
         
-        let passlock = Signal<Void, NoError>.single(Void()) |> delay(15, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, NoError> in
+        let passlock = Signal<Void, NoError>.single(Void()) |> delay(10, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, NoError> in
             return accountManager.transaction { transaction -> Int32? in
                 return transaction.getAccessChallengeData().timeout
             }
@@ -173,7 +173,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     
     func logout() -> Signal<Never, NoError> {
         let accountManager = self.accountManager
-        let signal = combineLatest(self.activeAccounts.accounts.map { logoutFromAccount(id: $0.0, accountManager: self.accountManager) }) |> deliverOnMainQueue
+        let signal = combineLatest(self.activeAccounts.accounts.map { logoutFromAccount(id: $0.0, accountManager: self.accountManager, alreadyLoggedOutRemotely: false) }) |> deliverOnMainQueue
         let removePasscode = accountManager.transaction { $0.setAccessChallengeData(.none) }  |> deliverOnMainQueue
         return combineLatest(removePasscode, signal) |> ignoreValues
     }
@@ -222,8 +222,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         let screenLocked = self.screenLocked
         var alsoNotified:Set<MessageId> = Set()
         
-        disposableDict.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([([Message], PeerGroupId?)], InAppNotificationSettings), NoError> in
-            return appNotificationSettings(accountManager: self.accountManager) |> mapToSignal { inAppSettings -> Signal<([([Message], PeerGroupId?)], InAppNotificationSettings), NoError> in
+        disposableDict.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([([Message], PeerGroupId)], InAppNotificationSettings), NoError> in
+            return appNotificationSettings(accountManager: self.accountManager) |> take(1) |> mapToSignal { inAppSettings -> Signal<([([Message], PeerGroupId)], InAppNotificationSettings), NoError> in
                 self.snoofEnabled = inAppSettings.showNotificationsOutOfFocus
                 
                 if inAppSettings.enabled && inAppSettings.muteUntil < Int32(Date().timeIntervalSince1970) {
@@ -234,7 +234,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 
             }
         }
-        |> mapToSignal { messages, inAppSettings -> Signal<([([Message], PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings), NoError> in
+        |> mapToSignal { messages, inAppSettings -> Signal<([([Message], PeerGroupId)],[MessageId:NSImage], InAppNotificationSettings), NoError> in
                 
                 var photos:[Signal<(MessageId, CGImage?),NoError>] = []
                 for message in messages.reduce([], { current, value in return current + value.0}) {
@@ -245,7 +245,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                         }
                     }
                     if let peer = peer {
-                        photos.append(peerAvatarImage(account: account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
+                        photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
                     }
                 }
                 
@@ -258,7 +258,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     }
                     return (messages, images, inAppSettings)
                 }
-            } |> mapToSignal { messages, images, inAppSettings -> Signal<([([Message], PeerGroupId?)],[MessageId:NSImage], InAppNotificationSettings, Bool), NoError> in
+            } |> mapToSignal { messages, images, inAppSettings -> Signal<([([Message], PeerGroupId)],[MessageId:NSImage], InAppNotificationSettings, Bool), NoError> in
                 return screenLocked.get()
                     |> take(1)
                     |> map { data in return (messages, images, inAppSettings, data.isLocked)}
@@ -299,7 +299,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 title += " → \(accountPeer.addressName ?? accountPeer.displayTitle)"
                             }
                             
-                            var text = chatListText(account: account, location: .peer(message.id.peerId), for: message).string.nsstring
+                            var text = chatListText(account: account, for: message).string.nsstring
                             var subText:String?
                             if text.contains("\n") {
                                 let parts = text.components(separatedBy: "\n")
@@ -318,6 +318,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             notification.subtitle = subText
                             notification.contentImage = screenIsLocked ? nil : images[message.id]
                             notification.hasReplyButton = hasReplyButton
+                            
+                            notification.hasActionButton = true
+                            notification.otherButtonTitle = L10n.notificationMarkAsRead
+                           // notification.additionalActions = [NSUserNotificationAction(identifier: "read", title: "Mark as Read")]
                             
                             var dict: [String : Any] = [:]
                             
@@ -338,7 +342,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             dict["message.namespace"] =  message.id.namespace
                             dict["peer.id"] =  message.id.peerId.id
                             dict["peer.namespace"] =  message.id.peerId.namespace
-                            dict["groupId"] = groupId?.rawValue
+                            dict["groupId"] = groupId.rawValue
                             dict["timestamp"] = Int32(Date().timeIntervalSince1970)
                             dict["accountId"] = account.id.int64
                             
@@ -371,6 +375,22 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         return !snoofEnabled || !NSApp.isActive
     }
     
+    
+    @objc func userNotificationCenter(_ center: NSUserNotificationCenter, didDismissAlert notification: NSUserNotification) {
+        if let userInfo = notification.userInfo, let msgId = userInfo["message.id"] as? Int32, let timestamp = userInfo["timestamp"] as? Int32, let msgNamespace = userInfo["message.namespace"] as? Int32, let namespace = userInfo["peer.namespace"] as? Int32, let id = userInfo["peer.id"] as? Int32, let accountId = userInfo["accountId"] as? Int64 {
+            
+            let accountId = AccountRecordId(rawValue: accountId)
+            
+            let messageId = MessageId(peerId: PeerId(namespace: namespace, id: id), namespace: msgNamespace, id: msgId)
+            
+            guard let account = activeAccounts.accounts.first(where: {$0.0 == accountId})?.1 else {
+                return
+            }
+            
+            
+            _ = applyMaxReadIndexInteractively(postbox: account.postbox, stateManager: account.stateManager, index: MessageIndex(id: messageId, timestamp: timestamp)).start()
+        }
+    }
     
     func userNotificationCenter(_ center: NSUserNotificationCenter, didActivate notification: NSUserNotification) {
         if let userInfo = notification.userInfo, let msgId = userInfo["message.id"] as? Int32, let msgNamespace = userInfo["message.namespace"] as? Int32, let namespace = userInfo["peer.namespace"] as? Int32, let id = userInfo["peer.id"] as? Int32, let accountId = userInfo["accountId"] as? Int64 {

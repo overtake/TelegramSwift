@@ -17,6 +17,8 @@ public enum ImageViewTransition {
 open class ImageView: NSView {
 
     
+    public var isEventLess: Bool = false
+    
     public var animationTransition: ImageViewTransition = .default
     open var animates:Bool = false
     

@@ -34,7 +34,7 @@ class AccountViewController: NavigationViewController {
     private let disposable = MetaDisposable()
     init(_ context: AccountContext) {
         self.layoutController = LayoutAccountController(context)
-        super.init(layoutController)
+        super.init(layoutController, context.window)
         self.ready.set(layoutController.ready.get())
         disposable.set(context.hasPassportSettings.get().start(next: { [weak self] value in
             self?.layoutController.passportPromise.set(.single(value))
@@ -344,7 +344,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, contextMenuItems: {
                 return [ContextMenuItem(L10n.accountSettingsDeleteAccount, handler: {
                     confirm(for: mainWindow, information: L10n.accountConfirmLogoutText, successHandler: { _ in
-                        _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager).start()
+                        _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                     })
                 })]
             }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { theme.colors.blueIcon }), compactText: true)
@@ -360,8 +360,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .proxy(_, let status):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), action: {
-                let first: Atomic<Bool> = Atomic(value: true)
-                proxyListController(accountManager: arguments.context.sharedContext.accountManager, network: arguments.context.account.network, share: { servers in
+                let controller = proxyListController(accountManager: arguments.context.sharedContext.accountManager, network: arguments.context.account.network, share: { servers in
                     var message: String = ""
                     for server in servers {
                         message += server.link + "\n\n"
@@ -369,9 +368,11 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     message = message.trimmed
                     
                     showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: message)), for: mainWindow)
-                })( { controller in
-                    arguments.presentController(controller, first.swap(false))
+                }, pushController: { controller in
+                     arguments.presentController(controller, false)
                 })
+                arguments.presentController(controller, true)
+
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .stickers:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsStickers, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, action: {
@@ -381,8 +382,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: .next, action: {
                 arguments.presentController(NotificationSettingsViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .language:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(""), action: {
+        case let .language(_, current):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(current), action: {
                 arguments.presentController(LanguageViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .appearance:
@@ -519,7 +520,7 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
     index += 1
     entries.append(.appearance(index: index))
     index += 1
-    entries.append(.language(index: index, current: L10n.accountSettingsCurrentLanguage))
+    entries.append(.language(index: index, current: language.localizedName))
     index += 1
     entries.append(.stickers(index: index))
     index += 1
@@ -595,7 +596,7 @@ class LayoutAccountController : TableViewController {
         (rightBarView as? TextButtonBarView)?.needsLayout = true
     }
     
-    override func selectionWillChange(row: Int, item: TableRowItem) -> Bool {
+    override func selectionWillChange(row: Int, item: TableRowItem, byClick: Bool) -> Bool {
         return item is GeneralInteractedRowItem || item is AccountInfoItem || item is ShortPeerRowItem
     }
     

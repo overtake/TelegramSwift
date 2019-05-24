@@ -47,7 +47,7 @@ class ChatContactRowItem: ChatRowItem {
             if let peerId = contact.peerId {
                 self.contactPeer = message.peers[peerId]
                 let range = attr.append(string: name, font: .medium(.text))
-                attr.add(link: inAppLink.peerInfo(peerId:peerId,action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
+                attr.add(link: inAppLink.peerInfo(link: "", peerId:peerId,action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
                 phoneLayout = TextViewLayout(.initialize(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
 
             } else {

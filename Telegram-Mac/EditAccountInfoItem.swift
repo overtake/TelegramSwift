@@ -24,7 +24,7 @@ class EditAccountInfoItem: GeneralRowItem {
         self.updateText = updateText
         self.state = state
         self.uploadNewPhoto = uploadNewPhoto
-        self.photo = .PeerAvatar(account.peerId, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil)
+        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil) : .Empty
         super.init(initialSize, height: 90, stableId: stableId)
     }
     
@@ -128,10 +128,9 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        super.set(item: item, animated: animated)
         
         guard let item = item as? EditAccountInfoItem else {return}
-        
+
         avatar.setState(account: item.account, state: item.photo)
         ignoreUpdates = true
         firstNameTextView.animates = false
@@ -143,8 +142,8 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         firstNameTextView.setString(item.state.firstName)
         lastNameTextView.setString(item.state.lastName)
         
-        firstNameTextView.animates = true
-        lastNameTextView.animates = true
+//        firstNameTextView.animates = true
+//        lastNameTextView.animates = true
         
         if let uploadState = item.state.updatingPhotoState {
             if progressView.superview == nil {
@@ -168,7 +167,11 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
             self.updoadPhotoCap.isHidden = false
         }
         
-        needsLayout = true
+        super.set(item: item, animated: animated)
+
+        
+        layout()
+
         ignoreUpdates = false
     }
     
@@ -184,6 +187,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         super.layout()
         
         guard let item = item as? EditAccountInfoItem else {return}
+        
+        firstNameTextView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, firstNameTextView.frame.height))
+        lastNameTextView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, lastNameTextView.frame.height))
+
 
         avatar.setFrameOrigin(item.inset.left, 16)
         firstNameTextView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY - 6))
@@ -211,8 +218,6 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         guard let item = item as? EditAccountInfoItem else {return}
-        firstNameTextView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, firstNameTextView.frame.height))
-        lastNameTextView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, lastNameTextView.frame.height))
     }
     
     func textViewEnterPressed(_ event:NSEvent) -> Bool {

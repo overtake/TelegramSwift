@@ -13,16 +13,16 @@ final class FFMpegMediaPassthroughVideoFrameDecoder: MediaTrackFrameDecoder {
     func decode(frame: MediaTrackDecodableFrame) -> MediaTrackFrame? {
         var blockBuffer: CMBlockBuffer?
         
-        let bytes = malloc(Int(frame.packet.packet.size))!
-        memcpy(bytes, frame.packet.packet.data, Int(frame.packet.packet.size))
-        guard CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: bytes, blockLength: Int(frame.packet.packet.size), blockAllocator: nil, customBlockSource: nil, offsetToData: 0, dataLength: Int(frame.packet.packet.size), flags: 0, blockBufferOut: &blockBuffer) == noErr else {
+        let bytes = malloc(Int(frame.packet.size))!
+        memcpy(bytes, frame.packet.data, Int(frame.packet.size))
+        guard CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: bytes, blockLength: Int(frame.packet.size), blockAllocator: nil, customBlockSource: nil, offsetToData: 0, dataLength: Int(frame.packet.size), flags: 0, blockBufferOut: &blockBuffer) == noErr else {
             free(bytes)
             return nil
         }
         
         var timingInfo = CMSampleTimingInfo(duration: frame.duration, presentationTimeStamp: frame.pts, decodeTimeStamp: frame.dts)
         var sampleBuffer: CMSampleBuffer?
-        var sampleSize = Int(frame.packet.packet.size)
+        var sampleSize = Int(frame.packet.size)
         guard CMSampleBufferCreate(allocator: nil, dataBuffer: blockBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: self.videoFormat, sampleCount: 1, sampleTimingEntryCount: 1, sampleTimingArray: &timingInfo, sampleSizeEntryCount: 1, sampleSizeArray: &sampleSize, sampleBufferOut: &sampleBuffer) == noErr else {
             return nil
         }

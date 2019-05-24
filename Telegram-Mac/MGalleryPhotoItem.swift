@@ -125,11 +125,15 @@ class MGalleryPhotoItem: MGalleryItem {
             return .never()
         })
         
-        self.image.set(result |> deliverOnMainQueue)
+        self.image.set(result |> map { .image($0) } |> deliverOnMainQueue)
         
         
         fetch()
         
+    }
+    
+    override var backgroundColor: NSColor {
+        return theme.colors.transparentBackground
     }
     
     override func fetch() -> Void {

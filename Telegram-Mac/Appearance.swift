@@ -37,15 +37,56 @@ private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
 }
 
 private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(10, 10), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(12, 12), contextGenerator: { size, ctx in
+        ctx.interpolationQuality = .high
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         ctx.round(size, size.width / 2)
-        
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
         
         ctx.setFillColor(activeColor.cgColor)
-        ctx.fillEllipse(in: NSMakeRect(2, 2, 6, 6))
+        ctx.fillEllipse(in: NSMakeRect(2, 2, 8, 8))
+    })!
+}
+
+private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    
+    let textNode = TextNode.layoutText(NSAttributedString.initialize(string: L10n.markScam, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    
+    return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), contextGenerator: { size, ctx in
+        ctx.interpolationQuality = .high
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        let borderPath = NSBezierPath(roundedRect: NSMakeRect(1, 1, size.width - 2, size.height - 2), xRadius: 2, yRadius: 2)
+        
+        ctx.setStrokeColor(foregroundColor.cgColor)
+        ctx.addPath(borderPath.cgPath)
+        ctx.closePath()
+        ctx.strokePath()
+        
+        let textRect = NSMakeRect((size.width - textNode.0.size.width) / 2, (size.height - textNode.0.size.height) / 2 + 1, textNode.0.size.width, textNode.0.size.height)
+        textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: backgroundColor)
+        
+    })!
+}
+
+private func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    
+    let textNode = TextNode.layoutText(NSAttributedString.initialize(string: L10n.markScam, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), rotatedContext: { size, ctx in
+        ctx.interpolationQuality = .high
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        
+        let borderPath = NSBezierPath(roundedRect: NSMakeRect(1, 1, size.width - 2, size.height - 2), xRadius: 2, yRadius: 2)
+        
+        ctx.setStrokeColor(foregroundColor.cgColor)
+        ctx.addPath(borderPath.cgPath)
+        ctx.closePath()
+        ctx.strokePath()
+        
+        let textRect = NSMakeRect((size.width - textNode.0.size.width) / 2, (size.height - textNode.0.size.height) / 2 + 1, textNode.0.size.width, textNode.0.size.height)
+        textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: backgroundColor)
+        
     })!
 }
 
@@ -288,6 +329,22 @@ private func generateTransparentBackground() -> CGImage {
         ctx.setFillColor(NSColor(0xcbcbcb).cgColor)
         ctx.fill(NSMakeRect(10, 10, 10, 10))
 
+    })!
+}
+
+private func generateLottieTransparentBackground() -> CGImage {
+    return generateImage(NSMakeSize(10, 10), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.setFillColor(.black)
+        ctx.fill(NSMakeRect(0, 0, 5, 5))
+        ctx.setFillColor(NSColor.lightGray.cgColor)
+        ctx.fill(NSMakeRect(5, 0, 5, 5))
+        
+        ctx.setFillColor(NSColor.lightGray.cgColor)
+        ctx.fill(NSMakeRect(0, 5, 5, 5))
+        ctx.setFillColor(.black)
+        ctx.fill(NSMakeRect(5, 5, 5, 5))
+        
     })!
 }
 
@@ -796,6 +853,10 @@ struct TelegramIconsTheme {
     let chatListMention: CGImage
     let chatListMentionActive: CGImage
     
+    let chatListMentionArchived: CGImage
+    let chatListMentionArchivedActive: CGImage
+
+    
     let chatMention: CGImage
     let chatMentionActive: CGImage
     
@@ -875,6 +936,7 @@ struct TelegramIconsTheme {
     let chatShareWallpaper: CGImage
     let chatGotoMessageWallpaper: CGImage
     let transparentBackground: CGImage
+    let lottieTransparentBackground: CGImage
     
     let passcodeTouchId: CGImage
     let passcodeLogin: CGImage
@@ -939,9 +1001,10 @@ struct TelegramIconsTheme {
     
     let searchArticle: CGImage
     let searchSaved: CGImage
-    
+    let archivedChats: CGImage
+
     let hintPeerActive: CGImage
-    
+    let hintPeerActiveSelected: CGImage
     
     let chatSwiping_delete: CGImage
     let chatSwiping_mute: CGImage
@@ -950,6 +1013,8 @@ struct TelegramIconsTheme {
     let chatSwiping_unread: CGImage
     let chatSwiping_pin: CGImage
     let chatSwiping_unpin: CGImage
+    let chatSwiping_archive: CGImage
+    let chatSwiping_unarchive: CGImage
     
     
     let galleryPrev: CGImage
@@ -1029,8 +1094,18 @@ struct TelegramIconsTheme {
 
     
     let disableEmojiPrediction: CGImage
-   // let videoMessageChatCap: CGImage
+    let scam: CGImage
+    let scamActive: CGImage
+    let chatScam: CGImage
 
+    let chatUnarchive: CGImage
+    let chatArchive: CGImage
+    
+    
+    let privacySettings_blocked: CGImage
+    let privacySettings_activeSessions: CGImage
+    let privacySettings_passcode: CGImage
+    let privacySettings_twoStep: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1454,6 +1529,9 @@ extension ColorPalette {
     var transparentBackground: NSColor {
         return NSColor(patternImage: NSImage(cgImage: theme.icons.transparentBackground, size: theme.icons.transparentBackground.backingSize))
     }
+    var lottieTransparentBackground: NSColor {
+        return NSColor(patternImage: NSImage(cgImage: theme.icons.lottieTransparentBackground, size: theme.icons.lottieTransparentBackground.backingSize))
+    }
 }
 
 
@@ -1662,6 +1740,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                ivChannelJoined: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white),
                                                chatListMention: generateBadgeMention(backgroundColor: palette.blueUI, foregroundColor: palette.background),
                                                chatListMentionActive: generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect),
+                                               chatListMentionArchived: generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background),
+                                               chatListMentionArchivedActive: generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect),
                                                chatMention: generateChatMention(backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon),
                                                chatMentionActive: generateChatMention(backgroundColor: palette.background, border: palette.blueIcon, foregroundColor: palette.blueIcon),
                                                sliderControl: #imageLiteral(resourceName: "Icon_SliderNormal").precomposed(),
@@ -1723,6 +1803,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatShareWallpaper: #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon),
                                                chatGotoMessageWallpaper: #imageLiteral(resourceName: "Icon_GotoBubbleMessage").precomposed(palette.blueIcon),
                                                transparentBackground: generateTransparentBackground(),
+                                               lottieTransparentBackground: generateLottieTransparentBackground(),
                                                passcodeTouchId: #imageLiteral(resourceName: "Icon_TouchId").precomposed(),
                                                passcodeLogin: #imageLiteral(resourceName: "Icon_PasscodeLogin").precomposed(),
                                                confirmDeleteMessagesAccessory: generateConfirmDeleteMessagesAccessory(backgroundColor: palette.redUI),
@@ -1772,7 +1853,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPlaceholderCap: generatePlayerListAlbumPlaceholder(nil, background: palette.fileActivityBackground, radius: 20),
                                                searchArticle: #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white),
                                                searchSaved: #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white),
-                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.blueUI, backgroundColor: palette.background),
+                                               archivedChats: #imageLiteral(resourceName: "Icon_ArchiveAvatar").precomposed(.white),
+                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.background),
+                                               hintPeerActiveSelected: generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.blueSelect),
                                                chatSwiping_delete: #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white),
                                                chatSwiping_mute: #imageLiteral(resourceName: "Icon_ChatSwipingMute").precomposed(.white),
                                                chatSwiping_unmute: #imageLiteral(resourceName: "Icon_ChatSwipingUnmute").precomposed(.white),
@@ -1780,6 +1863,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatSwiping_unread: #imageLiteral(resourceName: "Icon_ChatSwipingUnread").precomposed(.white),
                                                chatSwiping_pin: #imageLiteral(resourceName: "Icon_ChatSwipingPin").precomposed(.white),
                                                chatSwiping_unpin: #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white),
+                                               chatSwiping_archive: #imageLiteral(resourceName: "Icon_ChatListSwiping_Archive").precomposed(.white),
+                                               chatSwiping_unarchive: #imageLiteral(resourceName: "Icon_ChatListSwiping_Unarchive").precomposed(.white),
                                                galleryPrev: #imageLiteral(resourceName: "Icon_GalleryPrev").precomposed(.white),
                                                galleryNext: #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white),
                                                galleryMore: #imageLiteral(resourceName: "Icon_GalleryMore").precomposed(.white),
@@ -1832,8 +1917,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                logoutOptionClearCache: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ClearCache")!.precomposed(flipVertical: true)),
                                                logoutOptionChangePhoneNumber: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ChangePhoneNumber")!.precomposed(flipVertical: true)),
                                                logoutOptionContactSupport: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ContactSupport")!.precomposed(flipVertical: true)),
-                                               disableEmojiPrediction: NSImage(named: "Icon_CallWindowClose")!.precomposed(palette.grayIcon)
-                                               ///videoMessageChatCap: generateVideoMessageChatCap(backgroundColor: palette.background)
+                                               disableEmojiPrediction: NSImage(named: "Icon_CallWindowClose")!.precomposed(palette.grayIcon),
+                                               scam: generateScamIcon(foregroundColor: palette.redUI, backgroundColor: .clear),
+                                               scamActive: generateScamIcon(foregroundColor: .white, backgroundColor: .clear),
+                                               chatScam: generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear),
+                                               chatUnarchive: NSImage(named: "Icon_ChatUnarchive")!.precomposed(palette.blueIcon),
+                                               chatArchive: NSImage(named: "Icon_ChatArchive")!.precomposed(palette.blueIcon),
+                                               privacySettings_blocked: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_Blocked")!.precomposed(flipVertical: true)),
+                                               privacySettings_activeSessions: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_ActiveSessions")!.precomposed(flipVertical: true)),
+                                               privacySettings_passcode: generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(flipVertical: true)),
+                                               privacySettings_twoStep: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true))
     )
 }
 

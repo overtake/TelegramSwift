@@ -13,6 +13,22 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
 
+private class WeakGameScriptMessageHandler: NSObject, WKScriptMessageHandler {
+    private let f: (WKScriptMessage) -> ()
+    
+    init(_ f: @escaping (WKScriptMessage) -> ()) {
+        self.f = f
+        
+        super.init()
+    }
+    
+    func userContentController(_ controller: WKUserContentController, didReceive scriptMessage: WKScriptMessage) {
+        self.f(scriptMessage)
+    }
+}
+
+
+
 fileprivate var weakGames:[WeakReference<WebGameViewController>] = []
 
 fileprivate func game(forKey:String) -> WebGameViewController? {
@@ -24,7 +40,7 @@ fileprivate func game(forKey:String) -> WebGameViewController? {
     return nil
 }
 
-class WebGameViewController: TelegramGenericViewController<WebView>, WebFrameLoadDelegate {
+class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDelegate {
     private let gameUrl:String
     private let peerId:PeerId
     
@@ -53,9 +69,8 @@ class WebGameViewController: TelegramGenericViewController<WebView>, WebFrameLoa
     override func getRightBarViewOnce() -> BarView {
         let view = ImageBarView(controller: self, theme.icons.webgameShare)
         
-        let context = self.context
-        view.button.set(handler: {_ in 
-            showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/gamebot")), for: mainWindow)
+        view.button.set(handler: { [weak self] _ in
+            self?.share_game("")
         }, for: .Click)
         view.set(image: theme.icons.webgameShare, highlightImage: nil)
         return view
@@ -63,8 +78,8 @@ class WebGameViewController: TelegramGenericViewController<WebView>, WebFrameLoa
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        genericView.mainFrame.load(URLRequest(url: URL(string:"file://blank")!))
-        genericView.mainFrame.stopLoading()
+        genericView.load(URLRequest(url: URL(string:"file://blank")!))
+        genericView.stopLoading()
     }
     
     override func viewDidLoad() {
@@ -84,35 +99,66 @@ class WebGameViewController: TelegramGenericViewController<WebView>, WebFrameLoa
         self.centerBarView.status = .initialize(string: "@\(peer.addressName ?? "gamebot")", color: theme.colors.grayText, font: .normal(.text))
         
         if let url = URL(string:gameUrl) {
-            genericView.mainFrame.load(URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 15))
+            genericView.load(URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 15))
         }
-        genericView.frameLoadDelegate = self;
+        
+        
+        
+
+        
         readyOnce()
     }
     
-    func webView(_ sender: WebView!, didFinishLoadFor frame: WebFrame!) {
-        frame.windowObject.evaluateWebScript("TelegramWebviewProxy = { postEvent:function(eventType, eventData) {gameHandler(eventType,eventData)}}")
-        JSGlobalContextSetName(frame.globalContext, JSStringCreateWithCFString(uniqueId as CFString));
-        let funcName = JSStringCreateWithUTF8CString("gameHandler");
-        let funcObj = JSObjectMakeFunctionWithCallback(frame.globalContext, funcName, { (ctx, function, thisObject, argumentCount, arguments, exception) in
-            if let arguments = arguments, argumentCount == 2 && JSValueGetType (ctx, arguments[0]) == kJSTypeString && JSValueGetType (ctx, arguments[1]) == kJSTypeString {
-                let eventType = JSStringCopyCFString(kCFAllocatorDefault,JSValueToStringCopy (ctx, arguments[0],exception))
-                let data = JSStringCopyCFString(kCFAllocatorDefault,JSValueToStringCopy (ctx, arguments[1],exception))
-                let uniqueId = JSStringCopyCFString(kCFAllocatorDefault,JSGlobalContextCopyName(JSContextGetGlobalContext(ctx)))
-
-                if let eventType = eventType as String?, let data = data as String?, let uniqueId = uniqueId as String?, let controller = game(forKey: uniqueId) {
-                    let selector = NSSelectorFromString(eventType + ":")
-                    if controller.responds(to: selector) {
-                        controller.perform(selector, with: data)
-                    }
-                }
+    
+    override func initializer() -> WKWebView {
+        
+        let js = "var TelegramWebviewProxyProto = function() {}; " +
+            "TelegramWebviewProxyProto.prototype.postEvent = function(eventName, eventData) { " +
+            "window.webkit.messageHandlers.performAction.postMessage({'eventName': eventName, 'eventData': eventData}); " +
+            "}; " +
+        "var TelegramWebviewProxy = new TelegramWebviewProxyProto();"
+        
+        let configuration = WKWebViewConfiguration()
+        let userController = WKUserContentController()
+        
+        let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        userController.addUserScript(userScript)
+        
+        userController.add(WeakGameScriptMessageHandler { [weak self] message in
+            if let strongSelf = self {
+                strongSelf.handleScriptMessage(message)
             }
-            return  JSValueMakeNull(ctx);
-        });
-        JSObjectSetProperty(sender.mainFrame.globalContext, JSContextGetGlobalObject(frame.globalContext), funcName, funcObj, JSPropertyAttributes(kJSPropertyAttributeNone), nil);
-        JSStringRelease(funcName);
-
+        }, name: "performAction")
+        
+        
+        configuration.userContentController = userController
+        
+        return WKWebView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), configuration: configuration)
     }
+    
+    private func handleScriptMessage(_ message: WKScriptMessage) {
+        guard let body = message.body as? [String: Any] else {
+            return
+        }
+        
+        guard let eventName = body["eventName"] as? String else {
+            return
+        }
+        
+        switch eventName {
+        case "share_game":
+            self.share_game("")
+        case "share_score":
+            self.share_score("")
+        case "game_over":
+            self.game_over("")
+        case "game_loaded":
+            self.game_loaded("")
+        default:
+            break
+        }
+    }
+
 
     
     @objc func game_loaded(_ data:String) {
@@ -122,10 +168,17 @@ class WebGameViewController: TelegramGenericViewController<WebView>, WebFrameLoa
         
     }
     @objc func share_game(_ data:String) {
-        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/gamebot")), for: mainWindow)
+        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(self.peer.addressName ?? "gamebot")" + "?game=\(self.media.name)")), for: mainWindow)
     }
     @objc func share_score(_ data:String) {
-        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/gamebot")), for: mainWindow)
+        
+        let context = self.context
+        let messageId = self.messageId
+        
+        showModal(with: ShareModalController(ShareCallbackObject(context, callback: { peerIds in
+            let signals = peerIds.map { forwardGameWithScore(account: context.account, messageId: messageId, to: $0) }
+            return combineLatest(signals) |> map { _ in return } |> ignoreValues
+        })), for: mainWindow)
     }
     
     

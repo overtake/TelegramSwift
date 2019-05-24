@@ -1,29 +1,33 @@
-#import "FFMpegSwResample.h"
+#import "FFMpegSWResample.h"
+#import "FFMpegAVFrame.h"
 
-@interface FFMpegSwResample () {
+#import "libavcodec/avcodec.h"
+#import "libswresample/swresample.h"
+
+@interface FFMpegSWResample () {
     SwrContext *_context;
     NSUInteger _ratio;
     NSInteger _destinationChannelCount;
-    enum AVSampleFormat _destinationSampleFormat;
+    enum FFMpegAVSampleFormat _destinationSampleFormat;
     void *_buffer;
     int _bufferSize;
 }
 
 @end
 
-@implementation FFMpegSwResample
+@implementation FFMpegSWResample
 
-- (instancetype)initWithSourceChannelCount:(NSInteger)sourceChannelCount sourceSampleRate:(NSInteger)sourceSampleRate sourceSampleFormat:(enum AVSampleFormat)sourceSampleFormat destinationChannelCount:(NSInteger)destinationChannelCount destinationSampleRate:(NSInteger)destinationSampleRate destinationSampleFormat:(enum AVSampleFormat)destinationSampleFormat {
+- (instancetype)initWithSourceChannelCount:(NSInteger)sourceChannelCount sourceSampleRate:(NSInteger)sourceSampleRate sourceSampleFormat:(enum FFMpegAVSampleFormat)sourceSampleFormat destinationChannelCount:(NSInteger)destinationChannelCount destinationSampleRate:(NSInteger)destinationSampleRate destinationSampleFormat:(enum FFMpegAVSampleFormat)destinationSampleFormat {
     self = [super init];
     if (self != nil) {
         _destinationChannelCount = destinationChannelCount;
         _destinationSampleFormat = destinationSampleFormat;
         _context = swr_alloc_set_opts(NULL,
                                       av_get_default_channel_layout((int)destinationChannelCount),
-                                      destinationSampleFormat,
+                                      (enum AVSampleFormat)destinationSampleFormat,
                                       (int)destinationSampleRate,
                                       av_get_default_channel_layout((int)sourceChannelCount),
-                                      sourceSampleFormat,
+                                      (enum AVSampleFormat)sourceSampleFormat,
                                       (int)sourceSampleRate,
                                       0,
                                       NULL);
@@ -40,11 +44,12 @@
     }
 }
 
-- (NSData *)resample:(AVFrame *)frame {
+- (NSData * _Nullable)resample:(FFMpegAVFrame *)frame {
+    AVFrame *frameImpl = (AVFrame *)[frame impl];
     int bufSize = av_samples_get_buffer_size(NULL,
                                              (int)_destinationChannelCount,
-                                             frame->nb_samples * (int)_ratio,
-                                             _destinationSampleFormat,
+                                             frameImpl->nb_samples * (int)_ratio,
+                                             (enum AVSampleFormat)_destinationSampleFormat,
                                              1);
     
     if (!_buffer || _bufferSize < bufSize) {
@@ -56,9 +61,9 @@
     
     int numFrames = swr_convert(_context,
                                 outbuf,
-                                frame->nb_samples * (int)_ratio,
-                                (const uint8_t **)frame->data,
-                                frame->nb_samples);
+                                frameImpl->nb_samples * (int)_ratio,
+                                (const uint8_t **)frameImpl->data,
+                                frameImpl->nb_samples);
     if (numFrames <= 0) {
         return nil;
     }

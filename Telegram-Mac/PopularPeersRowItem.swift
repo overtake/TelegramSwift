@@ -105,6 +105,7 @@ private final class PopularPeerItemView : HorizontalRowView {
         addSubview(imageView)
         addSubview(textView)
         addSubview(activeImage)
+        activeImage.isEventLess = true
         textView.isSelectable = false
         textView.userInteractionEnabled = false
         badgeView.userInteractionEnabled = false
@@ -113,6 +114,7 @@ private final class PopularPeerItemView : HorizontalRowView {
             guard let item = self?.item as? PopularPeerItem else {return}
             item.actionHandler(item.type)
         }, for: .Click)
+        
         
     }
     
@@ -131,11 +133,11 @@ private final class PopularPeerItemView : HorizontalRowView {
         switch item.type {
         case .savedMessages:
             let icon = theme.icons.searchSaved
-            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)))) |> map {($0, false)})
+            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
             text = L10n.searchPopularSavedMessages
         case let .articles(unreadCount):
             let icon = theme.icons.searchArticle
-            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(4), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)))) |> map {($0, false)})
+            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(4), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
             text = L10n.searchPopularArticles
             if unreadCount > 0 {
                 let node = BadgeNode(NSAttributedString.initialize(string: "\(unreadCount)", color: .white, font: .medium(11)), theme.chatList.badgeBackgroundColor)
@@ -203,7 +205,7 @@ private final class PopularPeerItemView : HorizontalRowView {
 
 class PopularPeersRowItem: GeneralRowItem {
 
-    fileprivate let peers: [Peer]
+    let peers: [Peer]
     fileprivate let account: Account
     fileprivate let unreadArticles: Int32
     fileprivate let selfPeer: Peer

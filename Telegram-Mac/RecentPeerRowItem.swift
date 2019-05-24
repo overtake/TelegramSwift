@@ -28,7 +28,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
             self.badge = nil
         }
 
-        super.init(initialSize, peer: peer, account: account, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems)
+        super.init(initialSize, peer: peer, account: account, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems, highlightVerified: true)
     }
     
     
@@ -37,7 +37,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
     }
     
     override var textAdditionInset:CGFloat {
-        return 20
+        return 20 + (highlightVerified ? 25 : 0)
     }
 }
 

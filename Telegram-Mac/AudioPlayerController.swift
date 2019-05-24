@@ -114,21 +114,7 @@ func ==(lhs:APItem, rhs:APItem) -> Bool {
     return lhs.stableId == rhs.stableId
 }
 
-class APHoleItem : APItem {
-    private let hole:MessageHistoryHole
-    override init(_ entry:APEntry, _ account:Account) {
-        if case let .hole(hole) = entry {
-            self.hole = hole
-        } else {
-            fatalError()
-        }
-        super.init(entry, account)
-    }
 
-    override var stableId: ChatHistoryEntryId {
-        return hole.chatStableId
-    }
-}
 
 class APSongItem : APItem {
     let songName:String
@@ -281,8 +267,6 @@ fileprivate func prepareItems(from:[APEntry]?, to:[APEntry], account:Account) ->
             switch entry {
             case  .song:
                 return APSongItem(entry,account)
-            case .hole:
-                return APHoleItem(entry,account)
             case .single:
                 return APSongItem(entry,account)
             }
@@ -303,7 +287,6 @@ enum APHistoryLocation : Equatable {
 
 enum APEntry : Comparable, Identifiable {
     case song(Message)
-    case hole(MessageHistoryHole)
     case single(APSingleWrapper)
     var stableId: ChatHistoryEntryId {
         switch self {
@@ -314,8 +297,7 @@ enum APEntry : Comparable, Identifiable {
                 return stableId
             }
             return .maybeId(wrapper.id)
-        case let .hole(hole):
-            return hole.chatStableId
+
         }
     }
 
@@ -329,8 +311,6 @@ enum APEntry : Comparable, Identifiable {
 
     var index: MessageIndex {
         switch self {
-        case let .hole(hole):
-            return hole.maxIndex
         case let .song(message):
             return MessageIndex(message)
         case .single(_):
@@ -349,12 +329,6 @@ func ==(lhs:APEntry, rhs:APEntry) -> Bool {
         }
     case .single(_):
         return false
-    case let .hole(lhsHole):
-        if case let .hole(rhsHole) = rhs, lhsHole == rhsHole {
-            return true
-        } else {
-            return false
-        }
     }
 }
 
@@ -981,21 +955,15 @@ class APChatController : APController {
         let apply = history.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError> in
             switch location {
             case .initial:
-
-                return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, clipHoles: true, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
             case let .index(index):
-                return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, clipHoles: true, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
             }
 
         } |> map { view -> (APHistory?,APHistory) in
             var entries:[APEntry] = []
             for viewEntry in view.0.entries {
-                switch viewEntry {
-                case let .MessageEntry(message, _, _, _, _):
-                    entries.append(.song(message))
-                case let .HoleEntry(hole, _):
-                    entries.append(.hole(hole))
-                }
+                entries.append(.song(viewEntry.message))
             }
 
             let new = APHistory(original: view.0, filtred: entries)

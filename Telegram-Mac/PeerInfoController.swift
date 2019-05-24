@@ -457,7 +457,17 @@ class PeerInfoController: EditableViewController<TableView> {
         
        
      
+        genericView.setScrollHandler { position in
+            if let loadMoreControl = loadMoreControl {
+                switch position.direction {
+                case .bottom:
+                    context.peerChannelMemberCategoriesContextsManager.loadMore(peerId: peerId, control: loadMoreControl)
+                default:
+                    break
+                }
+            }
 
+        }
        
         
     }

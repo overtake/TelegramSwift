@@ -32,7 +32,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
     
     fileprivate var photo:Signal<(CGImage?, Bool), NoError>?
     fileprivate var status:(TextNodeLayout, TextNode)?
-    fileprivate var name:(TextNodeLayout, TextNode)?
+    fileprivate let nameLayout: TextViewLayout
     
     fileprivate var titleHeight: CGFloat = 15
     fileprivate var secondHeight: CGFloat = 0
@@ -40,6 +40,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
     let context: AccountContext
     let peer:Peer?
     let isVerified: Bool
+    let isScam: Bool
     let peerView:PeerView
     let result:PeerStatusStringResult
     let editable:Bool
@@ -57,14 +58,17 @@ class PeerInfoHeaderItem: GeneralRowItem {
         self.firstTextEdited = firstNameEditableText
         self.lastTextEdited = lastNameEditableText
         
-        canCall = peer != nil && (peer!.canCall && peer!.id != context.peerId && !editable)
+        self.canCall = peer != nil && (peer!.canCall && peer!.id != context.peerId && !editable)
         
-        isVerified = peer?.isVerified ?? false
-        
+        self.isVerified = peer?.isVerified ?? false
+        self.isScam = peer?.isScam ?? false
         if let peer = peer {
-            photo = peerAvatarImage(account: context.account, photo: .peer(peer.id, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions:NSMakeSize(photoDimension, photoDimension))
+            photo = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions:NSMakeSize(photoDimension, photoDimension))
         }
-        self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false))
+        self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false), expanded: true)
+        
+        
+        nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
         
         super.init(initialSize, stableId:stableId)
         
@@ -102,9 +106,8 @@ class PeerInfoHeaderItem: GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        name = TextNode.layoutText(maybeNode: nil,  result.title, nil, 1, .end, NSMakeSize(size.width - textInset - inset.right - (canCall ? 40 : 0), size.height), nil, false, .left)
+        nameLayout.measure(width: size.width - textInset - inset.right - (canCall ? 40 : 0) - (isScam ? theme.icons.scam.backingSize.width + 5 : 0))
         status = TextNode.layoutText(maybeNode: nil,  result.status, nil, 1, .end, NSMakeSize(size.width - textInset - inset.right - (canCall ? 40 : 0), size.height), nil, false, .left)
-
         return success
     }
 }
@@ -113,7 +116,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
 class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
     
     private let image:AvatarControl = AvatarControl(font: .avatar(26.0))
-    
+    private let nameTextView = TextView()
     private let firstNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     private let lastNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     private let editableContainer:View = View()
@@ -122,11 +125,14 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
     private let progressView:RadialProgressContainerView = RadialProgressContainerView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
     private let callButton:ImageButton = ImageButton()
     private let callDisposable = MetaDisposable()
+    private let fetchPeerAvatar = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         layerContentsRedrawPolicy = .onSetNeedsDisplay
         image.frame = NSMakeRect(0, 0, 70, 70)
         addSubview(image)
+        
+        addSubview(nameTextView)
         
         image.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeaderItem, let peer = item.peer, let _ = peer.largeProfileImage {
@@ -172,6 +178,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
         addSubview(callButton)
         
         progressView.frame = image.bounds
+        
         // image.addSubview(progressView)
     }
     
@@ -249,25 +256,26 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        if let item = item as? PeerInfoHeaderItem, let name = item.name, !item.editable {
+        if let item = item as? PeerInfoHeaderItem, !item.editable {
             
-            var nameY:CGFloat = focus(name.0.size).minY
+            var nameY:CGFloat = focus(item.nameLayout.layoutSize).minY
             
             if let status = item.status {
                 
-                let t = name.0.size.height + status.0.size.height + 4.0
+                let t = item.nameLayout.layoutSize.height + status.0.size.height + 4.0
                 nameY = (frame.height - t) / 2.0
                 
-                let sY = nameY + name.0.size.height + 4.0
+                let sY = nameY + item.nameLayout.layoutSize.height + 4.0
                 status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
                 
             }
             
             if item.isVerified {
-                ctx.draw(theme.icons.peerInfoVerify, in: NSMakeRect(item.textInset + name.0.size.width + 3, nameY + 4, theme.icons.peerInfoVerify.backingSize.width, theme.icons.peerInfoVerify.backingSize.height))
+                ctx.draw(theme.icons.peerInfoVerify, in: NSMakeRect(item.textInset + item.nameLayout.layoutSize.width + 3, nameY + 4, theme.icons.peerInfoVerify.backingSize.width, theme.icons.peerInfoVerify.backingSize.height))
             }
-            
-            name.1.draw(NSMakeRect(item.textInset, nameY, name.0.size.width, name.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
+            if item.isScam {
+                ctx.draw(theme.icons.scam, in: NSMakeRect(item.textInset + item.nameLayout.layoutSize.width + 3, nameY + 3, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+            }
         }
         
     }
@@ -284,9 +292,19 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
             editableContainer.isHidden = !item.editable
             editableContainer.backgroundColor = theme.colors.background
             
+            
+            nameTextView.update(item.nameLayout)
+            nameTextView.isHidden = item.editable
           
             if let peer = item.peer {
                 image.setPeer(account: item.context.account, peer: peer)
+                
+                if let largeProfileImage = peer.largeProfileImage {
+                    if let peerReference = PeerReference(peer) {
+                        fetchPeerAvatar.set(fetchedMediaResource(postbox: item.context.account.postbox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                    }
+                }
+                
                 if let peer = peer as? TelegramUser {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.firstName ?? "", animated: false)
                     lastNameTextView.setString(item.lastTextEdited ?? peer.lastName ?? "", animated: false)
@@ -294,7 +312,10 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                     lastNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     lastNameTextView.isHidden = false
                 } else {
-                    firstNameTextView.setString(item.firstTextEdited ?? peer.displayTitle, animated: false)
+                    let titleText = item.firstTextEdited ?? peer.displayTitle
+                    if titleText != firstNameTextView.string() {
+                        firstNameTextView.setString(titleText, animated: false)
+                    }
                     if peer.isChannel {
                         firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoChannelNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     } else {
@@ -357,10 +378,21 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
             
             callButton.centerY(x: frame.width - callButton.frame.width - 30)
             editableContainer.centerY(x: item.textInset)
+            
+            
+            
+            var nameY:CGFloat = focus(item.nameLayout.layoutSize).minY
+            if let status = item.status {
+                let t = item.nameLayout.layoutSize.height + status.0.size.height + 4.0
+                nameY = (frame.height - t) / 2.0
+            }
+            nameTextView.setFrameOrigin(NSMakePoint(item.textInset, nameY))
+            
         }
     }
     
     deinit {
         callDisposable.dispose()
+        fetchPeerAvatar.dispose()
     }
 }

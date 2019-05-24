@@ -326,9 +326,36 @@ class ChatMediaItem: ChatRowItem {
             if hasEntities {
                 caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
             }
-            captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true)
+            captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false)
             
             captionLayout?.interactions = globalLinkExecutor
+            
+            if let textLayout = self.captionLayout {
+                if let highlightFoundText = entry.additionalData?.highlightFoundText {
+                    if highlightFoundText.isMessage {
+                        if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
+                            textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.blueIcon.withAlphaComponent(0.5), def: false)]
+                        }
+                    } else {
+                        var additionalSelections:[TextSelectedRange] = []
+                        let string = caption.string.lowercased().nsstring
+                        var searchRange = NSMakeRange(0, string.length)
+                        var foundRange:NSRange = NSMakeRange(NSNotFound, 0)
+                        while (searchRange.location < string.length) {
+                            searchRange.length = string.length - searchRange.location
+                            foundRange = string.range(of: highlightFoundText.query.lowercased(), options: [], range: searchRange)
+                            if (foundRange.location != NSNotFound) {
+                                additionalSelections.append(TextSelectedRange(range: foundRange, color: theme.colors.grayIcon.withAlphaComponent(0.5), def: false))
+                                searchRange.location = foundRange.location+foundRange.length;
+                            } else {
+                                break
+                            }
+                        }
+                        textLayout.additionalSelections = additionalSelections
+                    }
+                }
+            }
+            
 
         }
         

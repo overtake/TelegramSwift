@@ -19,22 +19,30 @@ class MajorBackNavigationBar: BackNavigationBar {
     init(_ controller: ViewController, context: AccountContext, excludePeerId:PeerId) {
         self.context = context
         self.peerId = excludePeerId
-        badgeNode = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, excludePeerId: excludePeerId, view: View())
-        badgeNode.xInset = -22
+        
+        var layoutChanged:(()->Void)? = nil
+        badgeNode = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, excludeGroupId: Namespaces.PeerGroup.archive, view: View(), layoutChanged: {
+            layoutChanged?()
+        })
+        badgeNode.xInset = 0
+        
+        
         super.init(controller)
         
-        disposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
-            if let strongSelf = self {
-                switch state {
-                case .single:
-                    strongSelf.badgeNode.view?.isHidden = false
-                default:
-                    strongSelf.badgeNode.view?.isHidden = true
-                }
-            }
-        }))
         addSubview(badgeNode.view!)
 
+        
+        layoutChanged = { [weak self] in
+           self?.needsLayout = true
+        }
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        self.badgeNode.view!.setFrameOrigin(NSMakePoint(min(frame.width == minWidth ? 30 : 22, frame.width - self.badgeNode.view!.frame.width - 4), 4))
+        
     }
     
     deinit {

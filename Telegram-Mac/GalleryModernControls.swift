@@ -175,8 +175,8 @@ class GalleryModernControlsView: View {
                 fastSaveControl.isHidden = false
             } else if let file = media.media as? TelegramMediaFile {
                 if file.isVideo {
-                    zoomInControl.isHidden = true
-                    zoomOutControl.isHidden = true
+                    zoomInControl.isHidden = false
+                    zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
                     fastSaveControl.isHidden = false
                 }
@@ -189,8 +189,13 @@ class GalleryModernControlsView: View {
                 fastSaveControl.isHidden = false
             } else if let file = message.message?.media.first as? TelegramMediaFile {
                 if file.isVideo {
-                    zoomInControl.isHidden = true
-                    zoomOutControl.isHidden = true
+                    zoomInControl.isHidden = false
+                    zoomOutControl.isHidden = false
+                    rotateControl.isHidden = true
+                    fastSaveControl.isHidden = false
+                } else if !file.isGraphicFile {
+                    zoomInControl.isHidden = false
+                    zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
                     fastSaveControl.isHidden = false
                 }

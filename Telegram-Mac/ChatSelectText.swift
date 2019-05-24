@@ -12,7 +12,7 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 struct SelectContainer {
-    let text:String
+    let text:NSAttributedString
     let range:NSRange
     let header:String?
 }
@@ -21,7 +21,7 @@ class SelectManager : NSResponder {
     
     private var ranges:[(AnyHashable,WeakReference<TextView>, SelectContainer)] = []
     
-    func add(range:NSRange, textView: TextView, text: String, header: String?, stableId: AnyHashable) {
+    func add(range:NSRange, textView: TextView, text: NSAttributedString, header: String?, stableId: AnyHashable) {
         ranges.append((stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, header: header)))
     }
     
@@ -44,44 +44,39 @@ class SelectManager : NSResponder {
     }
     
     
-    var selectedText: String {
-        var string:String = ""
+    var selectedText: NSAttributedString {
+        let string:NSMutableAttributedString = NSMutableAttributedString()
         
         for i in stride(from: ranges.count - 1, to: -1, by: -1) {
             let container = ranges[i].2
             if let header = container.header, ranges.count > 1 {
-                string += header + "\n"
+                _ = string.append(string: header + "\n", color: nil, font: .normal(.text))
             }
             
             if container.range.location != NSNotFound {
                 if container.range.location != 0, ranges.count > 1 {
-                    string += "..."
+                    _ = string.append(string: "...", color: nil, font: .normal(.text))
                 }
-                string += container.text.nsstring.substring(with: container.range)
+                string.append(container.text.attributedSubstring(from: container.range))
                 if container.range.location + container.range.length != container.text.length, ranges.count > 1 {
-                    string += "..."
+                    _ = string.append(string: "...", color: nil, font: .normal(.text))
                 }
             }
             
             if i != 0 {
-                string += "\n\n"
+                _ = string.append(string: "\n\n", color: nil, font: .normal(.text))
             }
         }
-        
+
         return string
     }
     
     @objc func copy(_ sender:Any) {
-        
-        let string:String = selectedText
-        
-        if !string.isEmpty {
-            let pb = NSPasteboard.general
-            pb.declareTypes([.string], owner: self)
-            pb.setString(string, forType: .string)
+        let selectedText = self.selectedText
+        if !globalLinkExecutor.copyAttributedString(selectedText) {
+            NSPasteboard.general.declareTypes([.string], owner: self)
+            NSPasteboard.general.setString(selectedText.string, forType: .string)
         }
-        
-        
     }
     
     func selectNextChar() -> Bool {
@@ -439,7 +434,7 @@ class ChatSelectText : NSObject {
                             selectableView.canBeResponder = false
                             layout.selectedRange.range = layout.selectedRange(startPoint:startPoint, currentPoint:endPoint)
                             layout.selectedRange.cursorAlignment = startPoint.x > endPoint.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
-                            selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString.string, header: view?.header, stableId: table.item(at: i).stableId)
+                            selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString, header: view?.header, stableId: table.item(at: i).stableId)
                             selectableView.setNeedsDisplay()
                             
                             

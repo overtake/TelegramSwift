@@ -544,13 +544,14 @@ open class Window: NSWindow {
     private func startSwiping(_ event: NSEvent) {
         if event.scrollingDeltaY == 0 && event.scrollingDeltaX != 0 {
             CATransaction.begin()
-            for (key, swipe) in swipeHandlers {
-                if swipeState[key] == nil, let view = swipe.object.value, view._mouseInside() {
+            for (key, swipe) in swipeHandlers.sorted(by: { $0.value.priority > $1.value.priority }) {
+                if let view = swipe.object.value, view._mouseInside() {
                     if scrollDeltaXAfterInvertion(event.scrollingDeltaX) > 0 {
                         let result = swipe.handler(.left(.start(controller: ViewController())))
                         switch result {
                         case let .success(controller):
                             swipeState[key] = .left(.start(controller: controller))
+                            break
                         default:
                             break
                         }
@@ -559,6 +560,7 @@ open class Window: NSWindow {
                         switch result {
                         case let .success(controller):
                             swipeState[key] = .right(.start(controller: controller))
+                            break
                         default:
                             break
                         }
@@ -593,6 +595,7 @@ open class Window: NSWindow {
                 default:
                     swipeState[key] = newState
                 }
+                break
             }
         }
     }
@@ -678,6 +681,21 @@ open class Window: NSWindow {
                 }
             } else if eventType == .scrollWheel, !swipeHandlers.isEmpty  {
                 
+                
+                if let handlers = mouseHandlers[eventType.rawValue] {
+                    let sorted = handlers.sorted(by: >)
+                    loop: for handle in sorted {
+                        switch handle.handler(event) {
+                        case .invoked:
+                            return
+                        case .rejected:
+                            continue
+                        case .invokeNext:
+                            break loop
+                        }
+                    }
+                }
+                
                 switch event.phase {
                 case NSEvent.Phase.began:
                     startSwiping(event)
@@ -706,6 +724,11 @@ open class Window: NSWindow {
                     case .invokeNext:
                         break loop
                     }
+                }
+            }
+            if eventType == .rightMouseDown {
+                if !swipeState.isEmpty {
+                    stopSwiping(event)
                 }
             }
             super.sendEvent(event)

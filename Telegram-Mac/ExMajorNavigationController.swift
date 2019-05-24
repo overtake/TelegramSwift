@@ -21,9 +21,13 @@ class ExMajorNavigationController: MajorNavigationController {
         return context.window
     }
     
+    open override var responderPriority: HandlerPriority {
+        return .medium
+    }
+    
     public init(_ context: AccountContext, _ majorClass:AnyClass, _ empty:ViewController) {
         self.context = context
-        super.init(majorClass, empty)
+        super.init(majorClass, empty, context.window)
     }
     
     override func push(_ controller: ViewController, _ animated: Bool, style: ViewControllerStyle?) {

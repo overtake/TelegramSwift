@@ -180,7 +180,7 @@ class PeerListContainerView : View {
             addSubview(tableView)
         }
     }
-    let searchView:SearchView = SearchView(frame:NSZeroRect)
+    let searchView:SearchView = SearchView(frame:NSMakeRect(10, 0, 0, 0))
     let compose:ImageButton = ImageButton()
     fileprivate let proxyButton:ImageButton = ImageButton()
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
@@ -189,7 +189,7 @@ class PeerListContainerView : View {
     var mode: PeerListMode = .plain {
         didSet {
             switch mode {
-            case .feedChannels:
+            case .folder:
                 compose.isHidden = true
             case .plain:
                 compose.isHidden = false
@@ -237,7 +237,7 @@ class PeerListContainerView : View {
     
     func searchStateChanged(_ state: SearchFieldState, animated: Bool) {
         self.searchState = state
-        searchView.change(size: NSMakeSize(state == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (!mode.isFeedChannels ? 36 + compose.frame.width : 20) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
+        searchView.change(size: NSMakeSize(state == .Focus || mode.isFolder ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
         compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
         proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
     }
@@ -264,7 +264,7 @@ class PeerListContainerView : View {
     override func layout() {
         super.layout()
         
-        let offset: CGFloat
+        var offset: CGFloat
         switch theme.backgroundMode {
         case .background:
             offset = 50
@@ -274,7 +274,17 @@ class PeerListContainerView : View {
             offset = 49
         }
         
-        searchView.setFrameSize(NSMakeSize(searchState == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (!mode.isFeedChannels ? 36 + compose.frame.width : 20) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
+        if frame.width < 200 {
+            switch self.mode {
+            case .folder:
+                offset = 0
+                
+            default:
+                break
+            }
+        }
+        
+        searchView.setFrameSize(NSMakeSize(searchState == .Focus || mode.isFolder ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
         tableView.setFrameSize(frame.width, frame.height - offset)
         
         searchView.isHidden = frame.width < 200
@@ -301,28 +311,28 @@ class PeerListContainerView : View {
 
 enum PeerListMode {
     case plain
-    case feedChannels(PeerGroupId)
+    case folder(PeerGroupId)
     
-    var isFeedChannels:Bool {
+    var isFolder:Bool {
         switch self {
-        case .feedChannels:
+        case .folder:
             return true
         default:
             return false
         }
     }
-    var groupId: PeerGroupId? {
+    var groupId: PeerGroupId {
         switch self {
-        case let .feedChannels(groupId):
+        case let .folder(groupId):
             return groupId
         default:
-            return nil
+            return .root
         }
     }
 }
 
 
-class PeersListController: EditableViewController<PeerListContainerView>, TableViewDelegate {
+class PeersListController: TelegramGenericViewController<PeerListContainerView>, TableViewDelegate {
     
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
@@ -354,7 +364,15 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         self.mode = mode
         self.searchOptions = searchOptions
         super.init(context)
-
+        self.bar = .init(height: mode.isFolder ? 50 : 0)
+    }
+    
+    override var redirectUserInterfaceCalls: Bool {
+        return true
+    }
+    
+    override var responderPriority: HandlerPriority {
+        return .low
     }
     
     deinit {
@@ -382,7 +400,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         
         genericView.mode = mode
         
-        if followGlobal, mode.groupId == nil {
+        if followGlobal {
             actionsDisposable.add((context.globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
                 guard let `self` = self else {return}
                 self.changeSelection(location)
@@ -418,16 +436,16 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         }))
         
         let pushController:(ViewController)->Void = { [weak self] c in
-            self?.navigationController?.push(c)
+            self?.context.sharedContext.bindings.rootNavigation().push(c)
         }
         
         let openProxySettings:()->Void = { [weak self] in
-            if let controller = self?.navigationController?.controller as? InputDataController {
+            if let controller = self?.context.sharedContext.bindings.rootNavigation().controller as? InputDataController {
                 if controller.identifier == "proxy" {
                     return
                 }
             }
-            proxyListController(accountManager: context.sharedContext.accountManager, network: context.account.network, share: { servers in
+            let controller = proxyListController(accountManager: context.sharedContext.accountManager, network: context.account.network, share: { servers in
                 var message: String = ""
                 for server in servers {
                     message += server.link + "\n\n"
@@ -435,9 +453,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
                 message = message.trimmed
 
                 showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
-            })( { controller in
-                pushController(controller)
+            }, pushController: { controller in
+                 pushController(controller)
             })
+            pushController(controller)
         }
         
         genericView.proxyButton.set(handler: {  _ in
@@ -476,58 +495,61 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         }, for: .Click)
         
         
-        genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state in
+        genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
             guard let `self` = self else {return}
-            self.genericView.searchStateChanged(state.state, animated: true)
+            self.genericView.searchStateChanged(state.state, animated: animated)
             switch state.state {
             case .Focus:
-               assert(self.searchController == nil)
-                switch self.mode {
-                case .plain:
-                    self.showSearchController(animated: true)
-                case .feedChannels:
-                    if state.request.isEmpty {
-                        self.hideSearchController(animated: true)
-                    }
-                }
+                assert(self.searchController == nil)
+                self.showSearchController(animated: animated)
                 
             case .None:
-                self.hideSearchController(animated: true)
+                self.hideSearchController(animated: animated)
             }
             
         }, { [weak self] state in
             guard let `self` = self else {return}
-            switch self.mode {
-            case .plain:
-                self.searchController?.request(with: state.request)
-            case .feedChannels:
-                if state.request.isEmpty {
-                    self.hideSearchController(animated: true)
-                } else {
-                    self.showSearchController(animated: true)
-                    self.searchController?.request(with: state.request)
-                }
-            }
-            
+            self.searchController?.request(with: state.request)
         })
         
         
     }
     
+    override func requestUpdateBackBar() {
+        self.leftBarView.minWidth = 70
+        super.requestUpdateBackBar()
+    }
+    
+    override func getLeftBarViewOnce() -> BarView {
+        let view = BackNavigationBar(self, canBeEmpty: true)
+        view.minWidth = 70
+        return view
+    }
+    
+    override func backSettings() -> (String, CGImage?) {
+        return context.sharedContext.layout == .minimisize ? ("", theme.icons.instantViewBack) : super.backSettings()
+    }
+    
+    
     func changeSelection(_ location: ChatLocation?) {
-        self.genericView.tableView.changeSelection(stableId: location)
+        if let location = location {
+            self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId))
+        } else {
+            self.genericView.tableView.changeSelection(stableId: nil)
+        }
     }
     
     private func showSearchController(animated: Bool) {
         
         if searchController == nil {
-            let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, message, close) in
+            let rect = genericView.tableView.frame
+            let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
                 if let peerId = peerId {
-                    self?.open(with: .peer(peerId), message:message, close:close)
+                    self?.open(with: .chatId(peerId), messageId: messageId, close:close)
                 } else {
                     self?.genericView.searchView.cancel(true)
                 }
-            }, options: searchOptions, frame:genericView.tableView.frame, groupId: self.mode.groupId)
+            }, options: searchOptions, frame:NSMakeRect(rect.minX, rect.minY, frame.width, rect.height))
             
             searchController.pinnedItems = collectPinnedItems
            
@@ -552,6 +574,10 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
        
     }
     
+    override func focusSearch(animated: Bool) {
+        genericView.searchView.change(state: .Focus, animated)
+    }
+    
     override func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
         genericView.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current), removeOnCompletion: false)
         return { [weak genericView] in
@@ -563,12 +589,14 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         if let searchController = self.searchController {
             searchController.viewWillDisappear(animated)
             searchController.view.layer?.opacity = animated ? 1.0 : 0.0
-            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self] completed in
-              // if completed {
-                    self?.searchController?.viewDidDisappear(true)
-                    self?.searchController?.removeFromSuperview()
-                    self?.searchController = nil
-              //  }
+            
+            searchController.viewDidDisappear(true)
+            self.searchController = nil
+            
+            let view = searchController.view
+            
+            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
+                view?.removeFromSuperview()
             })
         }
     }
@@ -578,29 +606,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         return []
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-       
-        if animated {
-            genericView.tableView.layoutItems()
-        }
-        
-        if context.sharedContext.layout == .single && animated {
-            context.globalPeerHandler.set(.single(nil))
-        }
-        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
-            if let strongSelf = self, case .minimisize = state {
-                if strongSelf.genericView.searchView.state == .Focus {
-                    strongSelf.genericView.searchView.change(state: .None,  false)
-                }
-            }
-            self?.genericView.tableView.alwaysOpenRowsOnMouseUp = state == .single
-            self?.genericView.tableView.reloadData()
-        }))
-        
 
-        
-    }
     
     public override func escapeKeyAction() -> KeyHandlerResult {
         guard context.sharedContext.layout != .minimisize else {
@@ -627,25 +633,30 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
         return .rejected
     }
     
-    func open(with chatLocation: ChatLocation, message:Message? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
-        if let navigation = navigationController {
+    func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
+        
+        switch entryId {
+        case let .chatId(peerId):
+            let navigation = context.sharedContext.bindings.rootNavigation()
             
-            if let modalAction = navigation.modalAction as? FWDNavigationAction, chatLocation.peerId == context.peerId {
+            if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
                 _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
                 _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
                 modalAction.afterInvoke()
                 navigation.removeModalAction()
             } else {
-                let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: chatLocation, messageId: message?.id) : ChatController(context: self.context, chatLocation: chatLocation, messageId: message?.id, initialAction: initialAction)
+                let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId) : ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction)
                 navigation.push(chat, context.sharedContext.layout == .single)
             }
+        case let .groupId(groupId):
+            self.navigationController?.push(ChatListController(context, modal: false, groupId: groupId))
         }
         if close {
             self.genericView.searchView.cancel(true)
         }
     }
     
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return true
     }
     
@@ -673,47 +684,61 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        switch mode {
-        case .plain:
-            self.window?.set(handler: { [weak self] in
-                if let strongSelf = self {
-                    return strongSelf.escapeKeyAction()
-                }
-                return .invokeNext
-            }, with: self, for: .Escape, priority:.low)
-            
-            self.window?.set(handler: { [weak self] in
-                if let strongSelf = self {
-                    return strongSelf.returnKeyAction()
-                }
-                return .invokeNext
-            }, with: self, for: .Return, priority:.low)
-            
-            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                if let item = self?.effectiveTableView.selectedItem(), item.index > 0 {
-                    self?.effectiveTableView.selectPrev()
-                }
-                return .invoked
-            }, with: self, for: .UpArrow, priority: .medium, modifierFlags: [.option])
-            
-            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.effectiveTableView.selectNext()
-                return .invoked
-            }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
-            
-            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.effectiveTableView.selectNext(turnDirection: false)
-                return .invoked
-            }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control])
-            
-            self.window?.set(handler: {[weak self] () -> KeyHandlerResult in
-                self?.effectiveTableView.selectPrev(turnDirection: false)
-                return .invoked
-            }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control, .shift])
-            
-        default:
-            break
+        if animated {
+           // genericView.tableView.layoutItems()
         }
+        
+        if context.sharedContext.layout == .single && animated {
+            context.globalPeerHandler.set(.single(nil))
+        }
+        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
+            if let strongSelf = self, case .minimisize = state {
+                if strongSelf.genericView.searchView.state == .Focus {
+                    strongSelf.genericView.searchView.change(state: .None,  false)
+                }
+            }
+            self?.genericView.tableView.alwaysOpenRowsOnMouseUp = state == .single
+            self?.genericView.tableView.reloadData()
+            Queue.mainQueue().justDispatch {
+                self?.requestUpdateBackBar()
+            }
+        }))
+        
+        context.window.set(handler: { [weak self] in
+            if let strongSelf = self {
+                return strongSelf.escapeKeyAction()
+            }
+            return .invokeNext
+        }, with: self, for: .Escape, priority:.low)
+        
+        context.window.set(handler: { [weak self] in
+            if let strongSelf = self {
+                return strongSelf.returnKeyAction()
+            }
+            return .invokeNext
+        }, with: self, for: .Return, priority:.low)
+        
+        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+            if let item = self?.effectiveTableView.selectedItem(), item.index > 0 {
+                self?.effectiveTableView.selectPrev()
+            }
+            return .invoked
+        }, with: self, for: .UpArrow, priority: .medium, modifierFlags: [.option])
+        
+        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+            self?.effectiveTableView.selectNext()
+            return .invoked
+        }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
+        
+        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+            self?.effectiveTableView.selectNext(turnDirection: false)
+            return .invoked
+        }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control])
+        
+        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+            self?.effectiveTableView.selectPrev(turnDirection: false)
+            return .invoked
+        }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control, .shift])
         
         
         
@@ -721,7 +746,7 @@ class PeersListController: EditableViewController<PeerListContainerView>, TableV
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        self.window?.removeAllHandlers(for: self)
+        context.window.removeAllHandlers(for: self)
 
     }
     

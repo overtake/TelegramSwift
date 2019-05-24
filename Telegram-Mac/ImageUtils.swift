@@ -15,27 +15,26 @@ import TGUIKit
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
-    case peer(PeerId, TelegramMediaImageRepresentation?, [String], Message?)
-    case group([PeerId], [PeerId : TelegramMediaImageRepresentation], [PeerId : [String]])
+    case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
 }
 
 private var capHolder:[String : CGImage] = [:]
 
-private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
+private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
     if let representation = representation {
-        return cachedPeerPhoto(peerId, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                let resourceData = combineLatest(account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad), account.postbox.transaction { $0.getPeer(peerId) })
+                let resourceData = account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad)
                 let imageData = resourceData
                     |> take(1)
-                    |> mapToSignal { maybeData, peer -> Signal<(Data?, Bool), NoError> in
+                    |> mapToSignal { maybeData -> Signal<(Data?, Bool), NoError> in
                         if maybeData.complete {
                             return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
                         } else {
                             return Signal { subscriber in
-                                let resourceDataDisposable = resourceData.start(next: { data, _ in
+                                let resourceDataDisposable = resourceData.start(next: { data in
                                     if data.complete {
                                         subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), true))
                                         subscriber.putCompletion()
@@ -47,10 +46,10 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                                 })
                                 
                                 let fetchedDataDisposable: Disposable
-                                if let message = message {
-                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
-                                } else if let peer = peer, let reference = PeerReference(peer) {
+                                if let reference = PeerReference(peer) {
                                     fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
+                                } else if let message = message {
+                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
                                 } else {
                                     fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
                                 }
@@ -83,7 +82,7 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
                             image = nil
                         }
                         if let image = image {
-                            return cachePeerPhoto(image: image, peerId: peerId, representation: representation, size: displayDimensions, scale: scale) |> map {
+                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
                                 return (image, animated)
                             }
                         } else {
@@ -109,20 +108,20 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
         }
         
         
-        let color = theme.colors.peerColors(Int(abs(peerId.id % 7)))
+        let color = theme.colors.peerColors(Int(abs(peer.id.id % 7)))
         
         
         let symbol = letters.reduce("", { (current, letter) -> String in
             return current + letter
         })
         
-        return cachedEmptyPeerPhoto(peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
                 return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
                     if let image = image {
-                        return cacheEmptyPeerPhoto(image: image, peerId: peerId, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
+                        return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
                             return (image, false)
                         }
                     } else {
@@ -138,53 +137,56 @@ private func peerImage(account: Account, peerId: PeerId, displayDimensions: NSSi
 func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
-    case let .peer(peerId, representation, displayLetters, message):
-        return peerImage(account: account, peerId: peerId, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
-    case let .group(peerIds, representations, displayLetters):
-        var combine:[Signal<(CGImage?, Bool), NoError>] = []
-        let inGroupSize = NSMakeSize(displayDimensions.width / 2 - 2, displayDimensions.height / 2 - 2)
-        for peerId in peerIds {
-            let representation: TelegramMediaImageRepresentation? = representations[peerId]
-            let letters = displayLetters[peerId] ?? ["", ""]
-            combine.append(peerImage(account: account, peerId: peerId, displayDimensions: inGroupSize, representation: representation, displayLetters: letters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad))
-        }
-        return combineLatest(combine) |> deliverOn(graphicsThreadPool) |> map { images -> (CGImage?, Bool) in
-            var animated: Bool = false
-            for image in images {
-                if image.1 {
-                    animated = true
-                    break
-                }
-            }
-            return (generateImage(displayDimensions, rotatedContext: { size, ctx in
-                var x: CGFloat = 0
-                var y: CGFloat = 0
-                ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-                for i in 0 ..< images.count {
-                    let image = images[i].0
-                    if let image = image {
-                        let img = generateImage(image.size, rotatedContext: { size, ctx in
-                            ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-                            ctx.draw(image, in: NSMakeRect(0, 0, image.size.width, image.size.height))
-                        })!
-                        ctx.draw(img, in: NSMakeRect(x, y, inGroupSize.width, inGroupSize.height))
-                    }
-                    x += inGroupSize.width + 4
-                    if (i + 1) % 2 == 0 {
-                        x = 0
-                        y += inGroupSize.height + 4
-                    }
-                }
-                
-            }), animated)
-            
-        }
+    case let .peer(peer, representation, displayLetters, message):
+        return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
     }
 }
 
+/*
+ case let .group(peerIds, representations, displayLetters):
+ var combine:[Signal<(CGImage?, Bool), NoError>] = []
+ let inGroupSize = NSMakeSize(displayDimensions.width / 2 - 2, displayDimensions.height / 2 - 2)
+ for peerId in peerIds {
+ let representation: TelegramMediaImageRepresentation? = representations[peerId]
+ let letters = displayLetters[peerId] ?? ["", ""]
+ combine.append(peerImage(account: account, peerId: peerId, displayDimensions: inGroupSize, representation: representation, displayLetters: letters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad))
+ }
+ return combineLatest(combine) |> deliverOn(graphicsThreadPool) |> map { images -> (CGImage?, Bool) in
+ var animated: Bool = false
+ for image in images {
+ if image.1 {
+ animated = true
+ break
+ }
+ }
+ return (generateImage(displayDimensions, rotatedContext: { size, ctx in
+ var x: CGFloat = 0
+ var y: CGFloat = 0
+ ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+ for i in 0 ..< images.count {
+ let image = images[i].0
+ if let image = image {
+ let img = generateImage(image.size, rotatedContext: { size, ctx in
+ ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+ ctx.draw(image, in: NSMakeRect(0, 0, image.size.width, image.size.height))
+ })!
+ ctx.draw(img, in: NSMakeRect(x, y, inGroupSize.width, inGroupSize.height))
+ }
+ x += inGroupSize.width + 4
+ if (i + 1) % 2 == 0 {
+ x = 0
+ y += inGroupSize.height + 4
+ }
+ }
+ 
+ }), animated)
+ 
+ }
+ */
+
 enum EmptyAvatartType {
     case peer(colors:(top:NSColor, bottom: NSColor), letter: [String], font: NSFont)
-    case icon(colors:(top:NSColor, bottom: NSColor), icon: CGImage, iconSize: NSSize)
+    case icon(colors:(top:NSColor, bottom: NSColor), icon: CGImage, iconSize: NSSize, cornerRadius: CGFloat?)
 }
 
 func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> Signal<CGImage?, NoError> {
@@ -195,29 +197,35 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
         let icon: CGImage?
         let iconSize: NSSize?
         let font: NSFont?
+        let cornerRadius: CGFloat?
         switch type {
-        case let .icon(colors, _icon, _iconSize):
+        case let .icon(colors, _icon, _iconSize, _cornerRadius):
             color = colors
             icon = _icon
             letters = nil
             font = nil
             iconSize = _iconSize
+            cornerRadius = _cornerRadius
         case let .peer(colors, _letters, _font):
             color = colors
             icon = nil
             font = _font
             letters = _letters
             iconSize = nil
+            cornerRadius = nil
         }
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))
             
-            ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-            ctx.beginPath()
-            ctx.addEllipse(in: CGRect(x: 0.0, y: 0.0, width: size.width, height:
-                size.height))
-            ctx.clip()
+            if let cornerRadius = cornerRadius {
+                ctx.round(size, cornerRadius)
+            } else {
+                ctx.round(size, size.height / 2)
+            }
+            //ctx.addEllipse(in: CGRect(x: 0.0, y: 0.0, width: size.width, height:
+             //   size.height))
+           // ctx.clip()
             
             var locations: [CGFloat] = [1.0, 0.2];
             let colorSpace = CGColorSpaceCreateDeviceRGB()

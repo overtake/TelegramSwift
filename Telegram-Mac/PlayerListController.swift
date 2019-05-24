@@ -126,22 +126,11 @@ class PlayerListController: TableViewController {
                     case let .HistoryView(view: view, _, scroll, _):
                         var messages:[Message] = []
                         for entry in view.entries {
-                            switch entry {
-                            case let .MessageEntry(message, _, _, _, _):
-                                messages.append(message)
-                            default:
-                                break
-                            }
+                             messages.append(entry.message)
                         }
                         var laterId = view.laterId
                         var earlierId = view.earlierId
-                        
-                        if let last = view.entries.last, case .HoleEntry = last {
-                            laterId = nil
-                        }
-                        if let first = view.entries.first, case .HoleEntry = first {
-                            earlierId = nil
-                        }
+
                         var state: TableScrollState?
                         if let scroll = scroll {
                             switch scroll {

@@ -55,15 +55,17 @@ open class TableRowItem: NSObject {
     }
     
     open var index:Int {
-        get {
-            if let table = table, let index = table.index(of:self)  {
-                return index
-            } else {
-                return -1
-            }
+        if let _index = _index {
+            return _index
+        } else if let table = table, let index = table.index(of:self) {
+            return index
+        } else {
+            return -1
         }
-        
     }
+
+    
+    internal(set) var _index:Int? = nil
     
     public init(_ initialSize:NSSize) {
         self.initialSize = initialSize
@@ -86,9 +88,9 @@ open class TableRowItem: NSObject {
         return .single([])
     }
     
-    public func redraw(animated: Bool = false)->Void {
+    public func redraw(animated: Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false)->Void {
         if index != -1 {
-            table?.reloadData(row: index, animated: animated)
+            table?.reloadData(row: index, animated: animated, options: options, presentAsNew: presentAsNew)
         }
     }
     
@@ -149,5 +151,27 @@ open class TableRowItem: NSObject {
     open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth:CGFloat = 0) -> Bool {
         self.oldWidth = width
         return true;
+    }
+    
+    public private(set) var _isAutohidden: Bool = false
+    public var isAutohidden: Bool {
+        return _isAutohidden
+    }
+    public func hideItem(animated: Bool, reload: Bool = true, options: NSTableView.AnimationOptions = .slideUp, presentAsNew: Bool = true) {
+        _isAutohidden = true
+        if reload {
+            redraw(animated: animated, options: options, presentAsNew: presentAsNew)
+        }
+    }
+    public func unhideItem(animated: Bool, reload: Bool = true, options: NSTableView.AnimationOptions = .slideDown, presentAsNew: Bool = true) {
+        _isAutohidden = false
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+        if reload {
+            redraw(animated: animated, options: .slideDown, presentAsNew: true)
+        }
+    }
+    
+    internal var heightValue: CGFloat {
+        return _isAutohidden ? 0 : self.height
     }
 }

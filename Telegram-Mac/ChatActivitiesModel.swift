@@ -181,6 +181,9 @@ class ChatActivitiesModel: Node {
                         case .recordingInstantVideo:
                             animation = .recording
                             _ = text.append(string: tr(L10n.peerActivityChatMultiRecordingVideo1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
+                        case .playingGame:
+                            animation = .text
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiPlayingGame1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         default:
                             animation = .text
                             _ = text.append(string: tr(L10n.peerActivityChatMultiTypingText1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
@@ -235,6 +238,13 @@ class ChatActivitiesModel: Node {
                             _ = text.append(string: tr(L10n.peerActivityUserRecordingVideo), color: theme.textColor, font: .normal(.text))
                         } else {
                             _ = text.append(string: L10n.peerActivityChatRecordingVideo(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
+                        }
+                    case .playingGame:
+                        animation = .text
+                        if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
+                            _ = text.append(string: L10n.peerActivityUserPlayingGame, color: theme.textColor, font: .normal(.text))
+                        } else {
+                            _ = text.append(string: L10n.peerActivityChatPlayingGame(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     default:
                         animation = .text

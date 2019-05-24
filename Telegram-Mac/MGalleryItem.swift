@@ -11,7 +11,39 @@ import PostboxMac
 import TelegramCoreMac
 import SwiftSignalKitMac
 import TGUIKit
+import Lottie
 
+
+enum GPreviewValue {
+    case image(CGImage?)
+    case view(NSView?)
+    
+    var hasValue: Bool {
+        switch self {
+        case let .image(img):
+            return img != nil
+        case let .view(view):
+            return view != nil
+        }
+    }
+    var size: NSSize? {
+        switch self {
+        case let .image(img):
+            return img?.size
+        case let .view(view):
+            return view?.frame.size
+        }
+    }
+    
+    var image: CGImage? {
+        switch self {
+        case let .image(img):
+            return img
+        case .view:
+            return nil
+        }
+    }
+}
 
 func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
     switch lhs {
@@ -39,6 +71,12 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
+    case .lottie(_, let lhsEntry):
+        if case let .lottie(_, rhsEntry) = rhs {
+            return lhsEntry < rhsEntry
+        } else {
+            return false
+        }
     }
 }
 
@@ -56,9 +94,9 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeerId, lhsDate):
-        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeerId, rhsDate) = rhs {
-            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeerId == rhsPeerId && lhsDate == rhsDate
+    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeer, lhsDate):
+        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeer, rhsDate) = rhs {
+            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeer.isEqual(rhsPeer) && lhsDate == rhsDate
         } else {
             return false
         }
@@ -68,13 +106,20 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
+    case let .lottie(_, lhsEntry):
+        if case .lottie(_, let rhsEntry) = rhs {
+            return lhsEntry.stableId == rhsEntry.stableId
+        } else {
+            return false
+        }
     }
 }
 enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
-    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peerId: PeerId, date: TimeInterval)
+    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, date: TimeInterval)
     case instantMedia(InstantPageMedia, Message?)
     case secureIdDocument(SecureIdDocumentValue, Int)
+    case lottie(Animation, ChatHistoryEntry)
     var stableId: AnyHashable {
         switch self {
         case let .message(entry):
@@ -85,6 +130,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return media.index
         case let .secureIdDocument(document, _):
             return document.stableId
+        case let .lottie(_, entry):
+            return entry.stableId
         }
     }
     
@@ -102,8 +149,8 @@ enum GalleryEntry : Comparable, Identifiable {
             if let message = message, let peerId = message.chatPeer?.id {
                 return (peerId, TimeInterval(message.timestamp))
             }
-        case let .photo(_, _, _, _, peerId, date):
-            return (peerId, date)
+        case let .photo(_, _, _, _, peer, date):
+            return (peer.id, date)
         default:
             return nil
         }
@@ -125,6 +172,17 @@ enum GalleryEntry : Comparable, Identifiable {
             }
         case .instantMedia(let media, _):
             return media.media as? TelegramMediaFile
+        case let .lottie(_, entry):
+            if let media = entry.message!.media[0] as? TelegramMediaFile {
+                return media
+            } else if let media = entry.message!.media[0] as? TelegramMediaWebpage {
+                switch media.content {
+                case let .Loaded(content):
+                    return content.file
+                default:
+                    return nil
+                }
+            }
         default:
             return nil
         }
@@ -153,6 +211,25 @@ enum GalleryEntry : Comparable, Identifiable {
             return ImageMediaReference.standalone(media: image)
         case .photo:
             return ImageMediaReference.standalone(media: image)
+        case .lottie:
+            preconditionFailure()
+        }
+    }
+    
+    func peerPhotoResource() -> MediaResourceReference {
+        switch self {
+        case let .photo(_, _, image, _, peer, _):
+            if let representation = image.representationForDisplayAtSize(NSMakeSize(640, 640)) {
+                if let peerReference = PeerReference(peer) {
+                    return MediaResourceReference.avatar(peer: peerReference, resource: representation.resource)
+                } else {
+                    return MediaResourceReference.standalone(resource: representation.resource)
+                }
+            } else {
+                 preconditionFailure()
+            }
+        default:
+            preconditionFailure()
         }
     }
     
@@ -166,6 +243,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return FileMediaReference.standalone(media: file)
         case .photo:
             return FileMediaReference.standalone(media: file)
+        case .lottie:
+            preconditionFailure()
         }
     }
     
@@ -180,12 +259,16 @@ enum GalleryEntry : Comparable, Identifiable {
             return "\(stableId)"
         case let .secureIdDocument(document, _):
             return "secureId: \(document.document.id.hashValue)"
+        case let .lottie(_, entry):
+            return "lottie-animation-\(entry.message?.stableId ?? 0)"
         }
     }
     
     var chatEntry: ChatHistoryEntry? {
         switch self {
         case let .message(entry):
+            return entry
+        case let .lottie(_, entry):
             return entry
         default:
             return nil
@@ -233,7 +316,7 @@ func <(lhs: MGalleryItem, rhs: MGalleryItem) -> Bool {
 }
 
 class MGalleryItem: NSObject, Comparable, Identifiable {
-    let image:Promise<CGImage?> = Promise()
+    let image:Promise<GPreviewValue> = Promise()
     let view:Promise<NSView> = Promise()
     let size:Promise<NSSize> = Promise()
     let magnify:Promise<CGFloat> = Promise()
@@ -328,19 +411,19 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
         var first:Bool = true
         
-        let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] image, view  in
+        let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] value, view  in
             guard let `self` = self else {return}
             
-            view.layer?.contents = image
+            view.layer?.contents = value.image
             if !first && !self.disableAnimations {
                 view.layer?.animateContents()
             }
             self.disableAnimations = false
             first = false
-            view.layer?.backgroundColor = self is MGalleryPhotoItem ? theme.colors.transparentBackground.cgColor : .black
+            view.layer?.backgroundColor = self.backgroundColor.cgColor
 
             if let magnify = view.superview?.superview as? MagnifyView {
-                if let size = image?.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height, size.width > 150 && size.height > 150 {
+                if let size = value.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height, size.width > 150 && size.height > 150 {
                     self.modifiedSize = size
                     if magnify.contentSize != self.sizeValue {
                         magnify.contentSize = self.sizeValue
@@ -360,6 +443,10 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         magnifyDisposable.set(magnify.get().start(next: { [weak self] (magnify) in
             self?.magnifyValue = magnify
         }))
+    }
+    
+    var backgroundColor: NSColor {
+        return .black
     }
     
     func singleView() -> NSView {

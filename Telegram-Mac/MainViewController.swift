@@ -142,6 +142,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         super.viewDidLoad()
         let context = self.context
         
+        
         genericView.set(background: theme.colors.grayForeground, for: .Normal)
         genericView.isHidden = true
         genericView.hideAnimated = true
@@ -187,7 +188,7 @@ class MainViewController: TelegramViewController {
 
     let tabController:TabBarController = TabBarController()
     let contacts:ContactsController
-    let chatList:ChatListController
+    let chatListNavigation:NavigationViewController
     let settings:AccountViewController
     private let phoneCalls:RecentCallsViewController
     private let layoutDisposable:MetaDisposable = MetaDisposable()
@@ -239,7 +240,7 @@ class MainViewController: TelegramViewController {
         
         tabController.add(tab: TabItem(image: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), selectedImage: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true), controller: phoneCalls))
         
-        tabController.add(tab: TabBadgeItem(context, controller: chatList, image: theme.icons.chatTabIcon, selectedImage: hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected, longHoverHandler: { [weak self] control in
+        tabController.add(tab: TabBadgeItem(context, controller: chatListNavigation, image: theme.icons.chatTabIcon, selectedImage: hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected, longHoverHandler: { [weak self] control in
             self?.showFastChatSettings(control)
         }))
         
@@ -287,6 +288,10 @@ class MainViewController: TelegramViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        chatListNavigation.hasBarRightBorder = true
+        
         prefDisposable.set((baseAppSettings(accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
             guard let `self` = self else {return}
             if settings.showCallsTab != self.showCallTabs {
@@ -307,12 +312,13 @@ class MainViewController: TelegramViewController {
         if unreadCount > 0 {
             items.append(SPopoverItem(L10n.chatListPopoverReadAll, {
                 _ = context.account.postbox.transaction ({ transaction -> Void in
-                    markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker)
+                    markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root)
+                    markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive)
                 }).start()
             }))
         }
         
-        if self.tabController.current == chatList, !items.isEmpty {
+        if self.tabController.current == chatListNavigation, !items.isEmpty {
             showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxX, inset: NSMakePoint(control.frame.width + 12, 0))
         }
     }
@@ -388,29 +394,27 @@ class MainViewController: TelegramViewController {
                 context.window.sendKeyEvent(KeyboardKey.L, modifierFlags: [.command])
             }, theme.icons.fastSettingsLock))
         }
-        if #available(OSX 10.14, *), theme.followSystemAppearance {} else {
-            items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, { [weak self] in
-                if let strongSelf = self {
-                    _ = updateThemeInteractivetly(accountManager: strongSelf.context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
-                        let palette: ColorPalette
-                        var palettes:[String : ColorPalette] = [:]
-                        palettes[dayClassic.name] = dayClassic
-                        palettes[whitePalette.name] = whitePalette
-                        palettes[darkPalette.name] = darkPalette
-                        palettes[nightBluePalette.name] = nightBluePalette
-                        palettes[mojavePalette.name] = mojavePalette
-                        
-                        if !theme.colors.isDark {
-                            palette = palettes[settings.defaultNightName] ?? nightBluePalette
-                        } else {
-                            palette = palettes[settings.defaultDayName] ?? dayClassic
-                        }
-                        return settings.withUpdatedPalette(palette)
-                    }).start()
-                    _ = updateAutoNightSettingsInteractively(accountManager: strongSelf.context.sharedContext.accountManager, { $0.withUpdatedSchedule(nil)}).start()
-                }
-            }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
-        }
+        items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, { [weak self] in
+            if let strongSelf = self {
+                _ = updateThemeInteractivetly(accountManager: strongSelf.context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
+                    let palette: ColorPalette
+                    var palettes:[String : ColorPalette] = [:]
+                    palettes[dayClassic.name] = dayClassic
+                    palettes[whitePalette.name] = whitePalette
+                    palettes[darkPalette.name] = darkPalette
+                    palettes[nightBluePalette.name] = nightBluePalette
+                    palettes[mojavePalette.name] = mojavePalette
+                    
+                    if !theme.colors.isDark {
+                        palette = palettes[settings.defaultNightName] ?? nightBluePalette
+                    } else {
+                        palette = palettes[settings.defaultDayName] ?? dayClassic
+                    }
+                    return settings.withUpdatedPalette(palette).withUpdatedFollowSystemAppearance(false)
+                }).start()
+                _ = updateAutoNightSettingsInteractively(accountManager: strongSelf.context.sharedContext.accountManager, { $0.withUpdatedSchedule(nil)}).start()
+            }
+        }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
        
         
         let time = Int32(Date().timeIntervalSince1970)
@@ -478,6 +482,22 @@ class MainViewController: TelegramViewController {
         context.sharedContext.bindings.rootNavigation().to(index: index)
     }
     
+    override func focusSearch(animated: Bool) {
+        if context.sharedContext.layout == .minimisize {
+            return
+        }
+        let animated = animated && (context.sharedContext.layout != .single || context.sharedContext.bindings.rootNavigation().stackCount == 1)
+        if context.sharedContext.layout == .single {
+            context.sharedContext.bindings.rootNavigation().close()
+        }
+        if let current = tabController.current {
+            if current is AccountViewController {
+                tabController.select(index: chatIndex)
+            }
+            tabController.current?.focusSearch(animated: animated)
+        }
+    }
+    
     override func getCenterBarViewOnce() -> TitledBarView {
         return TitledBarView(controller: self)
     }
@@ -530,6 +550,10 @@ class MainViewController: TelegramViewController {
         chatList.openChat(index)
     }
     
+    var chatList: ChatListController {
+        return chatListNavigation.controller as! ChatListController
+    }
+    
     func showPreferences() {
         context.sharedContext.bindings.switchSplitLayout(.dual)
         if self.context.sharedContext.layout != .minimisize {
@@ -537,13 +561,17 @@ class MainViewController: TelegramViewController {
         }
     }
     
+    override var responderPriority: HandlerPriority {
+        return context.sharedContext.layout == .single ? .medium : .low
+    }
+    
     func isCanMinimisize() -> Bool{
-        return self.tabController.current == chatList
+        return self.tabController.current == chatListNavigation
     }
     
     override init(_ context: AccountContext) {
         
-        chatList = ChatListController(context)
+        chatListNavigation = NavigationViewController(ChatListController(context), context.window)
         contacts = ContactsController(context)
         settings = AccountViewController(context)
         phoneCalls = RecentCallsViewController(context)
@@ -552,6 +580,7 @@ class MainViewController: TelegramViewController {
         #endif
         super.init(context)
         bar = NavigationBarStyle(height: 0)
+       // chatListNavigation.alwaysAnimate = true
     }
 
     deinit {

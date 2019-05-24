@@ -46,8 +46,6 @@ private func mappedInsertEntries(context: AccountContext, peerId: PeerId, contro
         switch entry.entry {
         case let .MessageEntry(message, _, _, _, _, _, _, _, _):
             return GridNodeInsertItem(index: entry.index, item: GridMessageItem(context: context, message: message, chatInteraction: controllerInteraction), previousIndex: entry.previousIndex)
-        case .HoleEntry:
-            return GridNodeInsertItem(index: entry.index, item: GridHoleItem(), previousIndex: entry.previousIndex)
         case .UnreadEntry:
             assertionFailure()
             return GridNodeInsertItem(index: entry.index, item: GridHoleItem(), previousIndex: entry.previousIndex)
@@ -62,8 +60,6 @@ private func mappedUpdateEntries(context: AccountContext, peerId: PeerId, contro
         switch entry.entry {
         case let .MessageEntry(message, _, _, _, _, _, _, _, _):
             return GridNodeUpdateItem(index: entry.index, previousIndex: entry.previousIndex, item: GridMessageItem(context: context, message: message, chatInteraction: controllerInteraction))
-        case .HoleEntry:
-            return GridNodeUpdateItem(index: entry.index, previousIndex: entry.previousIndex, item: GridHoleItem())
         case .UnreadEntry:
             assertionFailure()
             return GridNodeUpdateItem(index: entry.index, previousIndex: entry.previousIndex, item: GridHoleItem())
@@ -154,8 +150,6 @@ private func mappedInsertEntries(context: AccountContext, chatInteraction: ChatI
         switch entry.1 {
         case let .MessageEntry(message, _, _, _, _, _, _, _, _):
             return GridNodeInsertItem(index: entry.0, item: GridMessageItem(context: context, message: message, chatInteraction: chatInteraction), previousIndex: entry.2)
-        case .HoleEntry:
-            return GridNodeInsertItem(index: entry.0, item: GridHoleItem(), previousIndex: entry.2)
         case .UnreadEntry:
             assertionFailure()
             return GridNodeInsertItem(index: entry.0, item: GridHoleItem(), previousIndex: entry.2)
@@ -172,8 +166,6 @@ private func mappedUpdateEntries(context: AccountContext, chatInteraction: ChatI
         switch entry.1 {
         case let .MessageEntry(message, _, _, _, _, _, _, _, _):
             return GridNodeUpdateItem(index: entry.0, previousIndex: entry.2, item: GridMessageItem(context: context, message: message, chatInteraction: chatInteraction))
-        case .HoleEntry:
-            return GridNodeUpdateItem(index: entry.0, previousIndex: entry.2, item: GridHoleItem())
         case .UnreadEntry:
             assertionFailure()
             return GridNodeUpdateItem(index: entry.0, previousIndex: entry.2, item: GridHoleItem())
@@ -292,6 +284,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        genericView.grid.floatingSections = true
         
         genericView.grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: [], updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(), preloadSize: self.bounds.width, type: .fixed(itemSize: itemSize, lineSpacing: 4)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
         
@@ -438,8 +431,10 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                         reason = ChatHistoryViewTransitionReason.InteractiveChanges
                     case .UpdateVisible:
                         reason = ChatHistoryViewTransitionReason.Reload
-                    case let .FillHole(insertions, deletions):
-                        reason = ChatHistoryViewTransitionReason.HoleChanges(filledHoleDirections: insertions, removeHoleDirections: deletions)
+                    case .FillHole:
+                        reason = .HoleReload
+                    case .Initial:
+                        reason = ChatHistoryViewTransitionReason.Initial(fadeIn: false)
                     }
                 }
                 
@@ -481,9 +476,6 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
                 if let strongSelf = self, let view = transition.historyView.originalView {
                     strongSelf.historyView = transition.historyView
                     
-                    if let range = visibleRange.loadedRange {
-                        strongSelf.context.account.postbox.updateMessageHistoryViewVisibleRange(view.id, earliestVisibleIndex: transition.historyView.filteredEntries[transition.historyView.filteredEntries.count - 1 - range.upperBound].entry.index, latestVisibleIndex: transition.historyView.filteredEntries[transition.historyView.filteredEntries.count - 1 - range.lowerBound].entry.index)
-                    }
                     
                     let historyState: ChatHistoryNodeHistoryState = .loaded(isEmpty: view.entries.isEmpty)
                     if strongSelf.currentHistoryState != historyState {

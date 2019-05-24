@@ -293,15 +293,13 @@ class ContactsController: PeersListController {
             switch location {
             case let .peer(peerId):
                 genericView.tableView.changeSelection(stableId: ContactsControllerEntryId.peerId(peerId.toInt64()))
-            default:
-                break
             }
         } else {
             genericView.tableView.cancelSelection()
         }
     }
     
-    override func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         if  let item = item as? ShortPeerRowItem, let modalAction = navigationController?.modalAction {
             if !modalAction.isInvokable(for: item.peer) {
                 modalAction.alertError(for: item.peer, with:window!)

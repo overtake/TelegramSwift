@@ -19,17 +19,25 @@
 #import "DFRPrivateHeader.h"
 #import "MP4Atom.h"
 #import "HackUtils.h"
+#import "BuildConfig.h"
+#import "TGModernGrowingTextView.h"
 
 #ifndef SHARE
 #import "ffmpeg/include/libavcodec/avcodec.h"
 #import "ffmpeg/include/libavformat/avformat.h"
-#import "FFMpegSwResample.h"
 #import "libjpeg-turbo/jpeglib.h"
 #import "libjpeg-turbo/jerror.h"
 #import "libjpeg-turbo/turbojpeg.h"
 #import "libjpeg-turbo/jmorecfg.h"
 #import "FFMpegRemuxer.h"
 #import "FFMpegGlobals.h"
+#import "FFMpegAVFormatContext.h"
+#import "FFMpegAVIOContext.h"
+#import "FFMpegAVCodec.h"
+#import "FFMpegAVCodecContext.h"
+#import "FFMpegAVFrame.h"
+#import "FFMpegPacket.h"
+#import "FFMpegSwResample.h"
 #endif
 
 
@@ -56,7 +64,7 @@
 #define nullable
 #endif
 
-
+void stickerThumbnailAlphaBlur(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
 void telegramFastBlurMore(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
 void telegramFastBlur(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
 NSArray<NSString *> * __nonnull cut_long_message(NSString * __nonnull message, int max_length);
@@ -132,120 +140,7 @@ NSArray<NSString *> * __nonnull currentAppInputSource();
 
 @end
 
-extern NSString *__nonnull const TGCustomLinkAttributeName;
 
-
-@interface TGInputTextAttribute : NSObject
-@property (nonatomic,strong,readonly) NSString * __nonnull name;
-@property (nonatomic,strong,readonly) id __nonnull  value;
--(id __nonnull )initWithName:(NSString * __nonnull)name value:(id __nonnull)value;
-@end
-
-@interface TGInputTextTag : NSTextAttachment
-
-@property (nonatomic, readonly) int64_t uniqueId;
-@property (nonatomic, strong, readonly) id __nonnull  attachment;
-
-@property (nonatomic,strong, readonly) TGInputTextAttribute * __nonnull attribute;
-
--(instancetype __nonnull )initWithUniqueId:(int64_t)uniqueId attachment:(id __nonnull )attachment attribute:(TGInputTextAttribute * __nonnull )attribute;
-
-@end
-
-@interface TGInputTextTagAndRange : NSObject
-
-@property (nonatomic, strong, readonly) TGInputTextTag *__nonnull tag;
-@property (nonatomic) NSRange range;
-
-- (instancetype __nonnull )initWithTag:(TGInputTextTag * __nonnull )tag range:(NSRange)range;
-
-@end
-
-@class TGModernGrowingTextView;
-
-@protocol TGModernGrowingDelegate <NSObject>
-
--(void) textViewHeightChanged:(CGFloat)height animated:(BOOL)animated;
--(BOOL) textViewEnterPressed:(NSEvent * __nonnull)event;
--(void) textViewTextDidChange:(NSString * __nonnull)string;
--(void) textViewTextDidChangeSelectedRange:(NSRange)range;
--(BOOL)textViewDidPaste:(NSPasteboard * __nonnull)pasteboard;
--(NSSize)textViewSize:(TGModernGrowingTextView *)textView;
--(BOOL)textViewIsTypingEnabled;
--(int)maxCharactersLimit:(TGModernGrowingTextView *)textView;
-
-@optional
-- (void) textViewNeedClose:(id __nonnull)textView;
-- (BOOL) canTransformInputText;
-- (BOOL) supportContinuityCamera;
-- (void)textViewDidReachedLimit:(id __nonnull)textView;
-- (void)makeUrlOfRange: (NSRange)range;
-- (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
-@end
-
-
-void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSString * _Nonnull key));
-void setTextViewEnableTouchBar(BOOL enableTouchBar);
-
-@interface TGGrowingTextView : NSTextView<NSServicesMenuRequestor>
-@property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
-@end
-
-@interface TGModernGrowingTextView : NSView
-
-
--(instancetype)initWithFrame:(NSRect)frameRect unscrollable:(BOOL)unscrollable;
-
-@property (nonatomic,assign) BOOL animates;
-@property (nonatomic,assign) int min_height;
-@property (nonatomic,assign) int max_height;
-
-@property (nonatomic,assign) BOOL isSingleLine;
-@property (nonatomic,assign) BOOL isWhitespaceDisabled;
-@property (nonatomic,strong) NSColor * __nonnull cursorColor;
-@property (nonatomic,strong) NSColor * __nonnull textColor;
-@property (nonatomic,strong) NSColor * __nonnull linkColor;
-@property (nonatomic,strong) NSFont * __nonnull textFont;
-@property (nonatomic,strong,readonly) TGGrowingTextView * __nonnull inputView;
-@property (nonatomic,strong) NSString * __nonnull defaultText;
-
-@property (nonatomic,strong, nullable) NSAttributedString *placeholderAttributedString;
-
--(void)setPlaceholderAttributedString:(NSAttributedString * __nonnull)placeholderAttributedString update:(BOOL)update;
-
-@property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable delegate;
-
--(int)height;
-
-
--(void)update:(BOOL)notify;
-
--(NSAttributedString * __nonnull)attributedString;
--(void)setAttributedString:(NSAttributedString * __nonnull)attributedString animated:(BOOL)animated;
--(NSString * __nonnull)string;
--(void)setString:(NSString * __nonnull)string animated:(BOOL)animated;
--(void)setString:(NSString * __nonnull)string;
--(NSRange)selectedRange;
--(void)appendText:(id __nonnull)aString;
--(void)insertText:(id __nonnull)aString replacementRange:(NSRange)replacementRange;
--(void)addInputTextTag:(TGInputTextTag * __nonnull)tag range:(NSRange)range;
--(void)scrollToCursor;
--(void)replaceMention:(NSString * __nonnull)mention username:(bool)username userId:(int32_t)userId;
-
--(void)paste:(id __nonnull)sender;
-
--(void)setSelectedRange:(NSRange)range;
-
--(Class __nonnull)_textViewClass;
--(int)_startXPlaceholder;
--(BOOL)_needShowPlaceholder;
-
--(void)codeWord;
--(void)italicWord;
--(void)boldWord;
--(void)addLink:(NSString *)link;
--(void)textDidChange:( NSNotification * _Nullable )notification;
-@end
 
 
 @interface NSWeakReference : NSObject

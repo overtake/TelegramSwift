@@ -115,7 +115,7 @@ public class TabBarView: View {
                         strongSelf.setSelectedIndex(i, respondToDelegate:true, animated: true)
                     }
                 }
-            }, for: .Click)
+            }, for: .Down)
             view.autoresizingMask = [.minXMargin, .maxXMargin, .width]
             view.autoresizesSubviews = true
             let imageView = tab.makeView()

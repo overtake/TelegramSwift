@@ -152,22 +152,24 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             if date != 0 {
                 let dateText = RichText.plain(stringForDate(date))
                 let formatString = _NSLocalizedString("InstantPage.AuthorAndDateTitle")
-                let authorRange = formatString.range(of: "%1$@")!
-                let dateRange = formatString.range(of: "%2$@")!
-                
-                if authorRange.lowerBound < dateRange.lowerBound {
-                    let byPart = String(formatString[formatString.startIndex ..< authorRange.lowerBound])
-                    let middlePart = String(formatString[authorRange.upperBound ..< dateRange.lowerBound])
-                    let endPart = String(formatString[dateRange.upperBound...])
-                    
-                    text = .concat([.plain(byPart), author, .plain(middlePart), dateText, .plain(endPart)])
-                } else {
-                    let beforePart = String(formatString[formatString.startIndex ..< dateRange.lowerBound])
-                    let middlePart = String(formatString[dateRange.upperBound ..< authorRange.lowerBound])
-                    let endPart = String(formatString[authorRange.upperBound...])
-                    
-                    text = .concat([.plain(beforePart), dateText, .plain(middlePart), author, .plain(endPart)])
+                let authorRange = formatString.range(of: "%1$@")
+                let dateRange = formatString.range(of: "%2$@")
+                if let authorRange = authorRange, let dateRange = dateRange {
+                    if authorRange.lowerBound < dateRange.lowerBound {
+                        let byPart = String(formatString[formatString.startIndex ..< authorRange.lowerBound])
+                        let middlePart = String(formatString[authorRange.upperBound ..< dateRange.lowerBound])
+                        let endPart = String(formatString[dateRange.upperBound...])
+                        
+                        text = .concat([.plain(byPart), author, .plain(middlePart), dateText, .plain(endPart)])
+                    } else {
+                        let beforePart = String(formatString[formatString.startIndex ..< dateRange.lowerBound])
+                        let middlePart = String(formatString[dateRange.upperBound ..< authorRange.lowerBound])
+                        let endPart = String(formatString[authorRange.upperBound...])
+                        
+                        text = .concat([.plain(beforePart), dateText, .plain(middlePart), author, .plain(endPart)])
+                    }
                 }
+                
             } else {
                 text = author
             }

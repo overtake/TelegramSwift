@@ -339,11 +339,9 @@ class InstalledStickerPacksController: TableViewController {
         }, openSuggestionOptions: { [weak self] in
             self?.openSuggestionOptions()
         })
-        let stickerPacks = Promise<CombinedView>()
-        stickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
+        let stickerPacks = context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])
         
-        let featured = Promise<[FeaturedStickerPackItem]>()
-       featured.set(context.account.viewTracker.featuredStickerPacks())
+        let featured = context.account.viewTracker.featuredStickerPacks()
         
         
         let stickerSettingsKey = ApplicationSpecificPreferencesKeys.stickerSettings
@@ -353,7 +351,7 @@ class InstalledStickerPacksController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<InstalledStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal = combineLatest(statePromise.get() |> deliverOnMainQueue, stickerPacks.get() |> deliverOnMainQueue, featured.get() |> deliverOnMainQueue, appearanceSignal, preferencesView)
+        let signal = combineLatest(queue: queue, statePromise.get(), stickerPacks, featured, appearanceSignal, preferencesView)
             |> map { state, view, featured, appearance, preferencesView -> TableUpdateTransition in
                 
                 var stickerSettings = StickerSettings.defaultSettings
@@ -365,8 +363,6 @@ class InstalledStickerPacksController: TableViewController {
                 
                 let entries = installedStickerPacksControllerEntries(state: state, stickerSettings: stickerSettings, view: view, featured: featured).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
-        } |> beforeNext { [weak self] _ in
-                self?.readyOnce()
         } |> afterDisposed {
             actionsDisposable.dispose()
         } |> deliverOnMainQueue
@@ -377,6 +373,8 @@ class InstalledStickerPacksController: TableViewController {
             
             self.genericView.merge(with: transition)
             
+            self.readyOnce()
+
             if !transition.isEmpty {
                 var start: Int? = nil
                 var length: Int = 0

@@ -79,7 +79,7 @@ final class GridMessageItemSectionNode: View {
      //   self.titleNode.isLayerBacked = true
         
         super.init()
-        
+        backgroundColor = theme.colors.background
         addSubview(textView)
         
         let date = Date(timeIntervalSince1970: TimeInterval(timestamp))

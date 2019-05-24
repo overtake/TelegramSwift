@@ -62,18 +62,40 @@ class MGalleryPeerPhotoItem: MGalleryItem {
                 return (newSize, orientation)
             }
             
-        } |> mapToSignal { size, orientation -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments, ImageOrientation?), NoError> in
-            return chatMessagePhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, synchronousLoad: true)
-                |> map { transform in
-                    return (transform, TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()), orientation)
+            } |> mapToSignal { size, orientation -> Signal<CGImage?, NoError> in
+                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, synchronousLoad: true)
+                    |> map { transform in
+                        let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                        if let orientation = orientation {
+                            return image?.createMatchingBackingDataWithImage(orienation: orientation)
+                        }
+                        return image
                 }
-        } |> mapToThrottled { (transform, arguments, orientation) -> Signal<CGImage?, NoError> in
-            let image = transform(arguments)?.generateImage()
-            if let orientation = orientation {
-                return .single(image?.createMatchingBackingDataWithImage(orienation: orientation))
-            }
-            return .single(image)
         }
+        
+//        let result = combineLatest(size.get(), rotate.get()) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
+//            guard let `self` = self else {return .complete()}
+//
+//            return self.smallestValue(for: size) |> map { size in
+//                var newSize = size
+//                if let orientation = orientation {
+//                    if orientation == .right || orientation == .left {
+//                        newSize = NSMakeSize(newSize.height, newSize.width)
+//                    }
+//                }
+//                return (newSize, orientation)
+//            }
+//
+//        } |> mapToSignal { size, orientation -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments, ImageOrientation?), NoError> in
+//            return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, secureIdAccessContext: nil, synchronousLoad: true)
+//                |> map { transform in
+//                    let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+//                    if let orientation = orientation {
+//                        return image?.createMatchingBackingDataWithImage(orienation: orientation)
+//                    }
+//                    return image
+//            }
+//        }
         
 
         if let representation = media.representationForDisplayAtSize(NSMakeSize(640, 640))  {
@@ -86,19 +108,22 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             })
         } 
         
-        self.image.set(result |> deliverOnMainQueue)
+        self.image.set(result |> map { .image($0) } |> deliverOnMainQueue)
         
         
         fetch()
     }
     
     override func fetch() -> Void {
-        fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640)).start())
+        fetching.set(fetchedMediaResource(postbox: context.account.postbox, reference: self.entry.peerPhotoResource()).start())
     }
     
     override func cancel() -> Void {
         super.cancel()
-        chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
+        if let representation = media.representationForDisplayAtSize(NSMakeSize(640, 640))  {
+            cancelFreeMediaFileInteractiveFetch(context: context, resource: representation.resource)
+        }
+        fetching.set(nil)
     }
 
 }

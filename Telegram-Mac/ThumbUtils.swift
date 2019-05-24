@@ -36,17 +36,22 @@ func generateExtensionImage(colors: (UInt32, UInt32), ext:String) -> CGImage? {
     return generateImage(CGSize(width: 42.0, height: 42.0), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         
-        context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-        context.scaleBy(x: 1.0, y: -1.0)
-        context.translateBy(x: -size.width / 2.0 + 1.0, y: -size.height / 2.0 + 1.0)
+    
 //        
 //        let radius: CGFloat = 2.0
 //        let cornerSize: CGFloat = 10.0
-        let size = CGSize(width: 42.0, height: 42.0)
+        
+       // context.beginPath()
+        context.round(size, .cornerRadius)
         
         context.setFillColor(NSColor(colors.0).cgColor)
-       // context.beginPath()
-        context.fillEllipse(in: NSMakeRect(0, 0, size.width - 2, size.height - 2))
+        context.fill(NSMakeRect(0, 0, size.width, size.height))
+        
+        context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.translateBy(x: -size.width / 2.0 + 1.0, y: -size.height / 2.0 + 1.0)
+        
+        
 //        context.move(to: CGPoint(x: 0.0, y: radius))
 //        if !radius.isZero {
 //            context.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: radius, y: 0.0), radius: radius)
@@ -98,7 +103,7 @@ func generateMediaEmptyLinkThumb(color: NSColor, host:String) -> CGImage? {
     return generateImage(CGSize(width: 50, height: 50), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         let host = host.isEmpty ? "L" : host
-        context.round(size, 25)
+        context.round(size, .cornerRadius)
         context.setFillColor(color.cgColor)
         context.fill(CGRect(origin: CGPoint(), size: size))
         if !host.isEmpty {

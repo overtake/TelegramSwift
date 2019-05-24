@@ -90,6 +90,7 @@ class ChatEmptyPeerItem: TableRowItem {
             peerViewDisposable.set((chatInteraction.context.account.postbox.peerView(id: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
                 if let cachedData = peerView.cachedData as? CachedUserData, let user = peerView.peers[peerView.peerId], user.isBot {
                     if let about = cachedData.botInfo?.description {
+                        let about = user.isScam ? L10n.peerInfoScamWarning : about
                         guard let `self` = self else {return}
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))

@@ -7,6 +7,8 @@
 //
 
 #import "FastBlur.h"
+#import <Accelerate/Accelerate.h>
+
 
 
 
@@ -212,3 +214,25 @@ yi += stride;
     free(rgb);
 }
 
+
+
+void stickerThumbnailAlphaBlur(int imageWidth, int imageHeight, int imageStride, void *pixels) {
+    vImage_Buffer srcBuffer;
+    srcBuffer.width = imageWidth;
+    srcBuffer.height = imageHeight;
+    srcBuffer.rowBytes = imageStride;
+    srcBuffer.data = pixels;
+    
+    {
+        vImage_Buffer dstBuffer;
+        dstBuffer.width = imageWidth;
+        dstBuffer.height = imageHeight;
+        dstBuffer.rowBytes = imageStride;
+        dstBuffer.data = pixels;
+        
+        int boxSize = 2;
+        boxSize = boxSize - (boxSize % 2) + 1;
+        
+        vImageBoxConvolve_ARGB8888(&srcBuffer, &dstBuffer, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
+    }
+}

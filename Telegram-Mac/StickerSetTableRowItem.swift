@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import TelegramCoreMac
 import PostboxMac
-
+import SwiftSignalKitMac
 
 
 enum ItemListStickerPackItemControl: Equatable {
@@ -86,6 +86,7 @@ class StickerSetTableRowView : TableRowView {
     private let countView:TextView = TextView()
     private let installationControl:ImageView = ImageView()
     private let removeControl = ImageButton()
+    private let loadedStickerPackDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
@@ -157,48 +158,66 @@ class StickerSetTableRowView : TableRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? StickerSetTableRowItem {
-            if let topItem = item.topItem {
-                nameView.backgroundColor = backdorColor
-                countView.backgroundColor = backdorColor
-                
-                removeControl.set(image: theme.icons.stickerPackDelete, for: .Normal)
-                _ = removeControl.sizeToFit()
-                imageView.setSignal( chatMessageSticker(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file), type: .thumb, scale: backingScaleFactor))
-                imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
-                _ = fileInteractiveFetched(account: item.account, fileReference: FileMediaReference.stickerPack(stickerPack: topItem.file.stickerReference!, media: topItem.file)).start()
-                nameView.update(item.nameLayout, origin: NSMakePoint(item.insets.left + 50, 7))
-                countView.update(item.countLayout, origin: NSMakePoint(item.insets.left + 50, frame.height - item.countLayout.layoutSize.height - 7))
-                switch item.control {
-                case let .installation(installed: installed):
-                    installationControl.isHidden = false
-                    removeControl.isHidden = true
-                    installationControl.image = installed ? theme.icons.stickersAddedFeatured : theme.icons.stickersAddFeatured
-                    installationControl.sizeToFit()
-                    installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
-                case .none:
-                    installationControl.isHidden = true
-                    removeControl.isHidden = false
-                    removeControl.centerY(x: frame.width - item.insets.left - removeControl.frame.width)
-                case .remove:
-                    removeControl.isHidden = true
-                    installationControl.isHidden = false
-                    installationControl.image = theme.icons.stickersRemove
-                    installationControl.sizeToFit()
-                    installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
-                case .empty:
-                    removeControl.isHidden = true
-                    installationControl.isHidden = true
-                case .selected:
-                    removeControl.isHidden = true
-                    installationControl.isHidden = false
-                    installationControl.image = theme.icons.generalSelect
-                    installationControl.sizeToFit()
-                    installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
-                }
+            nameView.backgroundColor = backdorColor
+            countView.backgroundColor = backdorColor
+            
+            removeControl.set(image: theme.icons.stickerPackDelete, for: .Normal)
+            _ = removeControl.sizeToFit()
+            
+            var thumbnailItem: TelegramMediaImageRepresentation?
+            var resourceReference: MediaResourceReference?
+            if let thumbnail = item.info.thumbnail {
+                thumbnailItem = thumbnail
+                resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
+            } else if let topItem = item.topItem {
+                let dimensions = topItem.file.dimensions ?? NSMakeSize(35, 35)
+                thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: topItem.file.resource)
+                resourceReference = MediaResourceReference.media(media: .stickerPack(stickerPack: StickerPackReference.id(id: item.info.id.id, accessHash: item.info.accessHash), media: topItem.file), resource: topItem.file.resource)
+            } 
+            
+            if let thumbnailItem = thumbnailItem {
+                imageView.setSignal(chatMessageStickerPackThumbnail(postbox: item.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false))
+            }
+            
+            if let resourceReference = resourceReference {
+                _ = fetchedMediaResource(postbox: item.account.postbox, reference: resourceReference, statsCategory: .file).start()
+            }
+            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
+            nameView.update(item.nameLayout, origin: NSMakePoint(item.insets.left + 50, 7))
+            countView.update(item.countLayout, origin: NSMakePoint(item.insets.left + 50, frame.height - item.countLayout.layoutSize.height - 7))
+            switch item.control {
+            case let .installation(installed: installed):
+                installationControl.isHidden = false
+                removeControl.isHidden = true
+                installationControl.image = installed ? theme.icons.stickersAddedFeatured : theme.icons.stickersAddFeatured
+                installationControl.sizeToFit()
+                installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
+            case .none:
+                installationControl.isHidden = true
+                removeControl.isHidden = false
+                removeControl.centerY(x: frame.width - item.insets.left - removeControl.frame.width)
+            case .remove:
+                removeControl.isHidden = true
+                installationControl.isHidden = false
+                installationControl.image = theme.icons.stickersRemove
+                installationControl.sizeToFit()
+                installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
+            case .empty:
+                removeControl.isHidden = true
+                installationControl.isHidden = true
+            case .selected:
+                removeControl.isHidden = true
+                installationControl.isHidden = false
+                installationControl.image = theme.icons.generalSelect
+                installationControl.sizeToFit()
+                installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
             }
         }
         needsLayout = true
     }
     
+    deinit {
+        loadedStickerPackDisposable.dispose()
+    }
     
 }

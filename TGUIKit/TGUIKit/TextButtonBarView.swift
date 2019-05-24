@@ -20,8 +20,10 @@ open class TextButtonBarView: BarView {
     private let progressIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
     public var alignment:TextBarAligment = .Center
     private var _isFitted: Bool
-    public init(controller: ViewController, text:String, style:ControlStyle = navigationButtonStyle, alignment:TextBarAligment = .Center) {
+    private let canBeEmpty: Bool
+    public init(controller: ViewController, text:String, style:ControlStyle = navigationButtonStyle, alignment:TextBarAligment = .Center, canBeEmpty: Bool = false) {
     
+        self.canBeEmpty = canBeEmpty
         
         button.userInteractionEnabled = false
         button.set(font: navigationButtonStyle.font, for: .Normal)
@@ -83,23 +85,29 @@ open class TextButtonBarView: BarView {
     
     
     override func fit(to maxWidth: CGFloat) -> CGFloat {
-        
-        var width: CGFloat = 20
-        switch alignment {
-        case .Center:
-            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height), thatFit: false)
-            width += button.frame.width + 16
+        if button.isEmpty && canBeEmpty {
+            _isFitted = true
+            return self.minWidth
+        } else {
+            var width: CGFloat = 20
+            switch alignment {
+            case .Center:
+                _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height), thatFit: false)
+                width += button.frame.width + 16
             //button.center()
-        case .Left:
-            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height))
-            width += button.frame.width
-        case .Right:
-            _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth - 20, frame.height), thatFit: false)
-            width += max(button.frame.width + 16, minWidth)
-            let f = focus(button.frame.size)
-            button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
+            case .Left:
+                _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height))
+                 width += button.frame.width
+            case .Right:
+                _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth - 20, frame.height), thatFit: false)
+                width += max(button.frame.width + 16, minWidth)
+                let f = focus(button.frame.size)
+                button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
+            }
+            return width
         }
-        return width
+        
+        
     }
     public override var style: ControlStyle {
         didSet {
@@ -133,19 +141,25 @@ open class TextButtonBarView: BarView {
     
     open override func layout() {
         super.layout()
-        switch alignment {
-        case .Center:
-            button.center()
-            progressIndicator.center()
-        case .Left:
-            let f = focus(button.frame.size)
-            button.setFrameOrigin(16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY))
-            progressIndicator.center()
-        case .Right:
-            let f = focus(button.frame.size)
-            button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY)))
-            progressIndicator.center()
+        if button.isEmpty && canBeEmpty {
+            button.frame = bounds
+            button.updateLayout()
+        } else {
+            switch alignment {
+            case .Center:
+                button.center()
+                progressIndicator.center()
+            case .Left:
+                let f = focus(button.frame.size)
+                button.setFrameOrigin(16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY))
+                progressIndicator.center()
+            case .Right:
+                let f = focus(button.frame.size)
+                button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY)))
+                progressIndicator.center()
+            }
         }
+       
     }
     
     

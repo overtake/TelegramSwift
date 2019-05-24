@@ -245,7 +245,7 @@ class ServiceEventLogItem: TableRowItem {
             }
             
             let range = contentName.append(string: peer.displayTitle, color: nameColor, font: .medium(.text))
-            contentName.add(link: inAppLink.peerInfo(peerId: peer.id, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor)
+            contentName.add(link: inAppLink.peerInfo(link: "", peerId: peer.id, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor)
             
             
             struct ChangedInfo {
@@ -262,7 +262,7 @@ class ServiceEventLogItem: TableRowItem {
             
             var changedInfo:ChangedInfo? = nil
             var serviceInfo: ServiceTextInfo?
-            let peerLink = (range: peer.displayTitle, link: inAppLink.peerInfo(peerId:peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo))
+            let peerLink = (range: peer.displayTitle, link: inAppLink.peerInfo(link: "", peerId:peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo))
             
             switch event.action {
             case let .changeTitle(prev, new):
@@ -336,7 +336,7 @@ class ServiceEventLogItem: TableRowItem {
                             message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                             message.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                             
-                            message.add(link: inAppLink.peerInfo(peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
+                            message.add(link: inAppLink.peerInfo(link: "", peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
                             self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
                             
                         }
@@ -418,7 +418,7 @@ class ServiceEventLogItem: TableRowItem {
                             message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                             message.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                             
-                            message.add(link: inAppLink.peerInfo(peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
+                            message.add(link: inAppLink.peerInfo(link: "", peerId: memberId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
                             self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
                             
                         }

@@ -102,23 +102,26 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
         
         for emoji in list {
             
-            var e:String = emoji
+            var e:String = emoji.emojiUnmodified
             for modifier in skinModifiers {
-                if emoji == modifier.emoji {
-                    if emoji.length == 5 {
+                if e == modifier.emoji {
+                    if e.length == 5 {
                         let mutable = NSMutableString()
                         mutable.insert(e, at: 0)
                         mutable.insert(modifier.modifier, at: 2)
                         e = mutable as String
                     } else {
-                        e = emoji + modifier.modifier
+                        e = e + modifier.modifier
                     }
                 }
+
+            }
+            if !line.contains(where: {$0.string == String(e.first!) }), let first = e.first {
+                line.append(.initialize(string: String(first), font: .normal(26.0)))
+                i += 1
             }
             
-            line.append(.initialize(string: String(e.first!), font: .normal(26.0)))
             
-            i += 1
             if i == 8 {
                 
                 lines.append(line)
@@ -220,7 +223,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         return true
     }
     
-    func selectionWillChange(row: Int, item: TableRowItem) -> Bool {
+    func selectionWillChange(row: Int, item: TableRowItem, byClick: Bool) -> Bool {
         return true
     }
     
@@ -258,7 +261,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
         
-        let searchInteractions = SearchInteractions({ [weak self] state in
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
             if state.state == .None && state.request.isEmpty {
                 search.set(state)
                 switch state.state {

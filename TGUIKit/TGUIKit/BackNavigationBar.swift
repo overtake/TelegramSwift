@@ -11,9 +11,9 @@ import Cocoa
 open class BackNavigationBar: TextButtonBarView {
 
     
-    public init(_ controller:ViewController) {
+    public init(_ controller:ViewController, canBeEmpty: Bool = false) {
         let backSettings = controller.backSettings()
-        super.init(controller: controller, text: backSettings.0, style: navigationButtonStyle, alignment: .Left)
+        super.init(controller: controller, text: backSettings.0, style: navigationButtonStyle, alignment: .Left, canBeEmpty: canBeEmpty)
 
         if let image = backSettings.1 {
             set(image: image, for: .Normal)

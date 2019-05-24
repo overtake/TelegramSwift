@@ -74,6 +74,11 @@ enum PhotoCacheKeyEntry : Hashable {
                 if lhsMedia.id != rhsMedia.id {
                     return false
                 }
+                if let lhsMedia = lhsMedia as? TelegramMediaMap, let rhsMedia = rhsMedia as? TelegramMediaMap {
+                    if lhsMedia.latitude != rhsMedia.latitude || lhsMedia.longitude != rhsMedia.longitude {
+                        return false
+                    }
+                }
                 if lhsSize != rhsSize {
                     return false
                 }

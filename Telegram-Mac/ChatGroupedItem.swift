@@ -138,7 +138,12 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override var hasBubble: Bool {
-        return isBubbled && (captionLayout != nil || message?.replyAttribute != nil || forwardNameLayout != nil || layout.messages.count == 1)
+        get {
+            return isBubbled && (captionLayout != nil || message?.replyAttribute != nil || forwardNameLayout != nil || layout.messages.count == 1)
+        }
+        set {
+            super.hasBubble = newValue
+        }
     }
     
     override var isBubbleFullFilled: Bool {
@@ -240,6 +245,8 @@ class ChatGroupedItem: ChatRowItem {
 
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var message: Message? = nil
+        let context = self.context
+        
         for i in 0 ..< layout.count {
             if NSPointInRect(location, layout.frame(at: i)) {
                 message = layout.messages[i]
@@ -285,11 +292,14 @@ class ChatGroupedItem: ChatRowItem {
             }))
         }
         
-        if let message = layout.messages.last {
-            if let peer = message.peers[message.id.peerId] as? TelegramChannel, let address = peer.addressName {
-                
-                items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
-                    copyToClipboard("t.me/\(address)/\(message.id.id)")
+        if let message = layout.messages.last, !message.flags.contains(.Failed), !message.flags.contains(.Unsent) {
+            if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                items.append(ContextMenuItem(L10n.messageContextCopyMessageLink1, handler: {
+                    _ = showModalProgress(signal: exportMessageLink(account: context.account, peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
+                        if let link = link {
+                            copyToClipboard(link)
+                        }
+                    })
                 }))
             }
         }

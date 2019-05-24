@@ -48,6 +48,19 @@ private final class EditInfoControllerArguments {
     }
 }
 struct EditInfoState : Equatable {
+    static func == (lhs: EditInfoState, rhs: EditInfoState) -> Bool {
+        
+        if let lhsPeer = lhs.peer, let rhsPeer = rhs.peer {
+            if !lhsPeer.isEqual(rhsPeer) {
+                return false
+            }
+        } else if (lhs.peer != nil) != (rhs.peer != nil) {
+            return false
+        }
+        
+        return lhs.firstName == rhs.firstName && lhs.lastName == rhs.lastName && lhs.username == rhs.username && lhs.phone == rhs.phone && lhs.representation == rhs.representation && lhs.updatingPhotoState == rhs.updatingPhotoState && lhs.stateInited == rhs.stateInited
+    }
+    
     let firstName: String
     let lastName: String
     let about: String
@@ -56,7 +69,8 @@ struct EditInfoState : Equatable {
     let representation:TelegramMediaImageRepresentation?
     let updatingPhotoState: PeerInfoUpdatingPhotoState?
     let stateInited: Bool
-    init(stateInited: Bool = false, firstName: String = "", lastName: String = "", about: String = "", username: String? = nil, phone: String? = nil, representation: TelegramMediaImageRepresentation? = nil, updatingPhotoState: PeerInfoUpdatingPhotoState? = nil) {
+    let peer: Peer?
+    init(stateInited: Bool = false, firstName: String = "", lastName: String = "", about: String = "", username: String? = nil, phone: String? = nil, representation: TelegramMediaImageRepresentation? = nil, updatingPhotoState: PeerInfoUpdatingPhotoState? = nil, peer: Peer? = nil) {
         self.firstName = firstName
         self.lastName = lastName
         self.about = about
@@ -65,10 +79,12 @@ struct EditInfoState : Equatable {
         self.representation = representation
         self.updatingPhotoState = updatingPhotoState
         self.stateInited = stateInited
+        self.peer = peer
     }
     
     init(_ peerView: PeerView) {
         let peer = peerView.peers[peerView.peerId] as? TelegramUser
+        self.peer = peer
         self.firstName = peer?.firstName ?? ""
         self.lastName = peer?.lastName ?? ""
         self.username = peer?.username
@@ -80,31 +96,31 @@ struct EditInfoState : Equatable {
     }
     
     func withUpdatedInited(_ stateInited: Bool) -> EditInfoState {
-        return EditInfoState(stateInited: stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState)
+        return EditInfoState(stateInited: stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer)
     }
     func withUpdatedAbout(_ about: String) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer)
     }
     
     
     func withUpdatedFirstName(_ firstName: String) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState)
+        return EditInfoState(stateInited: self.stateInited, firstName: firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer)
     }
     func withUpdatedLastName(_ lastName: String) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer)
     }
     
     func withUpdatedPeerView(_ peerView: PeerView) -> EditInfoState {
         let peer = peerView.peers[peerView.peerId] as? TelegramUser
         let about = stateInited ? self.about : (peerView.cachedData as? CachedUserData)?.about ?? self.about
         
-        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: peer?.username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState)
+        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: peer?.username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState, peer: peer)
     }
     func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: f(self.updatingPhotoState))
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: f(self.updatingPhotoState), peer: self.peer)
     }
     func withoutUpdatingPhotoState() -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: nil)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: nil, peer:self.peer)
     }
 }
 

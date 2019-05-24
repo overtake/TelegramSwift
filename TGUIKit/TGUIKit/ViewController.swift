@@ -191,6 +191,10 @@ open class ViewController : NSObject {
        
     }
     
+    open var redirectUserInterfaceCalls: Bool {
+        return false
+    }
+    
     public var backgroundColor: NSColor {
         set {
             self.view.background = newValue
@@ -348,6 +352,10 @@ open class ViewController : NSObject {
         
     }
     
+    open func focusSearch(animated: Bool) {
+        
+    }
+    
     open func invokeNavigationBack() -> Bool {
         return true
     }
@@ -397,6 +405,8 @@ open class ViewController : NSObject {
             viewDidResized(view.frame.size)
         }
     }
+    
+    
     
     open func viewWillAppear(_ animated:Bool) -> Void {
         
@@ -656,6 +666,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
             rightBarView = getRightBarViewOnce()
 
             _view = initializer()
+            _view?.wantsLayer = true
             _view?.autoresizingMask = [.width,.height]
             
             NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
