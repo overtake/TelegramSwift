@@ -11,6 +11,7 @@ import SwiftSignalKitMac
 import PostboxMac
 import TelegramCoreMac
 import TGUIKit
+import Lottie
 
 class ChatFileContentView: ChatMediaContentView {
     
@@ -29,7 +30,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
-    
+    private let openFileDisposable = MetaDisposable()
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -86,7 +87,13 @@ class ChatFileContentView: ChatMediaContentView {
             if media.isGraphicFile {
                 showChatGallery(context: context, message: parent, table, parameters as? ChatMediaGalleryParameters)
             } else {
-                QuickLookPreview.current.show(context: context, with: media, stableId:parent.chatStableId, table)
+               
+                if let _ = Animation.filepath(context.account.postbox.mediaBox.resourcePath(media.resource)) {
+                    showChatGallery(context: context, message: parent, self.table, self.parameters as? ChatMediaGalleryParameters, type: .alone)
+                } else {
+                    QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
+                }
+                
             }
         }
     }
@@ -110,8 +117,7 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
+        openFileDisposable.dispose()
     }
     
     func actionLayout(status:MediaResourceStatus, archiveStatus: ArchiveStatus?, file:TelegramMediaFile, presentation: ChatMediaPresentation, paremeters: ChatFileLayoutParameters?) -> TextViewLayout? {

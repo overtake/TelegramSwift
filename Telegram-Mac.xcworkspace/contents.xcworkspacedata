@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:submodules/lottie-ios/Lottie.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:submodules/Zip/Zip.xcodeproj">
    </FileRef>
    <FileRef

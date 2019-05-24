@@ -162,6 +162,13 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     }
                     
                     title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    
+                    if item.peer.isVerified && item.highlightVerified {
+                        ctx.draw(theme.icons.verifiedImage, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 2, theme.icons.verifiedImage.backingSize.width, theme.icons.verifiedImage.backingSize.height))
+                    }
+                    if item.peer.isScam && item.highlightVerified {
+                        ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                    }
                 }
             } else {
                 super.draw(layer, in: ctx)

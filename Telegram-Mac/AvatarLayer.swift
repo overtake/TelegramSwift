@@ -13,10 +13,10 @@ import TGUIKit
 import SwiftSignalKitMac
 private class AvatarNodeParameters: NSObject {
     let account: Account
-    let peerId: PeerId
+    let peerId: Peer
     let letters: [String]
     let font: NSFont
-    init(account: Account, peerId: PeerId, letters: [String], font: NSFont) {
+    init(account: Account, peerId: Peer, letters: [String], font: NSFont) {
         self.account = account
         self.peerId = peerId
         self.letters = letters
@@ -29,8 +29,8 @@ private class AvatarNodeParameters: NSObject {
 
 enum AvatarNodeState: Equatable {
     case Empty
-    case PeerAvatar(PeerId, [String], TelegramMediaImageRepresentation?, Message?)
-    case GroupAvatar([Peer])
+    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, Message?)
+    case ArchivedChats
 
 }
 
@@ -38,17 +38,9 @@ func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
     switch (lhs, rhs) {
     case (.Empty, .Empty):
         return true
-    case let (.PeerAvatar(lhsPeerId, lhsLetters, lhsPhotoRepresentations, _), .PeerAvatar(rhsPeerId, rhsLetters, rhsPhotoRepresentations, _)):
-        return lhsPeerId == rhsPeerId && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations
-    case let (.GroupAvatar(lhsPeers), .GroupAvatar(rhsPeers)):
-        if lhsPeers.count != rhsPeers.count {
-            return false
-        }
-        for i in 0 ..< lhsPeers.count {
-            if !lhsPeers[i].isEqual(rhsPeers[i]) {
-                return false
-            }
-        }
+    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, _), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, _)):
+        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations
+    case (.ArchivedChats, .ArchivedChats):
         return true
     default:
         return false
@@ -122,22 +114,26 @@ class AvatarControl: NSView {
     
     public func setState(account: Account, state: AvatarNodeState) {
         self.account = account
-        contentScale = 0
-        self.state = state
-        self.viewDidChangeBackingProperties()
+        if state != self.state {
+            contentScale = 0
+            self.state = state
+            self.viewDidChangeBackingProperties()
+        }
     }
     
     public func setPeer(account: Account, peer: Peer?, message: Message? = nil) {
         self.account = account
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, message)
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message)
         } else {
             state = .Empty
         }
-        self.state = state
-        contentScale = 0
-        self.viewDidChangeBackingProperties()
+        if self.state != state {
+            self.state = state
+            contentScale = 0
+            self.viewDidChangeBackingProperties()
+        }
     }
     
     func set(handler:@escaping (AvatarControl) -> Void, for event:ControlEvent) -> Void {
@@ -203,28 +199,15 @@ class AvatarControl: NSView {
         if let account = account, self.state != .Empty {
             if contentScale != backingScaleFactor {
                 contentScale = backingScaleFactor
-                
                 self.displaySuspended = true
                 self.layer?.contents = nil
                 let photo: PeerPhoto?
                 switch state {
-                case let .PeerAvatar(peerId, letters, representation, message):
-                    photo = .peer(peerId, representation, letters, message)
-                case let .GroupAvatar(peers):
-                    let representations: [PeerId:TelegramMediaImageRepresentation] = peers.reduce([:], { current, peer  in
-                        var current = current
-                        if let smallProfileImage = peer.smallProfileImage {
-                            current[peer.id] = smallProfileImage
-                        }
-                        return current
-                    })
-                    let letters: [PeerId:[String]] = peers.reduce([:], { current, peer  in
-                        var current = current
-                        current[peer.id] = peer.displayLetters
-                        return current
-                    })
-                    photo = .group(peers.map{$0.id}, representations, letters)
+                case let .PeerAvatar(peer, letters, representation, message):
+                    photo = .peer(peer, representation, letters, message)
                 case .Empty:
+                    photo = nil
+                default:
                     photo = nil
                 }
                 if let photo = photo {

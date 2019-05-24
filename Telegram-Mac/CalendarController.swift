@@ -57,7 +57,7 @@ class CalendarController: GenericViewController<CalendarControllerView> {
         self.window?.remove(object: self, for: .RightArrow)
     }
     
-    init(_ frameRect:NSRect, selectHandler:@escaping (Date)->Void) {
+    init(_ frameRect:NSRect, _ window: Window, selectHandler:@escaping (Date)->Void) {
         super.init(frame: frameRect)
         bar = .init(height: 0)
         self.interactions = CalendarMonthInteractions(selectAction: { [weak self] (selected) in
@@ -73,7 +73,7 @@ class CalendarController: GenericViewController<CalendarControllerView> {
             }
         })
         
-        self.navigation = NavigationViewController(stepMonth(date: Date()))
+        self.navigation = NavigationViewController(stepMonth(date: Date()), window)
         self.navigation._frameRect = frameRect
     }
     

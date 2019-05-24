@@ -31,7 +31,8 @@ final class AccountContextBindings {
     let switchSplitLayout:(SplitViewState)->Void
     let entertainment:()->EntertainmentViewController
     let needFullsize:()->Void
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }) {
+    let displayUpgradeProgress:(CGFloat)->Void
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -39,6 +40,7 @@ final class AccountContextBindings {
         self.entertainment = entertainment
         self.switchSplitLayout = switchSplitLayout
         self.needFullsize = needFullsize
+        self.displayUpgradeProgress = displayUpgradeProgress
     }
     #endif
 }
@@ -72,6 +74,10 @@ final class AccountContext {
     
     let globalPeerHandler:Promise<ChatLocation?> = Promise()
     
+    func updateGlobalPeer() {
+        globalPeerHandler.set(globalPeerHandler.get() |> take(1))
+    }
+    
     let hasPassportSettings: Promise<Bool> = Promise(false)
 
     private var _recentlyPeerUsed:[PeerId] = []
@@ -101,6 +107,8 @@ final class AccountContext {
     var limitConfiguration: LimitsConfiguration {
         return _limitConfiguration.with { $0 }
     }
+    
+    public var closeFolderFirst: Bool = false
     
     init(sharedContext: SharedAccountContext, window: Window, account: Account) {
         self.sharedContext = sharedContext

@@ -57,10 +57,10 @@ public struct SearchState : Equatable {
 }
 
 public final class SearchInteractions {
-    public let stateModified:(SearchState) -> Void
+    public let stateModified:(SearchState, Bool) -> Void
     public let textModified:(SearchState) -> Void
     public let responderModified:(SearchState) -> Void
-    public init(_ state:@escaping(SearchState)->Void, _ text:@escaping(SearchState)->Void, responderModified:@escaping(SearchState) -> Void = {_ in}) {
+    public init(_ state:@escaping(SearchState, Bool)->Void, _ text:@escaping(SearchState)->Void, responderModified:@escaping(SearchState) -> Void = {_ in}) {
         self.stateModified = state
         self.textModified = text
         self.responderModified = responderModified
@@ -393,7 +393,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             
             let text = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
             let value = SearchState(state: state, request: state == .None ? nil : text, responder: self.input == window?.firstResponder)
-            searchInteractions?.stateModified(value)
+            searchInteractions?.stateModified(value, animated)
 
             _searchValue.set(value)
             
@@ -419,7 +419,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                     
                     animateContainer.layer?.animate(from: fromX as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
                         self?.input.isHidden = false
-                        self?.window?.makeFirstResponder(self?.input)
+                        if self?.window?.firstResponder != self?.input {
+                            self?.window?.makeFirstResponder(self?.input)
+                        }
                         self?.lock = false
                     })
                 } else {

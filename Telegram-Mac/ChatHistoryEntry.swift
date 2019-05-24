@@ -12,7 +12,6 @@ import PostboxMac
 import TelegramCoreMac
 
 enum ChatHistoryEntryId : Hashable {
-    case hole(MessageHistoryHole)
     case message(Message)
     case groupedPhotos(groupInfo: MessageGroupInfo)
     case unread
@@ -21,8 +20,6 @@ enum ChatHistoryEntryId : Hashable {
     case maybeId(AnyHashable)
     var hashValue: Int {
         switch self {
-        case let .hole(index):
-            return index.stableId.hashValue
         case .message(let message):
             return message.stableId.hashValue
         case .unread:
@@ -40,12 +37,6 @@ enum ChatHistoryEntryId : Hashable {
     
     static func ==(lhs:ChatHistoryEntryId, rhs: ChatHistoryEntryId) -> Bool {
         switch lhs {
-        case let .hole(index):
-            if case .hole(index) = rhs {
-                return true
-            } else {
-                return false
-            }
         case .message(let lhsMessage):
             if case .message(let rhsMessage) = rhs {
                 return lhsMessage.stableId == rhsMessage.stableId
@@ -87,8 +78,6 @@ enum ChatHistoryEntryId : Hashable {
     
     var stableIndex: UInt64 {
         switch self {
-        case .hole:
-            return UInt64(0) << 40
         case .message:
             return UInt64(1) << 40
         case .groupedPhotos:
@@ -108,10 +97,23 @@ enum ChatHistoryEntryId : Hashable {
 
 struct MessageEntryAdditionalData : Equatable {
     let opaqueIdentifier: Data?
+    let highlightFoundText: HighlightFoundText?
+    init(opaqueIdentifier: Data?, highlightFoundText: HighlightFoundText?) {
+        self.opaqueIdentifier = opaqueIdentifier
+        self.highlightFoundText = highlightFoundText
+    }
+}
+
+struct HighlightFoundText : Equatable {
+    let query: String
+    let isMessage: Bool
+    init(query: String, isMessage: Bool) {
+        self.query = query
+        self.isMessage = isMessage
+    }
 }
 
 enum ChatHistoryEntry: Identifiable, Comparable {
-    case HoleEntry(MessageHistoryHole)
     case MessageEntry(Message, MessageIndex, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?, MessageEntryAdditionalData?, AutoplayMediaPreferences?)
     case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
     case UnreadEntry(MessageIndex, ChatItemRenderType)
@@ -139,8 +141,6 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var renderType: ChatItemRenderType {
         switch self {
-        case .HoleEntry:
-            return .list
         case let .MessageEntry(_,_,_, renderType,_,_,_, _, _):
             return renderType
         case .groupedPhotos(let entries, _):
@@ -175,8 +175,6 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var stableId: ChatHistoryEntryId {
         switch self {
-        case let .HoleEntry(hole):
-            return .hole(hole)
         case let .MessageEntry(message, _, _, _, _, _, _, _, _):
             return .message(message)
         case .groupedPhotos(_, let info):
@@ -192,8 +190,6 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var index: MessageIndex {
         switch self {
-        case let .HoleEntry(hole):
-            return hole.maxIndex
         case let .MessageEntry(_,index, _, _, _, _,_, _, _):
             return index
         case let .groupedPhotos(entries, _):
@@ -210,8 +206,6 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var scrollIndex: MessageIndex {
         switch self {
-        case let .HoleEntry(hole):
-            return hole.maxIndex
         case let .MessageEntry(message, _, _, _, _, _,_, _, _):
             return MessageIndex(message)
         case let .groupedPhotos(entries, _):
@@ -276,13 +270,6 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
 
 func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
     switch lhs {
-    case let .HoleEntry(lhsHole):
-        switch rhs {
-        case let .HoleEntry(rhsHole) where lhsHole == rhsHole:
-            return true
-        default:
-            return false
-        }
     case let .MessageEntry(lhsMessage, lhsIndex, lhsRead, lhsRenderType, lhsType, lhsFwdType, _, lhsAdditionalData, lhsAutoplayMedia):
         switch rhs {
         case let .MessageEntry(rhsMessage, rhsIndex, rhsRead, rhsRenderType, rhsType, rhsFwdType, _, rhsAdditionalData, rhsAutoplayMedia):
@@ -362,7 +349,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:Set<PeerId> = Set(), pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:Set<PeerId> = Set(), pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -370,258 +357,249 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     var groupInfo: MessageGroupInfo?
     
     
-    var i:Int = 0
-    for entry in messagesEntries {
-        switch entry {
-        case let .HoleEntry(hole, _):
-            if includeHoles {
-                entries.append(.HoleEntry(hole))
-            }
-        case let .MessageEntry(_msg, read, location, _, _):
-            var message = _msg
-            //TODO
-            if message.media.isEmpty, let server = proxySettings(from: message.text).0 {
-                var textInfo = ""
-                 let name: String
-                switch server.connection {
-                case let .socks5(username, password):
-                    if let user = username {
-                        textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextUsername(user)
-                    }
-                    if let pass = password {
-                        textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextPassword(pass)
-                    }
-                    name = L10n.chatMessageSocks5Config
-                case let .mtp(secret):
-                    textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextSecret((secret as NSData).hexString)
-                    name = L10n.chatMessageMTProxyConfig
+    for (i, entry) in messagesEntries.enumerated() {
+        var message = entry.message
+        if message.media.isEmpty, let server = proxySettings(from: message.text).0 {
+            var textInfo = ""
+            let name: String
+            switch server.connection {
+            case let .socks5(username, password):
+                if let user = username {
+                    textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextUsername(user)
                 }
-                
-               
-                
-                let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent(url: message.text, displayUrl: "", hash: 0, type: "proxy", websiteName: name, title: L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port)), text: textInfo, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: nil, file: nil, instantPage: nil)))
-                message = message.withUpdatedMedia([media]).withUpdatedText("")
+                if let pass = password {
+                    textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextPassword(pass)
+                }
+                name = L10n.chatMessageSocks5Config
+            case let .mtp(secret):
+                textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextSecret((secret as NSData).hexString)
+                name = L10n.chatMessageMTProxyConfig
             }
             
-            var disableEntry = false
-            if let action = message.media.first as? TelegramMediaAction {
-                switch action.action {
-                case .historyCleared:
-                    disableEntry = true
-                case .groupMigratedToChannel:
-                    disableEntry = true
-                case .channelMigratedFromGroup:
-                    disableEntry = true
-                case .peerJoined:
-                    disableEntry = false
-                default:
-                    break
-                }
-            }
             
-            if disableEntry {
+            
+            let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent(url: message.text, displayUrl: "", hash: 0, type: "proxy", websiteName: name, title: L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port)), text: textInfo, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: nil, file: nil, instantPage: nil)))
+            message = message.withUpdatedMedia([media]).withUpdatedText("")
+        }
+        
+        var disableEntry = false
+        if let action = message.media.first as? TelegramMediaAction {
+            switch action.action {
+            case .historyCleared:
+                disableEntry = true
+            case .groupMigratedToChannel:
+                disableEntry = true
+            case .channelMigratedFromGroup:
+                disableEntry = true
+            case .peerJoined:
+                disableEntry = false
+            default:
                 break
             }
-            
-            
-            
-            var prev:MessageHistoryEntry? = nil
-            var next:MessageHistoryEntry? = nil
-            
-            if i > 0 {
-                for k in stride(from: i - 1, to: -1, by: -1) {
-                    let current = messagesEntries[k]
-                    if let groupInfo = message.groupInfo {
-                        if case let .MessageEntry(msg,_, _, _, _) = current {
-                            if msg.groupInfo == groupInfo {
-                                continue
-                            } else {
-                                prev = current
-                                break
-                            }
-                        }
+        }
+        
+        if disableEntry {
+            continue
+        }
+        
+        
+        
+        var prev:MessageHistoryEntry? = nil
+        var next:MessageHistoryEntry? = nil
+        
+        if i > 0 {
+            loop: for k in stride(from: i - 1, to: -1, by: -1) {
+                let current = messagesEntries[k]
+                if let groupInfo = message.groupInfo {
+                    if current.message.groupInfo == groupInfo {
+                        continue loop
                     } else {
                         prev = current
-                        break
+                        break loop
+                    }
+                } else {
+                    prev = current
+                    break loop
+                }
+            }
+            
+        }
+        if i < messagesEntries.count - 1 {
+            loop: for k in i + 1 ..< messagesEntries.count {
+                let current = messagesEntries[k]
+                if let groupInfo = message.groupInfo {
+                    if current.message.groupInfo == groupInfo {
+                        continue loop
+                    } else {
+                        next = current
+                        break loop
+                    }
+                } else {
+                    next = current
+                    break loop
+                }
+            }
+        }
+        
+        let isAdmin = adminIds.contains(message.author?.id ?? PeerId(0))
+        
+        var itemType:ChatItemType = .Full(isAdmin: isAdmin)
+        var fwdType:ForwardItemType? = nil
+        
+        
+        if renderType == .list {
+            if let prev = prev {
+                var actionShortAccess: Bool = true
+                if let action = prev.message.media.first as? TelegramMediaAction {
+                    switch action.action {
+                    case .phoneCall:
+                        actionShortAccess = true
+                    default:
+                        actionShortAccess = false
                     }
                 }
                 
-            }
-            if i < messagesEntries.count - 1 {
-                for k in i + 1 ..< messagesEntries.count {
-                    let current = messagesEntries[k]
-                    if let groupInfo = message.groupInfo {
-                        if case let .MessageEntry(msg,_, _, _, _) = current {
-                            if msg.groupInfo == groupInfo {
-                                continue
-                            } else {
-                                next = current
+                if message.author?.id == prev.message.author?.id, (message.timestamp - prev.message.timestamp) < simpleDif, actionShortAccess, let peer = message.peers[message.id.peerId] {
+                    if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
+                        itemType = .Full(isAdmin: isAdmin)
+                    } else {
+                        var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
+                        for attr in message.attributes {
+                            if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) && !(attr is AutoremoveTimeoutMessageAttribute) {
+                                canShort = false
                                 break
                             }
                         }
-                    } else {
-                        next = current
-                        break
-                    }
-                }
-            }
-            
-            let isAdmin = adminIds.contains(message.author?.id ?? PeerId(0))
-            
-            var itemType:ChatItemType = .Full(isAdmin: isAdmin)
-            var fwdType:ForwardItemType? = nil
-            
-            
-            if renderType == .list {
-                if let prev = prev, case let .MessageEntry(prevMessage,_, _, _, _) = prev {
-                    var actionShortAccess: Bool = true
-                    if let action = prevMessage.media.first as? TelegramMediaAction {
-                        switch action.action {
-                        case .phoneCall:
-                            actionShortAccess = true
-                        default:
-                            actionShortAccess = false
-                        }
-                    }
-                    
-                    if message.author?.id == prevMessage.author?.id, (message.timestamp - prevMessage.timestamp) < simpleDif, actionShortAccess, let peer = message.peers[message.id.peerId] {
-                        if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
-                            itemType = .Full(isAdmin: isAdmin)
-                        } else {
-                            var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
-                            for attr in message.attributes {
-                                if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) && !(attr is AutoremoveTimeoutMessageAttribute) {
-                                    canShort = false
-                                    break
-                                }
-                            }
-                            itemType = !canShort ? .Full(isAdmin: isAdmin) : .Short
-                            
-                        }
-                    } else {
-                        itemType = .Full(isAdmin: isAdmin)
+                        itemType = !canShort ? .Full(isAdmin: isAdmin) : .Short
+                        
                     }
                 } else {
                     itemType = .Full(isAdmin: isAdmin)
                 }
             } else {
-                if let next = next, case let .MessageEntry(nextMessage,_, _, _, _) = next {
-                    if message.author?.id == nextMessage.author?.id, let peer = message.peers[message.id.peerId] {
-                        if peer.isChannel || ((peer.isGroup || peer.isSupergroup) && message.flags.contains(.Incoming)) {
-                            itemType = .Full(isAdmin: isAdmin)
-                        } else {                            
-                            itemType = message.inlinePeer == nil ? .Short : .Full(isAdmin: isAdmin)
-                        }
-                    } else {
+                itemType = .Full(isAdmin: isAdmin)
+            }
+        } else {
+            if let next = next {
+                if message.author?.id == next.message.author?.id, let peer = message.peers[message.id.peerId] {
+                    if peer.isChannel || ((peer.isGroup || peer.isSupergroup) && message.flags.contains(.Incoming)) {
                         itemType = .Full(isAdmin: isAdmin)
+                    } else {
+                        itemType = message.inlinePeer == nil ? .Short : .Full(isAdmin: isAdmin)
                     }
                 } else {
                     itemType = .Full(isAdmin: isAdmin)
                 }
+            } else {
+                itemType = .Full(isAdmin: isAdmin)
             }
-            
-            
-            
-            
-            if message.forwardInfo != nil {
-                if case .Short = itemType {
-                    if let prev = prev, case let .MessageEntry(prevMessage,_, _, _, _) = prev {
-                        if prevMessage.forwardInfo != nil, message.timestamp - prevMessage.timestamp < simpleDif  {
-                            fwdType = .Inside
-                            if let next = next, case let .MessageEntry(nextMessage,_, _, _, _) = next  {
-                                
-                                if message.author?.id != nextMessage.author?.id || nextMessage.timestamp - message.timestamp > simpleDif || nextMessage.forwardInfo == nil {
-                                    fwdType = .Bottom
-                                }
-                                
-                            } else {
+        }
+        
+        
+        
+        
+        if message.forwardInfo != nil {
+            if case .Short = itemType {
+                if let prev = prev {
+                    if prev.message.forwardInfo != nil, message.timestamp - prev.message.timestamp < simpleDif  {
+                        fwdType = .Inside
+                        if let next = next  {
+                            
+                            if message.author?.id != next.message.author?.id || next.message.timestamp - message.timestamp > simpleDif || next.message.forwardInfo == nil {
                                 fwdType = .Bottom
                             }
                             
                         } else {
-                            fwdType = .ShortHeader
-                        }
-                    }
-                } else {
-                    fwdType = .ShortHeader
-                }
-            }
-            
-            if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader  {
-                itemType = .Full(isAdmin: isAdmin)
-                if forwardType == .ShortHeader {
-                    if let next = next, case let .MessageEntry(nextMessage,_, _, _, _) = next  {
-                        if nextMessage.forwardInfo != nil && (message.author?.id == nextMessage.author?.id || nextMessage.timestamp - message.timestamp < simpleDif) {
-                            fwdType = .FullHeader
+                            fwdType = .Bottom
                         }
                         
+                    } else {
+                        fwdType = .ShortHeader
                     }
                 }
-            }
-            
-            let additionalData: MessageEntryAdditionalData?
-            
-            if let opaqueData = pollAnswersLoading[message.id] {
-                additionalData = MessageEntryAdditionalData(opaqueIdentifier: opaqueData)
             } else {
-                additionalData = nil
+                fwdType = .ShortHeader
             }
-            
-            
-            let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), read, renderType,itemType,fwdType, location, additionalData, autoplayMedia)
-             
-            if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
-                
-                if groupInfo == nil {
-                    groupInfo = key
-                    groupedPhotos.append(entry)
-                } else if groupInfo == key {
-                    groupedPhotos.append(entry)
-                } else {
-                    if groupedPhotos.count > 0 {
-                        if let groupInfo = groupInfo {
-                            entries.append(.groupedPhotos(groupedPhotos, groupInfo: groupInfo))
-                        }
-                        groupedPhotos.removeAll()
-                    }
-                    
-                    groupInfo = key
-                    groupedPhotos.append(entry)
-                }
-            } else {
-                entries.append(entry)
-            }
-            
-            prev = nil
-            next = nil
-            
-            if i > 0 {
-                prev = messagesEntries[i - 1]
-            }
-            if i < messagesEntries.count - 1 {
-                next = messagesEntries[i + 1]
-            }
-            
-            if prev == nil && dayGrouping {
-                let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
-                let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: 0), timestamp: Int32(dateId))
-                entries.append(.DateEntry(index, renderType))
-            }
-
-            if let next = next, case let .MessageEntry(nextMessage,_, _, _, _) = next, dayGrouping {
-                let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
-                let nextDateId = chatDateId(for: nextMessage.timestamp - Int32(timeDifference))
-                
-                
-                if dateId != nextDateId {
-                    let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: INT_MAX), timestamp: Int32(nextDateId))
-                    entries.append(.DateEntry(index, renderType))
-                }
-            }
-      
         }
         
-        i += 1
+        if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader  {
+            itemType = .Full(isAdmin: isAdmin)
+            if forwardType == .ShortHeader {
+                if let next = next  {
+                    if next.message.forwardInfo != nil && (message.author?.id == next.message.author?.id || next.message.timestamp - message.timestamp < simpleDif) {
+                        fwdType = .FullHeader
+                    }
+                    
+                }
+            }
+        }
+        
+        let additionalData: MessageEntryAdditionalData?
+        var highlightFoundText: HighlightFoundText? = nil
+        
+        
+        if let searchState = searchState, !message.text.isEmpty {
+            highlightFoundText = HighlightFoundText(query: searchState.query, isMessage: searchState.containsMessage(message))
+        }
+        
+        
+        if let opaqueData = pollAnswersLoading[message.id] {
+            additionalData = MessageEntryAdditionalData(opaqueIdentifier: opaqueData, highlightFoundText: highlightFoundText)
+        } else {
+            additionalData = MessageEntryAdditionalData(opaqueIdentifier: nil, highlightFoundText: highlightFoundText)
+        }
+        
+        
+        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, entry.location, additionalData, autoplayMedia)
+        
+        if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
+            
+            if groupInfo == nil {
+                groupInfo = key
+                groupedPhotos.append(entry)
+            } else if groupInfo == key {
+                groupedPhotos.append(entry)
+            } else {
+                if groupedPhotos.count > 0 {
+                    if let groupInfo = groupInfo {
+                        entries.append(.groupedPhotos(groupedPhotos, groupInfo: groupInfo))
+                    }
+                    groupedPhotos.removeAll()
+                }
+                
+                groupInfo = key
+                groupedPhotos.append(entry)
+            }
+        } else {
+            entries.append(entry)
+        }
+        
+        prev = nil
+        next = nil
+        
+        if i > 0 {
+            prev = messagesEntries[i - 1]
+        }
+        if i < messagesEntries.count - 1 {
+            next = messagesEntries[i + 1]
+        }
+        
+        if prev == nil && dayGrouping {
+            let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
+            let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: 0), timestamp: Int32(dateId))
+            entries.append(.DateEntry(index, renderType))
+        }
+        
+        if let next = next, dayGrouping {
+            let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
+            let nextDateId = chatDateId(for: next.message.timestamp - Int32(timeDifference))
+            
+            
+            if dateId != nextDateId {
+                let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: INT_MAX), timestamp: Int32(nextDateId))
+                entries.append(.DateEntry(index, renderType))
+            }
+        }
     }
     
     
@@ -644,8 +622,6 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     if hasUnread, sorted.count >= 2 {
         if  case .UnreadEntry = sorted[sorted.count - 2] {
             sorted.remove(at: sorted.count - 2)
-        } else if case .UnreadEntry = sorted[0], case .HoleEntry = sorted[1] {
-            sorted.removeFirst()
         }
     }
 

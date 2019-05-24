@@ -196,7 +196,7 @@ class ChatGIFContentView: ChatMediaContentView {
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media)
             let fitted = dimensions.aspectFilled(size)
-            player.setVideoLayerGravity(fitted.width == size.width ? .resizeAspectFill : .resizeAspect)
+            player.setVideoLayerGravity(.resizeAspectFill)
             let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: fitted, boundingSize: size, intrinsicInsets: NSEdgeInsets())
 
             player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: mediaUpdated)

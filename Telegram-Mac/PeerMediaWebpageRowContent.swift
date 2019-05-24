@@ -51,7 +51,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 if let iconImageRepresentation = iconImageRepresentation {
                     icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
                     
-                    let imageCorners = ImageCorners(radius: iconSize.width/2)
+                    let imageCorners = ImageCorners(radius: .cornerRadius)
                     iconArguments = TransformImageArguments(corners: imageCorners, imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
                 }
                 
@@ -144,6 +144,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 guard let `self` = self else {return false}
                 if let string = self.linkLayout?.attributedString.string {
                     copyToClipboard(string)
+                    return false
                 }
                 return true
         }, localizeLinkCopy: { link in

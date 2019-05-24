@@ -216,8 +216,8 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
         
         endpoint.id = desc.identifier;
         endpoint.port = (uint32_t)desc.port;
-        endpoint.address = tgvoip::IPv4Address(desc.ipv4.UTF8String);
-        endpoint.v6address = tgvoip::IPv6Address(desc.ipv6.UTF8String);
+        endpoint.address = tgvoip::NetworkAddress::IPv4(desc.ipv4.UTF8String);
+        endpoint.v6address = tgvoip::NetworkAddress::IPv4(desc.ipv6.UTF8String);
         endpoint.type = tgvoip::Endpoint::Type::UDP_RELAY;
         [desc.peerTag getBytes:&endpoint.peerTag length:16];
         

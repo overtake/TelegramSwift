@@ -97,7 +97,7 @@ class WPArticleLayout: WPLayout {
         }
         if let wallpaper = wallpaper {
             switch wallpaper {
-            case let .wallpaper(_, preview):
+            case let .wallpaper(_, _, preview):
                 switch preview {
                 case .color:
                     imageSize = NSMakeSize(150, 150)
@@ -160,7 +160,7 @@ class WPArticleLayout: WPLayout {
             var isColor: Bool = false
             if let wallpaper = wallpaper {
                 switch wallpaper {
-                case let .wallpaper(_, preview):
+                case let .wallpaper(_, _, preview):
                     switch preview {
                     case let .slug(_, settings):
                         var patternIntensity: CGFloat = 0.5

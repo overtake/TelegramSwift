@@ -127,7 +127,7 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
     }, logout: {
         confirm(for: mainWindow, header: L10n.accountConfirmLogout, information: L10n.accountConfirmLogoutText, successHandler: { _ in
             closeAllModals()
-            _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager).start()
+            _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
         })
     })
     

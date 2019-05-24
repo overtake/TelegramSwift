@@ -55,7 +55,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
             let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
             
             if let iconImageRepresentation = iconImageRepresentation {
-                iconArguments = TransformImageArguments(corners: ImageCorners( radius: iconSize.width / 2), imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
+                iconArguments = TransformImageArguments(corners: ImageCorners( radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
                 icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
             } else {
                 let fileName: String = file.fileName ?? ""
@@ -139,7 +139,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     
     func cancel() -> Void {
-        
+        cancelFetching()
     }
     
     func delete() -> Void {

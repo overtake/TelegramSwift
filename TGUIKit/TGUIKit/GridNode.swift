@@ -900,6 +900,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
             
             if let sectionNode = self.sectionNodes[wrappedSection] {
                 sectionNode.frame = sectionFrame
+                document.addSubview(sectionNode)
             } else {
                 let sectionNode = section.section.node()
                 sectionNode.frame = sectionFrame

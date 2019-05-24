@@ -123,6 +123,10 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         return false
     }
     
+    override var responderPriority: HandlerPriority {
+        return .medium
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         context.globalPeerHandler.set(.single(nil))

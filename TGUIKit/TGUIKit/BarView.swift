@@ -38,9 +38,8 @@ open class BarView: Control {
     public init(_ width:CGFloat = 20, controller: ViewController) {
         self.minWidth = width
         self.controller = controller
-        super.init()
+        super.init(frame: NSMakeRect(0, 0, minWidth, 50))
         animates = false
-        frame = NSMakeRect(0, 0, minWidth, 50)
         overlayInitEvent()
     }
     

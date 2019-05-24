@@ -14,6 +14,10 @@ struct EmojiSkinModifier : PostboxCoding, Equatable {
     let emoji: String
     let modifier: String
     init(emoji: String, modifier: String) {
+        var emoji = emoji
+        for skin in emoji.emojiSkinToneModifiers {
+            emoji = emoji.replacingOccurrences(of: skin, with: "")
+        }
         self.emoji = emoji
         self.modifier = modifier
     }
@@ -24,15 +28,13 @@ struct EmojiSkinModifier : PostboxCoding, Equatable {
     
     var modify: String {
         var e:String = emoji
-        if emoji == modifier {
-            if emoji.length == 5 {
-                let mutable = NSMutableString()
-                mutable.insert(e, at: 0)
-                mutable.insert(modifier, at: 2)
-                e = mutable as String
-            } else {
-                e = emoji + modifier
-            }
+        if emoji.length == 5 {
+            let mutable = NSMutableString()
+            mutable.insert(e, at: 0)
+            mutable.insert(modifier, at: 2)
+            e = mutable as String
+        } else {
+            e = emoji + modifier
         }
         return e
     }
@@ -40,6 +42,8 @@ struct EmojiSkinModifier : PostboxCoding, Equatable {
     init(decoder: PostboxDecoder) {
          self.emoji = decoder.decodeStringForKey("e", orElse: "")
          self.modifier = decoder.decodeStringForKey("m", orElse: "")
+        var bp:Int = 0
+        bp += 1
     }
 }
 
@@ -70,7 +74,17 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
                 list.append(emoji)
             }
         }
-        return list
+        return list.reduce([], { current, value in
+            var value = value
+            if let modifier = value.emojiSkinToneModifiers.first(where: { value.contains($0) }), value.glyphCount > 1 {
+                value = value.replacingOccurrences(of: modifier, with: "")
+            }
+            if let first = value.first {
+                return current + [String(first)]
+            } else {
+                return current
+            }
+        })
     }
     
     public required init(decoder: PostboxDecoder) {
@@ -129,8 +143,8 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
             
             for emoji in list.reversed() {
                 let emoji = emoji.emojiString.emojiUnmodified
-                if !emoji.isEmpty && emoji.length > 1 {
-                    if let index = emojies.index(of: emoji) {
+                if !emoji.isEmpty && emoji.count == 1 {
+                    if let index = emojies.firstIndex(of: emoji) {
                         emojies.remove(at: index)
                     }
                     emojies.insert(emoji, at: 0)

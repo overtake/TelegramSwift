@@ -39,11 +39,13 @@ class GeneralTextRowItem: GeneralRowItem {
     fileprivate let centerViewAlignment: Bool
     fileprivate let additionLoading: Bool
     fileprivate let isTextSelectable: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, linkExecutor: TextViewInteractions = globalLinkExecutor, isTextSelectable: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, linkExecutor: TextViewInteractions = globalLinkExecutor, isTextSelectable: Bool = false, detectLinks: Bool = true) {
         
         self.isTextSelectable = isTextSelectable
         let mutable = text.mutableCopy() as! NSMutableAttributedString
-        mutable.detectLinks(type: [.Links], context: nil, openInfo: {_, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, dotInMention: false)
+        if detectLinks {
+            mutable.detectLinks(type: [.Links], context: nil, openInfo: {_, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, dotInMention: false)
+        }
         
         self.text = mutable
         self.additionLoading = additionLoading

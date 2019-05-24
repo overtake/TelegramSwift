@@ -43,6 +43,76 @@ enum BotPemissionKey: String {
     case contact = "PermissionInlineBotContact"
 }
 
+
+enum AppTooltip {
+    case voiceRecording
+    case videoRecording
+    case mediaPreview_archive
+    case mediaPreview_collage
+    case mediaPreview_media
+    case mediaPreview_file
+    fileprivate var localizedString: String {
+        switch self {
+        case .voiceRecording:
+            return L10n.appTooltipVoiceRecord
+        case .videoRecording:
+            return L10n.appTooltipVideoRecord
+        case .mediaPreview_archive:
+            return L10n.previewSenderArchiveTooltip
+        case .mediaPreview_collage:
+            return L10n.previewSenderCollageTooltip
+        case .mediaPreview_media:
+            return L10n.previewSenderMediaTooltip
+        case .mediaPreview_file:
+            return L10n.previewSenderFileTooltip
+        }
+    }
+    
+    private var version:Int {
+        return 1
+    }
+    
+    fileprivate var key: String {
+        switch self {
+        case .voiceRecording:
+            return "app_tooltip_voice_recording_" + "\(version)"
+        case .videoRecording:
+            return "app_tooltip_video_recording_" + "\(version)"
+        case .mediaPreview_archive:
+             return "app_tooltip_mediaPreview_archive_" + "\(version)"
+        case .mediaPreview_collage:
+             return "app_tooltip_mediaPreview_collage_" + "\(version)"
+        case .mediaPreview_media:
+             return "app_tooltip_mediaPreview_media_" + "\(version)"
+        case .mediaPreview_file:
+             return "app_tooltip_mediaPreview_file_" + "\(version)"
+        }
+    }
+    
+    fileprivate var showCount: Int {
+        return 4
+    }
+    
+}
+
+func getAppTooltip(for value: AppTooltip, callback: (String) -> Void) {
+    let shownCount: Int = UserDefaults.standard.integer(forKey: value.key)
+    
+    var success: Bool = false
+    
+    defer {
+        if success {
+            UserDefaults.standard.set(shownCount + 1, forKey: value.key)
+            UserDefaults.standard.synchronize()
+        }
+    }
+    //shownCount == 0 || (shownCount < value.showCount && arc4random_uniform(100) > 100 / 3)
+    if true {
+        success = true
+        callback(value.localizedString)
+    }
+}
+
 class FastSettings {
 
     private static let kSendingType = "kSendingType"
@@ -57,6 +127,8 @@ class FastSettings {
     private static let kNeedCollage = "kNeedCollage"
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
     private static let kAutomaticallyPlayGifs = "kAutomaticallyPlayGifs"
+    private static let kArchiveIsHidden = "kArchiveIsHidden"
+    private static let kRTFEnable = "kRTFEnable";
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
@@ -65,7 +137,9 @@ class FastSettings {
 
     private static let kVolumeRate = "kVolumeRate"
     
-    
+    private static let kArchiveAutohidden = "kArchiveAutohidden"
+    private static let kAutohideArchiveFeature = "kAutohideArchiveFeature"
+
 
     
     static var sendingType:SendingType {
@@ -147,6 +221,16 @@ class FastSettings {
         return UserDefaults.standard.bool(forKey: kNeedCollage)
     }
     
+    static var enableRTF: Bool {
+        set {
+            UserDefaults.standard.set(!newValue, forKey: kRTFEnable)
+            UserDefaults.standard.synchronize()
+        }
+        get {
+             return !UserDefaults.standard.bool(forKey: kRTFEnable)
+        }
+    }
+    
     static func toggleIsNeedCollage(_ enable: Bool) -> Void {
         UserDefaults.standard.set(enable, forKey: kNeedCollage)
         UserDefaults.standard.synchronize()
@@ -177,6 +261,12 @@ class FastSettings {
         let value = UserDefaults.standard.integer(forKey: "tooltip:\(tooltip.rawValue)")
         UserDefaults.standard.set(value + 1, forKey: "tooltip:\(tooltip.rawValue)")
         return value < 12
+    }
+    
+    static func archivedTooltipCountAndIncrement() -> Int {
+        let value = UserDefaults.standard.integer(forKey: "archivation_tooltips")
+        UserDefaults.standard.set(value + 1, forKey: "archivation_tooltips")
+        return value
     }
     
     static var showAdAlert: Bool {
@@ -240,6 +330,17 @@ class FastSettings {
     
     static var gifsAutoPlay:Bool {
         return !UserDefaults.standard.bool(forKey: kAutomaticallyPlayGifs)
+    }
+    
+    static var archiveStatus: HiddenArchiveStatus {
+        get {
+            let value = UserDefaults.standard.integer(forKey: kArchiveIsHidden)
+            return HiddenArchiveStatus(rawValue: min(value, 3))!
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: kArchiveIsHidden)
+            UserDefaults.standard.synchronize()
+        }
     }
     
     
@@ -342,44 +443,43 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
     })
 }
 
-func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Void, NoError>  {
-    
+func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<String, NoError>  {
     let path = downloadFilePath(file, postbox)
-    
     return combineLatest(queue: resourcesQueue, path, downloadedFilePaths(postbox)) |> map { (expanded, paths) in
         let (boxPath, adopted) = expanded
         if let id = file.id {
-            do {
-                if let path = paths.path(for: id) {
-                    let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
-                        return
-                    }
-                    
+            if let path = paths.path(for: id) {
+                let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
+                if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                    return path.downloadedPath
                 }
-                
-                var adopted = adopted
-                var i:Int = 1
-                let deletedPathExt = adopted.nsstring.deletingPathExtension
-                while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
-                    let ext = adopted.nsstring.pathExtension
-                    adopted = "\(deletedPathExt) (\(i)).\(ext)"
-                    i += 1
-                }
-                
-                try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-                
-                
-                let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
-                
-                let fs = fileSize(boxPath)
-                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-
-                _ = updateDownloadedFilePaths(postbox, {
-                    $0.withAddedPath(path)
-                }).start()
                 
             }
+            
+            var adopted = adopted
+            var i:Int = 1
+            let deletedPathExt = adopted.nsstring.deletingPathExtension
+            while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+                let ext = adopted.nsstring.pathExtension
+                adopted = "\(deletedPathExt) (\(i)).\(ext)"
+                i += 1
+            }
+            
+            try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+            
+            
+            let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
+            
+            let fs = fileSize(boxPath)
+            let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
+            
+            _ = updateDownloadedFilePaths(postbox, {
+                $0.withAddedPath(path)
+            }).start()
+            
+            return adopted
+        } else {
+            return adopted
         }
     }
     
@@ -473,10 +573,14 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
     })
 }
 
+
+
+
 func putFileToTemp(from:String, named:String) -> Signal<String?, NoError> {
     return Signal { subscriber in
         
         let new = NSTemporaryDirectory() + named
+        try? FileManager.default.removeItem(atPath: new)
         try? FileManager.default.copyItem(atPath: from, toPath: new)
         
         subscriber.putNext(new)

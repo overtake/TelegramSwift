@@ -506,10 +506,9 @@ public class Modal: NSObject {
                     strongSelf.container.center()
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
+                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15)
                         if !controller.isFullScreen {
-                            strongSelf.container.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
-                        } else {
-                            strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.3)
+                            strongSelf.container.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
                         }
                     }
                     
@@ -545,7 +544,7 @@ public class Modal: NSObject {
                     }
                     
                     if strongSelf.animated {
-                        strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion:{[weak strongSelf] (completed) in
+                        strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.15, completion:{[weak strongSelf] (completed) in
                             strongSelf?.controller?.viewDidAppear(true)
                         })
                     } else {

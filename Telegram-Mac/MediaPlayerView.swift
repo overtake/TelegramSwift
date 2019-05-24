@@ -285,7 +285,7 @@ final class MediaPlayerView: View {
         
         self.videoQueue.async { [weak self] in
             let videoLayer = MediaPlayerViewLayer()
-            videoLayer.videoGravity = .resizeAspectFill
+            videoLayer.videoGravity = .resize
             Queue.mainQueue().async {
                 if let strongSelf = self {
                     strongSelf.videoLayer = videoLayer

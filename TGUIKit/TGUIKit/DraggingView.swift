@@ -152,7 +152,6 @@ public class DraggingView: SplitView {
     }
     
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        
         if let items = controller?.draggingItems(for: sender.draggingPasteboard), items.count > 0, !sender.draggingSourceOperationMask.isEmpty {
             
             container.frame = bounds

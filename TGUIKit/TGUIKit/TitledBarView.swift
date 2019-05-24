@@ -12,7 +12,7 @@ private class TitledContainerView : View {
     
     private var statusNode:TextNode = TextNode()
     private var titleNode:TextNode = TextNode()
-    var titleImage:CGImage? {
+    var titleImage:(CGImage, TitleBarImageSide)? {
         didSet {
             self.setNeedsDisplay()
         }
@@ -58,12 +58,18 @@ private class TitledContainerView : View {
         
         
         if let text = text, let superview = superview?.superview {
-            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(frame.width - inset, frame.height), nil,false, .left)
+            
+            var additionalInset: CGFloat = 0
+            if let (image,_) = titleImage {
+                additionalInset += image.backingSize.width + 5
+            }
+            
+            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(frame.width - inset - additionalInset, frame.height), nil,false, .left)
             var tY = focus(textLayout.size).minY
             
             if let status = status {
                 
-                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(frame.width - inset, frame.height), nil,false, .left)
+                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(frame.width - inset - additionalInset, frame.height), nil,false, .left)
                 
                 let t = textLayout.size.height + statusLayout.size.height + 2.0
                 tY = (frame.height - t) / 2.0
@@ -79,9 +85,14 @@ private class TitledContainerView : View {
             let point = convert( NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, (superview.frame.width - textLayout.size.width)/2.0), tY), from: superview)
             var textRect = NSMakeRect(min(max(textInset == nil ? point.x : textInset!, 0), frame.width - textLayout.size.width), point.y, textLayout.size.width, textLayout.size.height)
             
-            if let titleImage = titleImage {
-                ctx.draw(titleImage, in: NSMakeRect(textInset == nil ? textRect.minX - titleImage.backingSize.width : textInset!, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))
-                textRect.origin.x += floorToScreenPixels(scaleFactor: backingScaleFactor, titleImage.backingSize.width) + 4
+            if let (titleImage, side) = titleImage {
+                switch side {
+                case .left:
+                    ctx.draw(titleImage, in: NSMakeRect(textInset == nil ? textRect.minX - titleImage.backingSize.width : textInset!, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))
+                    textRect.origin.x += floorToScreenPixels(scaleFactor: backingScaleFactor, titleImage.backingSize.width) + 4
+                case .right:
+                    ctx.draw(titleImage, in: NSMakeRect(textRect.maxX + 3, tY + 1, titleImage.backingSize.width, titleImage.backingSize.height))
+                }
             }
             
             textApply.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
@@ -89,9 +100,14 @@ private class TitledContainerView : View {
     }
 }
 
+public enum TitleBarImageSide {
+    case left
+    case right
+}
+
 open class TitledBarView: BarView {
     
-    public var titleImage:CGImage? {
+    public var titleImage:(CGImage, TitleBarImageSide)? {
         didSet {
             _containerView.titleImage = titleImage
         }

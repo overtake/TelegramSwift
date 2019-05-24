@@ -428,7 +428,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         let searchState = self.searchState
         let context = self.context
         
-        genericView.searchContainer.searchView.searchInteractions = SearchInteractions({ state in
+        genericView.searchContainer.searchView.searchInteractions = SearchInteractions({ state, _ in
             searchState.set(state)
         }, { state in
             searchState.set(state)
@@ -460,11 +460,11 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         let previousState:Atomic<ChannelEventFilterState?> = Atomic(value: nil)
         let previousAppearance:Atomic<Appearance?> = Atomic(value: nil)
         let previousSearchState:Atomic<SearchState> = Atomic(value: SearchState(state: .None, request: nil))
-        disposable.set((combineLatest(searchState.get() |> map {SearchState(state: .None, request: $0.request)} |> distinctUntilChanged, history.get() |> filter {$0.0 != -1}) |> mapToSignal { values -> Signal<EventLogTableTransition?, NoError> in
+        disposable.set((combineLatest(searchState.get() |> map {SearchState(state: .None, request: $0.request)} |> distinctUntilChanged, history.get() |> filter {$0.0 != -1}) |> mapToSignal { values -> Signal<(EventLogTableTransition?, Peer?), NoError> in
 
             let state = values.1.1
             let searchState = values.0
-            return .single(nil) |> then (combineLatest(channelAdminLogEvents(postbox: context.account.postbox, network: context.account.network, peerId: peerId, maxId: values.1.0, minId: -1, limit: 50, query: searchState.request, filter: state.selectedFlags, admins: state.selectedAdmins) |> `catch` { _ in .complete()} |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result, appearance -> (EventLogTableTransition, [Peer]) in
+            return context.account.postbox.transaction { $0.getPeer(peerId) } |> map { (nil, $0) } |> then (combineLatest(channelAdminLogEvents(postbox: context.account.postbox, network: context.account.network, peerId: peerId, maxId: values.1.0, minId: -1, limit: 50, query: searchState.request, filter: state.selectedFlags, admins: state.selectedAdmins) |> `catch` { _ in .complete()} |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { result, appearance -> (EventLogTableTransition, [Peer]) in
                 
                 
                 let maxId = result.events.min(by: { (lhs, rhs) -> Bool in
@@ -484,13 +484,13 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                         updatePeers(transaction: transaction, peers: peers, update: { (previous, updated) -> Peer? in
                             return updated
                         })
-                        return Optional(transition)
+                        return (Optional(transition), transaction.getPeer(peerId))
                     }
                 })
             }
-            |> deliverOnMainQueue).start(next: { [weak self] transition in
+            |> deliverOnMainQueue).start(next: { [weak self] transition, peer in
                 if let tableView = self?.genericView.tableView {
-                    if let transition = transition, let peer = transition.eventLog.peers[transition.eventLog.peerId] {
+                    if let transition = transition, let peer = peer {
                         if !transition.addition {
                             tableView.removeAll()
                             _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))

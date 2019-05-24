@@ -46,11 +46,14 @@ final class UnauthorizedApplicationContext {
             window.center()
         }
         
+        if window.frame.height < window.minSize.height {
+            window.setFrame(NSMakeRect(window.frame.minX, window.frame.minY, window.minSize.width, window.minSize.height), display: true)
+        }
         
         self.account = account
         self.window = window
         self.sharedContext = sharedContext
-        self.rootController = MajorNavigationController(AuthController.self, AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers))
+        self.rootController = MajorNavigationController(AuthController.self, AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers), window)
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
 
         self.modal = AuthModalController(rootController)
@@ -213,7 +216,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self.leftController.chatList.globalSearch(search)
         }, entertainment: { [weak self] () -> EntertainmentViewController in
             guard let `self` = self else {
-                fatalError("Cannot use bindings. Application context is not exists")
+                return EntertainmentViewController.init(size: NSZeroSize, context: context)
             }
             if self.entertainment == nil {
                 self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: self.context)
@@ -226,6 +229,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self.splitView.state = state
         }, needFullsize: { [weak self] in
             self?.splitView.needFullsize()
+        }, displayUpgradeProgress: { progress in
+                
         })
         
         
@@ -269,17 +274,31 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         let accountId = context.account.id
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
-                let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager).start()
+                let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
             }
         }))
         
         
-      
-     
-        
         alertsDisposable.set((context.account.stateManager.displayAlerts |> deliverOnMainQueue).start(next: { alerts in
             for text in alerts {
-                alert(for: window, info: text)
+                
+                let alert:NSAlert = NSAlert()
+                alert.window.appearance = theme.appearance
+                alert.alertStyle = .informational
+                alert.messageText = appName
+                alert.informativeText = text.text
+
+                if text.isDropAuth {
+                    alert.addButton(withTitle: L10n.editAccountLogout)
+                    alert.addButton(withTitle: L10n.modalCancel)
+
+                }
+
+                alert.beginSheetModal(for: window, completionHandler: { result in
+                    if result.rawValue == 1000 && text.isDropAuth {
+                        let _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+                    }
+                })
             }
         }))
         
@@ -337,7 +356,25 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
         
         
-
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.leftController.focusSearch(animated: true)
+            return .invoked
+        }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .option])
+        
+        
+        #if DEBUG
+        window.set(handler: {  () -> KeyHandlerResult in
+            showModal(with: LottieTestModalController(), for: window)
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        #endif
+        
+       
+        
+//        window.set(handler: { [weak self] () -> KeyHandlerResult in
+//            self?.leftController.focusSearch(animated: true)
+//            return .invoked
+//        }, with: self, for: .E, priority: .low, modifierFlags: [.command])
         
         suggestedLocalizationDisposable.set(( context.account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, NoError> in
             

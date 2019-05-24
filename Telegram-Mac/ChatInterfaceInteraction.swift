@@ -32,8 +32,6 @@ final class ChatInteraction : InterfaceObserver  {
         switch chatLocation {
         case let .peer(peerId):
             return peerId
-        case .group:
-            return PeerId(0)
         }
     }
     
@@ -89,7 +87,7 @@ final class ChatInteraction : InterfaceObserver  {
     var focusMessageId: (MessageId?, MessageId, TableScrollState) -> Void = {_,_,_  in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile) -> Void = {_ in}
-    var sendMedias:([Media], ChatTextInputState, Bool) -> Void = {_,_,_ in}
+    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?) -> Void = {_,_,_,_ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
@@ -131,11 +129,11 @@ final class ChatInteraction : InterfaceObserver  {
     var updateEditingMessageMedia:([String]?, Bool) -> Void = { _, _ in}
     var editEditingMessagePhoto:(TelegramMediaImage) -> Void = { _ in}
     var removeChatInteractively:()->Void = { }
-    
-    
+    var updateSearchRequest: (SearchMessagesResultState)->Void = { _ in }
+    var searchPeerMessages: (Peer) -> Void = { _ in }
     var vote:(MessageId, Data?) -> Void = { _, _ in }
     var closePoll:(MessageId) -> Void = { _ in }
-    
+    var openDiscussion:()->Void = { }
     let loadingMessage: Promise<Bool> = Promise()
     
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
@@ -341,6 +339,29 @@ final class ChatInteraction : InterfaceObserver  {
                         }
                     case .payment:
                         alert(for: mainWindow, info: tr(L10n.paymentsUnsupported))
+                    case let .urlAuth(url, buttonId):
+                        let context = strongSelf.context
+                        _ = showModalProgress(signal: requestMessageActionUrlAuth(account: strongSelf.context.account, messageId: keyboardMessage.id, buttonId: buttonId), for: context.window).start(next: { result in
+                            switch result {
+                            case let .accepted(url):
+                                execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
+                            case .default:
+                                execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
+                            case let .request(url, peer, writeAllowed):
+                                showModal(with: InlineLoginController(context: context, url: url, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
+                                    _ = showModalProgress(signal: acceptMessageActionUrlAuth(account: context.account, messageId: keyboardMessage.id, buttonId: buttonId, allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                                        switch result {
+                                        case .default:
+                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
+                                        case let .accepted(url):
+                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
+                                        default:
+                                            break
+                                        }
+                                    })
+                                }), for: context.window)
+                            }
+                        })
                     default:
                         break
                     }
@@ -353,6 +374,8 @@ final class ChatInteraction : InterfaceObserver  {
         return ReplyMarkupInteractions(proccess: {_,_  in})
     }
     
+    
+    
     public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil) {
         
         
@@ -360,7 +383,7 @@ final class ChatInteraction : InterfaceObserver  {
         let interfaceState = presentation.interfaceState.withUpdatedTimestamp(timestamp).withUpdatedHistoryScrollState(scrollState)
         
         var s:Signal<Void, NoError> = updatePeerChatInterfaceState(account: context.account, peerId: peerId, state: interfaceState)
-        if !force {
+        if !force && !interfaceState.inputState.inputText.isEmpty {
             s = s |> delay(10, queue: Queue.mainQueue())
         }
         

@@ -248,6 +248,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
       //  self.layer?.drawsAsynchronously = System.drawAsync
     }
     
+    open override var wantsDefaultClipping: Bool {
+        return false
+    }
+    
     open override var translatesAutoresizingMaskIntoConstraints: Bool {
         get {
             return true

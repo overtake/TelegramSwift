@@ -82,7 +82,7 @@ fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry]
     let (removed,inserted,updated) = proccessEntriesWithoutReverse(from, right: to) { entry -> TableRowItem in
         switch entry {
         case let .message(message):
-            return ChatListMessageRowItem(initialSize, context: context, message: message, renderedPeer: RenderedPeer(message: message))
+            return ChatListMessageRowItem(initialSize, context: context, message: message, query: "", renderedPeer: RenderedPeer(message: message))
         }
     }
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated)
@@ -148,7 +148,7 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
         }
         close()
     }
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return true
     }
     func isSelectable(row:Int, item:TableRowItem) -> Bool {

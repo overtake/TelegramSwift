@@ -16,18 +16,20 @@ import PostboxMac
 class PeerMediaControllerView : View {
     
     private let actionsPanelView:MessageActionsPanelView = MessageActionsPanelView(frame: NSMakeRect(0,0,0, 50))
-    fileprivate let typesContainerView: View = View()
+    fileprivate let segmentContainerView: View = View()
     fileprivate let segmentControl = SegmentController(frame: NSMakeRect(0, 0, 200, 28))
     private weak var mainView:NSView?
     private let separator:View = View()
     private var isSelectionState:Bool = false
     private var chatInteraction:ChatInteraction?
+    private var searchState: SearchState?
+    private(set) var searchView: SearchView?
     required init(frame frameRect:NSRect) {
         super.init(frame: frameRect)
         addSubview(actionsPanelView)
         addSubview(separator)
-        typesContainerView.addSubview(segmentControl.view)
-        addSubview(typesContainerView)
+        segmentContainerView.addSubview(segmentControl.view)
+        addSubview(segmentContainerView)
         updateLocalizationAndTheme()
     }
     
@@ -51,7 +53,30 @@ class PeerMediaControllerView : View {
         needsLayout = true
     }
     
-
+    func updateSearchState(_ state: MediaSearchState) {
+        self.searchState = state.state
+        switch state.state.state {
+        case .Focus:
+            if searchView == nil {
+                searchView = state.view ?? SearchView(frame: NSZeroRect)
+                addSubview(searchView!)
+            }
+            searchView?.isLoading = state.isLoading
+            searchView!.frame = NSMakeRect(10, segmentContainerView.frame.maxY + 10, frame.width - 20, 30)
+            searchView?._change(pos: NSMakePoint(10, 10), animated: state.animated)
+            segmentContainerView._change(pos: NSMakePoint(segmentContainerView.frame.minX, -segmentContainerView.frame.height), animated: state.animated)
+            
+        case .None:
+            segmentContainerView._change(pos: NSMakePoint(segmentContainerView.frame.minX, 0), animated: state.animated)
+            if let searchView = self.searchView {
+                self.searchView = nil
+                searchView._change(pos: NSMakePoint(10, segmentContainerView.frame.maxY + 10), animated: state.animated, completion: { [weak searchView] completed in
+                    searchView?.removeFromSuperview()
+                })
+            }
+            
+        }
+    }
     
     func changeState(selectState:Bool, animated:Bool) {
         assert(mainView != nil)
@@ -68,10 +93,13 @@ class PeerMediaControllerView : View {
     override func layout() {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
-        typesContainerView.frame = NSMakeRect(0, 0, frame.width, 50)
+        segmentContainerView.frame = NSMakeRect(0, searchView != nil ? -segmentContainerView.frame.height : 0, frame.width, 50)
+        
+        searchView?.frame = NSMakeRect(10, segmentContainerView.frame.maxY + 10, frame.width - 20, 30)
+        
         segmentControl.view.setFrameSize(frame.width - 20, 28)
         segmentControl.view.center()
-        mainView?.frame = NSMakeRect(0, typesContainerView.frame.maxY, frame.width, frame.height - inset - typesContainerView.frame.maxY)
+        mainView?.frame = NSMakeRect(0, segmentContainerView.frame.maxY + (searchView != nil ? 50 : 0), frame.width, frame.height - inset - segmentContainerView.frame.maxY)
         actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
         separator.frame = NSMakeRect(0, frame.height - inset, frame.width, .borderSize)
     }
@@ -97,7 +125,9 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
     private let loadFwdMessagesDisposable = MetaDisposable()
     private let loadSelectionMessagesDisposable = MetaDisposable()
+    private let searchValueDisposable = MetaDisposable()
     private let currentModeValue:ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
+    private var searchController: PeerMediaListController?
     init(context: AccountContext, peerId:PeerId, tagMask:MessageTags) {
         self.peerId = peerId
         self.tagMask = tagMask
@@ -221,6 +251,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.updateInteraction(interactions)
+        
         
         let context = self.context
         
@@ -366,7 +397,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 self.listControllers[currentTagListIndex].removeFromSuperview()
                 self.listControllers[currentTagListIndex].viewDidDisappear(animated)
                 currentTagListIndex = -1
-
+                searchValueDisposable.set(nil)
             } else {
                 let previous: ViewController
                 if currentTagListIndex != -1 {
@@ -382,12 +413,22 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 self.listControllers[currentTagListIndex].viewDidAppear(animated)
                 previous.removeFromSuperview()
                 previous.viewDidDisappear(animated)
+                
+                
+                searchValueDisposable.set(self.listControllers[currentTagListIndex].mediaSearchValue.start(next: { [weak self] state in
+                    self?.genericView.updateSearchState(state)
+                    switch state.state.state {
+                    case .Focus:
+                        self?.currentTable?.autohide = nil
+                    case .None:
+                        self?.currentTable?.autohide = TableAutohide(item: self?.currentTable?.firstItem)
+                    }
+                }))
             }
             
         }
         
     }
-    
     
     deinit {
         messagesActionDisposable.dispose()
@@ -429,9 +470,9 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         for mediaList in listControllers {
             if mediaList.view.superview != nil {
                 if current == 0 {
-                    genericView.typesContainerView.setFrameOrigin(genericView.typesContainerView.frame.minX, 50)
+                    genericView.segmentContainerView.setFrameOrigin(genericView.segmentContainerView.frame.minX, genericView.searchView != nil ? 0 : 50)
                 }
-                genericView.typesContainerView._change(pos: NSMakePoint(genericView.typesContainerView.frame.minX, current), animated: animated)
+                genericView.segmentContainerView._change(pos: NSMakePoint(genericView.segmentContainerView.frame.minX, current), animated: animated)
                 return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
             }
         }

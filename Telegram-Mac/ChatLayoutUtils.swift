@@ -41,8 +41,9 @@ class ChatLayoutUtils: NSObject {
                     }
                 }
             }
-            
-            if file.isSticker {
+            if file.isAnimatedSticker {
+                size = NSMakeSize(240, 240)
+            } else if file.isSticker {
                 size = contentSize.aspectFitted(NSMakeSize(210, 210))
             } else if file.isInstantVideo {
                 size = NSMakeSize(200, 200)
@@ -53,7 +54,7 @@ class ChatLayoutUtils: NSObject {
                 } else {
                     size = contentSize.fitted(maxSize)
                     if hasText {
-                        size.width = max(maxSize.width, size.width)
+                      //  size.width = max(maxSize.width, size.width)
                     }
                 }
                 
@@ -96,6 +97,8 @@ class ChatLayoutUtils: NSObject {
                 return ChatVoiceContentView.self
             } else if file.isMusic {
                 return ChatMusicContentView.self
+            } else if file.isAnimatedSticker {
+                return ChatMediaAnimatedStickerView.self
             } else {
                 return ChatFileContentView.self
             }

@@ -46,6 +46,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var messageActionsPanelView:MessageActionsPanelView?
     private var recordingPanelView:ChatInputRecordingView?
     private var blockedActionView:TitleButton?
+    private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
     
     
@@ -70,7 +71,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     static let maxBottomHeight = ReplyMarkupNode.rowHeight * 3 + ReplyMarkupNode.buttonHeight / 2
     
     
-    private let formatterDisposable = MetaDisposable()
+    private let rtfAttachmentsDisposable = MetaDisposable()
     
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
@@ -163,7 +164,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         actionsView.backgroundColor = theme.colors.background
         blockedActionView?.disableActions()
         textView.textFont = .normal(theme.fontSize)
-
+        chatDiscussionView?.updateLocalizationAndTheme()
         blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
@@ -260,6 +261,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         recordingPanelView = nil
         blockedActionView?.removeFromSuperview()
         blockedActionView = nil
+        chatDiscussionView?.removeFromSuperview()
+        chatDiscussionView = nil
         restrictedView?.removeFromSuperview()
         restrictedView = nil
         messageActionsPanelView?.removeFromSuperview()
@@ -286,7 +289,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             break
         case .block(_):
             break
-
         case let .action(text,action):
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView = TitleButton(frame: bounds)
@@ -304,7 +306,15 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
             self.accessoryView.change(opacity: 0.0, animated: animated)
-            break
+        case let .channelWithDiscussion(discussionGroupId, leftAction, rightAction):
+            self.messageActionsPanelView?.removeFromSuperview()
+            self.chatDiscussionView = ChannelDiscussionInputView(frame: bounds)
+            self.chatDiscussionView?.update(with: chatInteraction, discussionGroupId: discussionGroupId, leftAction: leftAction, rightAction: rightAction)
+            
+            self.addSubview(self.chatDiscussionView!, positioned: .below, relativeTo: _ts)
+            self.contentView.isHidden = true
+            self.contentView.change(opacity: 0.0, animated: animated)
+            self.accessoryView.change(opacity: 0.0, animated: animated)
         case let .recording(recorder):
             textView.isHidden = true
             recordingPanelView = ChatInputRecordingView(frame: NSMakeRect(0,0,frame.width,standart), chatInteraction:chatInteraction, recorder:recorder)
@@ -312,7 +322,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             if animated {
                 self.recordingPanelView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-            break
         case let.restricted( text):
             self.messageActionsPanelView?.removeFromSuperview()
             self.restrictedView = RestrictionWrappedView(text)
@@ -396,6 +405,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         accessory.frame = NSMakeRect(15, contentView.frame.maxY, accessory.measuredWidth, accessory.size.height)
         messageActionsPanelView?.setFrameSize(frame.size)
         blockedActionView?.setFrameSize(frame.size)
+        chatDiscussionView?.setFrameSize(frame.size)
         restrictedView?.setFrameSize(frame.size)
         
         guard let superview = superview else {return}
@@ -468,7 +478,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             
             accessory.view?.change(opacity: accessory.isVisibility() ? 1.0 : 0.0, animated: animated)
-            accessory.view?.change(pos: NSMakePoint(15, contentHeight), animated: animated)
+            accessory.view?.change(pos: NSMakePoint(15, contentHeight + bottomHeight), animated: animated)
             
             
             change(size: NSMakeSize(NSWidth(frame), sumHeight), animated: animated)
@@ -589,7 +599,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         chatInteraction.remove(observer: self)
         self.accessoryDispose.dispose()
         emojiReplacementDisposable.dispose()
-        formatterDisposable.dispose()
+        rtfAttachmentsDisposable.dispose()
     }
     
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
@@ -609,9 +619,18 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         guard range.min != range.max, let window = kitWindow else {
             return
         }
+        var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
+        let defaultTag: TGInputTextTag? = self.textView.attributedString().attribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), at: range.location, effectiveRange: &effectiveRange) as? TGInputTextTag
         
-        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: range), completion: { [weak self] url in
-            self?.textView.addLink(url)
+        
+         let defaultUrl = defaultTag?.attachment as? String
+        
+        if effectiveRange.location == NSNotFound || defaultTag == nil {
+            effectiveRange = range
+        }
+        
+        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] url in
+            self?.textView.addLink(url, range: effectiveRange)
         }), for: window)
         
     }
@@ -629,10 +648,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return true
     }
     
+    func copyText(withRTF rtf: NSAttributedString!) -> Bool {
+        return globalLinkExecutor.copyAttributedString(rtf)
+    }
+    
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        
-        
-        
         
         if let window = kitWindow, self.chatState == .normal || self.chatState == .editing {
             
@@ -645,7 +665,34 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 }
             }
             
-            return !InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
+            let result = InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
+            if result {
+                if let data = pasteboard.data(forType: .rtf) {
+                    if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
+                        
+                        let (attributed, attachments) = attributed.applyRtf()
+
+                        if !attachments.isEmpty {
+                            rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
+                                if !urls.isEmpty, let chatInteraction = self?.chatInteraction {
+                                    showModal(with: PreviewSenderController(urls: urls, chatInteraction: chatInteraction, attributedString: attributed), for: window)
+                                }
+                            }))
+                        } else {
+                            let current = textView.attributedString().copy() as! NSAttributedString
+                            let currentRange = textView.selectedRange()
+                            let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
+                            let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
+                            self.textView.addSimpleItem(item)
+                        }
+                        
+                        return true
+                    }
+                }
+            }
+            
+            
+            return !result
         }
         
         

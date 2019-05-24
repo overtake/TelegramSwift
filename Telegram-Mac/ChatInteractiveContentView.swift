@@ -430,7 +430,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                     updatedStatusSignal = combineLatest(chatMessagePhotoStatus(account: context.account, photo: image), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
-                            if let pendingStatus = pendingStatus {
+                            if let pendingStatus = pendingStatus, parent.forwardInfo == nil || resourceStatus != .Local {
                                 return (.Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)), .Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)))
                             } else {
                                 return (resourceStatus, resourceStatus)
@@ -516,7 +516,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 
                 if let strongSelf = self {
                     
-                    
+                    strongSelf.authenticFetchStatus = authentic
+
                     
                     var authentic = authentic
                     if strongSelf.autoplayVideo {
@@ -531,7 +532,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         }
                     }
                     
-                    strongSelf.authenticFetchStatus = authentic
                     
                     
                     

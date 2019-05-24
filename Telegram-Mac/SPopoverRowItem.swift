@@ -21,7 +21,7 @@ class SPopoverRowItem: TableRowItem {
         return unique
     }
     
-    let iStyle:ControlStyle = ControlStyle(backgroundColor: theme.colors.blueSelect, highlightColor:.white)
+    let iStyle:ControlStyle = ControlStyle(backgroundColor: presentation.colors.blueSelect, highlightColor:.white)
     
     
     // data
@@ -69,21 +69,21 @@ private class SPopoverRowView: TableRowView {
         text.userInteractionEnabled = false
         
         overlay.set(handler: {[weak self] (state) in
-            self?.overlay.backgroundColor = theme.colors.blueSelect
+            self?.overlay.backgroundColor = presentation.colors.blueSelect
             if let item = self?.item as? SPopoverRowItem {
                 if let image = item.image {
                     self?.image.image = item.iStyle.highlight(image: image)
                 }
-                self?.text.backgroundColor = theme.colors.blueSelect
+                self?.text.backgroundColor = presentation.colors.blueSelect
                 self?.text.update(item.activeTitle)
             }
             }, for: .Hover)
         
         overlay.set(handler: {[weak self] (state) in
-            self?.overlay.backgroundColor = theme.colors.background
+            self?.overlay.backgroundColor = presentation.colors.background
             if let item = self?.item as? SPopoverRowItem {
                 self?.image.image = item.image
-                self?.text.backgroundColor = theme.colors.background
+                self?.text.backgroundColor = presentation.colors.background
                 self?.text.update(item.title)
             }
             }, for: .Normal)
@@ -107,8 +107,8 @@ private class SPopoverRowView: TableRowView {
         super.set(item: item, animated: animated)
         
         overlay.removeAllHandlers()
-        overlay.backgroundColor = theme.colors.background
-        text.backgroundColor = theme.colors.background
+        overlay.backgroundColor = presentation.colors.background
+        text.backgroundColor = presentation.colors.background
         if let item = item as? SPopoverRowItem {
             image.image = item.image
             overlay.removeAllHandlers()
@@ -160,7 +160,7 @@ private final class SPopoverSeparatorView : TableRowView {
     }
     override func updateColors() {
         super.updateColors()
-        separator.backgroundColor = theme.colors.border
+        separator.backgroundColor = presentation.colors.border
     }
     
     override func layout() {

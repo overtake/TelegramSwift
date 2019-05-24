@@ -157,7 +157,7 @@ class RecentCallsViewController: NavigationViewController {
     private var layoutController:LayoutRecentCallsViewController
     init(_ context:AccountContext) {
         self.layoutController = LayoutRecentCallsViewController(context)
-        super.init(layoutController)
+        super.init(layoutController, context.window)
         bar = .init(height: 0)
     }
     

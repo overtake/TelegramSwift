@@ -166,7 +166,7 @@ class MGalleryVideoItem: MGalleryItem {
             return .never()
         })
         
-        self.image.set(media.previewRepresentations.isEmpty ? .single(nil) |> deliverOnMainQueue : result |> deliverOnMainQueue)
+        self.image.set(media.previewRepresentations.isEmpty ? .single(.image(nil)) |> deliverOnMainQueue : result |> map { .image($0) } |> deliverOnMainQueue)
         
         fetch()
     }

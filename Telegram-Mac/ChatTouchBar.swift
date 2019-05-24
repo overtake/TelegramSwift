@@ -66,7 +66,7 @@ func inputChatTouchBarItems(presentation: ChatPresentationInterfaceState) -> [NS
 @available(OSX 10.12.2, *)
 func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: SplitViewState, isKeyWindow: Bool) -> (items: [NSTouchBarItem.Identifier], escapeReplacement: NSTouchBarItem.Identifier?) {
     
-    if presentation.isSearchMode {
+    if presentation.isSearchMode.0 {
         return (items: [], escapeReplacement: nil)
     }
     if presentation.state == .editing {
@@ -166,8 +166,8 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     private let loadStickersDisposable = MetaDisposable()
     private let loadRecentEmojiDisposable = MetaDisposable()
 
-    private let chatInteraction: ChatInteraction
-    private let textView: NSTextView
+    private var chatInteraction: ChatInteraction
+    private var textView: NSTextView
     private let candidateListItem = NSCandidateListTouchBarItem<AnyObject>(identifier: .candidateList)
     private let layoutStateDisposable = MetaDisposable()
     init(chatInteraction: ChatInteraction, textView: NSTextView) {
@@ -181,11 +181,19 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
         self.textView.updateTouchBarItemIdentifiers()
         self.customizationIdentifier = .windowBar
-        chatInteraction.add(observer: self)
         layoutStateDisposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] _ in
             guard let `self` = self else {return}
             self.notify(with: self.chatInteraction.presentation, oldValue: self.chatInteraction.presentation, animated: true)
         }))
+    }
+    
+    func updateChatInteraction(_ chatInteraction: ChatInteraction, textView: NSTextView) -> Void {
+        self.chatInteraction.remove(observer: self)
+        chatInteraction.add(observer: self)
+        self.chatInteraction = chatInteraction
+        
+        textView.updateTouchBarItemIdentifiers()
+        self.textView = textView
     }
     
     func updateByKeyWindow() {
@@ -223,7 +231,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         item.showPopover(item)
     }
     @objc private func searchAction() {
-        chatInteraction.update({$0.updatedSearchMode(!$0.isSearchMode)})
+        chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil))})
     }
     
     @objc private func attachPhotoOrVideo() {

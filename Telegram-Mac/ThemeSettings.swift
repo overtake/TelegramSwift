@@ -194,7 +194,22 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             bubbleBackgroundHighlight_incoming:  parseColor(decoder, "bubbleBackgroundHighlight_incoming") ?? palette.bubbleBackgroundHighlight_incoming,
             bubbleBackgroundHighlight_outgoing:  parseColor(decoder, "bubbleBackgroundHighlight_outgoing") ?? palette.bubbleBackgroundHighlight_outgoing,
             chatDateActive: parseColor(decoder, "chatDateActive") ?? palette.chatDateActive,
-            chatDateText: parseColor(decoder, "chatDateText") ?? palette.chatDateText)
+            chatDateText: parseColor(decoder, "chatDateText") ?? palette.chatDateText,
+            revealAction_neutral1_background: parseColor(decoder, "revealAction_neutral1_background") ?? palette.revealAction_neutral1_background,
+            revealAction_neutral1_foreground: parseColor(decoder, "revealAction_neutral1_foreground") ?? palette.revealAction_neutral1_foreground,
+            revealAction_neutral2_background: parseColor(decoder, "revealAction_neutral2_background") ?? palette.revealAction_neutral2_background,
+            revealAction_neutral2_foreground: parseColor(decoder, "revealAction_neutral2_foreground") ?? palette.revealAction_neutral2_foreground,
+            revealAction_destructive_background: parseColor(decoder, "revealAction_destructive_background") ?? palette.revealAction_destructive_background,
+            revealAction_destructive_foreground: parseColor(decoder, "revealAction_destructive_foreground") ?? palette.revealAction_destructive_foreground,
+            revealAction_constructive_background: parseColor(decoder, "revealAction_constructive_background") ?? palette.revealAction_constructive_background,
+            revealAction_constructive_foreground: parseColor(decoder, "revealAction_constructive_foreground") ?? palette.revealAction_constructive_foreground,
+            revealAction_accent_background: parseColor(decoder, "revealAction_accent_background") ?? palette.revealAction_accent_background,
+            revealAction_accent_foreground: parseColor(decoder, "revealAction_accent_foreground") ?? palette.revealAction_accent_foreground,
+            revealAction_warning_background: parseColor(decoder, "revealAction_warning_background") ?? palette.revealAction_warning_background,
+            revealAction_warning_foreground: parseColor(decoder, "revealAction_warning_foreground") ?? palette.revealAction_warning_foreground,
+            revealAction_inactive_background: parseColor(decoder, "revealAction_inactive_background") ?? palette.revealAction_inactive_background,
+            revealAction_inactive_foreground: parseColor(decoder, "revealAction_inactive_foreground") ?? palette.revealAction_inactive_foreground
+        )
         
         
         
@@ -241,7 +256,15 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     func withUpdatedBubbled(_ bubbled: Bool) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
+        
+        var wallpaper = self.wallpaper
+        if !bubbled {
+            wallpaper = .none
+        } else {
+            wallpaper = self.defaultWallpapers.first(where: {$0.paletteName == palette.name})?.wallpaper ?? wallpaper
+        }
+        
+        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
     }
     func withUpdatedFontSize(_ fontSize: CGFloat) -> ThemePaletteSettings {
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
@@ -252,11 +275,12 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     func withUpdatedWallpaper(_ wallpaper: Wallpaper) -> ThemePaletteSettings {
         
         var defaultWallpapers = self.defaultWallpapers
-        
-        if let index = defaultWallpapers.firstIndex(where: {$0.paletteName == self.palette.name}) {
-            defaultWallpapers[index] = DefaultWallpaper(paletteName: self.palette.name, wallpaper: wallpaper)
-        } else {
-            defaultWallpapers.append(DefaultWallpaper(paletteName: self.palette.name, wallpaper: wallpaper))
+        if self.bubbled {
+            if let index = defaultWallpapers.firstIndex(where: {$0.paletteName == self.palette.name}) {
+                defaultWallpapers[index] = DefaultWallpaper(paletteName: self.palette.name, wallpaper: wallpaper)
+            } else {
+                defaultWallpapers.append(DefaultWallpaper(paletteName: self.palette.name, wallpaper: wallpaper))
+            }
         }
         
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: defaultWallpapers)
@@ -320,6 +344,7 @@ func themeSettingsView(accountManager: AccountManager)-> Signal<ThemePaletteSett
                 case nightBluePalette.name:
                     pallete = nightBluePalette
                 case mojavePalette.name:
+                    
                     pallete = mojavePalette
                 default:
                     pallete = nightBluePalette

@@ -14,14 +14,13 @@ import PostboxMac
 import WebKit
 
 
-class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
+class WebpageModalController: ModalViewController, WKNavigationDelegate {
     private var indicator:ProgressIndicator!
     private let content:TelegramMediaWebpageLoadedContent
     private let context:AccountContext
-    private let webview: WebView = WebView(frame: NSZeroRect)
+    private let webview: WKWebView = WKWebView(frame: NSZeroRect)
     override func loadView() {
         super.loadView()
-        webview.frameLoadDelegate = self
         webview.wantsLayer = true
         webview.removeFromSuperview()
         addSubview(webview)
@@ -34,15 +33,24 @@ class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
         indicator.animates = true
         
         
+        webview.navigationDelegate = self
        // leakWebview()
         
         if let embed = content.embedUrl, let url = URL(string: embed) {
-            webview.mainFrame.load(URLRequest(url: url))
+            webview.load(URLRequest(url: url))
+            
             readyOnce()
         }
         
     }
     
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        webview.isHidden = false
+        webview.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        indicator.isHidden = true
+        indicator.animates = false
+    }
     
     override var dynamicSize:Bool {
         return true
@@ -64,8 +72,7 @@ class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         webview.removeFromSuperview()
-        webview.frameLoadDelegate = nil
-        webview.mainFrame.load(URLRequest(url: URL(string:"https://google.com")!))
+        webview.stopLoading()
        // webview.mainFrame.stopLoading()
       //  webView.stopLoading(nil)
       //  webView.removeFromSuperview()
@@ -76,12 +83,6 @@ class WebpageModalController: ModalViewController,WebFrameLoadDelegate {
         bp += 1
     }
     
-    func webView(_ sender: WebView!, didFinishLoadFor frame: WebFrame!) {
-        webview.isHidden = false
-        webview.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-        indicator.isHidden = true
-        indicator.animates = false
-    }
     
     init(content:TelegramMediaWebpageLoadedContent, context: AccountContext) {
         self.content = content

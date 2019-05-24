@@ -3,64 +3,21 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "MediaReferenceRevalidationContext.message(postbox:network:background:message:):FetchedMediaResource.swift">
-      </ContextState>
-      <ContextState
-         contextName = "WPArticleContentView.update(with:):WPArticleContentView.swift">
+         contextName = "__34-[TGGrowingTextView menuForEvent:]_block_invoke_2:TGModernGrowingTextView.m">
          <PersistentStrings>
             <PersistentString
-               value = "imageView.hasImage">
+               value = "subItem.action">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "SettingsThemeWallpaperView.setWallpaper(account:wallpaper:size:):ThemeGridControllerItem.swift">
+         contextName = "closure #1 in closure #1 in modernConfirm(for:account:peerId:accessory:header:information:okTitle:cancelTitle:thridTitle:successHandler:):PanelUtils.swift">
       </ContextState>
       <ContextState
-         contextName = "SVideoControlsView.update(with:animated:):SVideoView.swift">
+         contextName = "closure #1 in closure #5 in AuthorizedApplicationContext.startNotifyListener(with:):ApplicationContext.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #2 in InstantViewController.show():InstantViewWindow.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self._window.contentView">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "Wallpaper.isSemanticallyEqual(to:):Appearance.swift">
-      </ContextState>
-      <ContextState
-         contextName = "MediaBox.completedResourcePath(_:pathExtension:):MediaBox.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #7 in revalidateMediaResourceReference(postbox:network:revalidationContext:info:resource:):FetchedMediaResource.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #8 in closure #5 in PreviewSenderController.makeItems(_:):PreviewSenderController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatControllerView.updateHeader(_:_:):ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in closure #15 in ChatController.viewDidLoad():ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in prepareEntries(from:to:account:timeDifference:initialSize:interaction:animated:scrollPosition:reason:animationInterface:side:):ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatInteractiveContentView.update(with:size:account:parent:table:parameters:animated:positionFlags:):ChatInteractiveContentView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "saveVisible #1 (_:) in TableView.merge(with:):TableView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "translate(key:_:):LocalizableExtension.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "appCurrentLanguage">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "groupInfoEntries(view:arguments:inputActivities:channelMembers:):GroupInfoEntries.swift">
       </ContextState>
       <ContextState
          contextName = "ChatAccessoryModel.measureSize(_:sizeToFit:):ChatAccessoryModel.swift">
@@ -71,142 +28,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "static Sender.enqueue(input:account:peerId:replyId:disablePreview:):SenderController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #5 in MajorNavigationController.viewDidAppear(_:):MajorNavigationController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.controller.view">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "fetchedMediaResource(postbox:reference:range:statsCategory:reportResultStatus:preferBackgroundReferenceRevalidation:):FetchedMediaResource.swift">
-      </ContextState>
-      <ContextState
-         contextName = "WPMediaContentView.update(with:):WPMediaContentView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatMessageItem.init(_:_:_:_:_:):ChatMessageItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in saveUsedEmoji(_:postbox:):RecentUsedEmoji.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #5 in closure #1 in SelectContactsBehavior.start(account:search:linkInvation:):SelectPeersController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "Postbox.internalTransaction&lt;A&gt;(_:):Postbox.swift">
-      </ContextState>
-      <ContextState
-         contextName = "Postbox.currentUpdatedState.didset:Postbox.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "currentUpdatedState">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "GroupedLayout.measure(_:spacing:):GroupedLayout.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in MediaPlayerView.startPolling():MediaPlayerView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in ChatListController.viewDidLoad():ChatListController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "SVideoControlsView.status.didset:SVideoView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatVoiceContentView.checkState():ChatVoiceContentView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in ChatInteraction.processBotKeyboard(with:):ChatInterfaceInteraction.swift">
-      </ContextState>
-      <ContextState
-         contextName = "InstantPageSelectText.runSelector(_:updateLayout:):InstantPageSelectText.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "instantPage.items">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ChatMediaItem.init(_:_:_:_:_:):ChatMediaItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in MediaBox.clearFileContexts():MediaBox.swift">
-      </ContextState>
-      <ContextState
-         contextName = "makeMediaEnties(_:isSavedGifs:initialSize:):PrettyGridUtils.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ServiceEventLogItem.init(_:event:result:chatInteraction:):ChannelEventLogItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "PostboxStateView.init(_:):PostboxStateView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in moveWallpaperToCache(postbox:resource:blurred:):CoreExtension.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in InlineAudioPlayerView.addGlobalAudioToVisible(tableView:):InlineAudioPlayerView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in AppearanceViewController.viewDidLoad():AppearanceViewController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "layoutInstantPageBlock(webpage:rtl:block:boundingWidth:horizontalInset:safeInset:isCover:previousItems:fillToSize:media:mediaIndexCounter:embedIndexCounter:detailsIndexCounter:theme:webEmbedHeights:):InstantPageLayout.swift">
-      </ContextState>
-      <ContextState
-         contextName = "SVideoControlsView.scrubberInsideBuffering.getter:SVideoView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatRowItem.makeSize(_:oldWidth:):ChatRowItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #3 in GalleryViewer.init(account:peerId:firstStableId:_:_:reversed:):GalleryViewer.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in modernSearchStickers(postbox:query:):TwoStepVerification.swift">
-      </ContextState>
-      <ContextState
-         contextName = "WallpaperPreviewView.croppedRect.getter:WallpaperPreviewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.imageSize">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in fetchRemoteMessage(postbox:source:message:):SearchMessages.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in MGalleryItem.init(_:_:_:):MGalleryItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "specialized closure #1 in closure #1 in prepareEntries(from:to:context:initialSize:arguments:animated:):ContactsController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "insertions">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #64 in ChatController.viewDidLoad():ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "SVideoController.returnSystemSleep():SVideoController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "MediaPlayerView.state.didset:MediaPlayerView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "state">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "closure #2 in closure #1 in MediaReferenceRevalidationContext.message(postbox:network:background:message:):FetchedMediaResource.swift">
       </ContextState>
       <ContextState
          contextName = "closure #2 in ChatListController.viewDidAppear(_:):ChatListController.swift">
@@ -217,156 +39,7 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "MediaPlayerContext.seek(timestamp:action:):MediaPlayer.swift">
-      </ContextState>
-      <ContextState
-         contextName = "MessagePhotoInfo.init(_:):GroupedLayout.swift">
-      </ContextState>
-      <ContextState
-         contextName = "WPArticleLayout.init(with:account:chatInteraction:parent:fontSize:presentation:downloadSettings:):WPArticleLayout.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in InstantPageSelectText.runSelector(_:updateLayout:):InstantPageSelectText.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "item.lines">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "AppDelegate.applicationDidFinishLaunching(_:):AppDelegate.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #2 in chatContextQueryForSearchMention(peer:_:currentQuery:account:filter:):ChatInterfaceStateContextQueries.swift">
-      </ContextState>
-      <ContextState
-         contextName = "SVideoControlsView.bufferingStatus.didset:SVideoView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in searchStickerSets(postbox:query:):SearchStickers.swift">
-      </ContextState>
-      <ContextState
-         contextName = "WPArticleLayout.init(with:account:chatInteraction:parent:fontSize:presentation:approximateSynchronousValue:downloadSettings:):WPArticleLayout.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in closure #1 in MediaReferenceRevalidationContext.message(postbox:network:background:message:):FetchedMediaResource.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #63 in ChatController.viewDidLoad():ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatControllerView.updateScroller(_:):ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "StickerGridItem.init(account:collectionId:packInfo:index:file:inputNodeInteraction:selected:):EStickerGridItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "PhotoCache.freeMemoryIfNeeded():PhotoCache.swift">
-      </ContextState>
-      <ContextState
-         contextName = "applyUILocalization(_:):LocalizableExtension.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in StickersViewController.init(account:):EStickersViewController.swift">
-      </ContextState>
-      <ContextState
          contextName = "closure #1 in closure #2 in authorizeWithPassword(account:password:):Authorization.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #3 in SVideoController.viewDidLoad():SVideoController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "CSearchContextState.init(inputQueryResult:messages:selectedIndex:searchState:tokenState:peerId:):ChatHeaderController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in QuickLookPreview.show(account:with:stableId:_:):QuickLookPreview.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ColorPalette.withAccentColor(_:):PresentationTheme.swift">
-      </ContextState>
-      <ContextState
-         contextName = "instantPageLayoutForWebPage(_:boundingWidth:webEmbedHeights:presentation:openChannel:joinChannel:):InstantPageLayout.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #5 in AuthorizedApplicationContext.startNotifyListener(with:):ApplicationContext.swift">
-      </ContextState>
-      <ContextState
-         contextName = "static Api.parseVector&lt;A&gt;(_:elementSignature:elementType:):Api.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "Api.parse(reader, signature: signature)">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in clearCache(_:excludes:):CoreExtension.swift">
-      </ContextState>
-      <ContextState
-         contextName = "sizeup #1 (_:) in fitPrettyDimensions(_:isLastRow:fitToHeight:perSize:):PrettyGridUtils.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "dimensions">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in modernConfirm(for:account:peerId:accessory:header:information:okTitle:cancelTitle:thridTitle:successHandler:):PanelUtils.swift">
-      </ContextState>
-      <ContextState
-         contextName = "inApp(for:account:peerId:openInfo:hashtag:command:applyProxy:confirm:):InAppLinks.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #13 in execute(inapp:):InAppLinks.swift">
-      </ContextState>
-      <ContextState
-         contextName = "identityEntries(_:primary:relative:updateState:):PassportController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatController.viewDidAppear(_:):ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "Postbox.setState(_:):Postbox.swift">
-      </ContextState>
-      <ContextState
-         contextName = "chatMessagePhotoStatus(account:photo:):MediaUtils.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatController.applyTransition(_:view:initialData:isLoading:):ChatController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in chatMessagePhotoDatas(account:imageReference:fullRepresentationSize:autoFetchFullSize:secureIdAccessContext:):MediaUtils.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in showInFinder(_:account:):FastSettings.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in modernConfirm(for:account:peerId:accessory:header:information:okTitle:cancelTitle:thridTitle:successHandler:):PanelUtils.swift">
-      </ContextState>
-      <ContextState
-         contextName = "MagnifyView.contentSize.didset:MagnifyView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.contentSize">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ChatInteraction.update(animated:_:):ChatInterfaceInteraction.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #2 in fetchRemoteMessage(postbox:source:message:):SearchMessages.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in closure #1 in closure #10 in PrivacyAndSecurityViewController.viewDidLoad():PrivacyAndSecurityViewController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "updateTheme(with:for:animated:):Appearance.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ViewTracker.updateViews(postbox:transaction:):ViewTracker.swift">
-      </ContextState>
-      <ContextState
-         contextName = "SVideoView.status.didset:SVideoView.swift">
       </ContextState>
       <ContextState
          contextName = "WPLayout.webPage.getter:WPLayout.swift">
@@ -377,6 +50,176 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #63 in ChatController.viewDidLoad():ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TitleButton.updateLayout():TitleButton.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MediaBox.completedResourcePath(_:pathExtension:):MediaBox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static ChatRowItem.item(_:from:interaction:downloadSettings:):ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in SVideoController.viewDidLoad():SVideoController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "chatMessagePhotoStatus(account:photo:):MediaUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CSearchContextState.init(inputQueryResult:messages:selectedIndex:searchState:tokenState:peerId:):ChatHeaderController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "saveVisible #1 (_:) in TableView.merge(with:):TableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "BackNavigationBar.requestUpdate():BackNavigationBar.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in modernConfirm(for:account:peerId:accessory:header:information:okTitle:cancelTitle:thridTitle:successHandler:):PanelUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #64 in ChatController.viewDidLoad():ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "InstantPageSelectText.runSelector(_:updateLayout:):InstantPageSelectText.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "instantPage.items">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ColorPalette.withAccentColor(_:):PresentationTheme.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PostboxStateView.init(_:):PostboxStateView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #13 in execute(inapp:):InAppLinks.swift">
+      </ContextState>
+      <ContextState
+         contextName = "NSAttributedString.trimmed.getter:Extensions.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "string.string.nsstring">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "SVideoControlsView.status.didset:SVideoView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "convertEntries(from:tags:timeDifference:):PeerMediaListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MediaPlayerContext.seek(timestamp:action:):MediaPlayer.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatMessageItem.init(_:_:_:_:_:):ChatMessageItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in QuickLookPreview.show(account:with:stableId:_:):QuickLookPreview.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in GalleryViewer.init(account:peerId:firstStableId:_:_:reversed:):GalleryViewer.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static Sender.enqueue(input:account:peerId:replyId:disablePreview:):SenderController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in InstantPageSelectText.initializeHandlers(for:instantLayout:instantPage:account:updateLayout:openInfo:openNewTab:):InstantPageSelectText.swift">
+      </ContextState>
+      <ContextState
+         contextName = "GroupedLayout.measure(_:spacing:):GroupedLayout.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in moveWallpaperToCache(postbox:resource:blurred:):CoreExtension.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #5 in closure #1 in SelectContactsBehavior.start(account:search:linkInvation:):SelectPeersController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in clearCache(_:excludes:):CoreExtension.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in MediaPlayerView.startPolling():MediaPlayerView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static Api.parseVector&lt;A&gt;(_:elementSignature:elementType:):Api.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "Api.parse(reader, signature: signature)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MessagePhotoInfo.init(_:):GroupedLayout.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableAnimationInterface.animate(table:added:removed:):TableAnimationInterface.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MagnifyView.contentSize.didset:MagnifyView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentSize">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "identityEntries(_:primary:relative:updateState:):PassportController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "WPArticleContentView.update(with:):WPArticleContentView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "imageView.hasImage">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "WPArticleLayout.init(with:account:chatInteraction:parent:fontSize:presentation:approximateSynchronousValue:downloadSettings:):WPArticleLayout.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatControllerView.updateScroller(_:):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PhotoCache.freeMemoryIfNeeded():PhotoCache.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in InstantPageSelectText.runSelector(_:updateLayout:):InstantPageSelectText.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.lines">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "fetchedMediaResource(postbox:reference:range:statsCategory:reportResultStatus:preferBackgroundReferenceRevalidation:):FetchedMediaResource.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in ChatListController.viewDidLoad():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in showInFinder(_:account:):FastSettings.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MediaReferenceRevalidationContext.message(postbox:network:background:message:):FetchedMediaResource.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatInteractiveContentView.update(with:size:account:parent:table:parameters:animated:positionFlags:):ChatInteractiveContentView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #2 in fetchRemoteMessage(postbox:source:message:):SearchMessages.swift">
+      </ContextState>
+      <ContextState
          contextName = "String.trimmed.getter:Extensions.swift">
          <PersistentStrings>
             <PersistentString
@@ -385,19 +228,236 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ViewTracker.updateViews(postbox:transaction:):ViewTracker.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in SearchController.viewDidLoad():SearchController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatControllerView.updateHeader(_:_:):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #5 in MajorNavigationController.viewDidAppear(_:):MajorNavigationController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.controller.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Wallpaper.isSemanticallyEqual(to:):Appearance.swift">
+      </ContextState>
+      <ContextState
+         contextName = "inApp(for:account:peerId:openInfo:hashtag:command:applyProxy:confirm:):InAppLinks.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SVideoController.returnSystemSleep():SVideoController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatMediaItem.init(_:_:_:_:_:):ChatMediaItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in NavigationViewController.viewDidAppear(_:):NavigationViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "instantPageLayoutForWebPage(_:boundingWidth:webEmbedHeights:presentation:openChannel:joinChannel:):InstantPageLayout.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in renderedTotalUnreadCount(accountManager:postbox:):RenderedTotalUnreadCount.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ServiceEventLogItem.init(_:event:result:chatInteraction:):ChannelEventLogItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in ChatInteraction.processBotKeyboard(with:):ChatInterfaceInteraction.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in AppearanceViewController.viewDidLoad():AppearanceViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in modernSearchStickers(postbox:query:):TwoStepVerification.swift">
+      </ContextState>
+      <ContextState
+         contextName = "AppDelegate.applicationDidFinishLaunching(_:):AppDelegate.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in searchStickerSets(postbox:query:):SearchStickers.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in StickersViewController.init(account:):EStickersViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.viewDidAppear(_:):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Postbox.setState(_:):Postbox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.applyTransition(_:initialData:wallpaper:):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SVideoControlsView.bufferingStatus.didset:SVideoView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TelegramLocalization.init(primaryLanguage:secondaryLanguage:):LocalizableExtension.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatVoiceContentView.checkState():ChatVoiceContentView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "applyUILocalization(_:):LocalizableExtension.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MutableUnreadMessageCountsView.replay(postbox:transaction:):UnreadMessageCountsView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "transaction.currentUpdatedTotalUnreadStates">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in fetchRemoteMessage(postbox:source:message:):SearchMessages.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in prepareEntries(from:to:account:timeDifference:initialSize:interaction:animated:scrollPosition:reason:animationInterface:side:):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SettingsThemeWallpaperView.setWallpaper(account:wallpaper:size:):ThemeGridControllerItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SVideoControlsView.update(with:animated:):SVideoView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "specialized closure #1 in closure #1 in prepareEntries(from:to:context:initialSize:arguments:animated:):ContactsController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "insertions">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MediaPlayerView.state.didset:MediaPlayerView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "state">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "sizeup #1 (_:) in fitPrettyDimensions(_:isLastRow:fitToHeight:perSize:):PrettyGridUtils.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "dimensions">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in closure #1 in closure #10 in PrivacyAndSecurityViewController.viewDidLoad():PrivacyAndSecurityViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatPresentationInterfaceState.init(interfaceState:peer:notificationSettings:inputQueryResult:keyboardButtonsMessage:initialAction:historyCount:isSearchMode:recordingState:isBlocked:reportStatus:pinnedMessageId:urlPreview:selectionState:sidebarEnabled:sidebarShown:layout:canAddContact:isEmojiSection:chatLocation:canInvokeBasicActions:isNotAccessible:):ChatPresentationInterfaceState.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in chatMessagePhotoDatas(account:imageReference:fullRepresentationSize:autoFetchFullSize:secureIdAccessContext:):MediaUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "updateTheme(with:for:animated:):Appearance.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #7 in revalidateMediaResourceReference(postbox:network:revalidationContext:info:resource:):FetchedMediaResource.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.makeSize(_:oldWidth:):ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "SVideoView.status.didset:SVideoView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in saveUsedEmoji(_:postbox:):RecentUsedEmoji.swift">
+      </ContextState>
+      <ContextState
+         contextName = "fetchRemoteMessage(postbox:source:message:):SearchMessages.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #8 in closure #5 in PreviewSenderController.makeItems(_:):PreviewSenderController.swift">
+      </ContextState>
+      <ContextState
          contextName = "JoinLinkPreviewView.update(with:account:participants:groupUserCount:):JoinLinkPreviewModalController.swift">
       </ContextState>
       <ContextState
-         contextName = "convertEntries(from:tags:timeDifference:):PeerMediaListController.swift">
+         contextName = "closure #1 in closure #1 in closure #15 in ChatController.viewDidLoad():ChatController.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #3 in InstantPageSelectText.initializeHandlers(for:instantLayout:instantPage:account:updateLayout:openInfo:openNewTab:):InstantPageSelectText.swift">
+         contextName = "Postbox.internalTransaction&lt;A&gt;(_:):Postbox.swift">
       </ContextState>
       <ContextState
-         contextName = "__34-[TGGrowingTextView menuForEvent:]_block_invoke_2:TGModernGrowingTextView.m">
+         contextName = "closure #2 in ChatListController.viewDidLoad():ChatListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in InstantViewController.show():InstantViewWindow.swift">
          <PersistentStrings>
             <PersistentString
-               value = "subItem.action">
+               value = "self._window.contentView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "makeMediaEnties(_:isSavedGifs:initialSize:):PrettyGridUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in InlineAudioPlayerView.addGlobalAudioToVisible(tableView:):InlineAudioPlayerView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "layoutInstantPageBlock(webpage:rtl:block:boundingWidth:horizontalInset:safeInset:isCover:previousItems:fillToSize:media:mediaIndexCounter:embedIndexCounter:detailsIndexCounter:theme:webEmbedHeights:):InstantPageLayout.swift">
+      </ContextState>
+      <ContextState
+         contextName = "WPArticleLayout.init(with:account:chatInteraction:parent:fontSize:presentation:downloadSettings:):WPArticleLayout.swift">
+      </ContextState>
+      <ContextState
+         contextName = "WPMediaContentView.update(with:):WPMediaContentView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in MediaBox.clearFileContexts():MediaBox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in MGalleryItem.init(_:_:_:):MGalleryItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #2 in chatContextQueryForSearchMention(peer:_:currentQuery:account:filter:):ChatInterfaceStateContextQueries.swift">
+      </ContextState>
+      <ContextState
+         contextName = "WallpaperPreviewView.croppedRect.getter:WallpaperPreviewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.imageSize">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "StickerGridItem.init(account:collectionId:packInfo:index:file:inputNodeInteraction:selected:):EStickerGridItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatController.applyTransition(_:view:initialData:isLoading:):ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MultipartFetchSource.request(offset:limit:tag:fileReference:):MultipartFetch.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Postbox.currentUpdatedState.didset:Postbox.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "currentUpdatedState">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "SVideoControlsView.scrubberInsideBuffering.getter:SVideoView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "translate(key:_:):LocalizableExtension.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "appCurrentLanguage">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -405,25 +465,7 @@
          contextName = "closure #3 in SearchController.viewDidLoad():SearchController.swift">
       </ContextState>
       <ContextState
-         contextName = "TelegramLocalization.init(primaryLanguage:secondaryLanguage:):LocalizableExtension.swift">
-      </ContextState>
-      <ContextState
-         contextName = "MultipartFetchSource.request(offset:limit:tag:fileReference:):MultipartFetch.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in SearchController.viewDidLoad():SearchController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatPresentationInterfaceState.init(interfaceState:peer:notificationSettings:inputQueryResult:keyboardButtonsMessage:initialAction:historyCount:isSearchMode:recordingState:isBlocked:reportStatus:pinnedMessageId:urlPreview:selectionState:sidebarEnabled:sidebarShown:layout:canAddContact:isEmojiSection:chatLocation:canInvokeBasicActions:isNotAccessible:):ChatPresentationInterfaceState.swift">
-      </ContextState>
-      <ContextState
-         contextName = "fetchRemoteMessage(postbox:source:message:):SearchMessages.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #3 in ChatListController.viewDidLoad():ChatListController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatController.applyTransition(_:initialData:wallpaper:):ChatController.swift">
+         contextName = "ChatInteraction.update(animated:_:):ChatInterfaceInteraction.swift">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

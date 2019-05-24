@@ -81,13 +81,6 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             }
         }
         
-        if inputText.isSingleEmoji {
-            var inputText = inputText
-            if inputText.canHaveSkinToneModifier {
-                inputText = inputText.emojiUnmodified
-            }
-            return (inputText.startIndex ..< inputText.endIndex, [.stickers], nil)
-        }
         
         let maxUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: inputState.selectionRange.lowerBound)
         guard let maxIndex = maxUtfIndex.samePosition(in: inputText) else {
@@ -97,6 +90,16 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             return nil
         }
         var index = inputText.index(before: maxIndex)
+        
+        if inputText.isSingleEmoji {
+            var inputText = inputText
+            if inputText.canHaveSkinToneModifier {
+                inputText = inputText.emojiUnmodified
+            }
+            return (inputText.startIndex ..< maxIndex, [.stickers], nil)
+        }
+        
+       
         
         var possibleQueryRange: Range<String.Index>?
         
@@ -123,7 +126,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
                             possibleTypes = []
                         }
                     } else {
-                         possibleTypes = []
+                        // possibleTypes = []
                     }
                     
                 default:
@@ -197,7 +200,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             }
         }
         
-        if inputText.trimmingCharacters(in: CharacterSet.alphanumerics).isEmpty, !inputText.isEmpty  {
+        if inputText.trimmingCharacters(in: CharacterSet.letters).isEmpty, !inputText.isEmpty  {
             possibleTypes = possibleTypes.intersection([.emojiFast])
             definedType = true
             possibleQueryRange = index ..< maxIndex
@@ -220,7 +223,9 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         }
         
         
-        let query = String(inputState.inputText[possibleQueryRange]) //.substring(with: possibleQueryRange)
+        
+        let value = inputState.inputText[possibleQueryRange]
+        let query = String(value) //.substring(with: possibleQueryRange)
         if possibleTypes == [.hashtag] {
             return .hashtag(query)
         } else if possibleTypes == [.mention] {
@@ -231,13 +236,18 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
             let additionalString = String(inputState.inputText[additionalStringRange])
             return .contextRequest(addressName: query, query: additionalString)
         } else if possibleTypes == [.stickers] {
-            return .stickers(query)
+            return .stickers(query.emojiUnmodified)
         } else if possibleTypes == [.emoji] {
-            return .emoji(query, firstWord: false)
+            if query.trimmingCharacters(in: CharacterSet.letters).isEmpty {
+                return .emoji(query, firstWord: false)
+            } else {
+                return .none
+            }
         } else if possibleTypes == [.emojiFast] {
             return .emoji(query, firstWord: true)
         }
         return .none
+
     } else {
         return .none
     }

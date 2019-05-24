@@ -19,9 +19,9 @@ enum MediaTrackFrameResult {
 private let traceEvents = false
 
 final class MediaTrackFrameBuffer {
-    private let stallDuration: Double = 1.0
-    private let lowWaterDuration: Double = 2.0
-    private let highWaterDuration: Double = 3.0
+    private let stallDuration: Double
+    private let lowWaterDuration: Double
+    private let highWaterDuration: Double
     
     private let frameSource: MediaFrameSource
     private let decoder: MediaTrackFrameDecoder
@@ -38,29 +38,32 @@ final class MediaTrackFrameBuffer {
     private var endOfStream = false
     private var bufferedUntilTime: CMTime?
     
-    init(frameSource: MediaFrameSource, decoder: MediaTrackFrameDecoder, type: MediaTrackFrameType, duration: CMTime, rotationAngle: Double, aspect: Double) {
+    init(frameSource: MediaFrameSource, decoder: MediaTrackFrameDecoder, type: MediaTrackFrameType, duration: CMTime, rotationAngle: Double, aspect: Double, stallDuration: Double = 1.0, lowWaterDuration: Double = 2.0, highWaterDuration: Double = 3.0) {
         self.frameSource = frameSource
         self.type = type
         self.decoder = decoder
         self.duration = duration
         self.rotationAngle = rotationAngle
         self.aspect = aspect
+        self.stallDuration = stallDuration
+        self.lowWaterDuration = lowWaterDuration
+        self.highWaterDuration = highWaterDuration
         
         self.frameSourceSinkIndex = self.frameSource.addEventSink { [weak self] event in
             if let strongSelf = self {
                 switch event {
-                    case let .frames(frames):
-                        var filteredFrames: [MediaTrackDecodableFrame] = []
-                        for frame in frames {
-                            if frame.type == type {
-                                filteredFrames.append(frame)
-                            }
+                case let .frames(frames):
+                    var filteredFrames: [MediaTrackDecodableFrame] = []
+                    for frame in frames {
+                        if frame.type == type {
+                            filteredFrames.append(frame)
                         }
-                        if !filteredFrames.isEmpty {
-                            strongSelf.addFrames(filteredFrames)
-                        }
-                    case .endOfStream:
-                        strongSelf.endOfStreamReached()
+                    }
+                    if !filteredFrames.isEmpty {
+                        strongSelf.addFrames(filteredFrames)
+                    }
+                case .endOfStream:
+                    strongSelf.endOfStreamReached()
                 }
             }
         }
@@ -99,7 +102,7 @@ final class MediaTrackFrameBuffer {
     
     func status(at timestamp: Double) -> MediaTrackFrameBufferStatus {
         var bufferedDuration = 0.0
-        if let bufferedUntilTime = bufferedUntilTime {
+        if let bufferedUntilTime = self.bufferedUntilTime {
             if CMTimeCompare(bufferedUntilTime, self.duration) >= 0 || self.endOfStream {
                 return .finished(at: CMTimeGetSeconds(bufferedUntilTime))
             }

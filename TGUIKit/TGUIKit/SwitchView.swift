@@ -117,8 +117,8 @@ public class SwitchView: Control {
             buble.animateFrame(from: buble.frame, to: bubleRect, duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring)
         }
         backgroundLayer.backgroundColor = isEnabled ? ( isOn ? presentation.stateOnColor.cgColor : presentation.stateOffColor.cgColor ) : presentation.disabledColor.cgColor
-        backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
-        buble.borderWidth = isOn ? 0.0 : 1.0
+        backgroundLayer.borderWidth = isOn ? 0.0 : 0.0
+        buble.borderWidth = isOn ? 0.0 : 0.0
         buble.backgroundColor = presentation.backgroundColor.cgColor
         
         if animates {
@@ -138,8 +138,8 @@ public class SwitchView: Control {
 
     
     var bubleRect:NSRect {
-        let w = frame.height - (isOn ? 2.0 : 0.0)
-        return NSMakeRect(isOn ? frame.width - w - (isOn ? 1 : 0): 0, isOn ? 1.0 : 0.0, w, w)
+        let w = frame.height - (isOn ? 2.0 : 2.0)
+        return NSMakeRect(isOn ? frame.width - w - (isOn ? 1 : 1) : 1, isOn ? 1.0 : 1.0, w, w)
     }
     
     
@@ -149,12 +149,12 @@ public class SwitchView: Control {
         
         backgroundLayer.frame = NSMakeRect(0, 0, frame.width, frame.height)
         backgroundLayer.cornerRadius = frame.height / 2.0
-        backgroundLayer.borderWidth = isOn ? 0.0 : 1.0
+        backgroundLayer.borderWidth = isOn ? 0.0 : 0.0
         backgroundLayer.borderColor = presentation.borderColor.cgColor
         
         buble.frame = bubleRect
         buble.cornerRadius = bubleRect.height/2.0
-        buble.borderWidth = isOn ? 0.0 : 1.0
+        buble.borderWidth = isOn ? 0.0 : 0.0
         buble.borderColor = presentation.borderColor.cgColor
 
     }

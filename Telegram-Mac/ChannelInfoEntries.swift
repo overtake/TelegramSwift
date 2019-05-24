@@ -202,6 +202,14 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(setup)
     }
     
+    func setupDiscussion() {
+        _ = (self.context.account.postbox.loadedPeerWithId(self.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
+            if let `self` = self {
+                self.pushViewController(ChannelDiscussionSetupController(context: self.context, peer: peer))
+            }
+        })
+    }
+    
     func toggleSignatures( _ enabled: Bool) -> Void {
         toggleSignaturesDisposable.set(toggleShouldChannelMessagesSignatures(account: context.account, peerId: peerId, enabled: enabled).start())
     }
@@ -335,6 +343,7 @@ class ChannelInfoArguments : PeerInfoArguments {
 
 enum ChannelInfoEntry: PeerInfoEntry {
     case info(sectionId:Int, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?)
+    case scam(sectionId:Int, text: String)
     case about(sectionId:Int, text: String)
     case userName(sectionId:Int, value: String)
     case setPhoto(sectionId:Int)
@@ -345,6 +354,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case members(sectionId:Int, count:Int32?)
     case statistics(sectionId:Int)
     case link(sectionId:Int, addressName:String)
+    case discussion(sectionId:Int, group: Peer?, participantsCount: Int32?)
     case aboutInput(sectionId:Int, description:String)
     case aboutDesc(sectionId:Int)
     case signMessages(sectionId:Int, sign:Bool)
@@ -396,6 +406,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 } else if (lhsCachedData == nil) != (rhsCachedData != nil) {
                     return false
                 }
+                return true
+            default:
+                return false
+            }
+        case  let .scam(sectionId, text):
+            switch entry {
+            case .scam(sectionId, text):
                 return true
             default:
                 return false
@@ -482,6 +499,18 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .discussion(sectionId, lhsGroup, participantsCount):
+            if case .discussion(sectionId, let rhsGroup, participantsCount) = entry {
+                if let lhsGroup = lhsGroup, let rhsGroup = rhsGroup {
+                    return lhsGroup.isEqual(rhsGroup)
+                } else if (lhsGroup != nil) != (rhsGroup != nil) {
+                    return false
+                }
+                return true
+            } else {
+                return false
+            }
+            
         case let .aboutInput(sectionId, _):
             if case .aboutInput(sectionId, _) = entry {
                 return true
@@ -529,36 +558,40 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 0
         case .setPhoto:
             return 1
-        case .about:
+        case .scam:
             return 2
-        case .userName:
+        case .about:
             return 3
-        case .sharedMedia:
+        case .userName:
             return 4
-        case .notifications:
+        case .sharedMedia:
             return 5
-        case .admins:
+        case .notifications:
             return 6
-        case .members:
+        case .admins:
             return 7
-        case .blocked:
+        case .members:
             return 8
-        case .statistics:
+        case .blocked:
             return 9
-        case .link:
+        case .statistics:
             return 10
-        case .aboutInput:
+        case .link:
             return 11
-        case .aboutDesc:
+        case .discussion:
             return 12
-        case .signMessages:
+        case .aboutInput:
             return 13
-        case .signDesc:
+        case .aboutDesc:
             return 14
-        case .report:
+        case .signMessages:
             return 15
-        case .leave:
+        case .signDesc:
             return 16
+        case .report:
+            return 17
+        case .leave:
+            return 18
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -569,6 +602,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .info(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .setPhoto(sectionId):
+            return (sectionId * 1000) + stableIndex
+        case let .scam(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .about(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -587,6 +622,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .statistics(sectionId):
             return (sectionId * 1000) + stableIndex
         case let .link(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .discussion(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .aboutInput(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -620,6 +657,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return PeerInfoHeaderItem(initialSize, stableId: stableId.hashValue, context: arguments.context, peerView:peerView, editable: editable, updatingPhotoState: updatingPhotoState, firstNameEditableText: state.editingState?.editingName, textChangeHandler: { name, _ in
                 arguments.updateEditingName(name)
             })
+        case let .scam(_, text):
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, detectLinks:false)
         case let .about(_, text):
             return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, text:text, context: arguments.context, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
@@ -667,6 +706,22 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .link(_, addressName: addressName):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), action: { () in
                 arguments.visibilitySetup()
+            })
+        case let .discussion(_, group, participantsCount):
+            let title: String
+            if let group = group {
+                if let address = group.addressName {
+                    title = "@\(address)"
+                } else if let participantsCount = participantsCount {
+                    title = L10n.peerInfoDiscussionMembersCountCountable(Int(participantsCount))
+                } else {
+                    title = group.displayTitle
+                }
+            } else {
+                title = L10n.peerInfoDiscussionAdd
+            }
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDiscussion, type: .context(title), action: { () in
+                arguments.setupDiscussion()
             })
         case .setPhoto:
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetChannelPhoto, nameStyle: blueActionButton, type: .none, action: {
@@ -730,14 +785,36 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 entries.append(ChannelInfoEntry.section(sectionId))
                 sectionId += 1
             }
-            if channel.flags.contains(.isCreator) {
-                entries.append(ChannelInfoEntry.link(sectionId:sectionId, addressName: channel.username ?? ""))
-            }
             
             if channel.hasPermission(.changeInfo) {
                 entries.append(ChannelInfoEntry.aboutInput(sectionId:sectionId, description: editingState.editingDescriptionText))
                 entries.append(ChannelInfoEntry.aboutDesc(sectionId: sectionId))
                 
+                entries.append(ChannelInfoEntry.section(sectionId))
+                sectionId += 1
+            }
+            
+            var addSectionId: Bool = false
+            if channel.flags.contains(.isCreator) {
+                entries.append(ChannelInfoEntry.link(sectionId:sectionId, addressName: channel.username ?? ""))
+                addSectionId = true
+            }
+            
+            if channel.hasPermission(.pinMessages) {
+                let group: Peer?
+                let participantsCount: Int32?
+                if let cachedData = view.cachedData as? CachedChannelData, let associatedPeerId = cachedData.associatedPeerId {
+                    group = view.peers[associatedPeerId]
+                    participantsCount = cachedData.participantsSummary.memberCount
+                } else {
+                    group = nil
+                    participantsCount = nil
+                }
+                entries.append(ChannelInfoEntry.discussion(sectionId:sectionId, group: group, participantsCount: participantsCount))
+                addSectionId = true
+            }
+            
+            if addSectionId {
                 entries.append(ChannelInfoEntry.section(sectionId))
                 sectionId += 1
             }
@@ -763,8 +840,12 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
             
         } else {
             
+            if channel.isScam {
+                entries.append(ChannelInfoEntry.scam(sectionId:sectionId, text: L10n.channelInfoScamWarning))
+            }
+            
             if let cachedData = view.cachedData as? CachedChannelData {
-                if let about = cachedData.about, !about.isEmpty {
+                if let about = cachedData.about, !about.isEmpty, !channel.isScam {
                     entries.append(ChannelInfoEntry.about(sectionId:sectionId, text: about))
                 }
             }

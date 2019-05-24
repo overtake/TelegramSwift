@@ -405,7 +405,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
             return .complete()
         } |> deliverOnMainQueue)
         
-        self.image.set(result |> deliverOnMainQueue)
+        self.image.set(result |> map { .image($0) } |> deliverOnMainQueue)
         
         fetch()
     }

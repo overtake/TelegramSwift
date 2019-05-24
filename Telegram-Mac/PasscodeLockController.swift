@@ -28,7 +28,7 @@ private class TouchIdContainerView : View {
 
         button.set(text: L10n.passcodeUseTouchId, for: .Normal)
         button.set(image: theme.icons.passcodeTouchId, for: .Normal)
-        button.layer?.cornerRadius = .cornerRadius
+        button.layer?.cornerRadius = 18
     }
     
     required init?(coder: NSCoder) {
@@ -37,8 +37,9 @@ private class TouchIdContainerView : View {
     
     override func layout() {
         super.layout()
-        _ = button.sizeToFit(NSMakeSize(0, 0), NSMakeSize(frame.width, 36), thatFit: true)
+        _ = button.sizeToFit(NSMakeSize(16, 0), NSMakeSize(0, 36), thatFit: true)
         button.centerX(y: frame.height - button.frame.height)
+        
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -76,7 +77,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     fileprivate let input:PasscodeField
     private let nextButton:ImageButton = ImageButton()
     private var hasTouchId:Bool = false
-    private let touchIdContainer:TouchIdContainerView = TouchIdContainerView(frame: NSMakeRect(0, 0, 200, 76))
+    private let touchIdContainer:TouchIdContainerView = TouchIdContainerView(frame: NSMakeRect(0, 0, 240, 76))
     fileprivate let logoutTextView:TextView = TextView()
     fileprivate let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
     fileprivate var logoutImpl:() -> Void = {}

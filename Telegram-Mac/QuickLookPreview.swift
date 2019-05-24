@@ -86,10 +86,10 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
                 forceExtension = ext
             }
             
-            signal = downloadFilePath(file, context.account.postbox) |> mapToSignal { data in
-                return copyToDownloads(file, postbox: context.account.postbox) |> map {
-                    return  (Optional(data.1.nsstring.deletingPathExtension), Optional(data.1.nsstring.pathExtension))
-                }
+            
+            
+            signal = copyToDownloads(file, postbox: context.account.postbox) |> map { path in
+                return (Optional(path.nsstring.deletingPathExtension), Optional(path.nsstring.pathExtension))
             }
         } else if let image = media as? TelegramMediaImage {
             fileResource = largestImageRepresentation(image.representations)?.resource

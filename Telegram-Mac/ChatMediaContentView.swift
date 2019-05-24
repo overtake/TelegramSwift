@@ -11,7 +11,7 @@ import SwiftSignalKitMac
 import PostboxMac
 import TelegramCoreMac
 import TGUIKit
-
+import Lottie
 
 
 class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvider {

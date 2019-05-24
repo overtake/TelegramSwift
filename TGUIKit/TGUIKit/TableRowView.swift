@@ -178,6 +178,21 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
             menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
                 if let strongSelf = self {
                     let menu = ContextMenu()
+                    
+                    
+//                    presntContextMenu(for: event, items: items.compactMap({ item in
+//                        if !(item is ContextSeparatorItem) {
+//                            return SPopoverItem(item.title, item.handler)
+//                        } else {
+//                            return nil
+//                        }
+//                    }))
+                    
+//                    let window = Window(contentRect: NSMakeRect(event.locationInWindow.x + 100, event.locationInWindow.y, 100, 300), styleMask: [], backing: .buffered, defer: true)
+//                    window.contentView?.wantsLayer = true
+//                    window.contentView?.background = .random
+//                    event.window?.addChildWindow(window, ordered: .above)
+                    
                     menu.onShow = { [weak strongSelf] menu in
                         strongSelf?.contextMenu = menu
                         strongSelf?.onShowContextMenu()
@@ -190,7 +205,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                     for item in items {
                         menu.addItem(item)
                     }
-                    
+
                     menu.delegate = menu
                     NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
                 }
@@ -303,6 +318,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         let view:View = View(frame:bounds)
         view.backgroundColor = self.backdorColor
         return view
+    }
+    
+    open func onRemove(_ animation: NSTableView.AnimationOptions) {
+        
+    }
+    
+    open func onInsert(_ animation: NSTableView.AnimationOptions) {
+        
     }
     
     open func set(item:TableRowItem, animated:Bool = false) -> Void {

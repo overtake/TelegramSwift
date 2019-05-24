@@ -10,7 +10,11 @@
 		9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */; };
 		9F4EEF9A21DCD260002C3B33 /* SliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF9921DCD260002C3B33 /* SliderView.swift */; };
 		9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6281282037389200B2D3C9 /* CheckBox.swift */; };
+		9F9B5EAF2255FEDA00728CDC /* TooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */; };
 		9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */; };
+		9FF1DEB6225E285F009512C9 /* SPopoverRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEB3225E285F009512C9 /* SPopoverRowItem.swift */; };
+		9FF1DEB7225E285F009512C9 /* SPopoverRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */; };
+		9FF1DEB8225E285F009512C9 /* SPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEB5225E285F009512C9 /* SPopoverViewController.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
 		C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21178011F17E78E00AC706D /* TimableProgressView.swift */; };
@@ -109,7 +113,11 @@
 		9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalScrollView.swift; sourceTree = "<group>"; };
 		9F4EEF9921DCD260002C3B33 /* SliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SliderView.swift; sourceTree = "<group>"; };
 		9F6281282037389200B2D3C9 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
+		9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TooltipController.swift; sourceTree = "<group>"; };
 		9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentController.swift; sourceTree = "<group>"; };
+		9FF1DEB3225E285F009512C9 /* SPopoverRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SPopoverRowItem.swift; path = "../../Telegram-Mac/SPopoverRowItem.swift"; sourceTree = "<group>"; };
+		9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SPopoverRowView.swift; path = "../../Telegram-Mac/SPopoverRowView.swift"; sourceTree = "<group>"; };
+		9FF1DEB5225E285F009512C9 /* SPopoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SPopoverViewController.swift; path = "../../Telegram-Mac/SPopoverViewController.swift"; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
 		C21178011F17E78E00AC706D /* TimableProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimableProgressView.swift; sourceTree = "<group>"; };
@@ -365,12 +373,16 @@
 		C2303E7D1D99881500098E12 /* overlay */ = {
 			isa = PBXGroup;
 			children = (
+				9FF1DEB5225E285F009512C9 /* SPopoverViewController.swift */,
+				9FF1DEB3225E285F009512C9 /* SPopoverRowItem.swift */,
+				9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */,
 				C2B1A1241DA2F3DC00ACB1DD /* ContextMenu.swift */,
 				C2303E791D9987FE00098E12 /* Popover.swift */,
 				C2303E7B1D99880B00098E12 /* Modal.swift */,
 				C29B5F461DC8CA2B00D13E65 /* NavigationModalView.swift */,
 				C29B5F481DC8CA3C00D13E65 /* NavigationModalAction.swift */,
 				C230B9171DD3A6350057F596 /* ProgressModal.swift */,
+				9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */,
 			);
 			name = overlay;
 			sourceTree = "<group>";
@@ -564,6 +576,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = C2E0DE9D1D7EF51C00EF1C8D;
@@ -603,6 +616,7 @@
 				C22E06351D804C8200A11C88 /* TableView.swift in Sources */,
 				C232EA151E165AEF00C4D38C /* ImageBarView.swift in Sources */,
 				C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */,
+				9FF1DEB8225E285F009512C9 /* SPopoverViewController.swift in Sources */,
 				C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */,
 				C2271DED1DAFE4D0001792B6 /* TransformImageArguments.swift in Sources */,
 				C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */,
@@ -624,6 +638,7 @@
 				C219E1F31D8B02FA0042F0C8 /* CAAnimationUtils.swift in Sources */,
 				C291ED991DB35BC5008C6B2A /* Window.swift in Sources */,
 				C296AF841D8D9D7D001DBB59 /* RadialProgressView.swift in Sources */,
+				9FF1DEB6225E285F009512C9 /* SPopoverRowItem.swift in Sources */,
 				C24A371A1F338406004ADE5C /* SectionViewController.swift in Sources */,
 				C219E1EB1D8AD1470042F0C8 /* NavigationViewController.swift in Sources */,
 				C253A9761D9430A900CDC850 /* ImageView.swift in Sources */,
@@ -637,6 +652,7 @@
 				C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */,
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,
 				C2303E7A1D9987FE00098E12 /* Popover.swift in Sources */,
+				9F9B5EAF2255FEDA00728CDC /* TooltipController.swift in Sources */,
 				C29B5F3C1DC66DAC00D13E65 /* DraggingView.swift in Sources */,
 				9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */,
 				C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */,
@@ -664,6 +680,7 @@
 				9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */,
 				C22E06391D804DCD00A11C88 /* ScrollView.swift in Sources */,
 				C219E1F11D8AFD140042F0C8 /* AnimationBlockDelegate.swift in Sources */,
+				9FF1DEB7225E285F009512C9 /* SPopoverRowView.swift in Sources */,
 				C253A9521D9147A400CDC850 /* Layer.swift in Sources */,
 				C22E06371D804D3B00A11C88 /* TableRowItem.swift in Sources */,
 				C2303E711D9956C400098E12 /* Style.swift in Sources */,
@@ -758,6 +775,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				GCC_OPTIMIZATION_LEVEL = s;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
@@ -839,6 +857,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -918,6 +937,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -995,6 +1015,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1072,6 +1093,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1149,6 +1171,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1287,6 +1310,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				GCC_OPTIMIZATION_LEVEL = s;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
@@ -1315,6 +1339,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = TGUIKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";

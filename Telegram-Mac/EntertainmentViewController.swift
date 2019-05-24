@@ -12,6 +12,12 @@ import SwiftSignalKitMac
 import TelegramCoreMac
 import PostboxMac
 
+
+
+
+
+
+
 public final class EntertainmentInteractions {
     
     var current:EntertainmentState = .emoji
@@ -97,7 +103,7 @@ class EntertainmentViewController: NavigationViewController {
         items.append(SectionControllerItem(title: {L10n.entertainmentStickers.uppercased()}, controller: stickers))
         items.append(SectionControllerItem(title: {L10n.entertainmentGIF.uppercased()}, controller: gifs))
         self.section = SectionViewController(sections: items, selected: Int(FastSettings.entertainmentState.rawValue))
-        super.init(section)
+        super.init(section, context.window)
         bar = .init(height: 0)
     }
     

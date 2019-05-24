@@ -26,7 +26,7 @@ private(set) var passport: PassportWindowController? = nil
 class PassportWindowController  {
     let window: Window
     let controller: PassportController
-    let navigationController: MajorNavigationController
+    let navigationController: NavigationViewController
     init(context: AccountContext, peer: Peer, request: inAppSecureIdRequest, form: EncryptedSecureIdForm) {
         
         
@@ -41,7 +41,7 @@ class PassportWindowController  {
 
         
         controller = PassportController(context, peer, request: request, form)
-        navigationController = MajorNavigationController(PassportController.self, controller)
+        navigationController = NavigationViewController(controller, window)
         
         
         window.isMovableByWindowBackground = true
@@ -69,7 +69,6 @@ class PassportWindowController  {
             NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSView.frameDidChangeNotification, object: titleView)
         }
         
-        navigationController.alwaysAnimate = true
         navigationController.viewDidAppear(false)
         
         navigationController.doSomethingOnEmptyBack = { [weak self] in
@@ -92,7 +91,7 @@ class PassportWindowController  {
             if !NSEqualRects(frame, titleView.frame) {
                 titleView.frame = frame
             }
-            if let controls = titleView.subviews.first?.subviews {
+            if let controls = (HackUtils.findElements(byClass: "NSTitlebarView", in: titleView)?.first as? NSView)?.subviews {
                 var xs:[CGFloat] = [18, 58, 38]
                 for i in 0 ..< min(controls.count, xs.count) {
                     let view = controls[i]

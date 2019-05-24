@@ -25,10 +25,10 @@ class TextAndLabelItem: GeneralRowItem {
     var textLayout:TextViewLayout
     let isTextSelectable:Bool
     let callback:()->Void
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, text:String, context: AccountContext, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, labelColor: NSColor = theme.colors.blueUI, text:String, context: AccountContext, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false) {
         self.callback = callback
         self.isTextSelectable = isTextSelectable
-        self.label = NSAttributedString.initialize(string: label, color: theme.colors.blueUI, font: .normal(FontSize.text))
+        self.label = NSAttributedString.initialize(string: label, color: labelColor, font: .normal(FontSize.text))
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text.trimmed.fullTrimmed, color: theme.colors.text, font: .normal(.title))
         if detectLinks {

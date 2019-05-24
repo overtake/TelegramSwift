@@ -52,7 +52,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     override func layout() {
         super.layout()
         if let item = self.item as? ChatMessageItem {
-            
+
             if let webpageLayout = item.webpageLayout {
                 webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentInnerInset, webpageLayout.size.width, webpageLayout.size.height)
                 
@@ -65,7 +65,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 }
             }
            
-        }
+        } 
     }
     
     override func canStartTextSelecting(_ event: NSEvent) -> Bool {

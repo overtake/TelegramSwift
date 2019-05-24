@@ -25,7 +25,17 @@ final class InputSources: NSObject {
         return combineLatest(value, baseAppSettings(accountManager: sharedContext.accountManager)) |> mapToSignal { sources, settings in
             if settings.predictEmoji || !checkPrediction {
                 return combineLatest(sources.map({ searchEmojiKeywords(postbox: postbox, inputLanguageCode: $0, query: query.lowercased(), completeMatch: completeMatch) })) |> map { results in
-                    return results.reduce([], { $0 + $1 }).reduce([], { $0 + $1.emoticons }).uniqueElements.map { $0.fixed }
+                    return results.reduce([], { $0 + $1 }).reduce([], { current, value -> [String] in
+                        if completeMatch {
+                            if query.lowercased() == value.keyword.lowercased() {
+                                return current + value.emoticons
+                            } else {
+                                return current
+                            }
+                        } else {
+                            return current + value.emoticons
+                        }
+                    }).uniqueElements.map { $0.fixed }
                 } |> distinctUntilChanged
             } else {
                 return .single([])

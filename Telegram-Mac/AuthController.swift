@@ -383,21 +383,22 @@ class AuthController : GenericViewController<AuthHeaderView> {
     private func openProxySettings() {
 
         
-        var navigation:NavigationViewController?
         
-        var first: Bool = true
+        var pushController:((ViewController)->Void)? = nil
         
-        proxyListController(accountManager: sharedContext.accountManager, network: account.network, showUseCalls: false) ({ controller in
-            if first {
-                navigation = NavigationViewController(controller)
-                navigation!._frameRect = NSMakeRect(0, 0, 300, 440)
-                navigation!.readyOnce()
-                showModal(with: navigation!, for: mainWindow)
-                first = false
-            } else {
-                navigation?.push(controller)
-            }
+        let controller = proxyListController(accountManager: sharedContext.accountManager, network: account.network, showUseCalls: false, pushController: {  controller in
+            pushController?(controller)
         })
+        let navigation:NavigationViewController = NavigationViewController(controller, mainWindow)
+        navigation._frameRect = NSMakeRect(0, 0, 300, 440)
+        navigation.readyOnce()
+        
+        pushController = { [weak navigation] controller in
+            navigation?.push(controller)
+        }
+        
+        showModal(with: navigation, for: mainWindow)
+        
     }
     
     override func viewDidLoad() {

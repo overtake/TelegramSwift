@@ -67,7 +67,12 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference
         }
         
     case .recently:
-        return .recently
+        let activeUntil = presence.lastActivity - Int32(timeDifference) + 30
+        if activeUntil >= timestamp {
+            return .online(at: activeUntil)
+        } else {
+            return .recently
+        }
     case .lastWeek:
         return .lastWeek
     case .lastMonth:
@@ -75,7 +80,7 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference
     }
 }
 
-func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32) -> (String, Bool, NSColor) {
+func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32, expanded: Bool = false) -> (String, Bool, NSColor) {
     switch presence.status {
     case .none:
         return (L10n.peerStatusLongTimeAgo, false, theme.colors.grayText)
@@ -88,7 +93,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
             let difference = timestamp - statusTimestamp
             if difference < 59 {
                 return (tr(L10n.peerStatusJustNow), false, theme.colors.grayText)
-            } else if difference < 60 * 60 {
+            } else if difference < 60 * 60 && !expanded {
                 let minutes = max(difference / 60, 1)
                 
                 return (L10n.peerStatusMinAgoCountable(Int(minutes)), false, theme.colors.grayText)
@@ -109,7 +114,13 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
                 if dayDifference == 0 || dayDifference == -1 {
                     let day: UserPresenceDay
                     if dayDifference == 0 {
-                        day = .today
+                        if expanded {
+                            day = .today
+                        } else {
+                            let minutes = difference / (60 * 60)
+                            
+                            return (L10n.lastSeenHoursAgoCountable(Int(minutes)), false, theme.colors.grayText)
+                        }
                     } else {
                         day = .yesterday
                     }
@@ -120,7 +131,12 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
             }
         }
     case .recently:
-        return (L10n.peerStatusRecently, false, theme.colors.grayText)
+        let activeUntil = presence.lastActivity - Int32(timeDifference) + 30
+        if activeUntil >= timestamp {
+            return (L10n.peerStatusOnline, true, theme.colors.blueText)
+        } else {
+            return (L10n.peerStatusRecently, false, theme.colors.grayText)
+        }
     case .lastWeek:
         return (L10n.peerStatusLastWeek, false, theme.colors.grayText)
     case .lastMonth:
@@ -128,7 +144,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
     }
 }
 
-func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> Double {
+func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, timeDifference: Int32, relativeTo timestamp: Int32) -> Double {
     switch presence.status {
     case let .present(statusTimestamp):
         
@@ -150,7 +166,15 @@ func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, relative
                 return Double.infinity
             }
         }
-    case .recently, .none, .lastWeek, .lastMonth:
+    case .recently:
+        let activeUntil = presence.lastActivity - timeDifference + 30
+        if activeUntil >= timestamp {
+            return Double(activeUntil - timestamp + 1)
+        } else {
+            return Double.infinity
+        }
+
+    case .none, .lastWeek, .lastMonth:
         return Double.infinity
     }
 }

@@ -75,34 +75,8 @@ func preparedChatHistoryViewTransition(from fromView: ChatHistoryView?, to toVie
             }
         case .Reload:
             break
-        case let .HoleChanges(filledHoleDirections, removeHoleDirections):
-            if let (_, removeDirection) = removeHoleDirections.first {
-                switch removeDirection {
-                case .LowerToUpper:
-                    var holeIndex: MessageIndex?
-                    for (index, _) in filledHoleDirections {
-                        if holeIndex == nil || index < holeIndex! {
-                            holeIndex = index
-                        }
-                    }
-                    
-                    if let holeIndex = holeIndex {
-                        for i in 0 ..< toView.filteredEntries.count {
-                            if toView.filteredEntries[i].entry.index >= holeIndex {
-                                let index = toView.filteredEntries.count - 1 - (i - 1)
-                                stationaryItemRange = (index, Int.max)
-                                break
-                            }
-                        }
-                    }
-                case .UpperToLower:
-                    break
-                case .AroundId:
-                    break
-                case .AroundIndex(_, let lowerComplete, let upperComplete, let clippingMinIndex, let clippingMaxIndex):
-                    break
-                }
-            }
+        case .HoleReload:
+            break
         }
         
         for (index, entry, previousIndex) in indicesAndItems {

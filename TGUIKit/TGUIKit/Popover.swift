@@ -127,14 +127,14 @@ open class Popover: NSObject {
                 signal = signal |> delay(delayBeforeShown, queue: Queue.mainQueue())
             }
             self.readyDisposable.set(signal.start(next: { [weak self, weak controller, weak parentView] ready in
-                if let parentView = parentView, let `self` = self {
+                if let parentView = parentView {
                     for subview in parentView.subviews {
-                        if let view = subview  as? PopoverBackground, self.isShown {
+                        if let view = subview  as? PopoverBackground, view.popover?.isShown == true {
                             view.popover?.hide(false)
                         }
                     }
                 }
-                
+                //NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
                 
                 if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight || strongSelf.static) || !control.userInteractionEnabled), control.window != nil, control.visibleRect != NSZeroRect {
                     
@@ -403,13 +403,18 @@ public func closeAllPopovers(for window: Window) {
    
 }
 
-public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.2, static: Bool = false ) -> Void {
+public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.015, static: Bool = false ) -> Void {
     if let _ = control.window as? Window {
         if let popover = controller.popover {
             if popover.isShown {
                 return
             }
         }
+        
+      //  if let event = NSApp.currentEvent, event.type == .gesture {
+        
+      //  }
+                
         controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller, static: `static`)
         
         if let popover = controller.popover {
@@ -417,4 +422,7 @@ public func showPopover(for control:Control, with controller:ViewController, edg
         }
     }
 }
+
+
+
 

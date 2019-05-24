@@ -37,6 +37,7 @@ public enum TotalUnreadCountDisplayCategory: Int32 {
 
 import PostboxMac
 import SwiftSignalKitMac
+import TelegramCoreMac
 
 struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let enabled: Bool
@@ -163,5 +164,16 @@ func updateInAppNotificationSettingsInteractively(accountManager: AccountManager
 func appNotificationSettings(accountManager: AccountManager) -> Signal<InAppNotificationSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.inAppNotificationSettings]) |> map { view in
         return view.entries[ApplicationSharedPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings ?? InAppNotificationSettings.defaultSettings
+    }
+}
+func globalNotificationSettings(postbox: Postbox) -> Signal<GlobalNotificationSettingsSet, NoError> {
+    return postbox.preferencesView(keys: [PreferencesKeys.globalNotifications]) |> map { view in
+        let viewSettings: GlobalNotificationSettingsSet
+        if let settings = view.values[PreferencesKeys.globalNotifications] as? GlobalNotificationSettings {
+            viewSettings = settings.effective
+        } else {
+            viewSettings = GlobalNotificationSettingsSet.defaultSettings
+        }
+        return viewSettings
     }
 }

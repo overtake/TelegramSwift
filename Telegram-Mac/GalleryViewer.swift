@@ -12,6 +12,8 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 import AVFoundation
+import Lottie
+
 final class GalleryInteractions {
     var dismiss:()->KeyHandlerResult = { return .rejected}
     var next:()->KeyHandlerResult = { return .rejected}
@@ -74,12 +76,14 @@ enum GalleryAppearType {
     case secret
 }
 
-private func mediaForMessage(message: Message) -> Media? {
+private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
     for media in message.media {
         if let media = media as? TelegramMediaImage {
             return media
         } else if let file = media as? TelegramMediaFile {
             if file.mimeType.hasPrefix("image/") || file.isVideo || file.isAnimated {
+                return file
+            } else if Animation.filepath(postbox.mediaBox.resourcePath(file.resource), animationCache: LRUAnimationCache.sharedCache) != nil {
                 return file
             }
         } else if let webpage = media as? TelegramMediaWebpage {
@@ -99,7 +103,7 @@ private func mediaForMessage(message: Message) -> Media? {
 fileprivate func itemFor(entry: ChatHistoryEntry, context: AccountContext, pagerSize: NSSize) -> MGalleryItem {
     switch entry {
     case let .MessageEntry(message, _, _, _, _, _, _, _, _):
-        if let media = mediaForMessage(message: message) {
+        if let media = mediaForMessage(message: message, postbox: context.account.postbox) {
             if let _ = media as? TelegramMediaImage {
                 return MGalleryPhotoItem(context, .message(entry), pagerSize)
             } else if let file = media as? TelegramMediaFile {
@@ -110,6 +114,8 @@ fileprivate func itemFor(entry: ChatHistoryEntry, context: AccountContext, pager
                         return MGalleryPhotoItem(context, .message(entry), pagerSize)
                     } else if file.isVideo && file.isAnimated {
                         return MGalleryGIFItem(context, .message(entry), pagerSize)
+                    } else if let animation = Animation.filepath(context.account.postbox.mediaBox.resourcePath(file.resource), animationCache: LRUAnimationCache.sharedCache) {
+                        return MGalleryLottieItem(context, .lottie(animation, entry), pagerSize)
                     }
                 }
             }
@@ -344,6 +350,16 @@ class GalleryViewer: NSResponder {
         }, with: self, for: .Equal)
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.pager.decreaseSpeed()
+            return .invoked
+        }, with: self, for: .Minus, modifierFlags: [.command, .option])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.pager.increaseSpeed()
+            return .invoked
+        }, with: self, for: .Equal, modifierFlags: [.command, .option])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.pager.rotateLeft()
             return .invoked
         }, with: self, for: .R, modifierFlags: [.command])
@@ -404,13 +420,13 @@ class GalleryViewer: NSResponder {
         } |> deliverOnMainQueue |> map { [weak self] peer -> Bool in
             guard let `self` = self else {return false}
             if let peer = peer {
-                var representations:[TelegramMediaImageRepresentation] = peer.profileImageRepresentations
-//                if let representation = peer.smallProfileImage {
-//                    representations.append(representation)
-//                }
-//                if let representation = peer.largeProfileImage {
-//                    representations.append(representation)
-//                }
+                var representations:[TelegramMediaImageRepresentation] = []//peer.profileImageRepresentations
+                if let representation = peer.smallProfileImage {
+                    representations.append(representation)
+                }
+                if let representation = peer.largeProfileImage {
+                    representations.append(representation)
+                }
                 
                 var image:TelegramMediaImage? = nil
                 
@@ -428,7 +444,7 @@ class GalleryViewer: NSResponder {
                     image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
                 }
                 
-                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peerId: peerId, date: 0), pagerSize))], updated: []))
+                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, date: 0), pagerSize))], updated: []))
                 
                 
                 self.pager.set(index: 0, animated: false)
@@ -439,7 +455,7 @@ class GalleryViewer: NSResponder {
         })
 
         
-        self.disposable.set((requestPeerPhotos(account: context.account, peerId: peerId) |> map { photos -> (UpdateTransition<MGalleryItem>, Int, Int) in
+        self.disposable.set((combineLatest(requestPeerPhotos(account: context.account, peerId: peerId), context.account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer -> (UpdateTransition<MGalleryItem>, Int, Int) in
             
             var inserted:[(Int, MGalleryItem)] = []
             var updated:[(Int, MGalleryItem)] = []
@@ -466,7 +482,7 @@ class GalleryViewer: NSResponder {
                         default: 
                             break
                         }
-                    } else if let base = firstStableId.base as? String, base == largestImageRepresentation(photo.image.representations)?.resource.id.uniqueId {
+                    } else if let base = firstStableId.base as? String, base == photo.image.representationForDisplayAtSize(NSMakeSize(640, 640))?.resource.id.uniqueId {
                         foundIndex = true
                         currentIndex = i
                         
@@ -475,10 +491,10 @@ class GalleryViewer: NSResponder {
                 var index: Int = foundIndex ? 0 : 1
                 for i in 0 ..< photos.count {
                     if currentIndex == i && foundIndex {
-                        deleted.append(i)
-                        inserted.append((i, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peerId: peerId, date: photosDate[i]), pagerSize)))
+                     //   deleted.append(i)
+                       // inserted.append((i, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peer: peer, date: photosDate[i]), pagerSize)))
                     } else {
-                        inserted.append((index, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peerId: peerId, date: photosDate[i]), pagerSize)))
+                        inserted.append((index, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peer: peer, date: photosDate[i]), pagerSize)))
                     }
                     index += 1
                 }
@@ -613,7 +629,7 @@ class GalleryViewer: NSResponder {
                    type = .alone
                 }
 
-                let view = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, clipHoles: true, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                let view = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
             
                 switch type {
                 case .alone:
@@ -652,7 +668,7 @@ class GalleryViewer: NSResponder {
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _, _, _):
-                                return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message) != nil
+                                return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
                             default:
                                 return true
                             }
@@ -1010,9 +1026,9 @@ class GalleryViewer: NSResponder {
                                     } else if let item = item as? MGalleryGIFItem {
                                         file = item.media
                                     } else if let photo = item as? MGalleryPhotoItem {
-                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
                                     } else if let photo = item as? MGalleryPeerPhotoItem {
-                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
                                     } else {
                                         file = nil
                                     }
@@ -1032,7 +1048,7 @@ class GalleryViewer: NSResponder {
                                     layout.measure(width: strongSelf.window.frame.width - 100)
                                     
                                     if let file = file {
-                                        _ = (copyToDownloads(file, postbox: context.account.postbox) |> deliverOnMainQueue |> take(1) |> then (showModalSuccess(for: strongSelf.window, icon: theme.icons.successModalProgress, text: layout, background: .blackTransparent, delay: 2.0))).start()
+                                        _ = (copyToDownloads(file, postbox: context.account.postbox) |> map { _ in } |> deliverOnMainQueue |> take(1) |> then (showModalSuccess(for: strongSelf.window, icon: theme.icons.successModalProgress, text: layout, background: .blackTransparent, delay: 2.0))).start()
                                     } else {
                                         savePanel(file: path.nsstring.deletingPathExtension, ext: path.nsstring.pathExtension, for: strongSelf.window)
                                     }

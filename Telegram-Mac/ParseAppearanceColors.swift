@@ -156,7 +156,21 @@ func importPalette(_ path: String) -> ColorPalette? {
                                      bubbleBackgroundHighlight_incoming: colors["bubbleBackgroundHighlight_incoming"]!,
                                      bubbleBackgroundHighlight_outgoing: colors["bubbleBackgroundHighlight_outgoing"]!,
                                      chatDateActive: colors["chatDateActive"]!,
-                                     chatDateText: colors["chatDateText"]!)
+                                     chatDateText: colors["chatDateText"]!,
+                                     revealAction_neutral1_background: colors["revealAction_neutral1_background"]!,
+                                     revealAction_neutral1_foreground: colors["revealAction_neutral1_foreground"]!,
+                                     revealAction_neutral2_background: colors["revealAction_neutral2_background"]!,
+                                     revealAction_neutral2_foreground: colors["revealAction_neutral2_foreground"]!,
+                                     revealAction_destructive_background: colors["revealAction_destructive_background"]!,
+                                     revealAction_destructive_foreground: colors["revealAction_destructive_foreground"]!,
+                                     revealAction_constructive_background: colors["revealAction_constructive_background"]!,
+                                     revealAction_constructive_foreground: colors["revealAction_constructive_foreground"]!,
+                                     revealAction_accent_background: colors["revealAction_accent_background"]!,
+                                     revealAction_accent_foreground: colors["revealAction_accent_foreground"]!,
+                                     revealAction_warning_background: colors["revealAction_warning_background"]!,
+                                     revealAction_warning_foreground: colors["revealAction_warning_foreground"]!,
+                                     revealAction_inactive_background: colors["revealAction_inactive_background"]!,
+                                     revealAction_inactive_foreground: colors["revealAction_inactive_foreground"]!)
             }
         }
         

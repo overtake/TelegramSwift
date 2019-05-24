@@ -86,13 +86,15 @@ class ContextSearchMessageItem: GeneralRowItem {
             text = serviceMessageText(message, account: context.account)
         }
         _ = messageTitle.append(string: text, color: theme.colors.text, font: .normal(.text))
-        let selectRange = text.lowercased().nsstring.range(of: searchText.lowercased())
-        if selectRange.location != NSNotFound {
-            messageTitle.addAttribute(.link, value: "", range: selectRange)
-        }
         
         
         self.messageLayout = TextViewLayout(messageTitle, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
+        
+        if let selectRange = rangeOfSearch(searchText, in: messageTitle.string) {
+            self.messageLayout.additionalSelections = [TextSelectedRange.init(range: selectRange, color: theme.colors.blueIcon.withAlphaComponent(0.5), def: false)]
+        }
+        
+        
         let selectedAttrText = messageTitle.mutableCopy() as! NSMutableAttributedString
         selectedAttrText.addAttribute(.foregroundColor, value: NSColor.white, range: selectedAttrText.range)
         self.messageSelectedLayout = TextViewLayout(selectedAttrText, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
@@ -108,7 +110,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
         dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
         
-        self.photo = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, message)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message)
         
         super.init(initialSize, height: 44, action: action)
 

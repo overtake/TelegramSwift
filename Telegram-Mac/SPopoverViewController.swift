@@ -11,29 +11,29 @@ import TGUIKit
 import SwiftSignalKitMac
 
 
-struct SPopoverItem : Equatable {
+public struct SPopoverItem : Equatable {
     let title:String
     let image:CGImage?
     let textColor: NSColor
     let handler:()->Void
-    init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = theme.colors.text) {
+    public init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = presentation.colors.text) {
         self.title = title
         self.image = image
         self.textColor = textColor
         self.handler = handler
     }
     
-    static func ==(lhs: SPopoverItem, rhs: SPopoverItem) -> Bool {
+    public static func ==(lhs: SPopoverItem, rhs: SPopoverItem) -> Bool {
         return lhs.title == rhs.title && lhs.textColor.hexString == rhs.textColor.hexString
     }
 }
 
 
 
-class SPopoverViewController: GenericViewController<TableView> {
+public class SPopoverViewController: GenericViewController<TableView> {
     private let items:[TableRowItem]
     private let disposable = MetaDisposable()
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         
         genericView.insert(items: items)
@@ -43,7 +43,7 @@ class SPopoverViewController: GenericViewController<TableView> {
         readyOnce()
     }
     
-    init(items:[SPopoverItem], visibility:Int = 4, handlerDelay: Double = 0.15, headerItems: [TableRowItem] = []) {
+    public init(items:[SPopoverItem], visibility:Int = 4, handlerDelay: Double = 0.15, headerItems: [TableRowItem] = []) {
         weak var controller:SPopoverViewController?
         let alignAsImage = !items.filter({$0.image != nil}).isEmpty
         let items = items.map({ item in SPopoverRowItem(NSZeroSize, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
@@ -94,7 +94,7 @@ class SPopoverViewController: GenericViewController<TableView> {
     }
     
     
-    override func viewWillAppear(_ animated: Bool) {
+    public override func viewWillAppear(_ animated: Bool) {
         
     }
     
@@ -102,3 +102,18 @@ class SPopoverViewController: GenericViewController<TableView> {
 }
 
 
+
+
+
+//public func presntContextMenu(for event: NSEvent, items: [SPopoverItem]) -> Void {
+//    
+//    
+//    let controller = SPopoverViewController(items: items, visibility: Int.max, handlerDelay: 0)
+//    
+//    let window = Window(contentRect: NSMakeRect(event.locationInWindow.x, event.locationInWindow.y, controller.frame.width, controller.frame.height), styleMask: [], backing: .buffered, defer: true)
+//    window.contentView = controller.view
+//    window.backgroundColor = .clear
+//    event.window?.addChildWindow(window, ordered: .above)
+//    window.makeKeyAndOrderFront(nil)
+//    
+//}

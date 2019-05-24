@@ -147,6 +147,22 @@ public final class ColorPalette : Equatable {
     public let chatDateActive: NSColor
     public let chatDateText: NSColor
     
+    public let revealAction_neutral1_background: NSColor
+    public let revealAction_neutral1_foreground: NSColor
+    public let revealAction_neutral2_background: NSColor
+    public let revealAction_neutral2_foreground: NSColor
+    public let revealAction_destructive_background: NSColor
+    public let revealAction_destructive_foreground: NSColor
+    public let revealAction_constructive_background: NSColor
+    public let revealAction_constructive_foreground: NSColor
+    public let revealAction_accent_background: NSColor
+    public let revealAction_accent_foreground: NSColor
+    public let revealAction_warning_background: NSColor
+    public let revealAction_warning_foreground: NSColor
+    public let revealAction_inactive_background: NSColor
+    public let revealAction_inactive_foreground: NSColor
+
+    
     public func peerColors(_ index: Int) -> (top: NSColor, bottom: NSColor) {
         let colors: [(top: NSColor, bottom: NSColor)] = [
             (peerAvatarRedTop, peerAvatarRedBottom),
@@ -262,7 +278,21 @@ public final class ColorPalette : Equatable {
                 bubbleBackgroundHighlight_incoming: NSColor,
                 bubbleBackgroundHighlight_outgoing: NSColor,
                 chatDateActive: NSColor,
-                chatDateText: NSColor) {
+                chatDateText: NSColor,
+                revealAction_neutral1_background: NSColor,
+                revealAction_neutral1_foreground: NSColor,
+                revealAction_neutral2_background: NSColor,
+                revealAction_neutral2_foreground: NSColor,
+                revealAction_destructive_background: NSColor,
+                revealAction_destructive_foreground: NSColor,
+                revealAction_constructive_background: NSColor,
+                revealAction_constructive_foreground: NSColor,
+                revealAction_accent_background: NSColor,
+                revealAction_accent_foreground: NSColor,
+                revealAction_warning_background: NSColor,
+                revealAction_warning_foreground: NSColor,
+                revealAction_inactive_background: NSColor,
+                revealAction_inactive_foreground: NSColor) {
         self.isDark = isDark
         self.name = name
         self.background = background
@@ -368,7 +398,33 @@ public final class ColorPalette : Equatable {
         self.chatDateActive = chatDateActive
         self.chatDateText = chatDateText
         
+        self.revealAction_neutral1_background = revealAction_neutral1_background
+        self.revealAction_neutral1_foreground = revealAction_neutral1_foreground
+        self.revealAction_neutral2_background = revealAction_neutral2_background
+        self.revealAction_neutral2_foreground = revealAction_neutral2_foreground
+        self.revealAction_destructive_background = revealAction_destructive_background
+        self.revealAction_destructive_foreground = revealAction_destructive_foreground
+        self.revealAction_constructive_background = revealAction_constructive_background
+        self.revealAction_constructive_foreground = revealAction_constructive_foreground
+        self.revealAction_accent_background = revealAction_accent_background
+        self.revealAction_accent_foreground = revealAction_accent_foreground
+        self.revealAction_warning_background = revealAction_warning_background
+        self.revealAction_warning_foreground = revealAction_warning_foreground
+        self.revealAction_inactive_background = revealAction_inactive_background
+        self.revealAction_inactive_foreground = revealAction_inactive_foreground
         
+        /*
+         itemDisclosureActions: PresentationThemeItemDisclosureActions(
+         neutral1: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0x4892f2), foregroundColor: .white),
+         neutral2: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xf09a37), foregroundColor: .white),
+         destructive: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xff3824), foregroundColor: .white),
+         constructive: PresentationThemeItemDisclosureAction(fillColor: constructiveColor, foregroundColor: .white),
+         accent: PresentationThemeItemDisclosureAction(fillColor: accentColor, foregroundColor: .white),
+         warning: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xff9500), foregroundColor: .white),
+         inactive: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xbcbcc3), foregroundColor: .white)
+         ),
+         
+         */
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -498,7 +554,21 @@ public final class ColorPalette : Equatable {
                                  bubbleBackgroundHighlight_incoming: bubbleBackgroundHighlight_incoming,
                                  bubbleBackgroundHighlight_outgoing: highlightColor,
                                  chatDateActive: chatDateActive,
-                                 chatDateText: chatDateText)
+                                 chatDateText: chatDateText,
+                                 revealAction_neutral1_background: revealAction_neutral1_background,
+                                 revealAction_neutral1_foreground: revealAction_neutral1_foreground,
+                                 revealAction_neutral2_background: revealAction_neutral2_background,
+                                 revealAction_neutral2_foreground: revealAction_neutral2_foreground,
+                                 revealAction_destructive_background: revealAction_destructive_background,
+                                 revealAction_destructive_foreground: revealAction_destructive_foreground,
+                                 revealAction_constructive_background: revealAction_constructive_background,
+                                 revealAction_constructive_foreground: revealAction_constructive_foreground,
+                                 revealAction_accent_background: revealAction_accent_background,
+                                 revealAction_accent_foreground: revealAction_accent_foreground,
+                                 revealAction_warning_background: revealAction_warning_background,
+                                 revealAction_warning_foreground: revealAction_warning_foreground,
+                                 revealAction_inactive_background: revealAction_inactive_background,
+                                 revealAction_inactive_foreground: revealAction_inactive_foreground)
     }
 }
 
@@ -646,8 +716,36 @@ public let whitePalette = ColorPalette(isDark: false,
                                        bubbleBackgroundHighlight_incoming: NSColor(0xeaeaea),
                                        bubbleBackgroundHighlight_outgoing: NSColor(0x4b7bad),
                                        chatDateActive: NSColor(0xffffff, 1.0),
-                                       chatDateText: NSColor(0x333333)
+                                       chatDateText: NSColor(0x333333),
+                                       revealAction_neutral1_background: NSColor(0x4892f2),
+                                       revealAction_neutral1_foreground: .white,
+                                       revealAction_neutral2_background: NSColor(0xf09a37),
+                                       revealAction_neutral2_foreground: .white,
+                                       revealAction_destructive_background: NSColor(0xff3824),
+                                       revealAction_destructive_foreground: .white,
+                                       revealAction_constructive_background: NSColor(0x00c900),
+                                       revealAction_constructive_foreground: .white,
+                                       revealAction_accent_background: NSColor(0x2481cc),
+                                       revealAction_accent_foreground: .white,
+                                       revealAction_warning_background: NSColor(0xff9500),
+                                       revealAction_warning_foreground: .white,
+                                       revealAction_inactive_background: NSColor(0xbcbcc3),
+                                       revealAction_inactive_foreground: .white
 )
+
+
+/*
+ itemDisclosureActions: PresentationThemeItemDisclosureActions(
+ neutral1: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0x4892f2), foregroundColor: .white),
+ neutral2: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xf09a37), foregroundColor: .white),
+ destructive: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xff3824), foregroundColor: .white),
+ constructive: PresentationThemeItemDisclosureAction(fillColor: constructiveColor, foregroundColor: .white),
+ accent: PresentationThemeItemDisclosureAction(fillColor: accentColor, foregroundColor: .white),
+ warning: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xff9500), foregroundColor: .white),
+ inactive: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xbcbcc3), foregroundColor: .white)
+ ),
+ 
+ */
 
 /*
  colors[0] = NSColor(0xfc5c51); // red
@@ -760,7 +858,21 @@ public let nightBluePalette = ColorPalette(isDark: true,
     bubbleBackgroundHighlight_incoming: NSColor(0x2D3A49),
     bubbleBackgroundHighlight_outgoing: NSColor(0x5079A1),
     chatDateActive: NSColor(0x18222d),
-    chatDateText: NSColor(0xb1c3d5)
+    chatDateText: NSColor(0xb1c3d5),
+    revealAction_neutral1_background: NSColor(0x007cd6),
+    revealAction_neutral1_foreground: .white,
+    revealAction_neutral2_background: NSColor(0xcd7800),
+    revealAction_neutral2_foreground: .white,
+    revealAction_destructive_background: NSColor(0xc70c0c),
+    revealAction_destructive_foreground: .white,
+    revealAction_constructive_background: NSColor(0x08a723),
+    revealAction_constructive_foreground: .white,
+    revealAction_accent_background: NSColor(0x007cd6),
+    revealAction_accent_foreground: .white,
+    revealAction_warning_background: NSColor(0xcd7800),
+    revealAction_warning_foreground: .white,
+    revealAction_inactive_background: NSColor(0x26384c),
+    revealAction_inactive_foreground: .white
 )
 
 public let dayClassic = ColorPalette(isDark: false,
@@ -864,7 +976,21 @@ public let dayClassic = ColorPalette(isDark: false,
     bubbleBackgroundHighlight_incoming: NSColor(0xd9f4ff),
     bubbleBackgroundHighlight_outgoing: NSColor(0xc8ffa6),
     chatDateActive: NSColor(0xffffff, 1.0),
-    chatDateText: NSColor(0x999999)
+    chatDateText: NSColor(0x999999),
+    revealAction_neutral1_background: NSColor(0x4892f2),
+    revealAction_neutral1_foreground: .white,
+    revealAction_neutral2_background: NSColor(0xf09a37),
+    revealAction_neutral2_foreground: .white,
+    revealAction_destructive_background: NSColor(0xff3824),
+    revealAction_destructive_foreground: .white,
+    revealAction_constructive_background: NSColor(0x00c900),
+    revealAction_constructive_foreground: .white,
+    revealAction_accent_background: NSColor(0x2481cc),
+    revealAction_accent_foreground: .white,
+    revealAction_warning_background: NSColor(0xff9500),
+    revealAction_warning_foreground: .white,
+    revealAction_inactive_background: NSColor(0xbcbcc3),
+    revealAction_inactive_foreground: .white
 )
 
 public let darkPalette = ColorPalette(isDark:true,
@@ -968,7 +1094,21 @@ peerAvatarPinkBottom : NSColor(0xd669ed),
 bubbleBackgroundHighlight_incoming : NSColor(0x525768),
 bubbleBackgroundHighlight_outgoing : NSColor(0x387080),
 chatDateActive : NSColor(0x292b36),
-chatDateText : NSColor(0x8699a3)
+chatDateText : NSColor(0x8699a3),
+revealAction_neutral1_background: NSColor(0x666666),
+revealAction_neutral1_foreground: .white,
+revealAction_neutral2_background: NSColor(0xcd7800),
+revealAction_neutral2_foreground: .white,
+revealAction_destructive_background: NSColor(0xc70c0c),
+revealAction_destructive_foreground: .white,
+revealAction_constructive_background: NSColor(0x08a723),
+revealAction_constructive_foreground: .white,
+revealAction_accent_background: NSColor(0x666666),
+revealAction_accent_foreground: .white,
+revealAction_warning_background: NSColor(0xcd7800),
+revealAction_warning_foreground: .white,
+revealAction_inactive_background: NSColor(0x666666),
+revealAction_inactive_foreground: .white
 )
 
 
@@ -1073,7 +1213,22 @@ peerAvatarPinkBottom: NSColor(0xee9cff),
 bubbleBackgroundHighlight_incoming: NSColor(0x42444a),
 bubbleBackgroundHighlight_outgoing: NSColor(0x5079a1),
 chatDateActive: NSColor(0x292A2F),
-chatDateText: NSColor(0xb1c3d5))
+chatDateText: NSColor(0xb1c3d5),
+revealAction_neutral1_background: NSColor(0x666666),
+revealAction_neutral1_foreground: .white,
+revealAction_neutral2_background: NSColor(0xcd7800),
+revealAction_neutral2_foreground: .white,
+revealAction_destructive_background: NSColor(0xc70c0c),
+revealAction_destructive_foreground: .white,
+revealAction_constructive_background: NSColor(0x08a723),
+revealAction_constructive_foreground: .white,
+revealAction_accent_background: NSColor(0x666666),
+revealAction_accent_foreground: .white,
+revealAction_warning_background: NSColor(0xcd7800),
+revealAction_warning_foreground: .white,
+revealAction_inactive_background: NSColor(0x666666),
+revealAction_inactive_foreground: .white
+)
 
 
 /*

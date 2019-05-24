@@ -76,7 +76,7 @@ private class JoinLinkPreviewView : View {
                                 CTLineDraw(line.line, ctx)
                             }
                         })!
-                        avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize)) |> map {($0, false)})
+                        avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize, cornerRadius: nil)) |> map {($0, false)})
                         usersContainer.addSubview(avatar)
                     }
                     break

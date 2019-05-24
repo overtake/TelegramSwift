@@ -214,7 +214,7 @@ class InputContextView : TableView {
     
      override func updateLocalizationAndTheme() {
         separatorView.backgroundColor = theme.colors.border
-        //backgroundColor = theme.colors.background
+       // backgroundColor = theme.colors.background
     }
     
     required init?(coder: NSCoder) {
@@ -247,6 +247,8 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     private let context:AccountContext
     private let chatInteraction:ChatInteraction
     private let highlightInsteadOfSelect: Bool
+    
+    private var escapeTextMarked: String?
     
     fileprivate var result:ChatPresentationInputQueryResult?
     
@@ -299,6 +301,22 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             return .invokeNext
         }, with: self, for: .LeftArrow, priority: .modal)
         
+        mainWindow.set(handler: { () -> KeyHandlerResult in
+            return .invokeNext
+        }, with: self, for: .RightArrow, priority: .modal, modifierFlags: [.command])
+        
+        mainWindow.set(handler: { () -> KeyHandlerResult in
+            return .invokeNext
+        }, with: self, for: .UpArrow, priority: .modal, modifierFlags: [.command])
+        
+        mainWindow.set(handler: { () -> KeyHandlerResult in
+            return .invokeNext
+        }, with: self, for: .DownArrow, priority: .modal, modifierFlags: [.command])
+        
+        mainWindow.set(handler: { () -> KeyHandlerResult in
+            return .invokeNext
+        }, with: self, for: .LeftArrow, priority: .modal, modifierFlags: [.command])
+        
         mainWindow.set(handler: { [weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
@@ -309,7 +327,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 }
             }
             return .invokeNext
-        }, with: self, for: .RightArrow, priority: .modal)
+            }, with: self, for: .RightArrow, priority: .modal)
         
         mainWindow.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
@@ -330,6 +348,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if self?.genericView.selectedItem() != nil {
                 _ = self?.deselectSelectedHorizontalItem()
                 self?.genericView.cancelSelection()
+                self?.escapeTextMarked = self?.chatInteraction.presentation.effectiveInput.inputText
                 return .invoked
             }
             return .rejected
@@ -389,6 +408,26 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 let commandText = "/" + selectedItem.command.command.text + " "
                 chatInteraction.updateInput(with: commandText)
 
+            } else if let selectedItem = selectedItem as? ContextClueRowItem {
+                let clue: String?
+                if let index = selectedItem.selectedIndex {
+                    clue = selectedItem.clues[index]
+                } else {
+                    clue = selectedItem.clues.first
+                }
+                if let clue = clue {
+                    let textInputState = chatInteraction.presentation.effectiveInput
+                    if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                        let inputText = textInputState.inputText
+                        
+                        let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                        let replacementText = clue
+                        
+                        let atLength = range.lowerBound > inputText.startIndex && inputText[inputText.index(before: range.lowerBound)] == ":" ? 1 : 0
+                        _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                    }
+                }
+                return .invoked
             } else if let selectedItem = selectedItem as? ContextHashtagRowItem {
                 let textInputState = chatInteraction.presentation.effectiveInput
                 if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
@@ -538,7 +577,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             _ = invoke()
         }
     }
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return true
     }
     func isSelectable(row:Int, item:TableRowItem) -> Bool {
@@ -552,12 +591,27 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         genericView.merge(with: transition)
         layout(animated)
         if !genericView.isEmpty, let result = result {
+            
+            if let escapeTextMarked = escapeTextMarked, escapeTextMarked == self.chatInteraction.presentation.effectiveInput.inputText {
+                return
+            } else {
+                escapeTextMarked = nil
+            }
             switch result {
-            case .mentions, .searchMessages, .emoji:
+            case .mentions, .searchMessages:
                 if !highlightInsteadOfSelect {
                     _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
                 } else {
                     _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
+                }
+            case let .emoji(_, firstWord):
+                if !highlightInsteadOfSelect {
+                    _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
+                } else {
+                    _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
+                }
+                if !firstWord {
+                    _ = selectFirstInRowIfCan()
                 }
             default:
                 break
@@ -578,18 +632,20 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             let future = NSMakeSize(frame.width, min(genericView.listHeight, height))
             //  genericView.change(size: future, animated: animated)
             //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
-            
-            genericView.change(size: future, animated: animated)
+            CATransaction.begin()
+            genericView.change(size: future, animated: animated, duration: future.height > frame.height || genericView.position == .below ? 0 : 0.5)
             
             switch genericView.position {
             case .above:
-                genericView.separatorView.change(pos: NSZeroPoint, animated: true)
+                genericView.separatorView.change(pos: NSZeroPoint, animated: animated)
             case .below:
-                genericView.separatorView.change(pos: NSMakePoint(0, frame.height - genericView.separatorView.frame.height), animated: true)
+                genericView.separatorView.change(pos: NSMakePoint(0, frame.height - genericView.separatorView.frame.height), animated: animated)
             }
             
             let y = genericView.position == .above ? relativeView.frame.minY - frame.height : relativeView.frame.maxY
             genericView.change(pos: NSMakePoint(0, y), animated: animated)
+            
+            CATransaction.commit()
         }
         
     }
@@ -631,7 +687,7 @@ class InputContextHelper: NSObject {
         controller.superview = view
         controller.genericView.relativeView = relativeView
         controller.genericView.position = position
-        
+        controller.updateLocalizationAndTheme()
         var currentResult = result
         
         let initialSize = controller.atomicSize

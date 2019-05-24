@@ -510,7 +510,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
             
             if search.state == .None {
-                let signal:Signal<(ChatListView,ViewUpdateType), NoError> = account.viewTracker.tailChatListView(groupId: nil, count: 100) |> take(1)
+                let signal:Signal<(ChatListView,ViewUpdateType), NoError> = account.viewTracker.tailChatListView(groupId: .root, count: 100) |> take(1)
                 
                 
                 return combineLatest(signal, account.postbox.loadedPeerWithId(account.peerId)) |> deliverOn(prepareQueue) |> mapToQueue { [weak self] value, mainPeer -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
@@ -527,7 +527,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _):
                                 if let peer = renderedPeer.chatMainPeer {
                                     if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
                                         if peer.canSendMessage {
@@ -573,7 +573,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         }, account.postbox.loadedPeerWithId(account.peerId))
                     |> deliverOn(prepareQueue)
                 } else {
-                    let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased(), groupId: nil) |> map {$0.compactMap { $0.chatMainPeer} }
+                    let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased()) |> map {$0.compactMap { $0.chatMainPeer} }
                     
                     let foundRemotePeers:Signal<[Peer], NoError> = .single([]) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map { $0.map{$0.peer} + $1.map{$0.peer} } )
 
@@ -624,7 +624,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
             self?.readyOnce()
         }))
         
-        self.genericView.searchView.searchInteractions = SearchInteractions({ state in
+        self.genericView.searchView.searchInteractions = SearchInteractions({ state, _ in
             self.search.set(SearchState(state: state.state, request: state.request))
         }, { state in
             self.search.set(SearchState(state: state.state, request: state.request))

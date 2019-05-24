@@ -12,8 +12,11 @@ import PostboxMac
 import SwiftSignalKitMac
 import TelegramCoreMac
 
+
+
 class GlobalBadgeNode: Node {
     private let account:Account
+    private let sharedContext: SharedAccountContext
     private let layoutChanged:(()->Void)?
     private let excludePeerId:PeerId?
     private let disposable:MetaDisposable = MetaDisposable()
@@ -25,6 +28,8 @@ class GlobalBadgeNode: Node {
                 textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .middle, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .left)
                 size = NSMakeSize(textLayout!.0.size.width + 8, textLayout!.0.size.height + 7)
                 size = NSMakeSize(max(size.height,size.width), size.height)
+                
+                
             } else {
                 textLayout = nil
                 size = NSZeroSize
@@ -60,10 +65,11 @@ class GlobalBadgeNode: Node {
     
     private let getColor: () -> NSColor
     
-    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping() -> NSColor = { theme.colors.redUI }) {
+    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping() -> NSColor = { theme.colors.redUI }) {
         self.account = account
         self.excludePeerId = excludePeerId
         self.layoutChanged = layoutChanged
+        self.sharedContext = sharedContext
         self.getColor = getColor
         super.init(view)
         
@@ -94,10 +100,11 @@ class GlobalBadgeNode: Node {
                 var excludeTotal: Int32 = 0
                 
                 var dockText: String?
-                let totalValue = max(0, counts.reduce(0, { $0 + $1.0 }))
+                let totalValue = collectAllAccounts && !inAppSettings.notifyAllAccounts ? 0 : max(0, counts.reduce(0, { $0 + $1.0 }))
                 if totalValue > 0 {
                      dockText = "\(totalValue)"
                 }
+                
                 
                 excludeTotal = totalValue
  
@@ -125,6 +132,7 @@ class GlobalBadgeNode: Node {
                 }
                 
                 
+                
                 if excludeTotal == 0 {
                     strongSelf.attributedString = nil
                 } else {
@@ -133,6 +141,7 @@ class GlobalBadgeNode: Node {
                 strongSelf.layoutChanged?()
                 if dockTile {
                     NSApplication.shared.dockTile.badgeLabel = dockText
+                    forceUpdateStatusBarIconByDockTile(sharedContext: sharedContext)
                 }
             }
         }))
@@ -157,4 +166,71 @@ class GlobalBadgeNode: Node {
         disposable.dispose()
     }
     
+}
+
+func forceUpdateStatusBarIconByDockTile(sharedContext: SharedAccountContext) {
+    if let count = Int(NSApplication.shared.dockTile.badgeLabel ?? "0") {
+        resourcesQueue.async {
+            let icon = generateStatusBarIcon(count)
+            Queue.mainQueue().async {
+                 sharedContext.updateStatusBarImage(icon)
+            }
+        }
+       
+    }
+}
+
+private func generateStatusBarIcon(_ unreadCount: Int) -> NSImage {
+    let icon = NSImage(named: "StatusIcon")!
+//    if unreadCount > 0 {
+//        return NSImage(cgImage: icon.precomposed(whitePalette.redUI), size: icon.size)
+//    } else {
+//        return icon
+//    }
+    
+    var string = "\(unreadCount)"
+    if string.count > 3 {
+        string = ".." + string.nsstring.substring(from: string.length - 2)
+    }
+    let attributedString = NSAttributedString.initialize(string: string, color: .white, font: .medium(8), coreText: true)
+    
+    let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(18, CGFloat.greatestFiniteMagnitude), nil, false, .center)
+    
+    let generated: CGImage?
+    if unreadCount > 0 {
+        generated = generateImage(NSMakeSize(max(textLayout.0.size.width + 4, textLayout.0.size.height + 4), textLayout.0.size.height + 2), rotatedContext: { size, ctx in
+            let rect = NSMakeRect(0, 0, size.width, size.height)
+            ctx.clear(rect)
+            
+            ctx.setFillColor(NSColor.red.cgColor)
+            
+            
+            ctx.round(size, size.height/2.0)
+            ctx.fill(rect)
+            
+            let focus = NSMakePoint((rect.width - textLayout.0.size.width) / 2, (rect.height - textLayout.0.size.height) / 2)
+            textLayout.1.draw(NSMakeRect(focus.x, 2, textLayout.0.size.width, textLayout.0.size.height), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
+            
+        })!
+    } else {
+        generated = nil
+    }
+    
+    let full = generateImage(NSMakeSize(24, 20), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        
+        var color: NSColor = .black
+        if #available(OSX 10.14, *) {
+            if NSApp.effectiveAppearance.name != .aqua {
+                color = .white
+            }
+        }
+        ctx.draw(icon.precomposed(color), in: NSMakeRect((size.width - icon.size.width) / 2, 2, icon.size.width, icon.size.height))
+        if let generated = generated {
+            ctx.draw(generated, in: NSMakeRect(rect.width - generated.backingSize.width, 0, generated.backingSize.width, generated.backingSize.height))
+        }
+    })!
+    let image = NSImage(cgImage: full, size: full.backingSize)
+    return image
 }

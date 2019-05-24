@@ -14,81 +14,162 @@ import TelegramCoreMac
 
 
 
-extension ChatListEntry: Identifiable {
-    public var stableId: AnyHashable {
-        return index.messageIndex.id.peerId
+
+
+private final class ChatListTooltipController : NSObject {
+    var current: ArchiveTooltipController?
+    private let disposable = MetaDisposable()
+    private let context: AccountContext
+    init(context: AccountContext) {
+        self.context = context
+        super.init()
+        
+        let invocation: (NSEvent)-> KeyHandlerResult = { [weak self] _ in
+            self?.hideCurrentIfNeeded()
+            return .rejected
+        }
+        
+        self.context.window.set(mouseHandler: invocation, with: self, for: .leftMouseUp, priority: .supreme)
+        self.context.window.set(mouseHandler: invocation, with: self, for: .rightMouseUp, priority: .supreme)
+        self.context.window.set(mouseHandler: invocation, with: self, for: .rightMouseDown, priority: .supreme)
+        
+        
+        self.context.window.set(handler: { [weak self] in
+            self?.hideCurrentIfNeeded()
+            return .rejected
+        }, with: self, for: .All, priority: .supreme)
+    }
+    
+    func add(type: ArchiveTooltipType, peerId: PeerId, controller: ViewController) {
+        let context = self.context
+        hideCurrentIfNeeded()
+        
+        let new = ArchiveTooltipController(context, controller: controller, peerId: peerId, type: type)
+        new.show()
+        
+        self.current = new
+        
+        new.view.layer?.animatePosition(from: NSMakePoint(new.view.frame.minX, new.view.frame.maxY), to: new.view.frame.origin, duration: 0.25, timingFunction: .spring)
+        new.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .spring)
+
+        
+        disposable.set((Signal<Never, NoError>.complete() |> delay(5.0, queue: .mainQueue())).start(completed: { [weak self] in
+            self?.hideCurrentIfNeeded()
+        }))
+    }
+    
+    private func hideCurrentIfNeeded(animated: Bool = true) {
+        if let current = self.current {
+            self.current = nil
+            let view = current.view
+            if animated {
+                view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, view.frame.maxY), duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+                view._change(opacity: 0, timingFunction: .spring, completion: { [weak view] completed in
+                    view?.removeFromSuperview()
+                })
+            } else {
+                view.removeFromSuperview()
+            }
+        }
+    }
+    
+    deinit {
+        disposable.dispose()
+        context.window.removeAllHandlers(for: self)
     }
 }
 
 
-//enum ChatListEntryWrap : Identifiable, Comparable {
-//    
-//    static func < (lhs: ChatListEntryWrap, rhs: ChatListEntryWrap) -> Bool {
-//        switch lhs {
-//        case let .empty(lhsIndex):
-//            if case let .empty(rhsIndex) = rhs {
-//                return lhsIndex < rhsIndex
-//            } else {
-//                return false
-//            }
-//        case let .chatList(lhs):
-//            if case let .empty(rhs) = rhs {
-//                return lhs < rhs
-//            } else {
-//                return false
-//            }
-//        }
-//    }
-//    
-//    case empty(Int32)
-//    case chatList(ChatListEntry)
-//    
-//}
+enum UIChatListEntryId : Hashable {
+    case chatId(PeerId)
+    case groupId(PeerGroupId)
+}
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, to:[AppearanceWrapperEntry<ChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, state: ChatListRowState) -> Signal<TableUpdateTransition, NoError> {
+
+
+enum UIChatListEntry : Identifiable, Comparable {
+    case chat(ChatListEntry, isSponsored: Bool)
+    case group(Int, PeerGroupId, [ChatListGroupReferencePeer], Message?, PeerGroupUnreadCountersCombinedSummary, TotalUnreadCountDisplayCategory, Bool, HiddenArchiveStatus)
+    
+    
+    static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
+        switch lhs {
+        case let .chat(entry, isSponsored):
+            if case .chat(entry, isSponsored) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .group(index, groupId, peers, lhsMessage, unreadState, unreadCountDisplayCategory, animated, isHidden):
+            if case .group(index, groupId, peers, let rhsMessage, unreadState, unreadCountDisplayCategory, animated, isHidden) = rhs {
+                if let lhsMessage = lhsMessage, let rhsMessage = rhsMessage {
+                    return isEqualMessages(lhsMessage, rhsMessage)
+                } else if (lhsMessage != nil) != (rhsMessage != nil) {
+                    return false
+                } else {
+                    return true
+                }
+            } else {
+                return false
+            }
+        }
+    }
+    
+    
+    static func < (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
+        switch lhs {
+        case let .chat(lhsEntry, _):
+            if case let .chat(rhsEntry, _) = rhs {
+                return lhsEntry < rhsEntry
+            } else {
+                return true
+            }
+        case let .group(lhsIndex, _, _, _, _, _, _, _):
+            if case let .group(rhsIndex, _, _, _, _, _, _, _) = rhs {
+                return lhsIndex < rhsIndex
+            } else {
+                return false
+            }
+        }
+    }
+    
+    var stableId: UIChatListEntryId {
+        switch self {
+        case let .chat(entry, _):
+            return .chatId(entry.index.messageIndex.id.peerId)
+        case let .group(_, groupId, _, _, _, _, _, _):
+            return .groupId(groupId)
+        }
+    }
+    
+}
+
+
+
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, state: ChatListRowState, groupId: PeerGroupId) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
         
         var cancelled: Bool = false
         
-        func makeItem(_ entry: AppearanceWrapperEntry<ChatListEntry>) -> TableRowItem {
+        func makeItem(_ entry: AppearanceWrapperEntry<UIChatListEntry>) -> TableRowItem {
             switch entry.entry {
-            case let .HoleEntry(hole):
-                return ChatListHoleRowItem(initialSize, context, hole)
-            case let .MessageEntry(index, message, readState, notifySettings,embeddedState, renderedPeer, summaryInfo):
-                
-                var pinnedType: ChatListPinnedType = .some
-                if let i = to.index(of: entry) {
-                    if let pinningIndex = index.pinningIndex {
-                        if pinningIndex == adIndex {
-                            pinnedType = .ad
-                        } else {
-                            if i > 0 {
-                                if case let .MessageEntry(index, _, _, _ ,_ , _, _) = to[i - 1].entry, index.pinningIndex == nil {
-                                    pinnedType = .last
-                                }
-                            }
-                        }
-                    } else {
+            case let .chat(inner, isSponsored):
+                switch inner {
+                case let .HoleEntry(hole):
+                    return ChatListHoleRowItem(initialSize, context, hole)
+                case let .MessageEntry(index, message, readState, notifySettings,embeddedState, renderedPeer, peerPresence, summaryInfo):
+                    var pinnedType: ChatListPinnedType = .some
+                    if isSponsored {
+                        pinnedType = .ad
+                    } else if index.pinningIndex == nil {
                         pinnedType = .none
                     }
+                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, state: state, associatedGroupId: groupId)
                 }
-                return ChatListRowItem(initialSize, context: context, message: message, index: entry.entry.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, summaryInfo: summaryInfo, state: state)
-            case let .GroupReferenceEntry(groupId, index, message, peers, unreadCounters):
-                var pinnedType: ChatListPinnedType = .some
-                if let i = to.index(of: entry) {
-                    if index.pinningIndex != nil {
-                        if i > 0 {
-                            if case let .MessageEntry(index, _, _, _ ,_ , _, _) = to[i - 1].entry, index.pinningIndex == nil {
-                                pinnedType = .last
-                            }
-                        }
-                    } else {
-                        pinnedType = .none
-                    }
-                }
-                return ChatListRowItem(initialSize, context: context, pinnedType: pinnedType, groupId: groupId, message: message, peers: peers, unreadCounters: unreadCounters, state: state)
+            case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
+                return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
             }
         }
         
@@ -110,7 +191,43 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListEntry>]?, t
 }
 
 
-
+enum HiddenArchiveStatus : Equatable {
+    case normal
+    case collapsed
+    case hidden(Bool)
+    
+    var rawValue: Int {
+        switch self {
+        case .normal:
+            return 0
+        case .collapsed:
+            return 1
+        case .hidden:
+            return 2
+        }
+    }
+    var isHidden: Bool {
+        switch self {
+        case .hidden:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    init?(rawValue: Int) {
+        switch rawValue {
+        case 0:
+            self = .normal
+        case 1:
+            self = .collapsed
+        case 2:
+            self = .hidden(true)
+        default:
+            return nil
+        }
+    }
+}
 
 class ChatListController : PeersListController {
 
@@ -123,8 +240,39 @@ class ChatListController : PeersListController {
     private let scrollDisposable = MetaDisposable()
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
+    private let archivationTooltipDisposable = MetaDisposable()
+    private let tooltipController: ChatListTooltipController
+    private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
+    
+    private let hiddenArchiveValue: Atomic<HiddenArchiveStatus> = Atomic(value: FastSettings.archiveStatus)
+    private let hiddenArchiveState: ValuePromise<HiddenArchiveStatus> = ValuePromise(FastSettings.archiveStatus, ignoreRepeated: true)
+    
+    private func updateHiddenStateState(_ f:(HiddenArchiveStatus)->HiddenArchiveStatus) {
+        let result = hiddenArchiveValue.modify(f)
+        FastSettings.archiveStatus = result
+        hiddenArchiveState.set(result)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        
+//        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+//            guard let `self` = self else { return }
+//            let difference = position.rect.minY - self.genericView.tableView.frame.height
+//            updateHiddenStateState { isHidden in
+//                if isHidden && difference < -10 {
+//                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+//                    return false
+//                } else if !isHidden && difference > 60 {
+//                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+//                    return true
+//                } else {
+//                    return isHidden
+//                }
+//            }
+//        }))
         
         
         genericView.tableView.emptyItem = ChatListEmptyRowItem(frame.size)
@@ -135,11 +283,10 @@ class ChatListController : PeersListController {
         let first = Atomic<(ChatListIndex?, ChatListIndex?)>(value: (nil, nil))
         let scrollUp:Atomic<Bool> = self.first
         let groupId = self.mode.groupId
-        let onMainQueue:Atomic<Bool> = Atomic(value: true)
-        let previousEntries:Atomic<[AppearanceWrapperEntry<ChatListEntry>]?> = Atomic(value: nil)
+        let previousEntries:Atomic<[AppearanceWrapperEntry<UIChatListEntry>]?> = Atomic(value: nil)
         let stateValue = self.stateValue
         let animated: Atomic<Bool> = Atomic(value: false)
-
+        let animateGroupNextTransition = self.animateGroupNextTransition
         let previousState:Atomic<ChatListRowState> = Atomic(value: .plain)
         
         var scroll:TableScrollState? = nil
@@ -163,99 +310,84 @@ class ChatListController : PeersListController {
         
         let queue = self.queue
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: queue, chatHistoryView, appearanceSignal, stateValue.get(), context.chatUndoManager.allStatuses()) |> mapToQueue { value, appearance, state, undoStatuses -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: queue, chatHistoryView, appearanceSignal, stateValue.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings -> Signal<TableUpdateTransition, NoError> in
                     
-                    var removeNextAnimation = value.2
-                    
-                    let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
+            var removeNextAnimation = value.2
             
-                    let ignoreFlags = scrollUp.swap(false)
+            let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
+            
+            let ignoreFlags = scrollUp.swap(false)
             
             
             
-                    if !ignoreFlags || (!ignoreFlags && (previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex) && !removeNextAnimation) {
-                        scroll = nil
-                    }
-                
-                    if removeNextAnimation {
-                        removeNextAnimation = false
-                    }
-                   
-                    
-                _ = previousChatList.swap(value.0)
-                    
-                    
-                let stateWasUpdated = previousState.swap(state) != state
-                    var prepare = value.0.entries
-                    var pinnedIndex:UInt16 = 11
-                    if value.0.laterIndex == nil {
-                        prepare.removeAll()
-                       
-                        for value in  value.0.entries {
-                            switch value {
-                            case let .MessageEntry(index, a, b, c, d, e, f):
-                                if let _ = index.pinningIndex {
-                                    prepare.append(.MessageEntry(ChatListIndex(pinningIndex: pinnedIndex, messageIndex: index.messageIndex), a, b, c, d, e, f))
-                                    pinnedIndex -= 1
-                                } else {
-                                    prepare.append(value)
-                                }
-                            default:
-                                prepare.append(value)
-                            }
-                        }
-                        
-                        if let value = value.0.additionalItemEntries.first {
-                            switch value {
-                            case let .MessageEntry(index, a, b, c, d, e, f):
-                                prepare.append(ChatListEntry.MessageEntry(ChatListIndex(pinningIndex: pinnedIndex, messageIndex: index.messageIndex), a, b, c, d, e, f))
-                            default:
-                                break
-                            }
-                        }
-                    }
-                    
-                    let entries = prepare.compactMap { entry -> AppearanceWrapperEntry<ChatListEntry>? in
-                        switch entry {
-                        case .HoleEntry:
-                            return nil
-                        default:
-                            if undoStatuses.isActive(peerId: entry.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel]) {
-                                return nil
-                            } else if undoStatuses.isActive(peerId: entry.index.messageIndex.id.peerId, types: [.clearHistory]) {
-                                switch entry {
-                                case let .MessageEntry(values):
-                                    let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6)
-                                    return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
-                                default:
-                                    return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
-                                }
-                            } else {
-                                return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
-                            }
-                        }
-                    }
-                
-                    let prev = previousEntries.swap(entries)
-                    
-            return prepareEntries(from: prev, to: entries, adIndex: value.0.additionalItemEntries.first != nil ? pinnedIndex : nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, state: state)
+            if !ignoreFlags || (!ignoreFlags && (previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex) && !removeNextAnimation) {
+                scroll = nil
             }
+            
+            if removeNextAnimation {
+                removeNextAnimation = false
+            }
+            
+            
+            _ = previousChatList.swap(value.0)
+            
+                    
+            let stateWasUpdated = previousState.swap(state) != state
+            var prepare:[(ChatListEntry, Bool)] = []
+            for value in  value.0.entries {
+                prepare.append((value, false))
+            }
+            if value.0.laterIndex == nil {
+                if let value = value.0.additionalItemEntries.first {
+                    prepare.append((value, true))
+                }
+            }
+            var mapped: [UIChatListEntry] = prepare.map {
+                return .chat($0, isSponsored: $1)
+            }
+            if value.0.laterIndex == nil {
+                for (i, group) in value.0.groupEntries.reversed().enumerated() {
+                    mapped.append(.group(i, group.groupId, group.renderedPeers, group.message, group.unreadState, inAppSettings.totalUnreadCountDisplayCategory, animateGroupNextTransition.swap(nil) == group.groupId, archiveIsHidden))
+                }
+            }
+           
+            
+            let entries = mapped.compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
+                switch entry {
+                case let .chat(inner, isSponsored):
+                    switch inner {
+                    case .HoleEntry:
+                        return nil
+                    case let .MessageEntry(values):
+                        if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel]) {
+                            return nil
+                        } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.clearHistory]) {
+                            let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6, values.7)
+                            return AppearanceWrapperEntry(entry: .chat(entry, isSponsored: isSponsored), appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                        } else {
+                            return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                        }
+                    }
+                case .group:
+                    return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                }
+            }
+            
+            let prev = previousEntries.swap(entries)
+            
+            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, state: state, groupId: groupId)
+        }
         
         
-        var firstRequest: Bool = true
         let appliedTransition = list |> deliverOnMainQueue |> mapToQueue { [weak self] transition -> Signal<Void, NoError> in
             self?.enqueueTransition(transition)
-            if firstRequest, let `self` = self {
-                firstRequest = false
-                self.request.set(.single(.Initial(Int(50), nil)))
-            }
             return .complete()
         }
         
         disposable.set(appliedTransition.start())
+      
         
-        
-        request.set(.single(.Initial(Int(frame.height / 70) + 1, nil)))
+        request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
         
         var pinnedCount: Int = 0
         self.genericView.tableView.enumerateItems { item -> Bool in
@@ -275,7 +407,6 @@ class ChatListController : PeersListController {
         
         genericView.tableView.addScroll(listener: TableScrollListener({ [weak self] scroll in
 
-            guard let `self` = self, let view = previousChatList.modify({$0}) else {return}
 //            #if !STABLE && !APP_STORE
 //            if scroll.visibleRows.location == 0 && view.laterIndex != nil {
 //                self.lastScrolledIndex = nil
@@ -314,7 +445,7 @@ class ChatListController : PeersListController {
         let previousLocation: Atomic<ChatLocation?> = Atomic(value: nil)
         globalPeerDisposable.set(context.globalPeerHandler.get().start(next: { [weak self] location in
             if previousLocation.swap(location) != location {
-                self?.removeSwipingStateIfNeeded(nil)
+                self?.removeRevealStateIfNeeded(nil)
             }
             
             self?.removeHighlightEvents()
@@ -338,11 +469,56 @@ class ChatListController : PeersListController {
         
     }
     
+    func collapseOrExpandArchive() {
+        updateHiddenStateState { current in
+            switch current {
+            case .collapsed:
+                return .normal
+            default:
+                return .collapsed
+            }
+        }
+    }
+    
+    func toggleHideArchive() {
+        updateHiddenStateState { current in
+            switch current {
+            case .hidden:
+                return .normal
+            default:
+                return .hidden(true)
+            }
+        }
+    }
+    
+    
+    func setAnimateGroupNextTransition(_ groupId: PeerGroupId) {
+        _ = self.animateGroupNextTransition.swap(groupId)
+        
+    }
+    
+    func addArchiveTooltip(_ peerId:PeerId) {
+        guard self.context.sharedContext.layout != .minimisize else { return }
+        let type: ArchiveTooltipType = .justArchive
+//        let count = FastSettings.archivedTooltipCountAndIncrement()
+//        switch count {
+//        case 0:
+//            type = .first
+//        case 1:
+//            type = .second
+//        case 2:
+//            type = .third
+//        default:
+//            type = .justArchive
+//        }
+        self.tooltipController.add(type: type, peerId: peerId, controller: self)
+    }
+    
     private func enqueueTransition(_ transition: TableUpdateTransition) {
         self.genericView.tableView.merge(with: transition)
         readyOnce()
         switch self.mode {
-        case .feedChannels:
+        case .folder:
             if self.genericView.tableView.isEmpty {
                 self.navigationController?.close()
             }
@@ -350,31 +526,66 @@ class ChatListController : PeersListController {
             break
         }
         
-        var pinnedCount: Int = 0
+        if let first = self.genericView.tableView.firstItem as? ChatListRowItem, let archiveStatus = first.archiveStatus {
+            self.genericView.tableView.autohide = TableAutohide(item: first, hideUntilOverscroll: archiveStatus.isHidden, hideHandler: { [weak self] hidden in
+                self?.updateHiddenStateState { _ in
+                    return .hidden(hidden)
+                }
+            })
+        } else {
+            self.genericView.tableView.autohide = nil
+        }
+        
+        var pinnedRange: NSRange = NSMakeRange(NSNotFound, 0)
         self.genericView.tableView.enumerateItems { item -> Bool in
-            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
-            pinnedCount += 1
-            return item.pinnedType != .none
+            guard let item = item as? ChatListRowItem else {return false}
+            switch item.pinnedType {
+            case .some, .last:
+                if pinnedRange.location == NSNotFound {
+                    pinnedRange.location = item.index
+                }
+                pinnedRange.length += 1
+            default:
+                break
+            }
+            return item.pinnedType != .none || item.groupId != .root
         }
         self.searchController?.pinnedItems = self.collectPinnedItems
-        self.genericView.tableView.resortController?.resortRange = NSMakeRange(0, pinnedCount)
+        self.genericView.tableView.resortController?.resortRange = pinnedRange
     }
     
     private func resortPinned(_ from: Int, _ to: Int) {
         
         var items:[PinnedItemId] = []
 
+        var offset: Int = 0
+        
+        let groupId: PeerGroupId = self.mode.groupId
+
         
         self.genericView.tableView.enumerateItems { item -> Bool in
-            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
-            items.append(item.chatLocation.pinnedItemId)
-            return item.pinnedType != .none
+            guard let item = item as? ChatListRowItem else {return false}
+            if item.groupId != .root || item.pinnedType == .ad {
+                offset += 1
+            }
+            if let location = item.chatLocation {
+                switch item.pinnedType {
+                case .some, .last:
+                    items.append(location.pinnedItemId)
+                default:
+                    break
+                }
+            }
+           
+            return item.pinnedType != .none || item.groupId != .root
         }
         
-         items.move(at: from, to: to)
+        
+        
+         items.move(at: from - offset, to: to - offset)
         
         reorderDisposable.set(context.account.postbox.transaction { transaction -> Void in
-            _ = reorderPinnedItemIds(transaction: transaction, itemIds: items)
+            _ = reorderPinnedItemIds(transaction: transaction, groupId: groupId, itemIds: items)
         }.start())
     }
     
@@ -383,9 +594,16 @@ class ChatListController : PeersListController {
         
         
         self.genericView.tableView.enumerateItems { item -> Bool in
-            guard let item = item as? ChatListRowItem, item.pinnedType != .none else {return false}
-            items.append(item.chatLocation.pinnedItemId)
-            return item.pinnedType != .none
+            guard let item = item as? ChatListRowItem else {return false}
+            if let location = item.chatLocation {
+                switch item.pinnedType {
+                case .some, .last:
+                    items.append(location.pinnedItemId)
+                default:
+                    break
+                }
+            }
+            return item.pinnedType != .none || item.groupId != .root
         }
         return items
     }
@@ -400,7 +618,11 @@ class ChatListController : PeersListController {
             return
         }
         
-        let lastScrolledIndex = self.lastScrolledIndex
+        if self.genericView.tableView.contentOffset.y == 0 {
+            navigationController?.back()
+            return
+        }
+        
         
         let scrollToTop:()->Void = { [weak self] in
             guard let `self` = self else {return}
@@ -470,7 +692,7 @@ class ChatListController : PeersListController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+        context.window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             if event.modifierFlags.contains(.control) {
                 if self.genericView.tableView._mouseInside() {
@@ -484,6 +706,9 @@ class ChatListController : PeersListController {
             return .rejected
         }, with: self, for: .leftMouseDown, priority: .high)
         
+        
+        
+        
 //        self.window?.set(responder: { [weak self] () -> NSResponder? in
 //
 //            guard let `self` = self else {return nil}
@@ -496,12 +721,38 @@ class ChatListController : PeersListController {
 //            return nil
 //        }, with: self, priority: .low)
         
-        self.window?.add(swipe: { [weak self] direction -> SwipeHandlerResult in
+        context.window.add(swipe: { [weak self] direction -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window else {return .failed}
             let swipeState: SwipeState?
+            
+            var checkFolder: Bool = true
+            let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+            if row != -1 {
+                let item = self.genericView.tableView.item(at: row) as? ChatListRowItem
+                if let item = item {
+                    let view = item.view as? ChatListRowView
+                    if view?.endRevealState != nil {
+                        checkFolder = false
+                    }
+                    
+                    if !item.hasRevealState {
+                        return .failed
+                    }
+                } else {
+                    return .failed
+                }
+                
+            }
+
+            
             switch direction {
             case let .left(_state):
-                swipeState = _state
+                if self.mode.isFolder && checkFolder {
+                    swipeState = nil
+                } else {
+                    swipeState = _state
+                }
+                
             case let .right(_state):
                 swipeState = _state
             case .none:
@@ -509,9 +760,9 @@ class ChatListController : PeersListController {
             }
             
             
-            guard let state = swipeState else {return .failed}
+            guard let state = swipeState, self.context.sharedContext.layout != .minimisize else {return .failed}
             
-
+            
             
             switch state {
             case .start:
@@ -519,17 +770,17 @@ class ChatListController : PeersListController {
                 if row != -1 {
                     let item = self.genericView.tableView.item(at: row) as! ChatListRowItem
                     guard item.pinnedType != .ad else {return .failed}
-                    self.removeSwipingStateIfNeeded(item.peerId)
-                    (item.view as? SwipingTableView)?.initSwipingState()
-                    return .success(SwipingTableItemController(item: item))
+                    self.removeRevealStateIfNeeded(item.peerId)
+                    (item.view as? RevealTableView)?.initRevealState()
+                    return .success(RevealTableItemController(item: item))
                 } else {
                     return .failed
                 }
                
             case let .swiping(_delta, controller):
-                let controller = controller as! SwipingTableItemController
+                let controller = controller as! RevealTableItemController
 
-                guard let view = controller.item.view as? SwipingTableView else {return .nothing}
+                guard let view = controller.item.view as? RevealTableView else {return .nothing}
                 
                 var delta:CGFloat
                 switch direction {
@@ -542,9 +793,9 @@ class ChatListController : PeersListController {
                 }
                 
                 
-                delta -= view.additionalSwipingDelta
+                delta -= view.additionalRevealDelta
                 
-                let newDelta = min(view.width * log2(abs(delta) + 1) * log2(delta < 0 ? view.width * 4 : view.width) / 100.0, abs(delta))
+                let newDelta = min(view.width * log2(abs(delta) + 1) * log2(delta < 0 ? view.width * 8 : view.width) / 100.0, abs(delta))
 
                 if delta < 0 {
                     delta = -newDelta
@@ -554,10 +805,10 @@ class ChatListController : PeersListController {
 
                 
 
-                view.moveSwiping(delta: delta)
+                view.moveReveal(delta: delta)
             case let .success(_, controller), let .failed(_, controller):
-                let controller = controller as! SwipingTableItemController
-                guard let view = (controller.item.view as? SwipingTableView) else {return .nothing}
+                let controller = controller as! RevealTableItemController
+                guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
                 
                 
                 var direction = direction
@@ -565,17 +816,17 @@ class ChatListController : PeersListController {
                 switch direction {
                 case let .left(state):
                   
-                    if view.containerX < 0 && abs(view.containerX) > view.rightSwipingWidth / 2 {
+                    if view.containerX < 0 && abs(view.containerX) > view.rightRevealWidth / 2 {
                         direction = .right(state.withAlwaysSuccess())
-                    } else if abs(view.containerX) < view.rightSwipingWidth / 2 && view.containerX < view.leftSwipingWidth / 2 {
+                    } else if abs(view.containerX) < view.rightRevealWidth / 2 && view.containerX < view.leftRevealWidth / 2 {
                        direction = .left(state.withAlwaysFailed())
                     } else {
                         direction = .left(state.withAlwaysSuccess())
                     }
                 case .right:
-                    if view.containerX > 0 && view.containerX > view.leftSwipingWidth / 2 {
+                    if view.containerX > 0 && view.containerX > view.leftRevealWidth / 2 {
                         direction = .left(state.withAlwaysSuccess())
-                    } else if abs(view.containerX) < view.rightSwipingWidth / 2 && view.containerX < view.leftSwipingWidth / 2 {
+                    } else if abs(view.containerX) < view.rightRevealWidth / 2 && view.containerX < view.leftRevealWidth / 2 {
                         direction = .right(state.withAlwaysFailed())
                     } else {
                         direction = .right(state.withAlwaysSuccess())
@@ -586,13 +837,13 @@ class ChatListController : PeersListController {
                 
 
                 
-                view.completeSwiping(direction: direction)
+                view.completeReveal(direction: direction)
             }
             
           //  return .success()
             
             return .nothing
-        }, with: self.genericView.tableView, identifier: "chat-list")
+        }, with: self.genericView.tableView, identifier: "chat-list", priority: .high)
         
         if context.sharedContext.bindings.rootNavigation().stackCount == 1 {
             setHighlightEvents()
@@ -603,7 +854,7 @@ class ChatListController : PeersListController {
         
         removeHighlightEvents()
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
             if let item = self?.genericView.tableView.highlightedItem(), item.index > 0 {
                 self?.genericView.tableView.highlightPrev(turnDirection: false)
                 while self?.genericView.tableView.highlightedItem() is PopularPeersRowItem || self?.genericView.tableView.highlightedItem() is SeparatorRowItem {
@@ -614,7 +865,7 @@ class ChatListController : PeersListController {
         }, with: self, for: .UpArrow, priority: .low)
         
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.genericView.tableView.highlightNext(turnDirection: false)
             
             while self?.genericView.tableView.highlightedItem() is PopularPeersRowItem || self?.genericView.tableView.highlightedItem() is SeparatorRowItem {
@@ -628,14 +879,14 @@ class ChatListController : PeersListController {
     
     private func removeHighlightEvents() {
         genericView.tableView.cancelHighlight()
-        self.window?.remove(object: self, for: .DownArrow, forceCheckFlags: true)
-        self.window?.remove(object: self, for: .UpArrow, forceCheckFlags: true)
+        context.window.remove(object: self, for: .DownArrow, forceCheckFlags: true)
+        context.window.remove(object: self, for: .UpArrow, forceCheckFlags: true)
     }
     
-    private func removeSwipingStateIfNeeded(_ ignoreId: PeerId?) {
+    private func removeRevealStateIfNeeded(_ ignoreId: PeerId?) {
         genericView.tableView.enumerateItems { item -> Bool in
             if let item = item as? ChatListRowItem, item.peerId != ignoreId {
-                (item.view as? ChatListRowView)?.endSwipingState = nil
+                (item.view as? ChatListRowView)?.endRevealState = nil
             }
             return true
         }
@@ -649,27 +900,14 @@ class ChatListController : PeersListController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        window?.removeAllHandlers(for: self)
-        window?.removeAllHandlers(for: genericView.tableView)
+        context.window.removeAllHandlers(for: self)
+        context.window.removeAllHandlers(for: genericView.tableView)
     }
     
-    override func update(with state: ViewControllerState) {
-        super.update(with: state)
-        switch state {
-        case .Edit:
-            stateValue.set(.deletable(onRemove: { [weak self] chatLocation in
-                if let peerId = chatLocation.peerId {
-                    self?.removePeerIdGroup(peerId)
-                }
-            }, deletable: true))
-        default:
-            stateValue.set(.plain)
-        }
-    }
+//    override func getLeftBarViewOnce() -> BarView {
+//        return MajorBackNavigationBar(self, context: context, excludePeerId: context.peerId)
+//    }
     
-    private func removePeerIdGroup(_ peerId: PeerId) {
-        removePeerIdGroupDisposable.set(updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: nil).start())
-    }
     
     deinit {
         removePeerIdGroupDisposable.dispose()
@@ -677,33 +915,42 @@ class ChatListController : PeersListController {
         scrollDisposable.dispose()
         reorderDisposable.dispose()
         globalPeerDisposable.dispose()
+        archivationTooltipDisposable.dispose()
     }
     
     
     override var enableBack: Bool {
-        return mode.groupId != nil
+        return mode.groupId != .root
     }
     
     override var defaultBarTitle: String {
-        if let _ = mode.groupId {
-            return L10n.chatListFeeds
+        switch mode.groupId {
+        case .root:
+            return super.defaultBarTitle
+        default:
+            return L10n.chatListArchivedChats
         }
-        return super.defaultBarTitle
     }
 
     override func escapeKeyAction() -> KeyHandlerResult {
-        if let _ = mode.groupId {
-            return .rejected
+        if mode.isFolder, let navigation = navigationController {
+            navigation.back()
+            return .invoked
         }
         return super.escapeKeyAction()
     }
     
     init(_ context: AccountContext, modal:Bool = false, groupId: PeerGroupId? = nil) {
-        super.init(context, followGlobal:!modal, mode: groupId != nil ? .feedChannels(groupId!) : .plain)
+        self.tooltipController = ChatListTooltipController(context: context)
+        super.init(context, followGlobal:!modal, mode: groupId != nil ? .folder(groupId!) : .plain)
+        
+        if groupId != nil {
+            context.closeFolderFirst = true
+        }
     }
 
-    override func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
-        if  let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = navigationController?.modalAction {
+    override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
+        if let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = context.sharedContext.bindings.rootNavigation().modalAction {
             if !modalAction.isInvokable(for: peer) {
                 modalAction.alertError(for: peer, with:mainWindow)
                 return false
@@ -720,11 +967,21 @@ class ChatListController : PeersListController {
             }
             
         }
+        if let item = item as? ChatListRowItem {
+            if item.groupId != .root {
+                if byClick {
+                    item.view?.focusAnimation(nil)
+                    open(with: item.entryId, initialAction: nil, addition: false)
+                }
+                return false
+            }
+        }
         return true
     }
     
     override  func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
-        if let item = item as? ChatListRowItem, let navigation = navigationController {
+        let navigation = context.sharedContext.bindings.rootNavigation()
+        if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController {
                 if let modalAction = navigation.modalAction {
                     navigation.controller.invokeNavigation(action: modalAction)
@@ -732,7 +989,7 @@ class ChatListController : PeersListController {
                 controller.clearReplyStack()
                 controller.scrollup()
             } else {
-                open(with: item.chatLocation, initialAction: item.pinnedType == .ad && FastSettings.showAdAlert ? .ad : nil, addition: mode.groupId != nil)
+                open(with: item.entryId, initialAction: item.pinnedType == .ad && FastSettings.showAdAlert ? .ad : nil, addition: false)
             }
         }
     }

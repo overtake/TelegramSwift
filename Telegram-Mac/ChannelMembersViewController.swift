@@ -339,11 +339,14 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         
         let peerView = context.account.viewTracker.peerView(peerId)
         
-        let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, updated: { state in
+
+        let (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, updated: { state in
             peersPromise.set(.single(state.list))
         })
         actionsDisposable.add(disposable)
 
+        
+        
         
         let initialSize = atomicSize
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChannelMembersEntry>]> = Atomic(value: [])
@@ -364,6 +367,17 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 strongSelf.readyOnce()
             }
         }))
+        
+        genericView.setScrollHandler { position in
+            if let loadMoreControl = loadMoreControl {
+                switch position.direction {
+                case .bottom:
+                    context.peerChannelMemberCategoriesContextsManager.loadMore(peerId: peerId, control: loadMoreControl)
+                default:
+                    break
+                }
+            }
+        }
     }
     
     deinit {

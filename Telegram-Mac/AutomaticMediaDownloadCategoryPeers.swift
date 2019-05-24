@@ -147,7 +147,7 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
     public let automaticSaveDownloadedFiles: Bool
     public static var defaultSettings: AutomaticMediaDownloadSettings {
         let categories = AutomaticMediaDownloadCategories(photo: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), video: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: 10 * 1024 * 1024), files: AutomaticMediaDownloadCategoryPeers(privateChats: false, groupChats: false, channels: false, fileSize: 10 * 1024 * 1024))
-        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: true, downloadFolder: FastSettings.downloadsFolder ?? "~/Downloads/".nsstring.expandingTildeInPath, automaticSaveDownloadedFiles: false)
+        return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: true, downloadFolder: "~/Downloads/".nsstring.expandingTildeInPath, automaticSaveDownloadedFiles: false)
     }
     
     init(categories: AutomaticMediaDownloadCategories, automaticDownload: Bool, downloadFolder: String, automaticSaveDownloadedFiles: Bool) {
@@ -160,7 +160,7 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
     public init(decoder: PostboxDecoder) {
         self.categories = decoder.decodeObjectForKey("c", decoder: { AutomaticMediaDownloadCategories(decoder: $0) }) as! AutomaticMediaDownloadCategories
         self.automaticDownload = decoder.decodeBoolForKey("a", orElse: true)
-        self.downloadFolder = decoder.decodeStringForKey("d", orElse: FastSettings.downloadsFolder ?? "~/Downloads/".nsstring.expandingTildeInPath)
+        self.downloadFolder = decoder.decodeStringForKey("d", orElse: "~/Downloads/".nsstring.expandingTildeInPath)
         self.automaticSaveDownloadedFiles = decoder.decodeBoolForKey("ad", orElse: false)
     
     }

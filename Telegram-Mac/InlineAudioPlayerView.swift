@@ -352,7 +352,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
         
-        textView.centerY(x: next.frame.maxX + floorToScreenPixels(scaleFactor: backingScaleFactor, (w - textView.frame.width)/2), addition: -2)
+        //textView.centerY(x: next.frame.maxX + floorToScreenPixels(scaleFactor: backingScaleFactor, (w - textView.frame.width)/2), addition: -2)
+        
+        textView.center()
         
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }

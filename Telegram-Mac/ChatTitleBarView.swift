@@ -135,6 +135,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private let disposable = MetaDisposable()
     private let closeButton = ImageButton()
     private var lastestUsersController: ViewController?
+    private let fetchPeerAvatar: MetaDisposable = MetaDisposable()
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
         didSet {
             if connectionStatus != oldValue {
@@ -245,7 +246,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
         
         searchButton.set(handler: { [weak self] _ in
-            self?.chatInteraction.update({$0.updatedSearchMode(!$0.isSearchMode)})
+            self?.chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil))})
         }, for: .Click)
         
         addSubview(searchButton)
@@ -349,8 +350,6 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
                 } else {
                     switch chatInteraction.chatLocation {
-                    case let .group(groupId):
-                        chatInteraction.openFeedInfo(groupId)
                     case let .peer(peerId):
                         chatInteraction.openInfo(peerId, false, nil, nil)
                     }
@@ -363,8 +362,6 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
             } else {
                 switch chatInteraction.chatLocation {
-                case let .group(groupId):
-                    chatInteraction.openFeedInfo(groupId)
                 case let .peer(peerId):
                     chatInteraction.openInfo(peerId, false, nil, nil)
                 }
@@ -374,6 +371,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     deinit {
         disposable.dispose()
+        fetchPeerAvatar.dispose()
     }
     
     
@@ -419,14 +417,29 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             if let peer = peerViewMainPeer(peerView) {
                 if peer.id == chatInteraction.context.peerId {
                     let icon = theme.icons.searchSaved
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)))) |> map {($0, false)})
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil)) |> map {($0, false)})
                 } else {
                     avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
+                    if let largeProfileImage = peer.largeProfileImage {
+                       // let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [largeProfileImage], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+                        if let peerReference = PeerReference(peer) {
+                            fetchPeerAvatar.set(fetchedMediaResource(postbox: chatInteraction.context.account.postbox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                        }
+                      //  fetchPeerAvatar.set(chatMessagePhotoInteractiveFetched(account: chatInteraction.context.account, imageReference: ImageMediaReference.standalone(media: image), toRepresentationSize: NSMakeSize(640, 640)).start())
+                    }
                 }
             }
             
             if peerView.peers[peerView.peerId] is TelegramSecretChat {
-                titleImage = theme.icons.chatSecretTitle
+                titleImage = (theme.icons.chatSecretTitle, .left)
+            } else if let peer = peerViewMainPeer(peerView) {
+                if peer.isVerified {
+                    titleImage = (theme.icons.verifiedImage, .right)
+                } else if peer.isScam {
+                    titleImage = (theme.icons.scam, .right)
+                } else {
+                    titleImage = nil
+                }
             } else {
                 titleImage = nil
             }
@@ -449,16 +462,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
             
             if let presence = result.presence {
-                self.presenceManager?.reset(presence: presence)
+                self.presenceManager?.reset(presence: presence, timeDifference: Int32(chatInteraction.context.timeDifference))
             }
             if shouldUpdateLayout {
                 self.setNeedsDisplay()
             }
-        } else  if let view = postboxView as? ChatListTopPeersView {
-            avatarControl.setState(account: chatInteraction.context.account, state: .GroupAvatar(view.peers))
-            status = nil
-            text = .initialize(string: L10n.chatTitleFeed, color: theme.colors.text, font: .medium(.title))
-        }
+        } 
     }
     
     
@@ -475,11 +484,24 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         let inputActivities = self.inputActivities
         self.inputActivities = inputActivities
         
-        if let peerView = postboxView as? PeerView, peerView.peers[peerView.peerId] is TelegramSecretChat {
-            titleImage = theme.icons.chatSecretTitle
+        if let peerView = postboxView as? PeerView {
+            if peerView.peers[peerView.peerId] is TelegramSecretChat {
+                titleImage = (theme.icons.chatSecretTitle, .left)
+            } else if peerView.peers[peerView.peerId] is TelegramSecretChat {
+                titleImage = (theme.icons.chatSecretTitle, .left)
+            } else if let peer = peerViewMainPeer(peerView) {
+                if peer.isVerified {
+                    titleImage = (theme.icons.verifiedImage, .right)
+                } else if peer.isScam {
+                    titleImage = (theme.icons.scam, .right)
+                } else {
+                    titleImage = nil
+                }
+            } else {
+                titleImage = nil
+            }
         } else {
             titleImage = nil
         }
-        
     }
 }

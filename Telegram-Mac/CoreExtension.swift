@@ -375,6 +375,14 @@ public extension TelegramMediaFile {
         return nil
     }
     
+    var isAnimatedSticker: Bool {
+        if let fileName = fileName, fileName.hasPrefix("tg_animated_sticker_secret_") {
+            return false
+        } else {
+            return false
+        }
+    }
+    
     var musicText:(String,String) {
         
         var audioTitle:String?
@@ -402,36 +410,12 @@ public extension TelegramMediaFile {
     }
 }
 
-public extension MessageHistoryEntry {
-    var location:MessageHistoryEntryLocation? {
-        switch self {
-        case let .MessageEntry(_, _, location, _, _):
-            return location
-        case let .HoleEntry(_, location):
-            return location
-        }
-    }
-    
-    var message:Message? {
-        switch self {
-        case let .MessageEntry(message, _, _, _, _):
-            return message
-        default:
-            return nil
-        }
-    }
-}
 
 public extension MessageHistoryView {
     func index(for messageId: MessageId) -> Int? {
         for i in 0 ..< entries.count {
-            switch entries[i] {
-            case let .MessageEntry(lhsMessage,_, _, _, _):
-                if lhsMessage.id == messageId {
-                    return i
-                }
-            default:
-                break
+            if entries[i].index.id == messageId {
+                return i
             }
         }
         return nil
@@ -576,8 +560,6 @@ public extension Message {
 extension ChatLocation {
     var unreadMessageCountsItem: UnreadMessageCountsItem {
         switch self {
-        case let .group(groupId):
-            return .group(groupId)
         case let .peer(peerId):
             return .peer(peerId)
         }
@@ -587,8 +569,6 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId: peerId, components: [])
-        case let .group(groupId):
-            return .chatListTopPeers(groupId: groupId)
         }
     }
     
@@ -596,25 +576,13 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .group(groupId):
-            return .group(groupId)
         }
     }
     
-    var peerId: PeerId? {
+    var peerId: PeerId {
         switch self {
-        case .group:
-            return nil
         case let .peer(peerId):
             return peerId
-        }
-    }
-    var groupId: PeerGroupId? {
-        switch self {
-        case let .group(groupId):
-            return groupId
-        case .peer:
-            return nil
         }
     }
 }
@@ -622,8 +590,6 @@ extension ChatLocation {
 extension ChatLocation : Hashable {
     public var hashValue: Int {
         switch self {
-        case let .group(groupId):
-            return groupId.hashValue
         case let .peer(peerId):
             return peerId.hashValue
         }
@@ -2037,7 +2003,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         var thridTitle: String? = nil
         
         var canRemoveGlobally: Bool = false
-        if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId {
+        if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
             if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
                 canRemoveGlobally = true
             }
@@ -2045,6 +2011,8 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         
         if canRemoveGlobally {
             thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+        } else if peer.isBot {
+            thridTitle = L10n.peerInfoStopBot
         }
 
         
@@ -2053,7 +2021,10 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
             context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: type, action: { status in
                 switch status {
                 case .success:
-                    _ = context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
+                    context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
+                    if peer.isBot && result == .thrid {
+                        _ = requestUpdatePeerIsBlocked(account: context.account, peerId: peerId, isBlocked: true).start()
+                    }
                 default:
                     break
                 }
@@ -2410,6 +2381,24 @@ extension ProxyServerSettings {
         }
         return link
     }
+    
+    var isEmpty: Bool {
+        if host.isEmpty {
+            return true
+        }
+        if port == 0 {
+            return true
+        }
+        switch self.connection {
+        case let .mtp(secret):
+            if secret.isEmpty {
+                return true
+            }
+        default:
+            break
+        }
+        return false
+    }
 }
 
 
@@ -2452,6 +2441,9 @@ func isNotEmptyStrings(_ strings: [String?]) -> String {
 extension MessageIndex {
     func withUpdatedTimestamp(_ timestamp: Int32) -> MessageIndex {
         return MessageIndex(id: self.id, timestamp: timestamp)
+    }
+    init(_ message: Message) {
+        self.init(id: message.id, timestamp: message.timestamp)
     }
     
 }
@@ -2547,5 +2539,22 @@ extension FileManager {
 extension MessageForwardInfo {
     var authorTitle: String {
         return author?.displayTitle ?? authorSignature ?? ""
+    }
+}
+
+
+func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) -> Bool {
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.text.count <= 3 && message.text.containsOnlyEmoji
+}
+
+
+
+struct PeerEquatable: Equatable {
+    private let peer: Peer
+    init(peer: Peer) {
+        self.peer = peer
+    }
+    static func ==(lhs: PeerEquatable, rhs: PeerEquatable) -> Bool {
+        return lhs.peer.isEqual(rhs.peer)
     }
 }

@@ -379,6 +379,14 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             }
             entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights))
             descId += 1
+        } else if let initialParticipant = initialParticipant, case .creator = initialParticipant {
+            var index = 0
+            for right in rightsOrder {
+                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, TelegramChatAdminRightsFlags(rightsOrder), false, false))
+                index += 1
+            }
+            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights))
+            descId += 1
         }
     } else if let group = channelView.peers[channelView.peerId] as? TelegramGroup, let admin = adminView.peers[adminView.peerId] {
         entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence))

@@ -200,13 +200,67 @@ private func languageControllerEntries(listState: LocalizationListState?, langua
     return entries
 }
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LanguageTableEntry>], right: [AppearanceWrapperEntry<LanguageTableEntry>], initialSize:NSSize, animated: Bool, arguments:LanguageControllerArguments) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LanguageTableEntry>], right: [AppearanceWrapperEntry<LanguageTableEntry>], initialSize:NSSize, animated: Bool, arguments:LanguageControllerArguments) -> Signal<TableUpdateTransition, NoError> {
     
-    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
-        return entry.entry.item(arguments, initialSize: initialSize)
+    
+    return Signal { subscriber in
+        
+        
+        var cancelled = false
+        
+        
+        if Thread.isMainThread {
+            var initialIndex:Int = 0
+            var height:CGFloat = 0
+            var firstInsertion:[(Int, TableRowItem)] = []
+            let entries = Array(right)
+            
+            let index:Int = 0
+            
+            for i in index ..< entries.count {
+                let item = entries[i].entry.item(arguments, initialSize: initialSize)
+                height += item.height
+                firstInsertion.append((i, item))
+                if initialSize.height < height {
+                    break
+                }
+            }
+            
+            
+            initialIndex = firstInsertion.count
+            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil)))
+            
+            prepareQueue.async {
+                if !cancelled {
+                    
+                    var insertions:[(Int, TableRowItem)] = []
+                    let updates:[(Int, TableRowItem)] = []
+                    
+                    for i in initialIndex ..< entries.count {
+                        let item:TableRowItem
+                        item = entries[i].entry.item(arguments, initialSize: initialSize)
+                        insertions.append((i, item))
+                    }
+                    
+                    
+                    subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil)))
+                    subscriber.putCompletion()
+                }
+            }
+        } else {
+            let (deleted,inserted,updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
+                return entry.entry.item(arguments, initialSize: initialSize)
+            })
+            
+            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil)))
+            subscriber.putCompletion()
+        }
+        
+        return ActionDisposable {
+            cancelled = true
+        }
     }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated)
 }
 
 
@@ -230,6 +284,10 @@ class LanguageViewController: TableViewController {
         disposable.dispose()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -245,7 +303,7 @@ class LanguageViewController: TableViewController {
         
         var animated: Bool = false
         
-        let searchInteractions = SearchInteractions({ state in
+        let searchInteractions = SearchInteractions({ state, _ in
             animated = false
             searchPromise.set(state)
         }, { state in
@@ -273,18 +331,19 @@ class LanguageViewController: TableViewController {
 
         let signal = context.account.postbox.preferencesView(keys: [PreferencesKeys.localizationListState]) |> map { value -> LocalizationListState? in
             return value.values[PreferencesKeys.localizationListState] as? LocalizationListState
-        } |> deliverOnMainQueue
+        } |> deliverOnPrepareQueue
         
+        let first: Atomic<Bool> = Atomic(value: true)
         
-        let transition = combineLatest(signal, appearanceSignal)
+        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal)
             |> mapToSignal { infos, appearance in
                 return searchPromise.get() |> map { state in
                     return (infos, appearance, state)
                 }
-            } |> map { listState, appearance, state -> TableUpdateTransition in
+            } |> mapToSignal { listState, appearance, state in
                 let entries = languageControllerEntries(listState: listState, language: appearance.language, state: state).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-                return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), animated: animated, arguments: arguments)
-            }
+                return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), animated: animated, arguments: arguments) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue)
+            } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition in
             self?.genericView.merge(with: transition)

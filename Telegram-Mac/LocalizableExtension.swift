@@ -72,7 +72,7 @@ func applyUILocalization(_ settings: LocalizationSettings) {
     let primaryLanguage = Language(languageCode: settings.primaryComponent.languageCode, customPluralizationCode: settings.primaryComponent.customPluralizationCode, strings: dictFromLocalization(settings.primaryComponent.localization))
     let secondaryLanguage = settings.secondaryComponent != nil ? Language.init(languageCode: settings.secondaryComponent!.languageCode, customPluralizationCode: settings.secondaryComponent!.customPluralizationCode, strings: dictFromLocalization(settings.secondaryComponent!.localization)) : nil
 
-    let language = TelegramLocalization(primaryLanguage: primaryLanguage, secondaryLanguage: secondaryLanguage)
+    let language = TelegramLocalization(primaryLanguage: primaryLanguage, secondaryLanguage: secondaryLanguage, localizedName: settings.primaryComponent.localizedName)
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
     applyMainMenuLocalization(mainWindow)
@@ -82,19 +82,19 @@ func applyShareUILocalization(_ settings: LocalizationSettings) {
     let primaryLanguage = Language(languageCode: settings.primaryComponent.languageCode, customPluralizationCode: settings.primaryComponent.customPluralizationCode, strings: dictFromLocalization(settings.primaryComponent.localization))
     let secondaryLanguage = settings.secondaryComponent != nil ? Language.init(languageCode: settings.secondaryComponent!.languageCode, customPluralizationCode: settings.secondaryComponent!.customPluralizationCode, strings: dictFromLocalization(settings.secondaryComponent!.localization)) : nil
     
-    let language = TelegramLocalization(primaryLanguage: primaryLanguage, secondaryLanguage: secondaryLanguage)
+    let language = TelegramLocalization(primaryLanguage: primaryLanguage, secondaryLanguage: secondaryLanguage, localizedName: settings.primaryComponent.localizedName)
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
 }
 func dropShareLocalization() {
-    let language = TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil)
+    let language = TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil, localizedName: "English")
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
 }
 
 func dropLocalization() {
 
-    let language = TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil)
+    let language = TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil, localizedName: "English")
     _ = _appCurrentLanguage.swap(language)
     languagePromise.set(.single(language))
     applyMainMenuLocalization(mainWindow)
@@ -209,9 +209,11 @@ final class TelegramLocalization : Equatable {
     let primaryLanguage: Language
     let secondaryLanguage: Language?
     let baseLanguageCode: String
-    init(primaryLanguage: Language, secondaryLanguage: Language?) {
+    let localizedName: String
+    init(primaryLanguage: Language, secondaryLanguage: Language?, localizedName: String) {
         self.primaryLanguage = primaryLanguage
         self.secondaryLanguage = secondaryLanguage
+        self.localizedName = localizedName
         self.baseLanguageCode = secondaryLanguage?.languageCode ?? primaryLanguage.languageCode
     }
     
@@ -229,7 +231,7 @@ final class TelegramLocalization : Equatable {
     
 }
 
-let _appCurrentLanguage:Atomic<TelegramLocalization> = Atomic(value: TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil))
+let _appCurrentLanguage:Atomic<TelegramLocalization> = Atomic(value: TelegramLocalization(primaryLanguage: Language(languageCode: "en", customPluralizationCode: nil, strings: [:]), secondaryLanguage: nil, localizedName: "English"))
 var appCurrentLanguage:TelegramLocalization {
     return _appCurrentLanguage.modify {$0}
 }

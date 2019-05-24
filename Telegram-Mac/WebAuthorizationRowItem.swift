@@ -22,7 +22,7 @@ class WebAuthorizationRowItem: GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, authorization: WebAuthorization, peer: Peer, logout:@escaping()->Void) {
         self.logoutInteraction = logout
         self.account = account
-        self.photo = .PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, nil)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil)
         self.nameLayout = TextViewLayout(.initialize(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         let statusAttr = NSMutableAttributedString()
         

@@ -64,15 +64,17 @@ public class NavigationBarView: View {
     override public func layout() {
         super.layout()
         self.bottomBorder.setNeedsDisplay()
+        self.bottomBorder.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
+
+        self.layout(left: leftView, center: centerView, right: rightView)
+    
     }
 
     override public func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        self.bottomBorder.frame = NSMakeRect(0, newSize.height - .borderSize, newSize.width, .borderSize)
         
        // guard let window = window as? Window, !window.inLiveSwiping else {return}
 
-        self.layout(left: leftView, center: centerView, right: rightView)
     }
     
     public override var mouseDownCanMoveWindow: Bool {

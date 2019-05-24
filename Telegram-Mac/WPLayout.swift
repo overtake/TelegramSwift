@@ -120,7 +120,9 @@ class WPLayout: Equatable {
             
             attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true)
-            textLayout?.interactions = TextViewInteractions(processURL: { link in
+            
+            let interactions = globalLinkExecutor
+            interactions.processURL = { link in
                 if let link = link as? inAppLink {
                     var link = link
                     if case .external(let url, _) = link {
@@ -147,17 +149,9 @@ class WPLayout: Equatable {
                     
                     execute(inapp: link)
                 }
-            }, isDomainLink: { value in
-                if let value = value as? inAppLink {
-                    switch value {
-                    case .external:
-                        return true
-                    default:
-                        return false
-                    }
-                }
-                return false
-            })
+            }
+            
+            textLayout?.interactions = interactions
             
         }
         attributedText.fixUndefinedEmojies()

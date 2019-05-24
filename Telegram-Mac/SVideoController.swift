@@ -208,6 +208,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        genericView.layerContentsRedrawPolicy = .duringViewResize
+
         
         mediaPlayer.attachPlayerView(genericView.mediaPlayer)
         genericView.isStreamable = reference.media.isStreamable

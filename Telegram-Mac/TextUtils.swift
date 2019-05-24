@@ -32,7 +32,7 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             } else if fileMedia.isVoice {
                 messageText = tr(L10n.chatListVoice).nsstring
             } else if fileMedia.isMusic  {
-                messageText = (fileMedia.musicText.0 + " - " + fileMedia.musicText.1).nsstring
+                messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1).nsstring
             } else if fileMedia.isInstantVideo {
                 messageText = tr(L10n.chatListInstantVideo).nsstring
             } else if fileMedia.isVideo {
@@ -78,12 +78,12 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
     
 }
 
-func chatListText(account:Account, location: ChatLocation, for message:Message?, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, folder: Bool = false) -> NSAttributedString {
     
     if let embeddedState = embeddedState as? ChatEmbeddedInterfaceState {
         let mutableAttributedText = NSMutableAttributedString()
-        _ = mutableAttributedText.append(string: tr(L10n.chatListDraft), color: theme.colors.redUI, font: .normal(FontSize.text))
-        _ = mutableAttributedText.append(string: " \(embeddedState.text)", color: theme.chatList.grayTextColor, font: .normal(FontSize.text))
+        _ = mutableAttributedText.append(string: L10n.chatListDraft, color: theme.colors.redUI, font: .normal(.text))
+        _ = mutableAttributedText.append(string: " \(embeddedState.text)", color: theme.chatList.grayTextColor, font: .normal(.text))
         mutableAttributedText.setSelected(color: .white, range: mutableAttributedText.range)
         return mutableAttributedText
     }
@@ -93,17 +93,17 @@ func chatListText(account:Account, location: ChatLocation, for message:Message?,
             let subAttr = NSMutableAttributedString()
             switch peer.embeddedState {
             case .terminated:
-                _ = subAttr.append(string: tr(L10n.chatListSecretChatTerminated), color: theme.chatList.grayTextColor, font: .normal(.text))
+                _ = subAttr.append(string: L10n.chatListSecretChatTerminated, color: theme.chatList.grayTextColor, font: .normal(.text))
             case .handshake:
-            _ = subAttr.append(string: tr(L10n.chatListSecretChatExKeys), color: theme.chatList.grayTextColor, font: .normal(.text))
+            _ = subAttr.append(string: L10n.chatListSecretChatExKeys, color: theme.chatList.grayTextColor, font: .normal(.text))
             case .active:
                 if message == nil {
-                    let title:String = renderedPeer.chatMainPeer?.compactDisplayTitle ?? tr(L10n.peerDeletedUser)
+                    let title:String = renderedPeer.chatMainPeer?.compactDisplayTitle ?? L10n.peerDeletedUser
                     switch peer.role {
                     case .creator:
-                        _ = subAttr.append(string: tr(L10n.chatListSecretChatJoined(title)), color: theme.chatList.grayTextColor, font: .normal(.text))
+                        _ = subAttr.append(string: L10n.chatListSecretChatJoined(title), color: theme.chatList.grayTextColor, font: .normal(.text))
                     case .participant:
-                        _ = subAttr.append(string: tr(L10n.chatListSecretChatCreated(title)), color: theme.chatList.grayTextColor, font: .normal(.text))
+                        _ = subAttr.append(string: L10n.chatListSecretChatCreated(title), color: theme.chatList.grayTextColor, font: .normal(.text))
                     }
                     
                 }
@@ -116,11 +116,10 @@ func chatListText(account:Account, location: ChatLocation, for message:Message?,
     }
 
     if let message = message {
-        
-
+    
         if message.text.isEmpty && message.media.isEmpty {
             let attr = NSMutableAttributedString()
-            _ = attr.append(string: tr(L10n.chatListUnsupportedMessage), color: theme.chatList.grayTextColor, font: .normal(.text))
+            _ = attr.append(string: L10n.chatListUnsupportedMessage, color: theme.chatList.grayTextColor, font: .normal(.text))
             attr.setSelected(color: .white, range: attr.range)
             return attr
         }
@@ -128,47 +127,39 @@ func chatListText(account:Account, location: ChatLocation, for message:Message?,
         let peer = messageMainPeer(message)
         
         let messageText: NSString = pullText(from: message)
-        
+        let attributedText: NSMutableAttributedString = NSMutableAttributedString()
+
         if messageText.length > 0 {
-            var attributedText: NSMutableAttributedString
+            
+            if folder, let peer = peer {
+                _ = attributedText.append(string: peer.displayTitle + "\n", color: theme.chatList.peerTextColor, font: .normal(.text))
+            }
+            
             if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel {
-                let peerText: NSString = (author.id == account.peerId ? "\(L10n.chatListYou)\n" : author.compactDisplayTitle + "\n") as NSString
-                let mutableAttributedText = NSMutableAttributedString()
+                let peerText: NSString = (author.id == account.peerId ? "\(L10n.chatListYou)" + (folder ? ": " : "\n") : author.compactDisplayTitle + (folder ? ": " : "\n")) as NSString
                 
-                _ = mutableAttributedText.append(string: peerText as String, color: theme.chatList.peerTextColor, font: .normal(.text))
-                _ = mutableAttributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
-                attributedText = mutableAttributedText;
-            } else if location.groupId != nil {
-                let peerText = messageMainPeer(message)?.displayTitle ?? ""
-                let mutableAttributedText = NSMutableAttributedString()
-                
-                _ = mutableAttributedText.append(string: "\(peerText)\n", color: theme.chatList.peerTextColor, font: .normal(.text))
-                _ = mutableAttributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
-                attributedText = mutableAttributedText
+                _ = attributedText.append(string: peerText as String, color: theme.chatList.peerTextColor, font: .normal(.text))
+                _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
             } else {
-                attributedText = NSAttributedString.initialize(string: messageText as String, color: theme.chatList.grayTextColor, font: NSFont.normal(FontSize.text)).mutableCopy() as! NSMutableAttributedString
+                _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
             }
             attributedText.setSelected(color: .white,range: attributedText.range)
-            return attributedText
         } else if message.media.first is TelegramMediaAction {
-            let attributedText: NSMutableAttributedString = NSMutableAttributedString()
             _ = attributedText.append(string: serviceMessageText(message, account:account), color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: .white,range: attributedText.range)
-            return attributedText
         } else if let media = message.media.first as? TelegramMediaExpiredContent {
-            let attributedText: NSMutableAttributedString = NSMutableAttributedString()
             let text:String
             switch media.data {
             case .image:
-                text = tr(L10n.serviceMessageExpiredPhoto)
+                text = L10n.serviceMessageExpiredPhoto
             case .file:
-                text = tr(L10n.serviceMessageExpiredVideo)
+                text = L10n.serviceMessageExpiredVideo
             }
             _ = attributedText.append(string: text, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: .white,range: attributedText.range)
-            return attributedText
         }
-        
+        return attributedText
+
     }
     return NSAttributedString()
 }
@@ -204,6 +195,8 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
             } else {
                 return L10n.chatServiceGroupAddedMembers(authorName, peerDebugDisplayTitles(peerIds, message.peers))
             }
+        case .phoneNumberRequest:
+            return "phone number request"
         case .channelMigratedFromGroup:
             return ""
         case let .groupCreated(title: title):
@@ -369,7 +362,7 @@ func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
     return true
 }
 
-func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil) -> PeerStatusStringResult {
+func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil, expanded: Bool = false) -> PeerStatusStringResult {
     if let peer = peerViewMainPeer(peerView) {
     
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
@@ -381,7 +374,7 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
                 return PeerStatusStringResult(title, .initialize(string: L10n.presenceBot,  color: theme.statusColor, font: theme.statusFont))
             } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                let (string, activity, _) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
+                let (string, activity, _) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp), expanded: expanded)
                 
                 return PeerStatusStringResult(title, .initialize(string: string, color: activity && theme.highlightIfActivity ? theme.highlightColor : theme.statusColor, font: theme.statusFont), presence: presence)
 

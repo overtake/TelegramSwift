@@ -78,7 +78,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case recentlySearch(Peer, Int, SearchSecretChatWrapper?, PeerStatusStringResult, UnreadSearchBadge, Bool)
     case globalPeer(FoundPeer, Int)
     case savedMessages(Peer)
-    case message(Message,Int)
+    case message(Message, String,Int)
     case separator(text: String, index:Int, state:SeparatorBlockState)
     case topPeers(Int, articlesEnabled: Bool, unreadArticles: Int32, selfPeer: Peer, peers: [Peer], unread: [PeerId: UnreadSearchBadge], online: [PeerId : Bool])
     case emptySearch
@@ -91,7 +91,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .localPeerId(peer.id)
         case let .globalPeer(found, _):
             return .globalPeerId(found.peer.id)
-        case let .message(message,_):
+        case let .message(message, _, _):
             return .messageId(message.id)
         case .savedMessages:
             return .savedMessages
@@ -115,7 +115,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return index
         case let .globalPeer(_,index):
             return index
-        case let .message(_,index):
+        case let .message(_, _, index):
             return index
         case .savedMessages:
             return -1
@@ -156,10 +156,13 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .message(lhsMessage, lhsIndex):
-            if case let .message(rhsMessage, rhsIndex) = rhs {
+        case let .message(lhsMessage, lhsSearchText, lhsIndex):
+            if case let .message(rhsMessage, rhsSearchText, rhsIndex) = rhs {
                 
                 if lhsIndex != rhsIndex {
+                    return false
+                }
+                if lhsSearchText != rhsSearchText {
                     return false
                 }
                 if lhsMessage.id != rhsMessage.id {
@@ -228,7 +231,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 return updated
             })
         } |> mapToSignal { _ -> Signal<TogglePeerChatPinnedResult, NoError> in
-            return toggleItemPinned(postbox: arguments.context.account.postbox, itemId: .peer(peer.id))
+            return toggleItemPinned(postbox: arguments.context.account.postbox, groupId: .root, itemId: .peer(peer.id))
         } |> deliverOnMainQueue
         
         _ = updatePeer.start(next: { result in
@@ -243,8 +246,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
     
     let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
         switch entry.entry {
-        case let .message(message,_):
-            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, renderedPeer: RenderedPeer(message: message))
+        case let .message(message, query, _):
+            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, query: query, renderedPeer: RenderedPeer(message: message))
             return item
         case let .globalPeer(foundPeer,_):
             var status: String? = nil
@@ -422,9 +425,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private let context:AccountContext
     private var marked: Bool = false
     private let arguments:SearchControllerArguments
-    private var open:(PeerId?, Message?, Bool) -> Void = {_,_,_  in}
-    private let groupId: PeerGroupId?
+    private var open:(PeerId?, MessageId?, Bool) -> Void = {_,_,_  in}
+    private let groupId: PeerGroupId
     private let searchQuery:Promise = Promise<String?>()
+    private var query: String? = nil
     private let openPeerDisposable:MetaDisposable = MetaDisposable()
     private let statePromise:Promise<(SeparatorBlockState,SeparatorBlockState)> = Promise((SeparatorBlockState.short, SeparatorBlockState.short))
     private let disposable:MetaDisposable = MetaDisposable()
@@ -455,12 +459,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let statePromise = self.statePromise.get()
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
-        let groupId: PeerGroupId? = self.groupId
+        let groupId: PeerGroupId = self.groupId
         let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?), NoError> in
             if let query = query, !query.isEmpty {
                 var ids:[PeerId:PeerId] = [:]
                 
-                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(context.account.postbox.searchPeers(query: query.lowercased(), groupId: groupId), context.account.postbox.loadedPeerWithId(context.peerId))
+                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(context.account.postbox.searchPeers(query: query.lowercased()), context.account.postbox.loadedPeerWithId(context.peerId))
                     |> map { peers, accountPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
                         
@@ -491,7 +495,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 let foundRemotePeers: Signal<([ChatListSearchEntry], [ChatListSearchEntry], Bool), NoError>
                 
                 let location: SearchMessagesLocation
-                if let groupId = groupId {
+                if groupId != .root {
                     location = .group(groupId)
                     foundRemotePeers = .single(([], [], false))
                 } else if query.hasPrefix("#") || !options.contains(.chats) {
@@ -543,7 +547,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             var entries: [ChatListSearchEntry] = []
                             var index = 20001
                             for message in result.0.messages {
-                                entries.append(.message(message, index))
+                                entries.append(.message(message, query, index))
                                 index += 1
                             }
                             
@@ -687,23 +691,26 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         
         disposable.set(transition.start(next: { [weak self] (transition, loading, location, searchMessagesState) in
-            self?.genericView.merge(with: transition)
-            self?.isLoading.set(.single(loading))
+            guard let `self` = self else {return}
+            self.genericView.merge(with: transition)
+            self.isLoading.set(.single(loading))
             
             _ = searchMessagesStateValue.swap(searchMessagesState)
             
             if let location = location {
-                switch location {
-                case let .peer(peerId):
-                    let item = self?.genericView.item(stableId: ChatListSearchEntryStableId.globalPeerId(peerId)) ?? self?.genericView.item(stableId: ChatListSearchEntryStableId.localPeerId(peerId))
-                    if let item = item {
-                        _ = self?.genericView.select(item: item, notify: false, byClick: false)
+                if !(self.genericView.selectedItem() is ChatListMessageRowItem) {
+                    switch location {
+                    case let .peer(peerId):
+                        let item = self.genericView.item(stableId: ChatListSearchEntryStableId.globalPeerId(peerId)) ?? self.genericView.item(stableId: ChatListSearchEntryStableId.localPeerId(peerId))
+                        if let item = item {
+                            _ = self.genericView.select(item: item, notify: false, byClick: false)
+                        }
+                    default:
+                        self.genericView.cancelSelection()
                     }
-                default:
-                    self?.genericView.cancelSelection()
                 }
             } else {
-                self?.genericView.cancelSelection()
+                self.genericView.cancelSelection()
             }
         }))
 
@@ -740,34 +747,19 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let item = self?.genericView.selectedItem(), item.index > 0 {
-                self?.genericView.selectPrev()
-                if self?.genericView.selectedItem() is SeparatorRowItem {
-                    self?.genericView.selectPrev()
-                }
-            }
-            return .invoked
-        }, with: self, for: .UpArrow, priority: .modal, modifierFlags: [.command])
-        
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.genericView.selectNext()
-            if self?.genericView.selectedItem() is SeparatorRowItem {
-                self?.genericView.selectNext()
-            }
-            return .invoked
-        }, with: self, for: .DownArrow, priority: .modal, modifierFlags: [.command])
-        
+       
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
+            
+            if self.window?.firstResponder?.className != "TGUIKit.SearchTextField" {
+                return .rejected
+            }
+            
             if let highlighted = self.genericView.highlightedItem() {
                 _ = self.genericView.select(item: highlighted)
                 self.closeNext = true
 
             } else if !self.marked {
-                if self.window?.firstResponder?.className != "TGUIKit.SearchTextField" {
-                    return .rejected
-                }
                 self.genericView.cancelSelection()
                 self.genericView.selectNext()
                 self.closeNext = true
@@ -793,8 +785,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         removeHighlightEvents()
         
-        
+      
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            if self?.window?.firstResponder?.className != "TGUIKit.SearchTextField" {
+                return .rejected
+            }
             if let item = self?.genericView.highlightedItem(), item.index > 0 {
                 self?.genericView.highlightPrev(turnDirection: false)
                 while self?.genericView.highlightedItem() is PopularPeersRowItem || self?.genericView.highlightedItem() is SeparatorRowItem {
@@ -806,6 +801,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            if self?.window?.firstResponder?.className != "TGUIKit.SearchTextField" {
+                return .rejected
+            }
             self?.genericView.highlightNext(turnDirection: false)
             
             while self?.genericView.highlightedItem() is PopularPeersRowItem || self?.genericView.highlightedItem() is SeparatorRowItem {
@@ -816,12 +814,21 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }, with: self, for: .DownArrow, priority: .modal)
         
         
+        self.window?.set(handler: { () -> KeyHandlerResult in
+            return .rejected
+        }, with: self, for: .UpArrow, priority: .modal, modifierFlags: [.command])
+        
+        self.window?.set(handler: { () -> KeyHandlerResult in
+            return .rejected
+        }, with: self, for: .DownArrow, priority: .modal, modifierFlags: [.command])
+        
+        
     }
     
     private func removeHighlightEvents() {
         genericView.cancelHighlight()
-        self.window?.remove(object: self, for: .DownArrow, forceCheckFlags: true)
-        self.window?.remove(object: self, for: .UpArrow, forceCheckFlags: true)
+        self.window?.remove(object: self, for: .DownArrow)
+        self.window?.remove(object: self, for: .UpArrow)
     }
     
 
@@ -843,7 +850,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         disposable.dispose()
     }
     
-    init(context: AccountContext, open:@escaping(PeerId?,Message?, Bool) ->Void, options: AppSearchOptions = [.chats, .messages], frame:NSRect = NSZeroRect, groupId: PeerGroupId? = nil) {
+    init(context: AccountContext, open:@escaping(PeerId?, MessageId?, Bool) ->Void, options: AppSearchOptions = [.chats, .messages], frame:NSRect = NSZeroRect, groupId: PeerGroupId = .root) {
         self.context = context
         self.open = open
         self.options = options
@@ -875,7 +882,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     func request(with query:String?) -> Void {
-         setHighlightEvents()
+        setHighlightEvents()
+        self.query = query
         if let query = query, !query.isEmpty {
             searchQuery.set(.single(query))
         } else {
@@ -888,13 +896,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         var peer:Peer?
         var peerId:PeerId?
-        var message:Message?
+        var messageId:MessageId?
         
         let context = self.context
         
         if let item = item as? ChatListMessageRowItem {
             peer = item.peer
-            message = item.message
+            messageId = item.message?.id
             peerId = item.message!.id.peerId
         } else if let item = item as? ShortPeerRowItem {
             if let stableId = item.stableId.base as? ChatListSearchEntryStableId {
@@ -921,6 +929,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
 
             return
+        } else if item is PopularPeersRowItem {
+            peerId = context.peerId
         }
         
         var storedPeer: Signal<PeerId, NoError>
@@ -941,7 +951,18 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             storedPeer = .complete()
         }
         
-        
+        if let query = query, let peerId = peerId {
+            let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+            switch link {
+            case let .followResolvedName(_, _, postId, _, _, _):
+                if let postId = postId {
+                    messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: postId)
+                }
+            default:
+                break
+            }
+        }
+
         
         let recently: Signal<Void, NoError>
         if let peerId = peerId {
@@ -955,18 +976,21 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             recently = .single(Void())
         }
         
+        _ = combineLatest(storedPeer, recently).start()
         
         removeHighlightEvents()
 
         marked = true
         
-        openPeerDisposable.set((combineLatest(storedPeer, recently) |> deliverOnMainQueue).start( next: { [weak self] peerId, _ in
-            self?.open(peerId, message, self?.closeNext ?? false)
-        }))
+        if let peerId = peerId {
+            self.open(peerId, messageId, self.closeNext)
+        }
         
     }
     
-    func selectionWillChange(row: Int, item: TableRowItem) -> Bool {
+    func selectionWillChange(row: Int, item: TableRowItem, byClick: Bool) -> Bool {
+        
+        
         
         var peer: Peer? = nil
         if let item = item as? ChatListMessageRowItem {
@@ -983,6 +1007,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }
         
         if let peer = peer, let modalAction = navigationController?.modalAction {
+            
             if !modalAction.isInvokable(for: peer) {
                 modalAction.alertError(for: peer, with:window!)
                 return false

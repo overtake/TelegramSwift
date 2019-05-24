@@ -28,17 +28,50 @@ public extension NSAttributedString {
 
     }
     
-    public var range:NSRange {
+    var trimmed: NSAttributedString {
+        
+        let string:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
+        
+        while true {
+            let range = string.string.nsstring.range(of: "\u{2028}")
+            if range.location != NSNotFound {
+                string.replaceCharacters(in: range, with: "\n")
+            } else {
+                break
+            }
+        }
+        while true {
+            let range = string.string.nsstring.range(of: "\u{fffc}", options: .literal)
+            if range.location != NSNotFound {
+                string.replaceCharacters(in: range, with: "\n")
+            } else {
+                break
+            }
+        }
+        var range = string.string.nsstring.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines)
+        while !string.string.isEmpty, range.location == 0 {
+            string.replaceCharacters(in: NSMakeRange(0, 1), with: "")
+            range = string.string.nsstring.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines)
+        }
+        while !string.string.isEmpty, string.string.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines, options: [], range: string.string.index(string.string.endIndex, offsetBy: -1) ..< string.string.endIndex) != nil {
+            string.replaceCharacters(in: NSMakeRange(string.string.length - 1, 1), with: "")
+        }
+        
+        return string
+    }
+    
+    
+    var range:NSRange {
         return NSMakeRange(0, self.length)
     }
     
-    public func trimRange(_ range:NSRange) -> NSRange {
+    func trimRange(_ range:NSRange) -> NSRange {
         let loc:Int = min(range.location,self.length)
         let length:Int = min(range.length, self.length - loc)
         return NSMakeRange(loc, length)
     }
     
-    public static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
+    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
         _ = attr.append(string: string, color: color, font: font, coreText: true)
         
@@ -64,7 +97,7 @@ public extension NSAttributedString {
 public extension String {
     
     
-    public static func prettySized(with size:Int, afterDot: Int8 = 2) -> String {
+    static func prettySized(with size:Int, afterDot: Int8 = 2) -> String {
         var converted:Double = Double(size)
         var factor:Int = 0
         
@@ -88,7 +121,7 @@ public extension String {
         
     }
     
-    public var trimmed:String {
+    var trimmed:String {
         
         var string:String = self
         string = string.replacingOccurrences(of: "\u{2028}", with: "\n")
@@ -102,7 +135,7 @@ public extension String {
         return string
     }
     
-    public var fullTrimmed: String {
+    var fullTrimmed: String {
         var copy: String = self
         
         if copy.isEmpty {
@@ -150,25 +183,25 @@ public extension String {
 }
 
 public extension NSAttributedString.Key {
-    public static var preformattedCode: NSAttributedString.Key {
+    static var preformattedCode: NSAttributedString.Key {
         return NSAttributedString.Key(rawValue: "TGPreformattedCodeAttributeName")
     }
-    public static var preformattedPre: NSAttributedString.Key {
+    static var preformattedPre: NSAttributedString.Key {
         return NSAttributedString.Key(rawValue: "TGPreformattedPreAttributeName")
     }
-    public static var selectedColor: NSAttributedString.Key {
+    static var selectedColor: NSAttributedString.Key {
         return NSAttributedString.Key(rawValue: "KSelectedColorAttributeName")
     }
 }
 
 public extension NSPasteboard.PasteboardType {
-    public static var kUrl:NSPasteboard.PasteboardType {
+    static var kUrl:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType(kUTTypeURL as String)
     }
-    public static var kFilenames:NSPasteboard.PasteboardType {
+    static var kFilenames:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType("NSFilenamesPboardType")
     }
-    public static var kFileUrl: NSPasteboard.PasteboardType {
+    static var kFileUrl: NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType(kUTTypeFileURL as String)
     }
 }
@@ -214,7 +247,7 @@ public struct ParsingType: OptionSet {
 
 public extension NSMutableAttributedString {
     
-    public func append(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSRange {
+    func append(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSRange {
         
         if(string == nil) {
             return NSMakeRange(0, 0)
@@ -245,21 +278,21 @@ public extension NSMutableAttributedString {
         
     }
     
-    public func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
+    func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
         self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
         self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
     }
     
-    public func setCTFont(font:NSFont, range:NSRange) -> Void {
+    func setCTFont(font:NSFont, range:NSRange) -> Void {
         self.addAttribute(NSAttributedString.Key(kCTFontAttributeName as String), value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
     }
     
-    public func setSelected(color:NSColor,range:NSRange) -> Void {
+    func setSelected(color:NSColor,range:NSRange) -> Void {
         self.addAttribute(.selectedColor, value: color, range: range)
     }
 
     
-    public func setFont(font:NSFont, range:NSRange) -> Void {
+    func setFont(font:NSFont, range:NSRange) -> Void {
         self.addAttribute(NSAttributedString.Key.font, value: font, range: range)
     }
     
@@ -268,14 +301,14 @@ public extension NSMutableAttributedString {
 
 public extension CALayer {
     
-    public func disableActions() -> Void {
+    func disableActions() -> Void {
         
         self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(), "background":NSNull(), "position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull(), "shadowOffset": NSNull()]
         removeAllAnimations()
     }
     
     
-    public func animateBackground() ->Void {
+    func animateBackground() ->Void {
         let animation = CABasicAnimation(keyPath: "backgroundColor")
         animation.duration = 0.2
         self.add(animation, forKey: "backgroundColor")
@@ -283,13 +316,13 @@ public extension CALayer {
     
 
     
-    public func animateBorder() ->Void {
+    func animateBorder() ->Void {
         let animation = CABasicAnimation(keyPath: "borderWidth")
         animation.duration = 0.2
         self.add(animation, forKey: "borderWidth")
     }
     
-    public func animateContents() ->Void {
+    func animateContents() ->Void {
         let animation = CABasicAnimation(keyPath: "contents")
         animation.duration = 0.2
         self.add(animation, forKey: "contents")
@@ -299,11 +332,11 @@ public extension CALayer {
 
 public extension String {
     
-    public var nsstring:NSString {
+    var nsstring:NSString {
         return self as NSString
     }
     
-    public var length:Int {
+    var length:Int {
         return self.nsstring.length
     }
 }
@@ -311,7 +344,7 @@ public extension String {
 
 public extension NSView {
     
-    public var snapshot: NSImage {
+    var snapshot: NSImage {
         guard let bitmapRep = bitmapImageRepForCachingDisplay(in: bounds) else { return NSImage() }
         cacheDisplay(in: bounds, to: bitmapRep)
         let image = NSImage()
@@ -320,7 +353,7 @@ public extension NSView {
         return NSImage(data: dataWithPDF(inside: bounds))!
     }
     
-    public var subviewsSize: NSSize {
+    var subviewsSize: NSSize {
         var size: NSSize = NSZeroSize
         for subview in subviews {
             size.width += subview.frame.width
@@ -330,7 +363,7 @@ public extension NSView {
     }
     
     
-    public func _mouseInside() -> Bool {
+    func _mouseInside() -> Bool {
         if let window = self.window {
             var location:NSPoint = window.mouseLocationOutsideOfEventStream
             location = self.convert(location, from: nil)
@@ -340,6 +373,8 @@ public extension NSView {
                     if view.isEventLess {
                         return NSPointInRect(location, self.bounds)
                     }
+                } else if let view = view as? ImageView, view.isEventLess {
+                    return NSPointInRect(location, self.bounds)
                 }
                 if view == self {
                     return NSPointInRect(location, self.bounds)
@@ -372,7 +407,7 @@ public extension NSView {
         return false
     }
     
-    public var backingScaleFactor: CGFloat {
+    var backingScaleFactor: CGFloat {
         if let window = window {
             return window.backingScaleFactor
         } else {
@@ -380,13 +415,13 @@ public extension NSView {
         }
     }
     
-    public func removeAllSubviews() -> Void {
+    func removeAllSubviews() -> Void {
         while (self.subviews.count > 0) {
             self.subviews[0].removeFromSuperview();
         }
     }
     
-    public func isInnerView(_ view:NSView?) -> Bool {
+    func isInnerView(_ view:NSView?) -> Bool {
         var inner = false
         for i in 0 ..< subviews.count {
             inner = subviews[i] == view
@@ -400,15 +435,15 @@ public extension NSView {
         return inner
     }
     
-    public func setFrameSize(_ width:CGFloat, _ height:CGFloat) {
+    func setFrameSize(_ width:CGFloat, _ height:CGFloat) {
         self.setFrameSize(NSMakeSize(width, height))
     }
     
-    public func setFrameOrigin(_ x:CGFloat, _ y:CGFloat) {
+    func setFrameOrigin(_ x:CGFloat, _ y:CGFloat) {
         self.setFrameOrigin(NSMakePoint(x, y))
     }
     
-    public var background:NSColor {
+    var background:NSColor {
         get {
             if let view = self as? View {
                 return view.backgroundColor
@@ -427,7 +462,7 @@ public extension NSView {
         }
     }
     
-    public func centerX(_ superView:NSView? = nil, y:CGFloat? = nil, addition: CGFloat = 0) -> Void {
+    func centerX(_ superView:NSView? = nil, y:CGFloat? = nil, addition: CGFloat = 0) -> Void {
         
         var x:CGFloat = 0
         
@@ -440,7 +475,7 @@ public extension NSView {
         self.setFrameOrigin(NSMakePoint(x + addition, y == nil ? NSMinY(self.frame) : y!))
     }
     
-    public func focus(_ size:NSSize) -> NSRect {
+    func focus(_ size:NSSize) -> NSRect {
         var x:CGFloat = 0
         var y:CGFloat = 0
         
@@ -451,13 +486,13 @@ public extension NSView {
         return NSMakeRect(x, y, size.width, size.height)
     }
     
-    public func focus(_ size:NSSize, inset:NSEdgeInsets) -> NSRect {
+    func focus(_ size:NSSize, inset:NSEdgeInsets) -> NSRect {
         let x:CGFloat = CGFloat(round((frame.width - size.width + (inset.left + inset.right))/2.0))
         let y:CGFloat = CGFloat(round((frame.height - size.height + (inset.top + inset.bottom))/2.0))
         return NSMakeRect(x, y, size.width, size.height)
     }
     
-    public func centerY(_ superView:NSView? = nil, x:CGFloat? = nil, addition: CGFloat = 0) -> Void {
+    func centerY(_ superView:NSView? = nil, x:CGFloat? = nil, addition: CGFloat = 0) -> Void {
         
         var y:CGFloat = 0
         
@@ -471,7 +506,7 @@ public extension NSView {
     }
     
     
-    public func center(_ superView:NSView? = nil) -> Void {
+    func center(_ superView:NSView? = nil) -> Void {
         
         var x:CGFloat = 0
         var y:CGFloat = 0
@@ -489,7 +524,7 @@ public extension NSView {
     }
     
     
-    public func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
+    func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
         if animated {
             
             var presentX = NSMinX(self.frame)
@@ -513,7 +548,7 @@ public extension NSView {
       
     }
     
-    public func shake() {
+    func shake() {
         let a:CGFloat = 3
         if let layer = layer {
             self.layer?.shake(0.04, from:NSMakePoint(-a + layer.position.x,layer.position.y), to:NSMakePoint(a + layer.position.x, layer.position.y))
@@ -521,7 +556,7 @@ public extension NSView {
         NSSound.beep()
     }
     
-    public func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
+    func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
             let presentation = self.layer?.presentation()
@@ -540,7 +575,7 @@ public extension NSView {
         }
     }
     
-    public func _changeBounds(from: NSRect, to: NSRect, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
+    func _changeBounds(from: NSRect, to: NSRect, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         
         if save {
             self.bounds = to
@@ -558,7 +593,7 @@ public extension NSView {
         }
     }
     
-    public func _change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
+    func _change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         if animated {
             if let layer = self.layer {
                 var opacity:CGFloat = CGFloat(layer.opacity)
@@ -581,7 +616,7 @@ public extension NSView {
         }
     }
     
-    public func disableHierarchyInteraction() -> Void {
+    func disableHierarchyInteraction() -> Void {
         for sub in self.subviews {
             if let sub = sub as? View, sub.interactionStateForRestore == nil {
                 sub.interactionStateForRestore = sub.userInteractionEnabled
@@ -590,7 +625,7 @@ public extension NSView {
             sub.disableHierarchyInteraction()
         }
     }
-    public func restoreHierarchyInteraction() -> Void {
+    func restoreHierarchyInteraction() -> Void {
         for sub in self.subviews {
             if let sub = sub as? View, let resporeState = sub.interactionStateForRestore {
                 sub.userInteractionEnabled = resporeState
@@ -600,7 +635,7 @@ public extension NSView {
         }
     }
     
-    public func restoreHierarchyDynamicContent() -> Void {
+    func restoreHierarchyDynamicContent() -> Void {
         for sub in self.subviews {
             if let sub = sub as? View, let resporeState = sub.dynamicContentStateForRestore {
                 sub.isDynamicContentLocked = resporeState
@@ -610,7 +645,7 @@ public extension NSView {
         }
     }
     
-    public func disableHierarchyDynamicContent() -> Void {
+    func disableHierarchyDynamicContent() -> Void {
         for sub in self.subviews {
             if let sub = sub as? View, sub.interactionStateForRestore == nil {
                 sub.dynamicContentStateForRestore = sub.isDynamicContentLocked
@@ -628,7 +663,7 @@ public extension NSView {
 
 
 public extension NSTableView.AnimationOptions {
-    public static var none: NSTableView.AnimationOptions { get {
+    static var none: NSTableView.AnimationOptions { get {
             return NSTableView.AnimationOptions(rawValue: 0)
         }
     }
@@ -636,7 +671,7 @@ public extension NSTableView.AnimationOptions {
 }
 
 public extension CGSize {
-    public func fitted(_ size: CGSize) -> CGSize {
+    func fitted(_ size: CGSize) -> CGSize {
         var fittedSize = self
         if fittedSize.width > size.width {
             fittedSize = CGSize(width: size.width, height: ceil((fittedSize.height * size.width / max(fittedSize.width, 1.0))))
@@ -667,11 +702,11 @@ public extension CGSize {
         return size;
     }
     
-    public func cropped(_ size: CGSize) -> CGSize {
+    func cropped(_ size: CGSize) -> CGSize {
         return CGSize(width: min(size.width, self.width), height: min(size.height, self.height))
     }
     
-    public func fittedToArea(_ area: CGFloat) -> CGSize {
+    func fittedToArea(_ area: CGFloat) -> CGSize {
         if self.height < 1.0 || self.width < 1.0 {
             return CGSize()
         }
@@ -681,26 +716,26 @@ public extension CGSize {
         return CGSize(width: ceil(width), height: ceil(height))
     }
     
-    public func aspectFilled(_ size: CGSize) -> CGSize {
+    func aspectFilled(_ size: CGSize) -> CGSize {
         let scale = max(size.width / max(1.0, self.width), size.height / max(1.0, self.height))
         return CGSize(width: ceil(self.width * scale), height: ceil(self.height * scale))
     }
-    public func fittedToWidthOrSmaller(_ width: CGFloat) -> CGSize {
+    func fittedToWidthOrSmaller(_ width: CGFloat) -> CGSize {
         let scale = min(1.0, width / max(1.0, self.width))
         return CGSize(width: floor(self.width * scale), height: floor(self.height * scale))
     }
     
-    public func aspectFitted(_ size: CGSize) -> CGSize {
+    func aspectFitted(_ size: CGSize) -> CGSize {
         let scale = min(size.width / max(1.0, self.width), size.height / max(1.0, self.height))
         return CGSize(width: ceil(self.width * scale), height: ceil(self.height * scale))
     }
     
-    public func multipliedByScreenScale() -> CGSize {
+    func multipliedByScreenScale() -> CGSize {
         let scale:CGFloat = 2.0
         return CGSize(width: self.width * scale, height: self.height * scale)
     }
     
-    public func dividedByScreenScale() -> CGSize {
+    func dividedByScreenScale() -> CGSize {
         let scale:CGFloat = 2.0
         return CGSize(width: self.width / scale, height: self.height / scale)
     }
@@ -758,29 +793,29 @@ public extension NSImage {
 }
 
 public extension CGRect {
-    public var topLeft: CGPoint {
+    var topLeft: CGPoint {
         return self.origin
     }
     
-    public var topRight: CGPoint {
+    var topRight: CGPoint {
         return CGPoint(x: self.maxX, y: self.minY)
     }
     
-    public var bottomLeft: CGPoint {
+    var bottomLeft: CGPoint {
         return CGPoint(x: self.minX, y: self.maxY)
     }
     
-    public var bottomRight: CGPoint {
+    var bottomRight: CGPoint {
         return CGPoint(x: self.maxX, y: self.maxY)
     }
     
-    public var center: CGPoint {
+    var center: CGPoint {
         return CGPoint(x: self.midX, y: self.midY)
     }
 }
 
 public extension CGPoint {
-    public func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
+    func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
         return CGPoint(x: self.x + dx, y: self.y + dy)
     }
 }
@@ -821,7 +856,7 @@ public extension CGImage {
     }
 
     
-    public func createMatchingBackingDataWithImage(orienation: ImageOrientation) -> CGImage?
+    func createMatchingBackingDataWithImage(orienation: ImageOrientation) -> CGImage?
     {
         var orientedImage: CGImage?
         let imageRef = self
@@ -1001,7 +1036,7 @@ public struct NSRectCorner: OptionSet {
 }
 
 public extension CGContext {
-    public func round(_ size:NSSize,_ corners:CGFloat = .cornerRadius) {
+    func round(_ size:NSSize,_ corners:CGFloat = .cornerRadius) {
         let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
         let miny:CGFloat = 0, midy = size.height/2.0, maxy = size.height
         
@@ -1016,7 +1051,7 @@ public extension CGContext {
 
     }
     
-    public func round(_ frame: NSRect, flags: LayoutPositionFlags) {
+    func round(_ frame: NSRect, flags: LayoutPositionFlags) {
         var topLeftRadius: CGFloat = 0
         var bottomLeftRadius: CGFloat = 0
         var topRightRadius: CGFloat = 0
@@ -1051,7 +1086,7 @@ public extension CGContext {
     }
     
     
-    public static func round(frame: NSRect, cornerRadius: CGFloat, rectCorner: NSRectCorner) -> CGPath {
+    static func round(frame: NSRect, cornerRadius: CGFloat, rectCorner: NSRectCorner) -> CGPath {
         
         let path = CGMutablePath()
         
@@ -1104,19 +1139,19 @@ public extension CGContext {
 
 
 public extension NSRange {
-    public var min:Int {
+    var min:Int {
         return self.location
     }
-    public var max:Int {
+    var max:Int {
         return self.location + self.length
     }
-    public func indexIn(_ index: Int) -> Bool {
+    func indexIn(_ index: Int) -> Bool {
         return NSLocationInRange(index, self)
     }
 }
 
 public extension NSBezierPath {
-    public var cgPath: CGPath {
+    var cgPath: CGPath {
         let path = CGMutablePath()
         var points = [CGPoint](repeating: .zero, count: 3)
         for i in 0 ..< self.elementCount {
@@ -1136,11 +1171,11 @@ public extension NSBezierPath {
 
 public extension NSRect {
     
-    public func apply(multiplier: NSSize) -> NSRect {
+    func apply(multiplier: NSSize) -> NSRect {
         return NSMakeRect(round(minX * multiplier.width), round(minY * multiplier.height), round(width * multiplier.width), round(height * multiplier.height))
     }
     
-    public func rotate90Degress(parentSize: NSSize) -> NSRect {
+    func rotate90Degress(parentSize: NSSize) -> NSRect {
 
        
         
@@ -1294,13 +1329,14 @@ public extension Int {
         }
     }
     
-    public var prettyNumber:String {
+    var prettyNumber:String {
         if self < 1000 {
             return "\(self)"
         }
-        return self.prettyFormatter(self, iteration: 0)
+        
+        return self.prettyFormatter(self, iteration: 0).replacingOccurrences(of: ".", with: Locale.current.decimalSeparator ?? ".")
     }
-    public var separatedNumber: String {
+    var separatedNumber: String {
         if self < 1000 {
             return "\(self)"
         }
@@ -1331,7 +1367,7 @@ public extension Int {
 
 
 public extension ProgressIndicator {
-    public func set(color:NSColor) {
+    func set(color:NSColor) {
         let color = color.usingColorSpace(NSColorSpace.sRGB)
 
         let colorPoly = CIFilter(name: "CIColorPolynomial")
@@ -1350,14 +1386,14 @@ public extension ProgressIndicator {
 }
 
 public extension String {
-    public func prefix(_ by:Int) -> String {
+    func prefix(_ by:Int) -> String {
         if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
             return String(self[..<index])
         }
         return String(stringLiteral: self)
     }
     
-    public func prefixWithDots(_ by:Int) -> String {
+    func prefixWithDots(_ by:Int) -> String {
         if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
             var new = String(self[..<index])
             if new.length != self.length {
@@ -1369,14 +1405,14 @@ public extension String {
         return String(stringLiteral: self)
     }
     
-    public func fromSuffix(_ by:Int) -> String {
+    func fromSuffix(_ by:Int) -> String {
         if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
             return String(self[index..<self.endIndex])
         }
         return String(stringLiteral: self)
     }
     
-    public static func durationTransformed(elapsed:Int) -> String {
+    static func durationTransformed(elapsed:Int) -> String {
         let h = elapsed / 3600
         let m = (elapsed / 60) % 60
         let s = elapsed % 60
@@ -1392,26 +1428,26 @@ public extension String {
 }
 
 public extension NSTextField {
-    public func setSelectionRange(_ range: NSRange) {
+    func setSelectionRange(_ range: NSRange) {
         textView?.setSelectedRange(range)
     }
     
-    public var selectedRange: NSRange {
+    var selectedRange: NSRange {
         if let textView = textView {
             return textView.selectedRange
         }
         return NSMakeRange(0, 0)
     }
     
-    public func setCursorToEnd() {
+    func setCursorToEnd() {
         self.setSelectionRange(NSRange(location: self.stringValue.length, length: 0))
     }
     
-    public func setCursorToStart() {
+    func setCursorToStart() {
         self.setSelectionRange(NSRange(location: 0, length: 0))
     }
     
-    public var textView:NSTextView? {
+    var textView:NSTextView? {
         let textView = (self.window?.fieldEditor(true, for: self) as? NSTextView)
         textView?.backgroundColor = .clear
         textView?.drawsBackground = true
@@ -1420,11 +1456,11 @@ public extension NSTextField {
 }
 
 public extension NSTextView {
-    public func selectAllText() {
+    func selectAllText() {
         setSelectedRange(NSMakeRange(0, self.string.length))
     }
     
-    public func appendText(_ text: String) -> Void {
+    func appendText(_ text: String) -> Void {
         let inputText = self.attributedString().mutableCopy() as! NSMutableAttributedString
         
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
@@ -1438,11 +1474,11 @@ public extension NSTextView {
 
 
 public extension String {
-    public var emojiSkinToneModifiers: [String] {
+    var emojiSkinToneModifiers: [String] {
         return [ "🏻", "🏼", "🏽", "🏾", "🏿" ]
     }
     
-    public var emojiVisibleLength: Int {
+    var emojiVisibleLength: Int {
         var count = 0
         enumerateSubstrings(in: startIndex..<endIndex, options: .byComposedCharacterSequences) { _,_,_,_  in
             count += 1
@@ -1450,30 +1486,35 @@ public extension String {
         return count
     }
     
-    public var emojiUnmodified: String {
-        if self.isEmpty {
-            return ""
+    var emojiUnmodified: String {
+        var emoji = self
+        for skin in emoji.emojiSkinToneModifiers {
+            emoji = emoji.replacingOccurrences(of: skin, with: "")
         }
-        if nsstring.length <= 2 {
-            return self
-        } else if nsstring.length == 4 {
-            if emojiSkinToneModifiers.contains(nsstring.substring(from: 2)) {
-                 return nsstring.substring(to: nsstring.length - 2)
-            } else {
-                return self
-            }
-        } else if nsstring.length == 5 {
-            if emojiSkinToneModifiers.contains(nsstring.substring(with: NSMakeRange(2, 2))) {
-                return nsstring.substring(to: 2)
-            }
-            return self
-        } else if nsstring.length == 7 {
-            return nsstring.substring(with: NSMakeRange(0, 2)) + nsstring.substring(with: NSMakeRange(4, 3))
-        }
-        return nsstring.substring(to: min(nsstring.length - 2, 2))
+        return emoji
+//        if self.isEmpty {
+//            return ""
+//        }
+//        if nsstring.length <= 2 {
+//            return self
+//        } else if nsstring.length == 4 {
+//            if emojiSkinToneModifiers.contains(nsstring.substring(from: 2)) {
+//                 return nsstring.substring(to: nsstring.length - 2)
+//            } else {
+//                return self
+//            }
+//        } else if nsstring.length == 5 {
+//            if emojiSkinToneModifiers.contains(nsstring.substring(with: NSMakeRange(2, 2))) {
+//                return nsstring.substring(to: 2)
+//            }
+//            return self
+//        } else if nsstring.length == 7 {
+//            return nsstring.substring(with: NSMakeRange(0, 2)) + nsstring.substring(with: NSMakeRange(4, 3))
+//        }
+//        return nsstring.substring(to: min(nsstring.length - 2, 2))
     }
     
-    public func emojiWithSkinModifier(_ modifier: String) -> String {
+    func emojiWithSkinModifier(_ modifier: String) -> String {
         switch nsstring.length {
         case 5:
             return nsstring.substring(to: 2) + modifier + nsstring.substring(from: 2)
@@ -1482,7 +1523,7 @@ public extension String {
         }
     }
     
-    public var emojiSkin: String {
+    var emojiSkin: String {
         if self.length < 2 {
             return ""
         }
@@ -1495,38 +1536,37 @@ public extension String {
         return ""
     }
     
-    public var canHaveSkinToneModifier: Bool {
+    var canHaveSkinToneModifier: Bool {
         if self.isEmpty {
             return false
         }
         
         let modified = self.emojiUnmodified + self.emojiSkinToneModifiers[0]
-        return modified.emojiVisibleLength == 1
+        return modified.glyphCount == 1
     }
     
-    public var glyphCount: Int {
+    var glyphCount: Int {
         
         let richText = NSAttributedString(string: self)
         let line = CTLineCreateWithAttributedString(richText)
         return CTLineGetGlyphCount(line)
     }
     
-    public var isSingleEmoji: Bool {
+    var isSingleEmoji: Bool {
         return glyphCount == 1 && containsEmoji
     }
     
-    public var containsEmoji: Bool {
-        
-        return !unicodeScalars.filter { $0.isEmoji }.isEmpty
+    var containsEmoji: Bool {
+        return unicodeScalars.first(where: { $0.isEmoji }) != nil
     }
     
-    public var containsOnlyEmoji: Bool {
+    var containsOnlyEmoji: Bool {
         
         return unicodeScalars.first(where: { !$0.isEmoji && !$0.isZeroWidthJoiner }) == nil
     }
     
 
-    public var emojiString: String {
+    var emojiString: String {
         
         return emojiScalars.map { String($0) }.reduce("", +)
     }
@@ -1603,6 +1643,14 @@ extension UnicodeScalar {
         }
     }
 
+    var isEmojiFlag: Bool {
+        switch value {
+        case 0x1F1E6...0x1F1FF: // Flags
+            return true
+            
+        default: return false
+        }
+    }
     
     var isZeroWidthJoiner: Bool {
         return value == 8205
@@ -1642,11 +1690,11 @@ public extension Sequence where Iterator.Element: Equatable {
     }
 }
 public extension String {
-    public func capitalizingFirstLetter() -> String {
+    func capitalizingFirstLetter() -> String {
         return prefix(1).uppercased() + dropFirst()
     }
     
-    mutating public func capitalizeFirstLetter() {
+    mutating func capitalizeFirstLetter() {
         self = self.capitalizingFirstLetter()
     }
 }
@@ -1721,7 +1769,7 @@ class GestureUtils{
 }
 public extension NSView {
     
-    public func widthConstraint(relation: NSLayoutConstraint.Relation,
+    func widthConstraint(relation: NSLayoutConstraint.Relation,
                          size: CGFloat) -> NSLayoutConstraint {
         return NSLayoutConstraint(item: self,
                                   attribute: .width,
@@ -1732,7 +1780,7 @@ public extension NSView {
                                   constant: size)
     }
     
-    public func addWidthConstraint(relation: NSLayoutConstraint.Relation = .equal,
+    func addWidthConstraint(relation: NSLayoutConstraint.Relation = .equal,
                             size: CGFloat) {
         addConstraint(widthConstraint(relation: relation,
                                       size: size))
@@ -1741,7 +1789,7 @@ public extension NSView {
 }
 
 public extension NSWindow {
-    public var bounds: NSRect {
+    var bounds: NSRect {
         return NSMakeRect(0, 0, frame.width, frame.height)
     }
 }
@@ -1759,7 +1807,7 @@ public extension String {
 
 
 public extension Formatter {
-    public static let withSeparator: NumberFormatter = {
+    static let withSeparator: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.locale = NSLocale.current
         formatter.numberStyle = .decimal
@@ -1768,7 +1816,7 @@ public extension Formatter {
 }
 
 public extension BinaryInteger {
-    public var formattedWithSeparator: String {
+    var formattedWithSeparator: String {
         return Formatter.withSeparator.string(for: self) ?? ""
     }
 }
