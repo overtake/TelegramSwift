@@ -17,16 +17,16 @@ class ChatFileContentView: ChatMediaContentView {
     
 
 
-    var actionsLayout:TextViewLayout?
+    private var actionsLayout:TextViewLayout?
     
-    let progressView:RadialProgressView = RadialProgressView()
-    
+    private let progressView:RadialProgressView = RadialProgressView()
+    private var thumbProgress: RadialProgressView?
     private let thumbView:TransformImageView = TransformImageView()
     
-    var titleNode:TextNode = TextNode()
-    var actionText:TextView = TextView()
+    private var titleNode:TextNode = TextNode()
+    private var actionText:TextView = TextView()
     
-    var actionInteractions:TextViewInteractions = TextViewInteractions()
+    private var actionInteractions:TextViewInteractions = TextViewInteractions()
     
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
@@ -276,8 +276,8 @@ class ChatFileContentView: ChatMediaContentView {
         self.setNeedsDisplay()
                 
         if let updatedStatusSignal = updatedStatusSignal {
-            self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status, archiveStatus in
-                guard let `self` = self else {return}
+            self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self, weak file] status, archiveStatus in
+                guard let `self` = self, let file = file else { return }
                 self.fetchStatus = status
                 
                 let layout = self.actionLayout(status: status, archiveStatus: archiveStatus, file: file, presentation: presentation, paremeters: parameters)
@@ -285,6 +285,56 @@ class ChatFileContentView: ChatMediaContentView {
                     layout?.interactions = self.actionInteractions
                     self.actionText.update(layout)
                 }
+                
+                
+                self.progressView.isHidden = !file.previewRepresentations.isEmpty
+               
+                
+                var removeThumbProgress: Bool = false
+                if case .Local = status {
+                    removeThumbProgress = true
+                }
+                
+                if !file.previewRepresentations.isEmpty {
+                    
+                    if !removeThumbProgress {
+                        if self.thumbProgress == nil {
+                            let progressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
+                            progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: 40.0, height: 40.0))
+                            self.thumbProgress = progressView
+                            self.addSubview(progressView)
+                            let f = self.thumbView.focus(progressView.frame.size)
+                            self.thumbProgress?.setFrameOrigin(f.origin)
+                            progressView.fetchControls = self.fetchControls
+                        }
+                        switch status {
+                        case .Remote:
+                            self.thumbProgress?.state = .Remote
+                        case let .Fetching(_, progress):
+                            self.thumbProgress?.state = .Fetching(progress: progress, force: false)
+                        default:
+                            break
+                        }
+                    } else {
+                        if let progressView = self.thumbProgress {
+                            switch progressView.state {
+                            case .Fetching:
+                                progressView.state = .Fetching(progress:1.0, force: false)
+                            default:
+                                break
+                            }
+                            self.thumbProgress = nil
+                            progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
+                                if completed {
+                                    progressView?.removeFromSuperview()
+                                }
+                            })
+                            
+                        }
+                    }
+                    
+                }
+                
                 switch status {
                 case let .Fetching(_, progress):
                     var progress = progress
@@ -301,6 +351,7 @@ class ChatFileContentView: ChatMediaContentView {
                     progress = max(progress, 0.1)
                     self.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
                     self.progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Fetching(progress: progress, force: false)
+                    
                 case .Local:
                     self.progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil)
                     self.progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb, mode: .normal)
@@ -323,8 +374,10 @@ class ChatFileContentView: ChatMediaContentView {
             actionText.setFrameOrigin(leftInset, parameters.hasThumb ? center + 2 : 20)
             
             if parameters.hasThumb {
-                let f = thumbView.focus(progressView.frame.size)
-                progressView.setFrameOrigin(f.origin)
+                if let thumbProgress = thumbProgress {
+                    let f = thumbView.focus(thumbProgress.frame.size)
+                    thumbProgress.setFrameOrigin(f.origin)
+                }
             } else {
                 progressView.setFrameOrigin(NSZeroPoint)
             }
