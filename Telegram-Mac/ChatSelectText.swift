@@ -19,6 +19,14 @@ struct SelectContainer {
 
 class SelectManager : NSResponder {
     
+    override init() {
+        super.init()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     private var ranges:[(AnyHashable,WeakReference<TextView>, SelectContainer)] = []
     
     func add(range:NSRange, textView: TextView, text: NSAttributedString, header: String?, stableId: AnyHashable) {
@@ -162,10 +170,11 @@ class SelectManager : NSResponder {
     }
 }
 
-let selectManager:SelectManager = {
-    let manager = SelectManager()
-    return manager
-}()
+let selectManager:SelectManager = SelectManager()
+
+func initializeSelectManager() {
+    _ = selectManager.isEmpty
+}
 
 protocol MultipleSelectable {
     var selectableTextViews:[TextView] { get }

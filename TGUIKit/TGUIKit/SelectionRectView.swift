@@ -20,7 +20,7 @@ public enum SelectionRectDimensions {
     case x4_5
     case x5_7
     case x9_16
-    
+    case x16_9
     public var description: String {
         switch self {
         case .none:
@@ -41,6 +41,8 @@ public enum SelectionRectDimensions {
             return "5x7"
         case .x9_16:
             return "9x16"
+        case .x16_9:
+            return "16x9"
         }
     }
     
@@ -53,17 +55,19 @@ public enum SelectionRectDimensions {
         case .square:
             return 1
         case .x2_3:
-            return 2 / 3
+            return 3 / 2
         case .x3_5:
-            return 3 / 5
+            return 5 / 3
         case .x3_4:
-            return 3 / 4
+            return 4 / 3
         case .x4_5:
-            return 4 / 5
+            return 5 / 4
         case .x5_7:
-            return 5 / 7
+            return 7 / 5
         case .x9_16:
-            return 9 / 17
+            return 16 / 9
+        case .x16_9:
+            return 9 / 16
         }
     }
     
@@ -112,7 +116,7 @@ public enum SelectionRectDimensions {
     }
     
     public static var all: [SelectionRectDimensions] {
-        return [.original, .square, .x2_3, .x3_5, .x3_4, .x4_5, .x5_7, .x9_16]
+        return [.original, .square, .x2_3, .x3_5, .x3_4, .x4_5, .x5_7, .x9_16, .x16_9]
     }
 }
 

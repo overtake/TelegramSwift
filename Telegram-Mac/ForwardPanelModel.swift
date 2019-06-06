@@ -52,28 +52,16 @@ class ForwardPanelModel: ChatAccessoryModel {
         
         
         for message in forwardMessages {
-            
-            var hasSource: Bool = false
-            for attr in message.attributes {
-                if let _ = attr as? SourceReferenceMessageAttribute {
-                    if let info = message.forwardInfo {
-                        names.append(info.authorTitle)
-                    }
-                    hasSource = true
-                    break
-                }
-            }
-            if let peer = messageMainPeer(message), let author = message.author, !hasSource  {
+            if let author = message.chatPeer(account.peerId) {
                 if !used.contains(author.id) {
                     used.insert(author.id)
-                    if peer.isChannel {
-                        names.append(peer.displayTitle)
+                    if author.isChannel {
+                        names.append(author.displayTitle)
                     } else {
                         names.append(author.displayTitle)
                     }
                 }
             }
-            
         }
         
         self.headerAttr = NSAttributedString.initialize(string: names.joined(separator: ", "), color: theme.colors.blueUI, font: .medium(.text))

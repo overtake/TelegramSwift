@@ -127,11 +127,10 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager, accoun
 
         })
     }
-    
     let signal = statePromise.get() |> map { state in
-        return (forgotPasswordEntries(state: state, pattern: emailPattern, unavailable: {
+        return InputDataSignalValue(entries: forgotPasswordEntries(state: state, pattern: emailPattern, unavailable: {
              alert(for: mainWindow, info: L10n.twoStepAuthRecoveryFailed)
-        }), true)
+        }))
     }
     
     let controller = InputDataController(dataSignal: signal, title: L10n.twoStepAuthRecoveryTitle, validateData: { data in

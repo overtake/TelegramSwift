@@ -456,7 +456,7 @@ class ChatListRowItem: TableRowItem {
         var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState:embeddedState)
         
         if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
-            if copy.range.contains(range.min) && copy.range.contains(range.max - 1) {
+            if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
                 copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
                 copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
                 messageText = copy

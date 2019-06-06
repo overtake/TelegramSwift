@@ -472,6 +472,11 @@ public extension NSView {
             x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
         }
         
+        if x == 128.0 {
+            var bp:Int = 0
+            bp += 1
+        }
+        
         self.setFrameOrigin(NSMakePoint(x + addition, y == nil ? NSMinY(self.frame) : y!))
     }
     

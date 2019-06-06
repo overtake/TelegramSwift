@@ -117,9 +117,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         
       
-        
-
-        
+        initializeSelectManager()
 
         
         if #available(OSX 10.12.2, *) {

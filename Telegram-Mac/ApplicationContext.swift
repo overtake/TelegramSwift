@@ -207,7 +207,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
-            self.rightController.show(toaster: toaster, animated: animated)
+            self.rightController.controller.show(toaster: toaster, animated: animated)
         }, globalSearch: { [weak self] search in
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")

@@ -286,7 +286,7 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     })
     
-    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map {($0, true)}, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()

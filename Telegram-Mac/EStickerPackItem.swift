@@ -19,6 +19,10 @@ class EStickerPackRowItem: TableRowItem {
     override var height:CGFloat {
         return 40.0
     }
+    
+    override var width: CGFloat {
+        return 40
+    }
 
     var info:StickerPackCollectionInfo
     var topItem:StickerPackItem?
@@ -51,7 +55,10 @@ class ERecentPackRowItem: TableRowItem {
     override var height:CGFloat {
         return 40.0
     }
-        var interaction:EStickersInteraction
+    override var width: CGFloat {
+        return 40
+    }
+    let interaction:EStickersInteraction
     
     let _stableId:ChatMediaGridCollectionStableId
     override var stableId:AnyHashable {
@@ -247,6 +254,9 @@ class ERecentPackRowView: HorizontalRowView {
 class EStickerSpecificPackItem: TableRowItem {
     override var height:CGFloat {
         return 40.0
+    }
+    override var width: CGFloat {
+        return 40
     }
     let interaction:EStickersInteraction
     fileprivate let specificPack: (StickerPackCollectionInfo, Peer)

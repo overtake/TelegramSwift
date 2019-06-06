@@ -570,7 +570,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
         
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
+        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: chatTextAttributes(from: attributed))
+        
         chatInteraction.update({ current in
             var current = current
             current = current.withUpdatedEffectiveInputState(state)

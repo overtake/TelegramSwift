@@ -231,8 +231,8 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
    
     
     
-    let signal: Signal<([InputDataEntry], Bool), NoError> = statePromise.get() |> map { value in
-        return (newPollEntries(value, deleteOption: deleteOption), animated.swap(true))
+    let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> map { value in
+        return InputDataSignalValue(entries: newPollEntries(value, deleteOption: deleteOption), animated: animated.swap(true))
     }
     
     

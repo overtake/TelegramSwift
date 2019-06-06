@@ -686,7 +686,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
     }
     
     
-    return InputDataController(dataSignal: signal |> map {($0, true)}, title: L10n.privacySettingsTwoStepVerification, validateData: { validateData -> InputDataValidation in
+    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.privacySettingsTwoStepVerification, validateData: { validateData -> InputDataValidation in
         
         let data = stateValue.with {$0.data}
         let loading = stateValue.with {$0.checking}
@@ -916,7 +916,7 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
         })
     }
     
-    return InputDataController(dataSignal: signal |> map {($0, true)}, title: L10n.twoStepAuthRecoveryTitle, validateData: { data in
+    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.twoStepAuthRecoveryTitle, validateData: { data in
         
         let code = stateValue.with {$0.code}
         let loading = stateValue.with {$0.checking}
@@ -1195,7 +1195,7 @@ func twoStepVerificationPasswordEntryController(network: Network, mode: TwoStepV
     }
 
 
-    return InputDataController(dataSignal: signal |> map {($0, true)}, title: "", validateData: { data -> InputDataValidation in
+    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: "", validateData: { data -> InputDataValidation in
         
         var stage: PasswordEntryStage?
         var allowPerform: Bool = true

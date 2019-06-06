@@ -107,7 +107,7 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
     
     var shouldMakeNextResponderAfterTransition: InputDataIdentifier? = nil
     
-    let controller = InputDataController(dataSignal: dataSignal |> map { ($0, true) }, title: L10n.contactsAddContact, validateData: { data in
+    let controller = InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: L10n.contactsAddContact, validateData: { data in
         
         return .fail(.doSomething { f in
             let state = stateValue.with {$0}

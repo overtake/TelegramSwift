@@ -300,7 +300,29 @@ class ServiceEventLogItem: TableRowItem {
                     text = tr(L10n.eventLogServiceRemovedStickerSet(peer.displayTitle))
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .linkedPeerUpdated(previous, updated):
+                let text: String
+                var secondaryLink:(range: String, link: inAppLink)?
+                if let updated = updated {
+                    if let peer = result.peers[result.peerId] as? TelegramChannel, case .group = peer.info {
+                        text = L10n.channelEventLogMessageChangedLinkedChannel(peer.displayTitle, updated.displayTitle)
+                        secondaryLink = (range: updated.displayTitle, link: inAppLink.peerInfo(link: "", peerId: updated.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
+                    } else {
+                        text = L10n.channelEventLogMessageChangedLinkedGroup(peer.displayTitle, updated.displayTitle)
+                        secondaryLink = (range: updated.displayTitle, link: inAppLink.peerInfo(link: "", peerId: updated.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
+                    }
+                } else if let previous = previous {
+                    if let peer = result.peers[result.peerId] as? TelegramChannel, case .group = peer.info {
+                        text = L10n.channelEventLogMessageChangedUnlinkedChannel(peer.displayTitle, previous.displayTitle)
+                        secondaryLink = (range: previous.displayTitle, link: inAppLink.peerInfo(link: "", peerId: previous.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
 
+                    } else {
+                        text = L10n.channelEventLogMessageChangedUnlinkedGroup(peer.displayTitle)
+                    }
+                } else {
+                    text = ""
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
             case let .participantToggleAdmin(prev, new):
                 switch prev.participant {
                 case let .member(memberId, _, adminInfo: prevAdminInfo, banInfo: _):

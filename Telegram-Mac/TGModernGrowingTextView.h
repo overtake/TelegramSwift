@@ -57,6 +57,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 @interface TGGrowingTextView : NSTextView<NSServicesMenuRequestor>
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
+@property (nonatomic,weak) TGModernGrowingTextView  * _Nullable weakTextView;
 
 
 @end

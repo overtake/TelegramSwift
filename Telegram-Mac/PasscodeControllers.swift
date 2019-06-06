@@ -139,7 +139,7 @@ func PasscodeController(sharedContext: SharedAccountContext, mode: PasscodeMode)
 
     let actionsDisposable = DisposableSet()
     
-    return InputDataController(dataSignal: dataSignal |> map { ($0, true) }, title: title, validateData: { data in
+    return InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: title, validateData: { data in
         
         
         return .fail(.doSomething { f in

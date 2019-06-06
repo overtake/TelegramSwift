@@ -29,7 +29,8 @@ class TouchBarStickerItemView: NSScrubberItemView {
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions.aspectFitted(imageSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
 
         imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
-        imageView.setSignal(chatMessageSticker(account: account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file), type: .thumb, scale: backingScaleFactor), cacheImage: { [weak self] signal in
+        
+        imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak self] signal in
             if let strongSelf = self {
                 return cacheMedia(signal: signal, media: file, arguments: arguments, scale: strongSelf.backingScaleFactor)
             } else {
@@ -38,7 +39,7 @@ class TouchBarStickerItemView: NSScrubberItemView {
         })
         imageView.set(arguments: arguments)
         imageView.setFrameSize(imageSize)
-        fetchDisposable.set(fileInteractiveFetched(account: account, fileReference: FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file)).start())
+     //   fetchDisposable.set(fileInteractiveFetched(account: account, fileReference: FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file)).start())
     }
     
     required init?(coder: NSCoder) {

@@ -73,9 +73,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
         super.viewWillDisappear(animated)
         webview.removeFromSuperview()
         webview.stopLoading()
-       // webview.mainFrame.stopLoading()
-      //  webView.stopLoading(nil)
-      //  webView.removeFromSuperview()
+        webview.loadHTMLString("", baseURL: nil)
     }
     
     deinit {

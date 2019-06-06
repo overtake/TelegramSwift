@@ -132,5 +132,5 @@ func CallSettingsModalController(_ sharedContext: SharedAccountContext) -> Input
     let signal = combineLatest(voiceCallSettings(sharedContext.accountManager), inputDevices(), outputDevices()) |> map { value, inputDevices, outputDevices in
         return callSettingsEntries(state: value, arguments: arguments, inputDevices: inputDevices, outputDevices: outputDevices)
     }
-    return InputDataController(dataSignal: signal |> map { ($0, true) }, title: L10n.callSettingsTitle)
+    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.callSettingsTitle)
 }

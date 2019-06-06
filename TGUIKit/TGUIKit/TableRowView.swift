@@ -28,6 +28,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.wantsLayer = true
         backgroundColor = .clear
         self.layerContentsRedrawPolicy = .never
+        autoresizingMask = []
       //  self.layer?.delegate = self
         self.layer?.backgroundColor = backdorColor.cgColor
         autoresizesSubviews = false

@@ -108,3 +108,18 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
         }
     }
 }
+
+
+final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
+    var uniqueId: String {
+        return "animated-sticker-v19"
+    }
+    
+    func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if let _ = to as? CachedAnimatedStickerRepresentation {
+            return true
+        } else {
+            return false
+        }
+    }
+}

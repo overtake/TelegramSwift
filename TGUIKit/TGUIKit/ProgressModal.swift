@@ -128,6 +128,10 @@ class SuccessModalController : ModalViewController {
     private var genericView: SuccessModalView {
         return self.view as! SuccessModalView
     }
+    
+    override var redirectMouseAfterClosing: Bool {
+        return true
+    }
 
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)

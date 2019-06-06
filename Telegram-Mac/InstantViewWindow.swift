@@ -304,6 +304,10 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                 instantController = nil
             } else {
                 self?._window.toggleFullScreen(nil)
+                delay(0.8, closure: {
+                    self?._window.orderOut(self)
+                    instantController = nil
+                })
             }
             return true
         }
@@ -315,6 +319,8 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                     instantController = nil
                 } else {
                     window.toggleFullScreen(nil)
+                    var bp:Int = 0
+                    bp += 1
                 }
             }
 			

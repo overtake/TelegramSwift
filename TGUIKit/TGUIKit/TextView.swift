@@ -1287,6 +1287,7 @@ public class TextView: Control, NSViewToolTipOwner {
     func _mouseDown(with event: NSEvent) -> Void {
         
         if !isSelectable || !userInteractionEnabled || event.modifierFlags.contains(.shift) {
+            super.mouseDown(with: event)
             return
         }
         

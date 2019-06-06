@@ -258,7 +258,7 @@ func cancelResetAccountController(account: Account, phone: String, data: CancelA
     
     
     let signal = combineLatest(statePromise.get(), currentDataPromise.get(), timeout.get()) |> map { state, data, timeout in
-        return (cancelResetAccountEntries(state: state, data: data, timeout: timeout, phone: phone), true)
+        return InputDataSignalValue(entries: cancelResetAccountEntries(state: state, data: data, timeout: timeout, phone: phone))
     }
     
     let resendCode = currentDataPromise.get()

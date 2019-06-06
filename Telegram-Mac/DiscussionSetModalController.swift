@@ -52,10 +52,13 @@ private final class DiscussionSetView : View {
         groupPhoto.setPeer(account: context.account, peer: group)
         
         let attributedString = NSMutableAttributedString()
-        if channel.addressName == nil {
-            _ = attributedString.append(string: L10n.discussionSetModalTextPrivate(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
+        
+        if channel.addressName == nil && group.addressName != nil {
+            _ = attributedString.append(string: L10n.discussionSetModalTextPrivateChannelPublicGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
+        } else if group.addressName == nil {
+            _ = attributedString.append(string: L10n.discussionSetModalTextChannelPrivateGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
         } else {
-            _ = attributedString.append(string: L10n.discussionSetModalTextPublic(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
+            _ = attributedString.append(string: L10n.discussionSetModalTextPublicChannelPublicGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
         }
         attributedString.detectBoldColorInString(with: .medium(.text))
         
@@ -92,6 +95,21 @@ class DiscussionSetModalController: ModalViewController {
         modal?.resize(with: size, animated: false)
         readyOnce()
     }
+    
+    override var handleEvents: Bool {
+        return true
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        self.close()
+        self.accept()
+        return .invoked
+    }
+    
+    override var handleAllEvents: Bool {
+        return true
+    }
+    
     
     private var genericView:DiscussionSetView {
         return self.view as! DiscussionSetView

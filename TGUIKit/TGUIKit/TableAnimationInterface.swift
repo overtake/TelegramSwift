@@ -75,7 +75,6 @@ open class TableAnimationInterface: NSObject {
             
             contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
             
-            CATransaction.begin()
             if range.length >= added[0].index {
                 for idx in added[0].index ..< range.length {
                     
@@ -97,7 +96,6 @@ open class TableAnimationInterface: NSObject {
                     }
                 }
             }
-            CATransaction.commit()
             
         } else if !scrollBelow {
             contentView.bounds = NSMakeRect(0, bounds.minY + height, contentView.bounds.width, contentView.bounds.height)

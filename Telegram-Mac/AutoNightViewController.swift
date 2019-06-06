@@ -143,7 +143,7 @@ func autoNightSettingsController(_ sharedContext: SharedAccountContext) -> Input
     
     var getController:(()->InputDataController?)? = nil
     
-    controller = InputDataController(dataSignal: signal |> map {($0, true)}, title: L10n.autoNightSettingsTitle, validateData: { data in
+    controller = InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.autoNightSettingsTitle, validateData: { data in
         
         if let _ = data[_id_disabled] {
             _ = updateAutoNightSettingsInteractively(accountManager: sharedContext.accountManager, { current in

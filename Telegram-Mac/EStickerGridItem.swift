@@ -286,14 +286,13 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
         if let dimensions = file.dimensions {
 
             
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: eStickerSize, boundingSize: eStickerSize, intrinsicInsets: NSEdgeInsets())
             imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
-            
-            imageView.setSignal(chatMessageSticker(account: context.account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file), type: .small, scale: backingScaleFactor), cacheImage: { image -> Signal<Void, NoError> in
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { image -> Signal<Void, NoError> in
                 return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
             })
 
-            stickerFetchedDisposable.set(fileInteractiveFetched(account: context.account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)).start())
+           // stickerFetchedDisposable.set(fileInteractiveFetched(account: context.account, fileReference: file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)).start())
             
             let imageSize = dimensions.aspectFitted(eStickerSize)
             imageView.set(arguments: arguments)

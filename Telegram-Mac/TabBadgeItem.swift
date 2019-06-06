@@ -56,7 +56,7 @@ private final class AvatarTabContainer : View {
         if animated {
             let from: CGFloat = selected ? 1 : 24 / frame.height
             let to: CGFloat = selected ? 24 / frame.height : 1
-            avatar.layer?.animateScaleSpring(from: from, to: to, duration: 0.18, removeOnCompletion: false, bounce: false, completion: { completed in
+            avatar.layer?.animateScaleSpring(from: from, to: to, duration: 0.25, removeOnCompletion: false, bounce: false, completion: { completed in
                 
             })
         } else {

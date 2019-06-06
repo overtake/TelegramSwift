@@ -365,9 +365,9 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
 
 func AppUpdateViewController() -> InputDataController {
     
-    let signal: Signal<([InputDataEntry], Bool), NoError> = statePromise.get() |> map { value in
+    let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> map { value in
         return appUpdateEntries(state: value)
-    } |> map { ($0, true) }
+    } |> map { InputDataSignalValue(entries: $0) }
     
 
     return InputDataController(dataSignal: signal, title: L10n.appUpdateTitle, validateData: { data in

@@ -150,6 +150,11 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
                 items.append(.chatInputAction(text))
                 items.append(.flexibleSpace)
             }
+        case let .channelWithDiscussion(_, leftAction, rightAction):
+            items.append(.flexibleSpace)
+            items.append(.chatInputAction(leftAction))
+            items.append(.chatInputAction(rightAction))
+            items.append(.flexibleSpace)
         default:
             break
         }
@@ -246,10 +251,22 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     @objc private func attachLocation() {
         chatInteraction.attachLocation()
     }
-    @objc private func invokeInputAction() {
+    @objc private func invokeInputAction(_ sender: Any?) {
+        
         switch chatInteraction.presentation.state {
         case .action(_, let action):
             action(chatInteraction)
+        case let .channelWithDiscussion(_, leftAction, rightAction):
+            if let sender = sender as? NSButton {
+                switch sender.title {
+                case leftAction:
+                    chatInteraction.toggleNotifications()
+                case rightAction:
+                    chatInteraction.openDiscussion()
+                default:
+                    break
+                }
+            }
         default:
             break
         }
@@ -404,12 +421,23 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     
     func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
         
-        let actionKey: String
-        switch chatInteraction.presentation.state {
-        case let .action(title, _):
-            actionKey = title
-        default:
-            actionKey = ""
+//        let actionKey: String
+//        switch chatInteraction.presentation.state {
+//        case let .action(title, _):
+//            actionKey = title
+//        default:
+//            actionKey = ""
+//        }
+        
+        if let range = identifier.rawValue.range(of: NSTouchBarItem.Identifier.chatInputAction("").rawValue) {
+            let actionKey = String(identifier.rawValue[range.upperBound...])
+            let item = NSCustomTouchBarItem(identifier: identifier)
+            let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction(_:)))
+            button.addWidthConstraint(size: 200)
+            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.blueUI
+            item.view = button
+            item.customizationLabel = button.title
+            return item
         }
         
         switch identifier {
@@ -539,14 +567,14 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             item.view = button
             item.customizationLabel = button.title
             return item
-        case .chatInputAction(actionKey):
-            let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction))
-            button.addWidthConstraint(size: 200)
-            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.blueUI
-            item.view = button
-            item.customizationLabel = button.title
-            return item
+//        case chatInputAction(actionKey):
+//            let item = NSCustomTouchBarItem(identifier: identifier)
+//            let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction))
+//            button.addWidthConstraint(size: 200)
+//            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.blueUI
+//            item.view = button
+//            item.customizationLabel = button.title
+//            return item
         case .chatForwardMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesForward"))!

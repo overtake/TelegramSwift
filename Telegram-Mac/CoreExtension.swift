@@ -376,8 +376,8 @@ public extension TelegramMediaFile {
     }
     
     var isAnimatedSticker: Bool {
-        if let fileName = fileName, fileName.hasPrefix("tg_animated_sticker_secret_") {
-            return false
+        if let fileName = fileName, fileName.hasSuffix("tgs"), mimeType == "application/x-tgsticker" {
+            return true
         } else {
             return false
         }
@@ -434,12 +434,32 @@ public extension Message {
         return nil
     }
     
+    func isCrosspostFromChannel(account: Account) -> Bool {
+        
+        var sourceReference: SourceReferenceMessageAttribute?
+        for attribute in self.attributes {
+            if let attribute = attribute as? SourceReferenceMessageAttribute {
+                sourceReference = attribute
+                break
+            }
+        }
+        
+        var isCrosspostFromChannel = false
+        if let _ = sourceReference {
+            if self.id.peerId != account.peerId {
+                isCrosspostFromChannel = true
+            }
+        }
+
+        return isCrosspostFromChannel
+    }
+    
     var isHasInlineKeyboard: Bool {
         return replyMarkup?.flags.contains(.inline) ?? false
     }
     
     func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
-        if isBubbled, let peer = chatPeer, peer.isChannel {
+        if isBubbled, let peer = chatPeer(account.peerId), peer.isChannel {
             return true
         }
         
@@ -452,12 +472,16 @@ public extension Message {
         return flags.contains(.Incoming)
     }
     
-    var chatPeer: Peer? {
+    func chatPeer(_ accountPeerId: PeerId) -> Peer? {
         var _peer: Peer?
         for attr in attributes {
-            if let _ = attr as? SourceReferenceMessageAttribute {
+            if let source = attr as? SourceReferenceMessageAttribute {
                 if let info = forwardInfo {
-                    _peer = info.author
+                    if let peer = peers[source.messageId.peerId], peer is TelegramChannel, accountPeerId != id.peerId {
+                        _peer = peer
+                    } else {
+                        _peer = info.author
+                    }
                 }
                 break
             }
@@ -465,7 +489,7 @@ public extension Message {
         
         if let peer = messageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
             _peer = peer
-        } else if let author = author, _peer == nil {
+        } else if let author = effectiveAuthor, _peer == nil {
             if author is TelegramSecretChat {
                 return messageMainPeer(self)
             } else {
@@ -799,7 +823,7 @@ func canPinMessage(_ message:Message, for peer:Peer, account:Account) -> Bool {
 
 func canReportMessage(_ message: Message, _ account: Account) -> Bool {
     if let peer = messageMainPeer(message), message.author?.id != account.peerId {
-        return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer?.isBot == true)
+        return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(account.peerId)?.isBot == true)
     } else {
         return false
     }
@@ -2544,7 +2568,7 @@ extension MessageForwardInfo {
 
 
 func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) -> Bool {
-    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.text.count <= 3 && message.text.containsOnlyEmoji
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && message.text.count <= 3 && message.text.containsOnlyEmoji
 }
 
 
@@ -2556,5 +2580,24 @@ struct PeerEquatable: Equatable {
     }
     static func ==(lhs: PeerEquatable, rhs: PeerEquatable) -> Bool {
         return lhs.peer.isEqual(rhs.peer)
+    }
+}
+
+
+extension CGImage {
+    var cvPixelBuffer: CVPixelBuffer? {
+        var pixelBuffer: CVPixelBuffer? = nil
+        let options: [NSObject: Any] = [
+            kCVPixelBufferCGImageCompatibilityKey: false,
+            kCVPixelBufferCGBitmapContextCompatibilityKey: false,
+            ]
+        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32BGRA, options as CFDictionary, &pixelBuffer)
+        CVPixelBufferLockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer!)
+        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
+        let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer!), space: rgbColorSpace, bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue)
+        context?.draw(self, in: CGRect(origin: .zero, size: size))
+        CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        return pixelBuffer
     }
 }

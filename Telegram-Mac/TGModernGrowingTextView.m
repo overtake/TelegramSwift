@@ -104,7 +104,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 @end
 
 
+@interface TGModernGrowingTextView ()
+-(void)textDidChange:(NSNotification *)notification;
 
+@end
 
 
 
@@ -414,10 +417,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     if (![[self undoManager] isUndoing]) {
         [[self undoManager] setActionName:NSLocalizedString(@"actions.remove-item", @"Remove Item")];
     }
-    NSLog(@"%@", item.was);
     [[self textStorage] setAttributedString:item.was];
     [self setSelectedRange:item.wasRange];
     [self.weakd textViewTextDidChangeSelectedRange:item.wasRange];
+    [self.weakTextView textDidChange:nil];
 }
 
 
@@ -695,6 +698,8 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         [_placeholder setEnabled:NO];
         
         [self addSubview:_placeholder];
+        
+        _textView.weakTextView = self;
                 
         
     }
@@ -732,7 +737,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
 
     if ((self._selectedRange.location != self.textView.selectedRange.location) || (self._selectedRange.length != self.textView.selectedRange.length)) {
-        [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+        });
         self._selectedRange = self.textView.selectedRange;
     }
         
@@ -834,8 +841,14 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit: self];
     
     if (self.string != nil && self.string.length > 0 && self.string.length - _defaultText.length > limit) {
-        NSString *sub = [self.string substringWithRange:NSMakeRange(_defaultText.length, limit)];
-        [self setString:sub animated: notification != nil];
+        
+        NSAttributedString *string = [self.attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit, self.attributedString.string.length))];
+        
+        NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
+        NSRange selectedRange = _textView.selectedRange;
+        [_textView.textStorage setAttributedString:attr];
+        [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
+        [self update:notification != nil];
         if ([self.delegate respondsToSelector:@selector(textViewDidReachedLimit:)])
             [self.delegate textViewDidReachedLimit: self];
         return;
@@ -980,7 +993,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [self setNeedsDisplay:YES];
     
     if (_textView.selectedRange.location != NSNotFound) {
-        [_textView setSelectedRange:_textView.selectedRange];
+        [self setSelectedRange:_textView.selectedRange];
     }
     
     [self setNeedsDisplay:YES];
@@ -1157,6 +1170,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 
 - (void)refreshAttributes {
+    
     @try {
         NSAttributedString *string = _textView.attributedString;
         if (string.length == 0) {
@@ -1313,7 +1327,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         
     }
     
-    [self.inputView setSelectedRange:self.selectedRange];
+    [self setSelectedRange:self.selectedRange];
 }
 
 -(void)boldWord {

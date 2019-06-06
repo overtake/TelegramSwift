@@ -893,8 +893,15 @@ class ChatListController : PeersListController {
     }
     
     func openChat(_ index: Int) {
-        if genericView.tableView.count > index {
-            _ = genericView.tableView.select(item: genericView.tableView.item(at: index), notify: true, byClick: true)
+        if !genericView.tableView.isEmpty {
+            let archiveItem = genericView.tableView.item(at: 0) as? ChatListRowItem
+            var index: Int = index
+            if let item = archiveItem, item.isAutohidden || item.archiveStatus == .collapsed {
+                index += 1
+            }
+            if genericView.tableView.count > index {
+                _ = genericView.tableView.select(item: genericView.tableView.item(at: index), notify: true, byClick: true)
+            }
         }
     }
     
@@ -902,6 +909,8 @@ class ChatListController : PeersListController {
         super.viewWillDisappear(animated)
         context.window.removeAllHandlers(for: self)
         context.window.removeAllHandlers(for: genericView.tableView)
+        
+        removeRevealStateIfNeeded(nil)
     }
     
 //    override func getLeftBarViewOnce() -> BarView {

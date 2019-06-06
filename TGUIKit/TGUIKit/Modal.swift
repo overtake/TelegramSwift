@@ -376,9 +376,13 @@ public class Modal: NSObject {
         
        
         
-        background.set(handler: { [weak self] _ in
-            if let closable = self?.controller?.closable, closable {
-                self?.controller?.close()
+        background.set(handler: { [weak self] control in
+            guard let controller = self?.controller else { return }
+            if controller.closable {
+                controller.close()
+            }
+            if controller.redirectMouseAfterClosing, let event = NSApp.currentEvent {
+                control.performSuperMouseUp(event)
             }
         }, for: .Click)
         

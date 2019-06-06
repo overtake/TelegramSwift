@@ -299,12 +299,12 @@ class WPArticleContentView: WPContentView {
                         } else {
                             
                             let playable = ExternalVideoLoader.isPlayable(layout.content)
-                            if playable && layout.isFullImageSize {
+                            if layout.isFullImageSize, let icon = ExternalVideoLoader.playIcon(layout.content) {
                                 if self.playIcon == nil {
                                     self.playIcon = ImageView()
                                     self.imageView?.addSubview(self.playIcon!)
                                 }
-                                self.playIcon?.image = ExternalVideoLoader.playIcon(layout.content)
+                                self.playIcon?.image = icon
                                 self.playIcon?.sizeToFit()
                             } else {
                                 self.playIcon?.removeFromSuperview()

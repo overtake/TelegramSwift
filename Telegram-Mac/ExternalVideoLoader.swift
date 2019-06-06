@@ -70,6 +70,7 @@ private final class ExternalVideoStatusContext {
 private let youtubeName = "YouTube"
 private let vimeoName = "Vimeo"
 
+fileprivate let twitterIcon = #imageLiteral(resourceName: "icons8-circled-play-48").precomposed()
 fileprivate let youtubeIcon = #imageLiteral(resourceName: "icon_YouTubePlay").precomposed()
 fileprivate let vimeoIcon = #imageLiteral(resourceName: "Icon_VimeoPlay").precomposed()
 
@@ -85,10 +86,16 @@ class ExternalVideoLoader {
     private var cancelTokensVimeo:[WrappedExternalVideoId: Any] = [:]
     
     static func isPlayable(_ content:TelegramMediaWebpageLoadedContent) -> Bool {
+        
         return (content.websiteName == youtubeName || content.websiteName == vimeoName) && content.image != nil
     }
     
     static func playIcon(_ content:TelegramMediaWebpageLoadedContent) -> CGImage? {
+        if let embedUrl = content.embedUrl {
+            if embedUrl.contains("twitter.com/i/videos") && content.image != nil {
+                return twitterIcon
+            }
+        }
         if content.websiteName == vimeoName  {
             return vimeoIcon
         } else if content.websiteName == youtubeName {

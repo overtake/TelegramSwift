@@ -322,6 +322,24 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                     text = L10n.channelErrorAddTooMuch
                 case .generic:
                     text = L10n.unknownError
+                case let .bot(memberId):
+                    let _ = (context.account.postbox.transaction { transaction in
+                        return transaction.getPeer(peerId)
+                        }
+                        |> deliverOnMainQueue).start(next: { peer in
+                            guard let peer = peer as? TelegramChannel else {
+                                alert(for: context.window, info: L10n.unknownError)
+                                return
+                            }
+                            if peer.hasPermission(.addAdmins) {
+                                confirm(for: context.window, information: L10n.channelAddBotErrorHaveRights, okTitle: L10n.channelAddBotAsAdmin, successHandler: { _ in
+                                    showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _, f in f() }), for: context.window)
+                                })
+                            } else {
+                                alert(for: context.window, info: L10n.channelAddBotErrorHaveRights)
+                            }
+                        })
+                    return
                 case .restricted:
                     text = L10n.channelErrorAddBlocked
                 }

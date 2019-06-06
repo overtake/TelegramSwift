@@ -380,7 +380,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .notifications:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: .next, action: {
-                arguments.presentController(NotificationSettingsViewController(arguments.context), true)
+                arguments.presentController(NotificationPreferencesController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case let .language(_, current):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(current), action: {
@@ -478,22 +478,18 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
     
-    if accounts.count > 1 {
-        for account in accounts {
-            if account.peer.id != peerView.peerId {
-                entries.append(.accountRecord(index: index, info: account))
-                index += 1
-            }
-        }
-        if accounts.count < 3 {
-            entries.append(.addAccount(index: index))
+    for account in accounts {
+        if account.peer.id != peerView.peerId {
+            entries.append(.accountRecord(index: index, info: account))
             index += 1
         }
-      
-        
-        entries.append(.whiteSpace(index: index, height: 20))
+    }
+    if accounts.count < 3 {
+        entries.append(.addAccount(index: index))
         index += 1
     }
+    entries.append(.whiteSpace(index: index, height: 20))
+    index += 1
     
     if !proxySettings.0.servers.isEmpty {
         let status: String
@@ -676,10 +672,6 @@ class LayoutAccountController : TableViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
                     _ = genericView.select(item: item)
                 }
-            } else if navigation.controller is NotificationSettingsViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(4))) {
-                    _ = genericView.select(item: item)
-                }
             } else if navigation.controller is PrivacyAndSecurityViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
                     _ = genericView.select(item: item)
@@ -716,6 +708,10 @@ class LayoutAccountController : TableViewController {
                     }
                 case controller.identifier == "app_update":
                     if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
+                        _ = genericView.select(item: item)
+                    }
+                case controller.identifier == "notification-settings":
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(4))) {
                         _ = genericView.select(item: item)
                     }
                 default:

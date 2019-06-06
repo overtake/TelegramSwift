@@ -65,6 +65,10 @@ private final class PopularPeerItem : TableRowItem {
         return 66
     }
     
+    override var width: CGFloat {
+        return 74
+    }
+    
     override var stableId: AnyHashable {
         return type
     }
@@ -187,7 +191,7 @@ private final class PopularPeerItemView : HorizontalRowView {
         layout.measure(width: frame.width - 10)
         textView.update(layout)
         
-        needsLayout = true
+        self.needsLayout = true
     }
     
     override func layout() {
@@ -264,6 +268,7 @@ private final class PopularPeersRowView : TableRowView {
         }
         
         tableView.endTableUpdates()
+        
         separator.backgroundColor = theme.colors.border
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
     }

@@ -19,6 +19,7 @@ aip:text/x-audiosoft-intra
 ani:application/x-navi-animation
 aos:application/x-nokia-9000-communicator-add-on-software
 aps:application/mime
+tgs:application/x-tgsticker
 arc:application/octet-stream
 arj:application/arj
 arj:application/octet-stream

@@ -858,9 +858,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         self.arguments = SearchControllerArguments(context: context, removeRecentPeerId: { peerId in
             _ = removeRecentlySearchedPeer(postbox: context.account.postbox, peerId: peerId).start()
         }, clearRecent: {
-            _ = (recentlySearchedPeers(postbox: context.account.postbox) |> take(1) |> mapToSignal {
-                return combineLatest($0.map {removeRecentlySearchedPeer(postbox: context.account.postbox, peerId: $0.peer.peerId)})
-            }).start()
+            confirm(for: context.window, information: L10n.searchConfirmClearHistory, successHandler: { _ in
+                _ = (recentlySearchedPeers(postbox: context.account.postbox) |> take(1) |> mapToSignal {
+                    return combineLatest($0.map {removeRecentlySearchedPeer(postbox: context.account.postbox, peerId: $0.peer.peerId)})
+                }).start()
+            })
+           
         }, openTopPeer: { type in
             switch type {
             case let .peer(peer, _, _):

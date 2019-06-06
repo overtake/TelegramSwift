@@ -113,16 +113,15 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
                     
                     let view = TransformImageView()
-                    let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
                     view.setSignal(signal: cachedMedia(media: data.file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                    view.setSignal( chatMessageSticker(account: item.context.account, fileReference: reference, type: .small, scale: backingScaleFactor), cacheImage: { [weak self] signal in
+                    view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak self] signal in
                         if let strongSelf = self {
                             return cacheMedia(signal: signal, media: data.file, arguments: arguments, scale: strongSelf.backingScaleFactor)
                         } else {
                             return .complete()
                         }
                     })
-                    _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
+                   // _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
                     
                     view.set(arguments: arguments)
                     

@@ -292,8 +292,13 @@ class ChatMediaItem: ChatRowItem {
         
         super.init(initialSize, chatInteraction, context, object, downloadSettings)
         
+        var canAddCaption: Bool = true
+        if let media = media as? TelegramMediaFile, media.isAnimatedSticker || media.isSticker {
+            canAddCaption = false
+        }
         
-        if !message.text.isEmpty {
+        if !message.text.isEmpty, canAddCaption {
+            
             
             
             var caption:NSMutableAttributedString = NSMutableAttributedString()

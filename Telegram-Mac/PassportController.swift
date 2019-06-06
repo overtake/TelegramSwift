@@ -2944,7 +2944,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 let push:(SecureIdRequestedFormFieldValue, SecureIdRequestedFormFieldValue?, Bool) -> Void = { field, relative, hasMainField in
                     presentController(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
                         return addressEntries(state, hasMainField: hasMainField, relative: relative, updateState: updateState)
-                    } |> map {($0, true)}, title: relative?.rawValue ?? field.rawValue, validateData: { data in
+                        } |> map { InputDataSignalValue(entries: $0) }, title: relative?.rawValue ?? field.rawValue, validateData: { data in
 
                         if let _ = data[_id_delete] {
                             return .fail(.doSomething { next in
@@ -3173,7 +3173,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 let push:(SecureIdRequestedFormFieldValue, SecureIdRequestedFormFieldValue?, SecureIdRequestedFormFieldValue?) ->Void = { field, relative, primary in
                     presentController(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
                         return identityEntries(state, primary: primary, relative: relative, updateState: updateState)
-                    } |> map {($0, true)}, title: relative?.rawValue ?? field.rawValue, validateData: { data in
+                    } |> map { InputDataSignalValue(entries: $0) }, title: relative?.rawValue ?? field.rawValue, validateData: { data in
 
 
                         if let _ = data[_id_delete] {
@@ -3560,7 +3560,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }
                     presentController(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
                         return emailEntries(state, updateState: updateState)
-                    } |> map {($0, true)}, title: title, validateData: validate, updateDatas: { data in
+                    } |> map { InputDataSignalValue(entries: $0) }, title: title, validateData: validate, updateDatas: { data in
                         if let payload = _payload, let code = data[_id_email_code]?.stringValue, code.length == payload.length {
                             return validate(data)
                         }
@@ -3623,7 +3623,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                                     
                                                     presentController(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
                                                         return confirmPhoneNumberEntries(state, phoneNumber: phone, updateState: updateState)
-                                                    } |> map {($0, true)}, title: title, validateData: validate, updateDatas: { data in
+                                                    } |> map { InputDataSignalValue(entries: $0) }, title: title, validateData: validate, updateDatas: { data in
                                                         if let payload = _payload, let code = data[_id_phone_code]?.stringValue {
                                                             switch payload.type {
                                                             case let .sms(length):
@@ -3658,7 +3658,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }
                     presentController(InputDataController(dataSignal: state.get() |> map { state in
                         return phoneNumberEntries(state, updateState: updateState)
-                        } |> map {($0, true)}, title: title, validateData: validate, afterDisappear: {
+                        } |> map { InputDataSignalValue(entries: $0) }, title: title, validateData: validate, afterDisappear: {
 
                     }, identifier: "passport"))
                 }
@@ -3671,7 +3671,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             promise.set(combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
                 return createPasswordEntries(state)
             })
-            let controller = InputDataController(dataSignal: promise.get() |> map {($0, true)}, title: L10n.secureIdCreatePasswordTitle, validateData: { data in
+            let controller = InputDataController(dataSignal: promise.get() |> map { InputDataSignalValue(entries: $0) }, title: L10n.secureIdCreatePasswordTitle, validateData: { data in
 
                 let password = data[_id_c_password]!.stringValue!
                 let repassword = data[_id_c_repassword]!.stringValue!
@@ -3862,7 +3862,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     promise.set(combineLatest(Signal<[InputDataEntry], NoError>.single(recoverEmailEntries(emailPattern: emailPattern, unavailable: {
                         alert(for: mainWindow, info: L10n.twoStepAuthRecoveryFailed)
                     })) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {$0.0})
-                    presentController(InputDataController(dataSignal: promise.get() |> map {($0, true)}, title: L10n.secureIdRecoverPassword, validateData: { data -> InputDataValidation in
+                    presentController(InputDataController(dataSignal: promise.get() |> map { InputDataSignalValue(entries: $0) }, title: L10n.secureIdRecoverPassword, validateData: { data -> InputDataValidation in
                         
                         let code = data[_id_email_code]?.stringValue ?? ""
                         if code.isEmpty {

@@ -287,6 +287,10 @@ open class Control: View {
         }
     }
     
+    func performSuperMouseUp(_ event: NSEvent) {
+         super.mouseUp(with: event)
+    }
+    
     
     
     public func send(event:ControlEvent) -> Void {

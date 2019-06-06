@@ -12,10 +12,14 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 class ChatStickerContentView: ChatMediaContentView {
-
+    private let statusDisposable = MetaDisposable()
     private var image:TransformImageView = TransformImageView()
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        statusDisposable.dispose()
     }
     
     override var backgroundColor: NSColor {
@@ -57,21 +61,27 @@ class ChatStickerContentView: ChatMediaContentView {
             self.image.animatesAlphaOnFirstTransition = false
            
             self.image.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-            self.image.setSignal( chatMessageSticker(account: context.account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file), type: .chatMessage, scale: backingScaleFactor), cacheImage: { [weak self] signal in
-                if let strongSelf = self {
-                    return cacheMedia(signal: signal, media: file, arguments: arguments, scale: strongSelf.backingScaleFactor)
-                } else {
-                    return .complete()
-                }
+            self.image.setSignal( chatMessageSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { signal in
+                return cacheMedia(signal: signal, media: file, arguments: arguments, scale: System.backingScale)
             })
             
             self.image.set(arguments: arguments)
             self.image.setFrameSize(arguments.imageSize)
             _ = fileInteractiveFetched(account: context.account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)).start()
+            
+            self.fetchStatus = .Local
+            
+            let signal = context.account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue
+            
+            statusDisposable.set(signal.start(next: { [weak self] status in
+                self?.fetchStatus = status
+            }))
         }
         
     }
     
 
-    
+    override var contents: Any? {
+        return self.image.layer?.contents
+    }
 }

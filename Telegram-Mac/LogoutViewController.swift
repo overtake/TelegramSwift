@@ -136,5 +136,5 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
     }
     
     
-    return InputDataController(dataSignal: signal |> map {($0, true)}, title: L10n.logoutOptionsTitle, hasDone: false)
+    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.logoutOptionsTitle, hasDone: false)
 }

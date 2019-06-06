@@ -174,17 +174,18 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
         let key = PostboxViewKey.cachedPeerData(peerId: peerId)
         
         
-        let signal: Signal<(TableUpdateTransition, PreHistoryControllerState, Bool), NoError> = combineLatest(context.account.postbox.combinedView(keys: [key]) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, statePromise.get() |> deliverOnPrepareQueue) |> map { view, appearance, state in
+        let signal: Signal<(TableUpdateTransition, PreHistoryControllerState, Bool, CachedChannelData?, Peer?), NoError> = combineLatest(queue: prepareQueue, context.account.postbox.peerView(id: peerId), appearanceSignal, statePromise.get()) |> map { peerView, appearance, state in
             
-            let cachedData = view.views[key] as? CachedPeerDataView
-            let entries = preHistoryEntries(cachedData: cachedData?.cachedPeerData as? CachedChannelData, isGrpup: peerId.namespace == Namespaces.Peer.CloudGroup, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-            let defaultValue: Bool = (cachedData?.cachedPeerData as? CachedChannelData)?.flags.contains(.preHistoryEnabled) ?? false
+            let cachedData = peerView.cachedData as? CachedChannelData
+            let peer = peerViewMainPeer(peerView)
+            let entries = preHistoryEntries(cachedData: cachedData, isGrpup: peerId.namespace == Namespaces.Peer.CloudGroup, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let defaultValue: Bool = cachedData?.flags.contains(.preHistoryEnabled) ?? false
             
 
-            return (prepareEntries(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), state, defaultValue)
+            return (prepareEntries(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), state, defaultValue, cachedData, peer)
         } |> deliverOnMainQueue
         
-        disposable.set(signal.start(next: { [weak self] transition, state, defaultValue in
+        disposable.set(signal.start(next: { [weak self] transition, state, defaultValue, cachedData, peer in
             self?.genericView.merge(with: transition)
             self?.readyOnce()
             
@@ -207,6 +208,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                                     return .single(nil)
                                 }
                                 return updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: upgradedPeerId, historyAvailableForNewMembers: value)
+                                    |> `catch` { _ in return .complete() }
                                     |> mapToSignal { _ -> Signal<PeerId?, NoError> in
                                         return .complete()
                                     }
@@ -216,8 +218,25 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                         
                         self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
                     } else {
-                        let signal: Signal<PeerId?, NoError> = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> map { _ in return nil }
-                        self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
+                        let signal: Signal<PeerId?, NoError> = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> `catch` { _ in return .complete() } |> map { _ in return nil }
+                        
+                        if let cachedData = cachedData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId, let peer = peer as? TelegramChannel {
+                            confirm(for: context.window, information: L10n.preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
+                                if peer.adminRights == nil || !peer.hasPermission(.pinMessages) {
+                                    alert(for: mainWindow, info: L10n.channelErrorDontHavePermissions)
+                                } else {
+                                    let signal = updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: linkedDiscussionPeerId, groupId: nil)
+                                        |> `catch` { _ in return .complete() }
+                                        |> map { _ -> PeerId? in return nil }
+                                        |> then(signal)
+                                    self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
+                                }
+                                
+                            })
+                        } else {
+                            self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
+                        }
+                        
                     }
                 } else {
                     self?.onComplete.set(.single(nil))
