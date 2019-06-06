@@ -374,7 +374,12 @@ public class Modal: NSObject {
             }, with: self, for: .Return, priority: controller.responderPriority)
         }
         
-       
+        background.set(handler: { [weak self] control in
+            guard let controller = self?.controller else { return }
+            if controller.redirectMouseAfterClosing, let event = NSApp.currentEvent {
+                control.performSuperMouseDown(event)
+            }
+        }, for: .Down)
         
         background.set(handler: { [weak self] control in
             guard let controller = self?.controller else { return }

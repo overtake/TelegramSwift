@@ -290,7 +290,9 @@ open class Control: View {
     func performSuperMouseUp(_ event: NSEvent) {
          super.mouseUp(with: event)
     }
-    
+    func performSuperMouseDown(_ event: NSEvent) {
+        super.mouseDown(with: event)
+    }
     
     
     public func send(event:ControlEvent) -> Void {
