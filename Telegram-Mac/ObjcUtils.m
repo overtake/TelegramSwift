@@ -1306,6 +1306,10 @@ inline int colorIndexForGroupId(int64_t groupId)
     return colorIndex;
 }
 
+/*
+ Sorry guys there was a code which caused a crash on text input
+ */
+
 NSArray<NSString *> * __nonnull currentAppInputSource()
 {
     
@@ -1316,15 +1320,12 @@ NSArray<NSString *> * __nonnull currentAppInputSource()
     NSMutableArray<NSString *> *inputs = [[NSMutableArray alloc] init];
     
     for (int i = 0; i < inputSourcesCount; i++) {
-        TISInputSourceRef ref = (TISInputSourceRef)CFArrayGetValueAtIndex(inputSourcesList, i);
-        NSArray* list = (__bridge NSArray *)(TISGetInputSourceProperty(ref, kTISPropertyInputSourceLanguages));
+        NSArray* list = (__bridge NSArray *)(TISGetInputSourceProperty(CFArrayGetValueAtIndex(inputSourcesList, i), kTISPropertyInputSourceLanguages));
         if ([list count] > 0 && list[0] != nil) {
             [inputs addObject:list[0]];
         }
         
     }
-    CFRelease(inputSourcesList);
-    CFRelease(inputSourcesCount);
     
     return inputs;
 }
