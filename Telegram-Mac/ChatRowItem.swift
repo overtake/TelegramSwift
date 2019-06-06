@@ -504,7 +504,10 @@ class ChatRowItem: TableRowItem {
         if let message = message {
             for attr in message.attributes {
                 if let attr = attr as? SourceReferenceMessageAttribute {
-                    return (chatInteraction.peerId == context.peerId && context.peerId != attr.messageId.peerId) || message.author is TelegramChannel
+                    if authorIsChannel {
+                        return true
+                    }
+                    return (chatInteraction.peerId == context.peerId && context.peerId != attr.messageId.peerId)
                 }
             }
             
@@ -540,12 +543,48 @@ class ChatRowItem: TableRowItem {
         }
     }
     
+    var authorIsChannel: Bool {
+        guard let message = message else {
+            return false
+        }
+        return ChatRowItem.authorIsChannel(message: message, account: context.account)
+    }
+    
+    private static func authorIsChannel(message: Message, account: Account) -> Bool {
+        
+        let isCrosspostFromChannel = message.isCrosspostFromChannel(account: account)
+        
+        var sourceReference: SourceReferenceMessageAttribute?
+        for attribute in message.attributes {
+            if let attribute = attribute as? SourceReferenceMessageAttribute {
+                sourceReference = attribute
+                break
+            }
+        }
+        
+        var authorIsChannel: Bool = false
+        if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+            if case .broadcast = peer.info {
+                
+            } else {
+                if isCrosspostFromChannel, let sourceReference = sourceReference, let _ = message.peers[sourceReference.messageId.peerId] as? TelegramChannel {
+                    authorIsChannel = true
+                }
+            }
+        } else {
+            if isCrosspostFromChannel, let _ = message.forwardInfo?.source as? TelegramChannel {
+                authorIsChannel = true
+            }
+        }
+        return authorIsChannel
+    }
+    
     var isSharable: Bool {
         var peers:[Peer] = []
         if let peer = peer {
             peers.append(peer)
         }
-        if message?.author is TelegramChannel {
+        if authorIsChannel {
             return false
         }
         if let info = message?.forwardInfo {
@@ -706,7 +745,7 @@ class ChatRowItem: TableRowItem {
             
             if let _peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {
                 peer = _peer
-            } else if let author = message.author, peer == nil {
+            } else if let author = message.effectiveAuthor, peer == nil {
                 if author is TelegramSecretChat {
                     peer = messageMainPeer(message)
                 } else {
@@ -886,10 +925,10 @@ class ChatRowItem: TableRowItem {
                 if info.author == nil, let signature = info.authorSignature {
                     self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else {
-                    self.peer = message.chatPeer
+                    self.peer = message.chatPeer(context.peerId)
                 }
             } else {
-                self.peer = message.chatPeer
+                self.peer = message.chatPeer(context.peerId)
             }
             
             var isHasSource: Bool = false
@@ -911,6 +950,12 @@ class ChatRowItem: TableRowItem {
                     }
                 }
             }
+            if postAuthorAttributed == nil, ChatRowItem.authorIsChannel(message: message, account: context.account) {
+                if let author = message.forwardInfo?.authorSignature {
+                    postAuthorAttributed = .initialize(string: author, color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                }
+            }
+            
             
             if let peer = messageMainPeer(message) as? TelegramUser, peer.botInfo != nil || peer.id == context.peerId {
                 self.isRead = true
@@ -939,38 +984,50 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 
-                if accept {
+                if accept || (ChatRowItem.authorIsChannel(message: message, account: context.account) && info.author?.id != message.chatPeer(context.peerId)?.id) {
                     forwardType = fwdType
+                    
                     var attr = NSMutableAttributedString()
-                    if let source = info.source, source.isChannel {
-                        var range = attr.append(string: source.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
-                        if info.author?.id != source.id {
-                            let subrange = attr.append(string: " (\(info.authorTitle))", color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
-                            range.length += subrange.length
+
+                    if ChatRowItem.authorIsChannel(message: message, account: context.account) {
+                        if let author = info.author {
+                            var range = attr.append(string: author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                            
+                            let appLink = inAppLink.peerInfo(link: "", peerId: author.id, action: nil, openChat: !(author is TelegramUser), postId: info.sourceMessageId?.id, callback: chatInteraction.openInfo)
+                            attr.add(link: appLink, for: range)
                         }
-                        
-                        let link = source.addressName == nil ? "https://t.me/c/\(source.id.id)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")" : "https://t.me/\(source.addressName!)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")"
-                        let appLink = inApp(for: link.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo)
-                        attr.add(link: appLink, for: range)
-                        
                     } else {
-                        let range = attr.append(string: info.authorTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: info.author == nil ? .normal(.text) : .medium(.text))
-                        
-                        var linkAbility: Bool = true
-                        if let channel = info.author as? TelegramChannel {
-                            if channel.username == nil && channel.participationStatus != .member {
-                                linkAbility = false
+                        if let source = info.source, source.isChannel {
+                            var range = attr.append(string: source.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                            if info.author?.id != source.id {
+                                let subrange = attr.append(string: " (\(info.authorTitle))", color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                                range.length += subrange.length
+                            }
+                            
+                            let link = source.addressName == nil ? "https://t.me/c/\(source.id.id)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")" : "https://t.me/\(source.addressName!)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")"
+                            let appLink = inApp(for: link.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo)
+                            attr.add(link: appLink, for: range)
+                            
+                        } else {
+                            let range = attr.append(string: info.authorTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: info.author == nil ? .normal(.text) : .medium(.text))
+                            
+                            var linkAbility: Bool = true
+                            if let channel = info.author as? TelegramChannel {
+                                if channel.username == nil && channel.participationStatus != .member {
+                                    linkAbility = false
+                                }
+                            }
+                            if linkAbility, let author = info.author {
+                                attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: author.isChannel, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
+                            } else if info.author == nil {
+                                attr.add(link: inAppLink.callback("hid", { _ in
+                                    hiddenFwdTooltip?()
+                                }), for: range)
+                                
                             }
                         }
-                        if linkAbility, let author = info.author {
-                            attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: author.isChannel, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
-                        } else if info.author == nil {
-                            attr.add(link: inAppLink.callback("hid", { _ in
-                                hiddenFwdTooltip?()
-                            }), for: range)
-
-                        }
                     }
+                    
                     
                     var isInstantVideo: Bool {
                         if let media = message.media.first as? TelegramMediaFile {
@@ -1062,7 +1119,8 @@ class ChatRowItem: TableRowItem {
                         if isAdmin {
                             badge = .initialize(string: " " + L10n.chatAdminBadge, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
                             
-                        } else if message.author is TelegramChannel {
+                        }
+                        else if ChatRowItem.authorIsChannel(message: message, account: context.account) {
                             badge = .initialize(string: " " + L10n.chatChannelBadge, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
                         }
                         if let badge = badge {
@@ -1423,7 +1481,14 @@ class ChatRowItem: TableRowItem {
     }
     
     var bubbleFrame: NSRect {
-        let nameWidth = hasBubble ? ((authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)) : 0
+        let nameWidth:CGFloat
+        if hasBubble {
+            nameWidth = (authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)
+        } else {
+            nameWidth = 0
+        }
+        //hasBubble ? ((authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)) : 0
+        
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
         let replyWidth = hasBubble ? (replyModel?.size.width ?? 0) : 0
 

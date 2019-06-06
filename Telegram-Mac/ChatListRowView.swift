@@ -116,8 +116,10 @@ private final class ChatListExpandView: View {
 class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private let revealLeftView: View = View()
-    private let revealRightView: View = View()
     
+    private var internalDelta: CGFloat?
+    
+    private let revealRightView: View = View()
     private var titleText:TextNode = TextNode()
     private var messageText:TextNode = TextNode()
     private var badgeView:View?
@@ -141,6 +143,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     }
     var endRevealState: SwipeDirection? {
         didSet {
+            internalDelta = nil
             if let oldValue = oldValue, endRevealState == nil  {
                 switch oldValue {
                 case .left, .right:
@@ -406,6 +409,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         super.init(frame: frameRect)
         
+        
         addSubview(revealRightView)
         addSubview(revealLeftView)
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
@@ -416,7 +420,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         containerView.displayDelegate = self
         containerView.frame = bounds
-        
         
     }
     
@@ -963,10 +966,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var animateOnceAfterDelta: Bool = true
     func moveReveal(delta: CGFloat) {
         
+        
         if revealLeftView.subviews.isEmpty && revealRightView.subviews.isEmpty {
             initRevealState()
         }
       
+        self.internalDelta = delta
+        
         let delta = delta// - additionalRevealDelta
         
         containerView.change(pos: NSMakePoint(delta, containerView.frame.minY), animated: false)
@@ -1264,24 +1270,28 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         expandView?.frame = NSMakeRect(0, item.isCollapsed ? 0 : item.height, frame.width - .borderSize, frame.height)
         
-        let additionalDelta: CGFloat
-        if let state = endRevealState {
-            switch state {
-            case .left:
-                additionalDelta = -leftRevealWidth
-            case .right:
-                additionalDelta = rightRevealWidth
-            case .none:
+        if let delta = internalDelta {
+            moveReveal(delta: delta)
+        } else {
+            let additionalDelta: CGFloat
+            if let state = endRevealState {
+                switch state {
+                case .left:
+                    additionalDelta = -leftRevealWidth
+                case .right:
+                    additionalDelta = rightRevealWidth
+                case .none:
+                    additionalDelta = 0
+                }
+            } else {
                 additionalDelta = 0
             }
-        } else {
-            additionalDelta = 0
+            
+            
+            containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -70 : 0, frame.width - .borderSize, 70)
+            revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)
+            revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
         }
-        
-        containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -70 : 0, frame.width - .borderSize, 70)
-        revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)
-        revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
-
     }
     
 }

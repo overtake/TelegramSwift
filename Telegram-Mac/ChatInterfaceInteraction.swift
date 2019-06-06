@@ -163,10 +163,8 @@ final class ChatInteraction : InterfaceObserver  {
                 peerId = peer.id
             }
             let context = self.context
-            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { [weak self] result in
-                if let strongSelf = self {
-                    applyUIPCallResult(context.sharedContext, result)
-                }
+            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context.sharedContext, result)
             }))
         }
     }
@@ -347,8 +345,8 @@ final class ChatInteraction : InterfaceObserver  {
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
                             case .default:
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
-                            case let .request(url, peer, writeAllowed):
-                                showModal(with: InlineLoginController(context: context, url: url, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
+                            case let .request(requestURL, peer, writeAllowed):
+                                showModal(with: InlineLoginController(context: context, url: requestURL, originalURL: url, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
                                     _ = showModalProgress(signal: acceptMessageActionUrlAuth(account: context.account, messageId: keyboardMessage.id, buttonId: buttonId, allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
                                         switch result {
                                         case .default:

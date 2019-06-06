@@ -56,7 +56,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         
     }
     override func makeLabelsForWidth(_ width: CGFloat) {
-        self.name = TextNode.layoutText(maybeNode: nameNode, .initialize(string: fileName , color: presentation.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (hasThumb ? 80 : 50), 20), nil,false, .left)
+        self.name = TextNode.layoutText(maybeNode: nameNode, .initialize(string: fileName , color: presentation.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width, 20), nil,false, .left)
         
 
         uploadingLayout.measure(width: width)

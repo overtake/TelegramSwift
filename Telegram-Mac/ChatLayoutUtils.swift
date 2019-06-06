@@ -39,6 +39,8 @@ class ChatLayoutUtils: NSObject {
                     if contentSize.width < 50 && contentSize.height < 50 {
                         contentSize = maxSize
                     }
+                } else if case .Audio = attr {
+                    return NSMakeSize(width, 40)
                 }
             }
             if file.isAnimatedSticker {

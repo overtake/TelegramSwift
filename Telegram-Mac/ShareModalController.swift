@@ -389,9 +389,14 @@ class ShareMessageObject : ShareObject {
 
 final class ForwardMessagesObject : ShareObject {
     fileprivate let messageIds: [MessageId]
+    private let disposable = MetaDisposable()
     init(_ context: AccountContext, messageIds: [MessageId]) {
         self.messageIds = messageIds
         super.init(context)
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     override var multipleSelection: Bool {
@@ -400,27 +405,35 @@ final class ForwardMessagesObject : ShareObject {
     
     override func perform(to peerIds: [PeerId], comment: String?) -> Signal<Never, NoError> {
         let comment = comment != nil && !comment!.isEmpty ? comment : nil
-        if let peerId = peerIds.first {
-            if peerId == context.peerId {
-                _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId).start()
-                if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
-                    controller.chatInteraction.update({$0.withoutSelectionState()})
+        return context.account.postbox.messagesAtIds(messageIds)
+            |> map { $0.map { $0.id } }
+            |> deliverOnMainQueue
+            |> mapToSignal { [weak self] messageIds in
+                guard let `self` = self else {
+                    return .complete()
                 }
-                delay(0.2, closure: {
-                    _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
-                })
-            } else {
-                if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == peerId {
-                    controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds)})})
-                } else {
-                    let controller = ChatController(context: context, chatLocation: .peer(peerId), initialAction: .forward(messageIds: messageIds, text: comment, behavior: .automatic))
-                    context.sharedContext.bindings.rootNavigation().push(controller)
-                    
-                    return controller.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+                if let peerId = peerIds.first {
+                    if peerId == self.context.peerId {
+                        _ = Sender.forwardMessages(messageIds: messageIds, context: self.context, peerId: self.context.account.peerId).start()
+                        if let controller = self.context.sharedContext.bindings.rootNavigation().controller as? ChatController {
+                            controller.chatInteraction.update({$0.withoutSelectionState()})
+                        }
+                        delay(0.2, closure: {
+                            _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                        })
+                    } else {
+                        if let controller = self.context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == peerId {
+                            controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds)})})
+                        } else {
+                            let controller = ChatController(context: self.context, chatLocation: .peer(peerId), initialAction: .forward(messageIds: messageIds, text: comment, behavior: .automatic))
+                            self.context.sharedContext.bindings.rootNavigation().push(controller)
+                            
+                            return controller.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+                        }
+                    }
                 }
+                return .complete()
             }
-        }
-        return .complete()
     }
     
     override var searchPlaceholderKey: String {

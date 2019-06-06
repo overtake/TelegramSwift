@@ -126,7 +126,7 @@ func imageRequiresInversion(_ cgImage: CGImage) -> Bool {
 }
 
 
-func generateTintedImage(image: CGImage?, color: NSColor, backgroundColor: NSColor? = nil) -> CGImage? {
+func generateTintedImage(image: CGImage?, color: NSColor, backgroundColor: NSColor? = nil, flipVertical: Bool = true) -> CGImage? {
     guard let image = image else {
         return nil
     }
@@ -139,9 +139,11 @@ func generateTintedImage(image: CGImage?, color: NSColor, backgroundColor: NSCol
         
         let imageRect = CGRect(origin: CGPoint(), size: imageSize)
         context.saveGState()
-        context.translateBy(x: imageRect.midX, y: imageRect.midY)
-        context.scaleBy(x: 1.0, y: -1.0)
-        context.translateBy(x: -imageRect.midX, y: -imageRect.midY)
+        if flipVertical {
+            context.translateBy(x: imageRect.midX, y: imageRect.midY)
+            context.scaleBy(x: 1.0, y: -1.0)
+            context.translateBy(x: -imageRect.midX, y: -imageRect.midY)
+        }
         context.clip(to: imageRect, mask: image)
         context.setFillColor(color.cgColor)
         context.fill(imageRect)

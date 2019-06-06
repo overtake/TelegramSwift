@@ -992,7 +992,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         switch chatLocation {
         case let .peer(peerId):
-            self.peerView.set(context.account.viewTracker.peerView(peerId) |> map {Optional($0)})
+            self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
             let _ = checkPeerChatServiceActions(postbox: context.account.postbox, peerId: peerId).start()
         }
         
@@ -2028,8 +2028,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else { return }
             let signal = showModalProgress(signal: context.account.viewTracker.peerView(self.chatLocation.peerId) |> filter { $0.cachedData is CachedChannelData } |> map { $0.cachedData as! CachedChannelData } |> take(1) |> deliverOnMainQueue, for: context.window)
             self.discussionDataLoadDisposable.set(signal.start(next: { [weak self] cachedData in
-                if let associatedPeerId = cachedData.associatedPeerId {
-                    self?.chatInteraction.openInfo(associatedPeerId, true, nil, nil)
+                if let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId {
+                    self?.chatInteraction.openInfo(linkedDiscussionPeerId, true, nil, nil)
                 }
             }))
         }
@@ -2265,12 +2265,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }.updatedMainPeer(peerViewMainPeer(peerView))
                             
                             var discussionGroupId:PeerId? = nil
-                            if let cachedData = peerView.cachedData as? CachedChannelData, let associatedPeerId = cachedData.associatedPeerId {
+                            if let cachedData = peerView.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId {
                                 if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
                                     switch peer.info {
                                     case let .broadcast(info):
                                         if info.flags.contains(.hasDiscussionGroup) {
-                                            discussionGroupId = associatedPeerId
+                                            discussionGroupId = linkedDiscussionPeerId
                                         }
                                     default:
                                         break

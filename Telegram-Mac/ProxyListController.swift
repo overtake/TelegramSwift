@@ -232,7 +232,7 @@ func proxyListController(accountManager: AccountManager, network: Network, showU
         updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedUseForCalls(enable)}).start())
     })
     
-    let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map {($0, true)}, title: L10n.proxySettingsTitle, validateData: {
+    let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.proxySettingsTitle, validateData: {
         data in
         
         if data[_p_id_add] != nil {
@@ -299,7 +299,7 @@ private func addProxyController(accountManager: AccountManager, network: Network
     
     let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
         return addProxySettingsEntries(state: state)
-    } |> map {($0, true)}, title: title, validateData: { data -> InputDataValidation in
+    } |> map { InputDataSignalValue(entries: $0) }, title: title, validateData: { data -> InputDataValidation in
             if data[_id_export] != nil {
                 updateState { current in
                     copyToClipboard(current.server.withDataHextString().link)

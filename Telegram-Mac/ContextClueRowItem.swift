@@ -61,6 +61,9 @@ private final class ClueRowItem : TableRowItem {
     override var height: CGFloat {
         return 40
     }
+    override var width: CGFloat {
+        return 40
+    }
 }
 
 private final class ClueRowView : HorizontalRowView {

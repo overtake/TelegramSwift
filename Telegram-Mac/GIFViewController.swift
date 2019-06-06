@@ -208,6 +208,8 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         genericView.tableView?.removeAll()
+        genericView.tableView?.removeFromSuperview()
+        genericView.tableView = nil
         ready.set(.single(false))
     }
     
@@ -235,9 +237,8 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         super.viewWillAppear(animated)
         
-        NSLog("viewWillAppear")
         
-        genericView.tableView?.removeAll()
+        genericView.reinstall()
         genericView.updateRestricion(chatInteraction?.presentation.peer)
         
         _ = atomicSize.swap(_frameRect.size)

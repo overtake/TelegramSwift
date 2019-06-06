@@ -654,9 +654,9 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                             return ((nil, (FoundStickerSets(entries: entries), false)), .generic)
                         }
                     } else {
-                        return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: search.request, completeMatch: false, checkPrediction: false)
-                        |> mapToSignal { clues in
-                            if clues.isEmpty {
+//                        return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: search.request, completeMatch: false, checkPrediction: false) |> take(1)
+//                        |> mapToSignal { clues in
+//                            if clues.isEmpty {
                                 return combineLatest(searchStickerSets(postbox: context.account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: context.account.network, query: search.request) |> map {Optional($0)}))  |> map { local, remote in
                                     let update: StickerPacksCollectionUpdate
                                     if firstTime {
@@ -682,66 +682,66 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                                     }
                                     return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
                                 }
-                            } else {
-                                return combineLatest(combineLatest(clues.map({searchStickers(account: context.account, query: $0)})), searchStickerSets(postbox: context.account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: context.account.network, query: search.request) |> map {Optional($0)})) |> map { clueSets, local, remote in
-                                    var index:Int32 = randomInt32()
-                                   //
-                                    var sortedStickers:[String : (Int32, [ItemCollectionViewEntry])] = [:]
-                                    
-                                    for stickers in clueSets {
-                                        for sticker in stickers {
-                                            let file = sticker.file
-                                            if let id = file.id {
-                                                if let emoji = file.stickerText?.fixed {
-                                                    var values = sortedStickers[emoji] ?? (index, [])
-                                                    let count = sortedStickers.reduce(0, { current, value  in
-                                                        return current + values.1.count
-                                                    })
-                                                    let item = StickerPackItem(index: ItemCollectionItemIndex(index: Int32(count), id: id.id), file: file, indexKeys: [])
-                                                    values.1.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex.lowerBound(collectionIndex: -(values.0), collectionId: ItemCollectionId(namespace: 0, id: ItemCollectionId.Id(values.0))), item: item))
-                                                    sortedStickers[emoji] = values
-                                                }
-                                            }
-                                        }
-                                        index = randomInt32()
-                                    }
-                                    var entries: [ItemCollectionViewEntry] = []
-                                    for clue in clues {
-                                        if let stickers = sortedStickers[clue] {
-                                            entries.append(contentsOf: stickers.1)
-                                        }
-                                    }
-                                    
-                                    let clueValues = FoundStickerSets(entries: entries)
-                                    
-                                    let update: StickerPacksCollectionUpdate
-                                    if firstTime {
-                                        firstTime = remote == nil
-                                        switch position {
-                                        case .initial:
-                                            update = .generic
-                                        case .scroll:
-                                            update = .scroll
-                                        case let .navigate(index):
-                                            update = .navigate(index)
-                                        }
-                                    } else {
-                                        update = .generic
-                                    }
-                                    
-                                    var value = FoundStickerSets()
-                                    if let local = local {
-                                        value = value.merge(with: local)
-                                    }
-                                    if let remote = remote {
-                                        value = value.merge(with: remote)
-                                    }
-                                    value = clueValues.merge(with: value)
-                                    return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
-                                }
-                            }
-                            
-                        }
+//                            } else {
+//                                return combineLatest(combineLatest(clues.map({searchStickers(account: context.account, query: $0)})), searchStickerSets(postbox: context.account.postbox, query: search.request.lowercased()) |> map {Optional($0)}, Signal<FoundStickerSets?, NoError>.single(nil) |> then(searchStickerSetsRemotely(network: context.account.network, query: search.request) |> map {Optional($0)})) |> map { clueSets, local, remote in
+//                                    var index:Int32 = randomInt32()
+//                                   //
+//                                    var sortedStickers:[String : (Int32, [ItemCollectionViewEntry])] = [:]
+//
+//                                    for stickers in clueSets {
+//                                        for sticker in stickers {
+//                                            let file = sticker.file
+//                                            if let id = file.id {
+//                                                if let emoji = file.stickerText {
+//                                                    var values = sortedStickers[emoji] ?? (index, [])
+//                                                    let count = sortedStickers.reduce(0, { current, value  in
+//                                                        return current + values.1.count
+//                                                    })
+//                                                    let item = StickerPackItem(index: ItemCollectionItemIndex(index: Int32(count), id: id.id), file: file, indexKeys: [])
+//                                                    values.1.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex.lowerBound(collectionIndex: -(values.0), collectionId: ItemCollectionId(namespace: 0, id: ItemCollectionId.Id(values.0))), item: item))
+//                                                    sortedStickers[emoji] = values
+//                                                }
+//                                            }
+//                                        }
+//                                        index = randomInt32()
+//                                    }
+//                                    var entries: [ItemCollectionViewEntry] = []
+//                                    for clue in clues {
+//                                        if let stickers = sortedStickers[clue] {
+//                                            entries.append(contentsOf: stickers.1)
+//                                        }
+//                                    }
+//
+//                                    let clueValues = FoundStickerSets(entries: entries)
+//
+//                                    let update: StickerPacksCollectionUpdate
+//                                    if firstTime {
+//                                        firstTime = remote == nil
+//                                        switch position {
+//                                        case .initial:
+//                                            update = .generic
+//                                        case .scroll:
+//                                            update = .scroll
+//                                        case let .navigate(index):
+//                                            update = .navigate(index)
+//                                        }
+//                                    } else {
+//                                        update = .generic
+//                                    }
+//
+//                                    var value = FoundStickerSets()
+//                                    if let local = local {
+//                                        value = value.merge(with: local)
+//                                    }
+//                                    if let remote = remote {
+//                                        value = value.merge(with: remote)
+//                                    }
+//                                    value = clueValues.merge(with: value)
+//                                    return ((nil, (value, remote == nil && value.entries.isEmpty)), update)
+//                                }
+//                            }
+                        
+//                        }
                         
                     }
                    

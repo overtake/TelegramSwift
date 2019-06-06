@@ -52,7 +52,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         self.message = message
 
         
-        self.peer = message.chatPeer!
+        self.peer = message.chatPeer(context.peerId)!
         
         var peer:Peer = self.peer
         

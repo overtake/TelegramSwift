@@ -777,7 +777,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillScamButton(_ item: ChatRowItem) -> Void {
-        if item.isScam {
+        if item.isScam, item.canFillAuthorName {
             if scamButton == nil {
                 scamButton = ImageButton()
                 scamButton?.autohighlight = false

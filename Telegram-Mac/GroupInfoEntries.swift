@@ -1011,16 +1011,14 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupType, type: .context(isPublic ? L10n.peerInfoGroupTypePublic : L10n.peerInfoGroupTypePrivate), action: { () in
                 arguments.visibilitySetup()
             })
-        case let .linkedChannel(_, channel, subscribers):
+        case let .linkedChannel(_, channel, _):
             let title: String
             if let address = channel.addressName {
                 title = "@\(address)"
-            } else if let subscribers = subscribers {
-                title = L10n.peerInfoDiscussionSubscribersCountCountable(Int(subscribers))
             } else {
                 title = channel.displayTitle
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .context(title), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .nextContext(title), action: { () in
                 arguments.setupDiscussion()
             })
         case .groupStickerset(_, let name):
@@ -1143,14 +1141,12 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
             } else if let channel = view.peers[view.peerId] as? TelegramChannel, let cachedChannelData = view.cachedData as? CachedChannelData {
                 
-                
                 if access.isCreator {
                     entries.append(GroupInfoEntry.groupTypeSetup(section: sectionId, isPublic: group.addressName != nil))
                 }
-                if channel.hasPermission(.pinMessages), let associatedPeerId = cachedChannelData.associatedPeerId, let peer = view.peers[associatedPeerId] {
+                if (channel.adminRights != nil || channel.flags.contains(.isCreator)), let linkedDiscussionPeerId = cachedChannelData.linkedDiscussionPeerId, let peer = view.peers[linkedDiscussionPeerId] {
                     entries.append(GroupInfoEntry.linkedChannel(section: sectionId, channel: peer, subscribers: cachedChannelData.participantsSummary.memberCount))
-                }
-                if channel.hasPermission(.banMembers) {
+                } else if channel.hasPermission(.banMembers) {
                     if !access.isPublic {
                         entries.append(GroupInfoEntry.preHistory(section: sectionId, enabled: cachedChannelData.flags.contains(.preHistoryEnabled)))
                     }

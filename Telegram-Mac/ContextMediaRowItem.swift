@@ -126,9 +126,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 case let .sticker(data):
                     let view = TransformImageView()
                     //TODO
-                    let reference = data.file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: data.file.stickerReference!, media: data.file) : FileMediaReference.standalone(media: data.file)
-                    view.setSignal(chatMessageSticker(account: item.context.account, fileReference: reference, type: .small, scale: backingScaleFactor))
-                    _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
+                    view.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true))
+//                    _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
                     
                     let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
                     view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))

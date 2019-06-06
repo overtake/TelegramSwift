@@ -624,8 +624,8 @@ class PrivacyAndSecurityViewController: TableViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        twoStepAccessConfiguration.set(.single(nil) |> then(twoStepVerificationConfiguration(account: context.account) |> map { TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)}))
-        activeSessions.set(.single(nil) |> then(requestRecentAccountSessions(account: context.account) |> map(Optional.init)))
+        twoStepAccessConfiguration.set(twoStepVerificationConfiguration(account: context.account) |> map { TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)})
+        activeSessions.set(requestRecentAccountSessions(account: context.account) |> map(Optional.init))
     }
 
     private let twoStepAccessConfiguration: Promise<TwoStepVeriticationAccessConfiguration?> = Promise(nil)

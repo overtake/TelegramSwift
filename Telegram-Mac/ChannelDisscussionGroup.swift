@@ -72,19 +72,41 @@ private final class DiscussionState : Equatable {
     let type: DiscussionType
     let availablePeers:[Peer]
     let associatedPeer: Peer?
-    init(type: DiscussionType, availablePeers: [Peer], associatedPeer: Peer?) {
+    let unlinkAbility: Bool
+    let searchState: SearchState?
+    init(type: DiscussionType, availablePeers: [Peer], associatedPeer: Peer?, unlinkAbility: Bool, searchState: SearchState?) {
         self.type = type
+        self.searchState = searchState
         self.availablePeers = availablePeers
         self.associatedPeer = associatedPeer
+        self.unlinkAbility = unlinkAbility
+    }
+    
+    var filteredPeers: [Peer] {
+        return self.availablePeers.filter { peer in
+            if let search = self.searchState, !search.request.isEmpty {
+                return peer.displayTitle.lowercased().hasPrefix(search.request.lowercased()) || !peer.displayTitle.lowercased().components(separatedBy: " ").filter {$0.hasPrefix(search.request.lowercased())}.isEmpty
+
+            } else {
+                return true
+            }
+        }
     }
     
     func withUpdatedassociatedPeer(_ associatedPeer: Peer?) -> DiscussionState {
-        return DiscussionState(type: self.type, availablePeers: self.availablePeers, associatedPeer: associatedPeer)
+        return DiscussionState(type: self.type, availablePeers: self.availablePeers, associatedPeer: associatedPeer, unlinkAbility: self.unlinkAbility, searchState: self.searchState)
     }
     func withUpdatedAvailablePeers(_ availablePeers: [Peer]) -> DiscussionState {
-        return DiscussionState(type: self.type, availablePeers: availablePeers, associatedPeer: self.associatedPeer)
+        return DiscussionState(type: self.type, availablePeers: availablePeers, associatedPeer: self.associatedPeer, unlinkAbility: self.unlinkAbility, searchState: self.searchState)
     }
     
+    func withUpdatedUnlinkAbility(_ unlinkAbility: Bool) -> DiscussionState {
+        return DiscussionState(type: self.type, availablePeers: self.availablePeers, associatedPeer: self.associatedPeer, unlinkAbility: unlinkAbility, searchState: self.searchState)
+    }
+    
+    func withUpdatedSearchState(_ searchState: SearchState) -> DiscussionState {
+        return DiscussionState(type: self.type, availablePeers: self.availablePeers, associatedPeer: self.associatedPeer, unlinkAbility: self.unlinkAbility, searchState: searchState)
+    }
     
     static func == (lhs: DiscussionState, rhs: DiscussionState) -> Bool {
         if let lhsassociatedPeer = lhs.associatedPeer, let rhsassociatedPeer = rhs.associatedPeer {
@@ -92,6 +114,10 @@ private final class DiscussionState : Equatable {
                 return false
             }
         } else if (lhs.associatedPeer != nil) != (rhs.associatedPeer != nil) {
+            return false
+        }
+        
+        if lhs.searchState != rhs.searchState {
             return false
         }
         
@@ -116,6 +142,9 @@ private let _id_unlink_group = InputDataIdentifier("_id_unlink_group")
 private func _id_peer(_ peerId: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(peerId.toInt64())")
 }
+private func _id_peer_info(_ peerId: PeerId) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_peer_\(peerId.toInt64())_info")
+}
 
 
 
@@ -131,8 +160,12 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
     
     
     let applyList:()->Void = {
-        for peer in state.availablePeers {
-            let status = peer.addressName != nil ? "@\(peer.addressName!)" : (peer.isSupergroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
+        
+        let peers = state.filteredPeers
+        
+        for peer in peers {
+            
+            let status = peer.addressName != nil ? "@\(peer.addressName!)" : (peer.isSupergroup || peer.isGroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.id), equatable: InputDataEquatable(PeerEquatable(peer: peer)), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), action: {
                     arguments.setup(peer)
@@ -158,7 +191,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             index += 1
             
             let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
-            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), item: { initialSize, stableId in
+            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_info(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), action: {
                     arguments.openInfo(associatedPeer.id)
                 })
@@ -168,14 +201,15 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelSetDescription), color: theme.colors.grayText, detectBold: true))
             index += 1
             
-            entries.append(.sectionId(sectionId))
-            sectionId += 1
-            
-            entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unlink_group, data: InputDataGeneralData(name: L10n.discussionControllerChannelSetUnlinkGroup, color: theme.colors.redUI, action: {
-                arguments.unlinkGroup(associatedPeer)
-            })))
-            index += 1
-
+            if state.unlinkAbility {
+                entries.append(.sectionId(sectionId))
+                sectionId += 1
+                
+                entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unlink_group, data: InputDataGeneralData(name: L10n.discussionControllerChannelSetUnlinkGroup, color: theme.colors.redUI, action: {
+                    arguments.unlinkGroup(associatedPeer)
+                })))
+                index += 1
+            }
             
         } else {
             let text = L10n.discussionControllerChannelEmptyHeader
@@ -186,13 +220,15 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 _ = attributedString.append(string: text, color: theme.colors.grayText, font: .normal(.text))
                 return DiscussionHeaderItem(initialSize, stableId: stableId, icon: generateDiscussIcon(), text: attributedString)
             }))
-            
-            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_create_group, equatable: nil, item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.discussionControllerChannelEmptyCreateGroup, nameStyle: blueActionButton, action: {
-                    arguments.createGroup()
-                }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 33), inset:NSEdgeInsets(left: 40, right: 30))
-            }))
-            index += 1
+            if state.searchState == nil || state.searchState!.request.isEmpty {
+                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_create_group, equatable: nil, item: { initialSize, stableId in
+                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.discussionControllerChannelEmptyCreateGroup, nameStyle: blueActionButton, action: {
+                        arguments.createGroup()
+                    }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 33), inset:NSEdgeInsets(left: 40, right: 30))
+                }))
+                index += 1
+            }
+           
             applyList()
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelEmptyDescription), color: theme.colors.grayText, detectBold: true))
@@ -213,7 +249,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             index += 1
             
             let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
-            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), item: { initialSize, stableId in
+            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_info(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), action: {
                     arguments.openInfo(associatedPeer.id)
                 })
@@ -250,7 +286,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
 
 func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> InputDataController {
     
-    let initialState = DiscussionState(type: peer.isChannel ? .channel : .group, availablePeers: [], associatedPeer: nil)
+    let initialState = DiscussionState(type: peer.isChannel ? .channel : .group, availablePeers: [], associatedPeer: nil, unlinkAbility: false, searchState: nil)
     
     let stateValue: Atomic<DiscussionState> = Atomic(value: initialState)
     let statePromise:ValuePromise<DiscussionState> = ValuePromise(ignoreRepeated: true)
@@ -259,21 +295,75 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         statePromise.set(stateValue.modify(f))
     }
     
+    
+    let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none)
+    let searchPromise: ValuePromise<TableSearchViewState> = ValuePromise(.none, ignoreRepeated: true)
+    let updateSearchValue:((TableSearchViewState)->TableSearchViewState)->Void = { f in
+        searchPromise.set(searchValue.modify(f))
+    }
+    
+    
+    let searchData = TableSearchVisibleData(cancelImage: theme.icons.chatSearchCancel, cancel: {
+        updateSearchValue { _ in
+            return .none
+        }
+    }, updateState: { searchState in
+        updateState {
+            $0.withUpdatedSearchState(searchState)
+        }
+    })
+    
     let actionsDisposable = DisposableSet()
 
-    func setup(_ channelId: PeerId, _ groupId: PeerId?) -> Void {
-        actionsDisposable.add(showModalProgress(signal: updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId), for: context.window).start(next: { result in
+    func setup(_ channelId: PeerId, _ groupId: PeerId?, updatePreHistory: Bool = false) -> Void {
+        let signal: Signal<Bool, ChannelDiscussionGroupError>
+        
+        if let groupId = groupId, groupId.namespace == Namespaces.Peer.CloudGroup {
+            signal = convertGroupToSupergroup(account: context.account, peerId: groupId)
+                |> mapError { _ in return ChannelDiscussionGroupError.generic }
+                |> mapToSignal { upgradedPeerId in
+                return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: upgradedPeerId)
+            }
+        } else if updatePreHistory, let groupId = groupId {
+            signal = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: groupId, historyAvailableForNewMembers: true)
+                |> mapError { error -> ChannelDiscussionGroupError in
+                    switch error {
+                    case .generic:
+                        return .generic
+                    case .hasNotPermissions:
+                        return .hasNotPermissions
+                    }
+                } |> mapToSignal { _ in
+                return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId)
+            }
+        } else {
+            signal = updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId)
+        }
+        
+        actionsDisposable.add(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { result in
             if result && groupId == nil && initialState.type == .group {
                 context.sharedContext.bindings.rootNavigation().back()
             }
+            updateSearchValue { current in
+                return .none
+            }
         }, error: { error in
-            alert(for: context.window, info: L10n.unknownError)
+            switch error {
+            case .groupHistoryIsCurrentlyPrivate:
+                confirm(for: context.window, information: L10n.discussionControllerErrorPreHistory, okTitle: L10n.discussionControllerErrorOK, successHandler: { _ in
+                    setup(channelId, groupId, updatePreHistory: true)
+                })
+            case .hasNotPermissions:
+                alert(for: context.window, info: L10n.channelErrorDontHavePermissions)
+            default:
+                alert(for: context.window, info: L10n.unknownError)
+            }
         }))
     }
     
     let arguments = DiscussionArguments(context: context, createGroup: {
         let controller = context.sharedContext.bindings.rootNavigation().controller
-        actionsDisposable.add(createSupergroup(with: context, for: context.sharedContext.bindings.rootNavigation()).start(next: { [weak controller] peerId in
+        actionsDisposable.add(createSupergroup(with: context, for: context.sharedContext.bindings.rootNavigation(), defaultText: peer.displayTitle + " Chat").start(next: { [weak controller] peerId in
             if let peerId = peerId, let controller = controller {
                 setup(peer.id, peerId)
                 context.sharedContext.bindings.rootNavigation().removeUntil(InputDataController.self)
@@ -281,7 +371,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
             }
         }))
     }, setup: { selected in
-        showModal(with: DiscussionSetModalController(context: context, channel: selected, group: peer, accept: {
+        showModal(with: DiscussionSetModalController(context: context, channel: peer, group: selected, accept: {
             if selected.isChannel {
                 setup(selected.id, peer.id)
             } else {
@@ -302,26 +392,34 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         }
     })
     
+    
     let dataSignal = statePromise.get() |> map { state in
         return channelDiscussionEntries(state: state, arguments: arguments)
     }
     
+    var updateBarIsHidden:((Bool)->Void)? = nil
+
     
     actionsDisposable.add(context.account.postbox.peerView(id: peer.id).start(next: { peerView in
         updateState { current in
             var current = current
-            if let cachedData = peerView.cachedData as? CachedChannelData, let associatedPeerId = cachedData.associatedPeerId {
-                current = current.withUpdatedassociatedPeer(peerView.peers[associatedPeerId])
+            let peer = peerViewMainPeer(peerView)
+            if let cachedData = peerView.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId {
+                current = current.withUpdatedassociatedPeer(peerView.peers[linkedDiscussionPeerId])
             } else {
                 current = current.withUpdatedassociatedPeer(nil)
             }
-            
+            if let linkedPeer = current.associatedPeer as? TelegramChannel, linkedPeer.isChannel {
+                current = current.withUpdatedUnlinkAbility(linkedPeer.hasPermission(.pinMessages))
+            } else if let peer = peer as? TelegramChannel {
+                current = current.withUpdatedUnlinkAbility(peer.hasPermission(.pinMessages))
+            }
             return current
         }
     }))
     
     
-    let availableSignal = peer.isChannel ? availableGroupsForChannelDiscussion(network: context.account.network) : availableChannelsForGroupDiscussion(network: context.account.network)
+    let availableSignal = peer.isChannel ? availableGroupsForChannelDiscussion(postbox: context.account.postbox, network: context.account.network) : .single([])
     
     actionsDisposable.add(availableSignal.start(next: { peers in
         updateState {
@@ -331,7 +429,72 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         
     }))
     
-    return InputDataController(dataSignal: dataSignal |> map { ($0, true)}, title: peer.isChannel ? L10n.discussionControllerChannelTitle : L10n.discussionControllerGroupTitle, afterDisappear: {
+    
+   
+    
+    
+    
+    return InputDataController(dataSignal: combineLatest(dataSignal, searchPromise.get()) |> map { InputDataSignalValue(entries: $0, searchState: $1) }, title: peer.isChannel ? L10n.discussionControllerChannelTitle : L10n.discussionControllerGroupTitle, afterDisappear: {
         actionsDisposable.dispose()
-    }, removeAfterDisappear: false, hasDone: false)
+    }, removeAfterDisappear: false, hasDone: false, customRightButton: { controller in
+        let bar = ImageBarView(controller: controller, theme.icons.chatSearch)
+        bar.button.set(handler: { _ in
+            updateSearchValue { current in
+                switch current {
+                case .none:
+                    return .visible(searchData)
+                case .visible:
+                    return .none
+                }
+            }
+        }, for: .Click)
+        updateBarIsHidden = { [weak bar] isHidden in
+            bar?.button.alphaValue = isHidden ? 0 : 1
+        }
+        //let isHidden = stateValue.with {$0.associatedPeer != nil && $0.availablePeers.count > 5}
+        
+
+        return bar
+    }, afterTransaction: { controller in
+        
+        let isHidden = stateValue.with {$0.associatedPeer != nil || $0.availablePeers.count < 5}
+        updateBarIsHidden?(isHidden)
+        
+    }, returnKeyInvocation: { _, _  in
+        let state = stateValue.with { $0 }
+        
+        if state.associatedPeer == nil, state.type == .channel, state.filteredPeers.count == 1, let searchState = state.searchState, !searchState.request.isEmpty {
+            arguments.setup(state.filteredPeers[0])
+            return .nothing
+        }
+        
+        return .default
+    }, deleteKeyInvocation: { _ in
+        
+        let state = stateValue.with { $0 }
+
+        if let peer = state.associatedPeer, state.unlinkAbility {
+            arguments.unlinkGroup(peer)
+            return .invoked
+        }
+        
+        return .default
+    }, searchKeyInvocation: {
+        
+        let state = stateValue.with { $0 }
+
+        if state.associatedPeer == nil, state.availablePeers.count > 5 {
+            updateSearchValue { current in
+                switch current {
+                case .none:
+                    return .visible(searchData)
+                case .visible:
+                    return .none
+                }
+            }
+        }
+        
+                
+        return .invoked
+    })
 }

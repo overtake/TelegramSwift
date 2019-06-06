@@ -111,7 +111,7 @@ public class ControllerToaster {
         controller.addSubview(view!)
         
         if animated {
-            view?.layer?.animatePosition(from: NSMakePoint(0, -height), to: NSZeroPoint, duration: 0.2)
+            view?.layer?.animatePosition(from: NSMakePoint(0, -height - controller.bar.height), to: NSZeroPoint, duration: 0.2)
         }
         
         let signal:Signal<Void,Void> = .single(Void()) |> delay(timeout, queue: Queue.mainQueue())
@@ -725,6 +725,10 @@ open class ModalViewController : ViewController {
     
     
     open var isFullScreen:Bool {
+        return false
+    }
+    
+    open var redirectMouseAfterClosing: Bool {
         return false
     }
     

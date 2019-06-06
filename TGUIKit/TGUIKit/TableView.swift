@@ -150,17 +150,49 @@ public class UpdateTransition<T> {
         return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count)"
     }
 }
+public struct TableSearchVisibleData {
+    let cancelImage: CGImage
+    let cancel:()->Void
+    let updateState: (SearchState)->Void
+    public init(cancelImage: CGImage, cancel: @escaping()->Void, updateState: @escaping(SearchState)->Void) {
+        self.cancelImage = cancelImage
+        self.cancel = cancel
+        self.updateState = updateState
+    }
+}
 
+public enum TableSearchViewState : Equatable {
+    case none
+    case visible(TableSearchVisibleData)
+    
+    public static func ==(lhs: TableSearchViewState, rhs: TableSearchViewState) -> Bool {
+        switch lhs {
+        case .none:
+            if case .none = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .visible:
+            if case .visible = rhs {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+}
 
 public class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public let state:TableScrollState
     public let animated:Bool
     public let grouping:Bool
-    
-    public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true, animateVisibleOnly: Bool = true) {
+    public let searchState: TableSearchViewState?
+    public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true, animateVisibleOnly: Bool = true, searchState: TableSearchViewState? = nil) {
         self.animated = animated
         self.state = state
         self.grouping = grouping
+        self.searchState = searchState
         super.init(deleted: deleted, inserted: inserted, updated: updated, animateVisibleOnly: animateVisibleOnly)
     }
     public override var description: String {
@@ -266,6 +298,54 @@ public extension TableScrollState {
 
 protocol SelectDelegate : class {
     func selectRow(index:Int) -> Void;
+}
+
+private final class TableSearchView : View {
+    let searchView = SearchView(frame: NSZeroRect)
+    private let cancelButton = ImageButton()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(searchView)
+        background = presentation.colors.background
+        border = [.Bottom]
+        searchView.frame = NSMakeRect(10, 10, frame.width - 20, frame.height - 20)
+        addSubview(cancelButton)
+    }
+    
+    func applySearchResponder() {
+        // _ = window?.makeFirstResponder(searchView.input)
+        searchView.layout()
+        _ = window?.makeFirstResponder(searchView.input)
+        searchView.change(state: .Focus, false)
+    }
+    
+    func updateDatas(_ datas: TableSearchVisibleData) {
+        cancelButton.removeAllHandlers()
+        cancelButton.set(image: datas.cancelImage, for: .Normal)
+        cancelButton.set(handler: { _ in
+            datas.cancel()
+        }, for: .Click)
+        _ = cancelButton.sizeToFit()
+        
+        searchView.searchInteractions = SearchInteractions({ state, _ in
+            datas.updateState(state)
+        }, { state in
+            datas.updateState(state)
+        })
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        cancelButton.centerY(x: frame.width - 10 - cancelButton.frame.width)
+        searchView.frame = NSMakeRect(10, 10, frame.width - cancelButton.frame.width - 30, frame.height - 20)
+    }
+    
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 class TGFlipableTableView : NSTableView, CALayerDelegate {
@@ -461,6 +541,8 @@ public struct TableAutohide {
 }
 
 open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol, AppearanceViewProtocol {
+    
+    private var searchView: TableSearchView?
     
     public var separator:TableSeparator = .none
     
@@ -683,6 +765,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
             emptyView.centerX(y: superview.frame.height - emptyView.frame.height)
         }
+        if let searchView = searchView {
+            searchView.setFrameSize(NSMakeSize(frame.width, searchView.frame.height))
+        }
        
         if needsLayouItemsOnNextTransition {
             layoutItems()
@@ -790,55 +875,54 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: clipView, queue: OperationQueue.main, using: { [weak self] notification  in
                 Queue.mainQueue().justDispatch { [weak self] in
                     self?.scrollDidChangedBounds()
+                }
+                if let strongSelf = self {
                     
-                    if let strongSelf = self {
+                    let reqCount = strongSelf.count / 6
+                    
+                    strongSelf.updateStickAfterScroll(false)
+                    
+                    let scroll = strongSelf.scrollPosition(strongSelf.visibleRows())
+                    
+                    if (!strongSelf.updating && !strongSelf.clipView.isAnimateScrolling) {
                         
-                        let reqCount = strongSelf.count / 6
+                        let range = scroll.current.visibleRows
                         
-                        strongSelf.updateStickAfterScroll(false)
-                        
-                        let scroll = strongSelf.scrollPosition(strongSelf.visibleRows())
-                        
-                        if (!strongSelf.updating && !strongSelf.clipView.isAnimateScrolling) {
+                        if(scroll.current.direction != strongSelf.previousScroll?.direction && scroll.current.rect != strongSelf.previousScroll?.rect) {
                             
-                            let range = scroll.current.visibleRows
-                            
-                            if(scroll.current.direction != strongSelf.previousScroll?.direction && scroll.current.rect != strongSelf.previousScroll?.rect) {
-                                
-                                switch(scroll.current.direction) {
-                                case .top:
-                                    if(range.location  <= reqCount) {
-                                        strongSelf.scrollHandler(scroll.current)
-                                        strongSelf.previousScroll = scroll.current
-                                        
-                                    }
-                                case .bottom:
-                                    if(strongSelf.count - (range.location + range.length) <= reqCount) {
-                                        strongSelf.scrollHandler(scroll.current)
-                                        strongSelf.previousScroll = scroll.current
-                                        
-                                    }
-                                case .none:
+                            switch(scroll.current.direction) {
+                            case .top:
+                                if(range.location  <= reqCount) {
                                     strongSelf.scrollHandler(scroll.current)
                                     strongSelf.previousScroll = scroll.current
                                     
                                 }
-                            }
-                            
-                        }
-                        for listener in strongSelf.scrollListeners {
-                            if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, scroll.previous.visibleRows) {
-                                listener.handler(scroll.current)
-                                listener.first = false
+                            case .bottom:
+                                if(strongSelf.count - (range.location + range.length) <= reqCount) {
+                                    strongSelf.scrollHandler(scroll.current)
+                                    strongSelf.previousScroll = scroll.current
+                                    
+                                }
+                            case .none:
+                                strongSelf.scrollHandler(scroll.current)
+                                strongSelf.previousScroll = scroll.current
+                                
                             }
                         }
                         
-                        if strongSelf.needUpdateVisibleAfterScroll {
-                            let range = strongSelf.visibleRows()
-                            for i in range.location ..< range.location + range.length {
-                                if let view = strongSelf.viewNecessary(at: i) {
-                                    view.updateMouse()
-                                }
+                    }
+                    for listener in strongSelf.scrollListeners {
+                        if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, scroll.previous.visibleRows) {
+                            listener.handler(scroll.current)
+                            listener.first = false
+                        }
+                    }
+                    
+                    if strongSelf.needUpdateVisibleAfterScroll {
+                        let range = strongSelf.visibleRows()
+                        for i in range.location ..< range.location + range.length {
+                            if let view = strongSelf.viewNecessary(at: i) {
+                                view.updateMouse()
                             }
                         }
                     }
@@ -1559,6 +1643,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if(redraw) {
             self.tableView.removeRows(at: IndexSet(integersIn: 0 ..< count), withAnimation:  animation != .none ? .effectFade : .none)
         }
+        self.tableView.removeAllSubviews()
     }
     
     public func selectNext(_ scroll:Bool = true, _ animated:Bool = false, turnDirection: Bool = true) -> Void {
@@ -2207,6 +2292,28 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         if oldEmpty != isEmpty || first {
             updateEmpties(animated: !first)
+        }
+        
+        if let searchState = transition.searchState {
+            if self.searchView == nil {
+                self.searchView = TableSearchView(frame: NSMakeRect(0, -50, frame.width, 50))
+                addSubview(self.searchView!)
+            }
+            guard let searchView = self.searchView else {
+                return
+            }
+            switch searchState {
+            case .none:
+                searchView.change(pos: NSMakePoint(0, -searchView.frame.height), animated: transition.animated)
+                searchView.searchView.cancel(false)
+            case let .visible(data):
+                searchView.change(pos: NSZeroPoint, animated: transition.animated)
+                searchView.applySearchResponder()
+                searchView.updateDatas(data)
+            }
+        } else {
+            self.searchView?.removeFromSuperview()
+            self.searchView = nil
         }
         
         first = false

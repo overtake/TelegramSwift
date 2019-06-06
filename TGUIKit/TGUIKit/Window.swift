@@ -543,7 +543,6 @@ open class Window: NSWindow {
     
     private func startSwiping(_ event: NSEvent) {
         if event.scrollingDeltaY == 0 && event.scrollingDeltaX != 0 {
-            CATransaction.begin()
             for (key, swipe) in swipeHandlers.sorted(by: { $0.value.priority > $1.value.priority }) {
                 if let view = swipe.object.value, view._mouseInside() {
                     if scrollDeltaXAfterInvertion(event.scrollingDeltaX) > 0 {
@@ -566,9 +565,7 @@ open class Window: NSWindow {
                         }
                     }
                 }
-                
             }
-            CATransaction.commit()
         }
         
     }

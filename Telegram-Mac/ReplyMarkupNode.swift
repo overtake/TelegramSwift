@@ -82,7 +82,7 @@ class ReplyMarkupNode: Node {
                 }, for: .Click)
                 
                 btnView.set(handler: { control in
-                    control.change(opacity: 0.85, animated: true)
+                    control.change(opacity: 0.7, animated: true)
                 }, for: .Highlight)
                 btnView.set(handler: { control in
                     control.change(opacity: 1.0, animated: true)

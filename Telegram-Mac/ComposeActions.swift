@@ -57,23 +57,18 @@ func createGroup(with context: AccountContext, for navigation:NavigationViewCont
 }
 
 
-func createSupergroup(with context: AccountContext, for navigation:NavigationViewController) -> Signal<PeerId?, NoError> {
-    let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true) }
-    let chooseName = { CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context) }
-    let signal = execute(navigation:navigation, select, chooseName) |> mapToSignal { (_, result) -> Signal<(PeerId?, [PeerId], String?), NoError> in
+func createSupergroup(with context: AccountContext, for navigation:NavigationViewController, defaultText: String = "") -> Signal<PeerId?, NoError> {
+    let chooseName = CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context, defaultText: defaultText)
+    navigation.push(chooseName)
+    chooseName.restart(with: ComposeState([]))
+    let signal = chooseName.onComplete.get() |> mapToSignal { result -> Signal<(PeerId?, Bool), NoError> in
         
-        let signal = showModalProgress(signal: createSupergroup(account: context.account, title: result.title, description: nil) |> map { return ($0, result.peerIds, result.picture) }, for: mainWindow, disposeAfterComplete: false)
+        let createSignal: Signal<(PeerId?, String?), NoError> = showModalProgress(signal: createSupergroup(account: context.account, title: result.title, description: nil) |> map { return ($0, result.picture) }, for: mainWindow, disposeAfterComplete: false)
         
-        return signal
-        } |> mapToSignal{ peerId, peerIds, picture -> Signal<(PeerId?, Bool), NoError> in
+        return createSignal
+         |> mapToSignal { peerId, picture -> Signal<(PeerId?, Bool), NoError> in
             if let peerId = peerId {
-                
-                let addMembers: Signal<Void, NoError> = context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: peerIds)
-                |> `catch` { _ in return .complete() }
-                
-
                 var additionalSignals:[Signal<Void, NoError>] = []
-                additionalSignals.append(addMembers)
                 
                 if let picture = picture {
                     let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
@@ -90,8 +85,8 @@ func createSupergroup(with context: AccountContext, for navigation:NavigationVie
                 return .single((peerId, true)) |> then(combined)
             }
             return .single((peerId, true))
-        } |> deliverOnMainQueue |> filter {$0.1}
-    
+        } |> deliverOnMainQueue
+    }
     
     return signal |> filter { $0.1 } |> map { $0.0 }
 }

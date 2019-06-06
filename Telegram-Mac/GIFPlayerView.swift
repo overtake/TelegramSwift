@@ -11,6 +11,36 @@ import TGUIKit
 import AVFoundation
 import SwiftSignalKitMac
 
+
+final class CIStickerContext : CIContext {
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+}
+
+private class AlphaFrameFilter: CIFilter {
+    static var kernel: CIColorKernel? = {
+        return CIColorKernel(source: """
+kernel vec4 alphaFrame(__sample s, __sample m) {
+  return vec4( s.rgb, m.r );
+}
+""")
+    }()
+    
+    var inputImage: CIImage?
+    var maskImage: CIImage?
+    
+    override var outputImage: CIImage? {
+        let kernel = AlphaFrameFilter.kernel!
+        guard let inputImage = inputImage, let maskImage = maskImage else {
+            return nil
+        }
+        let args = [inputImage as AnyObject, maskImage as AnyObject]
+        return kernel.apply(extent: inputImage.extent, arguments: args)
+    }
+}
+
 let sampleBufferQueue = DispatchQueue(label: "samplebuffer")
 
 private let veryLongTimeInterval = CFTimeInterval(256.0 * 365.0 * 24.0 * 60.0 * 60.0)
@@ -18,24 +48,26 @@ private let veryLongTimeInterval = CFTimeInterval(256.0 * 365.0 * 24.0 * 60.0 * 
 struct AVGifData : Equatable {
     let asset: AVURLAsset
     let track: AVAssetTrack
-    private init(asset: AVURLAsset, track: AVAssetTrack) {
+    let animatedSticker: Bool
+    private init(asset: AVURLAsset, track: AVAssetTrack, animatedSticker: Bool) {
         self.asset = asset
         self.track = track
+        self.animatedSticker = animatedSticker
     }
     
-    static func dataFrom(_ path: String?) -> AVGifData? {
+    static func dataFrom(_ path: String?, animatedSticker: Bool = false) -> AVGifData? {
         let new = link(path: path, ext: "mp4")
         if let new = new {
             let avAsset = AVURLAsset(url: URL(fileURLWithPath: new))
             let t = avAsset.tracks(withMediaType: .video).first
             if let t = t {
-                return AVGifData(asset: avAsset, track: t)
+                return AVGifData(asset: avAsset, track: t, animatedSticker: animatedSticker)
             }
         }
         return nil
     }
     static func ==(lhs: AVGifData, rhs: AVGifData) -> Bool {
-        return lhs.asset.url == rhs.asset.url
+        return lhs.asset.url == rhs.asset.url && lhs.animatedSticker == rhs.animatedSticker
     }
     
 }
@@ -185,6 +217,11 @@ class GIFPlayerView: TransformImageView {
                 return
             }
             
+            let context: CIStickerContext
+            context = CIStickerContext(options: [CIContextOption.useSoftwareRenderer : NSNumber(value: true)])
+
+            let isAnimatedSticker = data?.animatedSticker ?? false
+            
             layer.requestMediaDataWhenReady(on: sampleBufferQueue, using: {
                 if stopRequesting.swap(false) {
                     
@@ -218,6 +255,47 @@ class GIFPlayerView: TransformImageView {
                         if !stopRequesting.modify({$0}) {
                             
                             if readerValue.status == .reading, let sampleBuffer = outputValue.copyNextSampleBuffer() {
+                                var sampleBuffer = sampleBuffer
+                                if isAnimatedSticker {
+                                    let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+                                    var newSampleBuffer:CMSampleBuffer? = nil
+                                    if let imageBuffer = imageBuffer {
+                                        let sourceImage = CIImage(cvImageBuffer: imageBuffer)
+                                        
+                                        var cvPixelBuffer: CVPixelBuffer?
+                                        let videoSize = CGSize(width: 400, height: 400)
+                                        CVPixelBufferCreate(nil, 400, 400, kCVPixelFormatType_32BGRA, nil, &cvPixelBuffer)
+                                        if let cvPixelBuffer = cvPixelBuffer {
+                                            
+                                            let sourceRect = CGRect(origin: .zero, size: videoSize)
+                                            let alphaRect = sourceRect.offsetBy(dx: 0, dy: sourceRect.height)
+                                            let filter = AlphaFrameFilter()
+                                            filter.inputImage = sourceImage.cropped(to: alphaRect)
+                                                .transformed(by: CGAffineTransform(translationX: 0, y: -sourceRect.height))
+                                            filter.maskImage = sourceImage.cropped(to: sourceRect)
+                                            
+                                            let outputImage = filter.outputImage!
+                                            
+                                            
+                                            
+                                           context.render(outputImage, to: cvPixelBuffer)
+                                            
+                                            var formatRef: CMVideoFormatDescription?
+                                            let _ = CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: cvPixelBuffer, formatDescriptionOut: &formatRef)
+                                            
+                                            
+                                            var sampleTimingInfo: CMSampleTimingInfo = CMSampleTimingInfo()
+                                            CMSampleBufferGetSampleTimingInfo(sampleBuffer, at: 0, timingInfoOut: &sampleTimingInfo)
+                                            
+                                            CMSampleBufferCreateReadyWithImageBuffer(allocator: nil, imageBuffer: cvPixelBuffer, formatDescription: formatRef!, sampleTiming: &sampleTimingInfo, sampleBufferOut: &newSampleBuffer)
+                                            
+                                            if let newSampleBuffer = newSampleBuffer {
+                                                sampleBuffer = newSampleBuffer
+                                            }
+                                        }
+                                    }
+                                }
+                                
                                 layer.enqueue(sampleBuffer)
                                 
                                 continue

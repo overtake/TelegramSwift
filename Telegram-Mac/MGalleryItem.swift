@@ -142,11 +142,11 @@ enum GalleryEntry : Comparable, Identifiable {
     var interfaceState:(PeerId, TimeInterval)? {
         switch self {
         case let .message(entry):
-            if let peerId = entry.message!.chatPeer?.id {
+            if let peerId = entry.message!.effectiveAuthor?.id {
                 return (peerId, TimeInterval(entry.message!.timestamp))
             }
         case let .instantMedia(_, message):
-            if let message = message, let peerId = message.chatPeer?.id {
+            if let message = message, let peerId = message.effectiveAuthor?.id {
                 return (peerId, TimeInterval(message.timestamp))
             }
         case let .photo(_, _, _, _, peer, date):

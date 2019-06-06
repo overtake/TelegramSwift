@@ -30,7 +30,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         
         titleLayout = TextViewLayout(.initialize(string: formatter.string(from: date), color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         
-        var peer:Peer? = message.chatPeer
+        var peer:Peer? = message.chatPeer(interface.context.peerId)
         
         var title:String = peer?.displayTitle ?? ""
         if let _peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {

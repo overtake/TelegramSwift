@@ -44,6 +44,14 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
                 }
                 return fetchCachedBlurredWallpaperRepresentation(account: account, resource: resource, resourceData: data, representation: representation)
         }
+    } else if let representation = representation as? CachedAnimatedStickerRepresentation {
+        return account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
+            |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                if !data.complete {
+                    return .complete()
+                }
+                return fetchAnimatedStickerRepresentation(account: account, resource: resource, resourceData: data, representation: representation)
+        }
     }
 
     return .never()
@@ -377,4 +385,18 @@ private func fetchCachedBlurredWallpaperRepresentation(account: Account, resourc
         }
         return EmptyDisposable
     }) |> runOn(cacheThreadPool)
+}
+
+
+private func fetchAnimatedStickerRepresentation(account: Account, resource: MediaResource, resourceData: MediaResourceData, representation: CachedAnimatedStickerRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    return Signal({ subscriber in
+        if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+            return convertCompressedLottieToCombinedMp4(data: data, size: CGSize(width: 400.0, height: 400.0)).start(next: { path in
+                subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                subscriber.putCompletion()
+            })
+        } else {
+            return EmptyDisposable
+        }
+    }) |> runOn(Queue.concurrentDefaultQueue())
 }

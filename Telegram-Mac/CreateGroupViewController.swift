@@ -129,6 +129,13 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
     private let pictureValue = Promise<String?>(nil)
     private let textValue = ValuePromise<String>("", ignoreRepeated: true)
 
+    private let defaultText: String
+    
+    init(titles: ComposeTitles, context: AccountContext, defaultText: String = "") {
+        self.defaultText = defaultText
+        super.init(titles: titles, context: context)
+        self.textValue.set(self.defaultText)
+    }
     
     override func restart(with result: ComposeState<[PeerId]>) {
         super.restart(with: result)
@@ -137,6 +144,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         let table = self.genericView
         let pictureValue = self.pictureValue
         let textValue = self.textValue
+        
 
         let entries = self.entries
         let arguments = CreateGroupArguments(context: context, choicePicture: { select in

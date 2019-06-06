@@ -31,7 +31,7 @@ class StickerPreviewModalView : View, ModalPreviewControllerView {
     
     func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
         if let reference = reference.fileReference {
-            imageView.setSignal( chatMessageSticker(account: context.account, fileReference: reference, type: .full, scale: backingScaleFactor), clearInstantly: true, animate:true)
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: reference.media, small: false, scale: backingScaleFactor, fetched: true), clearInstantly: true, animate:true)
             let size = reference.media.dimensions?.aspectFitted(NSMakeSize(min(300, frame.size.width), min(300, frame.size.height))) ?? frame.size
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
             imageView.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)

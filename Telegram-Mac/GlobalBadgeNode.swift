@@ -170,8 +170,14 @@ class GlobalBadgeNode: Node {
 
 func forceUpdateStatusBarIconByDockTile(sharedContext: SharedAccountContext) {
     if let count = Int(NSApplication.shared.dockTile.badgeLabel ?? "0") {
+        var color: NSColor = .black
+        if #available(OSX 10.14, *) {
+            if NSApp.effectiveAppearance.name != .aqua {
+                color = .white
+            }
+        }
         resourcesQueue.async {
-            let icon = generateStatusBarIcon(count)
+            let icon = generateStatusBarIcon(count, color: color)
             Queue.mainQueue().async {
                  sharedContext.updateStatusBarImage(icon)
             }
@@ -180,7 +186,7 @@ func forceUpdateStatusBarIconByDockTile(sharedContext: SharedAccountContext) {
     }
 }
 
-private func generateStatusBarIcon(_ unreadCount: Int) -> NSImage {
+private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImage {
     let icon = NSImage(named: "StatusIcon")!
 //    if unreadCount > 0 {
 //        return NSImage(cgImage: icon.precomposed(whitePalette.redUI), size: icon.size)
@@ -220,12 +226,7 @@ private func generateStatusBarIcon(_ unreadCount: Int) -> NSImage {
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         
-        var color: NSColor = .black
-        if #available(OSX 10.14, *) {
-            if NSApp.effectiveAppearance.name != .aqua {
-                color = .white
-            }
-        }
+ 
         ctx.draw(icon.precomposed(color), in: NSMakeRect((size.width - icon.size.width) / 2, 2, icon.size.width, icon.size.height))
         if let generated = generated {
             ctx.draw(generated, in: NSMakeRect(rect.width - generated.backingSize.width, 0, generated.backingSize.width, generated.backingSize.height))

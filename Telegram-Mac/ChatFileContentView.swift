@@ -371,6 +371,13 @@ class ChatFileContentView: ChatMediaContentView {
         return (copy() as? NSView)?.layer?.contents
     }
     
+    override var contentFrame: NSRect {
+        if let media = media as? TelegramMediaFile, !media.previewRepresentations.isEmpty {
+            return thumbView.frame
+        }
+        return progressView.frame
+    }
+    
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         if let media = media as? TelegramMediaFile, !media.previewRepresentations.isEmpty {
             return thumbView

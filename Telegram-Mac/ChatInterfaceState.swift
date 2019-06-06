@@ -646,7 +646,7 @@ struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     }
     
     var synchronizeableInputState: SynchronizeableChatInputState? {
-        if self.inputState.inputText.isEmpty {
+        if self.inputState.inputText.isEmpty && self.replyMessageId == nil {
             return nil
         } else {
             return SynchronizeableChatInputState(replyToMessageId: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities, timestamp: self.timestamp)

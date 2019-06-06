@@ -1925,7 +1925,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatArchive: NSImage(named: "Icon_ChatArchive")!.precomposed(palette.blueIcon),
                                                privacySettings_blocked: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_Blocked")!.precomposed(flipVertical: true)),
                                                privacySettings_activeSessions: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_ActiveSessions")!.precomposed(flipVertical: true)),
-                                               privacySettings_passcode: generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(flipVertical: true)),
+                                               privacySettings_passcode: generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(palette.greenUI, flipVertical: true)),
                                                privacySettings_twoStep: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true))
     )
 }

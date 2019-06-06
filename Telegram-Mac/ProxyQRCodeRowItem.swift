@@ -48,6 +48,8 @@ private final class ProxyQRCodeRowView : TableRowView {
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(textView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
     }
     
     required init?(coder: NSCoder) {

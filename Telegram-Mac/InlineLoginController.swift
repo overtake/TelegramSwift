@@ -126,7 +126,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     return entries
 }
 
-func InlineLoginController(context: AccountContext, url: String, writeAllowed: Bool, botPeer: Peer, authorize: @escaping(Bool)->Void) -> InputDataModalController {
+func InlineLoginController(context: AccountContext, url: String, originalURL: String, writeAllowed: Bool, botPeer: Peer, authorize: @escaping(Bool)->Void) -> InputDataModalController {
     
     
     let initialState = writeAllowed ? InlineLoginState(options: [.login, .allowMessages]) : InlineLoginState(options: [.login])
@@ -147,7 +147,7 @@ func InlineLoginController(context: AccountContext, url: String, writeAllowed: B
                 return current.withRemovedOption(option, dependsOn)
             }
         })
-    } |> map { ($0, true) }
+    } |> map { InputDataSignalValue(entries: $0) }
     
     var close:(()->Void)?
     
@@ -155,7 +155,7 @@ func InlineLoginController(context: AccountContext, url: String, writeAllowed: B
         let state = stateValue.with { $0 }
         
         if state.options.isEmpty {
-            execute(inapp: inAppLink.external(link: url, false))
+            execute(inapp: inAppLink.external(link: originalURL, false))
         } else {
             authorize(state.options.contains(.allowMessages))
         }

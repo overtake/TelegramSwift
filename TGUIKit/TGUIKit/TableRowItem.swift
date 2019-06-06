@@ -46,7 +46,7 @@ open class TableRowItem: NSObject {
     
     public var oldWidth:CGFloat = 0
     
-    public var width:CGFloat  {
+    open var width:CGFloat  {
         return oldWidth
     }
     

@@ -286,13 +286,13 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                         if let strongSelf = self, let path = path {
                             strongSelf.dragpath = path
                             if let cgImage = strongSelf.contents {
-                                let image = NSImage(cgImage: cgImage as! CGImage, size: strongSelf.frame.size)
+                                let image = NSImage(cgImage: cgImage as! CGImage, size: strongSelf.contentFrame.size)
                                 
                                 let writer = NSPasteboardItem()
                                 
                                 writer.setDataProvider(strongSelf, forTypes: [.kFileUrl])
                                 let item = NSDraggingItem( pasteboardWriter: writer )
-                                item.setDraggingFrame(strongSelf.bounds, contents: image)
+                                item.setDraggingFrame(strongSelf.contentFrame, contents: image)
                                 strongSelf.beginDraggingSession(with: [item], event: event, source: strongSelf)
                                 
                             }
@@ -328,6 +328,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         return nil
     }
     
+    
+    var contentFrame: NSRect {
+        return bounds
+    }
     
 }
 

@@ -75,7 +75,7 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
     
     var close: (() -> Void)? = nil
     
-    let controller = InputDataController(dataSignal: dataSignal |> map { ($0, true)}, title: L10n.inputFormatterURLHeader, validateData: { data in
+    let controller = InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: L10n.inputFormatterURLHeader, validateData: { data in
         
         if let string = data[_id_input_url]?.stringValue {
             

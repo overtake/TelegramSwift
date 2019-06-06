@@ -609,18 +609,15 @@ class ChatMessageItem: ChatRowItem {
                         items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                             copyToClipboard(text)
                         }), at: min(1, items.count))
-                    } else {
-                        if let content = self?.webpageLayout?.content, content.type == "proxy" {
-                            items.insert(ContextMenuItem(L10n.chatCopyProxyConfiguration, handler: {
-                                copyToClipboard(content.url)
-                            }), at: items.isEmpty ? 0 : 1)
-                        } else {
-                            items.insert(ContextMenuItem(layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy), handler: {
-                                copyToClipboard(text)
-                            }), at: items.isEmpty ? 0 : 1)
-                        }
+                        
+                      
                     }
                 }
+            }
+            if let content = self?.webpageLayout?.content, content.type == "proxy" {
+                items.insert(ContextMenuItem(L10n.chatCopyProxyConfiguration, handler: {
+                    copyToClipboard(content.url)
+                }), at: items.isEmpty ? 0 : 1)
             }
             
             return items
