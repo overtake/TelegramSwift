@@ -515,9 +515,11 @@ public class Modal: NSObject {
                     strongSelf.container.center()
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
-                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15)
+                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
                         if !controller.isFullScreen {
-                            strongSelf.container.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
+                           // strongSelf.container.layer?.animateScaleSpring(from: 0.7, to: 1.0, duration: 0.2, bounce: false)
+                            let origin = strongSelf.container.frame.origin
+                            strongSelf.container.layer?.animatePosition(from: NSMakePoint(origin.x, origin.y + 100), to: origin, timingFunction: .spring)
                         }
                     }
                     
