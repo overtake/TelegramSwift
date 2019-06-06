@@ -382,7 +382,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         } else if let initialParticipant = initialParticipant, case .creator = initialParticipant {
             var index = 0
             for right in rightsOrder {
-                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, TelegramChatAdminRightsFlags(rightsOrder), false, false))
+                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, TelegramChatAdminRightsFlags(rightsOrder), true, false))
                 index += 1
             }
             entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights))

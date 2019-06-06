@@ -577,18 +577,31 @@ class ChatMessageItem: ChatRowItem {
         return items |> deliverOnMainQueue |> map { [weak self] items in
             var items = items
             
-            var needCopy: Bool = true
+            var index: Int? = nil
             for i in 0 ..< items.count {
-                if items[i].title == tr(L10n.messageContextCopyMessageLink1) || items[i].title == tr(L10n.textCopy) {
-                    needCopy = false
+                if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
+                    index = i
                 }
             }
-            if needCopy {
-
+            
+            if index == nil {
+                for i in 0 ..< items.count {
+                    if items[i].title == L10n.messageContextReply1 {
+                        index = i + 1
+                    }
+                }
+            }
+            if let index = index {
+                let index = min(index, items.count)
+                items.insert(ContextMenuItem(L10n.textCopyText, handler: { [weak self] in
+                    if let string = self?.textLayout.attributedString.string {
+                        copyToClipboard(string)
+                    }
+                }), at: index)
             }
             
             
-            if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, needCopy {
+            if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, index == nil {
                 let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 if let layout = textView.layout {
                     if let (link, _, range, _) = layout.link(at: point) {

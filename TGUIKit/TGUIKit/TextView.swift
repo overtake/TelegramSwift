@@ -200,18 +200,29 @@ public final class TextViewInteractions {
     }
 }
 
+struct TextViewStrikethrough {
+    let color: NSColor
+    let frame: NSRect
+    init(color: NSColor, frame: NSRect) {
+        self.color = color
+        self.frame = frame
+    }
+}
+
 public final class TextViewLine {
     public let line: CTLine
     public let frame: NSRect
     public let range: NSRange
     public var penFlush: CGFloat
     let isBlocked: Bool
-    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat, isBlocked: Bool = false) {
+    let strikethrough:[TextViewStrikethrough]
+    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat, isBlocked: Bool = false, strikethrough: [TextViewStrikethrough] = []) {
         self.line = line
         self.frame = frame
         self.range = range
         self.penFlush = penFlush
         self.isBlocked = isBlocked
+        self.strikethrough = strikethrough
     }
     
 }
@@ -342,6 +353,8 @@ public final class TextViewLayout : Equatable {
         var breakInset: CGFloat = 0
         var isWasPreformatted: Bool = false
         while true {
+            var strikethroughs: [TextViewStrikethrough] = []
+            
             var lineConstrainedWidth = constrainedWidth
             var lineOriginY: CGFloat = 0
             
@@ -446,6 +459,16 @@ public final class TextViewLayout : Equatable {
                 layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
+                attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
+                    if let _ = attributes[.strikethroughStyle] {
+                        let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
+                        let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
+                        let x = lowerX < upperX ? lowerX : upperX
+                        strikethroughs.append(TextViewStrikethrough(color: presentation.colors.text, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                    }
+                }
+
+                
                 lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted))
                 
                 break
@@ -475,8 +498,16 @@ public final class TextViewLayout : Equatable {
                         monospacedRects.append(NSMakeRect(0, lineFrame.minY - lineFrame.height, layoutSize.width, lineFrame.height + preformattedSpace))
                     }
 
+                    attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
+                        if let _ = attributes[.strikethroughStyle] {
+                            let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
+                            let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
+                            let x = lowerX < upperX ? lowerX : upperX
+                            strikethroughs.append(TextViewStrikethrough(color: presentation.colors.text, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                        }
+                    }
 
-                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted))
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, strikethrough: strikethroughs))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
@@ -1101,6 +1132,13 @@ public class TextView: Control, NSViewToolTipOwner {
                 
                 CTLineDraw(line.line, ctx)
                 
+                if !line.strikethrough.isEmpty {
+                    for strikethrough in line.strikethrough {
+                        let frame = strikethrough.frame.offsetBy(dx: penOffset, dy: startPosition.y + line.frame.minY)
+                        ctx.setFillColor(strikethrough.color.cgColor)
+                        ctx.fill(CGRect(x: frame.minX, y: frame.minY - 5, width: frame.width, height: 1.0))
+                    }
+                }
             }
             
             ctx.textMatrix = textMatrix
@@ -1110,6 +1148,9 @@ public class TextView: Control, NSViewToolTipOwner {
                 ctx.setFillColor(stroke.1.cgColor)
                 ctx.fill(stroke.0)
             }
+            
+            
+
             
         }
         
