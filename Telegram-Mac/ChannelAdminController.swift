@@ -17,11 +17,13 @@ private final class ChannelAdminControllerArguments {
     let toggleRight: (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void
     let dismissAdmin: () -> Void
     let cantEditError: () -> Void
-    init(context: AccountContext, toggleRight: @escaping (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void, dismissAdmin: @escaping () -> Void, cantEditError: @escaping() -> Void) {
+    let transferOwnership:()->Void
+    init(context: AccountContext, toggleRight: @escaping (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void, dismissAdmin: @escaping () -> Void, cantEditError: @escaping() -> Void, transferOwnership: @escaping()->Void) {
         self.context = context
         self.toggleRight = toggleRight
         self.dismissAdmin = dismissAdmin
         self.cantEditError = cantEditError
+        self.transferOwnership = transferOwnership
     }
 }
 
@@ -29,18 +31,10 @@ private enum ChannelAdminEntryStableId: Hashable {
     case info
     case right(TelegramChatAdminRightsFlags)
     case description(Int32)
+    case changeOwnership
     case section(Int32)
     var hashValue: Int {
-        switch self {
-        case .info:
-            return 0
-        case .description(let index):
-            return Int(index)
-        case .section(let section):
-            return Int(section)
-        case let .right(flags):
-            return flags.rawValue.hashValue
-        }
+        return 0
     }
 
 }
@@ -49,6 +43,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
     case info(Int32, Peer, TelegramUserPresence?)
     case rightItem(Int32, Int, String, TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags, Bool, Bool)
     case description(Int32, Int32, String)
+    case changeOwnership(Int32, Int32, String)
     case section(Int32)
     
     
@@ -60,6 +55,8 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             return .right(right)
         case .description(_, let index, _):
             return .description(index)
+        case .changeOwnership:
+            return .changeOwnership
         case .section(let sectionId):
             return .section(sectionId)
         }
@@ -83,35 +80,20 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .rightItem(lhsSectionId, lhsIndex, lhsText, lhsRight, lhsFlags, lhsValue, lhsEnabled):
-            if case let .rightItem(rhsSectionId, rhsIndex, rhsText, rhsRight, rhsFlags, rhsValue, rhsEnabled) = rhs {
-                if lhsSectionId != rhsSectionId {
-                    return false
-                }
-                if lhsIndex != rhsIndex {
-                    return false
-                }
-                if lhsText != rhsText {
-                    return false
-                }
-                if lhsRight != rhsRight {
-                    return false
-                }
-                if lhsFlags != rhsFlags {
-                    return false
-                }
-                if lhsValue != rhsValue {
-                    return false
-                }
-                if lhsEnabled != rhsEnabled {
-                    return false
-                }
+        case let .rightItem(sectionId, index, text, right, flags, value, enabled):
+            if case .rightItem(sectionId, index, text, right, flags, value, enabled) = rhs {
                 return true
             } else {
                 return false
             }
         case let .description(sectionId, index, text):
             if case .description(sectionId, index, text) = rhs{
+                return true
+            } else {
+                return false
+            }
+        case let .changeOwnership(sectionId, index, text):
+            if case .changeOwnership(sectionId, index, text) = rhs{
                 return true
             } else {
                 return false
@@ -130,6 +112,8 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case .info(let sectionId, _, _):
             return (sectionId * 1000) + 0
         case .description(let sectionId, let index, _):
+            return (sectionId * 1000) + index
+        case let .changeOwnership(sectionId, index, _):
             return (sectionId * 1000) + index
         case .rightItem(let sectionId, let index, _, _, _, _, _):
             return (sectionId * 1000) + Int32(index) + 10
@@ -160,6 +144,10 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
                 arguments.toggleRight(right, flags)
             }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: theme.colors.background, stateOnColor: enabled ? theme.colors.blueUI : theme.colors.blueUI.withAlphaComponent(0.6), stateOffColor: enabled ? theme.colors.redUI : theme.colors.redUI.withAlphaComponent(0.6), disabledColor: .grayBackground, borderColor: .clear), disabledAction: {
                 arguments.cantEditError()
+            })
+        case let .changeOwnership(_, _, text):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, action: {
+                arguments.transferOwnership()
             })
         case .description(_, _, let name):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: name)//GeneralInteractedRowItem(initialSize, stableId: stableId, name: name)
@@ -371,6 +359,17 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             }
             entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted))
             descId += 1
+            
+            if channel.flags.contains(.isCreator) {
+                if currentRightsFlags.contains(maskRightsFlags) {
+                    entries.append(.section(sectionId))
+                    sectionId += 1
+                    entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup))
+                    entries.append(.section(sectionId))
+                    sectionId += 1
+                }
+            }
+            
         } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminInfo, _) = initialParticipant, let adminInfo = maybeAdminInfo {
             var index = 0
             for right in rightsOrder {
@@ -428,10 +427,21 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             entries.append(.description(sectionId, descId, currentRightsFlags.contains(.canAddAdmins) ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted))
             descId += 1
         }
+        
+        if group.role == .creator {
+            if currentRightsFlags.contains(maskRightsFlags) {
+                entries.append(.section(sectionId))
+                sectionId += 1
+                entries.append(.changeOwnership(sectionId, descId, L10n.channelAdminTransferOwnershipGroup))
+                entries.append(.section(sectionId))
+                sectionId += 1
+            }
+        }
 
     }
 
     
+
     return entries
 }
 
@@ -540,6 +550,41 @@ class ChannelAdminController: ModalViewController {
             }
         }, cantEditError: { [weak self] in
             self?.show(toaster: ControllerToaster(text: L10n.channelAdminCantEdit))
+        }, transferOwnership: {
+            _ = (combineLatest(queue: .mainQueue(), context.account.postbox.loadedPeerWithId(peerId), context.account.postbox.loadedPeerWithId(adminId))).start(next: { peer, admin in
+                
+                let header: String
+                let text: String
+                if peer.isChannel {
+                    header = L10n.channelAdminTransferOwnershipConfirmChannelTitle
+                    text = L10n.channelAdminTransferOwnershipConfirmChannelText(peer.displayTitle, admin.displayTitle)
+                } else {
+                    header = L10n.channelAdminTransferOwnershipConfirmGroupTitle
+                    text = L10n.channelAdminTransferOwnershipConfirmGroupText(peer.displayTitle, admin.displayTitle)
+                }
+                
+                let checkPassword:(PeerId)->Void = { peerId in
+                    showModal(with: InputPasswordController(context: context, title: L10n.channelAdminTransferOwnershipPasswordTitle, desc: L10n.channelAdminTransferOwnershipPasswordDesc, checker: { pwd in
+                        return .single(.close)
+                    }), for: context.window)
+                    
+                }
+                
+                confirm(for: context.window, header: header, information: text, okTitle: L10n.channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
+                    if peer.isGroup {
+                        actionsDisposable.add(showModalProgress(signal: convertGroupToSupergroup(account: context.account, peerId: peer.id), for: context.window).start(next: { upgradedPeerId in
+                            upgradedToSupergroup(upgradedPeerId, {
+                                checkPassword(upgradedPeerId)
+                            })
+                            dismissImpl()
+                        }, error: { error in
+                            dismissImpl()
+                        }))
+                    }  else {
+                        checkPassword(peer.id)
+                    }
+                })
+            })
         })
         
         self.arguments = arguments

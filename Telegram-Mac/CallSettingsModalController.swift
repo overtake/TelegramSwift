@@ -38,7 +38,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     var index: Int32 = 0
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -56,7 +56,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_device, data: InputDataGeneralData(name: L10n.callSettingsOutputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentOutput.deviceName, outputDevices))))
     index += 1
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), color: theme.colors.grayText, detectBold: false))
@@ -76,7 +76,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     index += 1
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -94,7 +94,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     })))
     index += 1
 
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     

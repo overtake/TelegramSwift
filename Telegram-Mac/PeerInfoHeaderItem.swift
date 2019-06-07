@@ -79,7 +79,6 @@ class PeerInfoHeaderItem: GeneralRowItem {
             layoutManager.addTextContainer(textContainer)
             textStorage.addLayoutManager(layoutManager)
             layoutManager.ensureLayout(for: textContainer)
-            
             titleHeight = layoutManager.usedRect(for: textContainer).height
         } else {
             titleHeight = 0
@@ -92,7 +91,6 @@ class PeerInfoHeaderItem: GeneralRowItem {
             layoutManager.addTextContainer(textContainer)
             textStorage.addLayoutManager(layoutManager)
             layoutManager.ensureLayout(for: textContainer)
-            
             secondHeight = layoutManager.usedRect(for: textContainer).height
         } else {
             secondHeight = 0

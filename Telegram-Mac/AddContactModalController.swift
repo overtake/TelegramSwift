@@ -57,7 +57,7 @@ private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsFirstNamePlaceholder.uppercased()), color: theme.colors.text, detectBold: true))
     index += 1
@@ -65,14 +65,14 @@ private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
     index += 1
 
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsLastNamePlaceholder.uppercased()), color: theme.colors.text, detectBold: true))
     index += 1
     entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.lastName), error: state.errors[_id_input_last_name], identifier: _id_input_last_name, mode: .plain, placeholder: nil, inputPlaceholder: L10n.contactsLastNamePlaceholder, filter: { $0 }, limit: 255))
     index += 1
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsPhoneNumberPlaceholder.uppercased()), color: theme.colors.text, detectBold: true))
     index += 1
@@ -82,7 +82,7 @@ private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
     index += 1
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries

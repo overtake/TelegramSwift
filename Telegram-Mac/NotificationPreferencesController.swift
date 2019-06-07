@@ -59,7 +59,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     if accounts.count > 1 {
@@ -74,7 +74,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
         entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(settings.notifyAllAccounts ? L10n.notificationSettingsShowNotificationsFromOn : L10n.notificationSettingsShowNotificationsFromOff), color: theme.colors.grayText, detectBold: true))
         index += 1
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
     }
@@ -112,7 +112,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsResetNotificationsText), color: theme.colors.grayText, detectBold: true))
     index += 1
 
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsBadgeHeader), color: theme.colors.grayText, detectBold: true))
@@ -142,7 +142,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     index += 1
 
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_new_contacts, data: InputDataGeneralData(name: L10n.notificationSettingsContactJoined, color: theme.colors.text, type: .switchable(globalSettings.contactsJoined), action: {
@@ -153,7 +153,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsContactJoinedInfo), color: theme.colors.grayText, detectBold: true))
     index += 1
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
     
@@ -169,7 +169,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     index += 1
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
 

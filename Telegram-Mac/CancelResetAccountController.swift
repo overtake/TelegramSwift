@@ -133,7 +133,7 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     var index:Int32 = 0
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
 //
@@ -155,7 +155,7 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     }
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(result), color: theme.colors.grayText, detectBold: true))
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries

@@ -224,6 +224,11 @@ final class InputDataGeneralData : Equatable {
     }
 }
 
+enum InputDataSectionType : Equatable {
+    case normal
+    case custom(CGFloat)
+}
+
 enum InputDataEntry : Identifiable, Comparable {
     case desc(sectionId: Int32, index: Int32, text: GeneralRowTextType, color: NSColor, detectBold: Bool)
     case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, filter:(String)->String, limit: Int32)
@@ -234,7 +239,7 @@ enum InputDataEntry : Identifiable, Comparable {
     case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, equatable: InputDataEquatable?, item:(NSSize, InputDataEntryId)->TableRowItem)
     case search(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, update:(SearchState)->Void)
     case loading
-    case sectionId(Int32)
+    case sectionId(Int32, type: InputDataSectionType)
     
     var stableId: InputDataEntryId {
         switch self {
@@ -254,7 +259,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return .custom(identifier)
         case let .search(_, _, _, identifier, _):
             return .custom(identifier)
-        case let .sectionId(index):
+        case let .sectionId(index, _):
             return .sectionId(index)
         case .loading:
             return .loading
@@ -313,7 +318,7 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var index: Int32 {
         switch self {
-        case let .sectionId(sectionId):
+        case let .sectionId(sectionId, _):
             return (sectionId + 1) * 1000 - sectionId
         default:
             return (sectionIndex * 1000) + stableIndex
@@ -322,8 +327,15 @@ enum InputDataEntry : Identifiable, Comparable {
     
     func item(arguments: InputDataArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .sectionId:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+        case let .sectionId(_, type):
+            var height: CGFloat = 20
+            switch type {
+            case let .custom(h):
+                height = h
+            default:
+                break
+            }
+            return GeneralRowItem(initialSize, height: height, stableId: stableId)
         case let .desc(_, _, text, color, detectBold):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: detectBold, textColor: color)
         case let .custom(_, _, _, _, _, item):
@@ -406,8 +418,8 @@ func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
         } else {
             return false
         }
-    case let .sectionId(id):
-        if case .sectionId(id) = rhs {
+    case let .sectionId(id, type):
+        if case .sectionId(id, type) = rhs {
             return true
         } else {
             return false

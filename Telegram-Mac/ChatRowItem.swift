@@ -1636,6 +1636,11 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     items.append(ContextSeparatorItem())
     
+    if canEditMessage(message, context: context) {
+        items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: {
+            chatInteraction.beginEditingMessage(message)
+        }))
+    }
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
         if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
@@ -1661,11 +1666,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
-    if canEditMessage(message, context: context) {
-        items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: {
-            chatInteraction.beginEditingMessage(message)
-        }))
-    }
+    
     
     if canForwardMessage(message, account: account) {
         items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: {

@@ -41,7 +41,7 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
     var sectionId: Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -52,7 +52,7 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
         unavailable()
     }), color: theme.colors.grayText, detectBold: false))
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries
