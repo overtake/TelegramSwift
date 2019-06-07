@@ -31,6 +31,10 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         }
     }
     
+    var currentAttributed: NSAttributedString {
+        return .initialize(string: currentText, font: .normal(.text), coreText: false)
+    }
+    
     var value: InputDataValue {
         return .string(currentText)
     }
@@ -56,21 +60,10 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.mode = mode
         super.init(initialSize, stableId: stableId, error: error)
         
-        let textStorage = NSTextStorage(attributedString: .initialize(string: currentText, font: .normal(.text), coreText: false))
+       
+        //.initialize(string: currentText, font: .normal(.text), coreText: false)
         
-        var additionalRightInset: CGFloat = 0
-        if let image = placeholder?.rightResoringImage {
-            additionalRightInset += image.backingSize.width + 6
-        }
-        
-        let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.left - inset.right - textFieldLeftInset - additionalRightInset, .greatestFiniteMagnitude))
-        let layoutManager = NSLayoutManager()
-        layoutManager.addTextContainer(textContainer)
-        textStorage.addLayoutManager(layoutManager)
-        layoutManager.ensureLayout(for: textContainer)
-        
-        inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 6)
-        
+       
         _ = makeSize(initialSize.width, oldWidth: oldWidth)
     }
     
@@ -90,7 +83,34 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         }
     }
     
+    override var instantlyResize: Bool {
+        return true
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        let currentAttributed: NSMutableAttributedString = NSMutableAttributedString()
+        _ = currentAttributed.append(string: currentText, font: .normal(.text))
+        
+        if mode == .secure {
+            currentAttributed.setAttributedString(.init(string: String(currentText.map { _ in return "•" })))
+            currentAttributed.addAttribute(.font, value: NSFont.normal(15.0 + 3.22), range: currentAttributed.range)
+        }
+        
+        let textStorage = NSTextStorage(attributedString: currentAttributed)
+        
+        var additionalRightInset: CGFloat = 0
+        if let image = placeholder?.rightResoringImage {
+            additionalRightInset += image.backingSize.width + 6
+        }
+        
+        let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.left - inset.right - textFieldLeftInset - additionalRightInset, .greatestFiniteMagnitude))
+        let layoutManager = NSLayoutManager()
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
+        layoutManager.ensureLayout(for: textContainer)
+        
+        inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 6)
+        
         let success = super.makeSize(width, oldWidth: oldWidth)
         placeholderLayout?.measure(width: 100)
         return success
@@ -157,6 +177,7 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         secureField.isEditable = true
         secureField.isSelectable = true
         
+    
         
         secureField.font = .normal(.text)
         secureField.textView?.insertionPointColor = theme.colors.text
@@ -241,7 +262,17 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
             
             
             textLimitation.change(pos: NSMakePoint(frame.width - item.inset.right - textLimitation.frame.width + 4, item.height - textLimitation.frame.height), animated: animated)
-
+            
+            if let placeholder = item.placeholder {
+                if placeholder.drawBorderAfterPlaceholder {
+                    separator.change(pos: NSMakePoint(item.inset.left + item.textFieldLeftInset + 4, frame.height - .borderSize), animated: animated)
+                } else {
+                    separator.change(pos: NSMakePoint(item.inset.left, frame.height - .borderSize), animated: animated)
+                }
+            } else {
+                separator.change(pos: NSMakePoint(item.inset.left, frame.height - .borderSize), animated: animated)
+            }
+            
             table.noteHeightOfRow(item.index, animated)
 
             
@@ -317,7 +348,7 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         textView.cursorColor = theme.colors.indicatorColor
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
-        secureField.font = .normal(.text)
+        secureField.font = .normal(13)
         secureField.backgroundColor = theme.colors.background
         secureField.textColor = theme.colors.text
         separator.backgroundColor = theme.colors.border
@@ -400,11 +431,11 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         case .secure:
             secureField.placeholderAttributedString = item.inputPlaceholder
             secureField.isHidden = false
+            
             textView.isHidden = true
             if item.currentText != secureField.stringValue {
                 secureField.stringValue = item.currentText
             }
-            secureField.sizeToFit()
         }
         
         super.set(item: item, animated: animated)

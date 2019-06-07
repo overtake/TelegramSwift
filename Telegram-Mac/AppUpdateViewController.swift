@@ -253,7 +253,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
     var currentItem: SUAppcastItem?
@@ -307,7 +307,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appUpdateNewestAvailable), color: theme.colors.grayText, detectBold: false))
         index += 1
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("new"), equatable: nil, item: { initialSize, stableId in
@@ -324,7 +324,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     
     
     if !state.items.isEmpty {
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         
@@ -343,13 +343,13 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
                 return GeneralTextRowItem(initialSize, stableId: stableId, text: text, textColor: theme.colors.text, fontSize: 13, isTextSelectable: true)
             }))
             index += 1
-            entries.append(.sectionId(sectionId))
+            entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
         }
        
     }
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
 //

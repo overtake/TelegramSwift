@@ -58,7 +58,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     struct UpdateEnableRow : Equatable {
@@ -104,7 +104,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     }
 
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -394,7 +394,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     
     var sectionId:Int32 = 0
     var index: Int32 = 0
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -422,7 +422,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
         entries.append(.input(sectionId: sectionId, index: index, value: .string(String(data: secret, encoding: .utf8)), error: nil, identifier: _id_secret, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.proxySettingsSecret), inputPlaceholder: L10n.proxySettingsSecret, filter: {$0}, limit: 255))
         index += 1
     case let .socks5(username, password):
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.proxySettingsCredentialsHeader), color: theme.colors.grayText, detectBold: true))
         index += 1
@@ -440,12 +440,12 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     
     if !server.isEmpty {
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, data: InputDataGeneralData(name: L10n.proxySettingsCopyLink, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
         index += 1
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         let link = server.withDataHextString().link

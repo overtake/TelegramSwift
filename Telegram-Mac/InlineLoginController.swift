@@ -66,7 +66,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     
     let host = URL(string: url)?.host ?? url
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("title"), equatable: nil, item: { initialSize, stableId in
@@ -81,7 +81,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     }))
     index += 1
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     let loginEnabled = state.options.contains(.login)
@@ -120,7 +120,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     }
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries

@@ -1713,7 +1713,7 @@ private func createPasswordEntries( _ state: PassportState) -> [InputDataEntry] 
     var entries:[InputDataEntry] = []
     var sectionId:Int32 = 0
     var index: Int32 = 0
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     let nonFilter:(String)->String = { value in
@@ -1734,7 +1734,7 @@ private func createPasswordEntries( _ state: PassportState) -> [InputDataEntry] 
     index += 1
 
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordHintHeader), color: theme.colors.grayText, detectBold: true))
@@ -1743,7 +1743,7 @@ private func createPasswordEntries( _ state: PassportState) -> [InputDataEntry] 
     entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_hint, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordHintPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordHintInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordEmailHeader), color: theme.colors.grayText, detectBold: true))
@@ -1767,7 +1767,7 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
     var index: Int32 = 0
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     var placeholder = state.searchValue(.email)?.emailValue?.email ?? ""
@@ -1793,7 +1793,7 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
         }
         
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(email), error: nil, identifier: _id_email_def, data: InputDataGeneralData(name: L10n.secureIdEmailUseSame(email), color: theme.colors.blueUI, icon: nil, type: .next, action: nil)))
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
     
@@ -1815,7 +1815,7 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     var index: Int32 = 0
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     //
     if let phone = (state.peer as? TelegramUser)?.phone, !phone.isEmpty {
@@ -1824,7 +1824,7 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
         entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberUseSameDesc), color: theme.colors.grayText, detectBold: true))
         index += 1
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), color: theme.colors.grayText, detectBold: true))
@@ -1850,7 +1850,7 @@ private func confirmPhoneNumberEntries( _ state: PassportState, phoneNumber: Str
     var index: Int32 = 0
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), color: theme.colors.grayText, detectBold: true))
@@ -1871,7 +1871,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
     var entries:[InputDataEntry] = []
     var sectionId:Int32 = 0
     var index: Int32 = 0
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     let nonFilter:(String)->String = { value in
@@ -1920,7 +1920,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         index += 1
         
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
     
@@ -1981,7 +1981,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         
         if relative.hasTranslation {
             
-            entries.append(.sectionId(sectionId))
+            entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
             entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), color: theme.colors.grayText, detectBold: true))
@@ -2036,12 +2036,12 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         
     }
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     if address != nil || relativeValue != nil {
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, data: InputDataGeneralData(name: relativeValue != nil ? L10n.secureIdDeleteIdentity : L10n.secureIdDeleteAddress, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
 
@@ -2081,7 +2081,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     var entries:[InputDataEntry] = []
     var sectionId:Int32 = 0
     var index: Int32 = 0
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -2181,7 +2181,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         
         if case let .personalDetails(nativeName) = primary, nativeName {
             if let residence = residence.stringValue {
-                entries.append(.sectionId(sectionId))
+                entries.append(.sectionId(sectionId, type: .normal))
                 sectionId += 1
                 
                 if state.configuration?.nativeLanguageByCountry[residence] != "en" {
@@ -2240,7 +2240,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             addRelativeIdentifier()
         }
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         let rErrors = state.errors[relative.valueKey]
@@ -2348,7 +2348,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         
         if relative.hasTranslation {
             
-            entries.append(.sectionId(sectionId))
+            entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
             entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), color: theme.colors.grayText, detectBold: true))
@@ -2409,12 +2409,12 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     
 
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     if personalDetails != nil || relativeValue != nil {
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, data: InputDataGeneralData(name: relativeValue != nil ? L10n.secureIdDeleteIdentity : L10n.secureIdDeletePersonalDetails, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
 
@@ -2428,7 +2428,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     var sectionId:Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdEmailActivateCodePlaceholder), inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))

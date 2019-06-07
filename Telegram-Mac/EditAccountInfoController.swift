@@ -152,7 +152,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     index += 1
 
     
-    entries.append(InputDataEntry.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.telegramBioViewController), inputPlaceholder: L10n.bioPlaceholder, filter: {$0}, limit: 70))
@@ -161,7 +161,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioDescription), color: theme.colors.grayText, detectBold: true))
     index += 1
     
-    entries.append(InputDataEntry.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), action: nil)))
@@ -170,7 +170,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), action: nil)))
     index += 1
 
-    entries.append(InputDataEntry.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     if activeAccounts.count < 3 {

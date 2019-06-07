@@ -111,7 +111,7 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -137,7 +137,7 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     index += 1
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollOptionsHeader), color: theme.colors.grayText, detectBold: false))
@@ -164,10 +164,10 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     index += 1
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries

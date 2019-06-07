@@ -631,6 +631,28 @@ internal final class L10n {
   internal static var channelAdminDismiss: String  { return L10n.tr("Localizable", "Channel.Admin.Dismiss") }
   /// WHAT CAN THIS ADMIN DO?
   internal static var channelAdminWhatCanAdminDo: String  { return L10n.tr("Localizable", "Channel.Admin.WhatCanAdminDo") }
+  /// Transfer Channel Ownership
+  internal static var channelAdminTransferOwnershipChannel: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Channel") }
+  /// Transfer Group Ownership
+  internal static var channelAdminTransferOwnershipGroup: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Group") }
+  /// Change Owner
+  internal static var channelAdminTransferOwnershipConfirmOK: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Confirm.OK") }
+  /// This will transfer the full owner rights for %@ to %@.\n\nYou will no longer be considered the creator of the channel. The new owner will be free to remove any of your admin privileges or even ban you.
+  internal static func channelAdminTransferOwnershipConfirmChannelText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Confirm.Channel.Text", p1, p2)
+  }
+  /// Transfer Channel Ownership
+  internal static var channelAdminTransferOwnershipConfirmChannelTitle: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Confirm.Channel.Title") }
+  /// This will transfer the full owner rights for %@ to %@.\n\nYou will no longer be considered the creator of the group. The new owner will be free to remove any of your admin privileges or even ban you.
+  internal static func channelAdminTransferOwnershipConfirmGroupText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Confirm.Group.Text", p1, p2)
+  }
+  /// Transfer Group Ownership
+  internal static var channelAdminTransferOwnershipConfirmGroupTitle: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Confirm.Group.Title") }
+  /// Please enter your 2-Step verification password to complete the transfer.
+  internal static var channelAdminTransferOwnershipPasswordDesc: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Password.Desc") }
+  /// Two-Step Verification
+  internal static var channelAdminTransferOwnershipPasswordTitle: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Password.Title") }
   /// Sorry, you're not allowed to promote this user to become an admin.
   internal static var channelAdminsAddAdminError: String  { return L10n.tr("Localizable", "Channel.Admins.AddAdminError") }
   /// promoted by %@
@@ -2463,6 +2485,10 @@ internal final class L10n {
   internal static var inputFormatterURLHeader: String  { return L10n.tr("Localizable", "InputFormatter.URL.Header") }
   /// URL
   internal static var inputFormatterURLPlaceholder: String  { return L10n.tr("Localizable", "InputFormatter.URL.Placeholder") }
+  /// Password
+  internal static var inputPasswordControllerPlaceholder: String  { return L10n.tr("Localizable", "InputPasswordController.Placeholder") }
+  /// Invalid password. Please try again
+  internal static var inputPasswordControllerErrorWrongPassword: String  { return L10n.tr("Localizable", "InputPasswordController.Error.WrongPassword") }
   /// Archived Stickers
   internal static var installedStickersArchived: String  { return L10n.tr("Localizable", "InstalledStickers.Archived") }
   /// Artists are welcome to add their own sticker sets using our @stickers bot.\n\nTap on a sticker to view and add the whole set.
@@ -2815,6 +2841,8 @@ internal final class L10n {
   internal static var modalSet: String  { return L10n.tr("Localizable", "Modal.Set") }
   /// Share
   internal static var modalShare: String  { return L10n.tr("Localizable", "Modal.Share") }
+  /// Add
+  internal static var navigationAdd: String  { return L10n.tr("Localizable", "Navigation.Add") }
   /// Back
   internal static var navigationBack: String  { return L10n.tr("Localizable", "Navigation.back") }
   /// Cancel
@@ -2849,6 +2877,8 @@ internal final class L10n {
   internal static var networkUsageHeaderImages: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Images") }
   /// VIDEOS
   internal static var networkUsageHeaderVideos: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Videos") }
+  /// New Contact
+  internal static var newContactTitle: String  { return L10n.tr("Localizable", "NewContact.Title") }
   /// Are you sure you want to discard this poll?
   internal static var newPollDisacardConfirm: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm") }
   /// Add an Option

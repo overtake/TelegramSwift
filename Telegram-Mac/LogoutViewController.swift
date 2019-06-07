@@ -48,7 +48,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -73,7 +73,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contact_support, data: InputDataGeneralData(name: L10n.logoutOptionsContactSupportTitle, color: theme.colors.text, icon: theme.icons.logoutOptionContactSupport, type: .next, description: L10n.logoutOptionsContactSupportText, action: arguments.contactSupport)))
     index += 1
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_log_out, data: InputDataGeneralData(name: L10n.logoutOptionsLogOut, color: theme.colors.redUI, action: arguments.logout)))
@@ -82,7 +82,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsLogOutInfo), color: theme.colors.grayText, detectBold: true))
     index += 1
 
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
     

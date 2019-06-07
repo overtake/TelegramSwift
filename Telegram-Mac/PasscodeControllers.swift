@@ -57,7 +57,7 @@ private func passcodeEntries(_ state: PasscodeState) -> [InputDataEntry] {
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     switch state.mode {
@@ -81,7 +81,7 @@ private func passcodeEntries(_ state: PasscodeState) -> [InputDataEntry] {
         entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_current]?.stringValue), error: state.errors[_id_input_current], identifier: _id_input_current, mode: .secure, placeholder: nil, inputPlaceholder: L10n.passcodeControllerCurrentPlaceholder, filter: { $0 }, limit: 255))
         index += 1
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
 
         

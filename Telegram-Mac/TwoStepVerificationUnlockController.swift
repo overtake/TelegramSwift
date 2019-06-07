@@ -221,7 +221,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
     var sectionId:Int32 = 0
     
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     var index: Int32 = 0
@@ -277,7 +277,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
         
         
         if let _ = pendingEmail {
-            entries.append(.sectionId(sectionId))
+            entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
             entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_enter_email_code, data: InputDataGeneralData(name: L10n.twoStepAuthEnterEmailCode, color: theme.colors.text, icon: nil, type: .none, action: nil)))
@@ -842,7 +842,7 @@ private func twoStepVerificationResetPasswordEntries( state: TwoStepVerification
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
@@ -957,7 +957,7 @@ private func twoStepVerificationPasswordEntryControllerEntries(state: TwoStepVer
     
     var sectionId:Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     var index: Int32 = 0

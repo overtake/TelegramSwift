@@ -30,7 +30,7 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
     var sectionId:Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
  
@@ -44,7 +44,7 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
 
     if let schedule = settings.schedule {
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         let sunriseEnabled: Bool
@@ -86,7 +86,7 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
             index += 1
         }
         
-        entries.append(.sectionId(sectionId))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         let nightBlueKey = "AppearanceSettings.ColorTheme." + nightBluePalette.name.lowercased().replacingOccurrences(of: " ", with: "_")
