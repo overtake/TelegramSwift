@@ -172,7 +172,7 @@ func forceUpdateStatusBarIconByDockTile(sharedContext: SharedAccountContext) {
     if let count = Int(NSApplication.shared.dockTile.badgeLabel ?? "0") {
         var color: NSColor = .black
         if #available(OSX 10.14, *) {
-            if NSApp.effectiveAppearance.name != .aqua {
+            if UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark" {
                 color = .white
             }
         }
