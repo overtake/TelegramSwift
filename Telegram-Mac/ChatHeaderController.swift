@@ -17,7 +17,8 @@ import PostboxMac
 enum ChatHeaderState : Identifiable, Equatable {
     case none
     case search(ChatSearchInteractions, Peer?)
-    case addContact
+    case addContact(block: Bool)
+    case shareInfo
     case pinned(MessageId)
     case report
     case sponsored
@@ -35,6 +36,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 4
         case .sponsored:
             return 5
+        case .shareInfo:
+            return 6
         }
     }
     
@@ -47,6 +50,8 @@ enum ChatHeaderState : Identifiable, Equatable {
         case .report:
             return 44
         case .addContact:
+            return 44
+        case .shareInfo:
             return 44
         case .pinned:
             return 44
@@ -121,8 +126,10 @@ class ChatHeaderController {
     private func viewIfNecessary(_ size:NSSize) -> View? {
         let view:View?
         switch _headerState {
-        case .addContact:
-            view = AddContactView(chatInteraction)
+        case let .addContact(block):
+            view = AddContactView(chatInteraction, canBlock: block)
+        case .shareInfo:
+            view = ShareInfoView(chatInteraction)
         case let .pinned(messageId):
             view = ChatPinnedView(messageId, chatInteraction: chatInteraction)
         case let .search(interactions, initialPeer):
@@ -328,7 +335,7 @@ class ChatReportView : Control {
         
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         
-        report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
+        report.set(text: L10n.chatHeaderReportSpam, for: .Normal)
         _ = report.sizeToFit()
         
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
@@ -339,7 +346,7 @@ class ChatReportView : Control {
         }, for: .SingleClick)
         
         dismiss.set(handler: { _ in
-            chatInteraction.dismissPeerReport()
+            chatInteraction.dismissPeerStatusOptions()
         }, for: .SingleClick)
         
         addSubview(dismiss)
@@ -351,7 +358,7 @@ class ChatReportView : Control {
         super.updateLocalizationAndTheme()
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
-        report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
         _ = report.sizeToFit()
         self.backgroundColor = theme.colors.background
         needsLayout = true
@@ -377,39 +384,53 @@ class ChatReportView : Control {
     }
 }
 
-class AddContactView : Control {
+class ShareInfoView : Control {
     private let chatInteraction:ChatInteraction
-    private let add:TitleButton = TitleButton()
+    private let share:TitleButton = TitleButton()
     private let dismiss:ImageButton = ImageButton()
-
     init(_ chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         super.init()
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         dismiss.disableActions()
-        add.set(text: tr(L10n.peerInfoAddContact), for: .Normal)
-        _ = add.sizeToFit()
         
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         _ = dismiss.sizeToFit()
-
-        add.set(handler: { _ in
-            chatInteraction.addContact()
+        
+        share.set(handler: { _ in
+            chatInteraction.shareSelfContact(nil)
+            chatInteraction.dismissPeerStatusOptions()
         }, for: .SingleClick)
         
         dismiss.set(handler: { _ in
-            
+            chatInteraction.dismissPeerStatusOptions()
         }, for: .SingleClick)
         
-        addSubview(add)
+        
+        
+        addSubview(share)
+        addSubview(dismiss)
         updateLocalizationAndTheme()
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        
+        if window == nil {
+            var bp:Int = 0
+            bp += 1
+        }
     }
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        add.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        share.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        
+        share.set(text: L10n.peerInfoShareMyInfo, for: .Normal)
+
         self.backgroundColor = theme.colors.background
+        needsLayout = true
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -419,7 +440,94 @@ class AddContactView : Control {
     }
     
     override func layout() {
-        add.center()
+        super.layout()
+        dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
+        share.center()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+class AddContactView : Control {
+    private let chatInteraction:ChatInteraction
+    private let add:TitleButton = TitleButton()
+    private let dismiss:ImageButton = ImageButton()
+    private let blockButton: TitleButton = TitleButton()
+    private let buttonsContainer = View()
+    init(_ chatInteraction:ChatInteraction, canBlock: Bool) {
+        self.chatInteraction = chatInteraction
+        super.init()
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+        dismiss.disableActions()
+        
+        dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        _ = dismiss.sizeToFit()
+
+        add.set(handler: { _ in
+            chatInteraction.addContact()
+        }, for: .SingleClick)
+        
+        dismiss.set(handler: { _ in
+            chatInteraction.dismissPeerStatusOptions()
+        }, for: .SingleClick)
+        
+        blockButton.set(handler: { _ in
+            chatInteraction.blockContact()
+        }, for: .SingleClick)
+        
+        
+       
+        
+        buttonsContainer.addSubview(add)
+        if canBlock {
+            buttonsContainer.addSubview(blockButton)
+        }
+        addSubview(buttonsContainer)
+        addSubview(dismiss)
+        updateLocalizationAndTheme()
+    }
+    
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        add.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        blockButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.redUI)
+        
+        if blockButton.superview == nil, let peer = chatInteraction.peer {
+            add.set(text: L10n.peerInfoAddUserToContact(peer.compactDisplayTitle), for: .Normal)
+        } else {
+            add.set(text: L10n.peerInfoAddContact, for: .Normal)
+        }
+        blockButton.set(text: L10n.peerInfoBlockUser, for: .Normal)
+
+        
+        self.backgroundColor = theme.colors.background
+        needsLayout = true
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
+    }
+    
+    override func layout() {
+        dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
+        if blockButton.superview == nil {
+            buttonsContainer.frame = NSMakeRect(0, 0, frame.width, frame.height - .borderSize)
+            add.setFrameSize(NSMakeSize(add.frame.width, buttonsContainer.frame.height))
+            add.center()
+        } else {
+            buttonsContainer.frame = NSMakeRect(0, 0, frame.width - (frame.width - dismiss.frame.minX), frame.height - .borderSize)
+            add.frame = NSMakeRect(buttonsContainer.frame.width / 2, 0, buttonsContainer.frame.width / 2, buttonsContainer.frame.height)
+            blockButton.frame = NSMakeRect(0, 0, buttonsContainer.frame.width / 2, buttonsContainer.frame.height)
+        }
     }
     
     required init?(coder: NSCoder) {

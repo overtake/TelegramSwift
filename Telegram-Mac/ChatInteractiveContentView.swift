@@ -494,7 +494,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
-            if let updateImageSignal = updateImageSignal {
+            if let updateImageSignal = updateImageSignal, !self.image.isFullyLoaded {
                 self.image.setSignal( updateImageSignal, animate: true, cacheImage: { [weak self] image in
                     if let strongSelf = self {
                         return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
@@ -544,7 +544,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: parameters?.soundOnHover == true, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
                             
                             strongSelf.autoplayVideoView = autoplay
-                            
+                            if parent == nil {
+                                strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resizeAspectFill)
+                            } else {
+                                strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resize)
+                            }
                             strongSelf.updatePlayerIfNeeded()
                         }
                         if let autoplay = strongSelf.autoplayVideoView {

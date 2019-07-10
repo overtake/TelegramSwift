@@ -48,7 +48,6 @@ class GIFContainerView: Control {
         //self.layer?.cornerRadius = 4.0
         player.background = .clear
         player.setVideoLayerGravity(.resizeAspectFill)
-        
         set(handler: { [weak self] control in
             if let `self` = self, let window = self.window as? Window, let table = self.tableView, let context = self.context {
                 _ = startModalPreviewHandle(table, window: window, context: context)

@@ -87,8 +87,14 @@ class ChatLayoutUtils: NSObject {
         if media is TelegramMediaImage {
             return ChatInteractiveContentView.self
         } else if let file = media as? TelegramMediaFile {
-            if file.isSticker {
-                return ChatStickerContentView.self
+            if file.isAnimatedSticker {
+                return ChatMediaAnimatedStickerView.self
+            } else if file.isSticker {
+                if let size = file.size, size < 200 * 1024 {
+                    return ChatStickerContentView.self
+                } else {
+                    return ChatFileContentView.self
+                }
             } else if file.isInstantVideo {
                 return ChatVideoMessageContentView.self
             } else if file.isVideo && !file.isAnimated {
@@ -99,8 +105,6 @@ class ChatLayoutUtils: NSObject {
                 return ChatVoiceContentView.self
             } else if file.isMusic {
                 return ChatMusicContentView.self
-            } else if file.isAnimatedSticker {
-                return ChatMediaAnimatedStickerView.self
             } else {
                 return ChatFileContentView.self
             }

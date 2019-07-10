@@ -55,7 +55,7 @@ class EntertainmentViewController: NavigationViewController {
 
 
     private let emoji:EmojiViewController
-    private let stickers:StickersViewController
+    private let stickers:NStickersViewController
     private let gifs:GIFViewController
     
     func update(with chatInteraction:ChatInteraction) -> Void {
@@ -95,7 +95,7 @@ class EntertainmentViewController: NavigationViewController {
         self.context = context
         self.cap = SidebarCapViewController(context)
         self.emoji = EmojiViewController(context)
-        self.stickers = StickersViewController(context)
+        self.stickers = NStickersViewController(context, search: .single(SearchState(state: .None, request: nil)))
         self.gifs = GIFViewController(context)
         
         var items:[SectionControllerItem] = []

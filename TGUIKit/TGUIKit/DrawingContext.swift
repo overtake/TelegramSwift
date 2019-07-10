@@ -41,6 +41,38 @@ public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) 
     return image
 }
 
+public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, scale: CGFloat = 2.0) -> CGImage? {
+    let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
+    let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
+    let length = bytesPerRow * Int(scaledSize.height)
+    let bytes = malloc(length)!.assumingMemoryBound(to: Int8.self)
+    
+    guard let provider = CGDataProvider(dataInfo: bytes, data: bytes, size: length, releaseData: { bytes, _, _ in
+        free(bytes)
+    })
+        else {
+            return nil
+    }
+    
+    let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.noneSkipFirst.rawValue)
+    
+    guard let context = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: bitmapInfo.rawValue)
+        else {
+            return nil
+    }
+    
+    context.scaleBy(x: scale, y: scale)
+    
+    contextGenerator(size, context)
+    
+    guard let image = CGImage(width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bytesPerRow, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: bitmapInfo, provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+        else {
+            return nil
+    }
+    
+    return image
+}
+
 public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = nil, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
     let selectedScale = scale ?? System.backingScale
     let scaledSize = CGSize(width: size.width * selectedScale, height: size.height * selectedScale)
@@ -76,8 +108,17 @@ public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? 
     return image
 }
 
-let deviceColorSpace = CGColorSpaceCreateDeviceRGB()
-
+public let deviceColorSpace: CGColorSpace = {
+    if #available(OSX 10.11.2, *) {
+        if let colorSpace = CGColorSpace(name: CGColorSpace.displayP3) {
+            return colorSpace
+        } else {
+            return CGColorSpaceCreateDeviceRGB()
+        }
+    } else {
+        return CGColorSpaceCreateDeviceRGB()
+    }
+}()
 public enum DrawingContextBltMode {
     case Alpha
 }

@@ -52,7 +52,11 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 if point.x > subview.frame.minX && point.x < subview.frame.maxX {
                     let file = item.result.results[i].file
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                    return .file(reference, StickerPreviewModalView.self)
+                    if file.isAnimatedSticker {
+                        return .file(reference, AnimatedStickerPreviewModalView.self)
+                    } else {
+                        return .file(reference, StickerPreviewModalView.self)
+                    }
                 }
                 i += 1
             }
@@ -109,24 +113,32 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         }
                     }, for: .LongMouseDown)
                     
-                    let imageSize = data.file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
-                    let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+                   
+                    if data.file.isAnimatedSticker {
+                        let view = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+                        let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
+                        view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+                        view.userInteractionEnabled = false
+                        container.addSubview(view)
+                    } else {
+                        let imageSize = data.file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
+                        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+                        let view = TransformImageView()
+                        view.setSignal(signal: cachedMedia(media: data.file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
+                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak self] signal in
+                            if let strongSelf = self {
+                                return cacheMedia(signal: signal, media: data.file, arguments: arguments, scale: strongSelf.backingScaleFactor)
+                            } else {
+                                return .complete()
+                            }
+                        })
+                        
+                        view.set(arguments: arguments)
+                        
+                        view.setFrameSize(imageSize)
+                        container.addSubview(view)
+                    }
                     
-                    let view = TransformImageView()
-                    view.setSignal(signal: cachedMedia(media: data.file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                    view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak self] signal in
-                        if let strongSelf = self {
-                            return cacheMedia(signal: signal, media: data.file, arguments: arguments, scale: strongSelf.backingScaleFactor)
-                        } else {
-                            return .complete()
-                        }
-                    })
-                   // _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
-                    
-                    view.set(arguments: arguments)
-                    
-                    view.setFrameSize(imageSize)
-                    container.addSubview(view)
                     container.setFrameSize(NSMakeSize(item.result.sizes[i].width - 4, item.result.sizes[i].height - 4))
                 default:
                     fatalError("ContextStickerRowItem support only stickers")

@@ -81,7 +81,7 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
     func item(_ arguments: FeaturedStickerPacksControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .pack(_, _, info, unread, topItem, count, installed):
-            return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .installation(installed: installed), action: {
+            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .installation(installed: installed), action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 arguments.addPack(info)

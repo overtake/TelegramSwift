@@ -198,6 +198,10 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public override var description: String {
         return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count), state: \(state), animated: \(animated)"
     }
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
 }
 
 public final class TableEntriesTransition<T> : TableUpdateTransition {
@@ -562,8 +566,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
    
-    public let selectedhash:Atomic<AnyHashable?> = Atomic(value: nil);
-    public let highlitedHash:Atomic<AnyHashable?> = Atomic(value: nil);
+    public var selectedhash:AnyHashable? = nil
+    public var highlitedHash:AnyHashable? = nil
 
     
     private var updating:Bool = false
@@ -593,7 +597,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var emptyView:TableRowView?
     
     public func addScroll(listener:TableScrollListener) {
-        scrollListeners.append(listener)
+        var found: Bool = false
+        for enumerate in scrollListeners {
+            if enumerate.uniqueId == listener.uniqueId {
+                found = true
+                break
+            }
+        }
+        if !found {
+            scrollListeners.append(listener)
+        }
     }
     
     
@@ -993,11 +1006,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         enumerateItems { item in
             _ = item.makeSize(frame.width, oldWidth: item.width)
             reloadData(row: item.index, animated: false)
-            NSAnimationContext.current.duration =  0.0
+            NSAnimationContext.current.duration = 0.0
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
             return true
         }
-        tableView.reloadData()
+        
         endTableUpdates()
         
         saveScrollState(visibleItems)
@@ -1249,7 +1262,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func selectedItem() -> TableRowItem? {
         
-        let hash = selectedhash.modify({$0})
+        let hash = selectedhash
         if let hash = hash {
             return self.item(stableId:hash)
         }
@@ -1257,12 +1270,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func isSelected(_ item:TableRowItem) ->Bool {
-        return selectedhash.modify({$0}) == item.stableId
+        return selectedhash == item.stableId
     }
     
     public func highlightedItem() -> TableRowItem? {
         
-        let hash = highlitedHash.modify({$0})
+        let hash = highlitedHash
         if let hash = hash {
             return self.item(stableId: hash)
         }
@@ -1270,7 +1283,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func isHighlighted(_ item:TableRowItem) ->Bool {
-        return highlitedHash.modify({$0}) == item.stableId
+        return highlitedHash == item.stableId
     }
     
     public func item(stableId:AnyHashable) -> TableRowItem? {
@@ -1509,6 +1522,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
+    
     public var firstItem:TableRowItem? {
         return self.list.first
     }
@@ -1534,7 +1548,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
-                
+                view.setFrameSize(NSMakeSize(frame.width, item.heightValue))
                 view.set(item: item, animated: animated)
                 view.needsDisplay = true
             } else {
@@ -1648,7 +1662,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func selectNext(_ scroll:Bool = true, _ animated:Bool = false, turnDirection: Bool = true) -> Void {
         var previousInset: CGFloat = 0
-        if let hash = selectedhash.modify({$0}) {
+        if let hash = selectedhash {
             let selectedItem = self.item(stableId: hash)
             if let selectedItem = selectedItem {
                 previousInset = -selectedItem.heightValue
@@ -1688,14 +1702,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             
         }
-        if let hash = selectedhash.modify({$0}), scroll {
+        if let hash = selectedhash, scroll {
             self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: false, inset: previousInset), inset: NSEdgeInsets(), true)
         }
     }
     
     public func selectPrev(_ scroll:Bool = true, _ animated:Bool = false, turnDirection: Bool = true) -> Void {
         var previousInset: CGFloat = 0
-        if let hash = selectedhash.modify({$0}) {
+        if let hash = selectedhash {
             let selectedItem = self.item(stableId: hash)
             if let selectedItem = selectedItem {
                 previousInset = selectedItem.heightValue
@@ -1738,14 +1752,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         }
         
-        if let hash = selectedhash.modify({$0}), scroll {
+        if let hash = selectedhash, scroll {
             self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: false, inset: previousInset), inset: NSEdgeInsets(), true)
         }
     }
     
     public func highlightNext(_ scroll:Bool = true, _ animated:Bool = false, turnDirection: Bool = true) -> Void {
         var previousInset: CGFloat = 0
-        if let hash = highlitedHash.modify({$0}) {
+        if let hash = highlitedHash {
             let highlighteditem = self.item(stableId: hash)
 
             if let highlighteditem = highlighteditem {
@@ -1785,7 +1799,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             
         }
-        if let hash = highlitedHash.modify({$0}), scroll {
+        if let hash = highlitedHash, scroll {
             self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: false, inset: previousInset), inset: NSEdgeInsets(), true)
         }
     }
@@ -1793,7 +1807,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func highlightPrev(_ scroll:Bool = true, _ animated:Bool = false, turnDirection: Bool = true) -> Void {
         var previousInset: CGFloat = 0
 
-        if let hash = highlitedHash.modify({$0}) {
+        if let hash = highlitedHash {
             let highlightedItem = self.item(stableId: hash)
             if let highlightedItem = highlightedItem {
                 previousInset = highlightedItem.heightValue
@@ -1834,7 +1848,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
         }
         
-        if let hash = highlitedHash.modify({$0}), scroll {
+        if let hash = highlitedHash, scroll {
             self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: false, inset: previousInset), inset: NSEdgeInsets(), true)
         }
     }
@@ -1874,7 +1888,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func viewNecessary(at row:Int, makeIfNecessary: Bool = false) -> TableRowView? {
-        if row < 0 || row > count - 1 {
+        if row < 0 || row >= count {
             if row == -1000 {
                 return emptyView
             }
@@ -1889,11 +1903,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let delegate = delegate, delegate.isSelectable(row: item.index, item: item) {
             if(self.item(stableId:item.stableId) != nil) {
                 if !notify || delegate.selectionWillChange(row: item.index, item: item, byClick: byClick) {
-                    let new = item.stableId != selectedhash.modify({$0})
+                    let new = item.stableId != selectedhash
                     if new {
                         self.cancelSelection();
                     }
-                    let _ = selectedhash.swap(item.stableId)
+                    self.selectedhash = item.stableId
                     if highlightedItem() != nil {
                         _ = highlight(item: item)
                     }
@@ -1915,11 +1929,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let delegate = delegate, delegate.isSelectable(row: item.index, item: item) {
             if(self.item(stableId:item.stableId) != nil) {
                 if !notify || delegate.selectionWillChange(row: item.index, item: item, byClick: byClick) {
-                    let new = item.stableId != selectedhash.modify({$0})
+                    let new = item.stableId != selectedhash
                     if new {
                         self.cancelHighlight();
                     }
-                    let _ = highlitedHash.swap(item.stableId)
+                    highlitedHash = item.stableId
                     item.prepare(true)
                     self.reloadData(row:item.index)
                     return true;
@@ -1936,7 +1950,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 _ = self.select(item:item, notify:false)
             } else {
                 cancelSelection()
-                _ = self.selectedhash.swap(stableId)
+                self.selectedhash = stableId
             }
         } else {
             cancelSelection()
@@ -1944,26 +1958,26 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func cancelSelection() -> Void {
-        if let hash = selectedhash.modify({$0}) {
+        if let hash = selectedhash {
             if let item = self.item(stableId: hash) {
                 item.prepare(false)
-                let _ = selectedhash.swap(nil)
+                selectedhash = nil
                 self.reloadData(row:item.index)
             } else {
-                let _ = selectedhash.swap(nil)
+                selectedhash = nil
             }
         }
         
     }
     
     public func cancelHighlight() -> Void {
-        if let hash = highlitedHash.modify({$0}) {
+        if let hash = highlitedHash {
             if let item = self.item(stableId: hash) {
                 item.prepare(false)
-                let _ = highlitedHash.swap(nil)
+                highlitedHash = nil
                 self.reloadData(row: item.index)
             } else {
-                let _ = highlitedHash.swap(nil)
+                highlitedHash = nil
             }
         }
         
@@ -2246,7 +2260,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     } else {
                         y = nrect.minY - visible.1
                     }
-                    scroll(contentView, to: NSMakePoint(0, y))
+                    self.clipView.scroll(to: NSMakePoint(0, y), animated: false)
+
                     //reflectScrolledClipView(clipView)
 //                    tile()
                     //self.contentView.bounds = NSMakeRect(0, y, 0, contentView.bounds.height)

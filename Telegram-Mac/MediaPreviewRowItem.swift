@@ -17,7 +17,7 @@ class MediaPreviewRowItem: TableRowItem {
     
 
 
-    fileprivate let media: Media
+    let media: Media
     fileprivate let context: AccountContext
     private let _stableId = arc4random()
     fileprivate let parameters: ChatMediaLayoutParameters?
@@ -101,6 +101,11 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
                 if let image = contentNode.media as? TelegramMediaImage {
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return .image(reference, ImagePreviewModalView.self)
+                }
+            } else if contentNode is ChatMediaAnimatedStickerView {
+                if let file = contentNode.media as? TelegramMediaFile {
+                    let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
+                    return .file(reference, AnimatedStickerPreviewModalView.self)
                 }
             } else if contentNode is ChatFileContentView {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {

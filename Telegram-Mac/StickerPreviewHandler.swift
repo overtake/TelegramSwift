@@ -141,8 +141,7 @@ class ModalPreviewHandler : NSObject {
     }
     
     func stopHandler() {
-        window.remove(object: self, for: .leftMouseDragged)
-        window.remove(object: self, for: .leftMouseUp)
+        window.removeAllHandlers(for: self)
         modal.close()
         handler = nil
     }
@@ -159,6 +158,11 @@ private final class PreviewModalView: View {
         super.init(frame: frameRect)
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     override func layout() {
         super.layout()
     }
@@ -170,6 +174,7 @@ private final class PreviewModalView: View {
         if contentView == nil || !contentView!.isKind(of: viewType)  {
             if animated {
                 let current = self.contentView
+                self.contentView = nil
                 current?.layer?.animateScaleSpring(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak current] completed in
                     if completed {
                         current?.removeFromSuperview()
@@ -206,8 +211,16 @@ class PreviewModalController: ModalViewController {
         bar = .init(height: 0)
     }
     
+    override var hasOwnTouchbar: Bool {
+        return false
+    }
+    
     override var containerBackground: NSColor {
         return .clear
+    }
+    
+    override func becomeFirstResponder() -> Bool? {
+        return false
     }
     
     override var handleEvents:Bool {
@@ -237,6 +250,11 @@ class PreviewModalController: ModalViewController {
     
     override func viewClass() -> AnyClass {
         return PreviewModalView.self
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     //    override var isFullScreen: Bool {

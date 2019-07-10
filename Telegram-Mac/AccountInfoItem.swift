@@ -33,7 +33,7 @@ class AccountInfoItem: GeneralRowItem {
             _ = attr.append(string: "\n")
             _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
         }
-        if let username = peer.username {
+        if let username = peer.username, !username.isEmpty {
             _ = attr.append(string: "\n")
             _ = attr.append(string: "@\(username)", color: theme.colors.grayText, font: .normal(.text))
         }

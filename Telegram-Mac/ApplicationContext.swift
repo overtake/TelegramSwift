@@ -123,7 +123,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
     private let chatUndoManagerDisposable = MetaDisposable()
-    
+    private let appUpdateDisposable = MetaDisposable()
     
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
@@ -185,7 +185,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         leftController = MainViewController(context);
 
-        
         
         leftController.navigationController = rightController
         
@@ -364,12 +363,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: {  () -> KeyHandlerResult in
-            showModal(with: LottieTestModalController(), for: window)
+            _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 5.0).start()
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         #endif
         
-       
+        appUpdateDisposable.set((context.account.stateManager.appUpdateInfo |> deliverOnMainQueue).start(next: { info in
+            
+        }))
         
 //        window.set(handler: { [weak self] () -> KeyHandlerResult in
 //            self?.leftController.focusSearch(animated: true)
@@ -592,6 +593,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
         chatUndoManagerDisposable.dispose()
+        appUpdateDisposable.dispose()
         context.cleanup()
     }
     

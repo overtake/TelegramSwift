@@ -747,7 +747,7 @@ class ChatListRowItem: TableRowItem {
                     break
                 }
                 items.append(ContextMenuItem(L10n.chatListContextDeleteAndExit, handler: deleteChat))
-            } else if let peer = peer as? TelegramChannel, pinnedType != .ad {
+            } else if let peer = peer as? TelegramChannel, pinnedType != .ad, !peer.flags.contains(.hasGeo) {
                 
                 if case .broadcast = peer.info {
                      items.append(ContextMenuItem(L10n.chatListContextLeaveChannel, handler: deleteChat))

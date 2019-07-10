@@ -18,8 +18,8 @@ class EditAccountInfoItem: GeneralRowItem {
     fileprivate let state: EditInfoState
     fileprivate let photo: AvatarNodeState
     fileprivate let updateText: (String, String)->Void
-    fileprivate let uploadNewPhoto: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, updateText:@escaping(String, String)->Void, uploadNewPhoto: @escaping()->Void) {
+    fileprivate let uploadNewPhoto: (()->Void)?
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, updateText:@escaping(String, String)->Void, uploadNewPhoto: (()->Void)? = nil) {
         self.account = account
         self.updateText = updateText
         self.state = state
@@ -70,7 +70,7 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         
         updoadPhotoCap.set(handler: { [weak self] _ in
             guard let item = self?.item as? EditAccountInfoItem else {return}
-            item.uploadNewPhoto()
+            item.uploadNewPhoto?()
         }, for: .Click)
         
         avatar.addSubview(updoadPhotoCap)
@@ -142,6 +142,7 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         firstNameTextView.setString(item.state.firstName)
         lastNameTextView.setString(item.state.lastName)
         
+        
 //        firstNameTextView.animates = true
 //        lastNameTextView.animates = true
         
@@ -164,8 +165,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
             } else {
                 progressView.removeFromSuperview()
             }
-            self.updoadPhotoCap.isHidden = false
+            updoadPhotoCap.isHidden = item.uploadNewPhoto == nil
         }
+        
+        secondSeparator.isHidden = item.uploadNewPhoto == nil
         
         super.set(item: item, animated: animated)
 
@@ -217,7 +220,6 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        guard let item = item as? EditAccountInfoItem else {return}
     }
     
     func textViewEnterPressed(_ event:NSEvent) -> Bool {

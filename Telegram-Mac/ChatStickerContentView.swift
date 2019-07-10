@@ -22,6 +22,11 @@ class ChatStickerContentView: ChatMediaContentView {
         statusDisposable.dispose()
     }
     
+    
+    override func clean() {
+        statusDisposable.set(nil)
+    }
+    
     override var backgroundColor: NSColor {
         didSet {
            
@@ -52,7 +57,6 @@ class ChatStickerContentView: ChatMediaContentView {
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
       
-
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         if let file = media as? TelegramMediaFile {
@@ -60,14 +64,17 @@ class ChatStickerContentView: ChatMediaContentView {
             
             self.image.animatesAlphaOnFirstTransition = false
            
-            self.image.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-            self.image.setSignal( chatMessageSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { signal in
-                return cacheMedia(signal: signal, media: file, arguments: arguments, scale: System.backingScale)
-            })
+            self.image.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
+            if !self.image.isFullyLoaded {
+                self.image.setSignal( chatMessageSticker(postbox: context.account.postbox, file: file, small: size.width < 120, scale: backingScaleFactor, fetched: true), cacheImage: { signal in
+                    return cacheMedia(signal: signal, media: file, arguments: arguments, scale: System.backingScale)
+                })
+                self.image.set(arguments: arguments)
+            } else {
+                self.image.dispose()
+            }
             
-            self.image.set(arguments: arguments)
             self.image.setFrameSize(arguments.imageSize)
-            _ = fileInteractiveFetched(account: context.account, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)).start()
             
             self.fetchStatus = .Local
             

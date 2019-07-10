@@ -237,7 +237,7 @@ class GalleryViewer: NSResponder {
             self.window.contentView?.wantsLayer = true
             
 
-            self.window.level = .screenSaver
+            self.window.level = .popUpMenu
             self.window.isOpaque = false
             self.window.backgroundColor = .clear
             self.window.appearance = theme.appearance
@@ -460,9 +460,13 @@ class GalleryViewer: NSResponder {
             var inserted:[(Int, MGalleryItem)] = []
             var updated:[(Int, MGalleryItem)] = []
             var deleted:[Int] = []
-            
+            var photos = photos
             var currentIndex: Int = 0
             var foundIndex: Bool = peerId.namespace == Namespaces.Peer.CloudUser
+            
+            if !foundIndex, !photos.isEmpty {
+                photos.removeFirst()
+            }
             
             if !photos.isEmpty {
                 

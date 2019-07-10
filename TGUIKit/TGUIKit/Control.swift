@@ -393,7 +393,7 @@ open class Control: View {
         self.isSelected = false
         super.init(frame: frameRect)
         animates = false
-        layer?.disableActions()
+//        layer?.disableActions()
         guard #available(OSX 10.12, *) else {
             layer?.opacity = 0.99
             return

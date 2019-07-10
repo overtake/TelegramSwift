@@ -13,7 +13,7 @@ import PostboxMac
 import SwiftSignalKitMac
 
 private let initialBatchSize: Int32 = 64
-private let emptyTimeout: Double = 2.0 * 60.0
+private let defaultEmptyTimeout: Double = 2.0 * 60.0
 private let headUpdateTimeout: Double = 30.0
 private let requestBatchSize: Int32 = 64
 
@@ -59,6 +59,8 @@ enum ChannelMemberListCategory {
     case recent
     case recentSearch(String)
     case admins(String?)
+    case contacts(String?)
+    case bots(String?)
     case restricted(String?)
     case banned(String?)
 }
@@ -92,7 +94,7 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
     var listStateValue: ChannelMemberListState {
         didSet {
             self.listStatePromise.set(.single(self.listStateValue))
-            if case .admins = self.category, case .ready = self.listStateValue.loadingState {
+            if case .admins(nil) = self.category, case .ready = self.listStateValue.loadingState {
                 let ids: Set<PeerId> = Set(self.listStateValue.list.map { $0.peer.id })
                 let previousIds: Set<PeerId> = Set(oldValue.list.map { $0.peer.id })
                 if ids != previousIds {
@@ -168,7 +170,6 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
         }
     }
     
-    
     private func loadSignal(offset: Int32, count: Int32, hash: Int32) -> Signal<[RenderedChannelParticipant]?, NoError> {
         let requestCategory: ChannelMembersCategory
         var adminQuery: String? = nil
@@ -180,10 +181,14 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
         case let .admins(query):
             requestCategory = .admins
             adminQuery = query
+        case let .contacts(query):
+            requestCategory = .contacts(query.flatMap(ChannelMembersCategoryFilter.search) ?? .all)
+        case let .bots(query):
+            requestCategory = .bots(query.flatMap(ChannelMembersCategoryFilter.search) ?? .all)
         case let .restricted(query):
-            requestCategory = .restricted(query != nil ? .search(query!) : .all)
+            requestCategory = .restricted(query.flatMap(ChannelMembersCategoryFilter.search) ?? .all)
         case let .banned(query):
-            requestCategory = .banned(query != nil ? .search(query!) : .all)
+            requestCategory = .banned(query.flatMap(ChannelMembersCategoryFilter.search) ?? .all)
         }
         return channelMembers(postbox: self.postbox, network: self.network, accountPeerId: self.accountPeerId, peerId: self.peerId, category: requestCategory, offset: offset, limit: count, hash: hash) |> map { members in
             switch requestCategory {
@@ -297,20 +302,23 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                 }
             }
             switch self.category {
-            case .admins:
-                if let updated = updated, let _ = updated.participant.adminInfo {
-                    var found = false
-                    loop: for i in 0 ..< list.count {
-                        if list[i].peer.id == updated.peer.id {
-                            list[i] = updated
-                            found = true
-                            updatedList = true
-                            break loop
+            case let .admins(query):
+                if let updated = updated, (query == nil || updated.peer.indexName.matchesByTokens(query!)) {
+                    if case let .member(_, _, adminInfo, _) = updated.participant, adminInfo == nil {
+                    } else {
+                        var found = false
+                        loop: for i in 0 ..< list.count {
+                            if list[i].peer.id == updated.peer.id {
+                                list[i] = updated
+                                found = true
+                                updatedList = true
+                                break loop
+                            }
                         }
-                    }
-                    if !found {
-                        list.insert(updated, at: 0)
-                        updatedList = true
+                        if !found {
+                            list.insert(updated, at: 0)
+                            updatedList = true
+                        }
                     }
                 } else if let previous = previous, let _ = previous.adminInfo {
                     loop: for i in 0 ..< list.count {
@@ -319,6 +327,10 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                             updatedList = true
                             break loop
                         }
+                    }
+                    if let updated = updated, case .creator = updated.participant {
+                        list.insert(updated, at: 0)
+                        updatedList = true
                     }
                 }
             case .restricted:
@@ -390,6 +402,58 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                             list.remove(at: i)
                             updatedList = true
                             break loop
+                        }
+                    }
+                }
+            case let .contacts(query):
+                if query == nil {
+                    if let updated = updated, isParticipantMember(updated.participant, infoIsMember: infoIsMember) {
+                        var found = false
+                        loop: for i in 0 ..< list.count {
+                            if list[i].peer.id == updated.peer.id {
+                                list[i] = updated
+                                found = true
+                                updatedList = true
+                                break loop
+                            }
+                        }
+                        if !found {
+                            //list.insert(updated, at: 0)
+                            //updatedList = true
+                        }
+                    } else if let previous = previous, isParticipantMember(previous, infoIsMember: nil) {
+                        loop: for i in 0 ..< list.count {
+                            if list[i].peer.id == previous.peerId {
+                                list.remove(at: i)
+                                updatedList = true
+                                break loop
+                            }
+                        }
+                    }
+                }
+            case let .bots(query):
+                if query == nil {
+                    if let updated = updated, isParticipantMember(updated.participant, infoIsMember: infoIsMember) {
+                        var found = false
+                        loop: for i in 0 ..< list.count {
+                            if list[i].peer.id == updated.peer.id {
+                                list[i] = updated
+                                found = true
+                                updatedList = true
+                                break loop
+                            }
+                        }
+                        if !found {
+                            //list.insert(updated, at: 0)
+                            //updatedList = true
+                        }
+                    } else if let previous = previous, isParticipantMember(previous, infoIsMember: nil) {
+                        loop: for i in 0 ..< list.count {
+                            if list[i].peer.id == previous.peerId {
+                                list.remove(at: i)
+                                updatedList = true
+                                break loop
+                            }
                         }
                     }
                 }
@@ -521,14 +585,16 @@ struct PeerChannelMemberCategoryControl {
 
 private final class PeerChannelMemberContextWithSubscribers {
     let context: ChannelMemberCategoryListContext
+    private let emptyTimeout: Double
     private let subscribers = Bag<(ChannelMemberListState) -> Void>()
     private let disposable = MetaDisposable()
     private let becameEmpty: () -> Void
     
     private var emptyTimer: SwiftSignalKitMac.Timer?
     
-    init(context: ChannelMemberCategoryListContext, becameEmpty: @escaping () -> Void) {
+    init(context: ChannelMemberCategoryListContext, emptyTimeout: Double, becameEmpty: @escaping () -> Void) {
         self.context = context
+        self.emptyTimeout = emptyTimeout
         self.becameEmpty = becameEmpty
         self.disposable.set((context.listState
             |> deliverOnMainQueue).start(next: { [weak self] value in
@@ -548,7 +614,7 @@ private final class PeerChannelMemberContextWithSubscribers {
     private func resetAndBeginEmptyTimer() {
         self.context.reset(false)
         self.emptyTimer?.invalidate()
-        let emptyTimer = SwiftSignalKitMac.Timer(timeout: emptyTimeout, repeat: false, completion: { [weak self] in
+        let emptyTimer = SwiftSignalKitMac.Timer(timeout: self.emptyTimeout, repeat: false, completion: { [weak self] in
             if let strongSelf = self {
                 if strongSelf.subscribers.isEmpty {
                     strongSelf.becameEmpty()
@@ -614,8 +680,15 @@ final class PeerChannelMemberCategoriesContext {
             return (current.subscribe(requestUpdate: requestUpdate, updated: updated), PeerChannelMemberCategoryControl(key: key))
         }
         let context: ChannelMemberCategoryListContext
+        let emptyTimeout: Double
         switch key {
-        case .recent, .recentSearch, .admins:
+        case .admins(nil), .banned(nil), .recentSearch(nil), .restricted(nil), .restrictedAndBanned(nil), .recent:
+            emptyTimeout = defaultEmptyTimeout
+        default:
+            emptyTimeout = 0.0
+        }
+        switch key {
+        case .recent, .recentSearch, .admins, .contacts, .bots:
             let mappedCategory: ChannelMemberListCategory
             switch key {
             case .recent:
@@ -624,6 +697,10 @@ final class PeerChannelMemberCategoriesContext {
                 mappedCategory = .recentSearch(query)
             case let .admins(query):
                 mappedCategory = .admins(query)
+            case let .contacts(query):
+                mappedCategory = .contacts(query)
+            case let .bots(query):
+                mappedCategory = .bots(query)
             default:
                 mappedCategory = .recent
             }
@@ -635,7 +712,7 @@ final class PeerChannelMemberCategoriesContext {
         case let .banned(query):
             context = ChannelMemberSingleCategoryListContext(postbox: self.postbox, network: self.network, accountPeerId: self.accountPeerId, peerId: self.peerId, category: .banned(query))
         }
-        let contextWithSubscribers = PeerChannelMemberContextWithSubscribers(context: context, becameEmpty: { [weak self] in
+        let contextWithSubscribers = PeerChannelMemberContextWithSubscribers(context: context, emptyTimeout: emptyTimeout, becameEmpty: { [weak self] in
             assert(Queue.mainQueue().isCurrent())
             if let strongSelf = self {
                 strongSelf.contexts.removeValue(forKey: key)

@@ -115,10 +115,24 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-        
+//        final class Test {
+//
+//            init() {
+//            }
+//            deinit {
+//                NSLog("dealloc test")
+//                var bp:Int = 0
+//                bp += 1
+//            }
+//        }
+//
+//
+//        let signal = Signal<(Test?, Test?, Test?, Bool), NoError>.single((Test(), Test(), nil, false))
+//        signal.start()
+
       
         initializeSelectManager()
-
+        startLottieCacheCleaner()
         
         if #available(OSX 10.12.2, *) {
             NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
@@ -203,18 +217,20 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
 
         
-        //#if !DEBUG
-            #if BETA
-
-                let hockeyAppId:String = "6ed2ac3049e1407387c2f1ffcb74e81f"
-                BITHockeyManager.shared().configure(withIdentifier: hockeyAppId)
-                BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = true
-                BITHockeyManager.shared().start()
+        let hockeyAppId:String
+        #if BETA
+            hockeyAppId = "6ed2ac3049e1407387c2f1ffcb74e81f"
+        #elseif ALPHA
+            hockeyAppId = "f012091f35d947bbb3db9cbd3b0232d3"
+        #endif
         
-                BITHockeyManager.shared()?.delegate = self
-
-            #endif
-//            
+        #if BETA || ALPHA
+            BITHockeyManager.shared().configure(withIdentifier: hockeyAppId)
+            BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = true
+            BITHockeyManager.shared().start()
+            BITHockeyManager.shared()?.delegate = self
+        #endif
+//
 //            #if STABLE     
 //                let hockeyAppId:String = "d77af558b21e0878953100680b5ac66a"
 //                BITHockeyManager.shared().configure(withIdentifier: hockeyAppId)
@@ -396,7 +412,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             
             let basicLocalization = Atomic<LocalizationSettings?>(value: localization)
-            _ = accountManager.sharedData(keys: [SharedDataKeys.localizationSettings]).start(next: { view in
+            _ = (accountManager.sharedData(keys: [SharedDataKeys.localizationSettings]) |> deliverOnMainQueue).start(next: { view in
                 if let settings = view.entries[SharedDataKeys.localizationSettings] as? LocalizationSettings {
                     if basicLocalization.swap(settings) != settings {
                         applyUILocalization(settings)
@@ -405,7 +421,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             })
             
             
-            let networkArguments = NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer(), appData: nil)
+            let networkArguments = NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(nil))
             
             let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: displayUpgrade)
             
@@ -467,7 +483,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             if let account = account {
                                 var settings: LaunchSettings?
                                 if let action = sharedContext.getLaunchActionOnce(for: account.id) {
-                                    settings = LaunchSettings(applyText: nil, navigation: action)
+                                    settings = LaunchSettings(applyText: nil, previousText: nil, navigation: action)
                                 } else {
                                     let semaphore = DispatchSemaphore(value: 0)
                                     _ = account.postbox.transaction { transaction in

@@ -44,6 +44,9 @@ func validateStickerComposition(json: [AnyHashable: Any]) -> Bool {
     return true
 }
 
+private let writeQueue = DispatchQueue(label: "assetWriterQueue")
+
+
 func convertCompressedLottieToCombinedMp4(data: Data, size: CGSize) -> Signal<String, NoError> {
     return Signal({ subscriber in
         let startTime = CACurrentMediaTime()
@@ -78,7 +81,6 @@ func convertCompressedLottieToCombinedMp4(data: Data, size: CGSize) -> Signal<St
                         assetWriter.startSession(atSourceTime: CMTime.zero)
                         
                         var currentFrame: Int32 = 0
-                        let writeQueue = DispatchQueue(label: "assetWriterQueue")
                         writeQueue.async {
                             let pointer: Unmanaged<AnimationContainer>
                             CATransaction.begin()
@@ -99,6 +101,7 @@ func convertCompressedLottieToCombinedMp4(data: Data, size: CGSize) -> Signal<St
                                     let lastFrameTime = CMTimeMake(value: Int64(currentFrame - startFrame), timescale: fps)
                                     let presentationTime = currentFrame == 0 ? lastFrameTime : CMTimeAdd(lastFrameTime, frameDuration)
                                     
+                                    let renderTime = CACurrentMediaTime()
                                     singleContext.withFlippedContext(vertical: true, { context in
                                         context.clear(CGRect(origin: CGPoint(), size: size))
                                         context.saveGState()

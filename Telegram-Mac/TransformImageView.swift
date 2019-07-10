@@ -11,7 +11,8 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
-private let imagesThreadPool = ThreadPool(threadCount: 3, threadPriority: 0.1)
+
+private let threadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
 open class TransformImageView: NSView {
     public var imageUpdated: ((Any?) -> Void)?
@@ -19,7 +20,7 @@ open class TransformImageView: NSView {
     private let cachedDisposable = MetaDisposable()
     public var animatesAlphaOnFirstTransition:Bool = false
     private let argumentsPromise = Promise<TransformImageArguments>()
-    private var isFullyLoaded: Bool = false
+    private(set) var isFullyLoaded: Bool = false
     public var ignoreFullyLoad:Bool = false
     private var first:Bool = true
     public init() {
@@ -94,18 +95,18 @@ open class TransformImageView: NSView {
         var combine = combineLatest(signal, argumentsPromise.get() |> distinctUntilChanged)
         
         if !synchronousLoad {
-            combine = combine |> deliverOn(imagesThreadPool)
+            combine = combine |> deliverOn(threadPool)
         }
         
         let result = combine |> mapToThrottled { transform, arguments -> Signal<(CGImage?, Bool), NoError> in
             return deferred {
                 let context = transform(arguments)
                 let image = context?.generateImage()
-                return Signal<(CGImage?, Bool), NoError>.single((image, context?.isHighQuality ?? true))
+                return .single((image, context?.isHighQuality ?? false))
             }
         } |> deliverOnMainQueue
         
-        self.disposable.set(result.start(next: { [weak self] (next, isThumb) in
+        self.disposable.set(result.start(next: { [weak self] (next, isHighQuality) in
             if let strongSelf = self  {
                 if strongSelf.image == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -115,11 +116,12 @@ open class TransformImageView: NSView {
                     self?.layer?.animateContents()
                 }
                 strongSelf.first = false
-                strongSelf.cachedDisposable.set(cacheImage(.single((next, isThumb))).start())
+                strongSelf.cachedDisposable.set(cacheImage(.single((next, isHighQuality))).start())
             }
         }))
 
     }
+    
     
     public var hasImage: Bool {
         return image != nil

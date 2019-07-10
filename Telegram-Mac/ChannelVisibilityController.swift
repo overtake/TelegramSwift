@@ -739,7 +739,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChannelVisibilityEntry>]> = Atomic(value: [])
 
         
-        let apply = combineLatest(statePromise.get(), peerView, peersDisablingAddressNameAssignment.get(), appearanceSignal)
+        let apply = combineLatest(queue: prepareQueue, statePromise.get(), peerView, peersDisablingAddressNameAssignment.get(), appearanceSignal)
             |> map { state, view, publicChannelsToRevoke, appearance -> (TableUpdateTransition, Peer?, Bool) in
                 let peer = peerViewMainPeer(view)
                 

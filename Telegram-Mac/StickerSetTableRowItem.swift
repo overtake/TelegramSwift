@@ -23,7 +23,7 @@ enum ItemListStickerPackItemControl: Equatable {
 
 class StickerSetTableRowItem: TableRowItem {
     
-    fileprivate let account:Account
+    fileprivate let context: AccountContext
     fileprivate let info:StickerPackCollectionInfo
     fileprivate let topItem:StickerPackItem?
     fileprivate let unread: Bool
@@ -44,8 +44,8 @@ class StickerSetTableRowItem: TableRowItem {
     override var stableId: AnyHashable {
         return _stableId
     }
-    init(_ initialSize: NSSize, account:Account, stableId:AnyHashable, info:StickerPackCollectionInfo, topItem:StickerPackItem?, itemCount:Int32, unread: Bool, editing: ItemListStickerPackItemEditing, enabled: Bool, control: ItemListStickerPackItemControl, action:@escaping()->Void, addPack:@escaping()->Void = {}, removePack:@escaping() -> Void = {}) {
-        self.account = account
+    init(_ initialSize: NSSize, context:AccountContext, stableId:AnyHashable, info:StickerPackCollectionInfo, topItem:StickerPackItem?, itemCount:Int32, unread: Bool, editing: ItemListStickerPackItemEditing, enabled: Bool, control: ItemListStickerPackItemControl, action:@escaping()->Void, addPack:@escaping()->Void = {}, removePack:@escaping() -> Void = {}) {
+        self.context = context
         self._stableId = stableId
         self.info = info
         self.topItem = topItem
@@ -86,6 +86,7 @@ class StickerSetTableRowView : TableRowView {
     private let countView:TextView = TextView()
     private let installationControl:ImageView = ImageView()
     private let removeControl = ImageButton()
+    private var animatedView: ChatMediaAnimatedStickerView?
     private let loadedStickerPackDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -150,7 +151,7 @@ class StickerSetTableRowView : TableRowView {
             countView.update(item.countLayout, origin: NSMakePoint(item.insets.left + 50, frame.height - item.countLayout.layoutSize.height - 7))
             installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
             removeControl.centerY(x: frame.width - item.insets.left - removeControl.frame.width)
-
+            animatedView?.centerY(x: item.insets.left)
         }
     }
     
@@ -164,25 +165,51 @@ class StickerSetTableRowView : TableRowView {
             removeControl.set(image: theme.icons.stickerPackDelete, for: .Normal)
             _ = removeControl.sizeToFit()
             
-            var thumbnailItem: TelegramMediaImageRepresentation?
-            var resourceReference: MediaResourceReference?
-            if let thumbnail = item.info.thumbnail {
-                thumbnailItem = thumbnail
-                resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
-            } else if let topItem = item.topItem {
-                let dimensions = topItem.file.dimensions ?? NSMakeSize(35, 35)
-                thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: topItem.file.resource)
-                resourceReference = MediaResourceReference.media(media: .stickerPack(stickerPack: StickerPackReference.id(id: item.info.id.id, accessHash: item.info.accessHash), media: topItem.file), resource: topItem.file.resource)
-            } 
-            
-            if let thumbnailItem = thumbnailItem {
-                imageView.setSignal(chatMessageStickerPackThumbnail(postbox: item.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false))
+            if item.info.flags.contains(.isAnimated) {
+                
+                if self.animatedView == nil {
+                    self.animatedView = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+                    addSubview(self.animatedView!)
+                }
+                self.imageView.isHidden = true
+                
+                var file: TelegramMediaFile?
+                if let thumbnail = item.info.thumbnail {
+                    file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                } else if let item = item.topItem {
+                    file = item.file
+                }
+                self.animatedView?.userInteractionEnabled = false
+                if let file = file {
+                    self.animatedView?.update(with: file, size: NSMakeSize(35, 35), context: item.context, parent: nil, table: item.table, parameters: nil, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+                }
+            } else {
+                
+                self.animatedView?.removeFromSuperview()
+                self.animatedView = nil
+                
+                 self.imageView.isHidden = false
+                
+                var thumbnailItem: TelegramMediaImageRepresentation?
+                var resourceReference: MediaResourceReference?
+                
+                if let thumbnail = item.info.thumbnail {
+                    thumbnailItem = thumbnail
+                    resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
+                } else if let topItem = item.topItem {
+                    let dimensions = topItem.file.dimensions ?? NSMakeSize(35, 35)
+                    thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: topItem.file.resource)
+                    resourceReference = MediaResourceReference.media(media: .stickerPack(stickerPack: StickerPackReference.id(id: item.info.id.id, accessHash: item.info.accessHash), media: topItem.file), resource: topItem.file.resource)
+                }
+                if let thumbnailItem = thumbnailItem {
+                    imageView.setSignal(chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false))
+                }
+                if let resourceReference = resourceReference {
+                    _ = fetchedMediaResource(postbox: item.context.account.postbox, reference: resourceReference, statsCategory: .file).start()
+                }
+                imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
             }
-            
-            if let resourceReference = resourceReference {
-                _ = fetchedMediaResource(postbox: item.account.postbox, reference: resourceReference, statsCategory: .file).start()
-            }
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
+           
             nameView.update(item.nameLayout, origin: NSMakePoint(item.insets.left + 50, 7))
             countView.update(item.countLayout, origin: NSMakePoint(item.insets.left + 50, frame.height - item.countLayout.layoutSize.height - 7))
             switch item.control {

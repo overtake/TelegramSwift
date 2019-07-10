@@ -967,6 +967,9 @@ class ChatRowItem: TableRowItem {
                 var accept:Bool = !isHasSource && message.id.peerId != context.peerId
                 
                 if let media = message.media.first as? TelegramMediaFile {
+                    if media.isAnimatedSticker {
+                        accept = false
+                    }
                     for attr in media.attributes {
                         switch attr {
                         case .Sticker:
@@ -1540,7 +1543,7 @@ class ChatRowItem: TableRowItem {
         switch chatInteraction.chatLocation {
         case .peer:
             if let peer = peer {
-                chatInteraction.openInfo(peer.id, false, nil, nil)
+                chatInteraction.openInfo(peer.id, !(peer is TelegramUser), nil, nil)
             }
         }
         

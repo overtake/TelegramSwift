@@ -305,12 +305,16 @@ final class NavigationShadowView : View {
         super.draw(layer, in: ctx)
         
         ctx.clear(NSMakeRect(0, 0, frame.width, frame.height))
-        
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let array = [NSColor.clear.cgColor, NSColor.black.withAlphaComponent(0.2).cgColor]
-        let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: array), locations: nil)!
-        
-        ctx.drawLinearGradient(gradient, start: NSMakePoint(0, 0), end: CGPoint(x: frame.width, y: 0), options: CGGradientDrawingOptions())
+        ctx.setStrokeColor(presentation.colors.background.cgColor)
+        ctx.setShadow(offset: CGSize.zero, blur: 8, color: .black)
+        ctx.setBlendMode(.multiply)
+        ctx.strokeLineSegments(between: [CGPoint(x: bounds.width, y: 0), CGPoint(x: bounds.width, y: bounds.height)])
+
+//        let colorSpace = CGColorSpaceCreateDeviceRGB()
+//        let array = [NSColor.clear.cgColor, NSColor.black.withAlphaComponent(0.2).cgColor]
+//        let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: array), locations: nil)!
+//
+//        ctx.drawLinearGradient(gradient, start: NSMakePoint(0, 0), end: CGPoint(x: frame.width, y: 0), options: CGGradientDrawingOptions())
     }
     
     required public init?(coder: NSCoder) {
@@ -664,6 +668,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         switch style {
         case .push:
+            
+            previous.viewWillDisappear(true);
+            controller.viewWillAppear(true);
+            
             nfrom = popInteractiveInset != nil ? popInteractiveInset! : frame.width
             nto = 0
             pfrom = previous.view.frame.minX
@@ -682,6 +690,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
             
         case .pop:
+            
+            previous.viewWillDisappear(true);
+            controller.viewWillAppear(true);
+            
             nfrom = popInteractiveInset != nil ? popInteractiveInset! : -round(frame.width/3.0)
             nto = 0
             pfrom = previous.view.frame.minX
@@ -711,6 +723,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             previous.viewWillDisappear(false);
             previous.view.removeFromSuperview()
             containerView.addSubview(controller.view)
+
             controller.viewWillAppear(false);
             previous.viewDidDisappear(false);
             controller.viewDidAppear(false);
@@ -756,8 +769,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         reloadHeaders()
         
-        previous.viewWillDisappear(true);
-        controller.viewWillAppear(true);
+       
         
        
         

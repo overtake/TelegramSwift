@@ -19,13 +19,13 @@ class MGalleryGIFItem: MGalleryItem {
         let view = self.view
         let pathSignal = path.get() |> map { path in
            return AVGifData.dataFrom(path)
-        } |> distinctUntilChanged |> deliverOnMainQueue |> mapToSignal { data -> Signal<(AVGifData?,GIFPlayerView), NoError> in
+        } |> distinctUntilChanged |> deliverOnMainQueue |> mapToSignal { data -> Signal<Tuple2<AVGifData?,GIFPlayerView>, NoError> in
             return view.get() |> distinctUntilChanged |> map { view in
-                return (data, view as! GIFPlayerView)
+                return Tuple(data, view as! GIFPlayerView)
             }
         }
-        disposable.set(pathSignal.start(next: { (data, view) in
-            view.set(data: data)
+        disposable.set(pathSignal.start(next: { tuple in
+            tuple._1.set(data: tuple._0)
         }))
         
     }

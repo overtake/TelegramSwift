@@ -311,9 +311,22 @@ extension Media {
         if self is TelegramMediaImage {
             return true
         } else if let file = self as? TelegramMediaFile {
-            return file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif"))
+            return file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif")) || file.isAnimatedSticker
         } else if let map = self as? TelegramMediaMap {
             return map.venue == nil
+        }
+        return false
+    }
+    
+    var canHaveCaption: Bool {
+        if self is TelegramMediaImage {
+            return true
+        } else if let file = self as? TelegramMediaFile {
+            if file.isInstantVideo || file.isAnimatedSticker || file.isSticker || file.isVoice {
+                return false
+            } else {
+                return true
+            }
         }
         return false
     }
@@ -750,7 +763,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
     
     if let media = message.media.first {
         if let file = media as? TelegramMediaFile {
-            if file.isSticker {
+            if file.isSticker || file.isAnimatedSticker {
                 return false
             }
             if file.isInstantVideo {
@@ -836,7 +849,7 @@ func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Acco
         let peerId:PeerId? = messages[0].author?.id
         if account.peerId != peerId {
             for message in messages {
-                if peerId != message.author?.id || message.media.first is TelegramMediaAction {
+                if peerId != message.author?.id {
                     return false
                 }
             }

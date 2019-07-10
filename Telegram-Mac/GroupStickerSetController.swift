@@ -126,14 +126,14 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
         case let .status(_, status):
             switch status {
             case let .loaded(info, topItem, count):
-                return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .empty, action: {})
+                return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .empty, action: {})
             case .loading:
                 return LoadingTableItem(initialSize, height: 50, stableId: stableId)
             case .failed:
                 return EmptyGroupstickerSearchRowItem(initialSize, height: 50, stableId: stableId)
             }
         case let .pack(_, _, info, topItem, count, selected):
-            return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: selected ? .selected : .empty, action: {
+            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: selected ? .selected : .empty, action: {
                 if let topItem = topItem {
                     arguments.installStickerset((info, [topItem], count))
                 }

@@ -139,9 +139,11 @@ fileprivate struct ChannelAdminsControllerState: Equatable {
 private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerView, state: ChannelAdminsControllerState, participants: [RenderedChannelParticipant]?, isCreator: Bool) -> [ChannelAdminsEntry] {
     var entries: [ChannelAdminsEntry] = []
     
-    guard let participants = participants else {
-        return [.loading]
-    }
+    let participants = participants ?? []
+    
+//    guard let participants = participants else {
+//        return [.loading]
+//    }
     
     var sectionId:Int32 = 1
     
@@ -516,6 +518,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
             
             _ = signal.start(completed: { [weak navigationController] in
                 navigationController?.push(ChannelAdminsViewController(context, peerId: upgradedPeerId), false, style: .none)
+                f()
             })
             
         }

@@ -446,7 +446,9 @@ open class ViewController : NSObject {
     open func viewDidAppear(_ animated:Bool) -> Void {
         //assert(self.window != nil)
         if #available(OSX 10.12.2, *) {
-            window?.touchBar = window?.makeTouchBar()
+           // DispatchQueue.main.async { [weak self] in
+                self.window?.touchBar = self.window?.makeTouchBar()
+          //  }
         }
         if haveNextResponder {
             self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
@@ -717,6 +719,10 @@ open class ModalViewController : ViewController {
             temporaryTouchBar = ModalTouchBar(interactions, modal: modal)
         }
         return temporaryTouchBar as? NSTouchBar
+    }
+    
+    open var hasOwnTouchbar: Bool {
+        return true
     }
     
     open var background:NSColor {

@@ -452,12 +452,14 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                 if !NSEqualRects(frame, titleView.frame) {
                     titleView.frame = frame
                 }
-                if let controls = (HackUtils.findElements(byClass: "NSTitlebarView", in: titleView)?.first as? NSView)?.subviews {
-                    var xs:[CGFloat] = [18, 58, 38]
-                    for i in 0 ..< min(controls.count, xs.count) {
-                        let view = controls[i]
-                        view.setFrameOrigin(xs[i], floorToScreenPixels(scaleFactor: System.backingScale, (barHeight - view.frame.height)/2))
-                    }
+                let xs:[CGFloat] = [18, 58, 38]
+                let first = ObjcUtils.findElements(byClass: "_NSThemeCloseWidget", in: windowView).first
+                let second = ObjcUtils.findElements(byClass: "_NSThemeZoomWidget", in: windowView).first
+                let thrid = ObjcUtils.findElements(byClass: "_NSThemeWidget", in: windowView).first
+                let values:[NSView] = [first, second, thrid].compactMap { $0 }
+                for i in 0 ..< min(values.count, xs.count) {
+                    let view = values[i]
+                    view.setFrameOrigin(xs[i], floorToScreenPixels(scaleFactor: System.backingScale, (barHeight - view.frame.height)/2))
                 }
             }
         }

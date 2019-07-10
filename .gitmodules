@@ -1,18 +1,6 @@
-[submodule "submodules/Postbox"]
-	path = submodules/Postbox
-	url = https://github.com/peter-iakovlev/Postbox.git
-[submodule "submodules/TelegramCore"]
-	path = submodules/TelegramCore
-	url = https://github.com/peter-iakovlev/TelegramCore.git
 [submodule "Signals"]
 	path = Signals
 	url = https://github.com/peter-iakovlev/Signals.git
-[submodule "submodules/Signals"]
-	path = submodules/Signals
-	url = https://github.com/peter-iakovlev/Signals.git
-[submodule "submodules/MtProtoKit"]
-	path = submodules/MtProtoKit
-	url = https://github.com/peter-iakovlev/MtProtoKit.git
 [submodule "submodules/libtgvoip"]
 	path = submodules/libtgvoip
 	url = https://github.com/grishka/libtgvoip
@@ -25,3 +13,9 @@ url=https://github.com/overtake/Sparkle
 [submodule "submodules/lottie-ios"]
 	path = submodules/lottie-ios
 	url = https://github.com/airbnb/lottie-ios
+[submodule "submodules/telegram-ios"]
+	path = submodules/telegram-ios
+	url = git@gitlab.com:peter-iakovlev/telegram-ios.git
+[submodule "submodules/rlottie"]
+	path = submodules/rlottie
+	url = git@github.com:Samsung/rlottie.git

@@ -109,6 +109,10 @@ class GeneralRowItem: TableRowItem {
         return true
     }
     
+    override var canBeAnchor: Bool {
+        return false
+    }
+    
     override var isUniqueView: Bool {
         return true
     }

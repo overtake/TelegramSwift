@@ -320,6 +320,8 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 switch error {
                 case .limitExceeded:
                     text = L10n.channelErrorAddTooMuch
+                case .tooMuchJoined:
+                    text = L10n.channelErrorAddTooMuch
                 case .generic:
                     text = L10n.unknownError
                 case let .bot(memberId):

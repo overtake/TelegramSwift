@@ -420,7 +420,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     [[self textStorage] setAttributedString:item.was];
     [self setSelectedRange:item.wasRange];
     [self.weakd textViewTextDidChangeSelectedRange:item.wasRange];
-    [self.weakTextView textDidChange:nil];
+    [self.weakTextView update:YES];
 }
 
 
@@ -842,7 +842,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     if (self.string != nil && self.string.length > 0 && self.string.length - _defaultText.length > limit) {
         
-        NSAttributedString *string = [self.attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit, self.attributedString.string.length))];
+        NSAttributedString *string = [self.attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit + _defaultText.length, self.attributedString.string.length))];
         
         NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
         NSRange selectedRange = _textView.selectedRange;

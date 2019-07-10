@@ -470,8 +470,10 @@ open class Window: NSWindow {
                 return sheet.makeTouchBar()
             }
         }
-        if hasModals(self) {
-            return Modal.topModalController(self)?.makeTouchBar() ?? super.makeTouchBar()
+        if let topModal = Modal.topModalController(self) {
+            if topModal.hasOwnTouchbar {
+                return topModal.makeTouchBar() ?? super.makeTouchBar()
+            }
         }
         return self.rootViewController?.makeTouchBar() ?? super.makeTouchBar()
     }

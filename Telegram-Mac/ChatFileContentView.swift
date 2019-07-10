@@ -333,6 +333,9 @@ class ChatFileContentView: ChatMediaContentView {
                         }
                     }
                     
+                } else {
+                    self.thumbProgress?.removeFromSuperview()
+                    self.thumbProgress = nil
                 }
                 
                 switch status {

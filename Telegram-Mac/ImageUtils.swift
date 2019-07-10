@@ -66,7 +66,8 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                     if let image = capHolder[key] {
                         return .single((image, false))
                     } else {
-                        capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: displayDimensions)
+                        let size = NSMakeSize(max(30, displayDimensions.width), max(30, displayDimensions.height))
+                        capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size)
                         return .single((capHolder[key]!, false))
                     }
                 }) |> deliverOnMainQueue
@@ -228,7 +229,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
            // ctx.clip()
             
             var locations: [CGFloat] = [1.0, 0.2];
-            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            let colorSpace = deviceColorSpace
             let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.top.cgColor, color.bottom.cgColor]), locations: &locations)!
             
             ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
@@ -275,7 +276,7 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))
             
             var locations: [CGFloat] = [1.0, 0.2];
-            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            let colorSpace = deviceColorSpace
             let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [color.top.cgColor, color.bottom.cgColor]), locations: &locations)!
             
             ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())

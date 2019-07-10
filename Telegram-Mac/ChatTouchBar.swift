@@ -289,8 +289,8 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         guard let item = self.item(forIdentifier: .chatStickersAndEmojiPicker) as? NSPopoverTouchBarItem else {return}
         var stickers: (favorite: [TelegramMediaFile], recent: [TelegramMediaFile], packs: [(StickerPackCollectionInfo, [TelegramMediaFile])]) = (favorite: [], recent: [], packs: [])
 
-        stickers.favorite = itemCollectionView.orderedItemListsViews[0].items.compactMap {($0.contents  as? SavedStickerItem)?.file}
-        stickers.recent = itemCollectionView.orderedItemListsViews[1].items.compactMap {($0.contents  as? RecentMediaItem)?.media as? TelegramMediaFile}
+        stickers.favorite = Array(itemCollectionView.orderedItemListsViews[0].items.compactMap {($0.contents  as? SavedStickerItem)?.file}.prefix(5))
+        stickers.recent = Array(itemCollectionView.orderedItemListsViews[1].items.compactMap {($0.contents  as? RecentMediaItem)?.media as? TelegramMediaFile}.prefix(20))
 
         var collections: [ItemCollectionId : [TelegramMediaFile]] = [:]
 
@@ -601,7 +601,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             if let result = chatInteraction.presentation.inputQueryResult {
                 switch result {
                 case let .stickers(stickers):
-                    return StickersScrubberBarItem(identifier: identifier, account: chatInteraction.context.account, sendSticker: { [weak self] file in
+                    return StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, sendSticker: { [weak self] file in
                         self?.chatInteraction.sendAppFile(file)
                         self?.chatInteraction.clearInput()
                     }, entries: stickers.map({.sticker($0.file)}))

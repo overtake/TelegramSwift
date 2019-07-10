@@ -9,6 +9,7 @@
 import Cocoa
 import SwiftSignalKitMac
 import AVFoundation
+import Foundation
 
 open class TableRowView: NSTableRowView, CALayerDelegate {
     
@@ -206,15 +207,32 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                     for item in items {
                         menu.addItem(item)
                     }
-
+                    
                     menu.delegate = menu
-                    NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
+                    
+                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
+
+                    
+//                    if #available(OSX 10.12, *) {
+//                        RunLoop.current.perform(inModes: [.modalPanel], block: {
+//                            NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
+//                        })
+//                    } else {
+//                        // Fallback on earlier versions
+//                    }
+                    
                 }
                 
             }))
         }
         
         
+    }
+    
+    @objc private func openPanelInRunLoop(_ timer:Foundation.Timer) {
+        if let (event, menu) = timer.userInfo as? (NSEvent, NSMenu) {
+            NSMenu.popUpContextMenu(menu, with: event, for: self)
+        }
     }
     
     open override func menu(for event: NSEvent) -> NSMenu? {

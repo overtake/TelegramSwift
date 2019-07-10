@@ -27,8 +27,8 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             }
             
         case let fileMedia as TelegramMediaFile:
-            if fileMedia.isSticker {
-                messageText = tr(L10n.chatListSticker(fileMedia.stickerText?.fixed ?? "")).nsstring
+            if fileMedia.isSticker || fileMedia.isAnimatedSticker {
+                messageText = L10n.chatListSticker(fileMedia.stickerText?.fixed ?? "").nsstring
             } else if fileMedia.isVoice {
                 messageText = tr(L10n.chatListVoice).nsstring
             } else if fileMedia.isMusic  {
@@ -164,7 +164,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
     return NSAttributedString()
 }
 
-func serviceMessageText(_ message:Message, account:Account) -> String {
+func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = false) -> String {
     
     var authorName:String = ""
     if let displayTitle = message.author?.displayTitle {
@@ -230,21 +230,26 @@ func serviceMessageText(_ message:Message, account:Account) -> String {
                 return peer.isChannel ? L10n.chatServiceChannelRemovedPhoto : L10n.chatServiceGroupRemovedPhoto(authorName)
             }
         case .pinnedMessageUpdated:
-            var authorName:String = ""
-            if let displayTitle = message.author?.displayTitle {
-                authorName = displayTitle
-                if account.peerId == message.author?.id {
-                    authorName = tr(L10n.chatServiceYou)
+            if !isReplied {
+                var authorName:String = ""
+                if let displayTitle = message.author?.displayTitle {
+                    authorName = displayTitle
+                    if account.peerId == message.author?.id {
+                        authorName = tr(L10n.chatServiceYou)
+                    }
                 }
+                
+                var replyMessageText = ""
+                for attribute in message.attributes {
+                    if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
+                        replyMessageText = pullText(from: message) as String
+                    }
+                }
+                return L10n.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefixWithDots(15))
+            } else {
+                return L10n.chatServicePinnedMessage
             }
             
-            var replyMessageText = ""
-            for attribute in message.attributes {
-                if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                    replyMessageText = pullText(from: message) as String
-                }
-            }
-            return L10n.chatServiceGroupUpdatedPinnedMessage(authorName, replyMessageText.prefixWithDots(15))
         case let .removedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
                 return L10n.chatServiceGroupRemovedSelf(authorName)
@@ -370,7 +375,9 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {
                 return PeerStatusStringResult(title, .initialize(string: L10n.peerServiceNotifications,  color: theme.statusColor, font: theme.statusFont))
             }
-            if let _ = user.botInfo {
+            if user.flags.contains(.isSupport) {
+                return PeerStatusStringResult(title, .initialize(string: L10n.presenceSupport,  color: theme.statusColor, font: theme.statusFont))
+            } else if let _ = user.botInfo {
                 return PeerStatusStringResult(title, .initialize(string: L10n.presenceBot,  color: theme.statusColor, font: theme.statusFont))
             } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970

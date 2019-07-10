@@ -59,7 +59,18 @@ private func preparedChatMediaInputGridEntryTransition(context: AccountContext, 
         }
     }
     
-    let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: fromEntries, rightList: toEntries)
+    var (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: fromEntries, rightList: toEntries)
+    
+    var clearDeleted = deleteIndices
+    var clearInserted = indicesAndItems
+    for (i, inserted) in indicesAndItems.enumerated().reversed() {
+        if inserted.0 == inserted.2 {
+            clearInserted.remove(at: i)
+            clearDeleted.removeAll(where: { $0 == inserted.0 })
+        }
+    }
+    deleteIndices = clearDeleted
+    indicesAndItems = clearInserted
     
     let deletions = deleteIndices
     let insertions = indicesAndItems.map { GridNodeInsertItem(index: $0.0, item: $0.1.entry.item(context: context, inputNodeInteraction: inputNodeInteraction), previousIndex: $0.2) }
@@ -73,18 +84,18 @@ private func preparedChatMediaInputGridEntryTransition(context: AccountContext, 
     return ChatMediaInputGridTransition(deletions: deletions, insertions: insertions, updates: updates, updateFirstIndexInSectionOffset: firstIndexInSectionOffset, stationaryItems: stationaryItems, scrollToItem:scrollToItem, animated: animated)
 }
 
-fileprivate func preparePackEntries(from:[AppearanceWrapperEntry<ChatMediaInputPanelEntry>]?, to:[AppearanceWrapperEntry<ChatMediaInputPanelEntry>], account:Account, initialSize:NSSize, stickersInteraction:EStickersInteraction) -> TableUpdateTransition {
+fileprivate func preparePackEntries(from:[AppearanceWrapperEntry<ChatMediaInputPanelEntry>]?, to:[AppearanceWrapperEntry<ChatMediaInputPanelEntry>], context: AccountContext, initialSize:NSSize, stickersInteraction:EStickersInteraction) -> TableUpdateTransition {
     
     let (deleted,inserted,updated) = proccessEntries(from, right: to, { (entry) -> TableRowItem in
         switch entry.entry {
         case let .stickerPack(index, stableId, info, topItem):
-            return EStickerPackRowItem(initialSize, account, index, stableId, info, topItem, stickersInteraction)
+            return EStickerPackRowItem(initialSize, context, index, stableId, info, topItem, stickersInteraction)
         case .recent:
             return ERecentPackRowItem(initialSize, entry.entry.stableId, stickersInteraction)
         case .saved:
             return ERecentPackRowItem(initialSize, entry.entry.stableId, stickersInteraction)
         case let .specificPack(info, peer):
-            return EStickerSpecificPackItem(initialSize, entry.entry.stableId, specificPack: (info, peer), account: account, stickersInteraction)
+            return EStickerSpecificPackItem(initialSize, entry.entry.stableId, specificPack: (info, peer), account: context.account, stickersInteraction)
         }
     })
 
@@ -176,7 +187,8 @@ private func chatMediaInputGridEntries(view: (ItemCollectionsView?, (FoundSticke
         }
         
         var i:Int = 0
-        for item in Array(orderedItemListViews[0].items.prefix(20)) {
+        let recent = Array(orderedItemListViews[0].items.prefix(20))
+        for item in recent {
             if let entry = item.contents as? RecentMediaItem {
                 if let file = entry.media as? TelegramMediaFile, let id = file.id, fileIds[id] == nil {
                     fileIds[id] = id
@@ -334,7 +346,6 @@ class StickersControllerView : View {
     
     func hidePacks(_ hide: Bool, _ animated: Bool) {
         tabsContainer.change(pos: NSMakePoint(0, frame.height - (hide ? 0 : 50)), animated: animated)
-        //tabsContainer.change(opacity: hide ? 0 : 1, animated: true)
         gridView.change(size: NSMakeSize(frame.width, frame.height - searchContainer.frame.maxY - (hide ? 0 : tabsContainer.frame.height)), animated: animated)
         needsLayout = true
     }
@@ -557,10 +568,10 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
     override func viewDidLoad() {
         super.viewDidLoad()
        
+        
         let context = self.context
         genericView.packsTable.delegate = self
-        
-        
+                
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
 
         let searchInteractions = SearchInteractions({ [weak self] state, _ in
@@ -753,11 +764,8 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
                 
         let inputNodeInteraction = self.inputNodeInteraction!
         let initialSize = atomicSize
-        let queue = Queue()
-        let transitions = combineLatest(queue: queue, itemCollectionsView, appearanceSignal, peerIdPromise.get() |> mapToSignal {
-            
-            combineLatest(context.account.viewTracker.peerView($0) |> take(1) |> map {peerViewMainPeer($0)}, peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: $0))
-            
+        let transitions = combineLatest(queue: prepareQueue, itemCollectionsView, appearanceSignal, peerIdPromise.get() |> mapToSignal {
+            combineLatest(queue: prepareQueue, context.account.viewTracker.peerView($0) |> take(1) |> map {peerViewMainPeer($0)}, peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: $0))
         })
         |> map { itemsView, appearance, specificData -> ((ItemCollectionsView?, (FoundStickerSets?, Bool)?), TableUpdateTransition, Bool, ChatMediaInputGridTransition, Bool) in
             
@@ -771,7 +779,7 @@ class StickersViewController: GenericViewController<StickersControllerView>, Tab
             
             let (previousPanelEntries, previousGridEntries) = previousEntries.swap((panelEntriesMapped, gridEntriesMapped))
             
-            return (itemsView.0, preparePackEntries(from: previousPanelEntries, to: panelEntriesMapped, account: context.account, initialSize: initialSize.modify({$0}), stickersInteraction:inputNodeInteraction),previousPanelEntries.isEmpty, preparedChatMediaInputGridEntryTransition(context: context, from: previousGridEntries, to: gridEntriesMapped, update: update, inputNodeInteraction: inputNodeInteraction), previousGridEntries.isEmpty)
+            return (itemsView.0, preparePackEntries(from: previousPanelEntries, to: panelEntriesMapped, context: context , initialSize: initialSize.modify({$0}), stickersInteraction:inputNodeInteraction),previousPanelEntries.isEmpty, preparedChatMediaInputGridEntryTransition(context: context, from: previousGridEntries, to: gridEntriesMapped, update: update, inputNodeInteraction: inputNodeInteraction), previousGridEntries.isEmpty)
            
         }
         

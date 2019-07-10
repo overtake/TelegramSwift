@@ -99,7 +99,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         case let .info(_, text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case let .pack(_, _, info, topItem, count, enabled, editing):
-            return StickerSetTableRowItem(initialSize, account: arguments.context.account, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .remove, action: {
+            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .remove, action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 
