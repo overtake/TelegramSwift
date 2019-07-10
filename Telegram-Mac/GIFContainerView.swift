@@ -172,7 +172,6 @@ class GIFContainerView: Control {
         self.ignoreWindowKey = ignoreWindowKey
         self.layer?.borderColor = theme.colors.background.cgColor
         
-        updateListeners()
         player.setFrameSize(viewSize)
         
         player.center()

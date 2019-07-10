@@ -56,7 +56,11 @@ class StickerPackPanelRowItem: TableRowItem {
             self.packReference = nil
         case let .speficicPack(info):
             title = info?.title ?? info?.shortName ?? ""
-            self.packReference = nil
+            if let info = info {
+                self.packReference = .id(id: info.id.id, accessHash: info.accessHash)
+            } else {
+                self.packReference = nil
+            }
         }
         
         let attributed = NSMutableAttributedString()
@@ -224,17 +228,24 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         longDisposable.set(nil)
         if isMouseDown, mouseInside() {
             let point = convert(event.locationInWindow, from: nil)
+            
             if let item = item as? StickerPackPanelRowItem {
-                for subview in self.subviews {
-                    if NSPointInRect(point, subview.frame) {
-                        if let contentView = subview as? ChatMediaContentView, let media = contentView.media {
-                            if !item.packInfo.installed, let reference = item.packReference {
-                                item.arguments.showPack(reference)
-                            } else {
-                                item.arguments.sendMedia(media)
+                if self.packNameView.mouseInside() {
+                    if let reference = item.packReference {
+                        item.arguments.showPack(reference)
+                    }
+                } else {
+                    for subview in self.subviews {
+                        if NSPointInRect(point, subview.frame) {
+                            if let contentView = subview as? ChatMediaContentView, let media = contentView.media {
+                                if !item.packInfo.installed, let reference = item.packReference {
+                                    item.arguments.showPack(reference)
+                                } else {
+                                    item.arguments.sendMedia(media)
+                                }
                             }
+                            return
                         }
-                        return
                     }
                 }
             }
@@ -261,6 +272,11 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             return
         }
         packNameView.setFrameOrigin(item.namePoint)
+        updateVisibleItems()
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
         updateVisibleItems()
     }
 
