@@ -33,3 +33,6 @@ fastlane/sparkle-release/dsa_pub.pem
 fastlane/sparkle-release/sign_update
 fastlane/support/dmg-license.py
 fastlane/support/template.applescript
+Telegram-Mac.xcworkspace/xcuserdata/keepcoder.xcuserdatad/UserInterfaceState.xcuserstate
+Telegram.xcodeproj/xcuserdata/keepcoder.xcuserdatad/xcschemes/xcschememanagement.plist
+TGUIKit/TGUIKit.xcodeproj/xcuserdata/keepcoder.xcuserdatad/xcschemes/xcschememanagement.plist

@@ -2147,11 +2147,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.remove(at: rdx, redraw: true, animation:effect)
         }
         
-        NSAnimationContext.current.duration = transition.animated ? 0.2 : 0.0
+        //NSAnimationContext.current.duration = transition.animated ? 0.2 : 0.0
         
 
         for (idx,item) in transition.inserted {
-            let effect:NSTableView.AnimationOptions = (visibleRange.indexIn(idx) || !transition.animateVisibleOnly) && transition.animated ? .effectFade : .none
+            let effect:NSTableView.AnimationOptions = (visibleRange.indexIn(idx - 1) || !transition.animateVisibleOnly) && transition.animated ? .effectFade : .none
             _ = self.insert(item: item, at:idx, redraw: true, animation: effect)
             if item.animatable {
                 inserted.append((item, effect))

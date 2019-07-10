@@ -405,12 +405,12 @@ private func prepareStickersTransition(from:[AppearanceWrapperEntry<StickerPackE
     var anim: Bool
     switch update {
     case let .generic(animated, scrollToTop):
+        anim = animated
         if scrollToTop {
             state = .up(animated)
         } else {
-            state = .none(nil)
+            state = .saveVisible(.lower)
         }
-        anim = animated
     case let .scroll(animated):
         state = .saveVisible(.upper)
         anim = animated
@@ -418,7 +418,7 @@ private func prepareStickersTransition(from:[AppearanceWrapperEntry<StickerPackE
         state = .top(id: index.collectionId, innerId: nil, animated: true, focus: false, inset: 0)
         anim = animated
     }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: anim, state: state, grouping: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: anim, state: state, grouping: !anim)
 }
 
 fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?, to:[AppearanceWrapperEntry<PackEntry>], context: AccountContext, initialSize:NSSize) -> TableUpdateTransition {
@@ -726,8 +726,12 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                 }
                 |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] result in
-                    self?.genericView.searchView.cancel(true)
-                    self?.position.set(.navigate(index: StickerPacksIndex.sticker(ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 0, collectionId: result))))
+                    if let `self` = self {
+                        if !self.genericView.searchView.query.isEmpty {
+                            self.genericView.searchView.cancel(true)
+                            self.position.set(.navigate(index: StickerPacksIndex.sticker(ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 0, collectionId: result))))
+                        }
+                    }
                 })
         }, navigate: { [weak self] index in
             self?.position.set(.navigate(index: .sticker(index)))
@@ -771,12 +775,15 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 return Int(round((size.height * (values.1 == .initial ? 2 : 20)) / 60 * 5))
             }
             if values.0.state == .None {
+                var firstTime: Bool = true
                 switch values.1 {
                 case .initial:
                     return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
                         |> mapToSignal { view  in
                             return specificPackData |> map { specificPack in
-                                return StickerPacksUpdateData(view, .generic(animated: true, scrollToTop: true), specificPack)
+                                let scrollToTop = firstTime
+                                firstTime = false
+                                return StickerPacksUpdateData(view, .generic(animated: true, scrollToTop: scrollToTop), specificPack)
                             }
                     }
                 case let .scroll(aroundIndex):

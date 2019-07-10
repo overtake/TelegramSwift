@@ -60,6 +60,9 @@ class ChatStickerContentView: ChatMediaContentView {
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         if let file = media as? TelegramMediaFile {
+            
+            let dimensions =  file.dimensions?.aspectFitted(size) ?? size
+            
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             
             self.image.animatesAlphaOnFirstTransition = false
@@ -74,8 +77,8 @@ class ChatStickerContentView: ChatMediaContentView {
                 self.image.dispose()
             }
             
-            self.image.setFrameSize(arguments.imageSize)
-            
+            self.image.setFrameSize(dimensions)
+            self.image.center()
             self.fetchStatus = .Local
             
             let signal = context.account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue
@@ -85,6 +88,11 @@ class ChatStickerContentView: ChatMediaContentView {
             }))
         }
         
+    }
+    
+    override func layout() {
+        super.layout()
+        self.image.center()
     }
     
 
