@@ -61,11 +61,11 @@ class StickerPackPanelRowItem: TableRowItem {
         
         let attributed = NSMutableAttributedString()
         if !packInfo.installed {
-            _ = attributed.append(string: title, color: theme.colors.text, font: .medium(14))
+            _ = attributed.append(string: title.uppercased(), color: theme.colors.text, font: .medium(14))
             _ = attributed.append(string: "\n")
             _ = attributed.append(string: L10n.stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
         } else {
-            _ = attributed.append(string: title, color: theme.colors.grayText, font: .medium(.text))
+            _ = attributed.append(string: title.uppercased(), color: theme.colors.grayText, font: .medium(.text))
         }
         let layout = TextViewLayout(attributed, alwaysStaticItems: true)
         layout.measure(width: initialSize.width - 20)
