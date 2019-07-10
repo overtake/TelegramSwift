@@ -10,10 +10,12 @@ import Cocoa
 import TGUIKit
 import TelegramCoreMac
 import PostboxMac
+import SwiftSignalKitMac
 
 class StickerPreviewModalView : View, ModalPreviewControllerView {
     fileprivate let imageView:TransformImageView = TransformImageView()
     fileprivate let textView:TextView = TextView()
+    private let fetchDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
@@ -23,21 +25,26 @@ class StickerPreviewModalView : View, ModalPreviewControllerView {
         self.background = .clear
     }
     
+    deinit {
+        fetchDisposable.dispose()
+    }
+    
     override func layout() {
         super.layout()
         imageView.center()
-        
     }
     
     func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
         if let reference = reference.fileReference {
-            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: reference.media, small: false, scale: backingScaleFactor, fetched: true), clearInstantly: true, animate:true)
+            
             let size = reference.media.dimensions?.aspectFitted(NSMakeSize(min(300, frame.size.width), min(300, frame.size.height))) ?? frame.size
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
             imageView.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
             if animated {
                 imageView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
             }
+            
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: reference.media, small: false, scale: backingScaleFactor, fetched: true), clearInstantly: true, animate:true)
             
             let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed, color: nil, font: .normal(30.0)))
             layout.measure(width: .greatestFiniteMagnitude)
@@ -148,7 +155,6 @@ class ImagePreviewModalView : View, ModalPreviewControllerView {
             self.imageView.setSignal(updateImageSignal, animate: false)
             self.imageView.set(arguments: arguments)
             
-            
             imageView.setFrameSize(arguments.imageSize)
             if animated {
                 imageView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
@@ -162,3 +168,87 @@ class ImagePreviewModalView : View, ModalPreviewControllerView {
     }
 }
 
+
+
+class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
+    private let loadResourceDisposable = MetaDisposable()
+    fileprivate let textView:TextView = TextView()
+
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.background = .clear
+        
+        addSubview(textView)
+        textView.backgroundColor = .clear
+    }
+    private var player: LottiePlayerView?
+    
+    override func layout() {
+        super.layout()
+        //player.center()
+    }
+    
+    override func viewDidMoveToWindow() {
+        if window == nil {
+            player?.set(nil)
+            player = nil
+        }
+    }
+    
+    deinit {
+        self.loadResourceDisposable.dispose()
+        var bp:Int = 0
+        bp += 1
+    }
+    
+    func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
+        
+        if let reference = reference.fileReference {
+            self.player?.removeFromSuperview()
+            self.player = nil
+            
+            let size = NSMakeSize(frame.width - 80, frame.height - 80)
+
+
+            self.player = LottiePlayerView(frame: NSMakeRect(0, 0, size.width, size.height))
+            addSubview(self.player!)
+            self.player?.center()
+            
+            let mediaId = reference.media.id
+            
+            self.loadResourceDisposable.set((context.account.postbox.mediaBox.resourceData(reference.media.resource, attemptSynchronously: true) |> map { resourceData -> Data? in
+                
+                if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                    return data
+                }
+                return nil
+            } |> deliverOnMainQueue).start(next: { [weak self] data in
+                if let data = data {
+                    self?.player?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(mediaId), size: size), cachePurpose: .none))
+                } else {
+                    self?.player?.set(nil)
+                }
+            }))
+
+            if animated {
+                player!.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            
+            let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed, color: nil, font: .normal(30.0)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            textView.update(layout)
+            textView.centerX()
+            if animated {
+                textView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
+            }
+            
+        } else {
+            var bp:Int = 0
+            bp += 1
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

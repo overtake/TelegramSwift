@@ -17,6 +17,8 @@ var APP_VERSION_STRING: String {
     vText += " Stable"
     #elseif APP_STORE
     vText += " AppStore"
+    #elseif ALPHA
+    vText += " Alpha"
     #else
     vText += " Beta"
     #endif

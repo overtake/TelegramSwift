@@ -235,4 +235,5 @@ void stickerThumbnailAlphaBlur(int imageWidth, int imageHeight, int imageStride,
         
         vImageBoxConvolve_ARGB8888(&srcBuffer, &dstBuffer, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
     }
+    
 }

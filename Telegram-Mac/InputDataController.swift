@@ -35,6 +35,9 @@ public class InputDataModalController : ModalViewController {
     }
     
     public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        if controller.defaultBarTitle.isEmpty {
+            return nil
+        }
         return (left: nil, center: ModalHeaderData(title: controller.defaultBarTitle), right: nil)
     }
     

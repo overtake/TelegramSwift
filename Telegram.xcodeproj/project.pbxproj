@@ -48,7 +48,6 @@
 		9F127E15210B1F540080D709 /* PeerMediaVoiceRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F127E14210B1F540080D709 /* PeerMediaVoiceRowItem.swift */; };
 		9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F12D342209251CF0072928B /* EditAccountInfoItem.swift */; };
 		9F13EE172100B05300562E53 /* VCardContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F13EE162100B05300562E53 /* VCardContactController.swift */; };
-		9F13EE192100B6DA00562E53 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
 		9F13EE1B2100BFCA00562E53 /* VCardHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F13EE1A2100BFCA00562E53 /* VCardHeaderItem.swift */; };
 		9F147F6F223014EB00D71BD1 /* PasscodeControllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F147F6E223014EB00D71BD1 /* PasscodeControllers.swift */; };
 		9F147F7322314B5500D71BD1 /* AccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7D422922240403007B68BB /* AccountContext.swift */; };
@@ -717,23 +716,32 @@
 		C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */; };
 		C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */; };
 		C2FF14601E532C0A007B7B14 /* SearchEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */; };
+		D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004167422D37AD00000566B /* StickerPackPanelRowItem.swift */; };
+		D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004167622D4AD3B0000566B /* StickerPackItems.swift */; };
+		D004D6FE22B7B92C00926F46 /* RLottieMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D004D6FD22B7B92C00926F46 /* RLottieMac.framework */; };
+		D004D70B22B7BCD400926F46 /* RLottieMac.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D004D6FD22B7B92C00926F46 /* RLottieMac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D00CE4F72284D530008C1B4F /* BuildConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F291C9F2264E57F00C66267 /* BuildConfig.m */; };
 		D00CE4F82284D5E3008C1B4F /* TransformOutgoingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */; };
 		D00CE50D2289C9B7008C1B4F /* ChatMediaAnimatedStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00CE50C2289C9B7008C1B4F /* ChatMediaAnimatedStickerView.swift */; };
 		D00CE50F2289CE87008C1B4F /* ChatAnimatedStickerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00CE50E2289CE87008C1B4F /* ChatAnimatedStickerItem.swift */; };
+		D014193C22AE939F008667CB /* ModalOptionSetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D014193B22AE939F008667CB /* ModalOptionSetController.swift */; };
+		D014193E22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D014193D22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift */; };
 		D0186731223807D200A77C45 /* ChatListEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0186730223807D200A77C45 /* ChatListEmptyRowItem.swift */; };
 		D01C731722A9814C000DA008 /* InputPasswordController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01C731622A9814C000DA008 /* InputPasswordController.swift */; };
-		D01CBE2822A52DF800F6A971 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D01CBE2922A52DF800F6A971 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D01CBE2A22A52DFB00F6A971 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
-		D01CBE2B22A52DFB00F6A971 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
 		D01CBE2D22A5384700F6A971 /* NotificationPreferencesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01CBE2C22A5384600F6A971 /* NotificationPreferencesController.swift */; };
+		D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */; };
+		D0276B7D22BD6511003155D8 /* DisplayLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0276B7C22BD6511003155D8 /* DisplayLink.swift */; };
 		D0558D7C215141CF006B403D /* ChatInfoTouchbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */; };
 		D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D842152B4D3006B403D /* GalleryTouchBar.swift */; };
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
 		D0675D6B217E20B9004900A7 /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0675D6A217E20B9004900A7 /* Zip.framework */; };
 		D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D0675D6A217E20B9004900A7 /* Zip.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0675D83217F1F27004900A7 /* ArchiverContext.swift */; };
+		D070DB7B22D35D6C008A0BBE /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
+		D070DB7C22D35D6C008A0BBE /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		D070DB7D22D35D70008A0BBE /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D070DB7E22D35D70008A0BBE /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D070DB8022D3638F008A0BBE /* StickersViewController.swift */; };
 		D071E8A421496F38001B6024 /* ChatListTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D071E8A321496F38001B6024 /* ChatListTouchBar.swift */; };
 		D071E8A6214A805C001B6024 /* ChatTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D071E8A5214A805C001B6024 /* ChatTouchBar.swift */; };
 		D071E8A8214BBE21001B6024 /* ChatStickersTouchBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = D071E8A7214BBE21001B6024 /* ChatStickersTouchBarPopover.swift */; };
@@ -747,17 +755,19 @@
 		D076F88D2296FD18004F895A /* DiscussionHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F88C2296FD18004F895A /* DiscussionHeaderItem.swift */; };
 		D076F88F2297285F004F895A /* DiscussionSetModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F88E2297285F004F895A /* DiscussionSetModalController.swift */; };
 		D076F891229823DA004F895A /* ChannelDiscussionInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F890229823DA004F895A /* ChannelDiscussionInputView.swift */; };
+		D08E5C9822C583CE007B1C09 /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08E5C9722C583CE007B1C09 /* Tuple.swift */; };
 		D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7181D7E175A007784E4 /* AppDelegate.swift */; };
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
 		D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D098C71C1D7E175A007784E4 /* MainMenu.xib */; };
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 		D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */; };
 		D09D9DF4229C289F00378796 /* GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF3229C289F00378796 /* GZip.m */; };
-		D0B6D72A22AA65D3008E36FE /* AddContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B6D72922AA65D3008E36FE /* AddContactController.swift */; };
+		D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B6D72922AA65D3008E36FE /* NewContactController.swift */; };
 		D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB98E21628C250055B718 /* EditImageModalController.swift */; };
 		D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9942166AF270055B718 /* PeerMediaTouchBar.swift */; };
 		D0BEB998216BD8A70055B718 /* EditImageControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB997216BD8A70055B718 /* EditImageControls.swift */; };
 		D0BEB99A216D10920055B718 /* MediaPreviewEditControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB999216D10920055B718 /* MediaPreviewEditControl.swift */; };
+		D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */; };
 		D0CD3095221970F8005D23DD /* FFMpegRemuxer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD3094221970F8005D23DD /* FFMpegRemuxer.m */; };
 		D0CD309822197E62005D23DD /* FFMpegGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD309722197E62005D23DD /* FFMpegGlobals.m */; };
 		D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */ = {isa = PBXBuildFile; fileRef = D0D71385227ADE9400EC88B1 /* maccheck.json */; };
@@ -771,8 +781,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D01CBE2822A52DF800F6A971 /* HockeySDK.framework in Copy Files */,
-				D01CBE2922A52DF800F6A971 /* Sparkle.framework in Copy Files */,
+				D070DB7D22D35D70008A0BBE /* HockeySDK.framework in Copy Files */,
+				D070DB7E22D35D70008A0BBE /* Sparkle.framework in Copy Files */,
+				D004D70B22B7BCD400926F46 /* RLottieMac.framework in Copy Files */,
 				9F0367E522707A4D00456348 /* Lottie.framework in Copy Files */,
 				D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */,
 				C224F2961E43CDDD002FF0B2 /* PostboxMac.framework in Copy Files */,
@@ -1722,17 +1733,26 @@
 		C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewSenderController.swift; sourceTree = "<group>"; };
 		C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInputRow.swift; sourceTree = "<group>"; };
 		C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchEmptyRowItem.swift; sourceTree = "<group>"; };
+		D004167422D37AD00000566B /* StickerPackPanelRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackPanelRowItem.swift; sourceTree = "<group>"; };
+		D004167622D4AD3B0000566B /* StickerPackItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackItems.swift; sourceTree = "<group>"; };
+		D004D6FD22B7B92C00926F46 /* RLottieMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottieMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00CA6502281BB0900FFACAD /* Telegram-Sandbox.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = "Telegram-Sandbox.entitlements"; sourceTree = "<group>"; };
 		D00CE50C2289C9B7008C1B4F /* ChatMediaAnimatedStickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMediaAnimatedStickerView.swift; sourceTree = "<group>"; };
 		D00CE50E2289CE87008C1B4F /* ChatAnimatedStickerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAnimatedStickerItem.swift; sourceTree = "<group>"; };
+		D014193B22AE939F008667CB /* ModalOptionSetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalOptionSetController.swift; sourceTree = "<group>"; };
+		D014193D22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralLineSeparatorRowItem.swift; sourceTree = "<group>"; };
 		D0186730223807D200A77C45 /* ChatListEmptyRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListEmptyRowItem.swift; sourceTree = "<group>"; };
 		D01C731622A9814C000DA008 /* InputPasswordController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputPasswordController.swift; sourceTree = "<group>"; };
 		D01CBE2C22A5384600F6A971 /* NotificationPreferencesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesController.swift; sourceTree = "<group>"; };
+		D01E1EFF22B261A800AD6DAE /* Alpha.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Alpha.xcconfig; sourceTree = "<group>"; };
+		D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottiePlayer.swift; sourceTree = "<group>"; };
+		D0276B7C22BD6511003155D8 /* DisplayLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayLink.swift; sourceTree = "<group>"; };
 		D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoTouchbar.swift; sourceTree = "<group>"; };
 		D0558D842152B4D3006B403D /* GalleryTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBar.swift; sourceTree = "<group>"; };
 		D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBarThumbItemView.swift; sourceTree = "<group>"; };
 		D0675D6A217E20B9004900A7 /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0675D83217F1F27004900A7 /* ArchiverContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiverContext.swift; sourceTree = "<group>"; };
+		D070DB8022D3638F008A0BBE /* StickersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickersViewController.swift; sourceTree = "<group>"; };
 		D071E8A321496F38001B6024 /* ChatListTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListTouchBar.swift; sourceTree = "<group>"; };
 		D071E8A5214A805C001B6024 /* ChatTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTouchBar.swift; sourceTree = "<group>"; };
 		D071E8A7214BBE21001B6024 /* ChatStickersTouchBarPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStickersTouchBarPopover.swift; sourceTree = "<group>"; };
@@ -1746,6 +1766,7 @@
 		D076F88C2296FD18004F895A /* DiscussionHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscussionHeaderItem.swift; sourceTree = "<group>"; };
 		D076F88E2297285F004F895A /* DiscussionSetModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscussionSetModalController.swift; sourceTree = "<group>"; };
 		D076F890229823DA004F895A /* ChannelDiscussionInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelDiscussionInputView.swift; sourceTree = "<group>"; };
+		D08E5C9722C583CE007B1C09 /* Tuple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
 		D098C7151D7E175A007784E4 /* Telegram.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telegram.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D098C7181D7E175A007784E4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D098C71A1D7E175A007784E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1755,11 +1776,12 @@
 		D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedStickerUtils.swift; sourceTree = "<group>"; };
 		D09D9DF2229C289F00378796 /* GZip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GZip.h; sourceTree = "<group>"; };
 		D09D9DF3229C289F00378796 /* GZip.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GZip.m; sourceTree = "<group>"; };
-		D0B6D72922AA65D3008E36FE /* AddContactController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContactController.swift; sourceTree = "<group>"; };
+		D0B6D72922AA65D3008E36FE /* NewContactController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewContactController.swift; sourceTree = "<group>"; };
 		D0BEB98E21628C250055B718 /* EditImageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageModalController.swift; sourceTree = "<group>"; };
 		D0BEB9942166AF270055B718 /* PeerMediaTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaTouchBar.swift; sourceTree = "<group>"; };
 		D0BEB997216BD8A70055B718 /* EditImageControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageControls.swift; sourceTree = "<group>"; };
 		D0BEB999216D10920055B718 /* MediaPreviewEditControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreviewEditControl.swift; sourceTree = "<group>"; };
+		D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieBufferCompressor.swift; sourceTree = "<group>"; };
 		D0CD3093221970F8005D23DD /* FFMpegRemuxer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegRemuxer.h; sourceTree = "<group>"; };
 		D0CD3094221970F8005D23DD /* FFMpegRemuxer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegRemuxer.m; sourceTree = "<group>"; };
 		D0CD309622197E62005D23DD /* FFMpegGlobals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FFMpegGlobals.h; sourceTree = "<group>"; };
@@ -1785,8 +1807,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D01CBE2A22A52DFB00F6A971 /* HockeySDK.framework in Frameworks */,
-				D01CBE2B22A52DFB00F6A971 /* Sparkle.framework in Frameworks */,
+				D070DB7B22D35D6C008A0BBE /* HockeySDK.framework in Frameworks */,
+				D070DB7C22D35D6C008A0BBE /* Sparkle.framework in Frameworks */,
+				D004D6FE22B7B92C00926F46 /* RLottieMac.framework in Frameworks */,
 				9F354EA4227077BD006F1D42 /* Lottie.framework in Frameworks */,
 				C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */,
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
@@ -1794,7 +1817,6 @@
 				9F4EEF8421D4F59C002C3B33 /* Accelerate.framework in Frameworks */,
 				D0675D6B217E20B9004900A7 /* Zip.framework in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
-				9F13EE192100B6DA00562E53 /* Contacts.framework in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				9FFAE50A205AA1FB000C028E /* libavutil.a in Frameworks */,
 				9FFAE50B205AA1FB000C028E /* libavcodec.a in Frameworks */,
@@ -2298,7 +2320,7 @@
 				C295C65E1F75808600BA309D /* ChatAdditionController.swift */,
 				C2F952AF1F8E1C840056E586 /* CachedAdminIds.swift */,
 				9F153D1521F3662700B95D82 /* StoredMessageFromSearchPeer.swift */,
-				D0B6D72922AA65D3008E36FE /* AddContactController.swift */,
+				D0B6D72922AA65D3008E36FE /* NewContactController.swift */,
 			);
 			name = chat;
 			sourceTree = "<group>";
@@ -2549,6 +2571,7 @@
 				9F10CE99206284F8002DD61A /* InputDataDateRowItem.swift */,
 				9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */,
 				9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */,
+				D014193D22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift */,
 			);
 			name = general;
 			sourceTree = "<group>";
@@ -2801,6 +2824,8 @@
 			children = (
 				C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */,
 				C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */,
+				D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */,
+				D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */,
 			);
 			name = video;
 			sourceTree = "<group>";
@@ -3176,6 +3201,7 @@
 				C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */,
 				9FC8ADA7206A77E00094F7B4 /* countries */,
 				9FDE0A8E21AD41C2001546D7 /* emoji1014-1.txt */,
+				D01E1EFF22B261A800AD6DAE /* Alpha.xcconfig */,
 			);
 			name = resources;
 			sourceTree = "<group>";
@@ -3407,6 +3433,7 @@
 		C2844AD51DA90775009308DC /* entertainment */ = {
 			isa = PBXGroup;
 			children = (
+				D070DB7F22D36359008A0BBE /* modern-stickers */,
 				C2F93A2B1F3C550A00BCD48F /* tolerance */,
 				C22674361DC0E270000BA9ED /* table */,
 				C2844ADA1DA907F7009308DC /* gifs */,
@@ -3720,6 +3747,7 @@
 		C2CBCABE1D81526A00142EC0 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				D08E5C9722C583CE007B1C09 /* Tuple.swift */,
 				9FFAE507205A92B9000C028E /* RingBuffer.h */,
 				9FFAE508205A92B9000C028E /* RingBuffer.m */,
 				9F0E6F79203EFE870086699C /* Preferences.swift */,
@@ -3778,6 +3806,7 @@
 				9FF1DEA5225B699D009512C9 /* SearchUtils.swift */,
 				9F0367EF227208E000456348 /* QRCode.swift */,
 				D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */,
+				D0276B7C22BD6511003155D8 /* DisplayLink.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -4033,6 +4062,7 @@
 				9F6314E021CAA0AB009FD379 /* NewPollController.swift */,
 				9F18908C2237B5A400665EF5 /* InputURLFormatterModalController.swift */,
 				9F0367EB2270836400456348 /* LottieTestModalController.swift */,
+				D014193B22AE939F008667CB /* ModalOptionSetController.swift */,
 			);
 			name = overlay;
 			sourceTree = "<group>";
@@ -4082,6 +4112,16 @@
 				D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */,
 			);
 			name = gallery;
+			sourceTree = "<group>";
+		};
+		D070DB7F22D36359008A0BBE /* modern-stickers */ = {
+			isa = PBXGroup;
+			children = (
+				D070DB8022D3638F008A0BBE /* StickersViewController.swift */,
+				D004167422D37AD00000566B /* StickerPackPanelRowItem.swift */,
+				D004167622D4AD3B0000566B /* StickerPackItems.swift */,
+			);
+			name = "modern-stickers";
 			sourceTree = "<group>";
 		};
 		D071E89F21496D77001B6024 /* touchbar */ = {
@@ -4174,6 +4214,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D004D6FD22B7B92C00926F46 /* RLottieMac.framework */,
 				9F354EA3227077BD006F1D42 /* Lottie.framework */,
 				9F354EA1227076EF006F1D42 /* Lottie.framework */,
 				9F354E9F227076A6006F1D42 /* libLottie.a */,
@@ -4561,6 +4602,7 @@
 				C29670791F0FAAC800884DA2 /* AppearanceViewController.swift in Sources */,
 				9F0367EE22709C5600456348 /* MGalleryLottieItem.swift in Sources */,
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
+				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				9FFAE4F9205A8C89000C028E /* FFMpegAudioFrameDecoder.swift in Sources */,
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
@@ -4604,6 +4646,7 @@
 				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
 				9F4EC948218B459A002B3C56 /* RenderedTotalUnreadCount.swift in Sources */,
 				C23044831F98F8B400977C51 /* MediaPreviewRowItem.swift in Sources */,
+				D014193C22AE939F008667CB /* ModalOptionSetController.swift in Sources */,
 				C2DF47D31DE824FD003AA6C0 /* OpusObjcBridge.mm in Sources */,
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,
 				9F10CE962061C98E002DD61A /* InputDataRowItem.swift in Sources */,
@@ -4835,6 +4878,7 @@
 				9F21A7DC21C290E00037784F /* InstantPageTableItem.swift in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */,
 				C2905E1C207E4D9E00990AD7 /* InstantPageAudioView.swift in Sources */,
+				D014193E22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift in Sources */,
 				C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */,
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
 				C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */,
@@ -4846,7 +4890,7 @@
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,
 				C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */,
-				D0B6D72A22AA65D3008E36FE /* AddContactController.swift in Sources */,
+				D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */,
 				D076F88F2297285F004F895A /* DiscussionSetModalController.swift in Sources */,
 				C2DF47CE1DE79751003AA6C0 /* ATQueue.m in Sources */,
 				C2C9B9341E8016C400380D79 /* NSObject+SPInvocationGrabbing.m in Sources */,
@@ -4864,7 +4908,9 @@
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				C29F4C761F45F58B00DBFC00 /* MIHSliderView.m in Sources */,
+				D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */,
 				C2DF47C31DE79574003AA6C0 /* internal.c in Sources */,
+				D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */,
 				C295C65F1F75808600BA309D /* ChatAdditionController.swift in Sources */,
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
 				C291942F1DCC6E2200359491 /* DeclareEncodables.swift in Sources */,
@@ -4892,6 +4938,7 @@
 				C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */,
 				9F354E9C2270630A006F1D42 /* HapticEngine.swift in Sources */,
 				C2167E571DC221E600F98E03 /* PeerMediaRowContent.swift in Sources */,
+				D08E5C9822C583CE007B1C09 /* Tuple.swift in Sources */,
 				D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */,
 				C248BD261E706A05004B9106 /* RecentSessionsController.swift in Sources */,
 				9FA0E53D205693DA001E5649 /* WebSessionsController.swift in Sources */,
@@ -4910,6 +4957,7 @@
 				C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */,
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
 				9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */,
+				D0276B7D22BD6511003155D8 /* DisplayLink.swift in Sources */,
 				9F0B8F171FFB7F1A00073D3F /* AccentColorRowItem.swift in Sources */,
 				C2DF47EE1DE9A1F3003AA6C0 /* LoginViewController.swift in Sources */,
 				C2DE5D301F3CA7C00081EC1E /* InstantPageLinkSelectionView.swift in Sources */,
@@ -5109,8 +5157,10 @@
 				9F8DF3C8209228B000AED104 /* EditAccountInfoController.swift in Sources */,
 				C241025D1FD5702D00DB8625 /* ChatMessageBubbleImages.swift in Sources */,
 				9FC8AD9A2062A5610094F7B4 /* InputDataDataSelectorRowItem.swift in Sources */,
+				D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */,
 				9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */,
 				C2DF47C11DE79574003AA6C0 /* wav_io.c in Sources */,
+				D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */,
 				C241026F1FD58EA900DB8625 /* SImageView.swift in Sources */,
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,
 				9F3EAB4720A5ED2F003FE7E3 /* fast-edge.cpp in Sources */,
@@ -5255,7 +5305,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -5275,6 +5325,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "BETA=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -5284,8 +5335,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5296,6 +5348,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
@@ -5389,7 +5442,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -5408,6 +5461,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -5417,8 +5471,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5429,6 +5484,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
@@ -5518,7 +5574,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -5536,6 +5592,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "STABLE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -5545,8 +5602,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5557,6 +5615,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
@@ -5643,7 +5702,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -5662,6 +5721,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "APP_STORE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -5671,8 +5731,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5683,6 +5744,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
@@ -5772,7 +5834,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -5791,6 +5853,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "APP_STORE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -5800,8 +5863,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5812,6 +5876,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
@@ -5956,7 +6021,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -5974,6 +6039,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "STABLE=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -5983,8 +6049,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -5995,6 +6062,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
@@ -6031,6 +6099,151 @@
 				SWIFT_VERSION = 4.2;
 			};
 			name = ReleaseHockeyapp;
+		};
+		D01E1EC922B2608F00AD6DAE /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = HockeyappMacAlpha;
+		};
+		D01E1ECA22B2608F00AD6DAE /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D01E1EFF22B261A800AD6DAE /* Alpha.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = NO;
+				CLANG_WARN_SUSPICIOUS_MOVE = NO;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				ENABLE_BITCODE = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+					"$(PROJECT_DIR)/HockeySDK-Mac",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "ALPHA=1";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
+				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
+				HEADERMAP_USES_VFS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/thrid-party/ogg",
+					"$(PROJECT_DIR)/submodules/libtgvoip",
+					"$(PROJECT_DIR)/thrid-party",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
+				);
+				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/thrid-party/libwebp/lib",
+					"$(SDKROOT)/usr/lib/system",
+					"$(PROJECT_DIR)/thrid-party/opus/lib",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
+					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D ALPHA";
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 4.2;
+			};
+			name = HockeyappMacAlpha;
+		};
+		D01E1ECB22B2608F00AD6DAE /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					"SHARE=1",
+				);
+				INFOPLIST_FILE = TelegramShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_VERSION = 4.2;
+			};
+			name = HockeyappMacAlpha;
 		};
 		D098C7201D7E175A007784E4 /* DebugHockeyapp */ = {
 			isa = XCBuildConfiguration;
@@ -6133,7 +6346,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -6153,6 +6366,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "BETA=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -6162,8 +6376,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -6174,8 +6389,10 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D BETA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
@@ -6193,7 +6410,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -6213,6 +6430,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -6222,8 +6440,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/thrid-party/ogg",
 					"$(PROJECT_DIR)/submodules/libtgvoip",
-					"$(PROJECT_DIR)/thrid-party/",
+					"$(PROJECT_DIR)/thrid-party",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
 				);
 				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -6234,6 +6453,7 @@
 					"$(PROJECT_DIR)/thrid-party/opus/lib",
 					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
 					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6257,6 +6477,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C232EAA11E1D07E700C4D38C /* DebugHockeyapp */,
+				D01E1ECB22B2608F00AD6DAE /* HockeyappMacAlpha */,
 				9FDD788E21C8EBF600F1B4EF /* DebugFork */,
 				C232EAA21E1D07E700C4D38C /* DebugAppStore */,
 				9FDD789121C8EC0000F1B4EF /* DebugAppStoreLLC */,
@@ -6272,6 +6493,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D098C7201D7E175A007784E4 /* DebugHockeyapp */,
+				D01E1EC922B2608F00AD6DAE /* HockeyappMacAlpha */,
 				9FDD788C21C8EBF600F1B4EF /* DebugFork */,
 				D098C7211D7E175A007784E4 /* DebugAppStore */,
 				9FDD788F21C8EC0000F1B4EF /* DebugAppStoreLLC */,
@@ -6287,6 +6509,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D098C7231D7E175A007784E4 /* DebugHockeyapp */,
+				D01E1ECA22B2608F00AD6DAE /* HockeyappMacAlpha */,
 				9FDD788D21C8EBF600F1B4EF /* DebugFork */,
 				D098C7241D7E175A007784E4 /* DebugAppStore */,
 				9FDD789021C8EC0000F1B4EF /* DebugAppStoreLLC */,

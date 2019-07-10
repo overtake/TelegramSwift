@@ -340,7 +340,7 @@ class ChatMessageItem: ChatRowItem {
                                 let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
                                 
                                 if let attribute = attribute as? inAppLink {
-                                    pb.setString(attribute.link, forType: .string)
+                                    pb.setString(attribute.link.isEmpty ? selectedText : attribute.link, forType: .string)
                                 } else {
                                     pb.setString(selectedText, forType: .string)
                                 }
@@ -716,7 +716,10 @@ class ChatMessageItem: ChatRowItem {
                         nsString = text as NSString
                     }
                     string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
-                    break
+                case .Strikethrough:
+                    string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
+                case .Underline:
+                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
                 default:
                     break
                 }

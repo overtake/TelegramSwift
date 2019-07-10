@@ -32,6 +32,11 @@ private class ModalBackground : Control {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         return false
     }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
 }
 
 private var activeModals:[WeakReference<Modal>] = []
@@ -297,8 +302,9 @@ public class Modal: NSObject {
     public let interactions:ModalInteractions?
     fileprivate let animated: Bool
     private let isOverlay: Bool
-    public init(controller:ModalViewController, for window:Window, animated: Bool = true, isOverlay: Bool) {
-        
+    private let animationType: ModalAnimationType
+    public init(controller:ModalViewController, for window:Window, animated: Bool = true, isOverlay: Bool, animationType: ModalAnimationType) {
+        self.animationType = animationType
         self.controller = controller
         self.window = window
         self.animated = animated
@@ -476,6 +482,7 @@ public class Modal: NSObject {
         background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self] (complete) in
             if let stongSelf = self {
                 stongSelf.background.removeFromSuperview()
+                stongSelf.controller?.view.removeFromSuperview()
                 stongSelf.controller?.viewDidDisappear(true)
                 stongSelf.controller?.modal = nil
                 stongSelf.controller = nil
@@ -517,9 +524,13 @@ public class Modal: NSObject {
                     if strongSelf.animated {
                         strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
                         if !controller.isFullScreen {
-                           // strongSelf.container.layer?.animateScaleSpring(from: 0.7, to: 1.0, duration: 0.2, bounce: false)
-                            let origin = strongSelf.container.frame.origin
-                            strongSelf.container.layer?.animatePosition(from: NSMakePoint(origin.x, origin.y + 100), to: origin, timingFunction: .spring)
+                            switch strongSelf.animationType {
+                            case .bottomToCenter:
+                                let origin = strongSelf.container.frame.origin
+                                strongSelf.container.layer?.animatePosition(from: NSMakePoint(origin.x, origin.y + 100), to: origin, timingFunction: .spring)
+                            case .scaleCenter:
+                                strongSelf.container.layer?.animateScaleSpring(from: 0.7, to: 1.0, duration: 0.2, bounce: false)
+                            }
                         }
                     }
                     
@@ -600,7 +611,12 @@ public func closeAllModals() {
     }
 }
 
-public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true) -> Void {
+public enum ModalAnimationType {
+    case bottomToCenter
+    case scaleCenter
+}
+
+public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
         if weakModal.value?.controller?.className == controller.className {
@@ -608,7 +624,7 @@ public func showModal(with controller:ModalViewController, for window:Window, is
         }
     }
     
-    controller.modal = Modal(controller: controller, for: window, animated: animated, isOverlay: isOverlay)
+    controller.modal = Modal(controller: controller, for: window, animated: animated, isOverlay: isOverlay, animationType: animationType)
     if #available(OSX 10.12.2, *) {
         window.touchBar = nil
     }
@@ -624,7 +640,7 @@ public func closeModal(_ type: ModalViewController.Type) -> Void {
     }
 }
 
-public func showModal(with controller: NavigationViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true) -> Void {
+public func showModal(with controller: NavigationViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
         if weakModal.value?.controller?.className == controller.className {
@@ -632,7 +648,7 @@ public func showModal(with controller: NavigationViewController, for window:Wind
         }
     }
     
-    controller.modal = Modal(controller: ModalController(controller), for: window, animated: animated, isOverlay: isOverlay)
+    controller.modal = Modal(controller: ModalController(controller), for: window, animated: animated, isOverlay: isOverlay, animationType: animationType)
     controller.modal?.show()
 }
 

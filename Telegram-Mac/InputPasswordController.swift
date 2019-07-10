@@ -15,10 +15,7 @@ enum InputPasswordValueError {
     case generic
     case wrong
 }
-enum InputPasswordValueResult {
-    case close
-    case nothing
-}
+
 
 private struct InputPasswordState : Equatable {
     let error: InputDataValueError?
@@ -64,7 +61,7 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     return entries
 }
 
-func InputPasswordController(context: AccountContext, title: String, desc: String, checker:@escaping(String)->Signal<InputPasswordValueResult, InputPasswordValueError>) -> InputDataModalController {
+func InputPasswordController(context: AccountContext, title: String, desc: String, checker:@escaping(String)->Signal<Never, InputPasswordValueError>) -> InputDataModalController {
 
     let initialState: InputPasswordState = InputPasswordState(value: .string(nil), error: nil, isLoading: false)
     let stateValue: Atomic<InputPasswordState> = Atomic(value: initialState)
@@ -90,17 +87,7 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
                 updateState {
                     return $0.withUpdatedLoading(true)
                 }
-                checkPassword.set(showModalProgress(signal: checker(pwd), for: context.window).start(next: { value in
-                    updateState {
-                        return $0.withUpdatedLoading(false)
-                    }
-                    switch value {
-                    case .close:
-                        dismiss?()
-                    case .nothing:
-                        break
-                    }
-                }, error: { error in
+                checkPassword.set(showModalProgress(signal: checker(pwd), for: context.window).start(error: { error in
                     let text: String
                     switch error {
                     case .wrong:
@@ -112,6 +99,11 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
                         return $0.withUpdatedLoading(false).withUpdatedError(InputDataValueError(description: text, target: .data))
                     }
                     f(.fail(.fields([_id_input_pwd : .shake])))
+                }, completed: {
+                    updateState {
+                        return $0.withUpdatedLoading(false)
+                    }
+                    dismiss?()
                 }))
             }
         })

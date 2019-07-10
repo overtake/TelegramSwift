@@ -68,6 +68,7 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
         }
         
         menu.delegate = menu
+        
         NSMenu.popUpContextMenu(menu, with: event, for: view)
     }
     

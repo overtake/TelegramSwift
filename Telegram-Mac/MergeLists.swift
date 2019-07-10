@@ -85,47 +85,13 @@ public func mergeListsStable<T>(leftList: [T], rightList: [T]) -> ([Int], [(Int,
     return (removeIndices, insertItems)
 }
 
-public func mergeListsStableWithUpdates<T>(leftList: [T], rightList: [T]) -> ([Int], [(Int, T, Int?)], [(Int, T, Int)]) where T: Comparable, T: Equatable, T: Identifiable {
+public func mergeListsStableWithUpdates<T>(leftList: [T], rightList: [T], allUpdated: Bool = false) -> ([Int], [(Int, T, Int?)], [(Int, T, Int)]) where T: Comparable, T: Identifiable {
     var removeIndices: [Int] = []
     var insertItems: [(Int, T, Int?)] = []
     var updatedIndices: [(Int, T, Int)] = []
     
-    #if (arch(i386) || arch(x86_64)) && os(iOS)
-    var existingStableIds: [T.T: T] = [:]
-    for item in leftList {
-        if let _ = existingStableIds[item.stableId] {
-            assertionFailure()
-        } else {
-            existingStableIds[item.stableId] = item
-        }
-    }
-    existingStableIds.removeAll()
-    for item in rightList {
-        if let other = existingStableIds[item.stableId] {
-            print("\(other) has the same stableId as \(item): \(item.stableId)")
-            assertionFailure()
-        } else {
-            existingStableIds[item.stableId] = item
-        }
-    }
-    #endif
     
     var currentList = leftList
-    
-    /*print("-----------")
-    let newline = "\n"
-    print("left:\n")
-    var m = 0
-    for left in leftList {
-        print("\(m): \(left.stableId)")
-        m += 1
-    }
-    m = 0
-    print("\nright:\n")
-    for right in rightList {
-        print("\(m): \(right.stableId)")
-        m += 1
-    }*/
     
     var i = 0
     var previousIndices: [T.T: Int] = [:]
@@ -141,12 +107,12 @@ public func mergeListsStableWithUpdates<T>(leftList: [T], rightList: [T]) -> ([I
         let right: T? = j < rightList.count ? rightList[j] : nil
         
         if let left = left, let right = right {
-            if left.stableId == right.stableId && left != right {
+            if left.stableId == right.stableId && (left != right || allUpdated) {
                 updatedIndices.append((i, right, previousIndices[left.stableId]!))
                 i += 1
                 j += 1
             } else {
-                if left == right {
+                if left == right && !allUpdated {
                     i += 1
                     j += 1
                 } else if left < right {
@@ -181,13 +147,13 @@ public func mergeListsStableWithUpdates<T>(leftList: [T], rightList: [T]) -> ([I
     }
     
     /*print("\n current after removes:\n")
-    m = 0
-    for right in currentList {
-        print("\(m): \(right.stableId)")
-        m += 1
-    }
-    
-    print("update:\n\(updatedIndices.map({ "\($0.0), \($0.1.stableId) (was \($0.2)))" }))")*/
+     m = 0
+     for right in currentList {
+     print("\(m): \(right.stableId)")
+     m += 1
+     }
+     
+     print("update:\n\(updatedIndices.map({ "\($0.0), \($0.1.stableId) (was \($0.2)))" }))")*/
     
     i = 0
     j = 0
@@ -271,19 +237,12 @@ public func mergeListsStableWithUpdates<T>(leftList: [T], rightList: [T]) -> ([I
         currentList[index] = item
     }
     
-    //print("update after inserts:\n\(updatedIndices.map({ "\($0.0), \($0.1.stableId) (was \($0.2)))" }))")
-    
-    /*if currentList != rightList {
-        for l in 0 ..< currentList.count {
-            if currentList[l] != rightList[l] {
-                print("here \(currentList[l]) != \(rightList[l])")
-            }
-        }
-    }*/
-    assert(currentList == rightList, "currentList == rightList")
+
     
     return (removeIndices, insertItems, updatedIndices)
 }
+
+
 
 
 public func mergeListsStableWithUpdatesReversed<T>(leftList: [T], rightList: [T], allUpdated: Bool = false) -> ([Int], [(Int, T, Int?)], [(Int, T, Int)]) where T: Comparable, T: Identifiable {

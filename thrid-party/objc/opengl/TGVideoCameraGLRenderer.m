@@ -59,6 +59,7 @@
         kCGLPFADoubleBuffer,
         kCGLPFASampleBuffers, (CGLPixelFormatAttribute)1,
         kCGLPFASamples,       (CGLPixelFormatAttribute)4,
+        kCGLPFAAllowOfflineRenderers,
         (CGLPixelFormatAttribute)0
     };
     CGLPixelFormatObj pixelFormat = NULL;

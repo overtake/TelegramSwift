@@ -15,26 +15,12 @@ enum PeerChannelMemberContextKey: Equatable, Hashable {
     case recent
     case recentSearch(String)
     case admins(String?)
+    case contacts(String?)
+    case bots(String?)
     case restrictedAndBanned(String?)
     case restricted(String?)
     case banned(String?)
     
-    var hashValue: Int {
-        switch self {
-        case .recent:
-            return 1
-        case let .recentSearch(query):
-            return query.hashValue
-        case let .admins(query):
-            return query?.hashValue ?? 2
-        case let .restrictedAndBanned(query):
-            return query?.hashValue ?? 3
-        case let .restricted(query):
-            return query?.hashValue ?? 4
-        case let .banned(query):
-            return query?.hashValue ?? 5
-        }
-    }
 }
 
 
@@ -176,6 +162,27 @@ final class PeerChannelMemberCategoriesContextsManager {
             return (EmptyDisposable, nil)
         }
     }
+    
+    func transferOwnership(account: Account, peerId: PeerId, memberId: PeerId, password: String) -> Signal<Void, ChannelOwnershipTransferError> {
+        return updateChannelOwnership(account: account, accountStateManager: account.stateManager, channelId: peerId, memberId: memberId, password: password)
+            |> map(Optional.init)
+            |> deliverOnMainQueue
+            |> beforeNext { [weak self] results in
+                if let strongSelf = self, let results = results {
+                    strongSelf.impl.with { impl in
+                        for (contextPeerId, context) in impl.contexts {
+                            if peerId == contextPeerId {
+                                context.replayUpdates(results.map { ($0.0, $0.1, nil) })
+                            }
+                        }
+                    }
+                }
+            }
+            |> mapToSignal { _ -> Signal<Void, ChannelOwnershipTransferError> in
+                return .complete()
+        }
+    }
+
     
     func externallyAdded(peerId: PeerId, participant: RenderedChannelParticipant) {
         self.impl.with { impl in

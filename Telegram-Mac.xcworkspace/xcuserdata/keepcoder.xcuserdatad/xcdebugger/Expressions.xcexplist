@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "closure #7 in PeerMediaListController.load(with:):PeerMediaListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #6 in InputDataController.viewDidLoad():InputDataController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "specialized installedStickerPacksControllerEntries(state:stickerSettings:view:featured:):InstalledStickerPacksController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "i">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatMediaAnimatedStickerView.update(with:size:context:parent:table:parameters:animated:positionFlags:approximateSynchronousValue:):ChatMediaAnimatedStickerView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.init(_:_:_:_:_:):ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ServiceEventLogItem.init(_:event:result:chatInteraction:):ChannelEventLogItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "BufferDecompressor.readPixelBuffer(frame:width:height:):BufferCompressor.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "framesMap[frame]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TelegramMediaFile.isAnimatedSticker.getter:CoreExtension.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #4 in SharedNotificationManager.init(activeAccounts:accountManager:window:bindings:):SharedNotificationManager.swift">
+      </ContextState>
+      <ContextState
+         contextName = "InputDataRowView.set(item:animated:):InputDataRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "secureField.attributedStringValue.attributes(at: 0, effectiveRange: nil)">
+            </PersistentString>
+            <PersistentString
+               value = "p.tabStops">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in TableView.scrollDidEndLiveScrolling():TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "BufferDecompressor.init(compressor:):BufferCompressor.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.isSharable.getter:ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Message.chatPeer.getter:CoreExtension.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "messageMainPeer(self)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "static ChatLayoutUtils.contentSize(for:with:hasText:):ChatLayoutUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "specialized DefaultStringInterpolation.appendInterpolation&lt;A&gt;(_:) [inlined]:(null)">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

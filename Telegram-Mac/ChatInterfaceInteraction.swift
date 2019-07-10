@@ -112,7 +112,7 @@ final class ChatInteraction : InterfaceObserver  {
     var unblock:()->Void = {}
     var updatePinned:(MessageId, Bool, Bool)->Void = {_,_,_ in}
     var reportSpamAndClose:()->Void = {}
-    var dismissPeerReport:()->Void = {}
+    var dismissPeerStatusOptions:()->Void = {}
     var toggleSidebar:()->Void = {}
     var mentionPressed:()->Void = {}
     var jumpToDate:(Date)->Void = {_ in}
@@ -134,13 +134,11 @@ final class ChatInteraction : InterfaceObserver  {
     var vote:(MessageId, Data?) -> Void = { _, _ in }
     var closePoll:(MessageId) -> Void = { _ in }
     var openDiscussion:()->Void = { }
+    var addContact:()->Void = {}
+    var blockContact: ()->Void = {}
     let loadingMessage: Promise<Bool> = Promise()
-    
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
-    func addContact() {
-        addContactDisposable.set(addContactPeerInteractively(account: context.account, peerId: peerId, phone: (presentation.peer as? TelegramUser)?.phone).start())
-    }
     
     func disableProxy() {
         disableProxyDisposable.set(updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> ProxySettings in

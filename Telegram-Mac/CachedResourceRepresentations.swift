@@ -14,12 +14,12 @@ import TelegramCoreMac
 
 final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize?
-    
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
         if let size = self.size {
-            return "sticker-ajpeg-\(Int(size.width))x\(Int(size.height))"
+            return "sticker-v1-png-\(Int(size.width))x\(Int(size.height))"
         } else {
-            return "sticker-ajpeg"
+            return "sticker-v1-png"
         }
     }
     
@@ -38,7 +38,7 @@ final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation 
 
 class CachedScaledImageRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize
-    
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
         return "scaled-image-\(Int(self.size.width))x\(Int(self.size.height))"
     }
@@ -59,6 +59,8 @@ class CachedScaledImageRepresentation: CachedMediaResourceRepresentation {
 
 
 final class CachedVideoFirstFrameRepresentation: CachedMediaResourceRepresentation {
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
+    
     var uniqueId: String {
         return "first-frame"
     }
@@ -74,7 +76,7 @@ final class CachedVideoFirstFrameRepresentation: CachedMediaResourceRepresentati
 
 final class CachedScaledVideoFirstFrameRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize
-    
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
         return "scaled-frame-\(Int(self.size.width))x\(Int(self.size.height))"
     }
@@ -92,6 +94,7 @@ final class CachedScaledVideoFirstFrameRepresentation: CachedMediaResourceRepres
     }
 }
 final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentation {
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
         return CachedBlurredWallpaperRepresentation.uniqueId
     }
@@ -111,13 +114,18 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
 
 
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
-        return "animated-sticker-v19"
+        return "animated-sticker-v-\(self.thumb ? 1 : 0)"
+    }
+    let thumb: Bool
+    init(thumb: Bool) {
+        self.thumb = thumb
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
-        if let _ = to as? CachedAnimatedStickerRepresentation {
-            return true
+        if let to = to as? CachedAnimatedStickerRepresentation {
+            return self.thumb == to.thumb
         } else {
             return false
         }

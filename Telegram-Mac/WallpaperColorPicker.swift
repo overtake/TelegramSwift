@@ -116,7 +116,7 @@ private final class WallpaperColorHueSaturationView: View {
     override func draw(_ layer: CALayer, in context: CGContext) {
         
         
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let colorSpace = deviceColorSpace
 
         let colors = [NSColor(rgb: 0xff0000).cgColor, NSColor(rgb: 0xffff00).cgColor, NSColor(rgb: 0x00ff00).cgColor, NSColor(rgb: 0x00ffff).cgColor, NSColor(rgb: 0x0000ff).cgColor, NSColor(rgb: 0xff00ff).cgColor, NSColor(rgb: 0xff0000).cgColor]
         var locations: [CGFloat] = [0.0, 0.16667, 0.33333, 0.5, 0.66667, 0.83334, 1.0]
@@ -159,7 +159,7 @@ private final class WallpaperColorBrightnessView: View {
     
 
     override func draw(_ layer: CALayer, in context: CGContext) {
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let colorSpace = deviceColorSpace
         
         context.setFillColor(NSColor(white: parameters.value, alpha: 1.0).cgColor)
         context.fill(bounds)

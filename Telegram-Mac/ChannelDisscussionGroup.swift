@@ -363,7 +363,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     
     let arguments = DiscussionArguments(context: context, createGroup: {
         let controller = context.sharedContext.bindings.rootNavigation().controller
-        actionsDisposable.add(createSupergroup(with: context, for: context.sharedContext.bindings.rootNavigation(), defaultText: peer.displayTitle + " Chat").start(next: { [weak controller] peerId in
+        actionsDisposable.add(createSupergroup(with: context, defaultText: peer.displayTitle + " Chat").start(next: { [weak controller] peerId in
             if let peerId = peerId, let controller = controller {
                 setup(peer.id, peerId)
                 context.sharedContext.bindings.rootNavigation().removeUntil(InputDataController.self)

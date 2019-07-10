@@ -131,9 +131,9 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case .info(_, let peer, let presence):
-            var string:String = peer.isBot ? tr(L10n.presenceBot) : tr(L10n.peerStatusRecently)
+            var string:String = peer.isBot ? L10n.presenceBot : L10n.peerStatusRecently
             var color:NSColor = theme.colors.grayText
-            if let presence = presence {
+            if let presence = presence, !peer.isBot {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
             }
@@ -360,7 +360,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted))
             descId += 1
             
-            if channel.flags.contains(.isCreator) {
+            if channel.flags.contains(.isCreator), !admin.isBot {
                 if currentRightsFlags.contains(maskRightsFlags) {
                     entries.append(.section(sectionId))
                     sectionId += 1
@@ -428,7 +428,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             descId += 1
         }
         
-        if group.role == .creator {
+        if group.role == .creator, !admin.isBot {
             if currentRightsFlags.contains(maskRightsFlags) {
                 entries.append(.section(sectionId))
                 sectionId += 1
@@ -496,8 +496,10 @@ class ChannelAdminController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let combinedPromise: Promise<CombinedView> = Promise()
+        
         let context = self.context
-        let peerId = self.peerId
+        var peerId = self.peerId
         let adminId = self.adminId
         let initialParticipant = self.initialParticipant
         let updated = self.updated
@@ -565,36 +567,113 @@ class ChannelAdminController: ModalViewController {
                 
                 let checkPassword:(PeerId)->Void = { peerId in
                     showModal(with: InputPasswordController(context: context, title: L10n.channelAdminTransferOwnershipPasswordTitle, desc: L10n.channelAdminTransferOwnershipPasswordDesc, checker: { pwd in
-                        return .single(.close)
+                        return context.peerChannelMemberCategoriesContextsManager.transferOwnership(account: context.account, peerId: peerId, memberId: admin.id, password: pwd)
+                            |> deliverOnMainQueue
+                            |> ignoreValues
+                            |> `catch` { error -> Signal<Never, InputPasswordValueError> in
+                            switch error {
+                            case .generic:
+                                return .fail(.generic)
+                            case .invalidPassword:
+                                return .fail(.wrong)
+                            default:
+                                return .fail(.generic)
+                            }
+                        }  |> afterCompleted {
+                            dismissImpl()
+                            _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 2.0)
+                        }
                     }), for: context.window)
                     
                 }
                 
-                confirm(for: context.window, header: header, information: text, okTitle: L10n.channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
-                    if peer.isGroup {
-                        actionsDisposable.add(showModalProgress(signal: convertGroupToSupergroup(account: context.account, peerId: peer.id), for: context.window).start(next: { upgradedPeerId in
-                            upgradedToSupergroup(upgradedPeerId, {
-                                checkPassword(upgradedPeerId)
+                let transfer:(PeerId, Bool, Bool)->Void = { _peerId, isGroup, convert in
+                    actionsDisposable.add(showModalProgress(signal: checkOwnershipTranfserAvailability(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, memberId: adminId), for: context.window).start(error: { error in
+                        let errorText: String?
+                        var install2Fa = false
+                        switch error {
+                        case .generic:
+                            errorText = L10n.unknownError
+                        case .tooMuchJoined:
+                            errorText = L10n.channelErrorAddTooMuch
+                        case .authSessionTooFresh:
+                            errorText = L10n.channelTransferOwnerErrorText
+                        case .invalidPassword:
+                            preconditionFailure()
+                        case .requestPassword:
+                            errorText = nil
+                        case .twoStepAuthMissing:
+                            errorText = L10n.channelTransferOwnerErrorText
+                            install2Fa = true
+                        case .twoStepAuthTooFresh:
+                            errorText = L10n.channelTransferOwnerErrorText
+                        case .restricted, .userBlocked:
+                            errorText = isGroup ? L10n.groupTransferOwnerErrorPrivacyRestricted : L10n.channelTransferOwnerErrorPrivacyRestricted
+                        case .adminsTooMuch:
+                             errorText = isGroup ? L10n.groupTransferOwnerErrorAdminsTooMuch : L10n.channelTransferOwnerErrorAdminsTooMuch
+                        case .userPublicChannelsTooMuch:
+                            errorText = L10n.channelTransferOwnerErrorPublicChannelsTooMuch
+                        case .limitExceeded:
+                            errorText = L10n.loginFloodWait
+                        case .userLocatedGroupsTooMuch:
+                            errorText = L10n.groupOwnershipTransferErrorLocatedGroupsTooMuch
+                        }
+                        
+                        if let errorText = errorText {
+                            confirm(for: context.window, header: L10n.channelTransferOwnerErrorTitle, information: errorText, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel, thridTitle: install2Fa ? L10n.channelTransferOwnerErrorEnable2FA : nil, successHandler: { result in
+                                switch result {
+                                case .basic:
+                                    break
+                                case .thrid:
+                                    dismissImpl()
+                                    context.sharedContext.bindings.rootNavigation().removeUntil(EmptyChatViewController.self)
+                                    context.sharedContext.bindings.rootNavigation().push(twoStepVerificationUnlockController(context: context, mode: .access(nil), presentController: { (controller, isRoot, animated) in
+                                        let navigation = context.sharedContext.bindings.rootNavigation()
+                                        if isRoot {
+                                            navigation.removeUntil(EmptyChatViewController.self)
+                                        }
+                                        if !animated {
+                                            navigation.stackInsert(controller, at: navigation.stackCount)
+                                        } else {
+                                            navigation.push(controller)
+                                        }
+                                    }))
+                                }
                             })
-                            dismissImpl()
-                        }, error: { error in
-                            dismissImpl()
-                        }))
-                    }  else {
-                        checkPassword(peer.id)
-                    }
+                        } else {
+                            if convert {
+                                actionsDisposable.add(showModalProgress(signal: convertGroupToSupergroup(account: context.account, peerId: peer.id), for: context.window).start(next: { upgradedPeerId in
+                                    upgradedToSupergroup(upgradedPeerId, {
+                                        peerId = upgradedPeerId
+                                        combinedPromise.set(context.account.postbox.combinedView(keys: [.peer(peerId: upgradedPeerId, components: .all), .peer(peerId: adminId, components: .all)]))
+                                        checkPassword(upgradedPeerId)
+                                    })
+                                }, error: { error in
+                                    dismissImpl()
+                                }))
+                            } else {
+                               checkPassword(peer.id)
+                            }
+                        }
+                    }))
+                }
+                
+                confirm(for: context.window, header: header, information: text, okTitle: L10n.channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
+                    transfer(peerId, peer.isSupergroup || peer.isGroup, peer.isGroup)
                 })
             })
         })
         
         self.arguments = arguments
         
-        let combinedView = context.account.postbox.combinedView(keys: [.peer(peerId: peerId, components: .all), .peer(peerId: adminId, components: .all)])
+        
+        
+        combinedPromise.set(context.account.postbox.combinedView(keys: [.peer(peerId: peerId, components: .all), .peer(peerId: adminId, components: .all)]))
         
         let previous:Atomic<[AppearanceWrapperEntry<ChannelAdminEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
         
-        let signal = combineLatest(statePromise.get(), combinedView, appearanceSignal)
+        let signal = combineLatest(statePromise.get(), combinedPromise.get(), appearanceSignal)
             |> deliverOn(prepareQueue)
             |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool, channelView: PeerView) in
                 let channelView = combinedView.views[.peer(peerId: peerId, components: .all)] as! PeerView
@@ -606,7 +685,7 @@ class ChannelAdminController: ModalViewController {
                     
                     if let initialParticipant = initialParticipant {
                         if channel.flags.contains(.isCreator) {
-                            canDismiss = true
+                            canDismiss = initialParticipant.adminInfo != nil
                         } else {
                             switch initialParticipant {
                             case .creator:

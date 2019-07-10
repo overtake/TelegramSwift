@@ -19,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>5.3</string>
+	<string>5.5.1</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -33,7 +33,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>171870</string>
+	<string>176334</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>

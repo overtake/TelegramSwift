@@ -123,7 +123,7 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
     }
     
     deinit {
-        assert(self.queue.isCurrent())
+        //assert(self.queue.isCurrent())
         
         self.taskQueue.terminate()
     }

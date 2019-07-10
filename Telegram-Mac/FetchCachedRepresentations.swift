@@ -11,13 +11,16 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
+import RLottieMac
 
-private let cacheThreadPool = ThreadPool(threadCount: 3, threadPriority: 0.1)
+private let cacheThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
 
 public func fetchCachedResourceRepresentation(account: Account, resource: MediaResource, representation: CachedMediaResourceRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     if let representation = representation as? CachedStickerAJpegRepresentation {
         return fetchCachedStickerAJpegRepresentation(account: account, resource: resource, representation: representation)
+    } else if let representation = representation as? CachedAnimatedStickerRepresentation {
+        return fetchCachedAnimatedStickerRepresentation(account: account, resource: resource, representation: representation)
     } else if let representation = representation as? CachedScaledImageRepresentation {
         return fetchCachedScaledImageRepresentation(account: account, resource: resource, representation: representation)
     } else if representation is CachedVideoFirstFrameRepresentation {
@@ -43,14 +46,6 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
                     return .complete()
                 }
                 return fetchCachedBlurredWallpaperRepresentation(account: account, resource: resource, resourceData: data, representation: representation)
-        }
-    } else if let representation = representation as? CachedAnimatedStickerRepresentation {
-        return account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
-            |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
-                if !data.complete {
-                    return .complete()
-                }
-                return fetchAnimatedStickerRepresentation(account: account, resource: resource, resourceData: data, representation: representation)
         }
     }
 
@@ -128,7 +123,7 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
                 
                 CGImageDestinationAddImage(colorDestination, fullSizeImage, options as CFDictionary)
                 if CGImageDestinationFinalize(colorDestination) {
-                    subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                    subscriber.putNext(.temporaryPath(path))
                     subscriber.putCompletion()
                 }
             }
@@ -138,32 +133,112 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
             subscriber.putCompletion()
         }
         return EmptyDisposable
-        } |> runOn(Queue.concurrentDefaultQueue())
+        } |> runOn(cacheThreadPool)
 }
 
 
-
+private func fetchCachedAnimatedStickerRepresentation(account: Account, resource: MediaResource, representation: CachedAnimatedStickerRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    return account.postbox.mediaBox.resourceData(resource) |> deliverOn(lottieThreadPool) |> map { resourceData -> (CGImage?, Data?, MediaResourceData) in
+        if resourceData.complete {
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                if !representation.thumb {
+                    var dataValue: Data! = TGGUnzipData(data)
+                    if dataValue.isEmpty {
+                        dataValue = data
+                    }
+                    if let json = String(data: dataValue, encoding: .utf8), json.length > 0 {
+                        let rlottie = RLottieBridge(json: json, key: resourceData.path)
+                        
+                        let unmanaged = rlottie?.renderFrame(0, width: 240 * 2, height: 240 * 2)
+                        let colorImage = unmanaged?.takeRetainedValue()
+                        return (colorImage, nil, resourceData)
+                    }
+                } else {
+                    return (nil, data, resourceData)
+                }
+            }
+        }
+        return (nil, nil, resourceData)
+    } |> runOn(cacheThreadPool) |> mapToSignal { frame, data, resourceData in
+        if resourceData.complete {
+            if !representation.thumb {
+                let path = NSTemporaryDirectory() + "\(arc4random64())"
+                let url = URL(fileURLWithPath: path)
+                
+                let colorData = NSMutableData()
+                if let colorImage = frame, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil){
+                    CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                    
+                    let colorQuality: Float
+                    colorQuality = 0.4
+                    
+                    let options = NSMutableDictionary()
+                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                    CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
+                    if CGImageDestinationFinalize(colorDestination)  {
+                        try? colorData.write(to: url, options: .atomic)
+                        return .single(.temporaryPath(path))
+                    }
+                } else {
+                    return .complete()
+                }
+            } else if let data = data {
+                
+                let path = NSTemporaryDirectory() + "\(arc4random64())"
+                let url = URL(fileURLWithPath: path)
+                
+                let colorData = NSMutableData()
+                let umnanaged = convertFromWebP(data)
+                var image = umnanaged?.takeUnretainedValue() ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                umnanaged?.release()
+                
+                if image == nil {
+                    if let json = String(data: TGGUnzipData(data)!, encoding: .utf8), json.length > 0 {
+                        let rlottie = RLottieBridge(json: json, key: resourceData.path)
+                        let unmanaged = rlottie?.renderFrame(0, width: 60 * 2, height: 60 * 2)
+                        image = unmanaged?.takeRetainedValue()
+                    }
+                }
+                
+                if let image = image, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil) {
+                    CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                    
+                    let colorQuality: Float
+                    colorQuality = 0.4
+                    
+                    let options = NSMutableDictionary()
+                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                    CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
+                    if CGImageDestinationFinalize(colorDestination)  {
+                        try? colorData.write(to: url, options: .atomic)
+                        return .single(.temporaryPath(path))
+                    }
+                } else {
+                    return .complete()
+                }
+            }
+        }
+        return .never()
+    }
+}
 
 private func fetchCachedStickerAJpegRepresentation(account: Account, resource: MediaResource, representation: CachedStickerAJpegRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     return account.postbox.mediaBox.resourceData(resource) |> mapToSignal { resourceData in
         return Signal { subscriber in
             if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-                let image = convertFromWebP(data)?.takeRetainedValue()
+                let unmanaged = convertFromWebP(data)
+                let image = unmanaged?.takeUnretainedValue()
+                unmanaged?.release()
                 let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
                 if let image = image, let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) {
                     var randomId: Int64 = 0
                     arc4random_buf(&randomId, 8)
-                    //
-                    
                     let directory = "\(containerUrl.path)/\(accountRecordIdPathName(account.id))/cached/"
                     try? FileManager.default.createDirectory(at: URL(fileURLWithPath: directory), withIntermediateDirectories: true, attributes: nil)
                     let path: String = directory + "\(randomId)"
-                    //containerUrl + accountRecordIdPathName(account.id)
-                    //let path = NSTemporaryDirectory() + "\(randomId)"
                     let url = URL(fileURLWithPath: path)
                     
                     let colorData = NSMutableData()
-                    let alphaData = NSMutableData()
                     
                     
                     let size:CGSize
@@ -182,55 +257,28 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
                     } else {
                         colorImage = image
                     }
-                    
-                    let alphaImage = generateImage(size, contextGenerator: { size, context in
-                        context.setFillColor(NSColor.white.cgColor)
-                        context.fill(CGRect(origin: CGPoint(), size: size))
-                        context.clip(to: CGRect(origin: CGPoint(), size: size), mask: colorImage)
-                        context.setFillColor(NSColor.black.cgColor)
-                        context.fill(CGRect(origin: CGPoint(), size: size))
-                    })
-                    
-                    if let alphaImage = alphaImage, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypeJPEG, 1, nil), let alphaDestination = CGImageDestinationCreateWithData(alphaData as CFMutableData, kUTTypeJPEG, 1, nil) {
+                    if let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil) {
                         CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
-                        CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
                         
                         let colorQuality: Float
-                        let alphaQuality: Float
                         if representation.size == nil {
                             colorQuality = 0.6
-                            alphaQuality = 0.6
                         } else {
-                            colorQuality = 0.5
-                            alphaQuality = 0.4
+                            colorQuality = 0.3
                         }
                         
                         let options = NSMutableDictionary()
                         options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
                         
-                        let optionsAlpha = NSMutableDictionary()
-                        optionsAlpha.setObject(alphaQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-                        
                         CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
-                        CGImageDestinationAddImage(alphaDestination, alphaImage, optionsAlpha as CFDictionary)
-                        if CGImageDestinationFinalize(colorDestination) && CGImageDestinationFinalize(alphaDestination) {
-                            let finalData = NSMutableData()
-                            var colorSize: Int32 = Int32(colorData.length)
-                            finalData.append(&colorSize, length: 4)
-                            finalData.append(colorData as Data)
-                            var alphaSize: Int32 = Int32(alphaData.length)
-                            finalData.append(&alphaSize, length: 4)
-                            finalData.append(alphaData as Data)
-                            
-                            let _ = try? finalData.write(to: url, options: [.atomic])
-                            
-                            subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                        if CGImageDestinationFinalize(colorDestination) {
+                            let _ = try? colorData.write(to: url, options: [.atomic])
+                            subscriber.putNext(.temporaryPath(path))
                             subscriber.putCompletion()
                         }
                     } else {
                         subscriber.putCompletion()
                     }
-                    
                 }
             }
             return EmptyDisposable
@@ -267,7 +315,7 @@ private func fetchCachedScaledImageRepresentation(account: Account, resource: Me
                         
                         CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
                         if CGImageDestinationFinalize(colorDestination) {
-                            subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                            subscriber.putNext(.temporaryPath(path))
                             subscriber.putCompletion()
                         }
                     }
@@ -307,7 +355,7 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
             
             CGImageDestinationAddImage(colorDestination, fullSizeImage, options as CFDictionary)
             if CGImageDestinationFinalize(colorDestination) {
-                return .single(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                return .single(.temporaryPath(path))
             }
         }
         return .never()
@@ -343,7 +391,7 @@ private func fetchCachedScaledVideoFirstFrameRepresentation(account: Account, re
                             
                             CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
                             if CGImageDestinationFinalize(colorDestination) {
-                                subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                                subscriber.putNext(.temporaryPath(path))
                                 subscriber.putCompletion()
                             }
                         }
@@ -377,7 +425,7 @@ private func fetchCachedBlurredWallpaperRepresentation(account: Account, resourc
                     
                     CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
                     if CGImageDestinationFinalize(colorDestination) {
-                        subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
+                        subscriber.putNext(.temporaryPath(path))
                         subscriber.putCompletion()
                     }
                 }
@@ -388,15 +436,3 @@ private func fetchCachedBlurredWallpaperRepresentation(account: Account, resourc
 }
 
 
-private func fetchAnimatedStickerRepresentation(account: Account, resource: MediaResource, resourceData: MediaResourceData, representation: CachedAnimatedStickerRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
-    return Signal({ subscriber in
-        if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-            return convertCompressedLottieToCombinedMp4(data: data, size: CGSize(width: 400.0, height: 400.0)).start(next: { path in
-                subscriber.putNext(CachedMediaResourceRepresentationResult(temporaryPath: path))
-                subscriber.putCompletion()
-            })
-        } else {
-            return EmptyDisposable
-        }
-    }) |> runOn(Queue.concurrentDefaultQueue())
-}

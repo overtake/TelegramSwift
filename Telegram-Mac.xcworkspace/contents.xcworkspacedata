@@ -2,6 +2,24 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:submodules/telegram-ios/submodules/TelegramApi/TelegramApi_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:RLottieMac/RLottieMac.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/MtProtoKit/MtProtoKit_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/TelegramCore/TelegramCore_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/Postbox/Postbox_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/SSignalKit/SSignalKit_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:submodules/lottie-ios/Lottie.xcodeproj">
    </FileRef>
    <FileRef
@@ -15,18 +33,6 @@
    </FileRef>
    <FileRef
       location = "group:TGUIKit/TGUIKit.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:submodules/Signals/SSignalKit.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:submodules/Postbox/Postbox.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:submodules/MtProtoKit/MtProtoKit.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:submodules/TelegramCore/TelegramCore.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Telegram.xcodeproj">

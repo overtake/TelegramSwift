@@ -231,7 +231,7 @@ class ReplyModel: ChatAccessoryModel {
             
             var text = pullText(from:message, attachEmoji: false) as String
             if text.isEmpty {
-                text = serviceMessageText(message, account: account)
+                text = serviceMessageText(message, account: account, isReplied: true)
             }
             self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(L10n.chatHeaderPinnedMessage), color: presentation.title, font: .medium(.text))
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))

@@ -69,6 +69,10 @@ class UsernameInputRowView: GeneralInputRowView {
         }
     }
     
+    func textViewDidReachedLimit(_ textView: Any) {
+        self.textView.shake()
+    }
+    
     override func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
         super.textViewHeightChanged(height, animated: animated)
         imageView.change(pos: NSMakePoint(textView.frame.maxX - imageView.frame.width, textView.frame.maxY - imageView.frame.height), animated: animated)

@@ -956,7 +956,21 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             CATransaction.begin()
             self.genericView.tableView.merge(with: transition)
+
+            var placeholder: String = L10n.previewSenderCommentPlaceholder
             
+            if self.genericView.tableView.count == 1 {
+                if let item = self.genericView.tableView.firstItem {
+                    if let item = item as? MediaPreviewRowItem {
+                        if item.media.canHaveCaption {
+                            placeholder = L10n.previewSenderCaptionPlaceholder
+                        }
+                    }
+                }
+            }
+            
+           self.genericView.textView.setPlaceholderAttributedString(.initialize(string: placeholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+
             
             if self.genericView.tableView.isEmpty {
                 self.close()
@@ -1040,7 +1054,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             }
             var additionalMessage: ChatTextInputState? = nil
             
-            if medias.count > 1 && !input.inputText.isEmpty {
+            if (medias.count > 1  || (medias.count == 1 && !medias[0].canHaveCaption)) && !input.inputText.isEmpty {
                 if state != .collage {
                     additionalMessage = input
                     input = ChatTextInputState()
@@ -1358,6 +1372,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
             textView.setSelectedRange(range)
         }
+        textViewTextDidChangeSelectedRange(range)
     }
     
     

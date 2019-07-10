@@ -66,7 +66,10 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
     fileprivate let share:ImageButton = ImageButton()
     fileprivate let dismiss:ImageButton = ImageButton()
     
-    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     fileprivate let sendButton = ImageButton()
@@ -626,9 +629,17 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         return nil
     }
     
+    private func invokeShortCut(_ index: Int) {
+        if genericView.tableView.count > index, let item = self.genericView.tableView.item(at: index) as? ShortPeerRowItem  {
+            _ = self.genericView.tableView.select(item: item)
+            (item.view as? ShortPeerRowView)?.invokeAction(item, clickCount: 1)
+        }
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        let context = self.share.context
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.genericView.tableView.highlightPrev()
@@ -649,11 +660,70 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             
             return .rejected
         }, with: self, for: .Return, priority: .low)
+        
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.selectInteractions.action(context.peerId)
+            return .invoked
+        }, with: self, for: .Zero, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(0)
+            return .invoked
+        }, with: self, for: .One, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(1)
+            return .invoked
+        }, with: self, for: .Two, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(2)
+            return .invoked
+        }, with: self, for: .Three, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(3)
+            return .invoked
+        }, with: self, for: .Four, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(4)
+            return .invoked
+        }, with: self, for: .Five, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(5)
+            return .invoked
+        }, with: self, for: .Six, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(6)
+            return .invoked
+        }, with: self, for: .Seven, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(7)
+            return .invoked
+        }, with: self, for: .Eight, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.invokeShortCut(8)
+            return .invoked
+        }, with: self, for: .Nine, priority: self.responderPriority, modifierFlags: [.command])
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.window?.removeAllHandlers(for: self)
+    }
+    
+    override var handleAllEvents: Bool {
+        return true
+    }
+    
+    override var responderPriority: HandlerPriority {
+        return .modal
     }
     
     override func viewDidLoad() {

@@ -95,7 +95,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         }
         
         
-        onComplete.set(showModalProgress(signal: createChannel(account: context.account, title: nameItem.text, description: descItem.text), for: window!, disposeAfterComplete: false) |> mapToSignal { peerId in
+        onComplete.set(showModalProgress(signal: createChannel(account: context.account, title: nameItem.text, description: descItem.text), for: window!, disposeAfterComplete: false) |> map(Optional.init) |> `catch` { _ in return .single(nil) } |> mapToSignal { peerId in
             if let peerId = peerId, let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
                 let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in

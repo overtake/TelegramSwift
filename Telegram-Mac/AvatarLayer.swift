@@ -204,7 +204,15 @@ class AvatarControl: NSView {
                 let photo: PeerPhoto?
                 switch state {
                 case let .PeerAvatar(peer, letters, representation, message):
-                    photo = .peer(peer, representation, letters, message)
+                    if let peer = peer as? TelegramUser, peer.firstName == nil && peer.lastName == nil {
+                        photo = nil
+                        self.setState(account: account, state: .Empty)
+                        let icon = theme.icons.deletedAccount
+                        self.setSignal(generateEmptyPhoto(frame.size, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(frame.size.width - 20, frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
+                        return
+                    } else {
+                        photo = .peer(peer, representation, letters, message)
+                    }
                 case .Empty:
                     photo = nil
                 default:

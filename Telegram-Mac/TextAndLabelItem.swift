@@ -25,7 +25,8 @@ class TextAndLabelItem: GeneralRowItem {
     var textLayout:TextViewLayout
     let isTextSelectable:Bool
     let callback:()->Void
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, labelColor: NSColor = theme.colors.blueUI, text:String, context: AccountContext, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false) {
+    let canCopy: Bool
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, labelColor: NSColor = theme.colors.blueUI, text:String, context: AccountContext, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true) {
         self.callback = callback
         self.isTextSelectable = isTextSelectable
         self.label = NSAttributedString.initialize(string: label, color: labelColor, font: .normal(FontSize.text))
@@ -36,7 +37,7 @@ class TextAndLabelItem: GeneralRowItem {
                 applyExternalProxy(settings, accountManager: context.sharedContext.accountManager)
             })
         }
-        
+        self.canCopy = canCopy
         
         
         textLayout = TextViewLayout(attr, alwaysStaticItems: !detectLinks)
@@ -85,12 +86,16 @@ class TextAndLabelItem: GeneralRowItem {
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return .single([ContextMenuItem(L10n.textCopyLabel(self.label.string.components(separatedBy: " ").map{$0.capitalizingFirstLetter()}.joined(separator: " ")), handler: { [weak self] in
-            if let strongSelf = self {
-                copyToClipboard(strongSelf.textLayout.attributedString.string)
-            }
-            
-        })])
+        if !canCopy {
+            return .single([])
+        } else {
+            return .single([ContextMenuItem(L10n.textCopyLabel(self.label.string.components(separatedBy: " ").map{$0.capitalizingFirstLetter()}.joined(separator: " ")), handler: { [weak self] in
+                if let strongSelf = self {
+                    copyToClipboard(strongSelf.textLayout.attributedString.string)
+                }
+            })])
+        }
+       
     }
 //
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
@@ -164,7 +169,7 @@ class TextAndLabelRowView: GeneralRowView {
         
         if let item = item as? TextAndLabelItem {
            // labelView.userInteractionEnabled = item.isTextSelectable
-
+            labelView.userInteractionEnabled = item.canCopy
             labelView.isSelectable = item.isTextSelectable
             labelView.update(item.textLayout)
             labelView.backgroundColor = theme.colors.background

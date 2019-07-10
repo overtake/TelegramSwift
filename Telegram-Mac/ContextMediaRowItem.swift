@@ -89,6 +89,25 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         stickerFetchedDisposable.dispose()
     }
     
+    func previewMediaIfPossible() -> Bool {
+        if let item = self.item as? ContextMediaRowItem, let table = item.table, let window = window as? Window {
+            _ = startModalPreviewHandle(table, window: window, context: item.context)
+        }
+        return true
+    }
+    
+    override func forceClick(in location: NSPoint) {
+        if mouseInside() == true {
+            let result = previewMediaIfPossible()
+            if !result {
+                super.forceClick(in: location)
+            }
+        } else {
+            super.forceClick(in: location)
+        }
+        
+    }
+    
     func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
         guard let item = item as? ContextMediaRowItem else {return nil}
         for i in 0 ..< self.subviews.count {
@@ -96,6 +115,13 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 switch item.result.entries[i] {
                 case let .gif(data):
                     return .file(data.file, GifPreviewModalView.self)
+                case let .sticker(_, file):
+                    let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
+                    if file.isAnimatedSticker {
+                        return .file(reference, AnimatedStickerPreviewModalView.self)
+                    } else {
+                        return .file(reference, StickerPreviewModalView.self)
+                    }
                 default:
                     break
                 }
@@ -124,16 +150,22 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, iconSignal: signal)
                     container = view
                 case let .sticker(data):
-                    let view = TransformImageView()
-                    //TODO
-                    view.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true))
-//                    _ = fileInteractiveFetched(account: item.context.account, fileReference: reference).start()
+                    if data.file.isAnimatedSticker {
+                        let view = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+                        let size = NSMakeSize(round(item.result.sizes[i].width), round(item.result.sizes[i].height))
+                        view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+                        view.userInteractionEnabled = false
+                        container = view
+                    } else {
+                        let view = TransformImageView()
+                        view.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true))
+                        let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
+                        view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
+                        
+                        view.setFrameSize(imageSize)
+                        container = view
+                    }
                     
-                    let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
-                    view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
-                    
-                    view.setFrameSize(imageSize)
-                    container = view
                 case let .photo(data):
                     let view = View()
                     let imageView = TransformImageView()

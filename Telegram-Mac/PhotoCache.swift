@@ -12,7 +12,7 @@ import TelegramCoreMac
 import PostboxMac
 import TGUIKit
 
-struct PhotoCachedRecord {
+private final class PhotoCachedRecord {
     let date:TimeInterval
     let image:CGImage
     let size:Int
@@ -24,8 +24,7 @@ struct PhotoCachedRecord {
 }
 
 
-
-enum PhotoCacheKeyEntry : Hashable {
+private enum PhotoCacheKeyEntry : Hashable {
     case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)
     case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat)
     case media(Media, TransformImageArguments, CGFloat, LayoutPositionFlags?)
@@ -40,6 +39,23 @@ enum PhotoCacheKeyEntry : Hashable {
             return stableId.hashValue
         case let .media(media, _, _, _):
             return media.id?.id.hashValue ?? 0
+        }
+    }
+    
+    var stringValue: NSString {
+        switch self {
+        case let .avatar(peerId, rep, size, scale):
+            return "avatar-\(peerId.toInt64())-\(rep.resource.id.hashValue)-\(size.width)-\(size.height)-\(scale)".nsstring
+        case let .emptyAvatar(peerId, letters, color, size, scale):
+            return "emptyAvatar-\(peerId.toInt64())-\(letters)-\(color.hexString)-\(size.width)-\(size.height)-\(scale)".nsstring
+        case let .media(media, transform, scale, layout):
+            var addition: String = ""
+            if let media = media as? TelegramMediaMap {
+                addition = "\(media.longitude)-\(media.latitude)"
+            }
+            return "media-\(String(describing: media.id?.id))-\(transform.imageSize.width)-\(transform.imageSize.height)-\(transform.boundingSize.width)-\(transform.boundingSize.height)-\(scale)-\(String(describing: layout?.rawValue))-\(addition)".nsstring
+        case let .messageId(stableId, transform, scale, layout):
+            return "messageId-\(stableId)-\(transform.imageSize.width)-\(transform.imageSize.height)-\(transform.boundingSize.width)-\(transform.boundingSize.height)-\(scale)-\(layout.rawValue)".nsstring
         }
     }
     
@@ -104,73 +120,46 @@ enum PhotoCacheKeyEntry : Hashable {
 
 
 
-class PhotoCache {
+private class PhotoCache {
     let memoryLimit:Int
-    let maxCount:Int = 1000
-    private var values:[PhotoCacheKeyEntry:PhotoCachedRecord] = [:]
-    private let queue:Queue = Queue()
+    let maxCount:Int = 50
+    private var values:NSCache<NSString, PhotoCachedRecord> = NSCache()
     
-    init(_ memoryLimit:Int = 16*1024*1024) {
+    init(_ memoryLimit:Int = 100) {
         self.memoryLimit = memoryLimit
+        self.values.countLimit = memoryLimit
     }
     
-    func cacheImage(_ image:CGImage, for key:PhotoCacheKeyEntry) {
-        queue.justDispatch {
-            self.values[key] = PhotoCachedRecord(image: image, size: Int(image.size.width * image.size.height * 4))
-            self.freeMemoryIfNeeded()
-        }
+    fileprivate func cacheImage(_ image:CGImage, for key:PhotoCacheKeyEntry) {
+        self.values.setObject(PhotoCachedRecord(image: image, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: key.stringValue)
+        var bp:Int = 0
+        bp += 1
     }
     
     private func freeMemoryIfNeeded() {
-        assert(queue.isCurrent())
-        
-        let total = values.reduce(0, { (current, value: (key: PhotoCacheKeyEntry, value: PhotoCachedRecord)) -> Int in
-            return current + value.value.size
-        })
-        
-        if total > memoryLimit {
-            let list = values.map ({($0.key, $0.value)}).sorted(by: { lhs, rhs -> Bool in
-                return lhs.1.date < rhs.1.date
-            })
-            
-            var clearedMemorySize: Int = 0
-            
-            for entry in list {
-                values.removeValue(forKey: entry.0)
-                clearedMemorySize += entry.1.size
-                
-                if total - clearedMemorySize < memoryLimit {
-                    break
-                }
-            }
-        }
     }
     
     func cachedImage(for key:PhotoCacheKeyEntry) -> CGImage? {
         var image:CGImage? = nil
-        queue.sync {
-            image = self.values[key]?.image
-        }
+        image = self.values.object(forKey: key.stringValue)?.image
         return image
     }
     
     func removeRecord(for key:PhotoCacheKeyEntry) {
-        queue.justDispatch {
-            self.values.removeValue(forKey: key)
-        }
+        self.values.removeObject(forKey: key.stringValue)
     }
     
     func clearAll() {
-        queue.justDispatch {
-            self.values.removeAll()
-        }
+        self.values.removeAllObjects()
     }
 }
 
 
 private let peerPhotoCache = PhotoCache()
-private let photosCache = PhotoCache(48 * 1024 * 1024)
-private let photoThumbsCache = PhotoCache(8 * 1024 * 1024)
+private let photosCache = PhotoCache(100)
+private let photoThumbsCache = PhotoCache(100)
+
+private let stickersCache = PhotoCache(500)
 
 
 func clearImageCache() -> Signal<Void, NoError> {
@@ -216,7 +205,11 @@ func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloa
     let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
     let value: CGImage?
     var full: Bool = false
-    if let image = photosCache.cachedImage(for: entry) {
+    
+    if arguments.imageSize.width == 60, let media = media as? TelegramMediaFile, media.isSticker || media.isAnimatedSticker, let image = stickersCache.cachedImage(for: entry) {
+        value = image
+        full = true
+    } else if let image = photosCache.cachedImage(for: entry) {
         value = image
         full = true
     } else {
@@ -240,10 +233,12 @@ func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CG
 
 func cacheMedia(signal:Signal<(CGImage?, Bool), NoError>, media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal <Void, NoError> {
     // |> filter {$0.1}
-    return signal |> mapToSignal { (image, highResolution) -> Signal<Void, NoError> in
+    return signal |> deliverOn(resourcesQueue) |> mapToSignal { (image, highResolution) -> Signal<Void, NoError> in
         if let image = image {
             let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
-            if !highResolution {
+            if arguments.imageSize.width == 60, highResolution, let media = media as? TelegramMediaFile,  media.isSticker || media.isAnimatedSticker {
+                return .single(stickersCache.cacheImage(image, for: entry))
+            } else if !highResolution {
                 return .single(photoThumbsCache.cacheImage(image, for: entry))
             } else {
                 return .single(photosCache.cacheImage(image, for: entry))

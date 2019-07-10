@@ -389,6 +389,18 @@ internal final class L10n {
   internal static var bioPlaceholder: String  { return L10n.tr("Localizable", "Bio.Placeholder") }
   /// Save
   internal static var bioSave: String  { return L10n.tr("Localizable", "Bio.Save") }
+  /// Do you want to block %@ from messaging and calling you on Telegram?
+  internal static func blockContactTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BlockContact.Title", p1)
+  }
+  /// Block %@
+  internal static func blockContactOptionsAction(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BlockContact.Options.Action", p1)
+  }
+  /// Delete this Chat
+  internal static var blockContactOptionsDeleteChat: String  { return L10n.tr("Localizable", "BlockContact.Options.DeleteChat") }
+  /// Report Spam
+  internal static var blockContactOptionsReport: String  { return L10n.tr("Localizable", "BlockContact.Options.Report") }
   /// Blocked users can't send you messages or add you to groups. They will not see your profile pictures, online and last seen status.
   internal static var blockedPeersEmptyDescrpition: String  { return L10n.tr("Localizable", "BlockedPeers.EmptyDescrpition") }
   /// Open Link
@@ -769,6 +781,12 @@ internal final class L10n {
   internal static func channelEventLogMessageChangedUnlinkedGroup(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageChangedUnlinkedGroup", p1)
   }
+  /// transferred ownership
+  internal static var channelEventLogMessageTransfered: String  { return L10n.tr("Localizable", "Channel.EventLog.MessageTransfered") }
+  /// transferred ownership to %@ %@
+  internal static func channelEventLogMessageTransferedName(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageTransferedName", p1, p2)
+  }
   /// Original message
   internal static var channelEventLogOriginalMessage: String  { return L10n.tr("Localizable", "Channel.EventLog.OriginalMessage") }
   /// What Is This?
@@ -879,6 +897,18 @@ internal final class L10n {
   internal static var channelSelectPeersContacts: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Contacts") }
   /// global
   internal static var channelSelectPeersGlobal: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Global") }
+  /// Sorry, this channel has too many admins and the new owner can't be added. Please remove one of the existing admins first.
+  internal static var channelTransferOwnerErrorAdminsTooMuch: String  { return L10n.tr("Localizable", "Channel.TransferOwner.ErrorAdminsTooMuch") }
+  /// Sorry, this user is not a member of this channel and their privacy settings prevent you from adding them manually.
+  internal static var channelTransferOwnerErrorPrivacyRestricted: String  { return L10n.tr("Localizable", "Channel.TransferOwner.ErrorPrivacyRestricted") }
+  /// Sorry, the target user has too many public groups or channels already. Please ask them to make one of their existing groups or channels private first.
+  internal static var channelTransferOwnerErrorPublicChannelsTooMuch: String  { return L10n.tr("Localizable", "Channel.TransferOwner.ErrorPublicChannelsTooMuch") }
+  /// Enable 2-Step Verification.
+  internal static var channelTransferOwnerErrorEnable2FA: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Enable2FA") }
+  /// Ownership transfers are only available if:\n\n• 2-Step Verification was enabled for your account more than 7 days ago.\n\n• You have logged in on this device more than 24 hours ago.\n\nPlease come back later.
+  internal static var channelTransferOwnerErrorText: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Text") }
+  /// Security Check
+  internal static var channelTransferOwnerErrorTitle: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Title") }
   /// Recent Actions
   internal static var channelAdminsRecentActions: String  { return L10n.tr("Localizable", "ChannelAdmins.RecentActions") }
   /// BLOCKED
@@ -2355,6 +2385,12 @@ internal final class L10n {
   internal static func groupEventLogServiceUpdateLeft(_ p1: String) -> String {
     return L10n.tr("Localizable", "Group.EventLog.Service.UpdateLeft", p1)
   }
+  /// Sorry, the target user has too many location-based groups already. Please ask them to delete or transfer one of their existing ones first.
+  internal static var groupOwnershipTransferErrorLocatedGroupsTooMuch: String  { return L10n.tr("Localizable", "Group.OwnershipTransfer.ErrorLocatedGroupsTooMuch") }
+  /// Sorry, this group has too many admins and the new owner can't be added. Please remove one of the existing admins first.
+  internal static var groupTransferOwnerErrorAdminsTooMuch: String  { return L10n.tr("Localizable", "Group.TransferOwner.ErrorAdminsTooMuch") }
+  /// Sorry, this user is not a member of this group and their privacy settings prevent you from adding them manually.
+  internal static var groupTransferOwnerErrorPrivacyRestricted: String  { return L10n.tr("Localizable", "Group.TransferOwner.ErrorPrivacyRestricted") }
   /// All Members Are Admins
   internal static var groupAdminsAllMembersAdmins: String  { return L10n.tr("Localizable", "GroupAdmins.AllMembersAdmins") }
   /// Only admins can add and remove members, and can edit the group's name and photo.
@@ -2877,8 +2913,22 @@ internal final class L10n {
   internal static var networkUsageHeaderImages: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Images") }
   /// VIDEOS
   internal static var networkUsageHeaderVideos: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Videos") }
+  /// phone number
+  internal static var newContactPhone: String  { return L10n.tr("Localizable", "NewContact.Phone") }
   /// New Contact
   internal static var newContactTitle: String  { return L10n.tr("Localizable", "NewContact.Title") }
+  /// Share My Phone Number
+  internal static var newContactExceptionShareMyPhoneNumber: String  { return L10n.tr("Localizable", "NewContact.Exception.ShareMyPhoneNumber") }
+  /// You can make your phone visible to %@.
+  internal static func newContactExceptionShareMyPhoneNumberDesc(_ p1: String) -> String {
+    return L10n.tr("Localizable", "NewContact.Exception.ShareMyPhoneNumber.Desc", p1)
+  }
+  /// Hidden
+  internal static var newContactPhoneHidden: String  { return L10n.tr("Localizable", "NewContact.Phone.Hidden") }
+  /// Phone number will be **visible** once %@ adds you as a contact.
+  internal static func newContactPhoneHiddenText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "NewContact.Phone.Hidden.Text", p1)
+  }
   /// Are you sure you want to discard this poll?
   internal static var newPollDisacardConfirm: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm") }
   /// Add an Option
@@ -3413,6 +3463,10 @@ internal final class L10n {
   internal static var peerInfoAddContact: String  { return L10n.tr("Localizable", "PeerInfo.AddContact") }
   /// Add Members
   internal static var peerInfoAddMember: String  { return L10n.tr("Localizable", "PeerInfo.AddMember") }
+  /// Add %@ to Contacts
+  internal static func peerInfoAddUserToContact(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.AddUserToContact", p1)
+  }
   /// Administrators
   internal static var peerInfoAdministrators: String  { return L10n.tr("Localizable", "PeerInfo.Administrators") }
   /// admin
@@ -3673,6 +3727,8 @@ internal final class L10n {
   internal static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
   /// bot
   internal static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
+  /// support
+  internal static var presenceSupport: String  { return L10n.tr("Localizable", "Presence.Support") }
   /// %d
   internal static func previewDraggingAddItemsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Preview.Dragging.AddItems_countable", p1)
@@ -4835,6 +4891,34 @@ internal final class L10n {
   internal static var stickerSetDontExist: String  { return L10n.tr("Localizable", "StickerSet.DontExist") }
   /// Remove
   internal static var stickerSetRemove: String  { return L10n.tr("Localizable", "StickerSet.Remove") }
+  /// %d
+  internal static func stickersCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stickers.Count_countable", p1)
+  }
+  /// %d stickers
+  internal static func stickersCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stickers.Count_few", p1)
+  }
+  /// %d stickers
+  internal static func stickersCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stickers.Count_many", p1)
+  }
+  /// %d sticker
+  internal static func stickersCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stickers.Count_one", p1)
+  }
+  /// %d stickers
+  internal static func stickersCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stickers.Count_other", p1)
+  }
+  /// %d stickers
+  internal static func stickersCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stickers.Count_two", p1)
+  }
+  /// %d stickers
+  internal static func stickersCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stickers.Count_zero", p1)
+  }
   /// Favorite
   internal static var stickersFavorite: String  { return L10n.tr("Localizable", "Stickers.Favorite") }
   /// GROUP STICKERS

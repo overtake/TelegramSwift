@@ -330,6 +330,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     
     entries.append(.section(sectionId))
     sectionId += 1
+    
   //  #endif
    
   
@@ -343,7 +344,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<AppearanceViewEn
         return entry.entry.item(arguments, initialSize: initialSize)
     }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: false)
 }
 
 final class AppeaanceView : View {
@@ -362,6 +363,11 @@ final class AppeaanceView : View {
       //  super.updateLocalizationAndTheme()
         tableView.updateLocalizationAndTheme()
         bottomHolder.backgroundColor = theme.colors.background
+    }
+    
+    func merge(with transition: TableUpdateTransition) {
+        self.tableView.merge(with: transition)
+        self.needsLayout = true
     }
     
     required init?(coder: NSCoder) {
@@ -419,7 +425,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition, wallpaper in
-            self?.genericView.tableView.merge(with: transition)
+            self?.genericView.merge(with: transition)
             self?.readyOnce()
         }))
         

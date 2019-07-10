@@ -653,7 +653,7 @@ public final class TextViewLayout : Equatable {
                         
                         
                         let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
-                        if interactions.isDomainLink(value), strokeLinks {
+                        if interactions.isDomainLink(value) && strokeLinks {
                             let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
                             strokeRects.append((rect, color))
                         }
@@ -666,7 +666,26 @@ public final class TextViewLayout : Equatable {
             
         })
         
-        
+        attributedString.enumerateAttribute(NSAttributedString.Key.underlineStyle, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
+            if let _ = value {
+                for line in lines {
+                    let lineRange = NSIntersectionRange(range, line.range)
+                    if lineRange.length != 0 {
+                        var leftOffset: CGFloat = 0.0
+                        if lineRange.location != line.range.location {
+                            leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
+                        }
+                        let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
+                        
+                        
+                        let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.text
+                        let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
+                        strokeRects.append((rect, color))
+                    }
+                }
+            }
+            
+        })
     }
     
     public func clearSelect() {
@@ -1175,7 +1194,7 @@ public class TextView: Control, NSViewToolTipOwner {
                             for item in items {
                                 menu.addItem(item)
                             }
-                            NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
+                            RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
                         }
                     }))
                 } else {
@@ -1194,7 +1213,7 @@ public class TextView: Control, NSViewToolTipOwner {
                     })
                    // let copy = NSMenuItem(title: , action: #selector(copy(_:)), keyEquivalent: "")
                     menu.addItem(copy)
-                    NSMenu.popUpContextMenu(menu, with: event, for: self)
+                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: self, selector: #selector(self.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
                 }
             } else {
                 layout.selectedRange.range = NSMakeRange(NSNotFound, 0)
@@ -1205,6 +1224,13 @@ public class TextView: Control, NSViewToolTipOwner {
             super.rightMouseDown(with: event)
         }
     }
+    
+    @objc private func openPanelInRunLoop(_ timer:Foundation.Timer) {
+        if let (event, menu) = timer.userInfo as? (NSEvent, NSMenu) {
+            NSMenu.popUpContextMenu(menu, with: event, for: self)
+        }
+    }
+    
     
     /*
      var view: NSTextView? = (self.window?.fieldEditor(true, forObject: self) as? NSTextView)

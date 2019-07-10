@@ -101,7 +101,7 @@ private class TokenView : Control {
     }
 }
 
-public protocol TokenizedProtocol {
+public protocol TokenizedProtocol : class {
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool)
 }
 
@@ -136,7 +136,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         return _textUpdater.get()
     }
     
-    public var delegate: TokenizedProtocol? = nil
+    public weak var delegate: TokenizedProtocol? = nil
     private let placeholder: TextView = TextView()
     
     public func addToken(token: SearchToken, animated: Bool) -> Void {

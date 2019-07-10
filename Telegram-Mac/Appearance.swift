@@ -36,6 +36,16 @@ private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
     })!
 }
 
+private func generateStickerPackSelection(_ color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(30, 30), contextGenerator: { size, ctx in
+        ctx.interpolationQuality = .low
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.round(size, .cornerRadius)
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+    })!
+}
+
 private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColor) -> CGImage {
     return generateImage(NSMakeSize(12, 12), contextGenerator: { size, ctx in
         ctx.interpolationQuality = .high
@@ -1106,6 +1116,12 @@ struct TelegramIconsTheme {
     let privacySettings_activeSessions: CGImage
     let privacySettings_passcode: CGImage
     let privacySettings_twoStep: CGImage
+    
+    
+    let deletedAccount: CGImage
+    
+    let stickerPackSelection: CGImage
+    let stickerPackSelectionActive: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1926,7 +1942,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                privacySettings_blocked: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_Blocked")!.precomposed(flipVertical: true)),
                                                privacySettings_activeSessions: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_ActiveSessions")!.precomposed(flipVertical: true)),
                                                privacySettings_passcode: generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(palette.greenUI, flipVertical: true)),
-                                               privacySettings_twoStep: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true))
+                                               privacySettings_twoStep: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true)),
+                                               deletedAccount: NSImage(named: "Icon_DeletedAccount")!.precomposed(),
+                                               stickerPackSelection: generateStickerPackSelection(palette.background),
+                                               stickerPackSelectionActive: generateStickerPackSelection(palette.grayForeground)
     )
 }
 

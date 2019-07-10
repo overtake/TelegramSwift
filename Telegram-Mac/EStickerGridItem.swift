@@ -157,20 +157,31 @@ final class StickerGridItem: GridItem {
     }
     
     func node(layout: GridNodeLayout, gridNode:GridNode, cachedNode: GridItemNode?) -> GridItemNode {
-        let node = cachedNode as? StickerGridItemView ?? StickerGridItemView(gridNode)
-        node.inputNodeInteraction = self.inputNodeInteraction
-        node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
-        node.selected = self.selected
-        return node
+        if self.file.isAnimatedSticker {
+            let node = AnimatedStickerGridItemView(gridNode)
+            node.inputNodeInteraction = self.inputNodeInteraction
+            node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
+            node.selected = self.selected
+            return node
+        } else {
+            let node = cachedNode as? StickerGridItemView ?? StickerGridItemView(gridNode)
+            node.inputNodeInteraction = self.inputNodeInteraction
+            node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
+            node.selected = self.selected
+            return node
+        }
+       
     }
     
     func update(node: GridItemNode) {
-        guard let node = node as? StickerGridItemView else {
-            assertionFailure()
-            return
+       
+        if let node = node as? StickerGridItemView {
+            node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
+            node.selected = self.selected
+        } else if let node = node as? AnimatedStickerGridItemView {
+            node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
+            node.selected = self.selected
         }
-        node.setup(context: self.context, file: self.file, collectionId: self.collectionId, packInfo: packInfo)
-        node.selected = self.selected
     }
 }
 
@@ -197,6 +208,7 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
             let menu = NSMenu()
             let file = currentState.1
             if let reference = file.stickerReference{
+                
                 menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
                     self?.inputNodeInteraction?.showStickerPack(reference)
                 }))

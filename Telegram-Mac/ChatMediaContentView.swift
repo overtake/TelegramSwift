@@ -43,6 +43,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     weak var table:TableView?
     
+    override func updateTrackingAreas() {
+        
+    }
     
     override init() {
         super.init()
@@ -84,6 +87,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                 transaction.deleteMessages([parentId])
             }).start()
         }
+    }
+    
+    override var allowsVibrancy: Bool {
+        return true
     }
     
     func cancelFetching() {

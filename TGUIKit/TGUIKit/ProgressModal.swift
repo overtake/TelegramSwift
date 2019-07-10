@@ -77,16 +77,24 @@ class ProgressModalController: ModalViewController {
 private final class SuccessModalView : View {
     private let imageView:ImageView = ImageView()
     private let textView: TextView = TextView()
+    private let visualView:NSVisualEffectView
     required init(frame frameRect: NSRect) {
+        visualView = NSVisualEffectView(frame: frameRect)
         super.init(frame: frameRect)
-        addSubview(imageView)
+        addSubview(visualView)
         addSubview(textView)
+        visualView.material = .menu
+        visualView.blendingMode = .withinWindow
+        visualView.state = .active
         
-        background = presentation.colors.grayBackground.withAlphaComponent(0.86)
+      //  wantsLayer = true
+      //  background = presentation.colors.grayBackground.withAlphaComponent(0.86)
         addSubview(imageView)
        
         
     }
+    
+
     
     override func layout() {
         super.layout()
@@ -183,7 +191,7 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
         
         
         beforeDisposable.add(beforeModal.start(completed: {
-            showModal(with: modal, for: window)
+            showModal(with: modal, for: window, animationType: .scaleCenter)
         }))
         
         
@@ -212,7 +220,7 @@ public func showModalSuccess(for window: Window, icon: CGImage, text: TextViewLa
     let modal = SuccessModalController(icon, text: text, background: background)
     
     return Signal<Void, NoError>({ _ -> Disposable in
-        showModal(with: modal, for: window)
+        showModal(with: modal, for: window, animationType: .scaleCenter)
         return ActionDisposable {
             modal.close()
         }

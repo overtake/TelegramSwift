@@ -190,10 +190,10 @@ final class AccountContext {
     
     #if !SHARE
     func composeCreateGroup() {
-        createGroup(with: self, for: sharedContext.bindings.rootNavigation())
+        createGroup(with: self)
     }
     func composeCreateChannel() {
-        createChannel(with: self, for: sharedContext.bindings.rootNavigation())
+        createChannel(with: self)
     }
     func composeCreateSecretChat() {
         let account = self.account

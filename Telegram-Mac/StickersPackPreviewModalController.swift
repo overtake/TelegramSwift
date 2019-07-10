@@ -288,6 +288,10 @@ class StickersPackPreviewModalController: ModalViewController {
 
     }
     
+    override func becomeFirstResponder() -> Bool? {
+        return false
+    }
+    
     deinit {
         disposable.dispose()
     }

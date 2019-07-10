@@ -46,7 +46,7 @@ NSData *TGGZipData(NSData *data, float level) {
 NSData *TGGUnzipData(NSData *data)
 {
     if (data.length == 0 || !TGIsGzippedData(data)) {
-        return data;
+        return [[NSData alloc] init];
     }
     
     z_stream stream;

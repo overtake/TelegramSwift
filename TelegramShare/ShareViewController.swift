@@ -48,7 +48,7 @@ class ShareViewController: NSViewController {
 
         
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
-        let networkArguments = NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos", appVersion: "", voipMaxLayer: 90, appData: nil)
+        let networkArguments = NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos", appVersion: "", voipMaxLayer: 90, appData: .single(nil))
         
         let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: { _ in })
         
