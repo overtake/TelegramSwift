@@ -570,9 +570,9 @@ class GroupInfoState: PeerInfoState {
 }
 
 
-enum GroupInfoMemberStatus {
+enum GroupInfoMemberStatus : Equatable {
     case member
-    case admin
+    case admin(rank: String)
 }
 
 private struct GroupPeerEntryStableId: PeerInfoEntryStableId {
@@ -1044,8 +1044,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, enabled):
             let label: String
             switch memberStatus {
-            case .admin:
-                label = L10n.peerInfoAdminLabel
+            case let .admin(rank):
+                label = rank
             case .member:
                 label = ""
             }
@@ -1286,8 +1286,10 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     let memberStatus: GroupInfoMemberStatus
                     if access.highlightAdmins {
                         switch sortedParticipants[i] {
-                        case .admin, .creator:
-                            memberStatus = .admin
+                        case .admin:
+                            memberStatus = .admin(rank: L10n.chatAdminBadge)
+                        case  .creator:
+                            memberStatus = .admin(rank: L10n.chatOwnerBadge)
                         case .member:
                             memberStatus = .member
                         }
@@ -1323,7 +1325,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             if !state.temporaryParticipants.isEmpty {
                 for participant in state.temporaryParticipants {
                     if !existingParticipantIds.contains(participant.peer.id) {
-                        updatedParticipants.append(RenderedChannelParticipant(participant: .member(id: participant.peer.id, invitedAt: participant.timestamp, adminInfo: nil, banInfo: nil), peer: participant.peer))
+                        updatedParticipants.append(RenderedChannelParticipant(participant: .member(id: participant.peer.id, invitedAt: participant.timestamp, adminInfo: nil, banInfo: nil, rank: nil), peer: participant.peer))
                         if let presence = participant.presence, peerPresences[participant.peer.id] == nil {
                             peerPresences[participant.peer.id] = presence
                         }
@@ -1374,10 +1376,10 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 let memberStatus: GroupInfoMemberStatus
                 if access.highlightAdmins {
                     switch sortedParticipants[i].participant {
-                    case .creator:
-                        memberStatus = .admin
-                    case .member(_, _, let adminRights, _):
-                        memberStatus = adminRights != nil ? .admin : .member
+                    case let .creator(_, rank):
+                        memberStatus = .admin(rank: rank ?? L10n.chatOwnerBadge)
+                    case let .member(_, _, adminRights, _, rank):
+                        memberStatus = adminRights != nil ? .admin(rank: rank ?? L10n.chatAdminBadge) : .member
                     }
                 } else {
                     memberStatus = .member

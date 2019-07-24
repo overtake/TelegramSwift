@@ -280,7 +280,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)boldWord:(id)sender {
-     [self changeFontMarkdown:[NSFont boldSystemFontOfSize:self.font.pointSize]];
+    [self changeFontMarkdown:[NSFontManager.sharedFontManager convertFont:self.font toHaveTrait:NSBoldFontMask] makeBold:YES makeItalic:NO];
 
    // [self.textStorage addAttribute:NSFontAttributeName value:[NSFont boldSystemFontOfSize:self.font.pointSize] range:self.selectedRange];
    // [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
@@ -299,7 +299,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)italicWord:(id)sender {
-    [self changeFontMarkdown:[[NSFontManager sharedFontManager] convertFont:[NSFont systemFontOfSize:self.font.pointSize] toHaveTrait:NSFontItalicTrait]];
+    [self changeFontMarkdown:[[NSFontManager sharedFontManager] convertFont:self.font toHaveTrait:NSFontItalicTrait] makeBold:NO makeItalic:YES];
     
 //    [self.textStorage addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:[NSFont systemFontOfSize:13] toHaveTrait:NSFontItalicTrait] range:self.selectedRange];
 //    [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
@@ -307,12 +307,12 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)codeWord:(id)sender {
-    [self changeFontMarkdown:[NSFont fontWithName:@"Menlo-Regular" size:self.font.pointSize]];
+    [self changeFontMarkdown:[NSFont fontWithName:@"Menlo-Regular" size:self.font.pointSize] makeBold:NO makeItalic:NO];
 //    [self.textStorage addAttribute:NSFontAttributeName value:[NSFont fontWithName:@"Menlo-Regular" size:self.font.pointSize] range:self.selectedRange];
 //    [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
 }
 
--(void)changeFontMarkdown:(NSFont *)font  {
+-(void)changeFontMarkdown:(NSFont *)font makeBold:(BOOL)makeBold makeItalic:(BOOL)makeItalic  {
     
     if(self.selectedRange.length == 0) {
         return;
@@ -339,31 +339,40 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     
     dispatch_block_t block = ^{
+        
+        NSFont *newFont = [[NSFontManager sharedFontManager] convertFont:font toNotHaveTrait:makeBold ? NSBoldFontMask : makeItalic ? NSItalicFontMask : 0];
+        
         if (self.selectedRange.location >= effectiveRange.location && self.selectedRange.location + self.selectedRange.length <= effectiveRange.location + effectiveRange.length) {
-            [self.textStorage addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:13] range:self.selectedRange];
+            [self.textStorage addAttribute:NSFontAttributeName value:newFont range:self.selectedRange];
         } else if (self.selectedRange.location >= effectiveRange.location) {
             [self.textStorage addAttribute:NSFontAttributeName value:font range:self.selectedRange];
         } else {
-            [self.textStorage addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:13] range:self.selectedRange];
+            [self.textStorage addAttribute:NSFontAttributeName value:newFont range:self.selectedRange];
         }
     };
     
+    BOOL doNext = YES;
+    
     if (isBold) {
-        if (isEffectiveBold) {
+        if (isEffectiveBold && makeBold) {
             block();
+            doNext = NO;
         } else {
             [self.textStorage addAttribute:NSFontAttributeName value:font range:self.selectedRange];
         }
-    } else if (isItalic) {
-        if (isEffectiveItalic) {
+    }
+    if (isItalic) {
+        if (isEffectiveItalic && makeItalic) {
             block();
-        } else {
+        } else if (doNext) {
             [self.textStorage addAttribute:NSFontAttributeName value:font range:self.selectedRange];
+            doNext = NO;
         }
-    } else if (isMonospace) {
+    }
+    if (isMonospace) {
         if (isEffectiveMonospace) {
             block();
-        } else {
+        } else if (doNext) {
             [self.textStorage addAttribute:NSFontAttributeName value:font range:self.selectedRange];
         }
     }

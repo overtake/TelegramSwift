@@ -36,7 +36,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             return Signal { subscriber in
                                 let resourceDataDisposable = resourceData.start(next: { data in
                                     if data.complete {
-                                        subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), true))
+                                        subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true))
                                         subscriber.putCompletion()
                                     }
                                 }, error: { error in
@@ -47,11 +47,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                 
                                 let fetchedDataDisposable: Disposable
                                 if let reference = PeerReference(peer) {
-                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
+                                    fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
                                 } else if let message = message {
-                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
+                                    fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
                                 } else {
-                                    fetchedDataDisposable = fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
+                                    fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
                                 }
                                 return ActionDisposable {
                                     resourceDataDisposable.dispose()

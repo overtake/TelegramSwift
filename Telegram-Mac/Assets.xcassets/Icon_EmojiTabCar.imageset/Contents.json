@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "ic_city@1x.png",
+      "filename" : "City.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "ic_city@2x.png",
+      "filename" : "City@2x.png",
       "scale" : "2x"
     },
     {

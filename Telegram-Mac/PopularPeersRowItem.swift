@@ -121,7 +121,7 @@ private final class PopularPeerItemView : HorizontalRowView {
         
         
     }
-    
+//    
 //    override var backdorColor: NSColor {
 //        return .random
 //    }
@@ -196,8 +196,8 @@ private final class PopularPeerItemView : HorizontalRowView {
     
     override func layout() {
         super.layout()
-        imageView.centerX()
-        textView.centerX(y: imageView.frame.maxY + 5)
+        imageView.centerX(addition: -4)
+        textView.centerX(y: imageView.frame.maxY + 5, addition: -4)
         badgeView.setFrameOrigin(imageView.frame.maxX - badgeView.frame.width / 2, 0)
         activeImage.setFrameOrigin(imageView.frame.maxX - activeImage.frame.width - 1, imageView.frame.maxY - 12)
     }

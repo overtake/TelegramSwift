@@ -11,6 +11,9 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
+
+
+
 class ChatMessageItem: ChatRowItem {
     public private(set) var messageText:NSAttributedString
     public private(set) var textLayout:TextViewLayout
@@ -389,6 +392,13 @@ class ChatMessageItem: ChatRowItem {
         }
     }
     
+    override var isForceRightLine: Bool {
+        if self.webpageLayout?.content.type == "proxy" {
+            return true
+        } else {
+            return super.isForceRightLine
+        }
+    }
     
     override var isFixedRightPosition: Bool {
         if containsBigEmoji {
@@ -650,6 +660,9 @@ class ChatMessageItem: ChatRowItem {
             }
         }
         
+        var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
+        
+
         
         let string = NSMutableAttributedString(string: text, attributes: [NSAttributedString.Key.font: NSFont.normal(fontSize), NSAttributedString.Key.foregroundColor: textColor])
         if let entities = entities {
@@ -679,9 +692,17 @@ class ChatMessageItem: ChatRowItem {
                     
                     string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
                 case .Bold:
-                    string.addAttribute(NSAttributedString.Key.font, value: NSFont.bold(fontSize), range: range)
+                    if let fontAttribute = fontAttributes[range] {
+                        fontAttributes[range] = fontAttribute.union(.bold)
+                    } else {
+                        fontAttributes[range] = .bold
+                    }
                 case .Italic:
-                    string.addAttribute(NSAttributedString.Key.font, value: NSFontManager.shared.convert(.normal(fontSize), toHaveTrait: .italicFontMask), range: range)
+                    if let fontAttribute = fontAttributes[range] {
+                        fontAttributes[range] = fontAttribute.union(.italic)
+                    } else {
+                        fontAttributes[range] = .italic
+                    }
                 case .Mention:
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                     if nsString == nil {
@@ -700,15 +721,24 @@ class ChatMessageItem: ChatRowItem {
                     string.addAttribute(NSAttributedString.Key.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
                 case .Code:
                     string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                    string.addAttribute(NSAttributedString.Key.font, value: NSFont.code(fontSize), range: range)
+                    if let fontAttribute = fontAttributes[range] {
+                        fontAttributes[range] = fontAttribute.union(.monospace)
+                    } else {
+                        fontAttributes[range] = .monospace
+                    }
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
                     string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
                         copyToClipboard(link)
                         context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
                     }), range: range)
                 case  .Pre:
+                    string.addAttribute(.preformattedCode, value: 4.0, range: range)
+                    if let fontAttribute = fontAttributes[range] {
+                        fontAttributes[range] = fontAttribute.union(.monospace)
+                    } else {
+                        fontAttributes[range] = .monospace
+                    }
                     string.addAttribute(.preformattedPre, value: 4.0, range: range)
-                    string.addAttribute(NSAttributedString.Key.font, value: NSFont.code(fontSize), range: range)
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
                 case .Hashtag:
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
@@ -724,8 +754,25 @@ class ChatMessageItem: ChatRowItem {
                     break
                 }
             }
-            
         }
+        for (range, fontAttributes) in fontAttributes {
+            var font: NSFont?
+            if fontAttributes.contains(.blockQuote) {
+                font = .code(fontSize)
+            } else if fontAttributes == [.bold, .italic] {
+                font = .boldItalic(fontSize)
+            } else if fontAttributes == [.bold] {
+                font = .bold(fontSize)
+            } else if fontAttributes == [.italic] {
+                font = .italic(fontSize)
+            } else if fontAttributes == [.monospace] {
+                font = .code(fontSize)
+            }
+            if let font = font {
+                string.addAttribute(.font, value: font, range: range)
+            }
+        }
+
         return string.copy() as! NSAttributedString
     }
 }

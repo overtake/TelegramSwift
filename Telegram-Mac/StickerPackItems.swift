@@ -41,6 +41,21 @@ class StickerPackRowItem: TableRowItem {
         super.init(initialSize)
     }
     
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        var items:[ContextMenuItem] = []
+        let context = self.context
+        
+        switch _stableId {
+        case let .pack(id):
+            items.append(ContextMenuItem.init(L10n.stickersContextArchive, handler: {
+                _ = removeStickerPackInteractively(postbox: context.account.postbox, id: id, option: RemoveStickerPackOption.archive).start()
+            }))
+        default:
+            break
+        }
+        return .single(items)
+    }
+    
     func contentNode()->ChatMediaContentView.Type {
         return ChatMediaAnimatedStickerView.self
     }
@@ -60,7 +75,7 @@ class RecentPackRowItem: TableRowItem {
         return 40.0
     }
     override var width: CGFloat {
-        return 40
+        return 40.0
     }
     
     let _stableId:StickerPackCollectionId
@@ -81,8 +96,6 @@ class RecentPackRowItem: TableRowItem {
 
 class StickerPackRowView: HorizontalRowView {
     
-    private let boundingSize = CGSize(width: 40.0, height: 40.0)
-    private let imageSize = CGSize(width: 26, height: 26)
     
     private let stickerFetchedDisposable = MetaDisposable()
     
@@ -93,13 +106,17 @@ class StickerPackRowView: HorizontalRowView {
     required init(frame frameRect:NSRect) {
         super.init(frame:frameRect)
         
-        overlay.setFrameSize(30, 30)
+        overlay.setFrameSize(35, 35)
         overlay.userInteractionEnabled = false
-        imageView.setFrameSize(imageSize)
-
+        overlay.autohighlight = false
+        overlay.canHighlight = false
         addSubview(overlay)
         addSubview(imageView)
         
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     override func layout() {
@@ -120,6 +137,7 @@ class StickerPackRowView: HorizontalRowView {
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
+        
         var mediaUpdated = true
         if let lhs = (self.item as? StickerPackRowItem)?.topItem, let rhs = (item as? StickerPackRowItem)?.topItem {
             mediaUpdated = !lhs.file.isEqual(to: rhs.file)
@@ -130,39 +148,53 @@ class StickerPackRowView: HorizontalRowView {
         overlay.set(image: theme.icons.stickerPackSelectionActive, for: .Highlight)
         overlay.isSelected = item.isSelected
         
-        if let item = item as? StickerPackRowItem, mediaUpdated {
+        if let item = item as? StickerPackRowItem {
             var thumbnailItem: TelegramMediaImageRepresentation?
             var resourceReference: MediaResourceReference?
+            
+            var file: TelegramMediaFile?
+
+            
             if let thumbnail = item.info.thumbnail {
                 thumbnailItem = thumbnail
                 resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
+                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: [.FileName(fileName: "sticker.webp"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
             } else if let item = item.topItem, let dimensions = item.file.dimensions, let resource = chatMessageStickerResource(file: item.file, small: true) as? TelegramMediaResource {
                 thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource)
                 resourceReference = MediaResourceReference.media(media: .standalone(media: item.file), resource: resource)
+                file = item.file
             }
             
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(30, 30), boundingSize: NSMakeSize(30, 30), intrinsicInsets: NSEdgeInsets())
+
             if let thumbnailItem = thumbnailItem {
-                imageView.setSignal( chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false))
-                
+                if let file = file {
+                    imageView.setSignal(signal: cachedMedia(media: file , arguments: arguments, scale: backingScaleFactor))
+                }
+                if !imageView.isFullyLoaded {
+                    imageView.setSignal( chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false), cacheImage: { image in
+                        if let file = file {
+                            return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
+                        } else {
+                            return .complete()
+                        }
+                    })
+                }
             }
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
             imageView.set(arguments:arguments)
             imageView.setFrameSize(arguments.imageSize)
             if let resourceReference = resourceReference {
-                stickerFetchedDisposable.set(fetchedMediaResource(postbox: item.context.account.postbox, reference: resourceReference, statsCategory: .file).start())
+                stickerFetchedDisposable.set(fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: resourceReference, statsCategory: .file).start())
             }
             self.needsLayout = true
         }
+        
         
     }
     
 }
 
 class RecentPackRowView: HorizontalRowView {
-    
-    private let boundingSize = CGSize(width: 40.0, height: 40.0)
-    private let imageSize = CGSize(width: 26, height: 26)
-    
     
     var imageView:ImageView = ImageView()
     
@@ -171,9 +203,11 @@ class RecentPackRowView: HorizontalRowView {
     required init(frame frameRect:NSRect) {
         super.init(frame:frameRect)
         
-        overlay.setFrameSize(30, 30)
+        overlay.setFrameSize(35, 35)
         overlay.userInteractionEnabled = false
-        imageView.setFrameSize(imageSize)
+        overlay.autohighlight = false
+        overlay.canHighlight = false
+        imageView.setFrameSize(30, 30)
 
         addSubview(overlay)
         addSubview(imageView)
@@ -214,7 +248,7 @@ class RecentPackRowView: HorizontalRowView {
             }
             imageView.sizeToFit()
         }
-        
+        needsLayout = true
     }
     
 }
@@ -226,7 +260,7 @@ class StickerSpecificPackItem: TableRowItem {
         return 40.0
     }
     override var width: CGFloat {
-        return 40
+        return 40.0
     }
     fileprivate let specificPack: (StickerPackCollectionInfo, Peer)
     fileprivate let account: Account
@@ -249,9 +283,6 @@ class StickerSpecificPackItem: TableRowItem {
 
 class StickerSpecificPackView: HorizontalRowView {
     
-    private let boundingSize = CGSize(width: 40.0, height: 40.0)
-    private let imageSize = CGSize(width: 26, height: 26)
-    
     
     var imageView:AvatarControl = AvatarControl(font: .medium(.short))
     
@@ -260,9 +291,11 @@ class StickerSpecificPackView: HorizontalRowView {
     required init(frame frameRect:NSRect) {
         super.init(frame:frameRect)
         
-        imageView.setFrameSize(26, 26)
-        overlay.setFrameSize(30, 30)
+        imageView.setFrameSize(30, 30)
+        overlay.setFrameSize(35, 35)
         overlay.userInteractionEnabled = false
+        overlay.autohighlight = false
+        overlay.canHighlight = false
         imageView.userInteractionEnabled = false
         addSubview(overlay)
         addSubview(imageView)
@@ -302,7 +335,9 @@ private final class AnimatedStickerPackRowView : HorizontalRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        overlay.setFrameSize(30, 30)
+        overlay.setFrameSize(35, 35)
+        overlay.autohighlight = false
+        overlay.canHighlight = false
         overlay.userInteractionEnabled = false
         addSubview(overlay)
         
@@ -319,6 +354,10 @@ private final class AnimatedStickerPackRowView : HorizontalRowView {
         didSet {
             contentNode?.backgroundColor = backdorColor
         }
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     override func shakeView() {
@@ -356,7 +395,7 @@ private final class AnimatedStickerPackRowView : HorizontalRowView {
             self.contentNode?.userInteractionEnabled = false
             self.contentNode?.isEventLess = true
             if let file = file {
-                self.contentNode?.update(with: file, size: NSMakeSize(26, 26), context: item.context, parent: nil, table: item.table, parameters: nil, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+                self.contentNode?.update(with: file, size: NSMakeSize(30, 30), context: item.context, parent: nil, table: item.table, parameters: nil, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
             }
             
         }

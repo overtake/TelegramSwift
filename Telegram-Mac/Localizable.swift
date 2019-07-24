@@ -121,8 +121,6 @@ internal final class L10n {
   internal static var adminsChannelAdmins: String  { return L10n.tr("Localizable", "Admins.ChannelAdmins") }
   /// You can add admins to help you manage your channel
   internal static var adminsChannelDescription: String  { return L10n.tr("Localizable", "Admins.ChannelDescription") }
-  /// Creator
-  internal static var adminsCreator: String  { return L10n.tr("Localizable", "Admins.Creator") }
   /// Any member can add new members
   internal static var adminsEverbodyCanAddMembers: String  { return L10n.tr("Localizable", "Admins.EverbodyCanAddMembers") }
   /// GROUP ADMINS
@@ -131,6 +129,8 @@ internal final class L10n {
   internal static var adminsGroupDescription: String  { return L10n.tr("Localizable", "Admins.GroupDescription") }
   /// Only admins can add new members.
   internal static var adminsOnlyAdminsCanAddMembers: String  { return L10n.tr("Localizable", "Admins.OnlyAdminsCanAddMembers") }
+  /// Owner
+  internal static var adminsOwner: String  { return L10n.tr("Localizable", "Admins.Owner") }
   /// Contacts
   internal static var adminsSelectNewAdminTitle: String  { return L10n.tr("Localizable", "Admins.SelectNewAdminTitle") }
   /// Only Admins
@@ -585,6 +585,8 @@ internal final class L10n {
   internal static var channelAddBotErrorNoRights: String  { return L10n.tr("Localizable", "Channel.AddBotErrorNoRights") }
   /// Forever
   internal static var channelBanForever: String  { return L10n.tr("Localizable", "Channel.BanForever") }
+  /// Sorry, this bot is telling us it doesn't want to be added to groups. You can't add this bot unless its developers change their mind.
+  internal static var channelBotDoesntSupportGroups: String  { return L10n.tr("Localizable", "Channel.BotDoesntSupportGroups") }
   /// Channel Name
   internal static var channelChannelNameHolder: String  { return L10n.tr("Localizable", "Channel.ChannelNameHolder") }
   /// Create
@@ -621,6 +623,8 @@ internal final class L10n {
   internal static var channelPublicAboutGroup: String  { return L10n.tr("Localizable", "Channel.PublicAboutGroup") }
   /// Sorry, you have reserved too many public usernames. You can revoke the link from one of your older groups or channels, or create a private entity instead
   internal static var channelPublicNamesLimitError: String  { return L10n.tr("Localizable", "Channel.PublicNamesLimitError") }
+  /// Sorry, there are already too many bots in this group. Please remove some of the bots you're not using first.
+  internal static var channelTooMuchBots: String  { return L10n.tr("Localizable", "Channel.TooMuchBots") }
   /// CHANNEL TYPE
   internal static var channelTypeHeaderChannel: String  { return L10n.tr("Localizable", "Channel.TypeHeaderChannel") }
   /// GROUP TYPE
@@ -643,6 +647,16 @@ internal final class L10n {
   internal static var channelAdminDismiss: String  { return L10n.tr("Localizable", "Channel.Admin.Dismiss") }
   /// WHAT CAN THIS ADMIN DO?
   internal static var channelAdminWhatCanAdminDo: String  { return L10n.tr("Localizable", "Channel.Admin.WhatCanAdminDo") }
+  /// CUSTOM TITLE
+  internal static var channelAdminRoleHeader: String  { return L10n.tr("Localizable", "Channel.Admin.Role.Header") }
+  /// A title that will be shown instead of 'admin'.
+  internal static var channelAdminRoleAdminDesc: String  { return L10n.tr("Localizable", "Channel.Admin.Role.Admin.Desc") }
+  /// A title that will be shown instead of 'owner'.
+  internal static var channelAdminRoleOwnerDesc: String  { return L10n.tr("Localizable", "Channel.Admin.Role.Owner.Desc") }
+  /// admin
+  internal static var channelAdminRolePlaceholderAdmin: String  { return L10n.tr("Localizable", "Channel.Admin.Role.Placeholder.Admin") }
+  /// owner
+  internal static var channelAdminRolePlaceholderOwner: String  { return L10n.tr("Localizable", "Channel.Admin.Role.Placeholder.Owner") }
   /// Transfer Channel Ownership
   internal static var channelAdminTransferOwnershipChannel: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Channel") }
   /// Transfer Group Ownership
@@ -803,6 +817,10 @@ internal final class L10n {
   internal static func channelEventLogServiceAboutUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.AboutUpdated", p1)
   }
+  /// %@ disabled slowmode
+  internal static func channelEventLogServiceDisabledSlowMode(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.DisabledSlowMode", p1)
+  }
   /// %@ disabled channel signatures
   internal static func channelEventLogServiceDisableSignatures(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.DisableSignatures", p1)
@@ -827,6 +845,10 @@ internal final class L10n {
   internal static func channelEventLogServicePhotoUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.PhotoUpdated", p1)
   }
+  /// %@ set slowmode to %@
+  internal static func channelEventLogServiceSetSlowMode(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.SetSlowMode", p1, p2)
+  }
   /// %@ edited this channel's title:
   internal static func channelEventLogServiceTitleUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.TitleUpdated", p1)
@@ -845,6 +867,28 @@ internal final class L10n {
   internal static var channelExceptionDisabledOptionGroup: String  { return L10n.tr("Localizable", "Channel.Exception.DisabledOption.Group") }
   /// Create Channel
   internal static var channelIntroCreateChannel: String  { return L10n.tr("Localizable", "Channel.Intro.CreateChannel") }
+  /// SLOW MODE
+  internal static var channelPermissionsSlowModeHeader: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Header") }
+  /// Members will be able to send only one message per this interval.
+  internal static var channelPermissionsSlowModeTextOff: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Text.Off") }
+  /// Members will be able to send only one message every %@
+  internal static func channelPermissionsSlowModeTextSelected(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Text.Selected", p1)
+  }
+  /// 15m
+  internal static var channelPermissionsSlowModeTimeout15m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.15m") }
+  /// 1h
+  internal static var channelPermissionsSlowModeTimeout1h: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.1h") }
+  /// 1m
+  internal static var channelPermissionsSlowModeTimeout1m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.1m") }
+  /// 30m
+  internal static var channelPermissionsSlowModeTimeout30m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.30m") }
+  /// 30s
+  internal static var channelPermissionsSlowModeTimeout30s: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.30s") }
+  /// 5m
+  internal static var channelPermissionsSlowModeTimeout5m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.5m") }
+  /// Off
+  internal static var channelPermissionsSlowModeTimeoutOff: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.Off") }
   /// Sending GIFs isn't allowed in this group.
   internal static var channelPersmissionDeniedSendGifsDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendGifs.DefaultRestrictedText") }
   /// The admins of this group have restricted you from sending GIFs here.
@@ -897,6 +941,16 @@ internal final class L10n {
   internal static var channelSelectPeersContacts: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Contacts") }
   /// global
   internal static var channelSelectPeersGlobal: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Global") }
+  /// Message in %@:%@
+  internal static func channelSlowModeMessageIn(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.SlowMode.MessageIn", p1, p2)
+  }
+  /// Off
+  internal static var channelSlowModeOff: String  { return L10n.tr("Localizable", "Channel.SlowMode.Off") }
+  /// Slowmode is enabled.\nYou can send your next message in %@:%@
+  internal static func channelSlowModeToolTip(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.SlowMode.ToolTip", p1, p2)
+  }
   /// Sorry, this channel has too many admins and the new owner can't be added. Please remove one of the existing admins first.
   internal static var channelTransferOwnerErrorAdminsTooMuch: String  { return L10n.tr("Localizable", "Channel.TransferOwner.ErrorAdminsTooMuch") }
   /// Sorry, this user is not a member of this channel and their privacy settings prevent you from adding them manually.
@@ -977,6 +1031,8 @@ internal final class L10n {
   internal static var chatInstantView: String  { return L10n.tr("Localizable", "Chat.InstantView") }
   /// Live Location
   internal static var chatLiveLocation: String  { return L10n.tr("Localizable", "Chat.LiveLocation") }
+  /// owner
+  internal static var chatOwnerBadge: String  { return L10n.tr("Localizable", "Chat.OwnerBadge") }
   /// %d of %d
   internal static func chatSearchCount(_ p1: Int, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Chat.SearchCount", p1, p2)
@@ -2269,6 +2325,8 @@ internal final class L10n {
   internal static var galleryViewFastSaveVideo: String  { return L10n.tr("Localizable", "GalleryView.FastSave.Video") }
   /// Accent Color
   internal static var generalSettingsAccentColor: String  { return L10n.tr("Localizable", "GeneralSettings.AccentColor") }
+  /// Accept Secret Chats
+  internal static var generalSettingsAcceptSecretChats: String  { return L10n.tr("Localizable", "GeneralSettings.AcceptSecretChats") }
   /// APPEARANCE SETTINGS
   internal static var generalSettingsAppearanceSettings: String  { return L10n.tr("Localizable", "GeneralSettings.AppearanceSettings") }
   /// Autoplay GIFs
@@ -2301,6 +2359,8 @@ internal final class L10n {
   internal static var generalSettingsLargeFonts: String  { return L10n.tr("Localizable", "GeneralSettings.LargeFonts") }
   /// Handle media keys for in-app player
   internal static var generalSettingsMediaKeysForInAppPlayer: String  { return L10n.tr("Localizable", "GeneralSettings.MediaKeysForInAppPlayer") }
+  /// Automatically Open Latest Chat
+  internal static var generalSettingsOpenLatestChatOnLaunch: String  { return L10n.tr("Localizable", "GeneralSettings.OpenLatestChatOnLaunch") }
   /// Use ⌘ + Enter to send
   internal static var generalSettingsSendByCmdEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByCmdEnter") }
   /// Use Enter to send
@@ -4853,6 +4913,16 @@ internal final class L10n {
   internal static var sidebarAvalability: String  { return L10n.tr("Localizable", "Sidebar.Avalability") }
   /// Sidebar is not available in this chat
   internal static var sidebarPeerRestricted: String  { return L10n.tr("Localizable", "Sidebar.Peer.Restricted") }
+  /// Slow mode is enabled. You can't forward a message with a comment
+  internal static var slowModeForwardCommentError: String  { return L10n.tr("Localizable", "SlowMode.ForwardComment.Error") }
+  /// Slow mode is enabled. You can't send more than one message at a time.
+  internal static var slowModeMultipleError: String  { return L10n.tr("Localizable", "SlowMode.Multiple.Error") }
+  /// Slowmode is Enabled.\nYou can't add comment as addition message.
+  internal static var slowModePreviewSenderComment: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.Comment") }
+  /// Slowmode is Enabled.\nThere is no way to send multiple files at once.
+  internal static var slowModePreviewSenderFileTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.FileTooltip") }
+  /// Slowmode is Enabled.\nThere is no way to send multiple media at once.
+  internal static var slowModePreviewSenderMediaTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.MediaTooltip") }
   /// Activate
   internal static var statusBarActivate: String  { return L10n.tr("Localizable", "StatusBar.Activate") }
   /// Hide
@@ -4935,6 +5005,8 @@ internal final class L10n {
   internal static var stickersSuggestNone: String  { return L10n.tr("Localizable", "Stickers.SuggestNone") }
   /// Suggest Stickers by Emoji
   internal static var stickersSuggestStickers: String  { return L10n.tr("Localizable", "Stickers.SuggestStickers") }
+  /// Archive
+  internal static var stickersContextArchive: String  { return L10n.tr("Localizable", "Stickers.Context.Archive") }
   /// %d
   internal static func stickersSetCount1Countable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stickers.Set.Count1_countable", p1)

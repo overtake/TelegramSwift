@@ -274,6 +274,7 @@ final class TRLotFileSupplyment {
             lzfseQueue.sync {
                 switch self.data.readFrame(frame: frame) {
                 case let .success(data):
+                    
                     let address = malloc(bufferSize)!.assumingMemoryBound(to: UInt8.self)
                     rendered = data.withUnsafeBytes({ (dataBytes: UnsafePointer<UInt8>) -> UnsafeRawPointer in
                         let _ = compression_decode_buffer(address, bufferSize, dataBytes, data.count, nil, COMPRESSION_LZFSE)

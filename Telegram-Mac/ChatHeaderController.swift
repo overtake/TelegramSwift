@@ -261,7 +261,7 @@ class ChatPinnedView : Control {
         _ = self.dismiss.sizeToFit()
         
         self.set(handler: { [weak self] _ in
-            self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
+            self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in

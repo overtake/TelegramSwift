@@ -126,7 +126,7 @@ func savePanel(file:String, named:String, for window:Window) {
 
 
 
-func alert(for window:Window, header:String = appName, info:String?, completion: (()->Void)? = nil) {
+func alert(for window:Window, header:String = appName, info:String?, runModal: Bool = false, completion: (()->Void)? = nil) {
 //
 //    let alert = AlertController(window, header: header, text: info ?? "")
 //    alert.show(completionHandler: { response in
@@ -138,9 +138,14 @@ func alert(for window:Window, header:String = appName, info:String?, completion:
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = info ?? ""
-    alert.beginSheetModal(for: window, completionHandler: { (_) in
-        completion?()
-    })
+    if runModal {
+        alert.runModal()
+    } else {
+        alert.beginSheetModal(for: window, completionHandler: { (_) in
+            completion?()
+        })
+    }
+    
     
 }
 

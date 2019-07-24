@@ -202,7 +202,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     }
     
     func updateByKeyWindow() {
-        self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: true)
+        self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
     }
     
     func isEqual(to other: Notifable) -> Bool {

@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "ic_sports@1x.png",
+      "filename" : "Sport.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "ic_sports@2x.png",
+      "filename" : "Sport@2x.png",
       "scale" : "2x"
     },
     {

@@ -307,8 +307,8 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func updateMemberAdminRights(account: Account, peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights) -> Signal<Void, NoError> {
-        return updateChannelAdminRights(account: account, peerId: peerId, adminId: memberId, rights: adminRights)
+    func updateMemberAdminRights(account: Account, peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights, rank: String?) -> Signal<Void, NoError> {
+        return updateChannelAdminRights(account: account, peerId: peerId, adminId: memberId, rights: adminRights, rank: rank)
             |> map(Optional.init)
             |> `catch` { _ -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, NoError> in
                 return .single(nil)

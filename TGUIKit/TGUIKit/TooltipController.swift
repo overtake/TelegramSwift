@@ -63,11 +63,27 @@ private final class TooltipCornerView : View {
 private final class TooltipView: View {
     let textView = TextView()
     let cornerView = TooltipCornerView(frame: NSMakeRect(0, 0, 20, 10))
+    var didRemoveFromWindow:(()->Void)?
+    weak var view: NSView? {
+        didSet {
+            oldValue?.removeObserver(self, forKeyPath: "window")
+            if let view = view {
+                 view.addObserver(self, forKeyPath: "window", options: .new, context: nil)
+            }
+        }
+    }
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if self.view?.window == nil {
+            self.didRemoveFromWindow?()
+        }
+    }
+    
     var cornerX: CGFloat? = nil {
         didSet {
             needsLayout = true
         }
     }
+    
     
     func move(corner cornerX: CGFloat, animated: Bool) {
         self.cornerX = cornerX
@@ -87,8 +103,8 @@ private final class TooltipView: View {
     func update(text: String, maxWidth: CGFloat, animated: Bool) {
         let layout = TextViewLayout(.initialize(string: text, color: .white, font: .medium(.text)), alignment: .center, alwaysStaticItems: true)
         layout.measure(width: maxWidth)
-        textView.update(layout)
-        textView.setFrameSize(layout.layoutSize.width + 20, layout.layoutSize.height + 10)
+        textView.change(size: NSMakeSize(layout.layoutSize.width + 20, layout.layoutSize.height + 10), animated: animated)
+        textView.set(layout: layout)
         change(size: NSMakeSize(textView.frame.width, textView.frame.height + 15), animated: animated)
         needsLayout = true
     }
@@ -101,6 +117,13 @@ private final class TooltipView: View {
         } else {
             cornerView.centerX(y: textView.frame.maxY)
         }
+    }
+    
+    deinit {
+        DispatchQueue.main.async {
+            removeShownAnimation = false
+        }
+        view?.removeObserver(self, forKeyPath: "window")
     }
     
     required public init?(coder: NSCoder) {
@@ -118,19 +141,24 @@ private var removeShownAnimation:Bool = false
 
 
 private let delayDisposable = MetaDisposable()
-
+private var shouldRemoveTooltip: Bool = true
 public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, autoCorner: Bool = true) -> Void {
     guard let window = view.window as? Window else { return }
+    
     
     let tooltip: TooltipView
     let isExists: Bool
     if let exists = window.contentView?.subviews.first(where: { $0 is TooltipView }) as? TooltipView {
         tooltip = exists
         isExists = true
+        shouldRemoveTooltip = false
     } else {
         tooltip = TooltipView(frame: NSZeroRect)
         isExists = false
+        shouldRemoveTooltip = (NSEvent.pressedMouseButtons & (1 << 0)) == 0
     }
+    
+    tooltip.view = view
     
 
     window.contentView?.addSubview(tooltip)
@@ -187,39 +215,26 @@ public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, aut
         }
     }
     
+    tooltip.didRemoveFromWindow = {
+        removeTooltip(true)
+    }
+    
     delayDisposable.set((Signal<Never, NoError>.complete() |> delay(3.0, queue: .mainQueue())).start(completed: {
         removeTooltip(true)
     }))
     
-    
+
     window.set(mouseHandler: { _ -> KeyHandlerResult in
-        removeTooltip(false)
+        DispatchQueue.main.async {
+            if shouldRemoveTooltip {
+                removeTooltip(true)
+            }
+            shouldRemoveTooltip = !isExists
+        }
         return .rejected
     }, with: tooltip, for: .leftMouseUp, priority: .supreme)
     
-    window.set(mouseHandler: { _ -> KeyHandlerResult in
-        defer {
-            Queue.mainQueue().justDispatch {
-                removeShownAnimation = false
-            }
-        }
-        removeTooltip(false)
-        return .rejected
-    }, with: tooltip, for: .leftMouseUp, priority: .supreme)
-    
-    window.set(mouseHandler: { _ -> KeyHandlerResult in
-        defer {
-            Queue.mainQueue().justDispatch {
-                removeShownAnimation = false
-            }
-        }
-        return .rejected
-    }, with: tooltip, for: .leftMouseDown, priority: .supreme)
-    
-    window.set(mouseHandler: { _ -> KeyHandlerResult in
-      //  removeTooltip(false)
-        return .rejected
-    }, with: tooltip, for: .leftMouseDown, priority: .supreme)
+
     
     window.set(mouseHandler: { _ -> KeyHandlerResult in
         removeTooltip(false)

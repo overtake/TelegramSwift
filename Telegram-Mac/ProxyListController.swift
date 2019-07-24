@@ -256,6 +256,8 @@ func proxyListController(accountManager: AccountManager, network: Network, showU
         }, for: .Click)
         view.set(image: theme.icons.webgameShare, highlightImage: nil)
         return view
+    }, afterTransaction: { controller in
+        controller.rightBarView.isHidden = stateValue.with { $0.settings.servers.isEmpty }
     })
     
     return controller

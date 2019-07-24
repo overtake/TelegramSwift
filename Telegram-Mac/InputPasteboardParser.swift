@@ -186,12 +186,11 @@ class InputPasteboardParser: NSObject {
             }
             
             if !files.isEmpty {
-                showModal(with:PreviewSenderController(urls: files, chatInteraction:chatInteraction), for:window)
-                
+                chatInteraction.showPreviewSender(files, true, nil)
                 return false
             } else if let image = image {
                 _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { (path) in
-                    showModal(with:PreviewSenderController(urls: [URL(fileURLWithPath: path)], chatInteraction: chatInteraction), for: window)
+                    chatInteraction.showPreviewSender([URL(fileURLWithPath: path)], true, nil)
                 })
                 return false
             }

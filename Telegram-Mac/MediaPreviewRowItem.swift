@@ -45,7 +45,7 @@ class MediaPreviewRowItem: TableRowItem {
     private var overSize: CGFloat? = nil
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
-        parameters?.makeLabelsForWidth(width - (media.isInteractiveMedia ? 20 : 60))
+        parameters?.makeLabelsForWidth(width - (media.isInteractiveMedia ? 20 : 120))
         
         if let table = table, table.count == 1 {
             if contentSize.height > table.frame.height && table.frame.height > 0 {

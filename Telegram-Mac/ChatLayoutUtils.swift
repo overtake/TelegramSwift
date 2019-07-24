@@ -90,11 +90,7 @@ class ChatLayoutUtils: NSObject {
             if file.isAnimatedSticker {
                 return ChatMediaAnimatedStickerView.self
             } else if file.isSticker {
-                if let size = file.size, size < 200 * 1024 {
-                    return ChatStickerContentView.self
-                } else {
-                    return ChatFileContentView.self
-                }
+                return ChatStickerContentView.self
             } else if file.isInstantVideo {
                 return ChatVideoMessageContentView.self
             } else if file.isVideo && !file.isAnimated {

@@ -483,7 +483,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             if let account = account {
                                 var settings: LaunchSettings?
                                 if let action = sharedContext.getLaunchActionOnce(for: account.id) {
-                                    settings = LaunchSettings(applyText: nil, previousText: nil, navigation: action)
+                                    settings = LaunchSettings(applyText: nil, previousText: nil, navigation: action, openAtLaunch: true)
                                 } else {
                                     let semaphore = DispatchSemaphore(value: 0)
                                     _ = account.postbox.transaction { transaction in

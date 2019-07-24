@@ -1227,7 +1227,7 @@ class LoginAuthInfoView : View {
             resetAccountContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
 
-        case let .confirmationCodeEntry(number, type, hash, timeout, nextType, _, _):
+        case let .confirmationCodeEntry(number, type, hash, timeout, nextType, _):
             codeInputContainer.updateLocalizationAndTheme()
             codeInputContainer.isHidden = false
             codeInputContainer.undo = []

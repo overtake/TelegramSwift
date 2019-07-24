@@ -30,15 +30,13 @@ class ChatInputAttachView: ImageButton, Notifable {
         
         updateLayout()
         
-        set(handler: { (event) in
-            
-        }, for: .Click)
-        
-        
         
         set(handler: { [weak self] control in
             
             guard let `self` = self else {return}
+            
+       
+            
             if let peer = chatInteraction.presentation.peer {
                 
                 var items:[SPopoverItem] = []
@@ -64,6 +62,11 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     
                 } else if chatInteraction.presentation.interfaceState.editState == nil {
+                    
+                    if let slowMode = self.chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                        return
+                    }
+                    
                     items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
                             alert(for: mainWindow, info: permissionText)
@@ -124,7 +127,7 @@ class ChatInputAttachView: ImageButton, Notifable {
             }
         }, for: .Hover)
         
-        set(handler: { [weak self] _ in
+        set(handler: { [weak self] control in
             guard let `self` = self else {return}
             if let peer = self.chatInteraction.presentation.peer, self.chatInteraction.presentation.interfaceState.editState == nil {
                 if let permissionText = permissionText(from: peer, for: .banSendMedia) {
@@ -168,6 +171,13 @@ class ChatInputAttachView: ImageButton, Notifable {
                 self.autohighlight = true
             }
         }
+       
+//        if let slowMode = value?.slowMode {
+//            if slowMode.hasError  {
+//                self.highlightHovered = false
+//                self.autohighlight = false
+//            }
+//        }
     }
     
     override func layout() {

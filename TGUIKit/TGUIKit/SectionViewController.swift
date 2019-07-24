@@ -47,8 +47,9 @@ public class SectionControllerView : View {
         needsLayout = true
     }
     
-    fileprivate func layout(sections: [SectionControllerItem], selected: Int, arguments: SectionControllerArguments) {
+    fileprivate func layout(sections: [SectionControllerItem], selected: Int, hasHeaderView: Bool, arguments: SectionControllerArguments) {
         header.removeAllSubviews()
+        header.isHidden = !hasHeaderView
         self.selectorIndex = selected
         for i in 0 ..< sections.count {
             let section = sections[i]
@@ -144,10 +145,11 @@ public class SectionControllerView : View {
     
     public override func layout() {
         super.layout()
-        header.setFrameSize(NSMakeSize(frame.width, 50))
+        header.setFrameSize(NSMakeSize(frame.width, header.isHidden ? 0 : 50.0))
+        
         let width = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / CGFloat(max(header.subviews.count, 3)))
         
-        selector.frame = NSMakeRect(CGFloat(selectorIndex) * width, 50 - .borderSize, width, .borderSize)
+        selector.frame = NSMakeRect(CGFloat(selectorIndex) * width, header.frame.height - .borderSize, width, .borderSize)
         container.frame = NSMakeRect(0, header.frame.maxY, frame.width, frame.height - header.frame.height)
         container.subviews.first?.frame = container.bounds
 
@@ -197,7 +199,7 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         let arguments = SectionControllerArguments { [weak self] index in
             self?.select(index, true)
         }
-        genericView.layout(sections: sections, selected: selectedIndex, arguments: arguments)
+        genericView.layout(sections: sections, selected: selectedIndex, hasHeaderView: self.hasHeaderView, arguments: arguments)
         genericView.updateLocalizationAndTheme()
     }
     
@@ -205,7 +207,7 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         disposable.dispose()
     }
     
-    fileprivate func select(_ index:Int, _ animated: Bool, notifyApper: Bool = true) {
+    public func select(_ index:Int, _ animated: Bool, notifyApper: Bool = true) {
         if selectedIndex != index || !animated {
             selectedSection = sections[index]
             sections[index].controller._frameRect = NSMakeRect(0, 0, frame.width, frame.height - 50)
@@ -371,15 +373,18 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         let arguments = SectionControllerArguments { [weak self] index in
             self?.select(index, true)
         }
-        genericView.layout(sections: sections, selected: selectedIndex, arguments: arguments)
+        genericView.layout(sections: sections, selected: selectedIndex, hasHeaderView: self.hasHeaderView, arguments: arguments)
         select(selectedIndex, false)
     }
     
-    public init(sections: [SectionControllerItem], selected: Int = 0) {
+    private let hasHeaderView: Bool
+    
+    public init(sections: [SectionControllerItem], selected: Int = 0, hasHeaderView: Bool = true) {
         assert(!sections.isEmpty)
         self.sections = sections
         self.selectedSection = sections[selected]
         self.selectedIndex = selected
+        self.hasHeaderView = hasHeaderView
         super.init()
         bar = .init(height: 0)
     }

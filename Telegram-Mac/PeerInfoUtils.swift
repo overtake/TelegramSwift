@@ -119,7 +119,7 @@ extension TelegramChannel {
         let hasRight = hasPermission(.banMembers)
         
         switch participant {
-        case let .member(_, _,  adminInfo, _):
+        case let .member(_, _,  adminInfo, _, _):
             if let adminInfo = adminInfo {
                 return accountId == adminInfo.promotedBy || flags.contains(.isCreator)
             } else {
@@ -172,11 +172,11 @@ func <(lhs:ChannelParticipant, rhs: ChannelParticipant) -> Bool {
     switch lhs {
     case .creator:
         return false
-    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo):
+    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank):
         switch rhs {
         case .creator:
             return true
-        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo):
+        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank):
             return lhsInvitedAt < rhsInvitedAt
         }
     }

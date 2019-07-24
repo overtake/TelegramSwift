@@ -205,7 +205,7 @@ class StickerSetTableRowView : TableRowView {
                     imageView.setSignal(chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false))
                 }
                 if let resourceReference = resourceReference {
-                    _ = fetchedMediaResource(postbox: item.context.account.postbox, reference: resourceReference, statsCategory: .file).start()
+                    _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: resourceReference, statsCategory: .file).start()
                 }
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
             }

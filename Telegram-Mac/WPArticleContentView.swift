@@ -124,7 +124,7 @@ class WPArticleContentView: WPContentView {
     func fetch() {
         if let layout = content as? WPArticleLayout {
             if let _ = layout.wallpaper, let file = layout.content.file {
-                fetchDisposable.set(fetchedMediaResource(postbox: layout.context.account.postbox, reference: MediaResourceReference.wallpaper(resource: file.resource)).start())
+                fetchDisposable.set(fetchedMediaResource(mediaBox: layout.context.account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: file.resource)).start())
             } else if let image = layout.content.image {
                 fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
             }

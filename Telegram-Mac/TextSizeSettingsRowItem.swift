@@ -13,17 +13,20 @@ import TGUIKit
 
 class SelectSizeRowItem: GeneralRowItem {
 
-
+    fileprivate let titles:[String]?
     fileprivate let sizes: [Int32]
-    fileprivate let current: Int32
+    fileprivate var current: Int32
+    fileprivate let initialCurrent: Int32
     fileprivate let selectAction:(Int)->Void
     fileprivate let hasMarkers: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, selectAction: @escaping(Int)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, titles:[String]? = nil, selectAction: @escaping(Int)->Void) {
         self.sizes = sizes
+        self.titles = titles
+        self.initialCurrent = current
         self.hasMarkers = hasMarkers
         self.current = current
         self.selectAction = selectAction
-        super.init(initialSize, height: 50, stableId: stableId)
+        super.init(initialSize, height: titles != nil ? 60 : 40, stableId: stableId, inset: NSEdgeInsets(left: 30, right: 30))
     }
     
     override func viewClass() -> AnyClass {
@@ -51,7 +54,8 @@ private class SelectSizeRowView : TableRowView {
             let point = convert(event.locationInWindow, from: nil)
             for i in 0 ..< availableRects.count {
                 if NSPointInRect(point, availableRects[i]), item.current != i {
-                    item.selectAction(i)
+                    item.current = item.sizes[i]
+                    self.needsDisplay = true
                 }
             }
         }
@@ -66,10 +70,24 @@ private class SelectSizeRowView : TableRowView {
             for i in 0 ..< availableRects.count {
                 if NSPointInRect(point, availableRects[i]), item.current != i {
                     item.selectAction(i)
+                    return
                 }
+            }
+            if item.initialCurrent != item.current {
+                item.selectAction(item.sizes.index(of: item.current)!)
             }
         }
         
+    }
+    
+    func _focus(_ size: NSSize) -> NSRect {
+        var focus = self.focus(size)
+        if let item = item as? SelectSizeRowItem {
+            if item.titles != nil {
+                focus.origin.y += 20
+            }
+        }
+        return focus
     }
     
     
@@ -85,8 +103,8 @@ private class SelectSizeRowView : TableRowView {
         
         let maxNode = TextNode.layoutText(.initialize(string: "A", color: theme.colors.text, font: .normal(min(maxFontSize, 15))), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
 
-        let minF = focus(item.hasMarkers ? minNode.0.size : NSZeroSize)
-        let maxF = focus(item.hasMarkers ? maxNode.0.size : NSZeroSize)
+        let minF = _focus(item.hasMarkers ? minNode.0.size : NSZeroSize)
+        let maxF = _focus(item.hasMarkers ? maxNode.0.size : NSZeroSize)
         
         if item.hasMarkers {
             minNode.1.draw(NSMakeRect(item.inset.left, minF.minY, minF.width, minF.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
@@ -103,7 +121,7 @@ private class SelectSizeRowView : TableRowView {
         
         ctx.setFillColor(theme.colors.blueFill.cgColor)
         let lineSize = NSMakeSize(width, 2)
-        let lc = focus(lineSize)
+        let lc = _focus(lineSize)
         let minX = item.inset.left + minF.width + insetBetweenFont
         
         let interactionRect = NSMakeRect(minX, lc.minY, lc.width, lc.height)
@@ -114,7 +132,7 @@ private class SelectSizeRowView : TableRowView {
        
         let selectSize = NSMakeSize(20, 20)
         
-        let selectPoint = NSMakePoint(minX + floorToScreenPixels(scaleFactor: backingScaleFactor, interactionRect.width / CGFloat(item.sizes.count - 1)) * current - selectSize.width / 2, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - selectSize.height) / 2))
+        let selectPoint = NSMakePoint(minX + floorToScreenPixels(scaleFactor: backingScaleFactor, interactionRect.width / CGFloat(item.sizes.count - 1)) * current - selectSize.width / 2, _focus(selectSize).minY)
 
         ctx.setFillColor(theme.colors.grayText.cgColor)
         let unMinX = selectPoint.x + selectSize.width / 2
@@ -123,13 +141,19 @@ private class SelectSizeRowView : TableRowView {
         
         for i in 0 ..< item.sizes.count {
             let perSize = NSMakeSize(10, 10)
-            let perF = focus(perSize)
-            let point = NSMakePoint(minX + per * CGFloat(i) - perSize.width / 2, perF.minY)
+            let perF = _focus(perSize)
+            let point = NSMakePoint(minX + per * CGFloat(i) - (i > 0 ? perSize.width / 2 : 0), perF.minY)
             ctx.setFillColor(theme.colors.background.cgColor)
             ctx.fill(NSMakeRect(point.x, point.y, perSize.width, perSize.height))
             
             ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.blueFill.cgColor : theme.colors.grayText.cgColor)
             ctx.fillEllipse(in: NSMakeRect(point.x + perSize.width/2 - 2, point.y + 3, 4, 4))
+            
+            if let titles = item.titles {
+                let title = titles[i]
+                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                titleNode.1.draw(NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+            }
         }
         
         
@@ -143,7 +167,7 @@ private class SelectSizeRowView : TableRowView {
         availableRects.removeAll()
         
         for i in 0 ..< item.sizes.count {
-            let perF = focus(selectSize)
+            let perF = _focus(selectSize)
             let point = NSMakePoint(interactionRect.minX + floorToScreenPixels(scaleFactor: backingScaleFactor, interactionRect.width / (count - 1)) * CGFloat(i) - selectSize.width / 2, perF.minY)
             let rect = NSMakeRect(point.x, point.y, selectSize.width, selectSize.height)
             addCursorRect(rect, cursor: NSCursor.pointingHand)
@@ -176,3 +200,18 @@ private class SelectSizeRowView : TableRowView {
     }
     
 }
+
+
+
+
+
+struct SliderSelectorItem : Equatable {
+    let value: Int32?
+    let localizedText: String?
+    init(value: Int32?, localizedText:String? = nil) {
+        assert(value != nil  || localizedText != nil)
+        self.value = value
+        self.localizedText = localizedText
+    }
+}
+

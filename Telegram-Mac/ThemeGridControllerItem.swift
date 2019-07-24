@@ -102,7 +102,7 @@ final class SettingsThemeWallpaperView: View {
             self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, autoFetchFullSize: true, scale: backingScaleFactor))
             self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil))
             
-            fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
         case let .file(_, file, settings, isPattern):
             self.label.isHidden = true
             self.imageView.isHidden = false
@@ -129,7 +129,7 @@ final class SettingsThemeWallpaperView: View {
             self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
             
             
-            fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
         default:
             break
         }

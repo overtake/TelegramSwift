@@ -45,16 +45,19 @@ struct LaunchSettings: PreferencesEntry, Equatable {
     let navigation: LaunchNavigation?
     let applyText: String?
     let previousText: String?
-    init(applyText: String?, previousText: String?, navigation: LaunchNavigation?) {
+    let openAtLaunch: Bool
+    init(applyText: String?, previousText: String?, navigation: LaunchNavigation?, openAtLaunch: Bool) {
         self.applyText = applyText
         self.navigation = navigation
         self.previousText = previousText
+        self.openAtLaunch = openAtLaunch
     }
     
     init(decoder: PostboxDecoder) {
         self.applyText = decoder.decodeOptionalStringForKey("at")
         self.navigation = decoder.decodeObjectForKey("n", decoder: { LaunchNavigation(decoder: $0) }) as? LaunchNavigation
         self.previousText = decoder.decodeOptionalStringForKey("pt")
+        self.openAtLaunch = decoder.decodeBoolForKey("oat", orElse: true)
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -73,6 +76,7 @@ struct LaunchSettings: PreferencesEntry, Equatable {
         } else {
             encoder.encodeNil(forKey: "pt")
         }
+        encoder.encodeBool(self.openAtLaunch, forKey: "oat")
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -85,17 +89,20 @@ struct LaunchSettings: PreferencesEntry, Equatable {
     
     
     func withUpdatedApplyText(_ applyText: String?) -> LaunchSettings {
-        return LaunchSettings(applyText: applyText, previousText: self.previousText, navigation: self.navigation)
+        return LaunchSettings(applyText: applyText, previousText: self.previousText, navigation: self.navigation, openAtLaunch: self.openAtLaunch)
     }
     func withUpdatedNavigation(_ navigation: LaunchNavigation?) -> LaunchSettings {
-        return LaunchSettings(applyText: self.applyText, previousText: self.previousText, navigation: navigation)
+        return LaunchSettings(applyText: self.applyText, previousText: self.previousText, navigation: navigation, openAtLaunch: self.openAtLaunch)
     }
     func withUpdatedPreviousText(_ previousText: String?) -> LaunchSettings {
-        return LaunchSettings(applyText: self.applyText, previousText: previousText, navigation: self.navigation)
+        return LaunchSettings(applyText: self.applyText, previousText: previousText, navigation: self.navigation, openAtLaunch: self.openAtLaunch)
+    }
+    func withUpdatedOpenAtLaunch(_ openAtLaunch: Bool) -> LaunchSettings {
+        return LaunchSettings(applyText: self.applyText, previousText: self.previousText, navigation: self.navigation, openAtLaunch: openAtLaunch)
     }
     
     static var defaultSettings: LaunchSettings {
-        return LaunchSettings(applyText: nil, previousText: nil, navigation: nil)
+        return LaunchSettings(applyText: nil, previousText: nil, navigation: nil, openAtLaunch: true)
     }
 }
 
@@ -134,7 +141,7 @@ func updateLaunchSettings(_ postbox: Postbox, _ f: @escaping(LaunchSettings)->La
 }
 
 
-func getUpdateNotifySettings(postbox: Postbox) -> Signal<LaunchSettings, NoError> {
+func appLaunchSettings(postbox: Postbox) -> Signal<LaunchSettings, NoError> {
     return postbox.transaction { transaction -> LaunchSettings in
         return transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.launchSettings) as? LaunchSettings ?? LaunchSettings.defaultSettings
     }

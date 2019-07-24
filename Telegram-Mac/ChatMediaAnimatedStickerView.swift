@@ -185,7 +185,7 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
             }
         }))
         
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(size.height, size.height), boundingSize: size, intrinsicInsets: NSEdgeInsets())
         
         
         self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
@@ -202,7 +202,7 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
             self.thumbView.dispose()
         }
 
-        fetchDisposable.set(fetchedMediaResource(postbox: context.account.postbox, reference: reference).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference).start())
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
             switch state {

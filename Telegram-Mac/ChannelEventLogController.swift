@@ -292,14 +292,14 @@ private func eventLogItems(_ result:AdminLogEventsResult, initialSize: NSSize, c
     for event in result.events {
         switch event.action {
         case let .editMessage(prev, new):
-            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(isAdmin: false), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction)
+            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction)
             items.append(ChannelEventLogEditedPanelItem(initialSize, previous: prev, item: item))
             items.append(item)
         case let .deleteMessage(message):
-            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()), MessageIndex(message), true, .list, .Full(isAdmin: false), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction))
+            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()), MessageIndex(message), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction))
         case let .updatePinned(message):
             if let message = message?.withUpdatedStableId(arc4random()) {
-                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, MessageIndex(message), true, .list, .Full(isAdmin: false), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction))
+                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, MessageIndex(message), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction))
             }
         default:
             break
@@ -350,7 +350,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         
         bar.set(handler: { [weak self] _ in
             self?.showFilter()
-            }, for: .Click)
+        }, for: .Click)
         
         return bar
     }

@@ -108,6 +108,8 @@ public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? 
     return image
 }
 
+
+
 public let deviceColorSpace: CGColorSpace = {
     if #available(OSX 10.11.2, *) {
         if let colorSpace = CGColorSpace(name: CGColorSpace.displayP3) {
@@ -119,6 +121,34 @@ public let deviceColorSpace: CGColorSpace = {
         return CGColorSpaceCreateDeviceRGB()
     }
 }()
+
+
+
+public func generateImagePixel(_ size: CGSize, scale: CGFloat, pixelGenerator: (CGSize, UnsafeMutablePointer<UInt8>) -> Void) -> CGImage? {
+    let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
+    let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
+    let length = bytesPerRow * Int(scaledSize.height)
+    let bytes = malloc(length)!.assumingMemoryBound(to: UInt8.self)
+    guard let provider = CGDataProvider(dataInfo: bytes, data: bytes, size: length, releaseData: { bytes, _, _ in
+        free(bytes)
+    })
+        else {
+            return nil
+    }
+    
+    pixelGenerator(scaledSize, bytes)
+    
+    let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
+    
+    guard let image = CGImage(width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo, provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+        else {
+            return nil
+    }
+    
+    return image
+}
+
+
 public enum DrawingContextBltMode {
     case Alpha
 }

@@ -450,7 +450,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             replyView?.set(handler: { [weak item, weak reply] _ in
                 item?.chatInteraction.focusInputField()
                 if let replyMessage = reply?.replyMessage, let fromMessage = item?.message {
-                    item?.chatInteraction.focusMessageId(fromMessage.id, replyMessage.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
+                    item?.chatInteraction.focusMessageId(fromMessage.id, replyMessage.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
                 }
                 
             }, for: .Click)
@@ -1299,5 +1299,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         CATransaction.commit()
     }
     
+    
+    override var interactableView: NSView {
+        return self.rightView
+    }
     
 }

@@ -216,7 +216,7 @@ class APSongItem : APItem {
     }
 
     private func fetch() {
-        fetchDisposable.set(fetchedMediaResource(postbox: account.postbox, reference: reference).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: reference).start())
     }
 
     private func cancelFetching() {
@@ -772,10 +772,10 @@ class APController : NSResponder {
                             let previous = index - 1
                             let next = index + 1
                             if previous >= 0 {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(postbox: strongSelf.account.postbox, reference: items[previous].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[previous].reference, statsCategory: .audio).start())
                             }
                             if next < items.count {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(postbox: strongSelf.account.postbox, reference: items[next].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[next].reference, statsCategory: .audio).start())
                             }
                         }
                         

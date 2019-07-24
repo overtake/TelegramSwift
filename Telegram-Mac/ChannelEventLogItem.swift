@@ -325,9 +325,9 @@ class ServiceEventLogItem: TableRowItem {
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
             case let .participantToggleAdmin(prev, new):
                 switch prev.participant {
-                case let .member(memberId, _, adminInfo: prevAdminInfo, banInfo: _):
+                case let .member(memberId, _, adminInfo: prevAdminInfo, banInfo: _, rank: prevRank):
                     switch new.participant {
-                    case let .member(_, _, adminInfo: newAdminInfo, banInfo: _):
+                    case let .member(_, _, adminInfo: newAdminInfo, banInfo: _, rank: newRank):
                         if let memberPeer = result.peers[memberId] {
                             let message = NSMutableAttributedString()
                    
@@ -362,7 +362,7 @@ class ServiceEventLogItem: TableRowItem {
                             self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
                             
                         }
-                    case let .creator(memberId):
+                    case let .creator(memberId, _):
                         if let memberPeer = result.peers[memberId] {
                             let message = NSMutableAttributedString()
                             
@@ -396,9 +396,9 @@ class ServiceEventLogItem: TableRowItem {
                 }
             case let .participantToggleBan(prev, new):
                 switch prev.participant {
-                case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo):
+                case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo, rank: _):
                     switch new.participant {
-                    case let .member(_, _, adminInfo: _, banInfo: newBanInfo):
+                    case let .member(_, _, adminInfo: _, banInfo: newBanInfo, rank: _):
                         let message = NSMutableAttributedString()
                         if let memberPeer = result.peers[memberId] {
                             
@@ -447,10 +447,6 @@ class ServiceEventLogItem: TableRowItem {
                                     }
                                 }
                             }
-                            
-                            
-                            
-                            
                             message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                             message.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
                             
@@ -498,7 +494,10 @@ class ServiceEventLogItem: TableRowItem {
                 let text:String = result.isGroup ? tr(L10n.groupEventLogServiceUpdateLeft(peer.displayTitle)) : tr(L10n.channelEventLogServiceUpdateLeft(peer.displayTitle))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case .participantJoin:
-                let text:String = result.isGroup ? tr(L10n.groupEventLogServiceUpdateJoin(peer.displayTitle)) : tr(L10n.channelEventLogServiceUpdateJoin(peer.displayTitle))
+                let text:String = result.isGroup ? L10n.groupEventLogServiceUpdateJoin(peer.displayTitle) : L10n.channelEventLogServiceUpdateJoin(peer.displayTitle)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .updateSlowmode(_, newValue):
+                let text:String = newValue == nil || newValue == 0 ? L10n.channelEventLogServiceDisabledSlowMode(peer.displayTitle) : L10n.channelEventLogServiceSetSlowMode(peer.displayTitle, autoremoveLocalized(Int(newValue!)))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .updateDefaultBannedRights(prev, new):
                 

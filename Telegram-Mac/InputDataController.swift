@@ -290,11 +290,11 @@ class InputDataController: GenericViewController<TableView> {
             
             if let focusIdentifier = focusIdentifier {
                 if let item = findItem(for: focusIdentifier) {
-                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: false, inset: 0), inset: NSEdgeInsets(), true)
+                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
                 }
             } else if scrollIfNeeded {
                 if !scrollDown  {
-                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: false, inset: 0), inset: NSEdgeInsets(), true)
+                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
                 } else {
                     genericView.scroll(to: .down(true))
                 }
@@ -318,7 +318,7 @@ class InputDataController: GenericViewController<TableView> {
                         if scrollFirstItem == nil {
                             scrollFirstItem = item
                             if let item = item {
-                                genericView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: true, inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
+                                genericView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
                             }
                         }
                     }

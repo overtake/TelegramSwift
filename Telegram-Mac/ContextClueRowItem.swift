@@ -199,7 +199,7 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         tableView.endTableUpdates()
         
         if let selectedItem = tableView.selectedItem() {
-            tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: false, inset: 0))
+            tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
         }
         
         needsLayout = true

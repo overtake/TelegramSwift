@@ -390,6 +390,18 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
+            if let strongSelf = self, case .minimisize = state {
+                if strongSelf.genericView.searchView.state == .Focus {
+                    strongSelf.genericView.searchView.change(state: .None,  false)
+                }
+            }
+            self?.genericView.tableView.alwaysOpenRowsOnMouseUp = state == .single
+            self?.genericView.tableView.reloadData()
+            Queue.mainQueue().justDispatch {
+                self?.requestUpdateBackBar()
+            }
+        }))
         
         let context = self.context
         let actionsDisposable = self.actionsDisposable
@@ -691,18 +703,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if context.sharedContext.layout == .single && animated {
             context.globalPeerHandler.set(.single(nil))
         }
-        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
-            if let strongSelf = self, case .minimisize = state {
-                if strongSelf.genericView.searchView.state == .Focus {
-                    strongSelf.genericView.searchView.change(state: .None,  false)
-                }
-            }
-            self?.genericView.tableView.alwaysOpenRowsOnMouseUp = state == .single
-            self?.genericView.tableView.reloadData()
-            Queue.mainQueue().justDispatch {
-                self?.requestUpdateBackBar()
-            }
-        }))
+
         
         context.window.set(handler: { [weak self] in
             if let strongSelf = self {

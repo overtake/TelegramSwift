@@ -284,13 +284,9 @@
 		C225524D1F7BE8E40007944D /* VideoRecorderModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C225524C1F7BE8E40007944D /* VideoRecorderModalView.swift */; };
 		C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = C225524E1F7C03B50007944D /* VideoRecorderPipeline.swift */; };
 		C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */; };
-		C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226741E1DBCEAC2000BA9ED /* EStickerGridEntries.swift */; };
-		C22674211DBCECCC000BA9ED /* EStickerGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674201DBCECCC000BA9ED /* EStickerGridItem.swift */; };
 		C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226742A1DBE16B9000BA9ED /* CachedResourceRepresentations.swift */; };
 		C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226742E1DBE2CB3000BA9ED /* PanelUtils.swift */; };
 		C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674301DBE9B50000BA9ED /* FetchCachedRepresentations.swift */; };
-		C22674331DBF665A000BA9ED /* EStickerPackEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674321DBF665A000BA9ED /* EStickerPackEntries.swift */; };
-		C22674351DBF6A85000BA9ED /* EStickerPackItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674341DBF6A85000BA9ED /* EStickerPackItem.swift */; };
 		C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674371DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift */; };
 		C226743A1DC1273E000BA9ED /* PeerMediaGridController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674391DC1273E000BA9ED /* PeerMediaGridController.swift */; };
 		C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226743E1DC12E4E000BA9ED /* GridMessageItem.swift */; };
@@ -316,7 +312,6 @@
 		C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */; };
 		C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F2A1DB3BEB60045E719 /* GlobalHandlers.swift */; };
 		C2271F381DB4D0490045E719 /* EmojiViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F371DB4D0490045E719 /* EmojiViewController.swift */; };
-		C2271F3A1DB4D0540045E719 /* EStickersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F391DB4D0540045E719 /* EStickersViewController.swift */; };
 		C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F3B1DB4D0630045E719 /* GIFViewController.swift */; };
 		C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F3D1DB4D4240045E719 /* ETabRowItem.swift */; };
 		C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F3F1DB4D5850045E719 /* ETabRowView.swift */; };
@@ -731,7 +726,10 @@
 		D01CBE2D22A5384700F6A971 /* NotificationPreferencesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01CBE2C22A5384600F6A971 /* NotificationPreferencesController.swift */; };
 		D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */; };
 		D0276B7D22BD6511003155D8 /* DisplayLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0276B7C22BD6511003155D8 /* DisplayLink.swift */; };
-		D050108D22D64D2200F00ED5 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D050108E22D654A500F00ED5 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D050108F22D654A500F00ED5 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D050109022D654A800F00ED5 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
+		D050109122D654A800F00ED5 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
 		D0558D7C215141CF006B403D /* ChatInfoTouchbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */; };
 		D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D842152B4D3006B403D /* GalleryTouchBar.swift */; };
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
@@ -771,16 +769,6 @@
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		D050108B22D64D1900F00ED5 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
-			remoteInfo = TelegramShare;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		C20D5AB61DAA94500042616A /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -788,6 +776,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				D050108E22D654A500F00ED5 /* HockeySDK.framework in Copy Files */,
+				D050108F22D654A500F00ED5 /* Sparkle.framework in Copy Files */,
 				D004D70B22B7BCD400926F46 /* RLottieMac.framework in Copy Files */,
 				9F0367E522707A4D00456348 /* Lottie.framework in Copy Files */,
 				D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */,
@@ -806,7 +796,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				D050108D22D64D2200F00ED5 /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1250,13 +1239,9 @@
 		C225524C1F7BE8E40007944D /* VideoRecorderModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderModalView.swift; sourceTree = "<group>"; };
 		C225524E1F7C03B50007944D /* VideoRecorderPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorderPipeline.swift; sourceTree = "<group>"; };
 		C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHistoryViewForLocation.swift; sourceTree = "<group>"; };
-		C226741E1DBCEAC2000BA9ED /* EStickerGridEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickerGridEntries.swift; sourceTree = "<group>"; };
-		C22674201DBCECCC000BA9ED /* EStickerGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickerGridItem.swift; sourceTree = "<group>"; };
 		C226742A1DBE16B9000BA9ED /* CachedResourceRepresentations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CachedResourceRepresentations.swift; sourceTree = "<group>"; };
 		C226742E1DBE2CB3000BA9ED /* PanelUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PanelUtils.swift; sourceTree = "<group>"; };
 		C22674301DBE9B50000BA9ED /* FetchCachedRepresentations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FetchCachedRepresentations.swift; sourceTree = "<group>"; };
-		C22674321DBF665A000BA9ED /* EStickerPackEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickerPackEntries.swift; sourceTree = "<group>"; };
-		C22674341DBF6A85000BA9ED /* EStickerPackItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickerPackItem.swift; sourceTree = "<group>"; };
 		C22674371DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaCollectionInterfaceState.swift; sourceTree = "<group>"; };
 		C22674391DC1273E000BA9ED /* PeerMediaGridController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaGridController.swift; sourceTree = "<group>"; };
 		C226743E1DC12E4E000BA9ED /* GridMessageItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridMessageItem.swift; sourceTree = "<group>"; };
@@ -1282,7 +1267,6 @@
 		C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaController.swift; sourceTree = "<group>"; };
 		C2271F2A1DB3BEB60045E719 /* GlobalHandlers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalHandlers.swift; sourceTree = "<group>"; };
 		C2271F371DB4D0490045E719 /* EmojiViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiViewController.swift; sourceTree = "<group>"; };
-		C2271F391DB4D0540045E719 /* EStickersViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickersViewController.swift; sourceTree = "<group>"; };
 		C2271F3B1DB4D0630045E719 /* GIFViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFViewController.swift; sourceTree = "<group>"; };
 		C2271F3D1DB4D4240045E719 /* ETabRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ETabRowItem.swift; sourceTree = "<group>"; };
 		C2271F3F1DB4D5850045E719 /* ETabRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ETabRowView.swift; sourceTree = "<group>"; };
@@ -1813,6 +1797,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D050109022D654A800F00ED5 /* HockeySDK.framework in Frameworks */,
+				D050109122D654A800F00ED5 /* Sparkle.framework in Frameworks */,
 				D004D6FE22B7B92C00926F46 /* RLottieMac.framework in Frameworks */,
 				9F354EA4227077BD006F1D42 /* Lottie.framework in Frameworks */,
 				C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */,
@@ -3464,11 +3450,6 @@
 		C2844AD91DA907F2009308DC /* stickers */ = {
 			isa = PBXGroup;
 			children = (
-				C2271F391DB4D0540045E719 /* EStickersViewController.swift */,
-				C22674201DBCECCC000BA9ED /* EStickerGridItem.swift */,
-				C226741E1DBCEAC2000BA9ED /* EStickerGridEntries.swift */,
-				C22674321DBF665A000BA9ED /* EStickerPackEntries.swift */,
-				C22674341DBF6A85000BA9ED /* EStickerPackItem.swift */,
 			);
 			name = stickers;
 			sourceTree = "<group>";
@@ -4327,7 +4308,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				D050108C22D64D1900F00ED5 /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -4777,7 +4757,6 @@
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
 				9FA0E53B2052EDFF001E5649 /* HackUtils.m in Sources */,
 				9FC4DA9E21DD1C6C003E2A62 /* ImageCompression.swift in Sources */,
-				C2271F3A1DB4D0540045E719 /* EStickersViewController.swift in Sources */,
 				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
 				C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */,
 				9F10CE9A206284F8002DD61A /* InputDataDateRowItem.swift in Sources */,
@@ -5065,7 +5044,6 @@
 				C234D4121EEDE6990017DC25 /* LoadingTableItem.swift in Sources */,
 				9F1962D82101458C00FFF048 /* VCardLocationRowItem.swift in Sources */,
 				C230B8F61DD371430057F596 /* SPopoverViewController.swift in Sources */,
-				C22674331DBF665A000BA9ED /* EStickerPackEntries.swift in Sources */,
 				9FC8ADA42063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift in Sources */,
 				9F4EEF8221D4F584002C3B33 /* ImageTransparency.swift in Sources */,
 				C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */,
@@ -5098,7 +5076,6 @@
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
-				C226741F1DBCEAC2000BA9ED /* EStickerGridEntries.swift in Sources */,
 				C2FD33F91E6C1486008D13D4 /* SSKeychainQuery.m in Sources */,
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,
 				C2271F4F1D9C38F500424F7B /* SPopoverRowItem.swift in Sources */,
@@ -5174,11 +5151,9 @@
 				C2DE5D2A1F3CA69D0081EC1E /* InstantPageMedia.swift in Sources */,
 				C2DE5D2E1F3CA72E0081EC1E /* InstantPageView.swift in Sources */,
 				C2FB2FAB1EBF73D00093C8BA /* RecentCallsViewController.swift in Sources */,
-				C22674211DBCECCC000BA9ED /* EStickerGridItem.swift in Sources */,
 				C26505951E0301B4001954DC /* MGalleryItem.swift in Sources */,
 				C2777B641DCFB559008B69DD /* ChatServiceRowView.swift in Sources */,
 				C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */,
-				C22674351DBF6A85000BA9ED /* EStickerPackItem.swift in Sources */,
 				C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */,
 				9F1BC1A9223FDE6D00F21815 /* InputSources.swift in Sources */,
 				C2E8694D1F43500D00BDD0A2 /* ChatNavigationMention.swift in Sources */,
@@ -5191,14 +5166,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		D050108C22D64D1900F00ED5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
-			targetProxy = D050108B22D64D1900F00ED5 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {
@@ -5371,7 +5338,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = DebugFork;
 		};
@@ -5509,7 +5476,7 @@
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = DebugAppStoreLLC;
 		};
@@ -5637,7 +5604,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = ReleaseHockeyappInternal;
 		};
@@ -5766,7 +5733,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = ReleaseAppStoreLLC;
 		};
@@ -5898,7 +5865,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = ReleaseAppStore;
 		};
@@ -6084,7 +6051,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = ReleaseHockeyapp;
 		};
@@ -6224,7 +6191,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = HockeyappMacAlpha;
 		};
@@ -6413,7 +6380,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = DebugHockeyapp;
 		};
@@ -6479,7 +6446,7 @@
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = DebugAppStore;
 		};

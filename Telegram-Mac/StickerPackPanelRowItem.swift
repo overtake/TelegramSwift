@@ -15,7 +15,7 @@ import SwiftSignalKitMac
 
 class StickerPackPanelRowItem: TableRowItem {
     let files: [(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)]
-    let packNameLayout: TextViewLayout
+    let packNameLayout: TextViewLayout?
     let context: AccountContext
     let arguments: StickerPanelArguments
     let namePoint: NSPoint
@@ -37,7 +37,7 @@ class StickerPackPanelRowItem: TableRowItem {
         let size: NSSize = NSMakeSize(60, 60)
         
         
-        let title: String
+        let title: String?
         var count: Int32 = 0
         switch packInfo {
         case let .pack(info, _):
@@ -52,7 +52,7 @@ class StickerPackPanelRowItem: TableRowItem {
             title = L10n.stickersRecent
             self.packReference = nil
         case .saved:
-            title = L10n.stickersFavorite
+            title = nil
             self.packReference = nil
         case let .speficicPack(info):
             title = info?.title ?? info?.shortName ?? ""
@@ -63,22 +63,28 @@ class StickerPackPanelRowItem: TableRowItem {
             }
         }
         
-        let attributed = NSMutableAttributedString()
-        if !packInfo.installed {
-            _ = attributed.append(string: title.uppercased(), color: theme.colors.text, font: .medium(14))
-            _ = attributed.append(string: "\n")
-            _ = attributed.append(string: L10n.stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
+        if let title = title {
+            let attributed = NSMutableAttributedString()
+            if !packInfo.installed {
+                _ = attributed.append(string: title.uppercased(), color: theme.colors.text, font: .medium(14))
+                _ = attributed.append(string: "\n")
+                _ = attributed.append(string: L10n.stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
+            } else {
+                _ = attributed.append(string: title.uppercased(), color: theme.colors.grayText, font: .medium(.text))
+            }
+            let layout = TextViewLayout(attributed, alwaysStaticItems: true)
+            layout.measure(width: 300)
+            self.packNameLayout = layout
+            
+            self.namePoint = NSMakePoint(10, floorToScreenPixels(scaleFactor: System.backingScale, ((!packInfo.installed ? 50 : 30) - layout.layoutSize.height) / 2))
         } else {
-            _ = attributed.append(string: title.uppercased(), color: theme.colors.grayText, font: .medium(.text))
+            namePoint = NSZeroPoint
+            self.packNameLayout = nil
         }
-        let layout = TextViewLayout(attributed, alwaysStaticItems: true)
-        layout.measure(width: initialSize.width - 20)
-        self.packNameLayout = layout
         
-        self.namePoint = NSMakePoint(10, floorToScreenPixels(scaleFactor: System.backingScale, ((!packInfo.installed ? 50 : 30) - layout.layoutSize.height) / 2))
 
 
-        var point: NSPoint = NSMakePoint(5, packInfo.installed ? 35 : 55)
+        var point: NSPoint = NSMakePoint(5, title == nil ? 5 : packInfo.installed ? 35 : 55)
         for (i, file) in files.enumerated() {
             filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file), point))
             point.x += size.width + 10
@@ -93,7 +99,7 @@ class StickerPackPanelRowItem: TableRowItem {
         self.collectionId = collectionId
         
         let rows = ceil((CGFloat(files.count) / 5.0))
-        _height = (packInfo.installed ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
+        _height = (title == nil ? 0 : packInfo.installed ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
 
        
         
@@ -103,7 +109,6 @@ class StickerPackPanelRowItem: TableRowItem {
         
         super.init(initialSize)
         
-       
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -241,7 +246,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                                 if !item.packInfo.installed, let reference = item.packReference {
                                     item.arguments.showPack(reference)
                                 } else {
-                                    item.arguments.sendMedia(media)
+                                    item.arguments.sendMedia(media, contentView)
                                 }
                             }
                             return
@@ -280,6 +285,9 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         updateVisibleItems()
     }
 
+    override var backdorColor: NSColor {
+        return .clear
+    }
     
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()

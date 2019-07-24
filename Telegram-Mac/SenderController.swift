@@ -122,7 +122,7 @@ class Sender: NSObject {
             }
             
            
-        } else if let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+        } else if MIMEType(path).hasPrefix("image"), let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
             
             let options = NSMutableDictionary()
             options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)

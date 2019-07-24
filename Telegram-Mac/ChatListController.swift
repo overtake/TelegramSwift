@@ -656,7 +656,7 @@ class ChatListController : PeersListController {
 //            guard let `self` = self else {return}
 //            if let index = index {
 //                self.lastScrolledIndex = index
-//                self.request.set(.single(ChatListIndexRequest.Index(index, TableScrollState.center(id: ChatLocation.peer(index.messageIndex.id.peerId), innerId: nil, animated: true, focus: true, inset: 0))))
+//                self.request.set(.single(ChatListIndexRequest.Index(index, TableScrollState.center(id: ChatLocation.peer(index.messageIndex.id.peerId), innerId: nil, animated: true, focus: .init(focus: true), inset: 0))))
 //            } else {
 //                self.lastScrolledIndex = nil
 //                scrollToTop()

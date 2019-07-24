@@ -729,6 +729,9 @@ open class ModalViewController : ViewController {
         return NSColor(0x000000, 0.6)
     }
     
+    open func didResizeView(_ size: NSSize, animated: Bool) -> Void {
+        
+    }
     
     open var isFullScreen:Bool {
         return false
@@ -870,6 +873,7 @@ open class TableModalViewController : ModalViewController {
         return self.view as! TableView
     }
     
+
    
 }
 

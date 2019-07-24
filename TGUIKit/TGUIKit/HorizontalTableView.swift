@@ -61,8 +61,15 @@ public class HorizontalTableView: TableView {
     }
     
     override func rowView(item:TableRowItem) -> TableRowView {
-        let identifier:String = NSStringFromClass(item.viewClass())
-        var view = self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
+        let identifier:String = item.identifier
+        
+        if let resortView = self.resortController?.resortView {
+            if resortView.item?.stableId == item.stableId {
+                return resortView
+            }
+        }
+        var view: NSView? = item.isUniqueView ? nil : self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
+        
         if(view == nil) {
             let vz = item.viewClass() as! TableRowView.Type
             
@@ -73,6 +80,18 @@ public class HorizontalTableView: TableView {
         }
         
         return view as! TableRowView;
+    }
+    
+    public override func viewNecessary(at row:Int, makeIfNecessary: Bool = false) -> TableRowView? {
+        if row < 0 || row >= count {
+            return nil
+        }
+        if let resortView = self.resortController?.resortView {
+            if resortView.item?.stableId == self.item(at: row).stableId {
+                return resortView
+            }
+        }
+        return self.tableView.rowView(atRow: row, makeIfNecessary: makeIfNecessary) as? TableRowView
     }
     
 }

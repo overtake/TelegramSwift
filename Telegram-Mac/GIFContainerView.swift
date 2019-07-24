@@ -44,7 +44,8 @@ class GIFContainerView: Control {
         super.init()
         addSubview(player)
         self.backgroundColor = .clear
-        self.layer?.borderWidth = 1.5
+        
+        //self.layer?.borderWidth = 1.5
         //self.layer?.cornerRadius = 4.0
         player.background = .clear
         player.setVideoLayerGravity(.resizeAspectFill)
@@ -86,7 +87,7 @@ class GIFContainerView: Control {
     
     func fetch() {
         if let context = context, let reference = reference {
-            fetchDisposable.set(fetchedMediaResource(postbox: context.account.postbox, reference: reference, statsCategory: .file).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference, statsCategory: .file).start())
         }
     }
     

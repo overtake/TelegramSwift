@@ -30,7 +30,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(StickerSettings.self, f: { StickerSettings(decoder: $0) })
     declareEncodable(EmojiSkinModifier.self, f: { AutoNightThemePreferences(decoder: $0) })
     declareEncodable(InstantPageStoredDetailsState.self, f: { InstantPageStoredDetailsState(decoder: $0) })
-    declareEncodable(CachedChannelAdminIds.self, f: { CachedChannelAdminIds(decoder: $0) })
+    declareEncodable(CachedChannelAdminRanks.self, f: { CachedChannelAdminRanks(decoder: $0) })
     declareEncodable(DefaultWallpaper.self, f: { DefaultWallpaper(decoder: $0) })
     declareEncodable(LaunchSettings.self, f: { LaunchSettings(decoder: $0)})
     declareEncodable(AutoplayMediaPreferences.self, f: { AutoplayMediaPreferences(decoder: $0)})

@@ -162,7 +162,7 @@ private final class FetchManagerCategoryContext {
                     } else {
                         range = nil
                     }
-                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, range: range, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
+                    activeContext.disposable = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: entry.reference, range: range, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
                         entryCompleted(id, value)
                     })
                 } else {
@@ -215,7 +215,7 @@ private final class FetchManagerCategoryContext {
                     } else {
                         range = nil
                     }
-                    activeContext.disposable = fetchedMediaResource(postbox: postbox, reference: entry.reference, range: range, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
+                    activeContext.disposable = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: entry.reference, range: range, statsCategory: entry.fetchTag, reportResultStatus: true).start(next: { value in
                         entryCompleted(id, value)
                     })
                 }

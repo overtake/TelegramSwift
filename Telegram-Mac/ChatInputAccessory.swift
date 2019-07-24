@@ -89,8 +89,8 @@ class ChatInputAccessory: Node {
                 self?.dismiss.send(event: .Click)
             }, for: .Click)
             
-        } else if !state.interfaceState.forwardMessageIds.isEmpty {
-            displayNode = ForwardPanelModel(forwardIds:state.interfaceState.forwardMessageIds,account:account)
+        } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
+            displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages,account:account)
             dismiss.set(handler: { [weak self] _ in
                 self?.dismissForward()
             }, for: .Click)
@@ -107,7 +107,7 @@ class ChatInputAccessory: Node {
             }, for: .Click)
             
             container.set(handler: { [weak self] _ in
-               self?.chatInteraction.focusMessageId(nil, replyMessageId, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
+               self?.chatInteraction.focusMessageId(nil, replyMessageId, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
             }, for: .Click)
         }
         

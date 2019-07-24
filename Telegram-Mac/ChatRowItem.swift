@@ -45,30 +45,13 @@ enum ForwardItemType {
 }
 
 enum ChatItemType : Equatable {
-    case Full(isAdmin: Bool)
+    case Full(rank: String?)
     case Short
 }
 
 enum ChatItemRenderType {
     case bubble
     case list
-}
-
-func ==(lhs: ChatItemType, rhs: ChatItemType) -> Bool {
-    switch lhs {
-    case .Full(let isAdmin):
-        if case .Full(isAdmin: isAdmin) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .Short:
-        if case .Short = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
 }
 
 class ChatRowItem: TableRowItem {
@@ -87,7 +70,7 @@ class ChatRowItem: TableRowItem {
         return []
     }
     
-    private(set) var itemType:ChatItemType = .Full(isAdmin: false)
+    private(set) var itemType:ChatItemType = .Full(rank: nil)
     
     var isFullItemType: Bool {
         if case .Full = itemType {
@@ -813,7 +796,7 @@ class ChatRowItem: TableRowItem {
         self._avatarSynchronousValue = Thread.isMainThread
         var message: Message?
         var isRead: Bool = true
-        var itemType: ChatItemType = .Full(isAdmin: false)
+        var itemType: ChatItemType = .Full(rank: nil)
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
         var object = object
@@ -876,7 +859,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if message?.id.peerId == context.peerId {
-            itemType = .Full(isAdmin: false)
+            itemType = .Full(rank: nil)
         }
         self.renderType = renderType
         self.message = message
@@ -1070,7 +1053,7 @@ class ChatRowItem: TableRowItem {
                 }
             }
             
-            if case .Full(let isAdmin) = itemType {
+            if case let .Full(rank) = itemType {
                 
                 
                 let canFillAuthorName: Bool = ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
@@ -1119,8 +1102,8 @@ class ChatRowItem: TableRowItem {
                     }
                     if canFillAuthorName {
                         var badge: NSAttributedString? = nil
-                        if isAdmin {
-                            badge = .initialize(string: " " + L10n.chatAdminBadge, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
+                        if let rank = rank {
+                            badge = .initialize(string: " " + rank, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
                             
                         }
                         else if ChatRowItem.authorIsChannel(message: message, account: context.account) {
@@ -1815,10 +1798,10 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                     _ = showModalProgress(signal: fetchChannelParticipant(account: account, peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in
                         if let participant = participant {
                             switch participant {
-                            case let .member(memberId, _, _, _):
+                            case let .member(memberId, _, _, _, _):
                                 showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: memberId, initialParticipant: participant, updated: { updatedRights in
-                                    _ = showModalProgress(signal: updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: author.id, rights: updatedRights), for: mainWindow).start()
-                                }), for: mainWindow)
+                                    _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: author.id, bannedRights: updatedRights).start()
+                                }), for: context.window)
                             default:
                                 break
                             }

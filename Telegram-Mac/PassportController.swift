@@ -3794,7 +3794,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 })
                 
                 if let scrollItem = scrollItem {
-                    self.genericView.tableView.scroll(to: TableScrollState.top(id: scrollItem.stableId, innerId: nil, animated: true, focus: true, inset: 0), inset: NSEdgeInsets(), true)
+                    self.genericView.tableView.scroll(to: TableScrollState.top(id: scrollItem.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), true)
                 }
                 
                 return

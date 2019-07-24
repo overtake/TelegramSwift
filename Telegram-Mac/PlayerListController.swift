@@ -170,7 +170,7 @@ class PlayerListController: TableViewController {
             self.genericView.merge(with: transition)
             if !self.didSetReady, !self.genericView.isEmpty {
                 self.view.setFrameSize(300, min(self.genericView.listHeight, 325))
-                self.genericView.scroll(to: .top(id: PeerMediaSharedEntryStableId.messageId(self.messageIndex.id), innerId: nil, animated: false, focus: false, inset: -25))
+                self.genericView.scroll(to: .top(id: PeerMediaSharedEntryStableId.messageId(self.messageIndex.id), innerId: nil, animated: false, focus: .init(focus: false), inset: -25))
                 self.readyOnce()
             }
         }))
