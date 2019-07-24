@@ -33,10 +33,10 @@ extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
         let updated: ChannelParticipant
         switch participant {
-        case let.member(id, invitedAt, adminInfo, _):
-            updated = ChannelParticipant.member(id: id, invitedAt: invitedAt, adminInfo: adminInfo, banInfo: info)
-        case let.creator(id):
-            updated = ChannelParticipant.creator(id: id)
+        case let.member(id, invitedAt, adminInfo, _, rank):
+            updated = ChannelParticipant.member(id: id, invitedAt: invitedAt, adminInfo: adminInfo, banInfo: info, rank: rank)
+        case let .creator(id, rank):
+            updated = ChannelParticipant.creator(id: id, rank: rank)
         }
         return RenderedChannelParticipant(participant: updated, peer: peer, presences: presences)
     }
@@ -907,13 +907,13 @@ func <(lhs:RenderedChannelParticipant, rhs: RenderedChannelParticipant) -> Bool 
     switch lhs.participant {
     case .creator:
         lhsInvitedAt = Int32.min
-    case .member(_, let invitedAt, _, _):
+    case .member(_, let invitedAt, _, _, _):
         lhsInvitedAt = invitedAt
     }
     switch rhs.participant {
     case .creator:
         rhsInvitedAt = Int32.min
-    case .member(_, let invitedAt, _, _):
+    case .member(_, let invitedAt, _, _, _):
         rhsInvitedAt = invitedAt
     }
     return lhsInvitedAt < rhsInvitedAt
@@ -2183,7 +2183,7 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blu
         resourceData = postbox.mediaBox.resourceData(resource)
     }
    
-    return combineLatest(fetchedMediaResource(postbox: postbox, reference: MediaResourceReference.wallpaper(resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
+    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
         if data.complete {
             return moveWallpaperToCache(postbox: postbox, path: data.path, blurred: blurred)
         } else {

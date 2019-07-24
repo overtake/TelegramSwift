@@ -161,9 +161,13 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
         case let .contextResult(results,result,index):
             return ContextListRowItem(initialSize, results, result, index, context, chatInteraction)
         case let .contextMediaResult(results,result,index):
-            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { result in
+            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { result, view in
                 if let results = results {
-                    chatInteraction.sendInlineResult(results, result)
+                    if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                        showSlowModeTimeoutTooltip(slowMode, for: view)
+                    } else {
+                        chatInteraction.sendInlineResult(results, result)
+                    }
                 }
             }))
         case let .command(command,_, stableId):
@@ -393,7 +397,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 chatInteraction.sendAppFile(selectedItem.result.results[index].file)
                 chatInteraction.clearInput()
             } else if let selectedItem = selectedItem as? ContextSearchMessageItem {
-                chatInteraction.focusMessageId(nil, selectedItem.message.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
+                chatInteraction.focusMessageId(nil, selectedItem.message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
             }
             return .invoked
         }
@@ -618,7 +622,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             }
             if let selectIndex = selectIndex {
                 _ = genericView.select(item: genericView.item(at: selectIndex))
-                genericView.scroll(to: .center(id: genericView.item(at: selectIndex).stableId, innerId: nil, animated: false, focus: false, inset: 0))
+                genericView.scroll(to: .center(id: genericView.item(at: selectIndex).stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
             }
         }
     }

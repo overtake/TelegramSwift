@@ -673,8 +673,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 
             }
-            
-            
          }
         
         if let _ = endRevealState {

@@ -221,6 +221,19 @@ enum ChatHistoryEntry: Identifiable, Comparable {
 
 }
 
+func isEqualMessageList(lhs:[Message], rhs:[Message]) -> Bool {
+    if lhs.count != rhs.count {
+        return false 
+    } else {
+        for (i, message) in lhs.enumerated() {
+            if !isEqualMessages(message, rhs[i]) {
+                return false
+            }
+        }
+    }
+    return true
+}
+
 func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     
     
@@ -349,7 +362,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, adminIds:Set<PeerId> = Set(), pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -441,9 +454,21 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
         }
         
-        let isAdmin = adminIds.contains(message.author?.id ?? PeerId(0))
         
-        var itemType:ChatItemType = .Full(isAdmin: isAdmin)
+        let rawRank = ranks?.ranks[message.author?.id ?? PeerId(0)]
+        var rank:String? = nil
+        if let rawRank = rawRank {
+            switch rawRank {
+            case .admin:
+                rank = L10n.chatAdminBadge
+            case .owner:
+                rank = L10n.chatOwnerBadge
+            case let .custom(string):
+                rank = string
+            }
+        }
+        
+        var itemType:ChatItemType = .Full(rank: rank)
         var fwdType:ForwardItemType? = nil
         
         
@@ -461,7 +486,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 
                 if message.author?.id == prev.message.author?.id, (message.timestamp - prev.message.timestamp) < simpleDif, actionShortAccess, let peer = message.peers[message.id.peerId] {
                     if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
-                        itemType = .Full(isAdmin: isAdmin)
+                        itemType = .Full(rank: rank)
                     } else {
                         var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
                         for attr in message.attributes {
@@ -470,28 +495,28 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                                 break
                             }
                         }
-                        itemType = !canShort ? .Full(isAdmin: isAdmin) : .Short
+                        itemType = !canShort ? .Full(rank: rank) : .Short
                         
                     }
                 } else {
-                    itemType = .Full(isAdmin: isAdmin)
+                    itemType = .Full(rank: rank)
                 }
             } else {
-                itemType = .Full(isAdmin: isAdmin)
+                itemType = .Full(rank: rank)
             }
         } else {
             if let next = next {
                 if message.author?.id == next.message.author?.id, let peer = message.peers[message.id.peerId] {
                     if peer.isChannel || ((peer.isGroup || peer.isSupergroup) && message.flags.contains(.Incoming)) {
-                        itemType = .Full(isAdmin: isAdmin)
+                        itemType = .Full(rank: rank)
                     } else {
-                        itemType = message.inlinePeer == nil ? .Short : .Full(isAdmin: isAdmin)
+                        itemType = message.inlinePeer == nil ? .Short : .Full(rank: rank)
                     }
                 } else {
-                    itemType = .Full(isAdmin: isAdmin)
+                    itemType = .Full(rank: rank)
                 }
             } else {
-                itemType = .Full(isAdmin: isAdmin)
+                itemType = .Full(rank: rank)
             }
         }
         
@@ -523,7 +548,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader  {
-            itemType = .Full(isAdmin: isAdmin)
+            itemType = .Full(rank: rank)
             if forwardType == .ShortHeader {
                 if let next = next  {
                     if next.message.forwardInfo != nil && (message.author?.id == next.message.author?.id || next.message.timestamp - message.timestamp < simpleDif) {
@@ -550,7 +575,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         
-        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, entry.location, additionalData, autoplayMedia)
+        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(Int32(timeDifference) > 0 ? message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference)) : message), entry.isRead, renderType, itemType, fwdType, entry.location, additionalData, autoplayMedia)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
             

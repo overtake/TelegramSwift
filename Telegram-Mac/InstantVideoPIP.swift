@@ -306,7 +306,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         if let msg = msg {
             if let currentMessage = currentMessage, !isShown && currentMessage.id != msg.id, CFAbsoluteTimeGetCurrent() - scrollTime > 1.0 {
                 if let item = tableView?.item(stableId: msg.chatStableId) {
-                    tableView?.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: false, inset: 0))
+                    tableView?.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
                 }
             }
             

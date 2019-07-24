@@ -30,7 +30,7 @@ class ETabRowItem: TableRowItem {
     }
     
     override var width: CGFloat {
-        return 40
+        return _height
     }
     
     init(_ initialSize:NSSize, icon:CGImage, iconSelected:CGImage, stableId:AnyHashable, width:CGFloat, clickHandler:@escaping(AnyHashable)->Void) {

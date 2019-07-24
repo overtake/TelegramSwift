@@ -472,6 +472,17 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
     return localized
 }
 
+func slowModeTooltipText(_ timeout: Int32) -> String {
+    let minutes = timeout / 60
+    let seconds = timeout % 60
+    return L10n.channelSlowModeToolTip(minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
+}
+func showSlowModeTimeoutTooltip(_ slowMode: SlowMode, for view: NSView) {
+    if let errorText = slowMode.errorText {
+        tooltip(for: view, text: errorText)
+    }
+}
+
 let preCharacter = "`"
 let codeCharacter = "```"
 func parseTextEntities(_ message:String) -> (String, [MessageTextEntity]) {

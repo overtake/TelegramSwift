@@ -183,7 +183,7 @@ final class GridMessageItemNode: GridItemNode {
             }
             
             menu.addItem(ContextMenuItem(L10n.messageContextGoto, handler: { [weak self] in
-                self?.chatInteraction?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
+                self?.chatInteraction?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
             }))
             return menu
         }
@@ -231,14 +231,14 @@ final class GridMessageItemNode: GridItemNode {
                                 cancelFetching()
                             } else if file.isStreamable {
                                 showChatGallery(context: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
-                                    interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
+                                    interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                             }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                             }
                         case .Remote:
                             fetch()
                         default:
                             showChatGallery(context: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
-                                interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
+                                interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                                 }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                         }
                         
@@ -246,7 +246,7 @@ final class GridMessageItemNode: GridItemNode {
                 } else {
                     if _status == nil || _status == .Local {
                         showChatGallery(context: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
-                            interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: true, inset: 0))
+                            interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                     }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                     }
                 }

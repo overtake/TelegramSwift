@@ -299,7 +299,7 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                 
                 if let largeProfileImage = peer.largeProfileImage {
                     if let peerReference = PeerReference(peer) {
-                        fetchPeerAvatar.set(fetchedMediaResource(postbox: item.context.account.postbox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                        fetchPeerAvatar.set(fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
                     }
                 }
                 

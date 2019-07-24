@@ -13,7 +13,7 @@ import TelegramCoreMac
 import PostboxMac
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
-    let inputQuery = chatPresentationInterfaceState.inputContext
+    let inputQuery = chatPresentationInterfaceState.slowMode?.timeout != nil ? .none : chatPresentationInterfaceState.inputContext
     if inputQuery != .none {
         if inputQuery == currentQuery {
             return nil
@@ -293,9 +293,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     
                     let maybeDelayedContextResults: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>
                     if delayRequest {
-                        maybeDelayedContextResults = contextResults |> delay(0.4, queue: Queue.concurrentDefaultQueue())
+                        maybeDelayedContextResults = contextResults |> `catch` { _ in return .complete() } |> delay(0.4, queue: Queue.concurrentDefaultQueue())
                     } else {
-                        maybeDelayedContextResults = contextResults
+                        maybeDelayedContextResults = contextResults |> `catch` { _ in return .complete() }
                     }
                     
                     return botResult |> then(maybeDelayedContextResults)

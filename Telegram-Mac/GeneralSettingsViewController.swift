@@ -29,6 +29,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case statusBar(sectionId:Int, enabled: Bool)
     case showCallsTab(sectionId:Int, enabled: Bool)
     case enableRFTCopy(sectionId:Int, enabled: Bool)
+    case openChatAtLaunch(sectionId:Int, enabled: Bool)
+    case acceptSecretChats(sectionId:Int, enabled: Bool)
     case latestArticles(sectionId:Int, enabled: Bool)
     case forceTouchReply(sectionId:Int, enabled: Bool)
     case forceTouchEdit(sectionId:Int, enabled: Bool)
@@ -65,18 +67,22 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 11
         case .enableRFTCopy:
             return 12
-        case .latestArticles:
+        case .openChatAtLaunch:
             return 13
-        case .forceTouchReply:
+        case .acceptSecretChats:
             return 14
-        case .forceTouchEdit:
-            return 15
-        case .forceTouchForward:
+        case .latestArticles:
             return 16
-        case .forceTouchPreviewMedia:
+        case .forceTouchReply:
+            return 16
+        case .forceTouchEdit:
             return 17
+        case .forceTouchForward:
+            return 18
+        case .forceTouchPreviewMedia:
+            return 19
 		case .instantViewScrollBySpace:
-			return 18
+			return 20
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -89,6 +95,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .showCallsTab(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .enableRFTCopy(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .openChatAtLaunch(sectionId, _):
+            return (sectionId * 1000) + stableId
+        case let .acceptSecretChats(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .latestArticles(sectionId, _):
             return (sectionId * 1000) + stableId
@@ -140,6 +150,14 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .enableRFTCopy(sectionId: _, enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsCopyRTF, type: .switchable(enabled), action: {
                 arguments.toggleRTFEnabled(!enabled)
+            })
+        case let .openChatAtLaunch(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsOpenLatestChatOnLaunch, type: .switchable(enabled), action: {
+                arguments.openChatAtLaunch(!enabled)
+            })
+        case let .acceptSecretChats(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsAcceptSecretChats, type: .switchable(enabled), action: {
+                arguments.acceptSecretChats(!enabled)
             })
         case let .latestArticles(sectionId: _, enabled: enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShowArticlesInSearch, type: .switchable(enabled), action: {
@@ -236,7 +254,9 @@ private final class GeneralSettingsArguments {
     let toggleBigEmoji: (Bool) -> Void
     let toggleStatusBar: (Bool) -> Void
     let toggleRTFEnabled: (Bool) -> Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleLatestArticles: @escaping(Bool)->Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void) {
+    let openChatAtLaunch:(Bool)->Void
+    let acceptSecretChats:(Bool)->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleLatestArticles: @escaping(Bool)->Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, openChatAtLaunch:@escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -252,11 +272,13 @@ private final class GeneralSettingsArguments {
         self.toggleBigEmoji = toggleBigEmoji
         self.toggleStatusBar = toggleStatusBar
         self.toggleRTFEnabled = toggleRTFEnabled
+        self.openChatAtLaunch = openChatAtLaunch
+        self.acceptSecretChats = acceptSecretChats
     }
    
 }
 
-private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSettings: BaseApplicationSettings, appearance: Appearance) -> [GeneralSettingsEntry] {
+private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSettings: BaseApplicationSettings, appearance: Appearance, launchSettings: LaunchSettings, secretChatSettings: SecretChatSettings) -> [GeneralSettingsEntry] {
     var sectionId:Int = 1
     var entries:[GeneralSettingsEntry] = []
     
@@ -309,6 +331,8 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
 
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab))
     entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF))
+    entries.append(.openChatAtLaunch(sectionId: sectionId, enabled: launchSettings.openAtLaunch))
+    entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice))
   //  entries.append(.latestArticles(sectionId: sectionId, enabled: baseSettings.latestArticles))
 
 
@@ -400,19 +424,31 @@ class GeneralSettingsViewController: TableViewController {
             }).start()
         }, toggleRTFEnabled: { enable in
             FastSettings.enableRTF = enable
+        }, openChatAtLaunch: { enable in
+            _ = updateLaunchSettings(context.account.postbox, {
+                $0.withUpdatedOpenAtLaunch(enable)
+            }).start()
+        }, acceptSecretChats: { enable in
+            _ = context.account.postbox.transaction({ transaction -> Void in
+                transaction.updatePreferencesEntry(key: PreferencesKeys.secretChatSettings, { _ in
+                   return SecretChatSettings(acceptOnThisDevice: enable)
+                })
+            }).start()
         })
         
         let initialSize = atomicSize
         
         let previos:Atomic<[AppearanceWrapperEntry<GeneralSettingsEntry>]> = Atomic(value: [])
         
-        let baseSettingsSignal: Signal<BaseApplicationSettings, NoError> = .single(context.sharedContext.baseSettings) |> then(baseAppSettings(accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue)
+        let baseSettingsSignal: Signal<BaseApplicationSettings, NoError> = .single(context.sharedContext.baseSettings) |> then(baseAppSettings(accountManager: context.sharedContext.accountManager))
         
-        let signal = combineLatest(baseSettingsSignal, inputPromise.get() |> deliverOnMainQueue, forceTouchPromise.get() |> deliverOnMainQueue, appearanceSignal) |> map { settings, _, _, appearance -> TableUpdateTransition in
+        let signal = combineLatest(queue: .mainQueue(), baseSettingsSignal, inputPromise.get(), forceTouchPromise.get(), appearanceSignal, appLaunchSettings(postbox: context.account.postbox), context.account.postbox.preferencesView(keys: [PreferencesKeys.secretChatSettings])) |> map { settings, _, _, appearance, launchSettings, preferencesView -> TableUpdateTransition in
             
             let baseSettings: BaseApplicationSettings = settings
             
-            let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let secretChatSettings = preferencesView.values[PreferencesKeys.secretChatSettings] as? SecretChatSettings ?? SecretChatSettings.defaultSettings
+            
+            let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance, launchSettings: launchSettings, secretChatSettings: secretChatSettings).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = previos.swap(entries)
             return prepareEntries(left: previous, right: entries, arguments: arguments, initialSize: initialSize.modify({$0}))
             

@@ -186,7 +186,7 @@ open class Popover: NSObject {
                     strongSelf.background.addSubview(strongSelf.overlay)
                     
                     
-                    controller.view.layer?.cornerRadius = .cornerRadius
+                   // controller.view.layer?.cornerRadius = .cornerRadius
                     controller.view.setFrameOrigin(NSMakePoint(0, 0))
                     
                     
@@ -230,7 +230,9 @@ open class Popover: NSObject {
                                 strongSelf.disposable.set(s.start(next: { [weak strongSelf] () in
                                     if let strongSelf = strongSelf {
                                         if !strongSelf.inside() && !control.mouseInside() {
-                                            strongSelf.hide()
+                                            if (NSEvent.pressedMouseButtons & (1 << 0)) == 0 {
+                                                strongSelf.hide()
+                                            }
                                         }
                                     }
                                     
@@ -328,6 +330,7 @@ open class Popover: NSObject {
         if !isShown {
             return
         }
+        
         isShown = false
         control?.isSelected = false
         window?.removeAllHandlers(for: self)

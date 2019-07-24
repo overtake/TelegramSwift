@@ -128,9 +128,9 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
             let status:String
             switch participant.participant {
             case .creator:
-                status = tr(L10n.adminsCreator)
+                status = L10n.adminsOwner
             case .member:
-                status = tr(L10n.adminsAdmin)
+                status = L10n.adminsAdmin
             }
             return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), action: {
                 arguments.toggleAdmin(participant.peer.id)

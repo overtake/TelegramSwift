@@ -102,9 +102,13 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 switch item.result.entries[i] {
                 case let .sticker(data):
                     
-                    container.set(handler: { [weak item] (control) in
-                        item?.chatInteraction.sendAppFile(data.file)
-                        item?.chatInteraction.clearInput()
+                    container.set(handler: { [weak item] control in
+                        if let slowMode = item?.chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                            showSlowModeTimeoutTooltip(slowMode, for: control)
+                        } else {
+                            item?.chatInteraction.sendAppFile(data.file)
+                            item?.chatInteraction.clearInput()
+                        }
                     }, for: .Click)
                     
                     container.set(handler: { [weak self, weak item] (control) in

@@ -53,11 +53,13 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     //views
     private(set) var textView:TGModernGrowingTextView!
     private var actionsView:ChatInputActionsView!
-    private var attachView:ChatInputAttachView!
+    private(set) var attachView:ChatInputAttachView!
     
     
     private let emojiReplacementDisposable:MetaDisposable = MetaDisposable()
 
+    
+    private let slowModeUntilDisposable = MetaDisposable()
     
     private var replyMarkupModel:ReplyMarkupNode?
     override var isFlipped: Bool {
@@ -196,7 +198,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             urlPreviewChanged = urlPreviewChanged || value.interfaceState.composeDisableUrlPreview != oldValue.interfaceState.composeDisableUrlPreview
             
             
-            if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged {
+            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged {
                 updateAdditions(value,animated)
             }
             
@@ -222,9 +224,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 needUpdateReplyMarkup(with: value, animated)
                 textViewHeightChanged(defaultContentHeight, animated: animated)
             }
+            
             update()
         }
     }
+    
     
     func needUpdateReplyMarkup(with state:ChatPresentationInterfaceState, _ animated:Bool) {
         if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown {
@@ -513,6 +517,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return false
     }
     
+    var currentActionView: NSView {
+        return self.actionsView.currentActionView
+    }
+
+    
 
     func makeBold() {
         self.textView.boldWord()
@@ -601,6 +610,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         self.accessoryDispose.dispose()
         emojiReplacementDisposable.dispose()
         rtfAttachmentsDisposable.dispose()
+        slowModeUntilDisposable.dispose()
     }
     
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
@@ -676,7 +686,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                         if !attachments.isEmpty {
                             rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
                                 if !urls.isEmpty, let chatInteraction = self?.chatInteraction {
-                                    showModal(with: PreviewSenderController(urls: urls, chatInteraction: chatInteraction, attributedString: attributed), for: window)
+                                    chatInteraction.showPreviewSender(urls, true, attributed)
                                 }
                             }))
                         } else {

@@ -10,24 +10,24 @@ import Cocoa
 import SwiftSignalKitMac
 
 
-class SearchTextField: NSTextView {
+public class SearchTextField: NSTextView {
     
     @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
+    override public func makeTouchBar() -> NSTouchBar? {
         return viewEnableTouchBar ? super.makeTouchBar() : nil
     }
     
-    override func resignFirstResponder() -> Bool {
+    override public func resignFirstResponder() -> Bool {
         self.delegate?.textDidEndEditing?(Notification(name: NSControl.textDidChangeNotification))
         return super.resignFirstResponder()
     }
     
-    override func becomeFirstResponder() -> Bool {
+    override public func becomeFirstResponder() -> Bool {
         self.delegate?.textDidBeginEditing?(Notification(name: NSControl.textDidChangeNotification))
         return super.becomeFirstResponder()
     }
     
-    override func paste(_ sender: Any?) {
+    override public func paste(_ sender: Any?) {
         
         let text = NSPasteboard.general.string(forType: .string)?.nsstring
         if let text = text {

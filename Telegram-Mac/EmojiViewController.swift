@@ -146,19 +146,18 @@ fileprivate var isReady:Bool = false
 
 class EmojiControllerView : View {
     fileprivate let tableView:TableView = TableView(frame:NSZeroRect)
+    private let tabsContainer = View()
     fileprivate let tabs:HorizontalTableView = HorizontalTableView(frame:NSZeroRect)
-    fileprivate let searchView = SearchView(frame: NSZeroRect)
-    fileprivate let searchContainer: View = View()
     private let borderView:View = View()
     private let emptyResults: ImageView = ImageView()
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(tableView)
-        addSubview(tabs)
-        addSubview(borderView)
-        addSubview(searchContainer)
-        searchContainer.addSubview(searchView)
         addSubview(emptyResults)
+        tabsContainer.addSubview(tabs)
+        tabsContainer.addSubview(borderView)
+        addSubview(tabsContainer)
         updateLocalizationAndTheme()
     }
     
@@ -166,7 +165,6 @@ class EmojiControllerView : View {
         super.updateLocalizationAndTheme()
         self.backgroundColor = theme.colors.background
         self.borderView.backgroundColor = theme.colors.border
-        searchView.updateLocalizationAndTheme()
         emptyResults.image = theme.icons.stickersEmptySearch
         emptyResults.sizeToFit()
     }
@@ -182,11 +180,10 @@ class EmojiControllerView : View {
     
     override func layout() {
         super.layout()
-        searchContainer.frame = NSMakeRect(0, 0, frame.width, 50)
-        tableView.frame = NSMakeRect(0, searchContainer.frame.maxY + 3.0, bounds.width , frame.height - 3.0 - 50 - searchContainer.frame.height)
-        tabs.frame = NSMakeRect(0, tableView.frame.maxY + 1, frame.width,49)
-        borderView.frame = NSMakeRect(0, frame.height - 50, frame.width, .borderSize)
-        searchView.frame = searchContainer.focus(NSMakeSize(searchContainer.frame.width - 20, 30))
+        tabsContainer.frame = NSMakeRect(0, 0, frame.width, 50)
+        tabs.center()
+        borderView.frame = NSMakeRect(0, tabsContainer.frame.height - .borderSize, frame.width, .borderSize)
+        tableView.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width , frame.height - tabs.frame.maxY)
         emptyResults.center()
     }
     
@@ -200,15 +197,30 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
         return nil
     }
-    
-    private var disposable:MetaDisposable = MetaDisposable()
- 
+    private let searchValue = ValuePromise<SearchState>()
+    private var searchState: SearchState = .init(state: .None, request: nil) {
+        didSet {
+            self.searchValue.set(searchState)
+        }
+    }
+    private let disposable:MetaDisposable = MetaDisposable()
+    private let searchStateDisposable = MetaDisposable()
+
     private var interactions:EntertainmentInteractions?
-    
-    override init(_ context: AccountContext) {
+    var makeSearchCommand:((ESearchCommand)->Void)?
+
+    init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
         super.init(context)
+        
         _frameRect = NSMakeRect(0, 0, 350, 300)
         self.bar = .init(height: 0)
+        
+        self.searchStateDisposable.set(search.start(next: { [weak self] state in
+            self?.searchState = state
+            if !state.request.isEmpty {
+                self?.makeSearchCommand?(.loading)
+            }
+        }))
     }
     
     
@@ -244,6 +256,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     
     deinit {
         disposable.dispose()
+        searchStateDisposable.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -258,37 +271,14 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
-        let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
-        
-        let searchInteractions = SearchInteractions({ [weak self] state, _ in
-            if state.state == .None && state.request.isEmpty {
-                search.set(state)
-                switch state.state {
-                case .None:
-                    self?.scrollup()
-                default:
-                    break
-                }
-            }
-            
-        }, { [weak self] state in
-            search.set(state)
-            switch state.state {
-            case .None:
-                self?.scrollup()
-            default:
-                break
-            }
-        })
-        
-        genericView.searchView.searchInteractions = searchInteractions
+
         
         
         // DO NOT WRITE CODE OUTSIZE READY BLOCK
       
         let ready:(RecentUsedEmoji, [String]?)->Void = { [weak self] recent, search in
             if let strongSelf = self {
+                strongSelf.makeSearchCommand?(.normal)
                 strongSelf.readyForDisplay(recent, search)
                 strongSelf.readyOnce()
             }
@@ -296,16 +286,19 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
         let context = self.context
         
-        let s:Signal = combineLatest(loadResource() |> deliverOnMainQueue, recentUsedEmoji(postbox: context.account.postbox) |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue, search.get() |> mapToSignal { state -> Signal<[String]?, NoError> in
+        let s:Signal = combineLatest(queue: resourcesQueue, loadResource(), recentUsedEmoji(postbox: context.account.postbox), appearanceSignal, self.searchValue.get() |> distinctUntilChanged(isEqual: { prev, new in
+            return prev.request == new.request
+        }) |> mapToSignal { state -> Signal<[String]?, NoError> in
             if state.request.isEmpty {
                 return .single(nil)
             } else {
-                return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: state.request, completeMatch: false, checkPrediction: false) |> map(Optional.init)
+                return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: state.request, completeMatch: false, checkPrediction: false) |> map(Optional.init) |> delay(0.2, queue: .concurrentDefaultQueue())
             }
-        } |> deliverOnMainQueue)
+        }) |> deliverOnMainQueue
         
         disposable.set(s.start(next: { (_, recent, _, search) in
             isReady = true
+            
             ready(recent, search)
         }))
         
@@ -355,8 +348,8 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             
             let w = floorToScreenPixels(scaleFactor: System.backingScale, frame.width / CGFloat(seg.count))
             
-            genericView.tabs.setFrameSize(NSMakeSize(w * CGFloat(seg.count), genericView.tabs.frame.height))
-            genericView.tabs.centerX()
+            genericView.tabs.setFrameSize(NSMakeSize(w * CGFloat(seg.count), 40))
+            genericView.tabs.center()
             var tabIcons:[CGImage] = []
             tabIcons.append(theme.icons.emojiRecentTab)
             tabIcons.append(theme.icons.emojiSmileTab)
@@ -392,6 +385,8 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         }
         genericView.tableView.endTableUpdates()
         genericView.updateVisibility(genericView.tableView.isEmpty, isSearch: search != nil)
+        
+        self.genericView.tableView.scroll(to: .up(true))
     }
     
     func update(with interactions: EntertainmentInteractions) {
@@ -408,7 +403,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     
     func scrollTo(stableId:AnyHashable) -> Void {
         genericView.tabs.changeSelection(stableId: stableId)
-        genericView.tableView.scroll(to: .top(id: stableId, innerId: nil, animated: true, focus: false, inset: 0), inset:NSEdgeInsets(top:3))
+        genericView.tableView.scroll(to: .top(id: stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset:NSEdgeInsets(top:3))
     }
     
 

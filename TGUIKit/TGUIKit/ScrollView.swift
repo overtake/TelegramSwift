@@ -36,7 +36,7 @@ open class ScrollView: NSScrollView{
     public var deltaCorner:Int64 = 60
     
   
-    override open static var isCompatibleWithResponsiveScrolling: Bool {
+    override public static var isCompatibleWithResponsiveScrolling: Bool {
         return true
     }
 

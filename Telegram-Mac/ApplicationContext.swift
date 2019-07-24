@@ -431,6 +431,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
             case let .chat(peerId, necessary):
+                
                 let peerSemaphore = DispatchSemaphore(value: 0)
                 var peer: Peer?
                 _ = context.account.postbox.transaction { transaction in
@@ -439,7 +440,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 }.start()
                 peerSemaphore.wait()
                 
-                if necessary || context.sharedContext.layout != .single {
+                if (necessary || context.sharedContext.layout != .single) && launchSettings.openAtLaunch {
                     if let peer = peer {
                         let controller = ChatController(context: context, chatLocation: .peer(peer.id))
                         controller.navigationController = self.rightController

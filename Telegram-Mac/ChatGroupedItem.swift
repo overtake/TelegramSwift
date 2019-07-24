@@ -107,7 +107,7 @@ class ChatGroupedItem: ChatRowItem {
             showChatGallery(context: context, message: message, self.table, self.parameters, type: type)
             
         }, showMessage: { [weak self] message in
-                self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: true, inset: 0))
+                self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
         }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), media: message.media.first!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia)
         
         self.parameters?.automaticDownloadFunc = { message in

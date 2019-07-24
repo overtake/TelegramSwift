@@ -37,7 +37,7 @@ private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
 }
 
 private func generateStickerPackSelection(_ color: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(30, 30), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(35, 35), contextGenerator: { size, ctx in
         ctx.interpolationQuality = .low
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         ctx.round(size, .cornerRadius)
@@ -1122,6 +1122,13 @@ struct TelegramIconsTheme {
     
     let stickerPackSelection: CGImage
     let stickerPackSelectionActive: CGImage
+    
+    let entertainment_Emoji:CGImage
+    let entertainment_Stickers:CGImage
+    let entertainment_Gifs:CGImage
+    let entertainment_Search:CGImage
+    let entertainment_Settings:CGImage
+    let entertainment_SearchCancel:CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1944,8 +1951,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                privacySettings_passcode: generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(palette.greenUI, flipVertical: true)),
                                                privacySettings_twoStep: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true)),
                                                deletedAccount: NSImage(named: "Icon_DeletedAccount")!.precomposed(),
-                                               stickerPackSelection: generateStickerPackSelection(palette.background),
-                                               stickerPackSelectionActive: generateStickerPackSelection(palette.grayForeground)
+                                               stickerPackSelection: generateStickerPackSelection(.clear),
+                                               stickerPackSelectionActive: generateStickerPackSelection(palette.grayForeground),
+                                               entertainment_Emoji: NSImage(named: "Icon_Entertainment_Emoji")!.precomposed(palette.grayIcon),
+                                               entertainment_Stickers: NSImage(named: "Icon_Entertainment_Stickers")!.precomposed(palette.grayIcon),
+                                               entertainment_Gifs: NSImage(named: "Icon_Entertainment_Gifs")!.precomposed(palette.grayIcon),
+                                               entertainment_Search: NSImage(named: "Icon_Entertainment_Search")!.precomposed(palette.grayIcon),
+                                               entertainment_Settings: NSImage(named: "Icon_Entertainment_Settings")!.precomposed(palette.grayIcon),
+                                               entertainment_SearchCancel: NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon)
     )
 }
 

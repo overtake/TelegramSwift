@@ -22,8 +22,8 @@ final class StickerPackGridItem: GridItem {
     let context: AccountContext
     let file: TelegramMediaFile
     let selected: () -> Void
-    let send:(TelegramMediaFile) -> Void
-    init(context: AccountContext, file: TelegramMediaFile, send:@escaping(TelegramMediaFile) -> Void,  selected: @escaping () -> Void) {
+    let send:(TelegramMediaFile, NSView) -> Void
+    init(context: AccountContext, file: TelegramMediaFile, send:@escaping(TelegramMediaFile, NSView) -> Void,  selected: @escaping () -> Void) {
         self.context = context
         self.file = file
         self.send = send
@@ -34,18 +34,18 @@ final class StickerPackGridItem: GridItem {
     func node(layout: GridNodeLayout, gridNode:GridNode, cachedNode: GridItemNode?) -> GridItemNode {
         if self.file.isAnimatedSticker {
             let node = AnimatedStickerGridItemView(gridNode)
-            node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
-                self?.send(file)
-                }, previewStickerSet: {_ in}, addStickerSet: {_ in}, showStickerPack: {_ in})
-            node.setup(context: self.context, file: self.file, packInfo: nil)
+            node.sendFile = { [weak self] file, view in
+                self?.send(file, view)
+            }
+            node.setup(context: self.context, file: self.file)
             node.selected = self.selected
             return node
         } else {
             let node = StickerGridItemView(gridNode)
-            node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
-                self?.send(file)
-                }, previewStickerSet: {_ in}, addStickerSet: {_ in}, showStickerPack: {_ in})
-            node.setup(context: self.context, file: self.file, packInfo: nil)
+            node.sendFile = { [weak self] file, view in
+                self?.send(file, view)
+            }
+            node.setup(context: self.context, file: self.file)
             node.selected = self.selected
             return node
         }
@@ -54,18 +54,10 @@ final class StickerPackGridItem: GridItem {
     func update(node: GridItemNode) {
         
         if let node = node as? StickerGridItemView {
-            node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
-                self?.send(file)
-                }, previewStickerSet: {_ in}, addStickerSet: {_ in}, showStickerPack: {_ in})
-            
-            node.setup(context: self.context, file: self.file, packInfo: nil)
+            node.setup(context: self.context, file: self.file)
             node.selected = self.selected
         } else if let node = node as? AnimatedStickerGridItemView {
-            node.inputNodeInteraction = EStickersInteraction(navigateToCollectionId: {_ in}, sendSticker: { [weak self] file in
-                self?.send(file)
-            }, previewStickerSet: {_ in}, addStickerSet: {_ in}, showStickerPack: {_ in})
-            
-            node.setup(context: self.context, file: self.file, packInfo: nil)
+            node.setup(context: self.context, file: self.file)
             node.selected = self.selected
         }
         
@@ -75,7 +67,7 @@ final class StickerPackGridItem: GridItem {
 
 
 final class AnimatedStickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
-    private var currentState: (AccountContext, TelegramMediaFile, CGSize, ChatMediaGridCollectionStableId?, ChatMediaGridPackHeaderInfo?)?
+    private var currentState: (AccountContext, TelegramMediaFile, CGSize)?
     
     private let view: ChatMediaAnimatedStickerView = ChatMediaAnimatedStickerView(frame: NSZeroRect)
 
@@ -88,35 +80,12 @@ final class AnimatedStickerGridItemView: GridItemNode, ModalPreviewRowViewProtoc
     }
     
     override func menu(for event: NSEvent) -> NSMenu? {
-        if let currentState = currentState, let state = currentState.3 {
-            let menu = NSMenu()
-            let file = currentState.1
-            if let reference = file.stickerReference{
-                menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
-                    self?.inputNodeInteraction?.showStickerPack(reference)
-                }))
-            }
-            if let mediaId = file.id {
-                if state == .saved {
-                    menu.addItem(ContextMenuItem(L10n.contextRemoveFaveSticker, handler: {
-                        _ = removeSavedSticker(postbox: currentState.0.account.postbox, mediaId: mediaId).start()
-                    }))
-                } else {
-                    menu.addItem(ContextMenuItem(L10n.chatContextAddFavoriteSticker, handler: {
-                        _ = addSavedSticker(postbox: currentState.0.account.postbox, network: currentState.0.account.network, file: file).start()
-                    }))
-                }
-            }
-            
-            
-            return menu
-        }
         return nil
     }
     
     private let stickerFetchedDisposable = MetaDisposable()
     
-    var inputNodeInteraction: EStickersInteraction?
+    var sendFile: ((TelegramMediaFile, NSView)->Void)?
     var selected: (() -> Void)?
     
     override init(_ grid:GridNode) {
@@ -140,21 +109,8 @@ final class AnimatedStickerGridItemView: GridItemNode, ModalPreviewRowViewProtoc
     
     private func click() {
         if mouseInside() || view._mouseInside() {
-            if let (_, file, _, _, packInfo) = currentState {
-                if let packInfo = packInfo {
-                    switch packInfo {
-                    case let .pack(_, installed):
-                        if installed {
-                            inputNodeInteraction?.sendSticker(file)
-                        } else if let reference = file.stickerReference {
-                            inputNodeInteraction?.previewStickerSet(reference)
-                        }
-                    default:
-                        inputNodeInteraction?.sendSticker(file)
-                    }
-                } else {
-                    inputNodeInteraction?.sendSticker(file)
-                }
+            if let (_, file, _) = currentState {
+                 sendFile?(file, self)
             }
         }
     }
@@ -175,13 +131,100 @@ final class AnimatedStickerGridItemView: GridItemNode, ModalPreviewRowViewProtoc
     }
    
     
-    func setup(context: AccountContext, file: TelegramMediaFile, collectionId: ChatMediaGridCollectionStableId? = nil, packInfo: ChatMediaGridPackHeaderInfo?) {
+    func setup(context: AccountContext, file: TelegramMediaFile) {
         let size = NSMakeSize(60, 60)
+        self.currentState = (context, file, size)
+        view.update(with: file, size: size, context: context, parent: nil, table: nil, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+    }
+    
+    
+}
 
-        self.currentState = (context, file, size, collectionId, packInfo)
+
+
+
+final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
+    private var currentState: (AccountContext, TelegramMediaFile, CGSize)?
+    
+    
+    private let imageView: TransformImageView = TransformImageView()
+    
+    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+        if let currentState = currentState {
+            let reference = currentState.1.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1) : FileMediaReference.standalone(media: currentState.1)
+            return .file(reference, StickerPreviewModalView.self)
+        }
+        return nil
+    }
+    
+    override func menu(for event: NSEvent) -> NSMenu? {
+        return nil
+    }
+    
+    private let stickerFetchedDisposable = MetaDisposable()
+    
+    var sendFile: ((TelegramMediaFile, NSView)->Void)?
+    var selected: (() -> Void)?
+    
+    override init(_ grid:GridNode) {
+        super.init(grid)
+        
+        //backgroundColor = .random
+        //layer?.cornerRadius = .cornerRadius
+        addSubview(imageView)
         
         
-       view.update(with: file, size: size, context: context, parent: nil, table: nil, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+        set(handler: { [weak self] (control) in
+            if let window = self?.window as? Window, let currentState = self?.currentState, let grid = self?.grid {
+                _ = startModalPreviewHandle(grid, window: window, context: currentState.0)
+            }
+        }, for: .LongMouseDown)
+        set(handler: { [weak self] _ in
+            self?.click()
+        }, for: .SingleClick)
+    }
+    
+    private func click() {
+        if mouseInside() || imageView._mouseInside() {
+            if let (_, file, _) = currentState {
+                self.sendFile?(file, self)
+            }
+        }
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        imageView.center()
+        
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        stickerFetchedDisposable.dispose()
+    }
+    
+    func setup(context: AccountContext, file: TelegramMediaFile) {
+        if let dimensions = file.dimensions {
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(60, 60), boundingSize: NSMakeSize(60, 60), intrinsicInsets: NSEdgeInsets())
+            imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { image -> Signal<Void, NoError> in
+                return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
+            })
+            
+            let imageSize = dimensions.aspectFitted(NSMakeSize(60, 60))
+            imageView.set(arguments: arguments)
+            
+            imageView.setFrameSize(imageSize)
+            currentState = (context, file, dimensions)
+        }
     }
     
     

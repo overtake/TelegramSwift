@@ -121,6 +121,9 @@ final class RenderedFrame : Equatable {
         return lhs.frame == rhs.frame
     }
     
+    var bufferSize: Int {
+        return Int(size.width * CGFloat(backingScale) * size.height * CGFloat(backingScale) * 4)
+    }
     
     deinit {
         data.deallocate()
@@ -723,6 +726,8 @@ private final class ContextHolder {
 
 private var holder: ContextHolder?
 
+
+
 private final class MetalRenderer: View {
     private let texture: MTLTexture
     private let commandQueue: MTLCommandQueue?
@@ -842,8 +847,8 @@ class LottiePlayerView : NSView {
                 if holder == nil {
                     holder = ContextHolder()
                 }
-                if let context = holder?.context {
-                    let metal = MetalRenderer(animation: animation, context: context)
+                if let holder = holder {
+                    let metal = MetalRenderer(animation: animation, context: holder.context)
                     self.addSubview(metal)
                     let layer = Unmanaged.passRetained(metal)
                     
@@ -860,8 +865,32 @@ class LottiePlayerView : NSView {
                         self?.stateValue.set(state)
                     })
                 } else {
-                    self.context = nil
+                    let fallback = NSView()
+                    fallback.wantsLayer = true
+                    fallback.setFrameSize(animation.size)
+                    self.addSubview(fallback)
+                    let layer = Unmanaged.passRetained(fallback)
+                    
+                    self.context = PlayerContext(animation, displayFrame: { frame in
+                        
+                        let image = generateImagePixel(frame.size, scale: CGFloat(frame.backingScale), pixelGenerator: { (_, pixelData) in
+                            memcpy(pixelData, frame.data, frame.bufferSize)
+                        })
+                        Queue.mainQueue().async {
+                            layer.takeUnretainedValue().layer?.contents = image
+                        }
+                    }, release: {
+                        Queue.mainQueue().async {
+                            layer.takeRetainedValue().removeFromSuperview()
+                        }
+                    }, updateState: { [weak self] state in
+                        guard let _ = self?.context else {
+                            return
+                        }
+                        self?.stateValue.set(state)
+                    })
                 }
+                
                 
             }
             

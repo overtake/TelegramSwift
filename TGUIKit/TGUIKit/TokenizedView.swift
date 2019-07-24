@@ -25,6 +25,7 @@ public func ==(lhs:SearchToken, rhs: SearchToken) -> Bool {
 
 private class TokenView : Control {
     fileprivate let token:SearchToken
+    private var isFailed: Bool = false
     private let dismiss: ImageButton = ImageButton()
     private let nameView: TextView = TextView()
     fileprivate var immediatlyPaste: Bool = true
@@ -59,6 +60,14 @@ private class TokenView : Control {
         }, for: .Click)
     }
     
+    fileprivate func setFailed(_ isFailed: Bool, animated: Bool) {
+        self.isFailed = isFailed
+        self.updateLocalizationAndTheme()
+        if isFailed {
+            self.shake()
+        }
+    }
+    
     fileprivate var isPerfectSized: Bool {
         return nameView.layout?.isPerfectSized ?? false
     }
@@ -83,13 +92,26 @@ private class TokenView : Control {
         dismiss.centerY(x: frame.width - 5 - dismiss.frame.width)
     }
     
+    var _backgroundColor: NSColor {
+        
+        var r:CGFloat = 0, g:CGFloat = 0, b:CGFloat = 0, a:CGFloat = 0
+        
+        var redSelected = presentation.colors.redUI
+
+        redSelected.getRed(&r, green: &g, blue: &b, alpha: &a)
+        redSelected =  NSColor(red: min(r + 0.1, 1.0), green: min(g + 0.1, 1.0), blue: min(b + 0.1, 1.0), alpha: a)
+        
+        return isSelected ? (isFailed ? redSelected : presentation.colors.blueSelect) : (isFailed ? presentation.colors.redUI : presentation.colors.blueFill)
+    }
+    
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white.withAlphaComponent(0.7)), for: .Normal)
         dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white), for: .Highlight)
         _ = dismiss.sizeToFit()
-        nameView.backgroundColor = isSelected ? presentation.colors.blueSelect : presentation.colors.blueFill
-        self.background = isSelected ? presentation.colors.blueSelect : presentation.colors.blueFill
+        
+        nameView.backgroundColor = _backgroundColor
+        self.background = _backgroundColor
     }
     
     required public init?(coder: NSCoder) {
@@ -107,6 +129,7 @@ public protocol TokenizedProtocol : class {
 
 public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelegate {
     private var tokens:[SearchToken] = []
+    private var failedTokens:[Int64] = []
     private let container: View = View()
     private let input:SearchTextField = SearchTextField()
     private(set) public var state: SearchFieldState = .None {
@@ -363,7 +386,34 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         updateLocalizationAndTheme()
     }
     
-
+    public func markAsFailed(_ ids:[Int64], animated: Bool) {
+        self.failedTokens = ids
+        self.updateFailed(animated)
+    }
+    
+    public func addTooltip(for id: Int64, text: String) {
+        for token in self.container.subviews {
+            if let token = token as? TokenView, token.token.uniqueId == id {
+                tooltip(for: token, text: text)
+                break
+            }
+        }
+    }
+    
+    public func removeAllFailed(animated: Bool) {
+        self.failedTokens = []
+        self.updateFailed(animated)
+    }
+    
+    private func updateFailed(_ animated: Bool) {
+        
+        for token in self.container.subviews {
+            if let token = token as? TokenView {
+                 token.setFailed(failedTokens.contains(token.token.uniqueId), animated: animated)
+            }
+        }
+        
+    }
     
     open func didResignResponder() {
         state = .None

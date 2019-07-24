@@ -226,8 +226,12 @@ class ShortPeerRowItem: GeneralRowItem {
             addition += 48
         case .selectable:
             addition += 20
-        case .context:
-            addition += 48
+        case let .context(text):
+            let attr = NSAttributedString.initialize(string: text, color: .text, font: statusStyle.font)
+            addition += attr.size().width + 10
+        case let .nextContext(text):
+            let attr = NSAttributedString.initialize(string: text, color: .text, font: statusStyle.font)
+            addition += attr.size().width + 10
         default:
             break
         }

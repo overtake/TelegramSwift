@@ -227,6 +227,14 @@ final class InputDataGeneralData : Equatable {
 enum InputDataSectionType : Equatable {
     case normal
     case custom(CGFloat)
+    var height: CGFloat {
+        switch self {
+        case .normal:
+            return 20
+        case let .custom(height):
+            return height
+        }
+    }
 }
 
 enum InputDataEntry : Identifiable, Comparable {

@@ -22,13 +22,17 @@ class ChatInputActionsView: View, Notifable {
     private let voice:ImageButton = ImageButton()
     private let muteChannelMessages:ImageButton = ImageButton()
     private let entertaiments:ImageButton = ImageButton()
+    private let slowModeTimeout:TitleButton = TitleButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
     private var secretTimer:ImageButton?
     private var inlineProgress: ProgressIndicator? = nil
+    
+    private var prevView: View
+    
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
-       
+        self.prevView = self.send
         super.init(frame: frameRect)
         
         addSubview(keyboard)
@@ -36,11 +40,12 @@ class ChatInputActionsView: View, Notifable {
         addSubview(voice)
         addSubview(inlineCancel)
         addSubview(muteChannelMessages)
+        addSubview(slowModeTimeout)
         inlineCancel.isHidden = true
         send.isHidden = true
         voice.isHidden = true
         muteChannelMessages.isHidden = true
-        
+        slowModeTimeout.isHidden = true
         voice.autohighlight = false
         muteChannelMessages.autohighlight = false
         
@@ -58,8 +63,8 @@ class ChatInputActionsView: View, Notifable {
         }, for: .Click)
         
         
-        voice.set(handler: { [weak self] _ in
-            self?.chatInteraction.startRecording(false)
+        voice.set(handler: { [weak self] control in
+            self?.chatInteraction.startRecording(false, control)
         }, for: .LongMouseDown)
 
         
@@ -115,6 +120,10 @@ class ChatInputActionsView: View, Notifable {
         inlineCancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
         _ = inlineCancel.sizeToFit()
         secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
+        
+        slowModeTimeout.set(font: .normal(.text), for: .Normal)
+        slowModeTimeout.set(color: theme.colors.grayIcon, for: .Normal)
+        _ = self.slowModeTimeout.sizeToFit(NSZeroSize, NSMakeSize(38, 30), thatFit: true)
 
     }
     
@@ -125,7 +134,7 @@ class ChatInputActionsView: View, Notifable {
     
     var entertaimentsPopover: ViewController {
         if chatInteraction.presentation.state == .editing {
-            let emoji = EmojiViewController(chatInteraction.context)
+            let emoji = EmojiViewController(chatInteraction.context, search: .single(SearchState(state: .None, request: nil)))
             if let interactions = chatInteraction.context.sharedContext.bindings.entertainment().interactions {
                 emoji.update(with: interactions)
             }
@@ -151,7 +160,7 @@ class ChatInputActionsView: View, Notifable {
     }
     
     private func showEntertainment() {
-        let rect = NSMakeRect(0, 0, 350, max(mainWindow.frame.height - 300, 300))
+        let rect = NSMakeRect(0, 0, 350, max(mainWindow.frame.height - 400, 300))
         entertaimentsPopover._frameRect = rect
         entertaimentsPopover.view.frame = rect
         showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
@@ -184,15 +193,15 @@ class ChatInputActionsView: View, Notifable {
     
     override func layout() {
         super.layout()
-        inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset)
-        inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 8)
+        inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset - 6)
+        inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 10)
         voice.centerY(x:frame.width - voice.frame.width - iconsInset)
         send.centerY(x: frame.width - send.frame.width - iconsInset)
+        slowModeTimeout.centerY(x: frame.width - slowModeTimeout.frame.width - iconsInset)
         entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - 0)
         secretTimer?.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
         keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
         muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width)
-        
     }
     
     func stop() {
@@ -220,11 +229,23 @@ class ChatInputActionsView: View, Notifable {
         return false
     }
     
+    var currentActionView: NSView {
+        if !self.send.isHidden {
+            return self.send
+        } else if !self.voice.isHidden {
+            return self.voice
+        } else if !self.slowModeTimeout.isHidden {
+            return self.slowModeTimeout
+        } else {
+            return self
+        }
+    }
+    
     
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || value.interfaceState.editState != oldValue.interfaceState.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode {
             
                 var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
                 
@@ -255,9 +276,9 @@ class ChatInputActionsView: View, Notifable {
                     newInlineRequest = false
                 }
                 
-                
-                
-                
+                let newSlowModeCounter: Bool = value.slowMode?.timeout != nil && value.interfaceState.editState == nil
+                let oldSlowModeCounter: Bool = oldValue.slowMode?.timeout != nil && oldValue.interfaceState.editState == nil
+
                 if let query = oldValue.inputQueryResult, case .contextRequestResult(_, let data) = query {
                     oldInlineLoading = data == nil
                 }
@@ -272,24 +293,25 @@ class ChatInputActionsView: View, Notifable {
                 let sNew = !value.effectiveInput.inputText.isEmpty || !value.interfaceState.forwardMessageIds.isEmpty || value.state == .editing
                 let sOld = !oldValue.effectiveInput.inputText.isEmpty || !oldValue.interfaceState.forwardMessageIds.isEmpty || oldValue.state == .editing
                 
-                let anim = animated && (sNew != sOld || newInlineRequest != oldInlineRequest)
-                if sNew != sOld || first || newInlineRequest != oldInlineRequest || oldInlineLoading != newInlineLoading {
+                if sNew != sOld || first || newInlineRequest != oldInlineRequest || oldInlineLoading != newInlineLoading || newSlowModeCounter != oldSlowModeCounter {
                     first = false
                     
-                    let prevView:View
+                    let prevView:View = self.prevView
                     let newView:View
                     
-                    if newInlineRequest {
-                        prevView = !sOld ? voice : send
+                    if newSlowModeCounter {
+                        newView = slowModeTimeout
+                    } else if newInlineRequest {
                         newView = inlineCancel
                     } else if oldInlineRequest {
-                        prevView = inlineCancel
                         newView = sNew ? send : voice
                     } else {
-                        prevView = sNew ? voice : send
                         newView = sNew ? send : voice
                     }
 
+                    self.prevView = newView
+                    
+                    let anim = animated && prevView != newView
                     
                     newView.isHidden = false
                     newView.layer?.opacity = 1.0
@@ -302,8 +324,11 @@ class ChatInputActionsView: View, Notifable {
                                 prevView.isHidden = true
                             }
                         })
-                    } else {
+                    } else if prevView != newView {
                         prevView.isHidden = true
+                    } else {
+                        prevView.isHidden = false
+                        prevView.layer?.opacity = 1.0
                     }
                 }
                 
@@ -311,7 +336,7 @@ class ChatInputActionsView: View, Notifable {
                
                 if newInlineLoading {
                     if inlineProgress == nil {
-                        inlineProgress = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
+                        inlineProgress = ProgressIndicator(frame: NSMakeRect(0, 0, 26, 26))
                         inlineProgress?.progressColor = theme.colors.grayIcon
                         addSubview(inlineProgress!, positioned: .below, relativeTo: inlineCancel)
                         inlineProgress?.set(handler: { [weak self] _ in
@@ -325,8 +350,16 @@ class ChatInputActionsView: View, Notifable {
                         }, for: .Click)
                     }
                 } else {
-                    inlineProgress?.removeFromSuperview()
-                    inlineProgress = nil
+                    if let inlineProgress = inlineProgress {
+                        self.inlineProgress = nil
+                        if animated {
+                            inlineProgress.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak inlineProgress] _ in
+                                inlineProgress?.removeFromSuperview()
+                            })
+                        } else {
+                            inlineProgress.removeFromSuperview()
+                        }
+                    }
                 }
        
                 entertaiments.apply(state: .Normal)
@@ -344,6 +377,12 @@ class ChatInputActionsView: View, Notifable {
                         self.keyboard.set(image: theme.icons.chatActiveReplyMarkup, for: .Normal)
                     }
 
+                }
+                if let slowMode = value.slowMode, let timeout = slowMode.timeout, timeout >= 0 {
+                    let minutes = timeout / 60
+                    let seconds = timeout % 60
+                    let string = String(format: "%@:%@", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
+                    self.slowModeTimeout.set(text: string, for: .Normal)
                 }
                 
                 setFrameSize(size)
@@ -367,9 +406,20 @@ class ChatInputActionsView: View, Notifable {
     }
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
-        send.set(handler: { _ in
-            chatInteraction.sendMessage()
+        send.set(handler: { control in
+            if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                showSlowModeTimeoutTooltip(slowMode, for: control)
+            } else {
+                chatInteraction.sendMessage()
+            }
         }, for: .Click)
+        
+        slowModeTimeout.set(handler: { control in
+            if let slowMode = chatInteraction.presentation.slowMode {
+                showSlowModeTimeoutTooltip(slowMode, for: control)
+            }
+        }, for: .Click)
+        
         
         chatInteraction.add(observer: self)
         notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)

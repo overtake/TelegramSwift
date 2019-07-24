@@ -102,7 +102,7 @@ final class ChatInteraction : InterfaceObserver  {
     var sendCommand:(PeerCommand)->Void = {_ in }
     var setNavigationAction:(NavigationModalAction)->Void = {_ in}
     var switchInlinePeer:(PeerId, ChatInitialAction)->Void = {_,_  in}
-    var showPreviewSender:([URL], Bool)->Void = {_,_  in}
+    var showPreviewSender:([URL], Bool, NSAttributedString?)->Void = {_,_,_  in}
     var setSecretChatMessageAutoremoveTimeout:(Int32?)->Void = {_ in}
     var toggleNotifications:()->Void = {}
     var removeAndCloseChat:()->Void = {}
@@ -118,7 +118,7 @@ final class ChatInteraction : InterfaceObserver  {
     var jumpToDate:(Date)->Void = {_ in}
     var openFeedInfo: (PeerGroupId)->Void = {_ in}
     var showNextPost:()->Void = {}
-    var startRecording:(Bool)->Void = {_ in}
+    var startRecording:(Bool, NSView?)->Void = {_,_ in}
     var openProxySettings: ()->Void = {}
     var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
     var clearMentions:()->Void = {}
@@ -284,13 +284,16 @@ final class ChatInteraction : InterfaceObserver  {
                     }
                 }
                 if invoke {
-                    showPreviewSender( list.map { URL(fileURLWithPath: $0) }, true )
+                    showPreviewSender( list.map { URL(fileURLWithPath: $0) }, true, nil )
                 }
             case let .forward(messageIds, text, _):
                 update(animated: animated, {$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(text != nil ? ChatTextInputState(inputText: text!) : $0.inputState)})})
             default:
                 break
             }
+            update({
+                $0.withoutInitialAction()
+            })
         }
     }
     

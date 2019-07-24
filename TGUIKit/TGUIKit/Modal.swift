@@ -329,6 +329,8 @@ public class Modal: NSObject {
         }
         
         container = ModalContainerView(frame: containerRect)
+        container.autoresizingMask = []
+        container.autoresizesSubviews = false
         container.layer?.cornerRadius = .cornerRadius
         container.layer?.shouldRasterize = true
         container.layer?.rasterizationScale = CGFloat(System.backingScale)
@@ -441,11 +443,14 @@ public class Modal: NSObject {
         
         
         if focus != container.frame {
+            CATransaction.begin()
             container.change(size: focus.size, animated: animated)
             container.change(pos: focus.origin, animated: animated)
             
             controller?.view._change(size: size, animated: animated)
             controller?.view._change(pos: NSMakePoint(0, headerOffset), animated: animated)
+            controller?.didResizeView(size, animated: animated)
+            CATransaction.commit()
         }
        
     }

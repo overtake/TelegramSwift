@@ -13,10 +13,10 @@ import SwiftSignalKitMac
 import PostboxMac
 
 final class ContextMediaArguments {
-    let sendResult: (ChatContextResult) -> Void
+    let sendResult: (ChatContextResult, NSView) -> Void
     let menuItems: (TelegramMediaFile) -> Signal<[ContextMenuItem], NoError>
     
-    init(sendResult: @escaping(ChatContextResult) -> Void, menuItems: @escaping(TelegramMediaFile) -> Signal<[ContextMenuItem], NoError> = { _ in return .single([]) }) {
+    init(sendResult: @escaping(ChatContextResult, NSView) -> Void, menuItems: @escaping(TelegramMediaFile) -> Signal<[ContextMenuItem], NoError> = { _ in return .single([]) }) {
         self.sendResult = sendResult
         self.menuItems = menuItems
     }
@@ -143,11 +143,19 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     let view = GIFContainerView()
                     let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     
-                    view.set(handler: { _ in
-                        item.arguments.sendResult(item.result.results[i])
+                    view.set(handler: { [weak item] control in
+                        if let item = item {
+                            item.arguments.sendResult(item.result.results[i], control)
+                        }
                     }, for: .Click)
                     
-                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, iconSignal: signal)
+                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, iconSignal: signal)
+                    if i != (item.result.entries.count - 1) {
+                        let layer = View()
+                        layer.frame = NSMakeRect(view.frame.width - 2.0, 0, 2.0, view.frame.height)
+                        layer.background = theme.colors.background
+                        view.addSubview(layer)
+                    }
                     container = view
                 case let .sticker(data):
                     if data.file.isAnimatedSticker {
@@ -205,7 +213,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
             for size in item.result.sizes {
                 
                 if point.x > inset && point.x < inset + size.width {
-                    item.arguments.sendResult(item.result.results[i])
+                    item.arguments.sendResult(item.result.results[i], self.subviews[i])
                     break
                 }
                 inset += size.width

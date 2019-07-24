@@ -38,7 +38,7 @@ public func systemBoldFont(_ size:CGFloat) ->NSFont {
 }
 
 public extension NSFont {
-    public static func normal(_ size:FontSize) ->NSFont {
+    static func normal(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
             return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.regular)
@@ -47,11 +47,15 @@ public extension NSFont {
         }
     }
     
-    public static func italic(_ size: FontSize) -> NSFont {
+    static func italic(_ size: FontSize) -> NSFont {
         return NSFontManager.shared.convert(.normal(size), toHaveTrait: .italicFontMask)
     }
     
-    public static func avatar(_ size: FontSize) -> NSFont {
+    static func boldItalic(_ size: FontSize) -> NSFont {
+        return NSFontManager.shared.convert(.normal(size), toHaveTrait: [.italicFontMask, .boldFontMask])
+    }
+    
+    static func avatar(_ size: FontSize) -> NSFont {
         
         if let font = NSFont(name: ".SFCompactRounded-Semibold", size: size) {
             return font
@@ -60,7 +64,7 @@ public extension NSFont {
         }
     }
     
-    public static func medium(_ size:FontSize) ->NSFont {
+    static func medium(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
             return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.semibold)
@@ -70,7 +74,7 @@ public extension NSFont {
         
     }
     
-    public static func bold(_ size:FontSize) ->NSFont {
+    static func bold(_ size:FontSize) ->NSFont {
         
         if #available(OSX 10.11, *) {
             return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.bold)
@@ -79,7 +83,7 @@ public extension NSFont {
         }
     }
     
-    public static func code(_ size:FontSize) ->NSFont {
+    static func code(_ size:FontSize) ->NSFont {
         return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: 17.0)
     }
 }
@@ -87,12 +91,12 @@ public extension NSFont {
 public typealias FontSize = CGFloat
 
 public extension FontSize {
-    public static let small: CGFloat = 11.0
-    public static let short: CGFloat = 12.0
-    public static let text: CGFloat = 13.0
-    public static let title: CGFloat = 14.0
-    public static let header: CGFloat = 15.0
-    public static let huge: CGFloat = 18.0
+    static let small: CGFloat = 11.0
+    static let short: CGFloat = 12.0
+    static let text: CGFloat = 13.0
+    static let title: CGFloat = 14.0
+    static let header: CGFloat = 15.0
+    static let huge: CGFloat = 18.0
 }
 
 

@@ -213,7 +213,7 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
                 
                 let editable:Bool
                 switch participant.participant {
-                case let .member(_, _, adminInfo, _):
+                case let .member(_, _, adminInfo, _, _):
                     if let adminInfo = adminInfo {
                         editable = adminInfo.canBeEditedByAccountPeer
                     } else {
@@ -320,6 +320,10 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 switch error {
                 case .limitExceeded:
                     text = L10n.channelErrorAddTooMuch
+                case .botDoesntSupportGroups:
+                    text = L10n.channelBotDoesntSupportGroups
+                case .tooMuchBots:
+                    text = L10n.channelTooMuchBots
                 case .tooMuchJoined:
                     text = L10n.channelErrorAddTooMuch
                 case .generic:

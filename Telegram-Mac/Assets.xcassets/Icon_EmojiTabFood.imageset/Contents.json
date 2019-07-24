@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "ic_eats@1x.png",
+      "filename" : "Food.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "ic_eats@2x.png",
+      "filename" : "Food@2x.png",
       "scale" : "2x"
     },
     {

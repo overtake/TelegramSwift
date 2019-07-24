@@ -125,15 +125,13 @@ private class PhotoCache {
     let maxCount:Int = 50
     private var values:NSCache<NSString, PhotoCachedRecord> = NSCache()
     
-    init(_ memoryLimit:Int = 100) {
+    init(_ memoryLimit:Int = 15) {
         self.memoryLimit = memoryLimit
         self.values.countLimit = memoryLimit
     }
     
     fileprivate func cacheImage(_ image:CGImage, for key:PhotoCacheKeyEntry) {
         self.values.setObject(PhotoCachedRecord(image: image, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: key.stringValue)
-        var bp:Int = 0
-        bp += 1
     }
     
     private func freeMemoryIfNeeded() {
@@ -156,8 +154,8 @@ private class PhotoCache {
 
 
 private let peerPhotoCache = PhotoCache()
-private let photosCache = PhotoCache(100)
-private let photoThumbsCache = PhotoCache(100)
+private let photosCache = PhotoCache(50)
+private let photoThumbsCache = PhotoCache(50)
 
 private let stickersCache = PhotoCache(500)
 
@@ -206,7 +204,7 @@ func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloa
     let value: CGImage?
     var full: Bool = false
     
-    if arguments.imageSize.width == 60, let media = media as? TelegramMediaFile, media.isSticker || media.isAnimatedSticker, let image = stickersCache.cachedImage(for: entry) {
+    if arguments.imageSize.width <= 60, let media = media as? TelegramMediaFile, media.isSticker || media.isAnimatedSticker, let image = stickersCache.cachedImage(for: entry) {
         value = image
         full = true
     } else if let image = photosCache.cachedImage(for: entry) {
@@ -236,7 +234,7 @@ func cacheMedia(signal:Signal<(CGImage?, Bool), NoError>, media: Media, argument
     return signal |> deliverOn(resourcesQueue) |> mapToSignal { (image, highResolution) -> Signal<Void, NoError> in
         if let image = image {
             let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
-            if arguments.imageSize.width == 60, highResolution, let media = media as? TelegramMediaFile,  media.isSticker || media.isAnimatedSticker {
+            if arguments.imageSize.width <= 60, highResolution, let media = media as? TelegramMediaFile,  media.isSticker || media.isAnimatedSticker {
                 return .single(stickersCache.cacheImage(image, for: entry))
             } else if !highResolution {
                 return .single(photoThumbsCache.cacheImage(image, for: entry))

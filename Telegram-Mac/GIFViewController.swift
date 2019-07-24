@@ -16,14 +16,14 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
         switch entry {
         case let .contextMediaResult(collection, row, index):
-            return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { result in
+            return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { result, view in
                 if let collection = collection {
-                    chatInteraction?.sendInlineResult(collection, result)
+                    chatInteraction?.sendInlineResult(collection, result, view)
                 } else {
                     switch result {
                     case let .internalReference(_, _, _, _, _, _, file, _):
                         if let file = file {
-                            chatInteraction?.sendAppFile(file)
+                            chatInteraction?.sendAppFile(file, view)
                         }
                     default:
                         break
@@ -75,27 +75,30 @@ private func gifEntries(for collection: ChatContextResultCollection?, initialSiz
 }
 
 final class RecentGifsArguments {
-    var sendInlineResult:(ChatContextResultCollection,ChatContextResult) -> Void = {_,_  in}
-    var sendAppFile:(TelegramMediaFile) -> Void = {_ in}
+    var sendInlineResult:(ChatContextResultCollection,ChatContextResult, NSView) -> Void = { _,_,_  in}
+    var sendAppFile:(TelegramMediaFile, NSView) -> Void = { _,_ in}
 }
 
 final class TableContainer : View {
+    private var searchState: SearchState = SearchState(state: .None, request: nil)
     fileprivate var tableView: TableView?
     fileprivate var restrictedView:RestrictionWrappedView?
-    fileprivate let searchView: SearchView
-    fileprivate let searchContainer: View = View()
     fileprivate let progressView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 30, 30))
     fileprivate let emptyResults: ImageView = ImageView()
     required init(frame frameRect: NSRect) {
-        searchView = SearchView(frame: NSMakeRect(0, 0, frameRect.width - 20, 30))
         super.init(frame: frameRect)
-        searchContainer.addSubview(searchView)
-        addSubview(searchContainer)
-        addSubview(emptyResults)
-        
+        emptyResults.contentGravity = .center
         updateLocalizationAndTheme()
         
         reinstall()
+    }
+    
+    func updateSeacrhState(_ searchState: SearchState) {
+        if searchState != self.searchState {
+            self.searchState = searchState
+            tableView?.change(pos: NSMakePoint(0, searchState.state == .Focus ? 50 : 0), animated: true)
+            needsLayout = true
+        }
     }
     
     func updateRestricion(_ peer: Peer?) {
@@ -114,26 +117,29 @@ final class TableContainer : View {
     func reinstall() {
         tableView?.removeFromSuperview()
         tableView = TableView(frame: bounds)
-        addSubview(tableView!)
+        var subviews:[NSView] = [tableView!, emptyResults]
+        
         restrictedView?.removeFromSuperview()
         if let restrictedView = restrictedView {
-            addSubview(restrictedView)
+            subviews.append(restrictedView)
         }
+        self.subviews = subviews
     }
     
-    fileprivate func updateLoading(_ isLoading: Bool) {
-        if isLoading {
-            if progressView.superview == nil {
-                addSubview(progressView)
-            }
-            progressView.center()
-        } else {
-            progressView.removeFromSuperview()
-        }
-        tableView?.isHidden = isLoading
+    fileprivate func merge(with transition: TableUpdateTransition, animated: Bool) {
+        self.tableView?.merge(with: transition)
         if let tableView = tableView {
-            emptyResults.isHidden = !tableView.isEmpty || isLoading
-            tableView.isHidden = tableView.isHidden || tableView.isEmpty
+            let emptySearchHidden: Bool = !tableView.isEmpty
+            
+            if !emptySearchHidden {
+                emptyResults.isHidden = false
+            }
+            emptyResults.change(opacity: emptySearchHidden ? 0 : 1, animated: animated, completion: { [weak self] completed in
+                if completed {
+                    self?.emptyResults.isHidden = emptySearchHidden
+                }
+            })
+            
         } else {
             emptyResults.isHidden = true
         }
@@ -147,20 +153,16 @@ final class TableContainer : View {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         self.restrictedView?.updateLocalizationAndTheme()
+        emptyResults.background = theme.colors.background
         emptyResults.image = theme.icons.stickersEmptySearch
-        emptyResults.sizeToFit()
-        searchView.updateLocalizationAndTheme()
     }
     
     override func layout() {
         super.layout()
-        searchContainer.frame = NSMakeRect(0, 0, frame.width, 50)
-        searchView.setFrameSize(searchContainer.frame.width - 20, 30)
-        searchView.center()
-        tableView?.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width, frame.height - searchContainer.frame.height)
+        tableView?.frame = NSMakeRect(0, self.searchState.state == .Focus ? 50 : 0, frame.width, frame.height - (self.searchState.state == .Focus ? 50 : 0))
         restrictedView?.setFrameSize(frame.size)
         progressView.center()
-        emptyResults.center()
+        emptyResults.frame = bounds
     }
     
     required init?(coder: NSCoder) {
@@ -169,12 +171,30 @@ final class TableContainer : View {
 }
 
 class GIFViewController: TelegramGenericViewController<TableContainer>, Notifable {
+    
+    private let searchValue = ValuePromise<SearchState>()
+    private var searchState: SearchState = .init(state: .None, request: nil) {
+        didSet {
+            self.searchValue.set(searchState)
+        }
+    }
+    
     private var interactions:EntertainmentInteractions?
     private var chatInteraction: ChatInteraction?
     private let disposable = MetaDisposable()
-    override init(_ context: AccountContext) {
+    private let searchStateDisposable = MetaDisposable()
+    var makeSearchCommand:((ESearchCommand)->Void)?
+    init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
         super.init(context)
         bar = .init(height: 0)
+        
+        self.searchStateDisposable.set(search.start(next: { [weak self] state in
+            self?.searchState = state
+            if !state.request.isEmpty {
+                self?.makeSearchCommand?(.loading)
+            }
+            self?.genericView.updateSeacrhState(state)
+        }))
     }
     
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
@@ -202,7 +222,6 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         disposable.set(nil)
-        genericView.searchView.change(state: .None, true)
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -211,10 +230,6 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         genericView.tableView?.removeFromSuperview()
         genericView.tableView = nil
         ready.set(.single(false))
-    }
-    
-    override func firstResponder() -> NSResponder? {
-        return self.genericView.searchView.input
     }
     
     
@@ -244,65 +259,55 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         _ = atomicSize.swap(_frameRect.size)
         let arguments = RecentGifsArguments()
         
-        arguments.sendAppFile = { [weak self] file in
-            self?.chatInteraction?.sendAppFile(file)
-            self?.genericView.searchView.change(state: .None, true)
-            self?.context.sharedContext.bindings.entertainment().closePopover()
+        arguments.sendAppFile = { [weak self] file, view in
+            if let slowMode = self?.chatInteraction?.presentation.slowMode, slowMode.hasLocked {
+                showSlowModeTimeoutTooltip(slowMode, for: view)
+            } else {
+                self?.chatInteraction?.sendAppFile(file)
+                self?.makeSearchCommand?(.close)
+                self?.context.sharedContext.bindings.entertainment().closePopover()
+            }
         }
         
-        arguments.sendInlineResult = { [weak self] results, result in
-            self?.chatInteraction?.sendInlineResult(results, result)
-            self?.genericView.searchView.change(state: .None, true)
-            self?.context.sharedContext.bindings.entertainment().closePopover()
+        arguments.sendInlineResult = { [weak self] results, result, view in
+            if let slowMode = self?.chatInteraction?.presentation.slowMode, slowMode.hasLocked {
+                showSlowModeTimeoutTooltip(slowMode, for: view)
+            } else {
+                self?.chatInteraction?.sendInlineResult(results, result)
+                self?.makeSearchCommand?(.close)
+                self?.context.sharedContext.bindings.entertainment().closePopover()
+            }
         }
         
         let previous:Atomic<[InputContextEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         let context = self.context
         
-        let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: genericView.searchView.state, request: genericView.searchView.query), ignoreRepeated: true)
         
-        let searchInteractions = SearchInteractions({ [weak self] state, _ in
-            search.set(state)
-            switch state.state {
-            case .None:
-                self?.scrollup()
-            default:
-                break
-            }
-        }, { [weak self] state in
-            search.set(state)
-            switch state.state {
-            case .None:
-                self?.scrollup()
-            default:
-                break
-            }
-        })
-        
-        
-        genericView.searchView.searchInteractions = searchInteractions
-        
-        let signal = combineLatest( context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> deliverOnPrepareQueue, search.get() |> deliverOnPrepareQueue) |> mapToSignal { view, search -> Signal<TableUpdateTransition?, NoError> in
+        let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get() |> distinctUntilChanged(isEqual: { prev, new in
+            return prev.request == new.request
+        })) |> mapToSignal { view, search -> Signal<TableUpdateTransition, NoError> in
             
             if search.request.isEmpty {
                 let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView
-                let entries = recentEntries(for: postboxView, initialSize: initialSize.modify({$0})).sorted(by: <)
-                return .single(prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.modify({$0}), chatInteraction: arguments))
+                let entries = recentEntries(for: postboxView, initialSize: initialSize.with { $0 }).sorted(by: <)
+                return .single(prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, chatInteraction: arguments))
             } else {
-                return .single(nil) |> then(searchGifs(account: context.account, query: search.request.lowercased()) |> map { result in
-                    let entries = gifEntries(for: result, initialSize: initialSize.modify({$0}))
-                    return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.modify({$0}), chatInteraction: arguments)
-                } |> delay(0.2, queue: Queue.concurrentDefaultQueue()))
+                return searchGifs(account: context.account, query: search.request.lowercased()) |> map { result in
+                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 })
+                    return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, chatInteraction: arguments)
+                } |> delay(0.2, queue: Queue.concurrentDefaultQueue())
             }
             
         } |> deliverOnMainQueue
         
+        var firstTime: Bool = true
+        
         disposable.set(signal.start(next: { [weak self] transition in
-            if let transition = transition {
-                self?.genericView.tableView?.merge(with: transition)
-            }
-            self?.genericView.updateLoading(transition == nil)
+            self?.genericView.merge(with: transition, animated: !firstTime)
+            self?.makeSearchCommand?(.normal)
+            firstTime = false
+            self?.genericView.tableView?.clipView.scroll(to: NSZeroPoint)
             self?.ready.set(.single(true))
         }))
     }
@@ -312,6 +317,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     
     deinit {
         disposable.dispose()
+        searchStateDisposable.dispose()
         chatInteraction?.remove(observer: self)
     }
     

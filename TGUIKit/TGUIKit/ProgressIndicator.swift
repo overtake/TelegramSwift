@@ -327,9 +327,12 @@ public class ProgressIndicator : Control {
     }
     
     public override func setFrameSize(_ newSize: NSSize) {
+        let prev = self.frame
         super.setFrameSize(newSize)
         indicator.frame = bounds
-        updateWantsAnimation()
+        if prev != self.frame {
+            updateWantsAnimation()
+        }
     }
     
     

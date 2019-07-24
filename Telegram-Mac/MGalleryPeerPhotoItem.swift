@@ -115,7 +115,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        fetching.set(fetchedMediaResource(postbox: context.account.postbox, reference: self.entry.peerPhotoResource()).start())
+        fetching.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: self.entry.peerPhotoResource()).start())
     }
     
     override func cancel() -> Void {

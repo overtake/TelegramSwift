@@ -356,6 +356,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    open var interactableView: NSView {
+        return self
+    }
+    
     open func shakeView() {
         
     }

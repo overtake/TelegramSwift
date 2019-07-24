@@ -423,7 +423,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     if let largeProfileImage = peer.largeProfileImage {
                        // let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [largeProfileImage], immediateThumbnailData: nil, reference: nil, partialReference: nil)
                         if let peerReference = PeerReference(peer) {
-                            fetchPeerAvatar.set(fetchedMediaResource(postbox: chatInteraction.context.account.postbox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                            fetchPeerAvatar.set(fetchedMediaResource(mediaBox: chatInteraction.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
                         }
                       //  fetchPeerAvatar.set(chatMessagePhotoInteractiveFetched(account: chatInteraction.context.account, imageReference: ImageMediaReference.standalone(media: image), toRepresentationSize: NSMakeSize(640, 640)).start())
                     }

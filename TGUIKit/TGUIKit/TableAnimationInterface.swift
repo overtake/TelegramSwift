@@ -18,7 +18,7 @@ open class TableAnimationInterface: NSObject {
         self.saveIfAbove = saveIfAbove
     }
 
-    public func animate(table:TableView, added:[TableRowItem], removed:[TableRowItem]) -> Void {
+    public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem]) -> Void {
         
         var height:CGFloat = 0
         
@@ -32,7 +32,7 @@ open class TableAnimationInterface: NSObject {
         var checkBelowAfter: Bool = false
         
         if scrollBelow {
-            contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
+            contentView.scroll(to: NSMakePoint(0, min(0, documentOffset.y)))
             contentView.layer?.removeAllAnimations()
         } else {
             checkBelowAfter = true
@@ -73,7 +73,7 @@ open class TableAnimationInterface: NSObject {
       
         if height - bounds.height < table.frame.height || bounds.minY > height, scrollBelow {
             
-            contentView.bounds = NSMakeRect(0, 0, contentView.bounds.width, contentView.bounds.height)
+            contentView.scroll(to: NSMakePoint(0, min(0, documentOffset.y)))
             
             if range.length >= added[0].index {
                 for idx in added[0].index ..< range.length {
