@@ -348,7 +348,7 @@ open class Window: NSWindow {
         self.mouseHandlers = newMouseHandlers
         
         self.swipeHandlers = self.swipeHandlers.filter { key, value in
-            return value.object.value !== object
+            return value.object.value !== object && value.object.value != nil
         }
     }
     

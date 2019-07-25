@@ -385,10 +385,10 @@ class MGalleryExternalVideoItem: MGalleryItem {
         let webpage = entry.webpage!
 
         
-        let signal:Signal<(TransformImageArguments) -> DrawingContext?,NoError> = chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(webpage), media: _media), scale: System.backingScale)
+        let signal:Signal<ImageDataTransformation,NoError> = chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(webpage), media: _media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets())
-        let result = signal |> deliverOn(graphicsThreadPool) |> mapToThrottled { transform -> Signal<CGImage?, NoError> in
-            return .single(transform(arguments)?.generateImage())
+        let result = signal |> deliverOn(graphicsThreadPool) |> mapToThrottled { data -> Signal<CGImage?, NoError> in
+            return .single(data.execute(arguments, data.data)?.generateImage())
         }
         
         switch webpage.content {

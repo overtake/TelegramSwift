@@ -407,7 +407,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
 
 
-        var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
+        var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         var updatedStatusSignal: Signal<(MediaResourceStatus, MediaResourceStatus), NoError>?
         
         if true /*mediaUpdated*/ {
@@ -495,11 +495,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
             if let updateImageSignal = updateImageSignal, !self.image.isFullyLoaded {
-                self.image.setSignal( updateImageSignal, animate: true, cacheImage: { [weak self] image in
-                    if let strongSelf = self {
-                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
-                    } else {
-                        return .complete()
+                self.image.setSignal( updateImageSignal, animate: true, cacheImage: { [weak media] result in
+                    if let media = media {
+                        cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
                 })
             }

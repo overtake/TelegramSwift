@@ -357,8 +357,10 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                     bp += 1
                 }
                
-                player.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media), scale: backingScaleFactor), cacheImage: { image in
-                    return cacheMedia(signal: image, media: media, arguments: arguments, scale: System.backingScale)
+                player.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
+                    if let media = media {
+                        cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                    }
                 })
 
                 

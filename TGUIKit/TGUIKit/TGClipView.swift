@@ -145,6 +145,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     deinit {
         endScroll()
+        NotificationCenter.default.removeObserver(self)
     }
     
     

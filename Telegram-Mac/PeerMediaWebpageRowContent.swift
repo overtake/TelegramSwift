@@ -263,11 +263,11 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
                 ivImage = nil
             }
             
-            let updateIconImageSignal:Signal<(TransformImageArguments) -> DrawingContext?,NoError>
+            let updateIconImageSignal:Signal<ImageDataTransformation,NoError>
             if let icon = item.icon {
                 updateIconImageSignal = chatWebpageSnippetPhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {
-                updateIconImageSignal = .single({_ in return nil})
+                updateIconImageSignal = .single(ImageDataTransformation())
             }
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)

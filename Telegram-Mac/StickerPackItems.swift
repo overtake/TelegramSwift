@@ -172,11 +172,9 @@ class StickerPackRowView: HorizontalRowView {
                     imageView.setSignal(signal: cachedMedia(media: file , arguments: arguments, scale: backingScaleFactor))
                 }
                 if !imageView.isFullyLoaded {
-                    imageView.setSignal( chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false), cacheImage: { image in
+                    imageView.setSignal( chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false), cacheImage: { result in
                         if let file = file {
-                            return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
-                        } else {
-                            return .complete()
+                            cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                         }
                     })
                 }

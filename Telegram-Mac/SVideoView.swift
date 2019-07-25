@@ -80,13 +80,15 @@ enum SVideoControlsStyle : Equatable {
 final class SVideoInteractions {
     let playOrPause: ()->Void
     let rewind:(Double)->Void
+    let scrobbling:(Double?)->Void
     let volume:(Float) -> Void
     let toggleFullScreen:() -> Void
     let togglePictureInPicture: ()->Void
     let closePictureInPicture: ()->Void
-    init(playOrPause: @escaping()->Void, rewind: @escaping(Double)->Void, volume: @escaping(Float) -> Void, toggleFullScreen: @escaping()->Void, togglePictureInPicture: @escaping() -> Void, closePictureInPicture:@escaping()->Void) {
+    init(playOrPause: @escaping()->Void, rewind: @escaping(Double)->Void, scrobbling: @escaping(Double?)->Void, volume: @escaping(Float) -> Void, toggleFullScreen: @escaping()->Void, togglePictureInPicture: @escaping() -> Void, closePictureInPicture:@escaping()->Void) {
         self.playOrPause = playOrPause
         self.rewind = rewind
+        self.scrobbling = scrobbling
         self.volume = volume
         self.toggleFullScreen = toggleFullScreen
         self.togglePictureInPicture = togglePictureInPicture
@@ -128,8 +130,47 @@ private final class SVideoControlsView : Control {
         } else if volumeSlider.hasTemporaryState {
             volumeSlider.mouseUp(with: event)
         } else {
-            super.mouseUp(with: event)
+            let point = self.convert(event.locationInWindow, from: nil)
+            let rect = NSMakeRect(self.progress.frame.minX, self.progress.frame.minY - 5, self.progress.frame.width, self.progress.frame.height + 10)
+            if NSPointInRect(point, rect) {
+                progress.mouseUp(with: event)
+            } else {
+                super.mouseUp(with: event)
+            }
         }
+    }
+    
+    private func updateLivePreview() {
+        guard let window = window else {
+            return
+        }
+        let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        
+        let rect = NSMakeRect(self.progress.frame.minX, self.progress.frame.minY - 5, self.progress.frame.width, self.progress.frame.height + 10)
+        
+        if NSPointInRect(point, rect) {
+            let point = self.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            let result = max(min(point.x, self.progress.frame.width), 0) / self.progress.frame.width
+            self.livePreview?(Float(result))
+        } else {
+            self.livePreview?(nil)
+        }
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        updateLivePreview()
+        
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        updateLivePreview()
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        updateLivePreview()
     }
     
     
@@ -165,12 +206,12 @@ private final class SVideoControlsView : Control {
         let currentTimeAttr: NSAttributedString = .initialize(string: status.timestamp == 0 && status.duration == 0 ? "--:--" : String.durationTransformed(elapsed: Int(status.timestamp)), color: .white, font: .medium(11))
         let durationTimeAttr: NSAttributedString = .initialize(string: status.duration == 0 ? "--:--" : String.durationTransformed(elapsed: Int(status.duration)), color: .white, font: .medium(11))
         
-        let currentTimeLayout = TextViewLayout(currentTimeAttr, alignment: .center)
+        let currentTimeLayout = TextViewLayout(currentTimeAttr, alignment: .right)
         let durationLayout = TextViewLayout(durationTimeAttr, alignment: .center)
         currentTimeLayout.measure(width: .greatestFiniteMagnitude)
         durationLayout.measure(width: .greatestFiniteMagnitude)
         
-        currentTimeView.setFrameSize(currentTimeLayout.layoutSize.width > 33 ? 40 : 33, currentTimeView.frame.height)
+        currentTimeView.setFrameSize(currentTimeLayout.layoutSize.width, currentTimeView.frame.height)
         durationView.setFrameSize(durationLayout.layoutSize.width > 33 ? 40 : 33, durationView.frame.height)
 
         
@@ -201,6 +242,8 @@ private final class SVideoControlsView : Control {
     let rewindBackward: ImageButton = ImageButton()
     let toggleFullscreen: ImageButton = ImageButton()
     let togglePip: ImageButton = ImageButton()
+    
+    var livePreview: ((Float?)->Void)?
     
     let volumeContainer: View = View()
     let volumeToggle: ImageButton = ImageButton()
@@ -321,8 +364,6 @@ private final class SVideoControlsView : Control {
             togglePip.setFrameOrigin(toggleFullscreen.frame.minX - togglePip.frame.width - 24, 16)
         }
         
-        
-        
         volumeContainer.setFrameOrigin(16, 16)
         volumeToggle.centerY(x: 0)
         volumeSlider.centerY(x: volumeToggle.frame.maxX + 16)
@@ -346,7 +387,34 @@ private final class SVideoControlsView : Control {
     }
 }
 
+private final class PreviewView : View {
+    fileprivate let imageView: ImageView = ImageView()
+    fileprivate let duration: TextView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        addSubview(duration)
+        background = .black
+        duration.background = NSColor.black.withAlphaComponent(0.9)
+        duration.disableBackgroundDrawing = true
+        duration.layer?.cornerRadius = 2
+    }
+    
+    override func layout() {
+        super.layout()
+        self.imageView.frame = bounds
+        self.duration.centerX(y: frame.height - self.duration.frame.height)
+    }
+    
+    required init?(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
 class SVideoView: NSView {
+    
+    var initialedSize: NSSize = NSZeroSize
     
     var controlsStyle:SVideoControlsStyle = .regular(pip: false, fullScreen: false, hideRewind: false) {
         didSet {
@@ -369,7 +437,7 @@ class SVideoView: NSView {
     
     var isStreamable: Bool = true
     
-    
+    private var previewView: PreviewView?
     
     var status: MediaPlayerStatus? = nil {
         didSet {
@@ -432,6 +500,13 @@ class SVideoView: NSView {
     }
     
     
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        if initialedSize == NSZeroSize {
+            self.initialedSize = newSize
+        }
+    }
+    
     override func mouseUp(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
         if !NSPointInRect(point, controls.frame) {
@@ -485,6 +560,13 @@ class SVideoView: NSView {
         controls.playOrPause.set(handler: { [weak self] _ in
             self?.interactions?.playOrPause()
         }, for: .Click)
+        
+        controls.livePreview = { [weak self] value in
+            guard let `self` = self else {return}
+            if let status = self.status {
+                self.interactions?.scrobbling(value != nil ? status.duration * Double(value!) : nil)
+            }
+        }
         
         controls.progress.onUserChanged = { [weak self] value in
             guard let `self` = self else {return}
@@ -549,5 +631,53 @@ class SVideoView: NSView {
     func set(isInFullScreen: Bool) {
         self.controlsStyle = self.controlsStyle.withUpdatedFullScreen(isInFullScreen)
         backgroundView.isHidden = !isInFullScreen
+    }
+    
+    func showScrubblerPreviewIfNeeded() {
+        if previewView == nil {
+            previewView = PreviewView(frame: NSZeroRect)
+            previewView?.background = .black
+            addSubview(previewView!)
+        }
+        previewView?.setFrameSize(initialedSize.aspectFitted(NSMakeSize(200, 200)))
+    }
+    
+    func setCurrentScrubblingState(_ state: MediaPlayerFramePreviewResult) {
+        guard let previewView = self.previewView, let window = self.window, let status = self.status else {
+            return
+        }
+        let point = self.controls.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        
+        switch state {
+        case let .image(image):
+            previewView.imageView.image = image
+            previewView.imageView.isHidden = false
+        case .waitingForData:
+            previewView.imageView.image = nil
+            previewView.imageView.isHidden = true
+        }
+        
+        let progressPoint = NSMakePoint(max(0, min(point.x, self.controls.progress.frame.width)), 0)
+        let converted = self.convert(progressPoint, from: self.controls.progress)
+        previewView.setFrameOrigin(NSMakePoint(max(10, min(frame.width - previewView.frame.width - 10, converted.x - previewView.frame.width / 2)), self.controls.frame.minY - previewView.frame.height - 10))
+        
+        let currentTime = Int(round(progressPoint.x / self.controls.progress.frame.width * CGFloat(status.duration)))
+        
+        
+        let duration = String.durationTransformed(elapsed: currentTime)
+        let layout = TextViewLayout(.initialize(string: duration, color: .white, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
+        
+        layout.measure(width: .greatestFiniteMagnitude)
+        
+        previewView.duration.update(layout)
+        previewView.duration.setFrameSize(NSMakeSize(layout.layoutSize.width + 10, layout.layoutSize.height + 6))
+        
+        previewView.needsLayout = true
+    }
+    
+    
+    func hideScrubblerPreviewIfNeeded() {
+        previewView?.removeFromSuperview()
+        previewView = nil
     }
 }

@@ -202,11 +202,9 @@ class ChatGIFContentView: ChatMediaContentView {
             player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: mediaUpdated)
 
             
-            player.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor), animate: true, cacheImage: { [weak self] image in
-                if let strongSelf = self {
-                    return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor, positionFlags: positionFlags)
-                } else {
-                    return .complete()
+            player.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor), animate: true, cacheImage: { [weak media] result in
+                if let media = media {
+                    cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                 }
             })
             player.set(arguments: arguments)

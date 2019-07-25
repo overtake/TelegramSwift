@@ -253,7 +253,7 @@ class WPArticleContentView: WPContentView {
                 image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: arc4random64()), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
                 
             }
-            var updateImageSignal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
+            var updateImageSignal:Signal<ImageDataTransformation, NoError>?
             if let image = image {
                 if let _ = layout.wallpaper {
                     updateImageSignal = chatWallpaper(account: layout.context.account, representations: image.representations, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false)
@@ -354,14 +354,12 @@ class WPArticleContentView: WPContentView {
                 
                 if let arguments = layout.imageArguments, let imageView = imageView {
                    imageView.set(arguments: arguments)
-                    imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: newLayout)
+                   imageView.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor), clearInstantly: newLayout)
                     
-                    if let updateImageSignal = updateImageSignal {
-                        imageView.setSignal(updateImageSignal, animate: true, cacheImage: { [weak self] signal in
-                            if let strongSelf = self {
-                                return cacheMedia(signal: signal, media: image, arguments: arguments, scale: strongSelf.backingScaleFactor)
-                            } else {
-                                return .complete()
+                    if let updateImageSignal = updateImageSignal, !imageView.isFullyLoaded {
+                        imageView.setSignal(updateImageSignal, animate: true, cacheImage: { [weak image] result in
+                            if let media = image {
+                                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
                             }
                         })
                     }

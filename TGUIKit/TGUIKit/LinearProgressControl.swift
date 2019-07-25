@@ -41,6 +41,9 @@ public class LinearProgressControl: Control {
     public var progressHeight:CGFloat
     public var onUserChanged:((Float)->Void)?
     
+    public var onLiveScrobbling:((Float?)->Void)?
+
+    
     public var insets: NSEdgeInsets = NSEdgeInsets() {
         didSet {
             needsLayout = true
@@ -51,7 +54,7 @@ public class LinearProgressControl: Control {
     
     private var scrubber: ImageButton? = nil
     
-    private var scrubblingTempState: CGFloat? {
+    private(set) public var scrubblingTempState: CGFloat? {
         didSet {
             needsLayout = true
             self.progressView.layer?.removeAllAnimations()
@@ -106,11 +109,12 @@ public class LinearProgressControl: Control {
             if liveScrobbling {
                 onUserChanged(progress)
             } else {
-                scrubblingTempState = CGFloat(progress)
+                self.scrubblingTempState = CGFloat(progress)
             }
            // }
         }
     }
+    
     
     public override func mouseDown(with event: NSEvent) {
         scrubblingTempState = nil
@@ -118,6 +122,7 @@ public class LinearProgressControl: Control {
             let location = containerView.convert(event.locationInWindow, from: nil)
             let progress = min(max(CGFloat(max(location.x, 0) / containerView.frame.width), 0), 1)
             self.scrubblingTempState = progress
+            self.onLiveScrobbling?(nil)
             // }
         } else {
             super.mouseDown(with: event)
@@ -132,10 +137,9 @@ public class LinearProgressControl: Control {
         scrubblingTempState = nil
         if let onUserChanged = onUserChanged, isEnabled {
             let location = containerView.convert(event.locationInWindow, from: nil)
-           // if location.x >= 0 && location.x <= frame.width {
-                let progress = min(max(Float(max(location.x, 0) / containerView.frame.width), 0), 1)
-                onUserChanged(progress)
-           // }
+            let progress = min(max(Float(max(location.x, 0) / containerView.frame.width), 0), 1)
+            onUserChanged(progress)
+            self.onLiveScrobbling?(nil)
         } else {
             super.mouseUp(with: event)
         }
@@ -364,12 +368,12 @@ public class LinearProgressControl: Control {
     }
     
     public override func mouseExited(with event: NSEvent) {
-         super.mouseExited(with: event)
+        super.mouseExited(with: event)
         updateCursor()
     }
     
     public override func mouseMoved(with event: NSEvent) {
-         super.mouseMoved(with: event)
+        super.mouseMoved(with: event)
         updateCursor()
     }
     

@@ -552,6 +552,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         
         
         func makeItem(_ entry: ChatWrapperEntry) -> TableRowItem {
+            
+            
             var item:TableRowItem;
             switch entry.appearance.entry {
             case .UnreadEntry:
@@ -3530,14 +3532,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             guard let state = swipeState else {return .failed}
             
-            NSLog("swipeState!=nil passed")
 
             
             switch state {
             case .start:
                 let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
                 if row != -1 {
-                    NSLog("row=\(row) passed")
                     guard let item = self.genericView.tableView.item(at: row) as? ChatRowItem, let message = item.message, canReplyMessage(message, peerId: self.chatInteraction.peerId) else {return .failed}
                     self.removeRevealStateIfNeeded(message.id)
                     (item.view as? RevealTableView)?.initRevealState()
@@ -3571,7 +3571,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 
                 view.moveReveal(delta: delta)
-                NSLog("delta=\(delta) move reveal")
 
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController

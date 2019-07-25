@@ -141,7 +141,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 switch item.result.entries[i] {
                 case let .gif(data):
                     let view = GIFContainerView()
-                    let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
+                    let signal:Signal<ImageDataTransformation, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     
                     view.set(handler: { [weak item] control in
                         if let item = item {

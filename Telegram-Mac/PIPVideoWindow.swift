@@ -130,6 +130,7 @@ fileprivate class PIPVideoWindow: NSPanel {
         if playerView.controlsStyle != .floating {
             playerView.player?.pause()
         }
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func animationResizeTime(_ newFrame: NSRect) -> TimeInterval {
@@ -360,6 +361,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         if control.isPictureInPicture {
             control.pause()
         }
+        NotificationCenter.default.removeObserver(self)
     }
 
     override func animationResizeTime(_ newFrame: NSRect) -> TimeInterval {

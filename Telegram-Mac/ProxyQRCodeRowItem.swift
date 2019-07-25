@@ -73,7 +73,7 @@ private final class ProxyQRCodeRowView : TableRowView {
         disposable.set((qrCode(string: item.link, color: theme.colors.text, backgroundColor: theme.colors.background, scale: 2.0)
             |> map { generator -> CGImage? in
                 let imageSize = CGSize(width: 256, height: 256)
-                let context = generator(TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
+                let context = generator.execute(TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()), generator.data)
                 
                 return context?.generateImage()
             }

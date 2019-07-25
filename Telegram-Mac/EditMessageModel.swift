@@ -131,7 +131,7 @@ class EditMessageModel: ChatAccessoryModel {
                 let mediaUpdated = true
                 
                 
-                var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
+                var updateImageSignal: Signal<ImageDataTransformation, NoError>?
                 if mediaUpdated {
                     if let image = updatedMedia as? TelegramMediaImage {
                         updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor)
@@ -147,8 +147,10 @@ class EditMessageModel: ChatAccessoryModel {
                 
                 if let updateImageSignal = updateImageSignal, let media = updatedMedia {
                     view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor))
-                    view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { image in
-                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: System.backingScale)
+                    view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { [weak media] result in
+                        if let media = media {
+                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                        }
                     })
                     if let media = media as? TelegramMediaImage {
                         self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())

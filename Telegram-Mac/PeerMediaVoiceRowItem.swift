@@ -288,7 +288,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             }))
             
         } else {
-            player.setSignal(signal: .single((nil, false)))
+            player.setSignal(signal: .single(TransformImageResult(nil, false)))
             player.set(data: nil)
             instantVideoData = nil
             resourceDataDisposable.set(nil)

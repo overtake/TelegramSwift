@@ -8,6 +8,9 @@
 
 import Cocoa
 
+
+
+
 public enum ImageCorner: Equatable {
     case Corner(CGFloat)
     case Tail(CGFloat)

@@ -56,4 +56,15 @@
     return _impl;
 }
 
+- (FFMpegAVFrameColorRange)colorRange {
+    switch (_impl->color_range) {
+        case AVCOL_RANGE_MPEG:
+        case AVCOL_RANGE_UNSPECIFIED:
+            return FFMpegAVFrameColorRangeRestricted;
+        default:
+            return FFMpegAVFrameColorRangeFull;
+    }
+}
+
+
 @end

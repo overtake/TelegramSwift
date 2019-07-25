@@ -72,9 +72,16 @@ struct AVGifData : Equatable {
     
 }
 
+private final class TAVSampleBufferDisplayLayer : AVSampleBufferDisplayLayer {
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+}
+
 class GIFPlayerView: TransformImageView {
     
-    private let sampleLayer:AVSampleBufferDisplayLayer = AVSampleBufferDisplayLayer()
+    private let sampleLayer:TAVSampleBufferDisplayLayer = TAVSampleBufferDisplayLayer()
     
     private var _reader:Atomic<AVAssetReader?> = Atomic(value:nil)
 
