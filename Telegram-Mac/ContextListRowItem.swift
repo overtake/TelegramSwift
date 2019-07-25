@@ -20,7 +20,7 @@ class ContextListRowItem: TableRowItem {
     let results:ChatContextResultCollection
     private let _index:Int64
     let context: AccountContext
-    let iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>
+    let iconSignal:Signal<ImageDataTransformation, NoError>
     let arguments:TransformImageArguments?
     var textLayout:(TextNodeLayout, TextNode)?
     let capImage:CGImage?

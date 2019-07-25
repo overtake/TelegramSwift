@@ -14,10 +14,22 @@ import TGUIKit
 
 private let threadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
+public final class TransformImageResult {
+    let image: CGImage?
+    let highQuality: Bool
+    init(_ image: CGImage?, _ highQuality: Bool) {
+        self.image = image
+        self.highQuality = highQuality
+    }
+    
+    deinit {
+        
+    }
+}
+
 open class TransformImageView: NSView {
     public var imageUpdated: ((Any?) -> Void)?
     private let disposable = MetaDisposable()
-    private let cachedDisposable = MetaDisposable()
     public var animatesAlphaOnFirstTransition:Bool = false
     private let argumentsPromise = Promise<TransformImageArguments>()
     private(set) var isFullyLoaded: Bool = false
@@ -61,7 +73,6 @@ open class TransformImageView: NSView {
     
     deinit {
         self.disposable.dispose()
-        cachedDisposable.dispose()
     }
     
     
@@ -69,19 +80,19 @@ open class TransformImageView: NSView {
         disposable.set(nil)
     }
     
-    public func setSignal(signal: Signal<(CGImage?, Bool), NoError>, clearInstantly: Bool = true) {
-        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, isFullyLoaded in
+    public func setSignal(signal: Signal<TransformImageResult, NoError>, clearInstantly: Bool = true) {
+        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] result in
             if clearInstantly {
-                self?.image = image
-            } else if let image = image {
+                self?.image = result.image
+            } else if let image = result.image {
                 self?.image = image
             }
-            self?.isFullyLoaded = isFullyLoaded
+            self?.isFullyLoaded = result.highQuality
         }))
     }
     
     
-    public func setSignal(_ signal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(Signal<(CGImage?, Bool), NoError>) -> Signal<Void, NoError> = { signal in return signal |> map {_ in return}}) {
+    public func setSignal(_ signal: Signal<ImageDataTransformation, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(TransformImageResult) -> Void = { _ in } ) {
         if clearInstantly {
             self.image = nil
         }
@@ -98,25 +109,23 @@ open class TransformImageView: NSView {
             combine = combine |> deliverOn(threadPool)
         }
         
-        let result = combine |> mapToThrottled { transform, arguments -> Signal<(CGImage?, Bool), NoError> in
-            return deferred {
-                let context = transform(arguments)
-                let image = context?.generateImage()
-                return .single((image, context?.isHighQuality ?? false))
-            }
+        let result = combine |> map { data, arguments -> TransformImageResult in
+            let context = data.execute(arguments, data.data)
+            let image = context?.generateImage()
+            return TransformImageResult(image, context?.isHighQuality ?? false)
         } |> deliverOnMainQueue
         
-        self.disposable.set(result.start(next: { [weak self] (next, isHighQuality) in
+        self.disposable.set(result.start(next: { [weak self] result in
             if let strongSelf = self  {
                 if strongSelf.image == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
-                self?.image = next
+                self?.image = result.image
                 if !strongSelf.first && animate {
                     self?.layer?.animateContents()
                 }
                 strongSelf.first = false
-                strongSelf.cachedDisposable.set(cacheImage(.single((next, isHighQuality))).start())
+                cacheImage(result)
             }
         }))
 

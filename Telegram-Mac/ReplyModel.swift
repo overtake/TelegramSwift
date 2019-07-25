@@ -161,7 +161,7 @@ class ReplyModel: ChatAccessoryModel {
                 let mediaUpdated = true
                 
                 
-                var updateImageSignal: Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
+                var updateImageSignal: Signal<ImageDataTransformation, NoError>?
                 if mediaUpdated {
                     if let image = updatedMedia as? TelegramMediaImage {
                         updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: true)
@@ -181,8 +181,10 @@ class ReplyModel: ChatAccessoryModel {
                     view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale))
 
                     
-                    view.imageView?.setSignal(updateImageSignal, animate: true, synchronousLoad: true, cacheImage: { image in
-                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: System.backingScale)
+                    view.imageView?.setSignal(updateImageSignal, animate: true, synchronousLoad: true, cacheImage: { [weak media] result in
+                        if let media = media {
+                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                        }
                     })
                     
                     if let media = media as? TelegramMediaImage, self.autodownload {

@@ -125,15 +125,14 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         view.userInteractionEnabled = false
                         container.addSubview(view)
                     } else {
-                        let imageSize = data.file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
+                        let file = data.file
+                        let imageSize = file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
                         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
                         let view = TransformImageView()
-                        view.setSignal(signal: cachedMedia(media: data.file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak self] signal in
-                            if let strongSelf = self {
-                                return cacheMedia(signal: signal, media: data.file, arguments: arguments, scale: strongSelf.backingScaleFactor)
-                            } else {
-                                return .complete()
+                        view.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
+                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
+                            if let file = file {
+                                cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                             }
                         })
                         

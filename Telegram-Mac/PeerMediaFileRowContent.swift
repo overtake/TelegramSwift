@@ -252,7 +252,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
             nameView.update(item.nameLayout, origin: NSMakePoint(item.contentInset.left, item.contentInset.top + 2))
             actionView.update(item.actionLayout, origin: NSMakePoint(item.contentInset.left, item.contentSize.height - item.actionLayout.layoutSize.height - item.contentInset.bottom - 2))
             
-            let updateIconImageSignal:Signal<(TransformImageArguments) -> DrawingContext?,NoError>
+            let updateIconImageSignal:Signal<ImageDataTransformation,NoError>
             if let icon = item.icon {
                 updateIconImageSignal = chatWebpageSnippetPhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {

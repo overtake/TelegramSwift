@@ -315,7 +315,7 @@ class ChatSelectText : NSObject {
 //                 self?.started = overView.userInteractionEnabled == true
 //            }
             if self.started {
-                self.started = !hasPopover(window)
+                self.started = !hasPopover(window) && self.beginInnerLocation != NSZeroPoint
             }
             
            // NSLog("\(!NSPointInRect(event.locationInWindow, window.bounds))")
@@ -360,9 +360,7 @@ class ChatSelectText : NSObject {
         var startIndex = table.row(at: beginInnerLocation)
         var endIndex = table.row(at: endInnerLocation)
         
-        
-      
-        
+                
         let reversed = endIndex < startIndex;
         
         if(endIndex < startIndex) {

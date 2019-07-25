@@ -83,10 +83,11 @@ final class SettingsThemeWallpaperView: View {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: size, intrinsicInsets: NSEdgeInsets())
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
             
-            let scale = backingScaleFactor
             
-            self.imageView.setSignal(settingsBuiltinWallpaperImage(account: account, scale: backingScaleFactor), cacheImage: { signal in
-                return cacheMedia(signal: signal, media: media, arguments: arguments, scale: scale)
+            self.imageView.setSignal(settingsBuiltinWallpaperImage(account: account, scale: backingScaleFactor), cacheImage: { [weak media] result in
+                if let media = media {
+                    cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                }
             })
             
             self.imageView.set(arguments: arguments)

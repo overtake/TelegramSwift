@@ -190,11 +190,9 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
         
         self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         if !self.thumbView.isFullyLoaded {
-            self.thumbView.setSignal(chatMessageAnimatedSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: false), cacheImage: { [weak file] signal in
+            self.thumbView.setSignal(chatMessageAnimatedSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: false), cacheImage: { [weak file] result in
                 if let file = file {
-                    return cacheMedia(signal: signal, media: file, arguments: arguments, scale: System.backingScale)
-                } else {
-                    return .complete()
+                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                 }
             })
             self.thumbView.set(arguments: arguments)

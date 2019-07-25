@@ -82,6 +82,11 @@ public class TextNode: NSObject {
         super.init()
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     
     private class func getlayout(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: NSColor?, constrainedSize: NSSize, cutout: TextNodeCutout?, selected:Bool, alignment:NSTextAlignment) -> TextNodeLayout {
         

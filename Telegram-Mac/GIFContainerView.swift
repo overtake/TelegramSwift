@@ -156,6 +156,7 @@ class GIFContainerView: Control {
     }
     deinit {
         playerDisposable.dispose()
+        removeNotificationListeners()
     }
     
     override func viewDidMoveToWindow() {
@@ -163,7 +164,7 @@ class GIFContainerView: Control {
         updatePlayerIfNeeded()
     }
     
-    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, file: TelegramMediaFile?, context: AccountContext, table: TableView?, ignoreWindowKey: Bool = false, iconSignal:Signal<(TransformImageArguments)->DrawingContext?, NoError>) {
+    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, file: TelegramMediaFile?, context: AccountContext, table: TableView?, ignoreWindowKey: Bool = false, iconSignal:Signal<ImageDataTransformation, NoError>) {
         let updated = self.reference == nil || !self.reference!.resource.id.isEqual(to: reference.resource.id)
         self.tableView = table
         self.context = context
@@ -190,11 +191,9 @@ class GIFContainerView: Control {
         player.animatesAlphaOnFirstTransition = !player.hasImage
 
         
-        player.setSignal(iconSignal, cacheImage: { [weak file] image in
+        player.setSignal(iconSignal, cacheImage: { [weak file] result in
             if let file = file {
-                return cacheMedia(signal: image, media: file, arguments: arguments, scale: System.backingScale)
-            } else {
-                return .complete()
+                cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
             }
         })
 

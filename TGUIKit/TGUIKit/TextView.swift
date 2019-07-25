@@ -1248,6 +1248,7 @@ public class TextView: Control, NSViewToolTipOwner {
     
     deinit {
         menuDisposable.dispose()
+        NotificationCenter.default.removeObserver(self)
     }
     
     public func isEqual(to layout:TextViewLayout) -> Bool {
@@ -1342,6 +1343,7 @@ public class TextView: Control, NSViewToolTipOwner {
             NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: window)
         }
     }
+    
     
     @objc open func windowDidBecomeKey() {
         needsDisplay = true

@@ -18,7 +18,7 @@ class GalleryThumbContainer : Control {
         super.init(frame: NSZeroRect)
         backgroundColor = .clear
         
-        var signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>?
+        var signal:Signal<ImageDataTransformation, NoError>?
         var size: NSSize?
         if let item = item as? MGalleryPhotoItem {
             signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor, small: true, secureIdAccessContext: item.secureIdAccessContext)

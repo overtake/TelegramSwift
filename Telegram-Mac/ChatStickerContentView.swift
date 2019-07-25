@@ -69,8 +69,10 @@ class ChatStickerContentView: ChatMediaContentView {
            
             self.image.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
             if !self.image.isFullyLoaded {
-                self.image.setSignal( chatMessageSticker(postbox: context.account.postbox, file: file, small: size.width < 120, scale: backingScaleFactor, fetched: true), cacheImage: { signal in
-                    return cacheMedia(signal: signal, media: file, arguments: arguments, scale: System.backingScale)
+                self.image.setSignal( chatMessageSticker(postbox: context.account.postbox, file: file, small: size.width < 120, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
+                    if let media = file {
+                        return cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                    }
                 })
                 self.image.set(arguments: arguments)
             } else {

@@ -303,11 +303,9 @@ final class GridMessageItemNode: GridItemNode {
                 let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageFrame.size, intrinsicInsets: NSEdgeInsets())
                 self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
 
-                self.imageView.setSignal( mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
-                    if let strongSelf = self {
-                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor)
-                    } else {
-                        return .complete()
+                self.imageView.setSignal( mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak media] result in
+                    if let media = media {
+                        cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
                     }
                 })
                 progressView?.removeFromSuperview()
@@ -327,11 +325,9 @@ final class GridMessageItemNode: GridItemNode {
                 
                 self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
 
-                self.imageView.setSignal( mediaGridMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak self] image in
-                    if let strongSelf = self {
-                        return cacheMedia(signal: image, media: media, arguments: arguments, scale: strongSelf.backingScaleFactor)
-                    } else {
-                        return .complete()
+                self.imageView.setSignal( mediaGridMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { [weak media] result in
+                    if let media = media {
+                        cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
                     }
                 })
                 

@@ -252,7 +252,7 @@ extension TelegramMediaFile {
                 return flags.contains(.supportsStreaming)
             }
         }
-        return false
+        return true
     }
     
     var imageSize:NSSize {

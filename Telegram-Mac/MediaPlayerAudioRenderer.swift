@@ -239,7 +239,7 @@ private final class AudioPlayerRendererContext {
     }
     
     deinit {
-        assert(audioPlayerRendererQueue.isCurrent())
+       // assert(audioPlayerRendererQueue.isCurrent())
         
         self.audioSessionDisposable.dispose()
         
