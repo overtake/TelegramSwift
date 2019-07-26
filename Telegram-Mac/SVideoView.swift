@@ -397,7 +397,6 @@ private final class PreviewView : View {
         background = .black
         duration.background = NSColor.black.withAlphaComponent(0.9)
         duration.disableBackgroundDrawing = true
-        duration.layer?.cornerRadius = 2
     }
     
     override func layout() {

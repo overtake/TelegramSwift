@@ -338,7 +338,7 @@ private final class PlayerRenderer {
         var framesTask: ThreadPoolTask? = nil
         
         var releaseState: Bool = false
-        var isRendering: Bool = true
+        let isRendering: Atomic<Bool> = Atomic(value: false)
         
         self.onDispose = {
             updateState {
@@ -350,10 +350,12 @@ private final class PlayerRenderer {
             firstTask = nil
             framesTask = nil
             
-            if isRendering {
-                releaseState = true
-            } else {
-                stateValue.release()
+            isRendering.with { value in
+                if !value {
+                    stateValue.release()
+                } else {
+                    releaseState = true
+                }
             }
         }
         
@@ -392,9 +394,11 @@ private final class PlayerRenderer {
                     }
                 }
                 
-                if hungry && !isRendering && !cancelled && !askedRender {
-                    askedRender = true
-                    add_frames_impl?()
+                isRendering.with { isRendering in
+                    if hungry && !isRendering && !cancelled && !askedRender {
+                        askedRender = true
+                        add_frames_impl?()
+                    }
                 }
             }
         }
@@ -417,7 +421,7 @@ private final class PlayerRenderer {
         
         framesTask = ThreadPoolTask { state in
             
-            isRendering = true
+            _ = isRendering.swap(true)
             
             while !releaseState && !state.cancelled.with({$0}) && currentState(stateValue).frames.count < min(maximum_rendered_frames, maximum) {
                 
@@ -443,21 +447,15 @@ private final class PlayerRenderer {
                     break
                 }
             }
-            
-//            if let firstTask = firstTask, prerender && !releaseState && !askedRender {
-//                askedRender = true
-//               // lottieThreadPool.addTask(firstTask)
-//            }
-           // prerender = false
-            
-            if releaseState {
-                stateValue.release()
+            _ = isRendering.modify { value -> Bool in
+                if releaseState {
+                    stateValue.release()
+                }
+                return false
             }
-            
             stateQueue.async {
                 askedRender = false
             }
-            isRendering = false
         }
         
         let add_frames:()->Void = {

@@ -313,6 +313,18 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             }
                             
                             let notification = NSUserNotification()
+                            
+                            if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
+                                notification.soundName = inAppSettings.tone
+                            } else {
+                                notification.soundName = nil
+                            }
+                            
+                            if message.muted {
+                                notification.soundName = nil
+                                title += " 🔕"
+                            }
+                            
                             notification.title = title
                             notification.informativeText = text as String
                             notification.subtitle = subText
@@ -326,15 +338,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             var dict: [String : Any] = [:]
                             
                             
-                            if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
-                                notification.soundName = inAppSettings.tone
-                            } else {
-                                notification.soundName = nil
-                            }
-                            
-                            if message.muted {
-                                notification.soundName = nil
-                            }
+                          
                             
                             
                             

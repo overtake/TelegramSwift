@@ -217,7 +217,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         let state = stateValue.with { $0 }
     
         if state.isEnabled {
-            chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil)
+            chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil, false)
             close?()
         }
     }

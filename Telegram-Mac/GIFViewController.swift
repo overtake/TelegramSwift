@@ -180,7 +180,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     }
     
     private var interactions:EntertainmentInteractions?
-    private var chatInteraction: ChatInteraction?
+    private weak var chatInteraction: ChatInteraction?
     private let disposable = MetaDisposable()
     private let searchStateDisposable = MetaDisposable()
     var makeSearchCommand:((ESearchCommand)->Void)?

@@ -507,7 +507,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             }
             
             if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
-                chatInteraction.sendMessage()
+                chatInteraction.sendMessage(false)
                 chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
                 markNextTextChangeToFalseActivity = true
             }

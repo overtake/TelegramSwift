@@ -56,7 +56,7 @@ private func tagsForMessage(_ message: Message) -> MessageTags? {
                 return .photoOrVideo
             } else if file.isVoice {
                 return .voiceOrInstantVideo
-            } else if file.isSticker || (file.isVideo && file.isAnimated) {
+            } else if file.isStaticSticker || (file.isVideo && file.isAnimated) {
                 return nil
             } else {
                 return .file

@@ -255,6 +255,17 @@ extension TelegramMediaFile {
         return true
     }
     
+    var isStaticSticker: Bool {
+        for attribute in self.attributes {
+            if case .Sticker = attribute {
+                if let s = self.size, s < 200 * 1024 {
+                    return !isAnimatedSticker
+                }
+            }
+        }
+        return false
+    }
+    
     var imageSize:NSSize {
         for attr in attributes {
             if case let .ImageSize(size) = attr {
@@ -322,7 +333,7 @@ extension Media {
         if self is TelegramMediaImage {
             return true
         } else if let file = self as? TelegramMediaFile {
-            if file.isInstantVideo || file.isAnimatedSticker || file.isSticker || file.isVoice {
+            if file.isInstantVideo || file.isAnimatedSticker || file.isStaticSticker || file.isVoice {
                 return false
             } else {
                 return true
@@ -577,7 +588,7 @@ public extension Message {
         } else if let peer = peer as? TelegramChannel {
             if let media = media.first, !(media is TelegramMediaWebpage) {
                 if let media = media as? TelegramMediaFile {
-                    if media.isSticker {
+                    if media.isStaticSticker {
                         return !peer.hasBannedRights(.banSendStickers)
                     } else if media.isVideo && media.isAnimated {
                         return !peer.hasBannedRights(.banSendGifs)
@@ -763,7 +774,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
     
     if let media = message.media.first {
         if let file = media as? TelegramMediaFile {
-            if file.isSticker || file.isAnimatedSticker {
+            if file.isStaticSticker || file.isAnimatedSticker {
                 return false
             }
             if file.isInstantVideo {

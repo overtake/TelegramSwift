@@ -269,7 +269,7 @@ class ChatMediaItem: ChatRowItem {
                 return true
             }
             
-            return media.isVideo || media.isAnimated || media.isVoice || media.isMusic || media.isSticker || media.isAnimatedSticker
+            return media.isVideo || media.isAnimated || media.isVoice || media.isMusic || media.isStaticSticker || media.isAnimatedSticker
         }
         return super.isFixedRightPosition
     }
@@ -293,7 +293,7 @@ class ChatMediaItem: ChatRowItem {
         super.init(initialSize, chatInteraction, context, object, downloadSettings)
         
         var canAddCaption: Bool = true
-        if let media = media as? TelegramMediaFile, media.isAnimatedSticker || media.isSticker {
+        if let media = media as? TelegramMediaFile, media.isAnimatedSticker || media.isStaticSticker {
             canAddCaption = false
         }
         

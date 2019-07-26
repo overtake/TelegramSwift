@@ -243,7 +243,7 @@ class ChatRowItem: TableRowItem {
     
     var isSticker: Bool {
         let file = message?.media.first as? TelegramMediaFile
-        return file?.isSticker == true || file?.isAnimatedSticker == true
+        return file?.isStaticSticker == true || file?.isAnimatedSticker == true
     }
     
 
@@ -315,7 +315,7 @@ class ChatRowItem: TableRowItem {
     var isStateOverlayLayout: Bool {
         if let message = message, let media = message.media.first {
             if let file = media as? TelegramMediaFile {
-                if file.isSticker || file.isAnimatedSticker {
+                if file.isStaticSticker || file.isAnimatedSticker {
                     return isBubbled
                 }
             }
@@ -699,7 +699,7 @@ class ChatRowItem: TableRowItem {
         if let message = message, let media = message.media.first {
             
             if let file = media as? TelegramMediaFile {
-                if file.isSticker {
+                if file.isStaticSticker {
                     return false
                 }
                 if file.isAnimatedSticker {
@@ -836,7 +836,7 @@ class ChatRowItem: TableRowItem {
         var isStateOverlayLayout: Bool {
             if renderType == .bubble, let message = captionMessage, let media = message.media.first {
                 if let file = media as? TelegramMediaFile {
-                    if file.isSticker || file.isAnimatedSticker {
+                    if file.isStaticSticker || file.isAnimatedSticker {
                         return renderType == .bubble
                     }
                     
@@ -1228,7 +1228,7 @@ class ChatRowItem: TableRowItem {
                         return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings)
                     } else if file.isVideo && !file.isAnimated {
                         return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings)
-                    } else if file.isSticker {
+                    } else if file.isStaticSticker {
                         return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings)
                     } else if file.isVoice {
                         return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, downloadSettings)
@@ -1709,7 +1709,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             } |> mapToSignal { items in
                 var items = items
                 return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
-                    if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isSticker && !file.isGraphicFile {
+                    if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isStaticSticker && !file.isGraphicFile {
                         let quickLook = ContextMenuItem(L10n.contextOpenInQuickLook, handler: {
                             FastSettings.toggleOpenInQuickLook(fileExtenstion(file))
                         })
@@ -1742,7 +1742,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                         }
                     }
                     
-                    if file.isSticker, let fileId = file.id {
+                    if file.isStaticSticker, let fileId = file.id {
                         return account.postbox.transaction { transaction -> [ContextMenuItem] in
                             let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
                             items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {

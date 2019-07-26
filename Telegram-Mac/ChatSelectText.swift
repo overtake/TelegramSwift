@@ -251,7 +251,7 @@ class ChatSelectText : NSObject {
                 
                 
                 if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
-                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame)) {
+                    if chatInteraction.presentation.state == .selecting || ((theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame) || view.rightView.mouseInside())) {
                         if self?.startMessageId == nil {
                             self?.startMessageId = item.message?.id
                         }
@@ -374,7 +374,7 @@ class ChatSelectText : NSObject {
         }
         
         let beginRow = table.row(at: beginInnerLocation)
-        if theme.bubbled, let view = table.item(at: beginRow).view as? ChatRowView, selectingText, table._mouseInside() {
+        if  let view = table.item(at: beginRow).view as? ChatRowView, selectingText, table._mouseInside() {
             if !NSPointInRect(view.convert(beginInnerLocation, from: table.documentView), view.bubbleFrame) {
                 if startIndex != endIndex {
                     for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {

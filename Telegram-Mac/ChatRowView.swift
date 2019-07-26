@@ -67,6 +67,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.displayDelegate = self
         
         super.addSubview(swipingRightView)
+        
     }
     
     override func setFrameSize(_ newSize: NSSize) {

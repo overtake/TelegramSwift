@@ -1333,6 +1333,8 @@ internal final class L10n {
   internal static var chatSecretChat4Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.4Feature") }
   /// Secret chats:
   internal static var chatSecretChatEmptyHeader: String  { return L10n.tr("Localizable", "Chat.SecretChat.EmptyHeader") }
+  /// Send Without Sound
+  internal static var chatSendWithoutSound: String  { return L10n.tr("Localizable", "Chat.Send.WithoutSound") }
   /// You allowed this bot to message you when you logged in on %@
   internal static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
@@ -3743,6 +3745,8 @@ internal final class L10n {
   internal static var peerInfoGroupTypePrivate: String  { return L10n.tr("Localizable", "PeerInfo.GroupType.Private") }
   /// Public
   internal static var peerInfoGroupTypePublic: String  { return L10n.tr("Localizable", "PeerInfo.GroupType.Public") }
+  /// Sorry, you must be in this user's Telegram contacts to add them to this group.\n\nThey can also join on their own if you send them an invite link.
+  internal static var peerInfoInviteErrorContactNeeded: String  { return L10n.tr("Localizable", "PeerInfo.InviteError.ContactNeeded") }
   /// Last Name
   internal static var peerInfoLastNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.LastName.Placeholder") }
   /// Hidden

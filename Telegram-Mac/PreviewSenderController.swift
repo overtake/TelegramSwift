@@ -219,8 +219,19 @@ fileprivate class PreviewSenderView : Control {
         }, for: .Hover)
         
         sendButton.set(handler: { [weak self] _ in
-            self?.controller?.send()
+            self?.controller?.send(false)
         }, for: .SingleClick)
+        
+        sendButton.set(handler: { [weak self] control in
+            if let controller = self?.controller, let peer = controller.chatInteraction.peer, peer.isUser, peer.id != controller.chatInteraction.context.peerId {
+                if let slowMode = controller.chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                    return
+                }
+                showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.chatSendWithoutSound, { [weak controller] in
+                    controller?.send(true)
+                })]))
+            }
+        }, for: .Hover)
         
         textView.setFrameSize(NSMakeSize(280, 34))
 
@@ -716,7 +727,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return .high
     }
     
-    private var sendCurrentMedia:(()->Void)? = nil
+    private var sendCurrentMedia:((Bool)->Void)? = nil
     private var runEditor:((URL)->Void)? = nil
     private var insertAdditionUrls:(([URL]) -> Void)? = nil
     
@@ -766,7 +777,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         if let currentEvent = NSApp.currentEvent {
 
             if FastSettings.checkSendingAbility(for: currentEvent), didSetReady {
-                send()
+                send(false)
                 return .invoked
             }
         }
@@ -774,8 +785,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return .invokeNext
     }
     
-    func send() {
-        sendCurrentMedia?()
+    func send(_ silent: Bool) {
+        sendCurrentMedia?(silent)
     }
     
     
@@ -998,7 +1009,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self.urlsAndStateValue.set(UrlAndState(self.urls, state))
         }
         
-        self.sendCurrentMedia = { [weak self] in
+        self.sendCurrentMedia = { [weak self] silent in
             guard let `self` = self else { return }
             
             if let slowMode = self.chatInteraction.presentation.slowMode, slowMode.hasLocked {
@@ -1043,7 +1054,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                         
                     }
                 }
-                self.chatInteraction.sendMedias(medias, input, state == .collage, additionalMessage)
+                self.chatInteraction.sendMedias(medias, input, state == .collage, additionalMessage, silent)
             }
             
             
