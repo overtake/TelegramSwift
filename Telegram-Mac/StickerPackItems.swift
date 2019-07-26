@@ -99,9 +99,9 @@ class StickerPackRowView: HorizontalRowView {
     
     private let stickerFetchedDisposable = MetaDisposable()
     
-    var imageView:TransformImageView = TransformImageView()
+    private var imageView:TransformImageView?
     
-    var overlay:ImageButton = ImageButton()
+    private let overlay:ImageButton = ImageButton()
     
     required init(frame frameRect:NSRect) {
         super.init(frame:frameRect)
@@ -111,7 +111,6 @@ class StickerPackRowView: HorizontalRowView {
         overlay.autohighlight = false
         overlay.canHighlight = false
         addSubview(overlay)
-        addSubview(imageView)
         
     }
     
@@ -122,10 +121,19 @@ class StickerPackRowView: HorizontalRowView {
     override func layout() {
         super.layout()
         
-        imageView.center()
-        overlay.center()
+        self.imageView?.center()
+        self.overlay.center()
     }
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            self.imageView?.removeFromSuperview()
+            self.imageView = nil
+        } else if let item = item, self.imageView == nil {
+            self.set(item: item, animated: false)
+        }
+    }
     
     deinit {
         stickerFetchedDisposable.dispose()
@@ -136,7 +144,6 @@ class StickerPackRowView: HorizontalRowView {
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
-        
         
         var mediaUpdated = true
         if let lhs = (self.item as? StickerPackRowItem)?.topItem, let rhs = (item as? StickerPackRowItem)?.topItem {
@@ -163,6 +170,14 @@ class StickerPackRowView: HorizontalRowView {
                 thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource)
                 resourceReference = MediaResourceReference.media(media: .standalone(media: item.file), resource: resource)
                 file = item.file
+            }
+            
+            if self.imageView == nil {
+                self.imageView = TransformImageView()
+                self.addSubview(self.imageView!)
+            }
+            guard let imageView = self.imageView else {
+                return
             }
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(30, 30), boundingSize: NSMakeSize(30, 30), intrinsicInsets: NSEdgeInsets())
@@ -372,6 +387,16 @@ private final class AnimatedStickerPackRowView : HorizontalRowView {
     override func viewWillMove(toSuperview newSuperview: NSView?) {
         if newSuperview == nil {
             self.contentNode?.willRemove()
+        }
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            contentNode?.removeFromSuperview()
+            contentNode = nil
+        } else if let item = item, contentNode == nil {
+            self.set(item: item, animated: false)
         }
     }
     

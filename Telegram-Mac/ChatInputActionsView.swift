@@ -406,16 +406,31 @@ class ChatInputActionsView: View, Notifable {
     }
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
-        send.set(handler: { control in
-            if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
+        
+        send.set(handler: { [weak chatInteraction] control in
+            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, peer.isUser, peer.id != chatInteraction.context.peerId {
+                if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                    return
+                }
+                if chatInteraction.presentation.state != .normal {
+                    return
+                }
+                showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
+                    chatInteraction?.sendMessage(true)
+                })]))
+            }
+        }, for: .Hover)
+        
+        send.set(handler: { [weak chatInteraction] control in
+            if let slowMode = chatInteraction?.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: control)
             } else {
-                chatInteraction.sendMessage()
+                chatInteraction?.sendMessage(false)
             }
         }, for: .Click)
         
-        slowModeTimeout.set(handler: { control in
-            if let slowMode = chatInteraction.presentation.slowMode {
+        slowModeTimeout.set(handler: { [weak chatInteraction] control in
+            if let slowMode = chatInteraction?.presentation.slowMode {
                 showSlowModeTimeoutTooltip(slowMode, for: control)
             }
         }, for: .Click)

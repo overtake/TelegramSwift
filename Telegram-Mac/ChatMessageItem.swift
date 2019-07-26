@@ -536,7 +536,7 @@ class ChatMessageItem: ChatRowItem {
                         }))
                     }
                     
-                    if file.isSticker, let fileId = file.id {
+                    if file.isStaticSticker, let fileId = file.id {
                         return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
                             let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
                             items.append(ContextMenuItem( !saved ? L10n.chatContextAddFavoriteSticker : L10n.chatContextRemoveFavoriteSticker, handler: {

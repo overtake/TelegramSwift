@@ -617,7 +617,7 @@ final class EntertainmentView : View {
 class EntertainmentViewController: TelegramGenericViewController<EntertainmentView> {
     private let languageDisposable:MetaDisposable = MetaDisposable()
 
-    private(set) var chatInteraction:ChatInteraction?
+    private(set) weak var chatInteraction:ChatInteraction?
     private(set) var interactions:EntertainmentInteractions?
     private let cap:SidebarCapViewController
     

@@ -207,7 +207,7 @@ func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloa
     let value: CGImage?
     var full: Bool = false
     
-    if arguments.imageSize.width <= 60, let media = media as? TelegramMediaFile, media.isSticker || media.isAnimatedSticker, let image = stickersCache.cachedImage(for: entry) {
+    if arguments.imageSize.width <= 60, let media = media as? TelegramMediaFile, media.isStaticSticker || media.isAnimatedSticker, let image = stickersCache.cachedImage(for: entry) {
         value = image
         full = true
     } else if let image = photosCache.cachedImage(for: entry) {
@@ -235,7 +235,7 @@ func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CG
 func cacheMedia(_ result: TransformImageResult, media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
     if let image = result.image {
         let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
-        if arguments.imageSize.width <= 60, result.highQuality, let media = media as? TelegramMediaFile,  media.isSticker || media.isAnimatedSticker {
+        if arguments.imageSize.width <= 60, result.highQuality, let media = media as? TelegramMediaFile,  media.isStaticSticker || media.isAnimatedSticker {
             stickersCache.cacheImage(image, for: entry)
         } else if !result.highQuality {
             photoThumbsCache.cacheImage(image, for: entry)

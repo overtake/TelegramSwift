@@ -171,7 +171,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     private let loadStickersDisposable = MetaDisposable()
     private let loadRecentEmojiDisposable = MetaDisposable()
 
-    private var chatInteraction: ChatInteraction
+    private weak var chatInteraction: ChatInteraction?
     private var textView: NSTextView
     private let candidateListItem = NSCandidateListTouchBarItem<AnyObject>(identifier: .candidateList)
     private let layoutStateDisposable = MetaDisposable()
@@ -187,13 +187,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.textView.updateTouchBarItemIdentifiers()
         self.customizationIdentifier = .windowBar
         layoutStateDisposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] _ in
-            guard let `self` = self else {return}
-            self.notify(with: self.chatInteraction.presentation, oldValue: self.chatInteraction.presentation, animated: true)
+            guard let `self` = self, let chatInteraction = self.chatInteraction else {return}
+            self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: true)
         }))
     }
     
     func updateChatInteraction(_ chatInteraction: ChatInteraction, textView: NSTextView) -> Void {
-        self.chatInteraction.remove(observer: self)
+        self.chatInteraction?.remove(observer: self)
         chatInteraction.add(observer: self)
         self.chatInteraction = chatInteraction
         
@@ -202,7 +202,9 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     }
     
     func updateByKeyWindow() {
-        self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
+        if let chatInteraction = self.chatInteraction {
+            self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
+        }
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -210,14 +212,14 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     }
     
     deinit {
-        chatInteraction.remove(observer: self)
+        chatInteraction?.remove(observer: self)
         loadRecentEmojiDisposable.dispose()
         loadStickersDisposable.dispose()
         layoutStateDisposable.dispose()
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
-        if let value = value as? ChatPresentationInterfaceState {
+        if let value = value as? ChatPresentationInterfaceState, let chatInteraction = self.chatInteraction  {
             let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
             self.defaultItemIdentifiers = result.items
             self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
@@ -229,64 +231,66 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     
     
     @objc private func chatInfoAction() {
-        guard let item = self.item(forIdentifier: .chatInfoAndAttach) as? NSPopoverTouchBarItem else {return}
+        guard let item = self.item(forIdentifier: .chatInfoAndAttach) as? NSPopoverTouchBarItem, let chatInteraction = self.chatInteraction else {return}
         item.popoverTouchBar = ChatInfoTouchbar(chatInteraction: chatInteraction, dismiss: { [weak item] in
             item?.dismissPopover(nil)
         })
         item.showPopover(item)
     }
     @objc private func searchAction() {
-        chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil))})
+        chatInteraction?.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil))})
     }
     
     @objc private func attachPhotoOrVideo() {
-        chatInteraction.attachPhotoOrVideo()
+        chatInteraction?.attachPhotoOrVideo()
     }
     @objc private func attachPicture() {
-        chatInteraction.attachPicture()
+        chatInteraction?.attachPicture()
     }
     @objc private func attachFile() {
-        chatInteraction.attachFile(false)
+        chatInteraction?.attachFile(false)
     }
     @objc private func attachLocation() {
-        chatInteraction.attachLocation()
+        chatInteraction?.attachLocation()
     }
     @objc private func invokeInputAction(_ sender: Any?) {
-        
-        switch chatInteraction.presentation.state {
-        case .action(_, let action):
-            action(chatInteraction)
-        case let .channelWithDiscussion(_, leftAction, rightAction):
-            if let sender = sender as? NSButton {
-                switch sender.title {
-                case leftAction:
-                    chatInteraction.toggleNotifications()
-                case rightAction:
-                    chatInteraction.openDiscussion()
-                default:
-                    break
+        if let chatInteraction = self.chatInteraction {
+            switch chatInteraction.presentation.state {
+            case .action(_, let action):
+                action(chatInteraction)
+            case let .channelWithDiscussion(_, leftAction, rightAction):
+                if let sender = sender as? NSButton {
+                    switch sender.title {
+                    case leftAction:
+                        chatInteraction.toggleNotifications()
+                    case rightAction:
+                        chatInteraction.openDiscussion()
+                    default:
+                        break
+                    }
                 }
+            default:
+                break
             }
-        default:
-            break
         }
+        
     }
     
     private func showEmojiPickerPopover(recent: [String], segments: [EmojiSegment : [String]]) {
         guard let item = self.item(forIdentifier: .chatStickersAndEmojiPicker) as? NSPopoverTouchBarItem else {return}
         
         item.popoverTouchBar = TouchBarEmojiPicker(recent: recent, segments: segments, selectedEmoji: { [weak self, weak item] emoji in
-            guard let `self` = self else {return}
-            if self.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
+            guard let chatInteraction = self?.chatInteraction else {return}
+            if chatInteraction.presentation.effectiveInput.inputText.isEmpty {
                 item?.dismissPopover(nil)
             }
-            _ = self.chatInteraction.appendText(emoji)
+            _ = chatInteraction.appendText(emoji)
         })
         item.showPopover(item)
     }
     
     private func showStickersPopover(_ itemCollectionView: ItemCollectionsView) {
-        guard let item = self.item(forIdentifier: .chatStickersAndEmojiPicker) as? NSPopoverTouchBarItem else {return}
+        guard let item = self.item(forIdentifier: .chatStickersAndEmojiPicker) as? NSPopoverTouchBarItem, let chatInteraction = self.chatInteraction else {return}
         var stickers: (favorite: [TelegramMediaFile], recent: [TelegramMediaFile], packs: [(StickerPackCollectionInfo, [TelegramMediaFile])]) = (favorite: [], recent: [], packs: [])
 
         stickers.favorite = Array(itemCollectionView.orderedItemListsViews[0].items.compactMap {($0.contents  as? SavedStickerItem)?.file}.prefix(5))
@@ -334,7 +338,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 
         item.popoverTouchBar = ChatStickersTouchBarPopover(chatInteraction: chatInteraction, dismiss: { [weak item, weak self] file in
             if let file = file {
-                self?.chatInteraction.sendAppFile(file)
+                self?.chatInteraction?.sendAppFile(file)
             }
             item?.dismissPopover(nil)
         }, entries: entries)
@@ -343,7 +347,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     
     
     @objc private func openEmojiOrStickersPicker(_ sender: Any?) {
-        if let segmentControl = sender as? NSSegmentedControl {
+        if let segmentControl = sender as? NSSegmentedControl, let chatInteraction = self.chatInteraction {
             switch segmentControl.selectedSegment {
             case 0:
                 loadRecentEmojiDisposable.set((recentUsedEmoji(postbox: chatInteraction.context.account.postbox) |> deliverOnPrepareQueue |> map { ($0, emojiesInstance)} |> take(1) |> deliverOnMainQueue).start(next: { [weak self] recent, segments in
@@ -361,23 +365,23 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     }
     
     @objc private func forwardMessages() {
-        chatInteraction.forwardSelectedMessages()
+        chatInteraction?.forwardSelectedMessages()
     }
     @objc private func deleteMessages() {
-        chatInteraction.deleteSelectedMessages()
+        chatInteraction?.deleteSelectedMessages()
     }
     
     @objc private func saveEditingMessage() {
-        chatInteraction.sendMessage()
+        chatInteraction?.sendMessage(false)
     }
     @objc private func replaceWithFile() {
-        chatInteraction.updateEditingMessageMedia(nil, false)
+        chatInteraction?.updateEditingMessageMedia(nil, false)
     }
     @objc private func replaceWithMedia() {
-        chatInteraction.updateEditingMessageMedia(mediaExts, true)
+        chatInteraction?.updateEditingMessageMedia(mediaExts, true)
     }
     @objc private func cancelMessageEditing() {
-        chatInteraction.update({$0.withoutEditMessage()})
+        chatInteraction?.update({$0.withoutEditMessage()})
     }
     @objc private func infoAndAttach(_ sender: Any?) {
         
@@ -582,7 +586,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.blueUI
             button.imageHugsTitle = true
-            button.isEnabled = chatInteraction.presentation.canInvokeBasicActions.forward
+            button.isEnabled = self.chatInteraction?.presentation.canInvokeBasicActions.forward ?? false
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -593,17 +597,17 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.redUI
             button.imageHugsTitle = true
-            button.isEnabled = chatInteraction.presentation.canInvokeBasicActions.delete
+            button.isEnabled = self.chatInteraction?.presentation.canInvokeBasicActions.delete ?? false
             item.view = button
             item.customizationLabel = button.title
             return item
         case .chatSuggestStickers:
-            if let result = chatInteraction.presentation.inputQueryResult {
+            if let result = self.chatInteraction?.presentation.inputQueryResult, let chatInteraction = self.chatInteraction {
                 switch result {
                 case let .stickers(stickers):
                     return StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, sendSticker: { [weak self] file in
-                        self?.chatInteraction.sendAppFile(file)
-                        self?.chatInteraction.clearInput()
+                        self?.chatInteraction?.sendAppFile(file)
+                        self?.chatInteraction?.clearInput()
                     }, entries: stickers.map({.sticker($0.file)}))
                 default:
                     break
@@ -621,13 +625,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             switch identifier {
             case .chatForwardMessages:
                 let button = (item(forIdentifier: identifier) as? NSCustomTouchBarItem)?.view as? NSButton
-                button?.bezelColor = chatInteraction.presentation.canInvokeBasicActions.forward ? theme.colors.blueUI : nil
-                button?.isEnabled = chatInteraction.presentation.canInvokeBasicActions.forward
+                button?.bezelColor = self.chatInteraction?.presentation.canInvokeBasicActions.forward ?? false ? theme.colors.blueUI : nil
+                button?.isEnabled = self.chatInteraction?.presentation.canInvokeBasicActions.forward ?? false
                 
             case .chatDeleteMessages:
                 let button = (item(forIdentifier: identifier) as? NSCustomTouchBarItem)?.view as? NSButton
-                button?.bezelColor = chatInteraction.presentation.canInvokeBasicActions.delete ? theme.colors.redUI : nil
-                button?.isEnabled = chatInteraction.presentation.canInvokeBasicActions.delete
+                button?.bezelColor = self.chatInteraction?.presentation.canInvokeBasicActions.delete ?? false ? theme.colors.redUI : nil
+                button?.isEnabled = self.chatInteraction?.presentation.canInvokeBasicActions.delete ?? false
             default:
                 break
             }

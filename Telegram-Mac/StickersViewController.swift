@@ -273,7 +273,7 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[1].items {
                     if let entry = item.contents as? SavedStickerItem {
-                        if let id = entry.file.id, ids[id] == nil, entry.file.isSticker || entry.file.isAnimatedSticker {
+                        if let id = entry.file.id, ids[id] == nil, entry.file.isStaticSticker || entry.file.isAnimatedSticker {
                             ids[id] = id
                             files.append(entry.file)
                         }
@@ -288,7 +288,7 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[0].items {
                     if let entry = item.contents as? RecentMediaItem {
-                        if let file = entry.media as? TelegramMediaFile, let id = file.id, ids[id] == nil, file.isSticker || file.isAnimatedSticker {
+                        if let file = entry.media as? TelegramMediaFile, let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
                             ids[id] = id
                             files.append(file)
                         }
@@ -307,7 +307,7 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
                 var files:[TelegramMediaFile] = []
                 for item in info.1 {
                     if let item = item as? StickerPackItem {
-                        if let id = item.file.id, ids[id] == nil, item.file.isSticker || item.file.isAnimatedSticker {
+                        if let id = item.file.id, ids[id] == nil, item.file.isStaticSticker || item.file.isAnimatedSticker {
                             ids[id] = id
                             files.append(item.file)
                         }
@@ -550,7 +550,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     private let specificPeerId = ValuePromise<PeerId>(ignoreRepeated: true)
     private var listener: TableScrollListener!
     private var interactions: EntertainmentInteractions?
-    private var chatInteraction: ChatInteraction?
+    private weak var chatInteraction: ChatInteraction?
     var makeSearchCommand:((ESearchCommand)->Void)?
     init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
         super.init(context)

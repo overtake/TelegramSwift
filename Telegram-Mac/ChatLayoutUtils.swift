@@ -45,7 +45,7 @@ class ChatLayoutUtils: NSObject {
             }
             if file.isAnimatedSticker {
                 size = NSMakeSize(240, 240)
-            } else if file.isSticker {
+            } else if file.isStaticSticker {
                 size = contentSize.aspectFitted(NSMakeSize(210, 210))
             } else if file.isInstantVideo {
                 size = NSMakeSize(200, 200)
@@ -89,7 +89,7 @@ class ChatLayoutUtils: NSObject {
         } else if let file = media as? TelegramMediaFile {
             if file.isAnimatedSticker {
                 return ChatMediaAnimatedStickerView.self
-            } else if file.isSticker {
+            } else if file.isStaticSticker {
                 return ChatStickerContentView.self
             } else if file.isInstantVideo {
                 return ChatVideoMessageContentView.self
