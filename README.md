@@ -33,7 +33,7 @@ Telegram strives to protect your privacy.  This app asks for as few permissions 
 * **Camera**: You can set your profile picture using your Mac’s iSight camera.
 * **Location**: You can send your location to friends.
 * **Outgoing network connections**: Telegram needs to connect to the internet to send your messages to your friends.
-* **Incoming network connections**: Telegram needs to accept incoming connections for peer-to-peer secret chats and voice calls.
+* **Incoming network connections**: Telegram needs to accept incoming connections for peer-to-peer voice calls.
 * **User-selected files**: You can save files or images to your Mac.
 * **Downloads folder**: Telegram can automatically download files or images you receive.
 
