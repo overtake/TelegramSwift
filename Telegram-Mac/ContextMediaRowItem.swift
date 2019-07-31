@@ -189,8 +189,6 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     imageView.center()
                     view.addSubview(imageView)
                     container = view
-
-                    break
                 }
                 container.setFrameOrigin(inset, 0)
                 container.background = theme.colors.background
@@ -211,12 +209,11 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
             var inset:CGFloat = 0
             var i:Int = 0
             for size in item.result.sizes {
-                
                 if point.x > inset && point.x < inset + size.width {
                     item.arguments.sendResult(item.result.results[i], self.subviews[i])
                     break
                 }
-                inset += size.width
+                inset += size.width + dif
                 i += 1
             }
         }

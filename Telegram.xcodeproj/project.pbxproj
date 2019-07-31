@@ -1740,9 +1740,20 @@
 		D01E1EFF22B261A800AD6DAE /* Alpha.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Alpha.xcconfig; sourceTree = "<group>"; };
 		D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottiePlayer.swift; sourceTree = "<group>"; };
 		D0276B7C22BD6511003155D8 /* DisplayLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayLink.swift; sourceTree = "<group>"; };
+		D027B71422F05EEA009BB54B /* celeb.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = celeb.tgs; sourceTree = "<group>"; };
+		D027B71522F05EEB009BB54B /* thumbs_up_2.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbs_up_2.tgs; sourceTree = "<group>"; };
+		D027B71622F05EEB009BB54B /* confused.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = confused.tgs; sourceTree = "<group>"; };
+		D027B71722F05EEC009BB54B /* thumbs_up_4.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbs_up_4.tgs; sourceTree = "<group>"; };
+		D027B71822F05EEC009BB54B /* thumbs_up_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbs_up_1.tgs; sourceTree = "<group>"; };
+		D027B71922F05EED009BB54B /* thumbs_up_3.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbs_up_3.tgs; sourceTree = "<group>"; };
+		D027B71A22F05EEE009BB54B /* thumbs_up_5.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbs_up_5.tgs; sourceTree = "<group>"; };
+		D027B71B22F05EEE009BB54B /* thumbs_up_6.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbs_up_6.tgs; sourceTree = "<group>"; };
 		D02F09FF22E8875800553411 /* SoftwareVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoSource.swift; sourceTree = "<group>"; };
 		D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerFramePreview.swift; sourceTree = "<group>"; };
 		D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalSoftwareVideoSource.swift; sourceTree = "<group>"; };
+		D02F0A0622EF1CA300553411 /* lol.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = lol.tgs; sourceTree = "<group>"; };
+		D02F0A0822EF1CA300553411 /* meh.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = meh.tgs; sourceTree = "<group>"; };
+		D02F0A0922EF1CA300553411 /* heart.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = heart.tgs; sourceTree = "<group>"; };
 		D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoTouchbar.swift; sourceTree = "<group>"; };
 		D0558D842152B4D3006B403D /* GalleryTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBar.swift; sourceTree = "<group>"; };
 		D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBarThumbItemView.swift; sourceTree = "<group>"; };
@@ -3176,6 +3187,7 @@
 		C252532B1DF043D800ADBC98 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				D02F0A0522EF1CA300553411 /* animoji */,
 				9F0367E622707B6400456348 /* lottie */,
 				9F0AE6B42199904400A8B53A /* sound_a.caf */,
 				9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */,
@@ -4071,6 +4083,24 @@
 			);
 			name = sskeychain;
 			path = objc/sskeychain;
+			sourceTree = "<group>";
+		};
+		D02F0A0522EF1CA300553411 /* animoji */ = {
+			isa = PBXGroup;
+			children = (
+				D027B71422F05EEA009BB54B /* celeb.tgs */,
+				D027B71622F05EEB009BB54B /* confused.tgs */,
+				D027B71822F05EEC009BB54B /* thumbs_up_1.tgs */,
+				D027B71522F05EEB009BB54B /* thumbs_up_2.tgs */,
+				D027B71922F05EED009BB54B /* thumbs_up_3.tgs */,
+				D027B71722F05EEC009BB54B /* thumbs_up_4.tgs */,
+				D027B71A22F05EEE009BB54B /* thumbs_up_5.tgs */,
+				D027B71B22F05EEE009BB54B /* thumbs_up_6.tgs */,
+				D02F0A0622EF1CA300553411 /* lol.tgs */,
+				D02F0A0822EF1CA300553411 /* meh.tgs */,
+				D02F0A0922EF1CA300553411 /* heart.tgs */,
+			);
+			path = animoji;
 			sourceTree = "<group>";
 		};
 		D0558D782151411F006B403D /* chat */ = {

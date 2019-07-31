@@ -22,6 +22,7 @@ public enum ControlEvent {
     case Click
     case SingleClick
     case RightClick
+    case RightDown
     case MouseDragging
     case LongMouseDown
     case LongMouseUp
@@ -313,9 +314,11 @@ open class Control: View {
         }
     }
     
+    
     open override func rightMouseDown(with event: NSEvent) {
         if userInteractionEnabled {
             updateState()
+            send(event: .RightDown)
             super.rightMouseDown(with: event)
         } else {
             super.rightMouseDown(with: event)

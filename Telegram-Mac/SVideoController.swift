@@ -117,7 +117,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private func updateControlVisibility() {
         updateIdleTimer()
         if let rootView = genericView.superview?.superview {
-            hideControls.set(!genericView._mouseInside() && !rootView.isHidden)
+            hideControls.set(!genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0)
         } else {
             hideControls.set(false)
         }

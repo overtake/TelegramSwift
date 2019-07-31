@@ -757,7 +757,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     NSSize size = newRect.size;
     size.width = NSWidth(self.frame);
     NSSize newSize = NSMakeSize(size.width, size.height);
-    newSize.height+= 8;
+    newSize.height+= 2;
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
     [self updatePlaceholder:self.animates newSize:newSize];

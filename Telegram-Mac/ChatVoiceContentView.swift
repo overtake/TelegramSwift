@@ -172,7 +172,7 @@ class ChatVoiceContentView: ChatAudioContentView {
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
             updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
-                    if let pendingStatus = pendingStatus {
+                    if let pendingStatus = pendingStatus.0 {
                         return .Fetching(isActive: true, progress: pendingStatus.progress)
                     } else {
                         return resourceStatus

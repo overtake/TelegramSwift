@@ -138,18 +138,32 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
 
 
 private func fetchCachedAnimatedStickerRepresentation(account: Account, resource: MediaResource, representation: CachedAnimatedStickerRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
-    return account.postbox.mediaBox.resourceData(resource) |> deliverOn(lottieThreadPool) |> map { resourceData -> (CGImage?, Data?, MediaResourceData) in
+   
+    let data: Signal<MediaResourceData, NoError>
+    if let resource = resource as? LocalBundleResource {
+        data = Signal { subscriber in
+            if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
+                subscriber.putNext(MediaResourceData(path: path, offset: 0, size: data.count, complete: true))
+                subscriber.putCompletion()
+            }
+            return EmptyDisposable
+        }
+    } else {
+        data = account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
+    }
+
+    return data |> deliverOn(lottieThreadPool) |> map { resourceData -> (CGImage?, Data?, MediaResourceData) in
         if resourceData.complete {
             if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                 if !representation.thumb {
-                    var dataValue: Data! = TGGUnzipData(data)
-                    if dataValue.isEmpty {
+                    var dataValue: Data! = TGGUnzipData(data, 8 * 1024 * 1024)
+                    if dataValue == nil {
                         dataValue = data
                     }
                     if let json = String(data: dataValue, encoding: .utf8), json.length > 0 {
                         let rlottie = RLottieBridge(json: json, key: resourceData.path)
                         
-                        let unmanaged = rlottie?.renderFrame(0, width: 240 * 2, height: 240 * 2)
+                        let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
                         let colorImage = unmanaged?.takeRetainedValue()
                         return (colorImage, nil, resourceData)
                     }
@@ -192,10 +206,10 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                 var image = umnanaged?.takeUnretainedValue() ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
                 umnanaged?.release()
                 
-                if image == nil {
-                    if let json = String(data: TGGUnzipData(data)!, encoding: .utf8), json.length > 0 {
+                if image == nil, let data = TGGUnzipData(data, 8 * 1024 * 1024) {
+                    if let json = String(data: data, encoding: .utf8), json.length > 0 {
                         let rlottie = RLottieBridge(json: json, key: resourceData.path)
-                        let unmanaged = rlottie?.renderFrame(0, width: 60 * 2, height: 60 * 2)
+                        let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
                         image = unmanaged?.takeRetainedValue()
                     }
                 }

@@ -212,7 +212,7 @@ class ChatGIFContentView: ChatMediaContentView {
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                 updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
-                        if let pendingStatus = pendingStatus {
+                        if let pendingStatus = pendingStatus.0 {
                             return .Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100))
                         } else {
                             return resourceStatus

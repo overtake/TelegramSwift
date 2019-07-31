@@ -24,6 +24,9 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
     private let thumbView = TransformImageView()
     private var sticker:LottieAnimation? = nil {
         didSet {
+            if oldValue != sticker {
+                self.previousAccept = false
+            }
             updatePlayerIfNeeded()
         }
     }
@@ -97,8 +100,10 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
-            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, let reference = media.stickerReference {
+            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isAnimatedSticker, let reference = media.stickerReference {
                 showModal(with:StickersPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
+            } else {
+                self.playerView.playIfNeeded()
             }
         }
     }
@@ -167,17 +172,30 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
             reference = FileMediaReference.standalone(media: file).resourceReference(file.resource)
         }
         
+        let data: Signal<MediaResourceData, NoError>
+        if let resource = file.resource as? LocalBundleResource {
+            data = Signal { subscriber in
+                if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
+                    subscriber.putNext(MediaResourceData(path: path, offset: 0, size: data.count, complete: true))
+                    subscriber.putCompletion()
+                }
+                return EmptyDisposable
+            } |> runOn(resourcesQueue)
+        } else {
+            data = context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: approximateSynchronousValue)
+        }
         
-        self.loadResourceDisposable.set((context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: approximateSynchronousValue) |> map { resourceData -> Data? in
+        self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
             
             if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                 return data
             }
             return nil
-        } |> deliverOnMainQueue).start(next: { [weak self] data in
-            if let data = data {
-                
-                self?.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(self?.media?.id), size: size), cachePurpose: size.width < 200 ? .temporaryLZ4(.thumb) : parent != nil  ? .temporaryLZ4(.chat) : .none, maximumFps: size.width < 200 ? 30 : 60)
+        } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
+            if let data = data, let file = file {
+                let playPolicy: LottiePlayPolicy = file.isEmojiAnimatedSticker ? .once : .loop
+                let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? 30 : 60
+                self?.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size), cachePurpose: size.width < 200 ? .temporaryLZ4(.thumb) : self?.parent != nil ? .temporaryLZ4(.chat) : .none, playPolicy: playPolicy, maximumFps: maximumFps)
                 self?.fetchStatus = .Local
             } else {
                 self?.sticker = nil
@@ -185,12 +203,12 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
             }
         }))
         
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(size.height, size.height), boundingSize: size, intrinsicInsets: NSEdgeInsets())
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
         
         
         self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         if !self.thumbView.isFullyLoaded {
-            self.thumbView.setSignal(chatMessageAnimatedSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: false), cacheImage: { [weak file] result in
+            self.thumbView.setSignal(chatMessageAnimatedSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, size: size, fetched: false), cacheImage: { [weak file] result in
                 if let file = file {
                     cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                 }

@@ -116,16 +116,18 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
-        return "animated-sticker-v-\(self.thumb ? 1 : 0)"
+        return "animated-sticker-v1-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)"
     }
     let thumb: Bool
-    init(thumb: Bool) {
+    let size: NSSize
+    init(thumb: Bool, size: NSSize) {
         self.thumb = thumb
+        self.size = size
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedAnimatedStickerRepresentation {
-            return self.thumb == to.thumb
+            return self.thumb == to.thumb && self.size == to.size
         } else {
             return false
         }

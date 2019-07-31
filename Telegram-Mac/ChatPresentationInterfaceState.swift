@@ -586,6 +586,8 @@ struct ChatPresentationInterfaceState: Equatable {
             }
             if forwardMessages.count > 1 || (!effectiveInput.inputText.isEmpty && forwardMessages.count == 1) {
                 return true
+            } else if effectiveInput.inputText.length > 4096 {
+                return true
             }
         }
         return false
@@ -595,6 +597,9 @@ struct ChatPresentationInterfaceState: Equatable {
         if let slowMode = self.slowMode, slowMode.hasLocked {
             return slowMode.errorText
         } else if slowModeMultipleLocked {
+            if effectiveInput.inputText.length > 4096 {
+                return L10n.slowModeTooLongError
+            }
             return L10n.slowModeForwardCommentError
         } else {
             return nil

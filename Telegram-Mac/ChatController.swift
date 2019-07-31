@@ -1084,17 +1084,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
         }
         let historyViewUpdate = historyViewUpdate1
-//        |> take(until: { view in
-//            switch view.0 {
-//                case let .HistoryView(historyView):
-//                    if case .Generic(.FillHole) = historyView.type {
-//                        return SignalTakeAction(passthrough: true, complete: true)
-//                    }
-//                default:
-//                    break
-//            }
-//            return SignalTakeAction(passthrough: true, complete: false)
-//        }) |> then(.never())
+
+        
+        let animatedEmojiStickers = loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: .animatedEmoji, forceActualized: false)
+            |> map { result -> [String: StickerPackItem] in
+                switch result {
+                case let .result(_, items, _):
+                    var animatedEmojiStickers: [String: StickerPackItem] = [:]
+                    for case let item as StickerPackItem in items {
+                        if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                            animatedEmojiStickers[emoji] = item
+                        }
+                    }
+                    return animatedEmojiStickers
+                default:
+                    return [:]
+                }
+        }
+
         
         
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
@@ -1119,28 +1126,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             } else if let location = self.locationValue {
                 self.setLocation(location)
             }
-            
-            
-//            let historyView = (strongSelf.opaqueTransactionState as? ChatHistoryTransactionOpaqueState)?.historyView
-//            let displayRange = strongSelf.displayedItemRange
-//            if let filteredEntries = historyView?.filteredEntries, let visibleRange = displayRange.visibleRange {
-//                let lastEntry = filteredEntries[filteredEntries.count - 1 - visibleRange.lastIndex]
-//
-//                strongSelf.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount), id: 0)
-//            } else {
-//                if let messageId = messageId {
-//                    strongSelf.chatHistoryLocationValue = ChatHistoryLocationInput(content: .InitialSearch(location: .id(messageId), count: 60), id: 0)
-//                } else {
-//                    strongSelf.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Initial(count: 60), id: 0)
-//                }
-//            }
+        
         }
         
         let clearHistoryUndoSignal = context.chatUndoManager.status(for: chatInteraction.peerId, type: .clearHistory)
         
         let _searchState: Atomic<SearchMessagesResultState> = Atomic(value: SearchMessagesResultState("", []))
         
-        let historyViewTransition = combineLatest(queue: messagesViewQueue, historyViewUpdate, appearanceSignal, combineLatest(maxReadIndex.get() |> deliverOnMessagesViewQueue, pollAnswersLoadingSignal), clearHistoryUndoSignal, searchState.get()) |> mapToQueue { update, appearance, readIndexAndPollAnswers, clearHistoryStatus, searchState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
+        let historyViewTransition = combineLatest(queue: messagesViewQueue, historyViewUpdate, appearanceSignal, combineLatest(maxReadIndex.get() |> deliverOnMessagesViewQueue, pollAnswersLoadingSignal), clearHistoryUndoSignal, searchState.get(), animatedEmojiStickers) |> mapToQueue { update, appearance, readIndexAndPollAnswers, clearHistoryStatus, searchState, animatedEmojiStickers -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
             
             //NSLog("get history")
             
@@ -1195,7 +1188,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             let animationInterface: TableAnimationInterface = TableAnimationInterface(nextTransaction.isExutable && view?.laterId == nil)
             let timeDifference = context.timeDifference
-            
+            let bigEmojiEnabled = context.sharedContext.baseSettings.bigEmoji
+
             
             var ranks: CachedChannelAdminRanks?
             if let view = view {
@@ -1217,7 +1211,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 } else if let clearHistoryStatus = clearHistoryStatus, clearHistoryStatus != .cancelled {
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
                 } else {
-                    let entries = messageEntries(view.entries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(view.entries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:]).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                 }
             } else {
@@ -1464,7 +1458,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 return .complete()
                             }
                             
-                            return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId)
+                            return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, silent: silent)
                         }
                         
                         invokeSignal = invokeSignal |> then( fwd |> ignoreValues)
@@ -1485,9 +1479,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     let actionView = strongSelf.genericView.inputView.currentActionView
                     if let slowMode = presentation.slowMode {
-                        
                         if let errorText = presentation.slowModeErrorText {
-                            tooltip(for: actionView, text: errorText)
+                            if let slowMode = presentation.slowMode, slowMode.timeout != nil {
+                                showSlowModeTimeoutTooltip(slowMode, for: actionView)
+                            } else {
+                                tooltip(for: actionView, text: errorText)
+                            }
                             if let last = slowMode.sendingIds.last {
                                 strongSelf.chatInteraction.focusMessageId(nil, last, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
                             } else {
@@ -3318,7 +3315,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     text = L10n.chatSendMessageErrorGroupRestricted
                 case .mediaRestricted:
                     text = L10n.chatSendMessageErrorGroupRestricted
-                    
+                case .slowmodeActive:
+                    text = L10n.chatSendMessageSlowmodeError
                 }
                 confirm(for: mainWindow, information: text, cancelTitle: "", thridTitle: L10n.genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}
@@ -3797,7 +3795,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 editButton?.isHidden = value.selectionState != nil
             }
             
-            if value.effectiveInput != oldValue.effectiveInput || force || (oldValue.slowMode?.timeout != nil && value.slowMode?.timeout == nil) {
+            if value.effectiveInput != oldValue.effectiveInput || force {
                 if let (updatedContextQueryState, updatedContextQuerySignal) = contextQueryResultStateForChatInterfacePresentationState(chatInteraction.presentation, context: self.context, currentQuery: self.contextQueryState?.0) {
                     self.contextQueryState?.1.dispose()
                     var inScope = true

@@ -6,15 +6,15 @@
 	<dict>
 		<key>Resources/BITCrashReportUI.nib</key>
 		<data>
-		IzrAGSCc7/Jq7W6of+Sdo4BkYCc=
+		3PMlLH/T9ihjR9hTJmlfhoYlTTo=
 		</data>
 		<key>Resources/BITFeedbackWindowController.nib</key>
 		<data>
-		Y3so7MmnzMi8NHktNw1cquXp36w=
+		f3VTPsVgsbufH47ihuBMbmxcx4g=
 		</data>
 		<key>Resources/Info.plist</key>
 		<data>
-		q1iPEiyOebrQT6xczSmGP2PiCvQ=
+		/chXfIUZSSRaP2Occt9z8Vde4Vg=
 		</data>
 		<key>Resources/de.lproj/HockeySDK.strings</key>
 		<dict>
@@ -293,33 +293,33 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			IzrAGSCc7/Jq7W6of+Sdo4BkYCc=
+			3PMlLH/T9ihjR9hTJmlfhoYlTTo=
 			</data>
 			<key>hash2</key>
 			<data>
-			tfSlsLlneesq+P6toVHkKtVbeRZNooU1UvEmFbUp/jI=
+			BnfITmSkCJY49DaG1Z5xoaxFx1y5RvFlJ9kZzzQwJZM=
 			</data>
 		</dict>
 		<key>Resources/BITFeedbackWindowController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			Y3so7MmnzMi8NHktNw1cquXp36w=
+			f3VTPsVgsbufH47ihuBMbmxcx4g=
 			</data>
 			<key>hash2</key>
 			<data>
-			oRedxnQUMSjrwuK75lkG/0WuSEy5uIg+nUqfiL6OzQo=
+			DZc3CEMvXc9m1C1ZotSZ8VR3jYtTdD1rewpdkazp0XM=
 			</data>
 		</dict>
 		<key>Resources/Info.plist</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			q1iPEiyOebrQT6xczSmGP2PiCvQ=
+			/chXfIUZSSRaP2Occt9z8Vde4Vg=
 			</data>
 			<key>hash2</key>
 			<data>
-			sxPjJUBTlEx1lZ1hag9tNNNs9iIrI8YqahrBFl3MDtk=
+			SEOyoYLTIMBuzPvPYY1PWD1NaxYMAj9TdhLIGOmJTjE=
 			</data>
 		</dict>
 		<key>Resources/de.lproj/HockeySDK.strings</key>

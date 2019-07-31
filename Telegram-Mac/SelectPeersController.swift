@@ -447,10 +447,10 @@ public struct SelectPeerSettings: OptionSet {
         self.rawValue = rawValue
     }
     
-    public static let remote = SelectPeerSettings(rawValue: 1)
-    public static let contacts = SelectPeerSettings(rawValue: 2)
-    public static let groups = SelectPeerSettings(rawValue: 3)
-    public static let excludeBots = SelectPeerSettings(rawValue: 4)
+    public static let remote = SelectPeerSettings(rawValue: 1 << 1)
+    public static let contacts = SelectPeerSettings(rawValue: 1 << 2)
+    public static let groups = SelectPeerSettings(rawValue: 1 <<  3)
+    public static let excludeBots = SelectPeerSettings(rawValue: 1 <<  4)
 }
 
 class SelectPeersBehavior {

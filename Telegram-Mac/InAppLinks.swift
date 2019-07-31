@@ -12,6 +12,8 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
+import MtProtoKitMac
+
 private let inapp:String = "chat://"
 private let tgme:String = "tg://"
 
@@ -631,9 +633,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     case actions_me[4]:
                         let vars = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret]  {
-                            let secret = ObjcUtils.data(fromHexString: rawSecret)!
                             let server = escape(with: server)
-                            return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
+                            if let secret = MTProxySecret.parse(rawSecret)?.serialize() {
+                                return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
+                            }
                         }
                     case actions_me[5]:
                         if let context = context, !value.isEmpty {
@@ -814,8 +817,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[6]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret] {
                         let server = escape(with: server)
-                       
-                        return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret:  ObjcUtils.data(fromHexString: rawSecret))), applyProxy: applyProxy)
+                        if let secret = MTProxySecret.parse(rawSecret)?.serialize() {
+                            return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
+                        }
                     }
                 case known_scheme[7]:
                     if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int32(rawBotId), let context = context {
@@ -927,9 +931,11 @@ func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
             }
             return (nil , true)
         } else if action.hasPrefix("proxy") {
-            if let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let secret = vars[keyURLSecret] {
+            if let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret] {
                 let server = escape(with: server)
-                return (ProxyServerSettings(host: server, port: port, connection: .mtp(secret: ObjcUtils.data(fromHexString: secret))), true)
+                if let secret = MTProxySecret.parse(rawSecret)?.serialize() {
+                    return (ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), true)
+                }
             }
         }
         

@@ -105,7 +105,7 @@ public class TabBarView: View {
             let container = View(frame: view.bounds)
             view.set(handler: { [weak tab] control in
                 tab?.longHoverHandler?(control)
-            }, for: .LongOver)
+            }, for: .RightDown)
             
             view.set(handler: { [weak self] control in
                 if let strongSelf = self {

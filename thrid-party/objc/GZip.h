@@ -7,8 +7,8 @@
 extern "C" {
 #endif
     
-    NSData *TGGZipData(NSData *data, float level);
-    NSData *TGGUnzipData(NSData *data);
+    NSData *TGGZipData(NSData * __nonnull data, float level);
+    NSData * _Nullable TGGUnzipData(NSData *data, uint sizeLimit);
     
 #ifdef __cplusplus
 }

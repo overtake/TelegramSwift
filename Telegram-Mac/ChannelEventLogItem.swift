@@ -338,22 +338,41 @@ class ServiceEventLogItem: TableRowItem {
                                 removedRights = prevAdminInfo.rights.flags.subtracting(newAdminInfo?.rights.flags ?? [])
                             }
                             
-                            _ = message.append(string: prevAdminInfo != nil ? tr(L10n.eventLogServicePromotedChanged(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")) : tr(L10n.eventLogServicePromoted(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")), color: theme.colors.text)
+                            var justRankUpdated: Bool = false
                             
-                            
-                            for right in result.rightsHelp.order {
-                                if addedRights.contains(right) {
-                                    _ = message.append(string: "\n+ \(right.localizedString)", color: theme.colors.text)
+                            if prevRank != newRank {
+                                let rank = newRank ?? L10n.chatAdminBadge
+                                if removedRights.isEmpty && addedRights.isEmpty {
+                                    _ = message.append(string: L10n.channelEventLogMessageRankName(memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", rank), color: theme.colors.text)
+                                    justRankUpdated = true
                                 }
                             }
-                            if !removedRights.isEmpty {
+                            if !justRankUpdated {
+                                _ = message.append(string: prevAdminInfo != nil ? L10n.eventLogServicePromotedChanged(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "") : L10n.eventLogServicePromoted(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
+                                
+                                
                                 for right in result.rightsHelp.order {
-                                    if removedRights.contains(right) {
-                                        _ = message.append(string: "\n- \(right.localizedString)", color: theme.colors.text)
+                                    if addedRights.contains(right) {
+                                        _ = message.append(string: "\n+ \(right.localizedString)", color: theme.colors.text)
+                                    }
+                                }
+                                if !removedRights.isEmpty {
+                                    for right in result.rightsHelp.order {
+                                        if removedRights.contains(right) {
+                                            _ = message.append(string: "\n- \(right.localizedString)", color: theme.colors.text)
+                                        }
+                                    }
+                                }
+                                
+                                if prevRank != newRank {
+                                    if let rank = newRank, !rank.isEmpty {
+                                        _ = message.append(string: "\n" + L10n.channelEventLogServicePlusTitle(rank), color: theme.colors.text)
+                                    } else {
+                                        _ = message.append(string: "\n" + L10n.channelEventLogServiceMinusTitle, color: theme.colors.text)
                                     }
                                 }
                             }
-                            
+                        
                             
                             message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                             message.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
@@ -379,8 +398,24 @@ class ServiceEventLogItem: TableRowItem {
                             
                         }
                     }
-                default:
-                    break
+                case let .creator(id, prevRank):
+                    switch new.participant {
+                    case .creator(id, let newRank):
+                        if prevRank != newRank, let memberPeer = result.peers[id] {
+                            
+                            let message = NSMutableAttributedString()
+                            
+                            let rank = newRank ?? L10n.chatOwnerBadge
+                            _ = message.append(string: L10n.channelEventLogMessageRankName(memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", rank), color: theme.colors.text)
+                            message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
+                            message.detectLinks(type: [.Mentions, .Hashtags], context: chatInteraction.context, color: theme.colors.link, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil)
+                            message.add(link: inAppLink.peerInfo(link: "", peerId: id, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: message.string.nsstring.range(of: memberPeer.displayTitle))
+                            self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
+                            
+                        }
+                    default:
+                        break
+                    }
                 }
             case .deleteMessage:
                 serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceDeletedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)

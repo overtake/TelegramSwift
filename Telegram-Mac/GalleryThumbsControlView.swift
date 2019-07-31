@@ -31,7 +31,7 @@ class GalleryThumbContainer : Control {
             signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
         } else if let item = item as? MGalleryPeerPhotoItem {
-            signal = chatMessagePhotoThumbnail(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
+            signal = chatMessagePhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
             
             size = item.media.representations.first?.dimensions
             item.fetch()

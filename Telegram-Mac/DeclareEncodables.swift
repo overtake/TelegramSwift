@@ -38,6 +38,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(LaunchNavigation.self, f: { LaunchNavigation(decoder: $0)})
     declareEncodable(DownloadedFilesPaths.self, f: { DownloadedFilesPaths(decoder: $0)})
     declareEncodable(DownloadedPath.self, f: { DownloadedPath(decoder: $0)})
+    declareEncodable(LocalBundleResource.self, f: { LocalBundleResource(decoder: $0)})    
     return
 }()
 

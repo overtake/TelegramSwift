@@ -10,7 +10,7 @@ import Cocoa
 
 import PostboxMac
 import TelegramCoreMac
-
+import MtProtoKitMac
 enum ChatHistoryEntryId : Hashable {
     case message(Message)
     case groupedPhotos(groupInfo: MessageGroupInfo)
@@ -362,7 +362,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:]) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -385,15 +385,34 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
                 name = L10n.chatMessageSocks5Config
             case let .mtp(secret):
-                textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextSecret((secret as NSData).hexString)
+                textInfo += (!textInfo.isEmpty ? "\n" : "") + L10n.proxyForceEnableTextSecret(MTProxySecret.parseData(secret)?.serializeToString() ?? "")
                 name = L10n.chatMessageMTProxyConfig
             }
-            
-            
             
             let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent(url: message.text, displayUrl: "", hash: 0, type: "proxy", websiteName: name, title: L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port)), text: textInfo, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: nil, file: nil, instantPage: nil)))
             message = message.withUpdatedMedia([media]).withUpdatedText("")
         }
+        
+        if message.media.isEmpty {
+            if message.text.length <= 6 {
+                let text = message.text.fixed
+                if let item = animatedEmojiStickers[text] {
+                    var file = item.file
+                    var attributes = file.attributes
+                    attributes.removeAll { attr in
+                        if case .FileName = attr {
+                            return true
+                        } else {
+                            return false
+                        }
+                    }
+                    attributes.append(.FileName(fileName: "animated-emoji.tgs"))
+                    file = file.withUpdatedAttributes(attributes)
+                    message = message.withUpdatedMedia([file])
+                }
+            }
+        }
+        
         
         var disableEntry = false
         if let action = message.media.first as? TelegramMediaAction {

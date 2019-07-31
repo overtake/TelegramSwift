@@ -44,7 +44,14 @@ class ChatLayoutUtils: NSObject {
                 }
             }
             if file.isAnimatedSticker {
+                let dimensions = file.dimensions
                 size = NSMakeSize(240, 240)
+                if file.isEmojiAnimatedSticker {
+                    size = NSMakeSize(96, 96)
+                }
+                if let dimensions = dimensions {
+                    size = dimensions.aspectFitted(size)
+                }
             } else if file.isStaticSticker {
                 size = contentSize.aspectFitted(NSMakeSize(210, 210))
             } else if file.isInstantVideo {

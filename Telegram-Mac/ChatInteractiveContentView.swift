@@ -119,31 +119,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
         self.addSubview(image)
     }
     
-//    override func mouseEntered(with event: NSEvent) {
-//        super.mouseEntered(with: event)
-//        updateAutoplaySound()
-//    }
-//
-//    override func mouseExited(with event: NSEvent) {
-//        super.mouseExited(with: event)
-//        updateAutoplaySound()
-//    }
-//
-    
-    private var canPlaySound: Bool {
-        return mouseInside() && globalAudio == nil && !hasPictureInPicture
-    }
+
     
     override func updateMouse() {
-        if let autoplayVideoView = autoplayVideoView, let media = media as? TelegramMediaFile, let status = autoplayVideoView.status, let parameters = parameters, parameters.soundOnHover {
-            autoplayVideoView.toggleVolume(canPlaySound, animated: canPlaySound)
-            updateVideoAccessory(.Local, file: media, mediaPlayerStatus: status, animated: true)
-        }
+       
     }
     
-    private var soundOffOnInlineImage: CGImage? {
-        return autoplayVideo && parameters?.soundOnHover == true ? mouseInside() && canPlaySound ? theme.icons.inlineVideoSoundOn : theme.icons.inlineVideoSoundOff : nil
-    }
     
     override func open() {
         if let parent = parent {
@@ -323,7 +304,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             isStreamable = file.isStreamable
         }
         
-        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil, soundOffOnImage: !isBuffering ? soundOffOnInlineImage : nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
+        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
             self?.fetch()
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()
@@ -430,7 +411,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                     updatedStatusSignal = combineLatest(chatMessagePhotoStatus(account: context.account, photo: image), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
-                            if let pendingStatus = pendingStatus, parent.forwardInfo == nil || resourceStatus != .Local {
+                            if let pendingStatus = pendingStatus.0, parent.forwardInfo == nil || resourceStatus != .Local {
                                 return (.Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)), .Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)))
                             } else {
                                 return (resourceStatus, resourceStatus)
@@ -469,7 +450,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                     updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
-                            if let pendingStatus = pendingStatus {
+                            if let pendingStatus = pendingStatus.0 {
                                 return (.Fetching(isActive: true, progress: pendingStatus.progress), .Fetching(isActive: true, progress: pendingStatus.progress))
                             } else {
                                 return (resourceStatus, resourceStatus)
@@ -539,7 +520,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             
                             let fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
                             
-                            autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: parameters?.soundOnHover == true, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
+                            autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
                             
                             strongSelf.autoplayVideoView = autoplay
                             if parent == nil {
