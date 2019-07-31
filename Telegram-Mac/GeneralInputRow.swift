@@ -305,6 +305,10 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         
     }
     
+    func textViewDidReachedLimit(_ textView: Any) {
+        self.textView.shake()
+    }
+    
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         if let item = item as? GeneralInputRowItem, let pasteFilter = item.pasteFilter {
             if let string = pasteboard.string(forType: .string) {

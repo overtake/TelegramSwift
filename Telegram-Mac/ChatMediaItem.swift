@@ -249,6 +249,9 @@ class ChatMediaItem: ChatRowItem {
         if isForceRightLine {
             return rightSize.height
         }
+        if let file = self.media as? TelegramMediaFile, file.isEmojiAnimatedSticker {
+            return rightSize.height + 3
+        }
         if let caption = captionLayout {
             if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
                 return rightSize.height
@@ -458,7 +461,7 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override var identifier: String {
-        return super.identifier + "\(stableId)"
+        return super.identifier
     }
    
     public func contentNode() -> ChatMediaContentView.Type {

@@ -395,8 +395,8 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     entries.append(.autoplayHeader(sectionId))
     entries.append(.autoplayGifs(sectionId, autoplayMedia.gifs))
     entries.append(.autoplayVideos(sectionId, autoplayMedia.videos))
-    entries.append(.soundOnHover(sectionId, autoplayMedia.soundOnHover))
-    entries.append(.soundOnHoverDesc(sectionId))
+//    entries.append(.soundOnHover(sectionId, autoplayMedia.soundOnHover))
+//    entries.append(.soundOnHoverDesc(sectionId))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1

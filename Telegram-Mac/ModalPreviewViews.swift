@@ -216,7 +216,20 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             
             let mediaId = reference.media.id
             
-            self.loadResourceDisposable.set((context.account.postbox.mediaBox.resourceData(reference.media.resource, attemptSynchronously: true) |> map { resourceData -> Data? in
+            let data: Signal<MediaResourceData, NoError>
+            if let resource = reference.media.resource as? LocalBundleResource {
+                data = Signal { subscriber in
+                    if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
+                        subscriber.putNext(MediaResourceData(path: path, offset: 0, size: data.count, complete: true))
+                        subscriber.putCompletion()
+                    }
+                    return EmptyDisposable
+                }
+            } else {
+                data = context.account.postbox.mediaBox.resourceData(reference.media.resource, attemptSynchronously: true)
+            }
+            
+            self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
                 
                 if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                     return data

@@ -207,13 +207,13 @@ class ChatMessageItem: ChatRowItem {
             if message.media.first == nil, bigEmojiMessage(context.sharedContext, message: message) {
                 switch copy.string.glyphCount {
                 case 1:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 5), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 5.8), range: copy.range)
                     containsBigEmoji = true
                 case 2:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 4), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 4.8), range: copy.range)
                     containsBigEmoji = true
                 case 3:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 3), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 3.8), range: copy.range)
                     containsBigEmoji = true
                 default:
                     containsBigEmoji = false

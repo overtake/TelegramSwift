@@ -364,9 +364,24 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let selectedItem = selectedItem as? ShortPeerRowItem {
                 chatInteraction.movePeerToInput(selectedItem.peer)
             } else if let selectedItem = selectedItem as? ContextListRowItem {
-                chatInteraction.sendInlineResult(selectedItem.results,selectedItem.result)
+                
+                if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                    if let view = selectedItem.view {
+                        showSlowModeTimeoutTooltip(slowMode, for: view)
+                        self.genericView.cancelSelection()
+                    }
+                } else {
+                    chatInteraction.sendInlineResult(selectedItem.results,selectedItem.result)
+                }
             } else if let selectedItem = selectedItem as? ContextCommandRowItem {
-                chatInteraction.sendCommand(selectedItem.command)
+                if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                    if let view = selectedItem.view {
+                        showSlowModeTimeoutTooltip(slowMode, for: view)
+                        self.genericView.cancelSelection()
+                    }
+                } else {
+                    chatInteraction.sendCommand(selectedItem.command)
+                }
             } else if let selectedItem = selectedItem as? ContextClueRowItem {
                 if let clue = selectedItem.selectedIndex != nil ? selectedItem.clues[selectedItem.selectedIndex!] : nil {
                     let textInputState = chatInteraction.presentation.effectiveInput

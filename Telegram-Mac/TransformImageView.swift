@@ -43,7 +43,9 @@ open class TransformImageView: NSView {
         layerContentsRedrawPolicy = .never
     }
     
-    
+    open override var isFlipped: Bool {
+        return true
+    }
     
     var image: CGImage? {
         set {
@@ -160,7 +162,7 @@ open class TransformImageView: NSView {
                     ctx.clear(bounds)
                     ctx.setFillColor(.clear)
                     ctx.fill(bounds)
-                    if visibleRect.minY == 0  {
+                    if visibleRect.minY != 0  {
                         ctx.clip(to: NSMakeRect(0, 0, bounds.width, bounds.height - ( bounds.height - visibleRect.height)))
                     } else {
                         ctx.clip(to: NSMakeRect(0, (bounds.height - visibleRect.height), bounds.width, bounds.height - ( bounds.height - visibleRect.height)))

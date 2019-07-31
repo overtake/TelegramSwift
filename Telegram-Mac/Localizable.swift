@@ -795,6 +795,10 @@ internal final class L10n {
   internal static func channelEventLogMessageChangedUnlinkedGroup(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageChangedUnlinkedGroup", p1)
   }
+  /// changed custom title for %@: %@
+  internal static func channelEventLogMessageRankName(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageRankName", p1, p2)
+  }
   /// transferred ownership
   internal static var channelEventLogMessageTransfered: String  { return L10n.tr("Localizable", "Channel.EventLog.MessageTransfered") }
   /// transferred ownership to %@ %@
@@ -837,6 +841,8 @@ internal final class L10n {
   internal static func channelEventLogServiceLinkUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.LinkUpdated", p1)
   }
+  /// - Title
+  internal static var channelEventLogServiceMinusTitle: String  { return L10n.tr("Localizable", "Channel.EventLog.Service.MinusTitle") }
   /// %@ removed channel photo
   internal static func channelEventLogServicePhotoRemoved(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.PhotoRemoved", p1)
@@ -844,6 +850,10 @@ internal final class L10n {
   /// %@ updated this channel's photo
   internal static func channelEventLogServicePhotoUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.PhotoUpdated", p1)
+  }
+  /// + Title: %@
+  internal static func channelEventLogServicePlusTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.PlusTitle", p1)
   }
   /// %@ set slowmode to %@
   internal static func channelEventLogServiceSetSlowMode(_ p1: String, _ p2: String) -> String {
@@ -875,14 +885,14 @@ internal final class L10n {
   internal static func channelPermissionsSlowModeTextSelected(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Text.Selected", p1)
   }
+  /// 10s
+  internal static var channelPermissionsSlowModeTimeout10s: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.10s") }
   /// 15m
   internal static var channelPermissionsSlowModeTimeout15m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.15m") }
   /// 1h
   internal static var channelPermissionsSlowModeTimeout1h: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.1h") }
   /// 1m
   internal static var channelPermissionsSlowModeTimeout1m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.1m") }
-  /// 30m
-  internal static var channelPermissionsSlowModeTimeout30m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.30m") }
   /// 30s
   internal static var channelPermissionsSlowModeTimeout30s: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.30s") }
   /// 5m
@@ -1043,6 +1053,8 @@ internal final class L10n {
   internal static var chatSendMessageErrorFlood: String  { return L10n.tr("Localizable", "Chat.SendMessageErrorFlood") }
   /// Sorry, you are currently restricted from posting to public groups.
   internal static var chatSendMessageErrorGroupRestricted: String  { return L10n.tr("Localizable", "Chat.SendMessageErrorGroupRestricted") }
+  /// Slowmode is enabled.
+  internal static var chatSendMessageSlowmodeError: String  { return L10n.tr("Localizable", "Chat.SendMessageSlowmodeError") }
   /// Share
   internal static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
@@ -1645,6 +1657,8 @@ internal final class L10n {
   internal static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
   internal static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
+  /// Are you sure you want to read all chats?
+  internal static var chatListPopoverConfirm: String  { return L10n.tr("Localizable", "ChatList.Popover.Confirm") }
   /// Read All
   internal static var chatListPopoverReadAll: String  { return L10n.tr("Localizable", "ChatList.Popover.ReadAll") }
   /// Collapse
@@ -4233,6 +4247,8 @@ internal final class L10n {
   internal static var proxySettingsExportDescription: String  { return L10n.tr("Localizable", "ProxySettings.ExportDescription") }
   /// Export link from clipboard
   internal static var proxySettingsExportLink: String  { return L10n.tr("Localizable", "ProxySettings.ExportLink") }
+  /// Incorrect secret. Please try again.
+  internal static var proxySettingsIncorrectSecret: String  { return L10n.tr("Localizable", "ProxySettings.IncorrectSecret") }
   /// MTPROTO
   internal static var proxySettingsMTP: String  { return L10n.tr("Localizable", "ProxySettings.MTP") }
   /// Password
@@ -4927,6 +4943,8 @@ internal final class L10n {
   internal static var slowModePreviewSenderFileTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.FileTooltip") }
   /// Slowmode is Enabled.\nThere is no way to send multiple media at once.
   internal static var slowModePreviewSenderMediaTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.MediaTooltip") }
+  /// Slow mode is enabled. This text is too long to send as one message.
+  internal static var slowModeTooLongError: String  { return L10n.tr("Localizable", "SlowMode.TooLong.Error") }
   /// Activate
   internal static var statusBarActivate: String  { return L10n.tr("Localizable", "StatusBar.Activate") }
   /// Hide

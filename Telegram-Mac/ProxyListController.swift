@@ -11,6 +11,7 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 import TGUIKit
+import MtProtoKitMac
 
 private let _p_id_enable: InputDataIdentifier = InputDataIdentifier("_p_id_enable")
 private let _p_id_add: InputDataIdentifier = InputDataIdentifier("_p_id_add")
@@ -34,7 +35,8 @@ extension ProxyServerSettings {
     func withHexedStringData() -> ProxyServerSettings {
         switch self.connection {
         case let .mtp(secret):
-            return ProxyServerSettings(host: host, port: port, connection: .mtp(secret: (secret as NSData).hexString.data(using: .utf8) ?? Data()))
+            let data = MTProxySecret.parseData(secret)?.serializeToString().data(using: .utf8) ?? Data()
+            return ProxyServerSettings(host: host, port: port, connection: .mtp(secret: data))
         default:
             return self
         }
@@ -43,7 +45,8 @@ extension ProxyServerSettings {
     func withDataHextString() -> ProxyServerSettings {
         switch self.connection {
         case let .mtp(secret):
-            return ProxyServerSettings(host: host, port: port, connection: .mtp(secret: ObjcUtils.data(fromHexString: String(data: secret, encoding: .utf8))))
+            let data = MTProxySecret.parse(String(data: secret, encoding: .utf8) ?? "")?.serialize() ?? Data()
+            return ProxyServerSettings(host: host, port: port, connection: .mtp(secret: data))
         default:
             return self
         }
@@ -333,18 +336,34 @@ private func addProxyController(accountManager: AccountManager, network: Network
                         return current
                     }
                     
+                    let server = current.server.withDataHextString()
+
+                    switch server.connection {
+                    case let .mtp(secret):
+                        if secret.count == 0 {
+                            alert(for: mainWindow, info: L10n.proxySettingsIncorrectSecret)
+                           return current
+                        }
+                    default:
+                        break
+                    }
+                    
                     actionsDisposable.add((updateProxySettingsInteractively(accountManager: accountManager, { proxySetting in
                         if let settings = settings {
-                            return proxySetting.withUpdatedServer(settings, with: current.server.withDataHextString())
+                            return proxySetting
+                                .withUpdatedServer(settings, with: server)
                         } else {
-                            return proxySetting.withAddedServer(current.server.withDataHextString()).withUpdatedActiveServer(current.server.withDataHextString()).withUpdatedEnabled(true)
+                            return proxySetting
+                                .withAddedServer(server)
+                                .withUpdatedActiveServer(server)
+                                .withUpdatedEnabled(true)
                         }
-                    }) |> deliverOnMainQueue).start(next: { _ in
+                    }) |> deliverOnMainQueue).start(next: {
                         f(.success(.navigationBack))
                     }))
                     return current
                 }
-                })
+            })
     }, updateDatas: { data in
         updateState { current in
             let port = data[_id_port]!.stringValue!

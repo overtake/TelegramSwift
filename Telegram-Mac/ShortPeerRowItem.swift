@@ -240,6 +240,10 @@ class ShortPeerRowItem: GeneralRowItem {
             addition += 40
         }
         
+        if self.peer.isScam {
+            addition += 20
+        }
+        
         if let titleAttr = titleAttr {
             title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right == 0 ? 10 : inset.right) - addition - textAdditionInset, 20), nil,false, .left)
             titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right == 0 ? 10 : inset.right) - addition - textAdditionInset, 20), nil,true, .left)

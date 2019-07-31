@@ -1623,7 +1623,7 @@ public extension String {
     }
 }
 
-extension UnicodeScalar {
+public extension UnicodeScalar {
     
     var isEmoji: Bool {
         switch value {

@@ -291,9 +291,12 @@ private final class ChatUndoManagerContext {
             }
             subscriber.putNext(self?.statuses[keyAction]?.status)
             
-            return ActionDisposable {
-                if let index = index {
-                    self?.statuses[keyAction]?.subscribers.remove(index)
+            return ActionDisposable { [weak self] in
+                if let index = index, let status = self?.statuses[keyAction] {
+                    status.subscribers.remove(index)
+                    if status.subscribers.copyItems().count == 0 {
+                        self?.statuses.removeValue(forKey: keyAction)
+                    }
                 }
             }
         }

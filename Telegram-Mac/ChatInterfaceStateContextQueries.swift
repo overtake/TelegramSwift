@@ -13,7 +13,7 @@ import TelegramCoreMac
 import PostboxMac
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
-    let inputQuery = chatPresentationInterfaceState.slowMode?.timeout != nil ? .none : chatPresentationInterfaceState.inputContext
+    let inputQuery = chatPresentationInterfaceState.inputContext
     if inputQuery != .none {
         if inputQuery == currentQuery {
             return nil

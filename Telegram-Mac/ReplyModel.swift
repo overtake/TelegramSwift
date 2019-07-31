@@ -84,11 +84,13 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, file.isVideo {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
                         if let dimensions = file.dimensions {
                             imageDimensions = dimensions
                         } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
                             imageDimensions = representation.dimensions
+                        } else if file.isAnimatedSticker {
+                            imageDimensions = NSMakeSize(30, 30)
                         }
                         break
                     }
@@ -126,13 +128,15 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, file.isVideo {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
                         updatedMedia = file
                         
                         if let dimensions = file.dimensions {
                             imageDimensions = dimensions
-                        } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
+                        } else if let representation = largestImageRepresentation(file.previewRepresentations) {
                             imageDimensions = representation.dimensions
+                        } else if file.isAnimatedSticker {
+                            imageDimensions = NSMakeSize(30, 30)
                         }
                         if file.isInstantVideo {
                             hasRoundImage = true
@@ -168,6 +172,10 @@ class ReplyModel: ChatAccessoryModel {
                     } else if let file = updatedMedia as? TelegramMediaFile {
                         if file.isVideo {
                             updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: true)
+                        } else if file.isAnimatedSticker {
+                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.account.postbox, file: file, small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize))
+                        } else if file.isSticker {
+                            updateImageSignal = chatMessageSticker(postbox: self.account.postbox, file: file, small: true, scale: view.backingScaleFactor)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
                             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
                             updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)

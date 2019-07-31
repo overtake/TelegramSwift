@@ -376,15 +376,19 @@ class Sender: NSObject {
         return attrs
     }
     
-    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId) -> Signal<[MessageId?], NoError> {
+    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, silent: Bool = false) -> Signal<[MessageId?], NoError> {
         
         var fwdMessages:[EnqueueMessage] = []
         
         let sorted = messageIds.sorted(by: >)
         
+        var attributes: [MessageAttribute] = []        
+        if FastSettings.isChannelMessagesMuted(peerId) || silent {
+            attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+        }
         
         for msgId in sorted {
-            fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: messageIds.count > 1 ? .auto : .none))
+            fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: messageIds.count > 1 ? .auto : .none, attributes: attributes))
         }
         return enqueueMessages(context: context, peerId: peerId, messages: fwdMessages.reversed())
     }

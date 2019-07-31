@@ -110,6 +110,7 @@ public class LinearProgressControl: Control {
                 onUserChanged(progress)
             } else {
                 self.scrubblingTempState = CGFloat(progress)
+                self.onLiveScrobbling?(progress)
             }
            // }
         }

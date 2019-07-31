@@ -64,6 +64,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 } else if chatInteraction.presentation.interfaceState.editState == nil {
                     
                     if let slowMode = self.chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                        showSlowModeTimeoutTooltip(slowMode, for: control)
                         return
                     }
                     
@@ -125,21 +126,21 @@ class ChatInputAttachView: ImageButton, Notifable {
                 }
                
             }
-        }, for: .Hover)
+        }, for: .Down)
         
-        set(handler: { [weak self] control in
-            guard let `self` = self else {return}
-            if let peer = self.chatInteraction.presentation.peer, self.chatInteraction.presentation.interfaceState.editState == nil {
-                if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                    alert(for: mainWindow, info: permissionText)
-                    return
-                }
-                self.controller?.popover?.hide()
-                Queue.mainQueue().justDispatch {
-                    self.chatInteraction.attachFile(true)
-                }
-            }
-        }, for: .Click)
+//        set(handler: { [weak self] control in
+//            guard let `self` = self else {return}
+//            if let peer = self.chatInteraction.presentation.peer, self.chatInteraction.presentation.interfaceState.editState == nil {
+//                if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+//                    alert(for: mainWindow, info: permissionText)
+//                    return
+//                }
+//                self.controller?.popover?.hide()
+//                Queue.mainQueue().justDispatch {
+//                    self.chatInteraction.attachFile(true)
+//                }
+//            }
+//        }, for: .Click)
 
         chatInteraction.add(observer: self)
         addSubview(editMediaAccessory)

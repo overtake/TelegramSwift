@@ -176,12 +176,12 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
         case .slowModeHeader:
             return GeneralTextRowItem(initialSize, text: L10n.channelPermissionsSlowModeHeader, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
         case let .slowMode(_, timeout):
-            let list:[Int32] = [0, 30, 60, 300, 900, 1800, 3600]
+            let list:[Int32] = [0, 10, 30, 60, 300, 900, 3600]
             let titles: [String] = [L10n.channelPermissionsSlowModeTimeoutOff,
+                                    L10n.channelPermissionsSlowModeTimeout10s,
                                     L10n.channelPermissionsSlowModeTimeout30s,
                                     L10n.channelPermissionsSlowModeTimeout1m, L10n.channelPermissionsSlowModeTimeout5m,
                                     L10n.channelPermissionsSlowModeTimeout15m,
-                                    L10n.channelPermissionsSlowModeTimeout30m,
                                     L10n.channelPermissionsSlowModeTimeout1h]
             return SelectSizeRowItem(initialSize, stableId: stableId, current: timeout ?? 0, sizes: list, hasMarkers: false, titles: titles, selectAction: { index in
                arguments.updateSlowMode(list[index])

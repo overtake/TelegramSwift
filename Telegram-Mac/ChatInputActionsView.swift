@@ -270,18 +270,22 @@ class ChatInputActionsView: View, Notifable {
                     newInlineLoading = data == nil && !value.effectiveInput.inputText.isEmpty
                 }
                 
+                
+                
                 if let query = value.inputQueryResult, case .contextRequestResult = query, newInlineRequest || first {
                     newInlineRequest = true
                 } else {
                     newInlineRequest = false
                 }
                 
-                let newSlowModeCounter: Bool = value.slowMode?.timeout != nil && value.interfaceState.editState == nil
-                let oldSlowModeCounter: Bool = oldValue.slowMode?.timeout != nil && oldValue.interfaceState.editState == nil
-
+                
+                
                 if let query = oldValue.inputQueryResult, case .contextRequestResult(_, let data) = query {
                     oldInlineLoading = data == nil
                 }
+                
+                let newSlowModeCounter: Bool = value.slowMode?.timeout != nil && value.interfaceState.editState == nil && !newInlineLoading && !newInlineRequest
+                let oldSlowModeCounter: Bool = oldValue.slowMode?.timeout != nil && oldValue.interfaceState.editState == nil && !oldInlineLoading && !oldInlineRequest
                 
                 
                 if let query = oldValue.inputQueryResult, case .contextRequestResult = query, oldInlineRequest || first {
@@ -408,7 +412,7 @@ class ChatInputActionsView: View, Notifable {
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
         send.set(handler: { [weak chatInteraction] control in
-            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, peer.isUser, peer.id != chatInteraction.context.peerId {
+            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, !peer.isSecretChat, peer.id != chatInteraction.context.account.peerId {
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                     return
                 }
@@ -419,14 +423,10 @@ class ChatInputActionsView: View, Notifable {
                     chatInteraction?.sendMessage(true)
                 })]))
             }
-        }, for: .Hover)
+        }, for: .RightDown)
         
         send.set(handler: { [weak chatInteraction] control in
-            if let slowMode = chatInteraction?.presentation.slowMode, slowMode.hasLocked {
-                showSlowModeTimeoutTooltip(slowMode, for: control)
-            } else {
-                chatInteraction?.sendMessage(false)
-            }
+             chatInteraction?.sendMessage(false)
         }, for: .Click)
         
         slowModeTimeout.set(handler: { [weak chatInteraction] control in

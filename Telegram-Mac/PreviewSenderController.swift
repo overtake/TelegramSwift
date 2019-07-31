@@ -223,7 +223,7 @@ fileprivate class PreviewSenderView : Control {
         }, for: .SingleClick)
         
         sendButton.set(handler: { [weak self] control in
-            if let controller = self?.controller, let peer = controller.chatInteraction.peer, peer.isUser, peer.id != controller.chatInteraction.context.peerId {
+            if let controller = self?.controller, let peer = controller.chatInteraction.peer, !peer.isSecretChat, peer.id != controller.chatInteraction.context.account.peerId, peer.isSecretChat {
                 if let slowMode = controller.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                     return
                 }
@@ -231,7 +231,7 @@ fileprivate class PreviewSenderView : Control {
                     controller?.send(true)
                 })]))
             }
-        }, for: .Hover)
+        }, for: .RightDown)
         
         textView.setFrameSize(NSMakeSize(280, 34))
 
@@ -806,6 +806,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     if item.media.canHaveCaption {
                         placeholder = L10n.previewSenderCaptionPlaceholder
                     }
+                } else if item is MediaGroupPreviewRowItem {
+                    placeholder = L10n.previewSenderCaptionPlaceholder
                 }
             }
         }
@@ -826,7 +828,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         if let attributedString = attributedString {
             genericView.textView.setAttributedString(attributedString, animated: false)
-        } else if chatInteraction.presentation.slowMode == nil {
+        } else {
             self.temporaryInputState = chatInteraction.presentation.interfaceState.inputState
             let text = chatInteraction.presentation.interfaceState.inputState.attributedString
             
@@ -1012,7 +1014,14 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         self.sendCurrentMedia = { [weak self] silent in
             guard let `self` = self else { return }
             
-            if let slowMode = self.chatInteraction.presentation.slowMode, slowMode.hasLocked {
+            let slowMode = self.chatInteraction.presentation.slowMode
+            let attributed = self.genericView.textView.attributedString()
+
+            if let slowMode = slowMode, slowMode.hasLocked {
+                self.genericView.textView.shake()
+            } else if self.inputPlaceholder != L10n.previewSenderCaptionPlaceholder && slowMode != nil && attributed.length > 0 {
+                tooltip(for: self.genericView.sendButton, text: L10n.slowModeMultipleError)
+                self.genericView.textView.setSelectedRange(NSMakeRange(0, attributed.length))
                 self.genericView.textView.shake()
             } else {
                 let state = stateValue.with { $0.currentState }
@@ -1038,7 +1047,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 self.sent = true
                 self.emoji.popover?.hide()
                 self.modal?.close(true)
-                let attributed = self.genericView.textView.attributedString()
                 
                 var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
                 
@@ -1441,9 +1449,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     func textViewDidReachedLimit(_ textView: Any) {
         genericView.textView.shake()
-        if let _ = self.chatInteraction.presentation.slowMode {
-            tooltip(for: self.genericView.separator, text: L10n.slowModePreviewSenderComment)
-        }
     }
     
     func canTransformInputText() -> Bool {
@@ -1516,9 +1521,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        if let _ = self.chatInteraction.presentation.slowMode, inputPlaceholder == L10n.previewSenderCommentPlaceholder {
-            return 0
-        }
         return 1024
     }
     

@@ -21,21 +21,21 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override var sizeValue: NSSize {
-        if let largest = media.representationForDisplayAtSize(NSMakeSize(640, 640)) {
+        if let largest = media.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
             return largest.dimensions.fitted(pagerSize)
         }
         return NSZeroSize
     }
     
     override func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
-        if let largest = media.representationForDisplayAtSize(NSMakeSize(640, 640)) {
+        if let largest = media.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
             return .single(largest.dimensions.fitted(size))
         }
         return .single(pagerSize)
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
-        if let largestRepresentation = media.representationForDisplayAtSize(NSMakeSize(640, 640)) {
+        if let largestRepresentation = media.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
             return context.account.postbox.mediaBox.resourceStatus(largestRepresentation.resource)
         } else {
             return .never()
@@ -63,7 +63,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             }
             
             } |> mapToSignal { size, orientation -> Signal<CGImage?, NoError> in
-                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, synchronousLoad: true)
+                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(1280, 1280), scale: System.backingScale, synchronousLoad: true)
                     |> map { transform in
                         let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                         if let orientation = orientation {
@@ -98,7 +98,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
 //        }
         
 
-        if let representation = media.representationForDisplayAtSize(NSMakeSize(640, 640))  {
+        if let representation = media.representationForDisplayAtSize(NSMakeSize(1280, 1280))  {
             path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
                 
                 if resource.complete {
@@ -120,7 +120,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     
     override func cancel() -> Void {
         super.cancel()
-        if let representation = media.representationForDisplayAtSize(NSMakeSize(640, 640))  {
+        if let representation = media.representationForDisplayAtSize(NSMakeSize(1280, 1280))  {
             cancelFreeMediaFileInteractiveFetch(context: context, resource: representation.resource)
         }
         fetching.set(nil)

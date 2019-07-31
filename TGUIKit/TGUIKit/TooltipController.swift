@@ -142,7 +142,7 @@ private var removeShownAnimation:Bool = false
 
 private let delayDisposable = MetaDisposable()
 private var shouldRemoveTooltip: Bool = true
-public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, autoCorner: Bool = true) -> Void {
+public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, autoCorner: Bool = true, updateText: @escaping(@escaping(String)->Bool)->Void = { _ in }) -> Void {
     guard let window = view.window as? Window else { return }
     
     
@@ -165,6 +165,10 @@ public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, aut
     
     let location = window.mouseLocationOutsideOfEventStream
     
+    updateText() { [weak tooltip] text in
+        tooltip?.update(text: text, maxWidth: maxWidth, animated: false)
+        return tooltip != nil
+    }
     
     tooltip.update(text: text, maxWidth: maxWidth, animated: isExists)
     

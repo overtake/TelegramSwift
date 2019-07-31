@@ -191,7 +191,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
                 updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.interface.context.account, file: item.file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
-                        if let pendingStatus = pendingStatus {
+                        if let pendingStatus = pendingStatus.0 {
                             return .Fetching(isActive: true, progress: pendingStatus.progress)
                         } else {
                             return resourceStatus

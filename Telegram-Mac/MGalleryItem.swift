@@ -219,7 +219,7 @@ enum GalleryEntry : Comparable, Identifiable {
     func peerPhotoResource() -> MediaResourceReference {
         switch self {
         case let .photo(_, _, image, _, peer, _):
-            if let representation = image.representationForDisplayAtSize(NSMakeSize(640, 640)) {
+            if let representation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
                 if let peerReference = PeerReference(peer) {
                     return MediaResourceReference.avatar(peer: peerReference, resource: representation.resource)
                 } else {

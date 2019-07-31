@@ -192,8 +192,13 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case let .role(_, text, placeholder):
             return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: placeholder, text: text, limit: 16, textChangeHandler: { text in
                 arguments.updateRank(text)
-            }, textFilter: { $0 }, pasteFilter: { text in
-                return (true, text)
+            }, textFilter: { text in
+                let filtered = text.filter { character -> Bool in
+                    return !String(character).containsOnlyEmoji
+                }
+                return filtered
+            }, pasteFilter: { text in
+                return (false, text)
             })
         case .roleDesc:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: "")

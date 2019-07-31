@@ -50,7 +50,7 @@ private let writeQueue = DispatchQueue(label: "assetWriterQueue")
 func convertCompressedLottieToCombinedMp4(data: Data, size: CGSize) -> Signal<String, NoError> {
     return Signal({ subscriber in
         let startTime = CACurrentMediaTime()
-        let decompressedData = TGGUnzipData(data)
+        let decompressedData = TGGUnzipData(data, 8 * 1024 * 1024)
         if let decompressedData = decompressedData, let json = (try? JSONSerialization.jsonObject(with: decompressedData, options: [])) as? [AnyHashable: Any] {
             if let _ = json["tgs"], let model = try? JSONDecoder().decode(Animation.self, from: decompressedData) {
                 

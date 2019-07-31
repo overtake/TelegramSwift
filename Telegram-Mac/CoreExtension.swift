@@ -12,6 +12,7 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 import TGUIKit
+import MtProtoKitMac
 
 extension AdminLogEventsFlags {
     
@@ -399,12 +400,8 @@ public extension TelegramMediaFile {
         return nil
     }
     
-    var isAnimatedSticker: Bool {
-        if let fileName = fileName, fileName.hasSuffix("tgs"), mimeType == "application/x-tgsticker" {
-            return true
-        } else {
-            return false
-        }
+    var isEmojiAnimatedSticker: Bool {
+        return fileName == "animated-emoji.tgs"
     }
     
     var musicText:(String,String) {
@@ -774,7 +771,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
     
     if let media = message.media.first {
         if let file = media as? TelegramMediaFile {
-            if file.isStaticSticker || file.isAnimatedSticker {
+            if file.isStaticSticker || (file.isAnimatedSticker && !file.isEmojiAnimatedSticker) {
                 return false
             }
             if file.isInstantVideo {
@@ -2095,7 +2092,7 @@ func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountMan
             textInfo += "\n" + L10n.proxyForceEnableTextPassword(pass)
         }
     case let .mtp(secret):
-        textInfo += "\n" + L10n.proxyForceEnableTextSecret((secret as NSData).hexString)
+        textInfo += "\n" + L10n.proxyForceEnableTextSecret(MTProxySecret.parseData(secret)?.serializeToString() ?? "")
     }
    
     textInfo += "\n\n" + L10n.proxyForceEnableText
@@ -2623,5 +2620,28 @@ extension CGImage {
         context?.draw(self, in: CGRect(origin: .zero, size: size))
         CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
         return pixelBuffer
+    }
+}
+
+
+private let emojis: [String: (String, CGFloat)] = [
+    "👍": ("thumbs_up_1", 450.0),
+    "👍🏻": ("thumbs_up_2", 450.0),
+    "👍🏼": ("thumbs_up_3", 450.0),
+    "👍🏽": ("thumbs_up_4", 450.0),
+    "👍🏾": ("thumbs_up_5", 450.0),
+    "👍🏿": ("thumbs_up_6", 450.0),
+    "😂": ("lol", 350.0),
+    "😒": ("meh", 350.0),
+    "❤️": ("heart", 350.0),
+    "♥️": ("heart", 350.0),
+    "🥳": ("celeb", 430.0),
+    "😳": ("confused", 350.0)
+]
+func animatedEmojiResource(emoji: String) -> (LocalBundleResource, CGFloat)? {
+    if let (name, size) = emojis[emoji] {
+        return (LocalBundleResource(name: name, ext: "tgs"), size)
+    } else {
+        return nil
     }
 }

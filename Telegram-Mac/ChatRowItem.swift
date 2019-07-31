@@ -1284,11 +1284,7 @@ class ChatRowItem: TableRowItem {
         if let channelViewsAttributed = channelViewsAttributed {
             channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
-        if let postAuthorAttributed = postAuthorAttributed {
-            postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : (width - contentOffset.x - 44) / 2, 20), nil, false, .left)
-        }
-
-        
+       
         var widthForContent: CGFloat = blockWidth
         if previousBlockWidth != widthForContent {
             self.previousBlockWidth = widthForContent
@@ -1358,6 +1354,8 @@ class ChatRowItem: TableRowItem {
             }
         }
         
+       
+        
         if !canFillAuthorName, let replyModel = replyModel, let authorText = authorText, replyModel.isSideAccessory {
             var adminWidth: CGFloat = 0
             if let adminBadge = adminBadge {
@@ -1373,9 +1371,19 @@ class ChatRowItem: TableRowItem {
             if let adminBadge = adminBadge {
                 adminWidth = adminBadge.layoutSize.width
             }
-            authorText?.measure(width: widthForContent - adminWidth)
+            
+            let channelOffset = (channelViews != nil ? channelViews!.0.size.width + 20 : 0)
+            
+            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0))
+            
+            
         }
       
+       
+        if let postAuthorAttributed = postAuthorAttributed {
+            
+            postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : (width - (authorText != nil ? authorText!.layoutSize.width : 0) - contentOffset.x - 44) / 2, 20), nil, false, .left)
+        }
         
         if hasBubble && isBubbleFullFilled {
             if let postAuthor = postAuthor, let postAuthorAttributed = postAuthorAttributed {
@@ -1607,6 +1615,12 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
+    if let file = message.media.first as? TelegramMediaFile, file.isEmojiAnimatedSticker {
+        items.append(ContextMenuItem(L10n.textCopyText, handler: {
+            copyToClipboard(message.text)
+        }))
+    }
+    
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if !message.flags.contains(.Failed), !message.flags.contains(.Unsent) {
             items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
@@ -1695,7 +1709,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             return account.postbox.transaction { transaction -> [ContextMenuItem] in
                 if file.isAnimated && file.isVideo {
                     let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
-                    if let _ = gifItems.index(where: {$0.media.id == mediaId}) {
+                    if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
                         items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                             let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
                         }))

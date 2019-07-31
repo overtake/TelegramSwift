@@ -159,7 +159,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
             updatedStatusSignal = context.account.pendingMessageManager.pendingMessageStatus(parent.id) |> map { pendingStatus in
-                if let pendingStatus = pendingStatus {
+                if let pendingStatus = pendingStatus.0 {
                     return .Fetching(isActive: true, progress: pendingStatus.progress)
                 } else {
                     return .Local

@@ -69,7 +69,7 @@ class UsernameInputRowView: GeneralInputRowView {
         }
     }
     
-    func textViewDidReachedLimit(_ textView: Any) {
+    override func textViewDidReachedLimit(_ textView: Any) {
         self.textView.shake()
     }
     

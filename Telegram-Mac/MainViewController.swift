@@ -311,10 +311,12 @@ class MainViewController: TelegramViewController {
         
         if unreadCount > 0 {
             items.append(SPopoverItem(L10n.chatListPopoverReadAll, {
-                _ = context.account.postbox.transaction ({ transaction -> Void in
-                    markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root)
-                    markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive)
-                }).start()
+                confirm(for: context.window, information: L10n.chatListPopoverConfirm, successHandler: { _ in
+                    _ = context.account.postbox.transaction ({ transaction -> Void in
+                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root)
+                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive)
+                    }).start()
+                })
             }))
         }
         

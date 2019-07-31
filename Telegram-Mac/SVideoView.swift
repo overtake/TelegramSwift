@@ -148,7 +148,7 @@ private final class SVideoControlsView : Control {
         
         let rect = NSMakeRect(self.progress.frame.minX, self.progress.frame.minY - 5, self.progress.frame.width, self.progress.frame.height + 10)
         
-        if NSPointInRect(point, rect) {
+        if NSPointInRect(point, rect) || self.progress.hasTemporaryState {
             let point = self.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
             let result = max(min(point.x, self.progress.frame.width), 0) / self.progress.frame.width
             self.livePreview?(Float(result))
@@ -336,6 +336,13 @@ private final class SVideoControlsView : Control {
         progress.set(progress: 0, animated: false, duration: 0)
         wantsLayer = true
         layer?.cornerRadius = 15
+        
+        
+        self.progress.onLiveScrobbling = { [weak self] _ in
+            if let `self` = self, !self.progress.mouseInside() {
+                self.updateLivePreview()
+            }
+        }
     }
     
     override var isFlipped: Bool {
@@ -395,14 +402,15 @@ private final class PreviewView : View {
         addSubview(imageView)
         addSubview(duration)
         background = .black
-        duration.background = NSColor.black.withAlphaComponent(0.9)
+        duration.background = darkPalette.grayBackground.withAlphaComponent(0.85)
         duration.disableBackgroundDrawing = true
+        duration.layer?.cornerRadius = 2
     }
     
     override func layout() {
         super.layout()
         self.imageView.frame = bounds
-        self.duration.centerX(y: frame.height - self.duration.frame.height)
+        self.duration.centerX(y: frame.height - self.duration.frame.height + 1)
     }
     
     required init?(coder decoder: NSCoder) {
@@ -491,6 +499,10 @@ class SVideoView: NSView {
         if !hide {
             controls.isHidden = false
         }
+        if hide {
+            self.hideScrubblerPreviewIfNeeded()
+        }
+        
         controls._change(opacity: hide ? 0 : 1, animated: animated, duration: 0.2, timingFunction: .linear, completion: { [weak self] completed in
             if completed {
                 self?.controls.isHidden = hide
@@ -511,6 +523,10 @@ class SVideoView: NSView {
         if !NSPointInRect(point, controls.frame) {
             super.mouseUp(with: event)
         }
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
     }
     
     
@@ -642,7 +658,9 @@ class SVideoView: NSView {
     }
     
     func setCurrentScrubblingState(_ state: MediaPlayerFramePreviewResult) {
-        guard let previewView = self.previewView, let window = self.window, let status = self.status else {
+        guard let previewView = self.previewView, let window = self.window, let status = self.status, !self.controls.isHidden else {
+            self.previewView?.removeFromSuperview()
+            self.previewView = nil
             return
         }
         let point = self.controls.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -660,17 +678,18 @@ class SVideoView: NSView {
         let converted = self.convert(progressPoint, from: self.controls.progress)
         previewView.setFrameOrigin(NSMakePoint(max(10, min(frame.width - previewView.frame.width - 10, converted.x - previewView.frame.width / 2)), self.controls.frame.minY - previewView.frame.height - 10))
         
+        
         let currentTime = Int(round(progressPoint.x / self.controls.progress.frame.width * CGFloat(status.duration)))
         
         
         let duration = String.durationTransformed(elapsed: currentTime)
-        let layout = TextViewLayout(.initialize(string: duration, color: .white, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
+        let layout = TextViewLayout(.initialize(string: duration, color: .white, font: .medium(.text)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
         
         layout.measure(width: .greatestFiniteMagnitude)
         
         previewView.duration.update(layout)
-        previewView.duration.setFrameSize(NSMakeSize(layout.layoutSize.width + 10, layout.layoutSize.height + 6))
-        
+        previewView.duration.setFrameSize(NSMakeSize(layout.layoutSize.width + 10, layout.layoutSize.height + 10))
+        previewView.duration.display()
         previewView.needsLayout = true
     }
     

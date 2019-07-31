@@ -264,6 +264,7 @@ private final class RendererState  {
 private let maximum_rendered_frames: Int = 4
 private final class PlayerRenderer {
     
+    private(set) var finished: Bool = false
     private let animation: LottieAnimation
     private var layer: Atomic<RLottieBridge?> = Atomic(value: nil)
     private let updateState:(LottiePlayerState)->Void
@@ -295,9 +296,14 @@ private final class PlayerRenderer {
         self.updateState(.initializing)
         self.with({ renderer in
             if let renderer = renderer {
-                let uncompressed = TGGUnzipData(renderer.animation.compressed)
-                let data = uncompressed!.count == 0 ? renderer.animation.compressed : uncompressed!
-                if !data.isEmpty, let json = String(data: data, encoding: .utf8), data.count < 2 * 1024 * 1024 {
+                let decompressed = TGGUnzipData(renderer.animation.compressed, 8 * 1024 * 1024)
+                let data: Data?
+                if let decompressed = decompressed {
+                    data = decompressed
+                } else {
+                    data = renderer.animation.compressed
+                }
+                if let data = data, !data.isEmpty, let json = String(data: data, encoding: .utf8) {
                     if let bridge = RLottieBridge(json: json, key: renderer.animation.cacheKey) {
                         renderer.play(renderer.layer.modify({_ in bridge})!)
                     } else {
@@ -310,8 +316,17 @@ private final class PlayerRenderer {
         })
     }
     
+    func playAgain() {
+        self.layer.with { lottie -> Void in
+            if let lottie = lottie {
+                self.play(lottie)
+            }
+        }
+    }
     
     private func play(_ player: RLottieBridge) {
+        
+        self.finished = false
         
         let fps: Int = max(min(Int(player.fps()), self.animation.maximumFps), 30)
         
@@ -391,6 +406,18 @@ private final class PlayerRenderer {
                         if current.frame > 0 {
                             updateState(.playing)
                         }
+                        switch renderer.animation.playPolicy {
+                        case .loop:
+                            break
+                        case .once:
+                            if current.frame == currentState(stateValue).endFrame - 1 {
+                                renderer.finished = true
+                                renderer.timer?.invalidate()
+                                firstTask?.cancel()
+                                framesTask?.cancel()
+                            }
+                        }
+                        
                     }
                 }
                 
@@ -482,24 +509,31 @@ private final class PlayerRenderer {
 }
 
 private final class PlayerContext {
-    private let rendererRef: Unmanaged<PlayerRenderer>
+    private let rendererRef: QueueLocalObject<PlayerRenderer>
     fileprivate let animation: LottieAnimation
     init(_ animation: LottieAnimation, displayFrame: @escaping(RenderedFrame)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
         self.animation = animation
-        self.rendererRef = Unmanaged.passRetained(PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
-            Queue.mainQueue().async {
-                updateState(state)
-            }
-        }))
-        self.rendererRef.takeUnretainedValue().initializeAndPlay()
-    }
-    
-    deinit {
-        let rendererRef = self.rendererRef
-        stateQueue.async {
-            rendererRef.release()
+        self.rendererRef = QueueLocalObject.init(queue: stateQueue, generate: {
+            return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
+                Queue.mainQueue().async {
+                    updateState(state)
+                }
+            })
+        })
+        
+        self.rendererRef.with { renderer in
+            renderer.initializeAndPlay()
         }
     }
+    
+    func playAgain() {
+        self.rendererRef.with { renderer in
+            if renderer.finished {
+                renderer.playAgain()
+            }
+        }
+    }
+    
 }
 
 
@@ -536,6 +570,11 @@ enum LottieAnimationKey : Equatable {
     case media(MediaId?)
 }
 
+enum LottiePlayPolicy : Equatable {
+    case loop
+    case once
+}
+
 final class LottieAnimation : Equatable {
     static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
         return lhs.key == rhs.key
@@ -554,11 +593,13 @@ final class LottieAnimation : Equatable {
     let key: LottieAnimationEntryKey
     let cache: ASCachePurpose
     let maximumFps: Int
-    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), maximumFps: Int = 60) {
+    let playPolicy: LottiePlayPolicy
+    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60) {
         self.compressed = compressed
         self.key = key
         self.cache = cachePurpose
         self.maximumFps = maximumFps
+        self.playPolicy = playPolicy
     }
     
     var size: NSSize {
@@ -569,7 +610,7 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, maximumFps: self.maximumFps)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps)
     }
     
     var cacheKey: String {
@@ -834,6 +875,12 @@ class LottiePlayerView : NSView {
     override func viewDidChangeBackingProperties() {
         if let context = context {
             self.set(context.animation.withUpdatedBackingScale(Int(backingScaleFactor)))
+        }
+    }
+    
+    func playIfNeeded() {
+        if let context = self.context, context.animation.playPolicy == .once {
+            context.playAgain()
         }
     }
     
