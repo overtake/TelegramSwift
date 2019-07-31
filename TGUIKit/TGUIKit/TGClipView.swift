@@ -295,6 +295,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.scroll(to: point)
     }
     
+    public func justScroll(to newOrigin:NSPoint) {
+        super.scroll(to: newOrigin)
+    }
+    
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
         

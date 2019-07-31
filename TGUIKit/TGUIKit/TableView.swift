@@ -2212,7 +2212,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }
-        self.clipView.scroll(to: documentOffset, animated: false)
+        self.clipView.justScroll(to: documentOffset)
 
         
         
@@ -2710,8 +2710,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if abs(bounds.minY - clipView.bounds.minY) < height {
                 if animate {
                     clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
-                        self?.removeScroll(listener: scrollListener)
-                        completion(completed)
+                        if let `self` = self {
+                            scrollListener.handler(self.scrollPosition().current)
+                            self.removeScroll(listener: scrollListener)
+                            completion(completed)
+                        }
+                        
                     })
                 } else {
                     self.contentView.scroll(to: bounds.origin)

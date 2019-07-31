@@ -100,7 +100,7 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
-            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isAnimatedSticker, let reference = media.stickerReference {
+            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
                 showModal(with:StickersPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
             } else {
                 self.playerView.playIfNeeded()
