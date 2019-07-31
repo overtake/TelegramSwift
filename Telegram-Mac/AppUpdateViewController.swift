@@ -41,6 +41,11 @@ extension SUAppcastItem {
         while let range = updateText.range(of: "   ") {
             updateText = updateText.replacingOccurrences(of: "   ", with: "  ", options: [], range: range)
         }
+        updateText = updateText.replacingOccurrences(of: "•", with: "\n•", options: [], range: nil)
+        
+        if updateText.first == "\n" {
+            updateText.removeFirst()
+        }
         updateText = updateText.replacingOccurrences(of: "\t", with: "  ", options: [], range: nil)
         return updateText
     }
