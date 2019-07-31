@@ -476,7 +476,9 @@ private final class PlayerRenderer {
             }
             _ = isRendering.modify { value -> Bool in
                 if releaseState {
-                    stateValue.release()
+                    stateQueue.async {
+                        stateValue.release()
+                    }
                 }
                 return false
             }
