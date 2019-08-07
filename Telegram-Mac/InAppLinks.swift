@@ -213,7 +213,7 @@ func execute(inapp:inAppLink) {
                 NSWorkspace.shared.open(url)
             }
             if needConfirm {
-                confirm(for: mainWindow, information: L10n.inAppLinksConfirmOpenExternal(url.absoluteString.removingPercentEncoding ?? url.absoluteString), successHandler: {_ in success()})
+                confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternal(url.absoluteString.removingPercentEncoding ?? url.absoluteString), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()})
             } else {
                 success()
             }

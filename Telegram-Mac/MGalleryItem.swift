@@ -15,7 +15,7 @@ import Lottie
 
 
 enum GPreviewValue {
-    case image(CGImage?)
+    case image(NSImage?)
     case view(NSView?)
     
     var hasValue: Bool {
@@ -35,7 +35,7 @@ enum GPreviewValue {
         }
     }
     
-    var image: CGImage? {
+    var image: NSImage? {
         switch self {
         case let .image(img):
             return img
@@ -315,6 +315,26 @@ func <(lhs: MGalleryItem, rhs: MGalleryItem) -> Bool {
     return lhs.entry < rhs.entry
 }
 
+private final class MGalleryItemView : NSView {
+    init() {
+        super.init(frame: NSZeroRect)
+        self.wantsLayer = true
+        self.layerContentsRedrawPolicy = .never
+    }
+    
+    required init?(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    override var isOpaque: Bool {
+        return true
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+}
+
 class MGalleryItem: NSObject, Comparable, Identifiable {
     let image:Promise<GPreviewValue> = Promise()
     let view:Promise<NSView> = Promise()
@@ -360,8 +380,8 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         return 8.0
     }
     
-    func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
-        return .single(pagerSize)
+    func smallestValue(for size: NSSize) -> NSSize {
+        return pagerSize
     }
     
     var status:Signal<MediaResourceStatus, NoError> {
@@ -413,8 +433,8 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
         let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] value, view  in
             guard let `self` = self else {return}
-            
             view.layer?.contents = value.image
+            
             if !first && !self.disableAnimations {
                 view.layer?.animateContents()
             }
@@ -450,7 +470,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     func singleView() -> NSView {
-        return NSView()
+        return MGalleryItemView()
     }
     
     func request(immediately:Bool = true) {

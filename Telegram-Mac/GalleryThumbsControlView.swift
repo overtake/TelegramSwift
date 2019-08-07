@@ -51,6 +51,11 @@ class GalleryThumbContainer : Control {
         layer?.cornerRadius = .cornerRadius
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     override func layout() {
         imageView.center()
     }

@@ -243,7 +243,7 @@ class ChatSelectText : NSObject {
                     }
                 }
                 
-                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals() || (!table.item(at: row).canMultiselectTextIn(event.locationInWindow) && chatInteraction.presentation.state != .selecting)) || !isCurrentTableView(window.contentView?.hitTest(event.locationInWindow)) {
+                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals()) || !isCurrentTableView(window.contentView?.hitTest(event.locationInWindow)) {
                     self?.beginInnerLocation = NSZeroPoint
                 } else {
                     self?.beginInnerLocation = documentPoint
@@ -251,7 +251,7 @@ class ChatSelectText : NSObject {
                 
                 
                 if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
-                    if chatInteraction.presentation.state == .selecting || ((theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame) || view.rightView.mouseInside())) {
+                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame)) {
                         if self?.startMessageId == nil {
                             self?.startMessageId = item.message?.id
                         }
@@ -375,7 +375,8 @@ class ChatSelectText : NSObject {
         
         let beginRow = table.row(at: beginInnerLocation)
         if  let view = table.item(at: beginRow).view as? ChatRowView, selectingText, table._mouseInside() {
-            if !NSPointInRect(view.convert(beginInnerLocation, from: table.documentView), view.bubbleFrame) {
+            let rowPoint = view.convert(beginInnerLocation, from: table.documentView)
+            if (!NSPointInRect(rowPoint, view.bubbleFrame) && theme.bubbled) {
                 if startIndex != endIndex {
                     for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {
                         let item = table.item(at: i) as? ChatRowItem

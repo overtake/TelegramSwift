@@ -96,8 +96,8 @@ class UserInfoArguments : PeerInfoArguments {
     
     func shareContact() {
         shareDisposable.set((context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
-            if let context = self?.context {
-                showModal(with: ShareModalController(ShareContactObject(context, user: peer as! TelegramUser)), for: mainWindow)
+            if let context = self?.context, let peer = peer as? TelegramUser {
+                showModal(with: ShareModalController(ShareContactObject(context, user: peer)), for: context.window)
             }
         }))
     }
@@ -236,7 +236,7 @@ class UserInfoArguments : PeerInfoArguments {
             
         } |> deliverOnMainQueue  |> mapToSignal { peer -> Signal<PeerId, NoError> in
             if let peer = peer {
-                let confirm = confirmSignal(for: mainWindow, information: L10n.peerInfoConfirmStartSecretChat(peer.displayTitle))
+                let confirm = confirmSignal(for: context.window, header: L10n.peerInfoConfirmSecretChatHeader, information: L10n.peerInfoConfirmStartSecretChat(peer.displayTitle), okTitle: L10n.peerInfoConfirmSecretChatOK)
                 return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, NoError> in
                     return showModalProgress(signal: createSecretChat(account: context.account, peerId: peer.id) |> `catch` { _ in return .complete()}, for: mainWindow)
                 }
@@ -271,8 +271,28 @@ class UserInfoArguments : PeerInfoArguments {
     }
     
     func updateBlocked(peer: Peer,_ blocked:Bool, _ isBot: Bool) {
-        
-        blockDisposable.set(requestUpdatePeerIsBlocked(account: context.account, peerId: peerId, isBlocked: blocked).start())
+        let context = self.context
+        if blocked {
+            let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peerId) |> deliverOnMainQueue, for: context.window)
+            blockDisposable.set(signal.start(error: { error in
+                switch error {
+                case .generic:
+                    alert(for: context.window, info: L10n.unknownError)
+                }
+            }, completed: {
+                
+            }))
+        } else {
+            let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peerId) |> deliverOnMainQueue, for: context.window)
+            blockDisposable.set(signal.start(error: { error in
+                switch error {
+                case .generic:
+                    alert(for: context.window, info: L10n.unknownError)
+                }
+            }, completed: {
+                
+            }))
+        }
         
         if !blocked && isBot {
             pushViewController(ChatController(context: context, chatLocation: .peer(peerId), initialAction: ChatInitialAction.start(parameter: "", behavior: .automatic)))

@@ -31,6 +31,11 @@ class ReplyMarkupButtonLayout {
         self.width = width
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
 }
 
 class ReplyMarkupNode: Node {
@@ -77,8 +82,10 @@ class ReplyMarkupNode: Node {
                 }
                 
                 let btnView = TextView()
-                btnView.set(handler: { [weak self] _ in
-                    self?.proccess(btnView,button.button)
+                btnView.set(handler: { [weak self, weak button] control in
+                    if let button = button {
+                        self?.proccess(control, button.button)
+                    }
                 }, for: .Click)
                 
                 btnView.set(handler: { control in

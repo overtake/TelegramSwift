@@ -108,16 +108,39 @@ class MGalleryVideoItem: MGalleryItem {
     var media:TelegramMediaFile {
         return entry.file!
     }
+    private var examinatedSize: CGSize?
+    var dimensions: CGSize? {
+        
+        if let examinatedSize = examinatedSize {
+            return examinatedSize
+        }
+        if let dimensions = media.dimensions {
+            return dimensions
+        }
+        let linked = link(path: context.account.postbox.mediaBox.resourcePath(media.resource), ext: "mp4")
+        guard let path = linked else {
+            return media.dimensions
+        }
+        
+        let url = URL(fileURLWithPath: path)
+        guard let track = AVURLAsset(url: url).tracks(withMediaType: .video).first else {
+            return media.dimensions
+        }
+        try? FileManager.default.removeItem(at: url)
+        self.examinatedSize = track.naturalSize.applying(track.preferredTransform)
+        return examinatedSize
+        
+    }
     
     override var notFittedSize: NSSize {
-        if let size = media.dimensions {
+        if let size = dimensions {
             return size.fitted(pagerSize)
         }
         return pagerSize
     }
     
     override var sizeValue: NSSize {
-        if let size = media.dimensions {
+        if let size = dimensions {
             
             var pagerSize = self.pagerSize
             
@@ -166,7 +189,7 @@ class MGalleryVideoItem: MGalleryItem {
             return .never()
         })
         
-        self.image.set(media.previewRepresentations.isEmpty ? .single(.image(nil)) |> deliverOnMainQueue : result |> map { .image($0) } |> deliverOnMainQueue)
+        self.image.set(media.previewRepresentations.isEmpty ? .single(.image(nil)) |> deliverOnMainQueue : result |> map { .image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil) } |> deliverOnMainQueue)
         
         fetch()
     }

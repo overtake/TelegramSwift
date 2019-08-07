@@ -362,7 +362,11 @@ public class Modal: NSObject {
             }, with: self, priority: controller.responderPriority)
             
             if controller.handleAllEvents {
-                window.set(handler: { () -> KeyHandlerResult in
+                window.set(handler: { [weak controller] () -> KeyHandlerResult in
+                    if let controller = controller, controller.redirectMouseAfterClosing {
+                        controller.close()
+                        return .rejected
+                    }
                     return .invokeNext
                 }, with: self, for: .All, priority: controller.responderPriority)
             }

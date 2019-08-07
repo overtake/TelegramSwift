@@ -17,7 +17,13 @@ open class MagnifyView : NSView {
     }
     public var maxMagnify:CGFloat = 8.0
     public var minMagnify:CGFloat = 1.0
-    public let smartUpdater:Promise<NSSize> = Promise()
+    
+    private let smartUpdater:Promise<NSSize> = Promise()
+
+    public var smartUpdaterValue: Signal<NSSize, NoError> {
+        return smartUpdater.get() |> distinctUntilChanged
+    }
+    
     public let magnifyUpdater:ValuePromise<CGFloat> = ValuePromise(ignoreRepeated: true)
     private var mov_start:NSPoint = NSZeroPoint
     private var mov_content_start:NSPoint = NSZeroPoint

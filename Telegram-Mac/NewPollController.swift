@@ -438,7 +438,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         let state = stateValue.with { $0 }
         
         if !state.title.isEmpty || !state.options.filter({!$0.text.isEmpty}).isEmpty {
-            confirm(for: mainWindow, information: L10n.newPollDisacardConfirm, okTitle: L10n.newPollDisacardConfirmYes, cancelTitle: L10n.newPollDisacardConfirmNo, successHandler: { _ in
+            confirm(for: mainWindow, header: L10n.newPollDisacardConfirmHeader, information: L10n.newPollDisacardConfirm, okTitle: L10n.newPollDisacardConfirmYes, cancelTitle: L10n.newPollDisacardConfirmNo, successHandler: { _ in
                 f()
             })
         } else {

@@ -57,6 +57,7 @@ final class AccountContext {
     #if !SHARE
     let peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager()
     let chatUndoManager = ChatUndoManager()
+    let blockedPeersContext: BlockedPeersContext
     #endif
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
@@ -116,6 +117,7 @@ final class AccountContext {
         self.window = window
         #if !SHARE
         self.fetchManager = FetchManager(postbox: account.postbox)
+        self.blockedPeersContext = BlockedPeersContext(account: account)
         #endif
         
         

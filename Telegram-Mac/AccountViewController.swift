@@ -94,7 +94,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case notifications(index: Int)
     case language(index: Int, current: String)
     case appearance(index: Int)
-    case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, [Peer]?)
+    case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)
     case dataAndStorage(index: Int)
     case passport(index: Int, peer: Peer)
     case update(index: Int, state: Any)
@@ -165,7 +165,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return index
         case let .appearance(index):
             return index
-        case let .privacy(index, _, _, _):
+        case let .privacy(index, _, _):
             return index
         case let .dataAndStorage(index):
             return index
@@ -242,25 +242,13 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .privacy(lhsIndex, lhsPrivacy, lhsWebSessions, lhsBlockedPeers):
-            if case let .privacy(rhsIndex, rhsPrivacy, rhsWebSessions, rhsBlockedPeers) = rhs {
+        case let .privacy(lhsIndex, lhsPrivacy, lhsWebSessions):
+            if case let .privacy(rhsIndex, rhsPrivacy, rhsWebSessions) = rhs {
                 if let lhsWebSessions = lhsWebSessions, let rhsWebSessions = rhsWebSessions {
                     if lhsWebSessions.0 != rhsWebSessions.0 {
                         return false
                     }
                 } else if (lhsWebSessions != nil) != (rhsWebSessions != nil) {
-                    return false
-                }
-                if let lhsBlockedPeers = lhsBlockedPeers, let rhsBlockedPeers = rhsBlockedPeers {
-                    if lhsBlockedPeers.count != rhsBlockedPeers.count {
-                        return false
-                    }
-                    for i in 0 ..< lhsBlockedPeers.count {
-                        if !lhsBlockedPeers[i].isEqual(rhsBlockedPeers[i]) {
-                            return false
-                        }
-                    }
-                } else if (lhsBlockedPeers != nil) != (rhsBlockedPeers != nil) {
                     return false
                 }
                 return lhsIndex == rhsIndex && lhsPrivacy == rhsPrivacy
@@ -390,9 +378,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, action: {
                 arguments.presentController(AppearanceViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .privacy(_, let privacySettings, let webSessions, let blockedPeers):
+        case let .privacy(_,  privacySettings, webSessions):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, action: {
-                 arguments.presentController(PrivacyAndSecurityViewController(arguments.context, initialSettings: .single((privacySettings, webSessions, blockedPeers))), true)
+                 arguments.presentController(PrivacyAndSecurityViewController(arguments.context, initialSettings: (privacySettings, webSessions)), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .dataAndStorage:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsDataAndStorage, icon: theme.icons.settingsStorage, activeIcon: theme.icons.settingsStorageActive, type: .next, action: {
@@ -465,7 +453,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedPeers:[Peer]?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -510,7 +498,7 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
     index += 1
     entries.append(.notifications(index: index))
     index += 1
-    entries.append(.privacy(index: index, privacySettings, webSessions, blockedPeers))
+    entries.append(.privacy(index: index, privacySettings, webSessions))
     index += 1
     entries.append(.dataAndStorage(index: index))
     index += 1
@@ -521,9 +509,6 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
     entries.append(.stickers(index: index))
     index += 1
     
-//    entries.append(.whiteSpace(index: index, height: 20))
-//    index += 1
-//
     if let state = appUpdateState {
         entries.append(.update(index: index, state: state))
         index += 1
@@ -546,9 +531,6 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
     index += 1
     entries.append(.ask(index: index))
     index += 1
-    
-    
-    
     
     return entries
 }
@@ -602,7 +584,6 @@ class LayoutAccountController : TableViewController {
     
     private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus), Bool)> = Promise()
     private let syncLocalizations = MetaDisposable()
-    private let blockedPeers: Promise<[Peer]?> = Promise()
     fileprivate let passportPromise: Promise<Bool> = Promise(false)
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
@@ -646,8 +627,8 @@ class LayoutAccountController : TableViewController {
         #endif
         
         
-        let apply = combineLatest(queue: queue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), blockedPeers.get(), appUpdateState) |> map { peerView, accounts, appearance, settings, blockedPeers, appUpdateState -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, blockedPeers: blockedPeers, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(queue: queue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState) |> map { peerView, accounts, appearance, settings, appUpdateState -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -747,7 +728,6 @@ class LayoutAccountController : TableViewController {
         let context = self.context
         
         
-        
         settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(requestAccountPrivacySettings(account: context.account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, NoError>.single(nil) |> then(webSessions(network: context.account.network) |> map {Optional($0)}), proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
             return context.account.network.connectionStatus |> map {(settings, $0)}
         }, passportPromise.get()))
@@ -755,11 +735,14 @@ class LayoutAccountController : TableViewController {
 
         syncLocalizations.set(synchronizedLocalizationListState(postbox: context.account.postbox, network: context.account.network).start())
         
-        blockedPeers.set(Signal<[Peer]?, NoError>.single(nil) |> deliverOnPrepareQueue |> then(requestBlockedPeers(account: context.account) |> map {Optional($0)} |> deliverOnPrepareQueue))
     }
     
     override func getLeftBarViewOnce() -> BarView {
         return BarView(controller: self)
+    }
+    
+    override init(_ context: AccountContext) {
+        super.init(context)
     }
     
 

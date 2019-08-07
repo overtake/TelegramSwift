@@ -2213,11 +2213,15 @@ public extension NSAttributedString {
                 }
                 if let string = string {
                     let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                    modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
+                    if let tag = tag {
+                        modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
+                    }
                 }
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont
-                if font.fontDescriptor.symbolicTraits.contains(.bold) {
+                if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {
+                    newFont = .boldItalic(theme.fontSize)
+                } else if font.fontDescriptor.symbolicTraits.contains(.bold) {
                     newFont = .bold(theme.fontSize)
                 } else if font.fontDescriptor.symbolicTraits.contains(.italic) {
                     newFont = .italic(theme.fontSize)
@@ -2241,14 +2245,7 @@ public extension NSAttributedString {
             }
         })
         
-        let crossTagsRemove = modified.mutableCopy() as! NSMutableAttributedString
-        modified.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: modified.range, options: [], using: { value, range, _ in
-            if value != nil {
-                crossTagsRemove.addAttribute(.font, value: NSFont.normal(theme.fontSize), range: range)
-            }
-        })
-        crossTagsRemove.addAttribute(.foregroundColor, value: theme.colors.text, range: modified.range)
-        return (crossTagsRemove.trimmed, attachments)
+        return (modified.trimmed, attachments)
     }
     
     func appendAttributedString(_ string: NSAttributedString, selectedRange: NSRange = NSMakeRange(0, 0)) -> (NSAttributedString, NSRange) {

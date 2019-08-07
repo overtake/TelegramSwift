@@ -256,16 +256,7 @@ extension TelegramMediaFile {
         return true
     }
     
-    var isStaticSticker: Bool {
-        for attribute in self.attributes {
-            if case .Sticker = attribute {
-                if let s = self.size, s < 200 * 1024 {
-                    return !isAnimatedSticker
-                }
-            }
-        }
-        return false
-    }
+
     
     var imageSize:NSSize {
         for attr in attributes {
@@ -872,6 +863,12 @@ extension Media {
     var isGraphicFile:Bool {
         if let media = self as? TelegramMediaFile {
             return media.mimeType.hasPrefix("image") && (media.mimeType.contains("png") || media.mimeType.contains("jpg") || media.mimeType.contains("jpeg") || media.mimeType.contains("tiff"))
+        }
+        return false
+    }
+    var isVideoFile:Bool {
+        if let media = self as? TelegramMediaFile {
+            return media.mimeType.hasPrefix("video/mp4") || media.mimeType.hasPrefix("video/mov") || media.mimeType.hasPrefix("video/avi")
         }
         return false
     }
@@ -2068,7 +2065,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
                 case .success:
                     context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
                     if peer.isBot && result == .thrid {
-                        _ = requestUpdatePeerIsBlocked(account: context.account, peerId: peerId, isBlocked: true).start()
+                        _ = context.blockedPeersContext.add(peerId: peerId).start()
                     }
                 default:
                     break

@@ -272,37 +272,24 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             let fullSizeData = data.fullSizeData
             let thumbnailData = data.thumbnailData
             
-            if let fullSizeData = fullSizeData {
+            let options = NSMutableDictionary()
             
-                
+            options.setValue(max(fittedSize.width * scale, fittedSize.height * scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+            options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
+            options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
+
+            if let fullSizeData = fullSizeData {
                 if data.fullSizeComplete {
-                    let options = NSMutableDictionary()
-                    if let image = NSImage(data: fullSizeData)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                        return image
-                    }
-                    
-                 //   options.setValue(max(fittedSize.width * scale, fittedSize.height * scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
-                    options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-                    options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         return image
                     }
                     
-                } else {
-                    let imageSource = CGImageSourceCreateIncremental(nil)
-                    CGImageSourceUpdateData(imageSource, fullSizeData as CFData, data.fullSizeComplete)
-                    
-                    let options = NSMutableDictionary()
-                    options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
-                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                    if let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
-                        return image
-                    }
                 }
             }
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                 thumbnailImage = image
             }
             
@@ -314,9 +301,12 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
                     c.interpolationQuality = .none
                     c.draw(thumbnailImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
                 }
-                telegramFastBlur(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
+                telegramFastBlurMore(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
                 
-                return thumbnailContext.generateImage()
+                return generateImage(fittedSize, contextGenerator: { size, ctx in
+                    ctx.draw(thumbnailContext.generateImage()!, in: NSMakeRect(0, 0, size.width, size.height))
+                })
+                
             }
             return generateImage(fittedSize, contextGenerator: { (size, ctx) in
                 ctx.setFillColor(theme.colors.background.cgColor)
@@ -331,7 +321,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
     let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: toRepresentationSize, synchronousLoad: synchronousLoad)
     
     return signal |> map { data in
-        return ImageDataTransformation.init(data: data, execute: { arguments, data in
+        return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
             
             let fullSizeData = data.fullSizeData
@@ -352,6 +342,8 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                 if data.fullSizeComplete {
                     let options = NSMutableDictionary()
                     options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                    options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
+
                     //   options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
@@ -369,8 +361,11 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                 }
             }
             
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+            
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -491,7 +486,9 @@ func chatMessageWebFilePhoto(account: Account, photo: TelegramMediaWebFile, toRe
                     let options = NSMutableDictionary()
                     options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
+                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+                    
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     }
                     
@@ -1015,7 +1012,7 @@ func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaRefer
 func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, small:Bool, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageDataTransformation, NoError> {
     let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
     return signal |> map { data in
-        return ImageDataTransformation.init(data: data, execute: { arguments, data in
+        return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
             
             let fullSizeData = data.fullSizeData
@@ -1040,8 +1037,9 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
                 if data.fullSizeComplete {
                     let options = NSMutableDictionary()
                     //   options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                         switch arguments.resizeMode {
                         case .none:
@@ -1069,9 +1067,12 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
                     }
                 }
             }
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -1199,8 +1200,12 @@ func fileCancelInteractiveFetch(account: Account, file: TelegramMediaFile) {
 
 public func blurImage(_ data:Data?, _ s:NSSize, cornerRadius:CGFloat = 0) -> CGImage? {
     
+    let options = NSMutableDictionary()
+    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+    
     var thumbnailImage: CGImage?
-    if let idata = data, let imageSource = CGImageSourceCreateWithData(idata as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+    if let idata = data, let imageSource = CGImageSourceCreateWithData(idata as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
         thumbnailImage = image
     }
     var blurredThumbnailImage: CGImage?
@@ -1459,7 +1464,10 @@ func chatSecretMessageVideo(account: Account, fileReference: FileMediaReference,
             var blurredImage: CGImage?
             
             if blurredImage == nil {
-                if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+                let options = NSMutableDictionary()
+                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+                if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                     let thumbnailSize = CGSize(width: image.width, height: image.height)
                     let thumbnailContextSize = thumbnailSize.aspectFilled(CGSize(width: 20.0, height: 20.0))
                     let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
@@ -1717,7 +1725,7 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
     let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: CGSize(width: 127.0, height: 127.0), autoFetchFullSize: true)
     
     return signal |> map { data in
-        return ImageDataTransformation.init(data: data, execute: { arguments, data in
+        return ImageDataTransformation(data: data, execute: { arguments, data in
             assertNotOnMainThread()
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
             
@@ -1735,7 +1743,9 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
                     let options = NSMutableDictionary()
                     options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
+                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     }
                 } else {
@@ -1749,9 +1759,11 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
                     }
                 }
             }
-            
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -1831,7 +1843,7 @@ func chatMessageVideoThumbnail(account: Account, fileReference: FileMediaReferen
                 if fullSizeComplete {
                     let options = NSMutableDictionary()
                     options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     }
                 } else {
@@ -1845,9 +1857,11 @@ func chatMessageVideoThumbnail(account: Account, fileReference: FileMediaReferen
                     }
                 }
             }
-            
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -1919,7 +1933,7 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
                 if fullSizeComplete {
                     let options = NSMutableDictionary()
                     options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     }
                 } else {
@@ -1933,9 +1947,11 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
                     }
                 }
             }
-            
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
             var thumbnailImage: CGImage?
-            if fullSizeImage == nil, let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            if fullSizeImage == nil, let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -2035,14 +2051,16 @@ private func imageFromAJpeg(data: Data) -> (CGImage, CGImage)? {
         let alphaData = data.subdata(in: (4 + Int(colorSize) + 4) ..< (4 + Int(colorSize) + 4 + Int(alphaSize)))
         return (colorData, alphaData)
     }) {
-        
-        let sourceColor:CGImageSource? = CGImageSourceCreateWithData(colorData as CFData, nil);
-        let sourceAlpha:CGImageSource? = CGImageSourceCreateWithData(alphaData as CFData, nil);
+        let options = NSMutableDictionary()
+        options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+        let sourceColor:CGImageSource? = CGImageSourceCreateWithData(colorData as CFData, options);
+        let sourceAlpha:CGImageSource? = CGImageSourceCreateWithData(alphaData as CFData, options);
         
          if let sourceColor = sourceColor, let sourceAlpha = sourceAlpha {
             
-            let colorImage =  CGImageSourceCreateImageAtIndex(sourceColor, 0, nil);
-            let alphaImage =  CGImageSourceCreateImageAtIndex(sourceAlpha, 0, nil);
+            let colorImage =  CGImageSourceCreateImageAtIndex(sourceColor, 0, options);
+            let alphaImage =  CGImageSourceCreateImageAtIndex(sourceAlpha, 0, options);
             if let colorImage = colorImage, let alphaImage = alphaImage {
                 return (colorImage, alphaImage)
             }
@@ -2116,6 +2134,8 @@ public func filethumb(with url:URL, account:Account, scale:CGFloat) -> Signal<Im
                 let options = NSMutableDictionary()
                 options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
                 if let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                     thumb = image
                 }
@@ -2166,7 +2186,7 @@ func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scal
                 if fullSizeComplete {
                     let options = NSMutableDictionary()
                     options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                         let thumbnailSize = CGSize(width: image.width, height: image.height)
                         let thumbnailContextSize = thumbnailSize.aspectFilled(CGSize(width: 20.0, height: 20.0))
                         let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
@@ -2201,7 +2221,10 @@ func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scal
             }
             
             if blurredImage == nil {
-                if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+                let options = NSMutableDictionary()
+                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+                if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                     let thumbnailSize = CGSize(width: image.width, height: image.height)
                     let thumbnailContextSize = thumbnailSize.aspectFilled(CGSize(width: 20.0, height: 20.0))
                     let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
@@ -2273,8 +2296,7 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
                 let options = NSMutableDictionary()
                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
-                
-                //   options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
                 if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options) {
                     if let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
                         fullSizeImage = image
@@ -2284,8 +2306,12 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
                 }
             }
             
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+            
             var thumbnailImage: CGImage?
-            if let thumbnailData = data.thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            if let thumbnailData = data.thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -2433,14 +2459,19 @@ func chatMessagePhotoThumbnail(account: Account,  imageReference: ImageMediaRefe
                      fullSizeImage = image
                      }*/
                     let options = NSMutableDictionary()
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     }
                 }
             }
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -2506,7 +2537,7 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
             if let fullSizeData = data.fullSizeData {
                 let options = NSMutableDictionary()
                 options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                     fullSizeImage = image
                 }
             }
@@ -2649,7 +2680,7 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
                 if fullSizeComplete {
                     let options = NSMutableDictionary()
                     options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     }
                 } else {
@@ -2665,7 +2696,10 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
             }
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+            let options = NSMutableDictionary()
+            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -2765,7 +2799,9 @@ func instantPageImageFile(account: Account, fileReference: FileMediaReference, s
                     let options = NSMutableDictionary()
                     options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
+                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
                         imageOrientation = imageOrientationFromSource(imageSource)
                         fullSizeImage = image
                     }

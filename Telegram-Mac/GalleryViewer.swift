@@ -35,13 +35,6 @@ final class GalleryInteractions {
 }
 private(set) var viewer:GalleryViewer?
 
-func cacheGalleryView(_ view: NSView, for item: MGalleryItem) {
-    viewer?.viewCache[item.stableId] = view
-}
-
-func cachedGalleryView(for item: MGalleryItem) -> NSView? {
-    return viewer?.viewCache[item.stableId]
-}
 
 let galleryButtonStyle = ControlStyle(font:.medium(.huge), foregroundColor:.white, backgroundColor:.clear, highlightColor:.grayIcon)
 
@@ -81,7 +74,9 @@ private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
         if let media = media as? TelegramMediaImage {
             return media
         } else if let file = media as? TelegramMediaFile {
-            if file.mimeType.hasPrefix("image/") || file.isVideo || file.isAnimated {
+            if file.isGraphicFile || file.isVideo || file.isAnimated {
+                return file
+            } else if file.isVideoFile, FileManager.default.fileExists(atPath: postbox.mediaBox.resourcePath(file.resource)) {
                 return file
             } else if Animation.filepath(postbox.mediaBox.resourcePath(file.resource), animationCache: LRUAnimationCache.sharedCache) != nil {
                 return file
@@ -107,7 +102,7 @@ fileprivate func itemFor(entry: ChatHistoryEntry, context: AccountContext, pager
             if let _ = media as? TelegramMediaImage {
                 return MGalleryPhotoItem(context, .message(entry), pagerSize)
             } else if let file = media as? TelegramMediaFile {
-                if file.isVideo && !file.isAnimated {
+                if (file.isVideo && !file.isAnimated) {
                     return MGalleryVideoItem(context, .message(entry), pagerSize)
                 } else {
                     if file.mimeType.hasPrefix("image/") {
@@ -116,6 +111,8 @@ fileprivate func itemFor(entry: ChatHistoryEntry, context: AccountContext, pager
                         return MGalleryGIFItem(context, .message(entry), pagerSize)
                     } else if let animation = Animation.filepath(context.account.postbox.mediaBox.resourcePath(file.resource), animationCache: LRUAnimationCache.sharedCache) {
                         return MGalleryLottieItem(context, .lottie(animation, entry), pagerSize)
+                    } else if file.isVideoFile {
+                        return MGalleryVideoItem(context, .message(entry), pagerSize)
                     }
                 }
             }
@@ -165,9 +162,11 @@ class GalleryMessagesBehavior {
     }
 }
 
-final class GalleryBackgroundView : View {
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-       // super.draw(layer, in: ctx)
+final class GalleryBackgroundView : NSView {
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
 }
 
@@ -193,12 +192,16 @@ private final class GalleryTouchBarController : ViewController {
         }
         return temporaryTouchBar as? NSTouchBar
     }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
 }
 
 
 class GalleryViewer: NSResponder {
     
-    fileprivate var viewCache:[AnyHashable: NSView] = [:]
     
     let window:Window
   //  private var controls:GalleryControls!
@@ -235,13 +238,14 @@ class GalleryViewer: NSResponder {
             let bounds = NSMakeRect(0, 0, screen.frame.width, screen.frame.height)
             self.window = Window(contentRect: bounds, styleMask: [.borderless], backing: .buffered, defer: false, screen: screen)
             self.window.contentView?.wantsLayer = true
-            
+            self.window.contentView?.canDrawSubviewsIntoLayer = true
 
             self.window.level = .popUpMenu
             self.window.isOpaque = false
             self.window.backgroundColor = .clear
             self.window.appearance = theme.appearance
-            backgroundView.backgroundColor = NSColor.black.withAlphaComponent(0.9)
+            backgroundView.wantsLayer = true
+            backgroundView.background = NSColor.black.withAlphaComponent(0.9)
             backgroundView.frame = bounds
             
             self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: 0, bottom: 95), interactions:interactions, window:window, reversed: reversed)
@@ -654,7 +658,7 @@ class GalleryViewer: NSResponder {
                                 } else if let file = media.media as? TelegramMediaFile {
                                     if file.isVideo && file.isAnimated {
                                         inserted.append((i, MGalleryGIFItem(context, .instantMedia(media, message), pagerSize)))
-                                    } else if file.isVideo {
+                                    } else if file.isVideo || file.isVideoFile {
                                         inserted.append((i, MGalleryVideoItem(context, .instantMedia(media, message), pagerSize)))
                                     }
                                 } else if media.media is TelegramMediaWebpage {

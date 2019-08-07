@@ -183,18 +183,17 @@ private struct BlockedPeerControllerState: Equatable {
     }
 }
 
-private func blockedPeersControllerEntries(state: BlockedPeerControllerState, peers: [Peer]?) -> [BlockedPeerEntry] {
+private func blockedPeersControllerEntries(state: BlockedPeerControllerState, blockedState: BlockedPeersContextState) -> [BlockedPeerEntry] {
     
     var entries: [BlockedPeerEntry] = []
     
-    if let peers = peers {
-        var index: Int32 = 0
-        
-        if !peers.isEmpty {
-            entries.append(.whiteSpace(16))
-        }
-        
-        for peer in peers {
+    var index: Int32 = 0
+    
+    if !blockedState.peers.isEmpty {
+        entries.append(.whiteSpace(16))
+    }
+    for peer in blockedState.peers {
+        if let peer = peer.peer {
             var deleting:ShortPeerDeleting? = nil
             if state.editing {
                 deleting = ShortPeerDeleting(editable: true)
@@ -203,10 +202,9 @@ private func blockedPeersControllerEntries(state: BlockedPeerControllerState, pe
             entries.append(.peerItem(index, peer, deleting, state.removingPeerId != peer.id))
             index += 1
         }
-        
     }
     if entries.isEmpty {
-        entries.append(.empty(peers == nil))
+        entries.append(.empty(blockedState.peers.isEmpty))
     }
     
     return entries
@@ -230,14 +228,6 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     private let removePeerDisposable:MetaDisposable = MetaDisposable()
     
     private let disposable:MetaDisposable = MetaDisposable()
-    private let defaultPeers:[Peer]?
-    private let updated:([Peer]?) -> Void
-    init(_ context: AccountContext, _ defaultPeers:[Peer]?, updated: @escaping([Peer]?) -> Void) {
-        self.defaultPeers = defaultPeers
-        self.updated = updated
-        super.init(context)
-    }
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -249,34 +239,15 @@ class BlockedPeersViewController: EditableViewController<TableView> {
             }
         }
         
-        let peersPromise = Promise<[Peer]?>(nil)
-        
         let arguments = BlockedPeerControllerArguments(context: context, removePeer: { [weak self] memberId in
-            
             updateState {
                 return $0.withUpdatedRemovingPeerId(memberId)
             }
-            
-            let applyPeers: Signal<Void, NoError> = peersPromise.get()
-                |> filter { $0 != nil }
-                |> take(1)
-                |> deliverOnMainQueue
-                |> mapToSignal { peers -> Signal<Void, NoError> in
-                    if let peers = peers {
-                        var updatedPeers = peers
-                        for i in 0 ..< updatedPeers.count {
-                            if updatedPeers[i].id == memberId {
-                                updatedPeers.remove(at: i)
-                                break
-                            }
-                        }
-                        peersPromise.set(.single(updatedPeers))
-                    }
-                    
-                    return .complete()
-            }
-            
-            self?.removePeerDisposable.set((requestUpdatePeerIsBlocked(account: context.account, peerId: memberId, isBlocked: false) |> then(applyPeers) |> deliverOnMainQueue).start(error: { _ in
+            self?.removePeerDisposable.set((context.blockedPeersContext.remove(peerId: memberId) |> deliverOnMainQueue).start(error: { error in
+                switch error {
+                case .generic:
+                    alert(for: context.window, info: L10n.unknownError)
+                }
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }
@@ -284,7 +255,6 @@ class BlockedPeersViewController: EditableViewController<TableView> {
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }
-                
             }))
         }, openPeer: { [weak self] peerId in
             guard let `self` = self else {return}
@@ -292,29 +262,34 @@ class BlockedPeersViewController: EditableViewController<TableView> {
         })
         
         
-        let peersSignal: Signal<[Peer]?, NoError> = .single(defaultPeers) |> then(requestBlockedPeers(account: context.account) |> map { Optional($0) })
-        
-        peersPromise.set(peersSignal)
         
         let initialSize = atomicSize
         let previousEntries:Atomic<[AppearanceWrapperEntry<BlockedPeerEntry>]> = Atomic(value: [])
         
         
-        let signal = combineLatest(statePromise.get(), peersPromise.get(), appearanceSignal)
+        let signal = combineLatest(statePromise.get(), context.blockedPeersContext.state, appearanceSignal)
             |> deliverOnMainQueue
-            |> map { state, peers, appearance -> (TableUpdateTransition, [Peer]?) in
-                let entries = blockedPeersControllerEntries(state: state, peers: peers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-                return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), peers)
+            |> map { state, blockedState, appearance -> TableUpdateTransition in
+                let entries = blockedPeersControllerEntries(state: state, blockedState: blockedState).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
             }
         
-        disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] transition, newValue in
+        disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] transition in
             if let strongSelf = self {
                 strongSelf.genericView.merge(with: transition)
                 strongSelf.readyOnce()
-                strongSelf.updated(newValue)
                 strongSelf.rightBarView.isHidden = strongSelf.genericView.item(at: 0) is SearchEmptyRowItem
             }
         }))
+        
+        genericView.setScrollHandler { position in
+            switch position.direction {
+            case .bottom:
+                context.blockedPeersContext.loadMore()
+            default:
+                break
+            }
+        }
     }
     
     deinit {

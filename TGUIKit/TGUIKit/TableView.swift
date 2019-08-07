@@ -2138,14 +2138,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
-        if documentOffset.y < 0 {
-            var bp:Int = 0
-            bp += 1
-        }
-        
         let oldEmpty = self.isEmpty
         
-        
+        for subview in tableView.subviews.reversed() {
+            if let subview = subview as? NSTableRowView {
+                if tableView.row(for: subview) == -1 {
+                    subview.removeFromSuperview()
+                }
+            }
+        }
+
         
         self.beginUpdates()
         

@@ -951,10 +951,6 @@ internal final class L10n {
   internal static var channelSelectPeersContacts: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Contacts") }
   /// global
   internal static var channelSelectPeersGlobal: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Global") }
-  /// Message in %@:%@
-  internal static func channelSlowModeMessageIn(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Channel.SlowMode.MessageIn", p1, p2)
-  }
   /// Off
   internal static var channelSlowModeOff: String  { return L10n.tr("Localizable", "Channel.SlowMode.Off") }
   /// Slowmode is enabled.\nYou can send your next message in %@:%@
@@ -1089,6 +1085,10 @@ internal final class L10n {
   internal static var chatConfirmReportSpamChannel: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam.Channel") }
   /// Report Spam and leave group?
   internal static var chatConfirmReportSpamGroup: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam.Group") }
+  /// Unpin message
+  internal static var chatConfirmUnpinHeader: String  { return L10n.tr("Localizable", "Chat.Confirm.Unpin.Header") }
+  /// Unpin
+  internal static var chatConfirmUnpinOK: String  { return L10n.tr("Localizable", "Chat.Confirm.Unpin.OK") }
   /// Connecting
   internal static var chatConnectingStatusConnecting: String  { return L10n.tr("Localizable", "Chat.ConnectingStatus.connecting") }
   /// Connecting to proxy
@@ -2563,6 +2563,10 @@ internal final class L10n {
   internal static func inAppLinksConfirmOpenExternal(_ p1: String) -> String {
     return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal", p1)
   }
+  /// Open Link
+  internal static var inAppLinksConfirmOpenExternalHeader: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.Header") }
+  /// Open
+  internal static var inAppLinksConfirmOpenExternalOK: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.OK") }
   /// Select a user or chat to share content via %@
   internal static func inlineModalActionDesc(_ p1: String) -> String {
     return L10n.tr("Localizable", "InlineModalAction.Desc", p1)
@@ -3007,6 +3011,8 @@ internal final class L10n {
   }
   /// Are you sure you want to discard this poll?
   internal static var newPollDisacardConfirm: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm") }
+  /// Poll
+  internal static var newPollDisacardConfirmHeader: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirmHeader") }
   /// Add an Option
   internal static var newPollOptionsAddOption: String  { return L10n.tr("Localizable", "NewPoll.OptionsAddOption") }
   /// %d
@@ -3083,7 +3089,7 @@ internal final class L10n {
   internal static var newPollTitle: String  { return L10n.tr("Localizable", "NewPoll.Title") }
   /// No
   internal static var newPollDisacardConfirmNo: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.No") }
-  /// Yes
+  /// Discard
   internal static var newPollDisacardConfirmYes: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.Yes") }
   /// You have a new message
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
@@ -3747,6 +3753,10 @@ internal final class L10n {
   internal static func peerInfoConfirmStartSecretChat(_ p1: String) -> String {
     return L10n.tr("Localizable", "PeerInfo.Confirm.StartSecretChat", p1)
   }
+  /// Secret Chat
+  internal static var peerInfoConfirmSecretChatHeader: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.Header") }
+  /// Start
+  internal static var peerInfoConfirmSecretChatOK: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.OK") }
   /// Add
   internal static var peerInfoDiscussionAdd: String  { return L10n.tr("Localizable", "PeerInfo.Discussion.Add") }
   /// Add group chat for comments.

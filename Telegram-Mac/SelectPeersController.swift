@@ -189,7 +189,7 @@ struct SelectPeerValue : Equatable {
     
     func status(_ context: AccountContext) -> (String, NSColor) {
         var color:NSColor = theme.colors.grayText
-        var string:String = L10n.peerStatusRecently
+        var string:String = L10n.peerStatusLongTimeAgo
         
         if let count = subscribers, peer.isGroup || peer.isSupergroup {
             let countValue = L10n.privacySettingsGroupMembersCountCountable(count)
@@ -248,7 +248,7 @@ private func entriesForView(_ view: ContactPeersView, searchPeers:[PeerId], sear
                     }
                 }
                 
-                entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil), index, !excludeIds.contains(peer.id)))
+                entries.append(.peer(SelectPeerValue(peer: peer, presence: view.peerPresences[peer.id], subscribers: nil), index, !excludeIds.contains(peer.id)))
                 index += 1
                 if index == 230 {
                     break
@@ -926,9 +926,16 @@ class SelectUsersAndGroupsBehavior : SelectPeersBehavior {
 
 fileprivate class SelectContactsBehavior : SelectPeersBehavior {
     fileprivate let index: PeerNameIndex = .lastNameFirst
-    
+    private var previousGlobal:Atomic<[SelectPeerValue]> = Atomic(value: [])
    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+        _ = previousGlobal.swap([])
+    }
     override func start(context: AccountContext, search:Signal<SearchState, NoError>, linkInvation: (()->Void)? = nil) -> Signal<[SelectPeerEntry], NoError> {
+        
+        let previousGlobal = self.previousGlobal
         
         return search |> mapToSignal { [weak self] search -> Signal<[SelectPeerEntry], NoError> in
             
@@ -975,8 +982,41 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                                 let local:[SelectPeerValue] = local.map { peer in
                                     return SelectPeerValue(peer: peer, presence: presences[peer.id], subscribers: nil)
                                 }
-                                let global:[SelectPeerValue] = global.map { peer in
+                                
+                                var filteredLocal:[SelectPeerValue] = []
+                                var excludeIds = Set<PeerId>()
+                                for peer in local {
+                                    if context.account.peerId != peer.peer.id {
+                                        if let peer = peer.peer as? TelegramUser, let botInfo = peer.botInfo {
+                                            if !botInfo.flags.contains(.worksWithGroups) {
+                                                continue
+                                            }
+                                        }
+                                        excludeIds.insert(peer.peer.id)
+                                        filteredLocal.append(peer)
+                                    }
+                                }
+                                
+                                var global:[SelectPeerValue] = global.map { peer in
                                     return SelectPeerValue(peer: peer, presence: presences[peer.id], subscribers: nil)
+                                }.filter { peer in
+                                    if context.account.peerId != peer.peer.id, !excludeIds.contains(peer.peer.id) {
+                                        if let peer = peer.peer as? TelegramUser, let botInfo = peer.botInfo {
+                                            if !botInfo.flags.contains(.worksWithGroups) {
+                                                return false
+                                            }
+                                        }
+                                        return true
+                                    } else {
+                                        return false
+                                    }
+                                }
+                                
+                                
+                                if !global.isEmpty {
+                                    _ = previousGlobal.swap(global)
+                                } else {
+                                    global = previousGlobal.with { $0 }
                                 }
                                 return searchEntriesForPeers(local, global, context: context, isLoading: values.2)
                         }

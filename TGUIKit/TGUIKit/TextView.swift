@@ -696,7 +696,7 @@ public final class TextViewLayout : Equatable {
         
         var selectedRange:NSRange = NSMakeRange(NSNotFound, 0)
         
-        if (currentPoint.x != -1 && currentPoint.y != -1 && !lines.isEmpty) {
+        if (currentPoint.x != -1 && currentPoint.y != -1 && !lines.isEmpty && startPoint.x != -1 && startPoint.y != -1) {
             
             
             let startSelectLineIndex = findIndex(location: startPoint)
@@ -1036,7 +1036,9 @@ public class TextView: Control, NSViewToolTipOwner {
 
         if let layout = layout {
             
-           
+            ctx.setAllowsFontSubpixelPositioning(true)
+            ctx.setShouldSubpixelPositionFonts(true)
+            
             ctx.setAllowsAntialiasing(true)
             
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
@@ -1449,6 +1451,8 @@ public class TextView: Control, NSViewToolTipOwner {
         } else {
             super.mouseUp(with: event)
         }
+        
+        self.beginSelect = NSMakePoint(-1, -1)
     }
     public override func cursorUpdate(with event: NSEvent) {
         if userInteractionEnabled {
