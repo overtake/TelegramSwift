@@ -966,6 +966,9 @@ public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
     return lhs.def == rhs.def && lhs.range.location == rhs.range.location && lhs.range.length == rhs.range.length && lhs.color.hexString == rhs.color.hexString
 }
 
+//private extension TextView : NSMenuDelegate {
+//    
+//}
 
 public class TextView: Control, NSViewToolTipOwner {
     
@@ -1230,9 +1233,14 @@ public class TextView: Control, NSViewToolTipOwner {
     @objc private func openPanelInRunLoop(_ timer:Foundation.Timer) {
         if let (event, menu) = timer.userInfo as? (NSEvent, NSMenu) {
             NSMenu.popUpContextMenu(menu, with: event, for: self)
+           // menu.delegate = self
         }
     }
     
+    
+    public func menuDidClose(_ menu: NSMenu) {
+        
+    }
     
     /*
      var view: NSTextView? = (self.window?.fieldEditor(true, forObject: self) as? NSTextView)
