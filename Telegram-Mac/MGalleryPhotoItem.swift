@@ -68,67 +68,85 @@ class MGalleryPhotoItem: MGalleryItem {
         return NSZeroSize
     }
     
-    override func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
+    override func smallestValue(for size: NSSize) -> NSSize {
         if let largest = media.representations.last {
             if let modifiedSize = modifiedSize {
                 let lhsProportion = modifiedSize.width/modifiedSize.height
                 let rhsProportion = largest.dimensions.width/largest.dimensions.height
                 
                 if lhsProportion != rhsProportion {
-                    return .single(modifiedSize.fitted(size))
+                    return modifiedSize.fitted(size)
                 }
             }
-            return .single(largest.dimensions.fitted(size))
+            return largest.dimensions.fitted(size)
         }
-        return .single(pagerSize)
+        return pagerSize
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
         return chatMessagePhotoStatus(account: context.account, photo: media)
     }
     
+    private var hasRequested: Bool = false
+    
     override func request(immediately: Bool) {
-        
-        let context = self.context
-        let entry = self.entry
-        let media = self.media
-        let secureIdAccessContext = self.secureIdAccessContext
-        
-        let result = combineLatest(size.get(), rotate.get()) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
-            guard let `self` = self else {return .complete()}
+        if !hasRequested {
+            let context = self.context
+            let entry = self.entry
+            let media = self.media
+            let secureIdAccessContext = self.secureIdAccessContext
             
-            return self.smallestValue(for: size) |> map { size in
-                var newSize = size
+            let sizeValue = size.get() |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
+                return lhs == rhs
+            })
+            
+            let rotateValue = rotate.get() |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
+                return lhs == rhs
+            })
+            
+            let result = combineLatest(sizeValue, rotateValue) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
+                guard let `self` = self else {return .complete()}
+                
+                var newSize = self.smallestValue(for: size)
                 if let orientation = orientation {
                     if orientation == .right || orientation == .left {
                         newSize = NSMakeSize(newSize.height, newSize.width)
                     }
                 }
-                return (newSize, orientation)
+                return .single((newSize, orientation))
+                
+            } |> mapToSignal { size, orientation -> Signal<NSImage?, NoError> in
+                    return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
+                        |> map { transform in
+                            let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                            if let orientation = orientation {
+                                let transformed = image?.createMatchingBackingDataWithImage(orienation: orientation)
+                                if let transformed = transformed {
+                                    return NSImage(cgImage: transformed, size: transformed.size)
+                                }
+                            }
+                            if let image = image {
+                                return NSImage(cgImage: image, size: image.size)
+                            } else {
+                                return nil
+                            }
+                    }
             }
             
-        } |> mapToSignal { size, orientation -> Signal<CGImage?, NoError> in
-            return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
-                |> map { transform in
-                    let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
-                    if let orientation = orientation {
-                        return image?.createMatchingBackingDataWithImage(orienation: orientation)
-                    }
-                    return image
+            path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { resource -> Signal<String, NoError> in
+                if resource.complete {
+                    return .single(link(path:resource.path, ext:kMediaImageExt)!)
                 }
+                return .never()
+            })
+            
+            self.image.set(result |> map { .image($0) } |> deliverOnMainQueue)
+            
+            
+            fetch()
+            
+            hasRequested = true
         }
-        
-        path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { resource -> Signal<String, NoError> in
-            if resource.complete {
-                return .single(link(path:resource.path, ext:kMediaImageExt)!)
-            }
-            return .never()
-        })
-        
-        self.image.set(result |> map { .image($0) } |> deliverOnMainQueue)
-        
-        
-        fetch()
         
     }
     
@@ -145,5 +163,10 @@ class MGalleryPhotoItem: MGalleryItem {
         chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
     }
     
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
 }

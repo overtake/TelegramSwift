@@ -239,10 +239,11 @@ class ChatControllerView : View, ChatInputDelegate {
             let resizeAnimated = animated && tableView.contentOffset.y < height
             //(previousHeight < height || tableView.contentOffset.y < height)
             
-            tableView.change(size: size, animated: resizeAnimated)
+            tableView.change(size: size, animated: animated)
+            
             
             if tableView.contentOffset.y > height {
-                tableView.clipView.scroll(to: NSMakePoint(0, tableView.contentOffset.y - (previousHeight - height)))
+               // tableView.clipView.scroll(to: NSMakePoint(0, tableView.contentOffset.y - (previousHeight - height)))
             }
             
             inputView.change(pos: NSMakePoint(0, tableView.frame.maxY), animated: animated)
@@ -1531,14 +1532,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 showModal(with: ModalOptionSetController(context: chatInteraction.context, options: options, actionText: (L10n.blockContactOptionsAction(peer.compactDisplayTitle), theme.colors.redUI), title: L10n.blockContactTitle(peer.compactDisplayTitle), result: { result in
                     
-                    var signals:[Signal<Void, NoError>] = []
+                    var signals:[Signal<Never, NoError>] = []
                     
-                    signals.append(requestUpdatePeerIsBlocked(account: context.account, peerId: peer.id, isBlocked: true))
+                    signals.append(context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() })
                     
                     if result[1] == .selected {
-                        signals.append(removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: result[0] == .selected))
+                        signals.append(removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: result[0] == .selected) |> ignoreValues)
                     } else if result[0] == .selected {
-                        signals.append(reportPeer(account: context.account, peerId: peer.id))
+                        signals.append(reportPeer(account: context.account, peerId: peer.id) |> ignoreValues)
                     }
                     let closeChat = result[1] == .selected
                     
@@ -1891,7 +1892,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //                    if let message = strongSelf.messageInCurrentHistoryView(toId) {
 //                        strongSelf.genericView.tableView.scroll(to: state.swap(to: ChatHistoryEntryId.message(message)))
 //                    } else {
-                        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toId), count: 100), account: context.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: nil, additionalData: [])
+                        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toId), count: strongSelf.requestCount), account: context.account, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: nil, additionalData: [])
                         
                         struct FindSearchMessage {
                             let message:Message?
@@ -2205,7 +2206,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.unblock = { [weak self] in
             if let strongSelf = self {
-                self?.unblockDisposable.set(requestUpdatePeerIsBlocked(account: context.account, peerId: strongSelf.chatInteraction.peerId, isBlocked: false).start())
+                strongSelf.unblockDisposable.set(context.blockedPeersContext.remove(peerId: strongSelf.chatInteraction.peerId).start())
             }
         }
         
@@ -2217,27 +2218,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let peer = self.chatInteraction.peer as? TelegramChannel {
                     if peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
                         
-                        self.updatePinnedDisposable.set(((dismiss ? confirmSignal(for: mainWindow, information: L10n.chatConfirmUnpin) : Signal<Bool, NoError>.single(true)) |> filter {$0} |> mapToSignal { _ in return
+                        self.updatePinnedDisposable.set(((dismiss ? confirmSignal(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK) : Signal<Bool, NoError>.single(true)) |> filter {$0} |> mapToSignal { _ in return
                             showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate) |> `catch` {_ in .complete()
-                        }, for: mainWindow)}).start())
+                        }, for: context.window)}).start())
                     } else {
                         self.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedDismissedPinnedId(pinnedId)})})
                     }
                 } else if self.chatInteraction.peerId == context.peerId {
                     if dismiss {
-                        confirm(for: mainWindow, information: L10n.chatConfirmUnpin, successHandler: { _ in
-                            self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: mainWindow).start())
+                        confirm(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK, successHandler: { _ in
+                            self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
                         })
                     } else {
-                        self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: mainWindow).start())
+                        self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
                     }
                 } else if let peer = self.chatInteraction.peer as? TelegramGroup, peer.canPinMessage {
                     if dismiss {
-                        confirm(for: mainWindow, information: L10n.chatConfirmUnpin, successHandler: { _ in
-                            self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: mainWindow).start())
+                        confirm(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK, successHandler: { _ in
+                            self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
                         })
                     } else {
-                        self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: mainWindow).start())
+                        self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
                     }
                 }
             }
@@ -2261,28 +2262,25 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     title = L10n.chatConfirmReportSpam
                 }
                 
-                
-                
-                strongSelf.reportPeerDisposable.set((confirmSignal(for: mainWindow, header: appName, information: title, okTitle: L10n.messageContextReport, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ in
-                    return reportPeer(account: context.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue |> mapToSignal { [weak strongSelf] () -> Signal<Void, NoError> in
-                        if let strongSelf = strongSelf, let peer = strongSelf.chatInteraction.peer {
+                strongSelf.reportPeerDisposable.set((confirmSignal(for: context.window, header: appName, information: title, okTitle: L10n.messageContextReport, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ in
+                    return reportPeer(account: context.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
+                        if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
                             if peer.id.namespace == Namespaces.Peer.CloudUser {
-                                return requestUpdatePeerIsBlocked(account: context.account, peerId: peer.id, isBlocked: true) |> deliverOnMainQueue |> mapToSignal { [weak strongSelf] () -> Signal<Void, NoError> in
-                                    if let strongSelf = strongSelf {
-                                        return removePeerChat(account: context.account, peerId: strongSelf.chatInteraction.peerId, reportChatSpam: false)
+                                return removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: false)
+                                |> mapToSignal { _ in
+                                    return context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() } |> mapToSignal { _ in
+                                        return .complete()
                                     }
-                                    return .complete()
                                 }
                             } else {
-                                return removePeerChat(account: context.account, peerId: strongSelf.chatInteraction.peerId, reportChatSpam: true)
+                                return removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: true)
                             }
                         }
                         return .complete()
-                    } |> map { _ in return true} |> deliverOnMainQueue
-                }).start(next: { [weak strongSelf] result in
-                    if let strongSelf = strongSelf, result {
-                        strongSelf.navigationController?.back()
                     }
+                    |> deliverOnMainQueue
+                }).start(completed: { [weak self] in
+                    self?.navigationController?.back()
                 }))
             }
         }

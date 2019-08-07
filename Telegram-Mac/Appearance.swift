@@ -1591,7 +1591,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatFallbackCallBubble_incoming: #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_incoming),
                                                chatFallbackCallBubble_outgoing: #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_outgoing),
                                                
-                                               chatToggleSelected: #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon),
+                                               chatToggleSelected: generateChatGroupToggleSelected(foregroundColor: palette.blueIcon),
                                                chatToggleUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(),
                                                chatShare: #imageLiteral(resourceName: "Icon_ChannelShare").precomposed(palette.blueIcon),
                                                chatMusicPlay: #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(),

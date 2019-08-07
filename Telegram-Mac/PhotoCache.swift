@@ -23,6 +23,18 @@ private final class PhotoCachedRecord {
     }
 }
 
+public final class TransformImageResult {
+    let image: CGImage?
+    let highQuality: Bool
+    init(_ image: CGImage?, _ highQuality: Bool) {
+        self.image = image
+        self.highQuality = highQuality
+    }
+    deinit {
+        
+    }
+}
+
 
 private enum PhotoCacheKeyEntry : Hashable {
     case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)

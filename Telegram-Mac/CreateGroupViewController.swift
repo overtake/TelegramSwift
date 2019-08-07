@@ -92,7 +92,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
             case let .peer(peer, _, presence):
                 
                 var color:NSColor = theme.colors.grayText
-                var string:String = tr(L10n.peerStatusRecently)
+                var string:String = L10n.peerStatusRecently
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))

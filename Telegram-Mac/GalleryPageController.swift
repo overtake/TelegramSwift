@@ -27,6 +27,10 @@ fileprivate class GMagnifyView : MagnifyView  {
         return frame.minX
     }
     
+    override var isOpaque: Bool {
+        return true
+    }
+    
     func updateStatus(_ status: Signal<MediaResourceStatus, NoError>) {
         statusDisposable.set((status |> deliverOnMainQueue).start(next: { [weak self] status in
             self?.updateProgress(status)
@@ -144,7 +148,8 @@ fileprivate class GMagnifyView : MagnifyView  {
 class GalleryPageView : NSView {
     init() {
         super.init(frame:NSZeroRect)
-        //self.wantsLayer = true
+        self.wantsLayer = true
+        self.canDrawSubviewsIntoLayer = true
     }
 
     
@@ -471,10 +476,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     func next() {
         if !lockedTransition {
             let item = self.item(at: min(controller.selectedIndex + 1, controller.arrangedObjects.count - 1))
-            item.size.set(.single(item.pagerSize))
-            item.request()
+          //  item.size.set(.single(item.pagerSize))
             
-            if let index = self.items.index(of: item) {
+            if let index = self.items.firstIndex(of: item) {
                 self.set(index: index, animated: false)
             }
         }
@@ -483,10 +487,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     func prev() {
         if !lockedTransition {
             let item = self.item(at: max(controller.selectedIndex - 1, 0))
-            item.size.set(.single(item.pagerSize))
-            item.request()
+           // item.size.set(.single(item.pagerSize))
             
-            if let index = self.items.index(of: item) {
+            if let index = self.items.firstIndex(of: item) {
                 self.set(index: index, animated: false)
             }
         }
@@ -577,7 +580,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     selectedIndex.set(index)
                 }
                 currentController = controller.selectedViewController
-
+                
+            }
+            
+            if items.count > 1, hasInited {
+                items[min(max(self.controller.selectedIndex - 1, 0), items.count - 1)].request()
+                items[min(max(self.controller.selectedIndex + 1, 0), items.count - 1)].request()
             }
         } 
     }
@@ -592,7 +600,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             
             
             item.view.set(.single(view.contentView))
-            smartUpdaterDisposable.set(view.smartUpdater.get().start(next: { size in
+            smartUpdaterDisposable.set(view.smartUpdaterValue.start(next: { size in
                 item.size.set(.single(size))
             }))
             
@@ -604,6 +612,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         lockedTransition = true
         captionView.change(opacity: 0)
         startIndex = pageController.selectedIndex
+        if items.count > 1 {
+            items[min(max(pageController.selectedIndex - 1, 0), items.count - 1)].request()
+            items[min(max(pageController.selectedIndex + 1, 0), items.count - 1)].request()
+        }
     }
     
     func pageControllerDidEndLiveTransition(_ pageController: NSPageController, force:Bool) {
@@ -630,7 +642,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 let item = self.item(at: startIndex)
                 if hasInited {
                     item.appear(for: controllerView.contentView)
-
+                    
                 }
                 controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
                 magnifyDisposable.set(controllerView.magnifyUpdater.get().start(next: { [weak self] value in
@@ -722,9 +734,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 _ = self?.interactions.dismiss()
             })
             controller.view = magnify
+            if hasInited {
+                item.request()
+            }
             magnify.updateStatus(item.status)
             cache.setObject(controller, forKey: identifier as AnyObject)
-            item.request()
             return controller
         }
     }
@@ -776,6 +790,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         window.contentView?.addSubview(_next)
         captionView.change(opacity: 0, animated: false)
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = self.selectedItem {
+            item.request()
             lockedTransition = true
             if let oldView = from(item.stableId), let oldWindow = oldView.window {
                 selectedView.isHidden = true
@@ -943,6 +958,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         magnifyDisposable.dispose()
         indexDisposable.dispose()
         smartUpdaterDisposable.dispose()
+        cache.removeAllObjects()
     }
 
 }

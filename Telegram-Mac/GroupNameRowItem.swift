@@ -102,7 +102,7 @@ class GroupNameRowView : GeneralInputRowView {
         textView.frame = NSMakeRect(100, 0, frame.width - 140 ,textView.frame.height)
         textView.centerY()
         imageView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - imageView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - imageView.frame.height)/2.0))
-        sepator.frame = NSMakeRect(105, textView.frame.maxY - .borderSize, frame.width - 140, .borderSize)
+        sepator.frame = NSMakeRect(105, textView.frame.maxY + 3 - .borderSize, frame.width - 140, .borderSize)
         photoView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - photoView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - photoView.frame.height)/2.0))
         tranparentView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - tranparentView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - tranparentView.frame.height)/2.0))
 
@@ -115,7 +115,7 @@ class GroupNameRowView : GeneralInputRowView {
     override func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
         textView._change(pos: NSMakePoint(100, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - height)/2.0)), animated: animated)
         super.textViewHeightChanged(height, animated: animated)
-        sepator._change(pos: NSMakePoint(105, textView.frame.maxY - .borderSize), animated: animated)
+        sepator._change(pos: NSMakePoint(105, textView.frame.maxY + 3 - .borderSize), animated: animated)
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

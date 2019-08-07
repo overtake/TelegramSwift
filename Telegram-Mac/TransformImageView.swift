@@ -14,18 +14,7 @@ import TGUIKit
 
 private let threadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
-public final class TransformImageResult {
-    let image: CGImage?
-    let highQuality: Bool
-    init(_ image: CGImage?, _ highQuality: Bool) {
-        self.image = image
-        self.highQuality = highQuality
-    }
-    
-    deinit {
-        
-    }
-}
+
 
 open class TransformImageView: NSView {
     public var imageUpdated: ((Any?) -> Void)?

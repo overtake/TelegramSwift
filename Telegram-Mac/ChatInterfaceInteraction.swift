@@ -258,8 +258,10 @@ final class ChatInteraction : InterfaceObserver  {
                 }
                 if invoke {
                     startBot(parameter)
+                    update({
+                        $0.withoutInitialAction()
+                    })
                 }
-                
             case let .inputText(text: text, behavior: behavior):
                 var invoke:Bool = !includeAuto
                 if includeAuto {
@@ -272,6 +274,9 @@ final class ChatInteraction : InterfaceObserver  {
                 }
                 if invoke {
                     updateInput(with: text)
+                    update({
+                        $0.withoutInitialAction()
+                    })
                 }
             case let .files(list: list, behavior: behavior):
                 var invoke:Bool = !includeAuto
@@ -285,15 +290,21 @@ final class ChatInteraction : InterfaceObserver  {
                 }
                 if invoke {
                     showPreviewSender( list.map { URL(fileURLWithPath: $0) }, true, nil )
+                    update({
+                        $0.withoutInitialAction()
+                    })
                 }
             case let .forward(messageIds, text, _):
                 update(animated: animated, {$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(text != nil ? ChatTextInputState(inputText: text!) : $0.inputState)})})
+                update({
+                    $0.withoutInitialAction()
+                })
             default:
-                break
+                update({
+                    $0.withoutInitialAction()
+                })
             }
-            update({
-                $0.withoutInitialAction()
-            })
+           
         }
     }
     

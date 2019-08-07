@@ -348,7 +348,7 @@ class MainViewController: TelegramViewController {
     
     private let settingsDisposable = MetaDisposable()
     private let prefDisposable = MetaDisposable()
-    private var quickController: ViewController?
+    private weak var quickController: ViewController?
     private func showFastSettings(_ control:Control) {
         
         let passcodeData = context.sharedContext.accountManager.transaction { transaction -> PostboxAccessChallengeData in

@@ -97,7 +97,7 @@ public extension NSAttributedString {
 public extension String {
     
     
-    static func prettySized(with size:Int, afterDot: Int8 = 2) -> String {
+    static func prettySized(with size:Int, afterDot: Int8 = 1, removeToken: Bool = false) -> String {
         var converted:Double = Double(size)
         var factor:Int = 0
         
@@ -113,10 +113,18 @@ public extension String {
         }
         //factor = Swift.max(1,factor)
         
-        if ceil(converted) - converted != 0.0 {
-            return String(format: "%.\(afterDot)f %@", converted, tokens[factor])
+        if ceil(converted) - converted != 0.0 || removeToken {
+            if removeToken {
+                return String(format: "%.\(afterDot)f", converted)
+            } else {
+                return String(format: "%.\(afterDot)f %@", converted, tokens[factor])
+            }
         } else {
-            return String(format: "%.0f %@", converted, tokens[factor])
+            if removeToken {
+                return String(format: "%.0f", converted)
+            } else {
+                return String(format: "%.0f %@", converted, tokens[factor])
+            }
         }
         
     }
@@ -148,34 +156,38 @@ public extension String {
         
         
         
-        while index != copy.endIndex {
-            
-            if let idx = newLineIndexEnd {
-                let substring = copy[index..<copy.index(after: idx)]
-                let symbols = substring.filter({$0 != "\n"})
-                let newLines = substring.filter({$0 == "\n"})
-                if symbols.isEmpty {
-                    newLineIndexEnd = copy.index(after: idx)
-                } else {
-                    if newLines.utf8.count > 2 {
-                        copy = String(copy[..<index] + "\n\n" + copy[idx..<copy.endIndex])
-                        newLineIndexEnd = nil
-                        index = copy.index(after: copy.startIndex)
-                    } else {
-                        index = copy.index(after: idx)
-                        newLineIndexEnd = nil
-                    }
-                }
-            } else {
-                let first = String(copy[index..<copy.index(after: index)])
-                
-                if first == "\n" {
-                    newLineIndexEnd = copy.index(after: index)
-                } else {
-                    index = copy.index(after: index)
-                }
-            }
-            
+//        while index != copy.endIndex {
+//
+//            if let idx = newLineIndexEnd {
+//                let substring = copy[index..<copy.index(after: idx)]
+//                let symbols = substring.filter({$0 != "\n"})
+//                let newLines = substring.filter({$0 == "\n"})
+//                if symbols.isEmpty {
+//                    newLineIndexEnd = copy.index(after: idx)
+//                } else {
+//                    if newLines.utf8.count > 2 {
+//                        copy = String(copy[..<index] + "\n\n" + copy[idx..<copy.endIndex])
+//                        newLineIndexEnd = nil
+//                        index = copy.index(after: copy.startIndex)
+//                    } else {
+//                        index = copy.index(after: idx)
+//                        newLineIndexEnd = nil
+//                    }
+//                }
+//            } else {
+//                let first = String(copy[index..<copy.index(after: index)])
+//
+//                if first == "\n" {
+//                    newLineIndexEnd = copy.index(after: index)
+//                } else {
+//                    index = copy.index(after: index)
+//                }
+//            }
+//
+//        }
+        
+        while let _ = copy.range(of: "\n\n\n") {
+            copy = copy.replacingOccurrences(of: "\n\n\n", with: "\n\n")
         }
         return copy
     }

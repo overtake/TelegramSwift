@@ -66,6 +66,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     @IBOutlet weak var window: Window! {
         didSet {
             window.delegate = self
+            window.isOpaque = true
             window.initSaver()
         }
     }

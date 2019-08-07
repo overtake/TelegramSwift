@@ -295,7 +295,7 @@ class PeerListContainerView : View {
             compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - compose.frame.height)/2.0))
             proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
         }
-        searchView.setFrameOrigin(10, floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - searchView.frame.height)/2.0))
+        searchView.setFrameOrigin(10, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - searchView.frame.height)/2.0))
         tableView.setFrameOrigin(0, offset)
         
         proxyConnecting.centerX()
@@ -389,6 +389,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        let context = self.context
+
         
         layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self, case .minimisize = state {
@@ -403,7 +405,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }))
         
-        let context = self.context
         let actionsDisposable = self.actionsDisposable
         
         actionsDisposable.add((context.cancelGlobalSearch.get() |> deliverOnMainQueue).start(next: { [weak self] animated in

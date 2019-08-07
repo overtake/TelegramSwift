@@ -35,8 +35,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         autoresizesSubviews = false
      //   canDrawSubviewsIntoLayer = true
         pressureConfiguration = NSPressureConfiguration(pressureBehavior: .primaryDeepClick)
+        
+        self.canDrawSubviewsIntoLayer = true
     }
     
+
     
     open func updateColors() {
         self.layer?.backgroundColor = backdorColor.cgColor
@@ -74,7 +77,6 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
 //        ctx.fill(layer.bounds)
        // layer.draw(in: ctx)
         
-
         if let border = border {
             
             ctx.setFillColor(presentation.colors.border.cgColor)

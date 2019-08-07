@@ -126,16 +126,16 @@ class GIFPlayerView: TransformImageView {
                 
                 
                 if positionFlags.contains(.top) && positionFlags.contains(.left) {
-                    topLeftRadius = topLeftRadius * 3 + 2
+                    bottomLeftRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.top) && positionFlags.contains(.right) {
-                    topRightRadius = topRightRadius * 3 + 2
+                    bottomRightRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
-                    bottomLeftRadius = bottomLeftRadius * 3 + 2
+                    topLeftRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
-                    bottomRightRadius = bottomRightRadius * 3 + 2
+                    topRightRadius = .cornerRadius * 3 + 2
                 }
                 
                 path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)

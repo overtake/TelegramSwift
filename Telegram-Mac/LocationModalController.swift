@@ -623,8 +623,8 @@ class LocationModalController: ModalViewController {
                 switch pick {
                 case let .custom(location, _):
                     if let location = location {
-                        return .single(state) |> then(googleVenueForLatitude(location.coordinate.latitude, longitude: location.coordinate.longitude) |> map { value in
-                            return .normal(.custom(location, named: value))
+                        return .single(state) |> then(reverseGeocodeLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude) |> map { value in
+                            return .normal(.custom(location, named: value?.fullAddress))
                         })
                     }
                 default:
@@ -672,46 +672,5 @@ class LocationModalController: ModalViewController {
     
     private var genericView: LocationMapView {
         return view as! LocationMapView
-    }
-}
-
-
-private func googleVenueForLatitude(_ latitude: Double, longitude: Double) -> Signal<String?, NoError> {
-    return Signal { subscriber in
-        let string = "https://maps.googleapis.com/maps/api/geocode/json?latlng=\(latitude),\(longitude)&sensor=true&language=\(appAppearance.language.languageCode)"
-        let request = MTHttpRequestOperation.data(forHttpUrl: URL(string: string))
-        let disposable = request?.start(next: { value in
-            if let data = value as? Data {
-                let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? Dictionary<String, Any>
-                 if let results = json?["results"] as? Array<Any> {
-                    if let first = results.first as? Dictionary<String, Any> {
-                        if let components = first["address_components"] as? [Any] {
-                            for component in components {
-                                if let component = component as? [String : Any] {
-                                    let types = component["types"] as? [String]
-                                    let longName = component["long_name"] as? String
-                                    if let types = types, types.contains("route") {
-                                        subscriber.putNext(longName)
-                                        subscriber.putCompletion()
-                                        return
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-            }
-            subscriber.putNext("")
-            subscriber.putCompletion()
-        }, error: { error in
-            subscriber.putNext("")
-            subscriber.putCompletion()
-        }, completed: {
-            subscriber.putCompletion()
-        })
-        return ActionDisposable {
-            disposable?.dispose()
-        }
     }
 }

@@ -114,7 +114,6 @@ open class ScrollView: NSScrollView{
         autoresizingMask = []
         self.wantsLayer = true;
         layer?.backgroundColor = presentation.colors.background.cgColor
-
       //  verticalScrollElasticity = .automatic
         //allowsMagnification = true
         //self.hasVerticalScroller = false
@@ -122,6 +121,11 @@ open class ScrollView: NSScrollView{
        // self.scrollerStyle = .overlay
  
     }
+    
+    open override func draw(_ dirtyRect: NSRect) {
+        
+    }
+    
     
     open override func scrollWheel(with event: NSEvent) {
         guard let window = window as? Window else {

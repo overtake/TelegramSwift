@@ -137,7 +137,10 @@ class GalleryThumbsControl: ViewController {
         return UpdateTransition<MGalleryItem>(deleted: deleteIndices, inserted: indicesAndItems.map {($0.0, $0.1)}, updated: updateIndices.map {($0.0, $0.1)})
     }
     
-
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     var genericView:GalleryThumbsControlView {
         return view as! GalleryThumbsControlView

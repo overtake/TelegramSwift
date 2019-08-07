@@ -235,7 +235,7 @@ class SharedAccountContext {
                 var addedAuthSignal: Signal<UnauthorizedAccount?, NoError> = .single(nil)
                 for (id, attributes) in records {
                     if self.activeAccountsValue?.accounts.firstIndex(where: { $0.0 == id}) == nil {
-                        addedSignals.append(accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: false, rootPath: rootPath, beginWithTestingEnvironment: attributes.isTestingEnvironment, backupData: attributes.backupData, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+                        addedSignals.append(accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: supplementary, rootPath: rootPath, beginWithTestingEnvironment: attributes.isTestingEnvironment, backupData: attributes.backupData, auxiliaryMethods: telegramAccountAuxiliaryMethods)
                             |> map { result -> AddedAccountResult in
                                 switch result {
                                 case let .authorized(account):

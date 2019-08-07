@@ -268,7 +268,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         switch status {
         case let .Fetching(_, progress):
-            let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress), afterDot: 1)
+            let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress), afterDot: 1, removeToken: true)
             var size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
             if (maxWidth < 100 && parent?.groupingKey != nil) || file.elapsedSize == 0 {
                 size = "\(Int(progress * 100))%"

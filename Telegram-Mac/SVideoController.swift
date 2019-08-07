@@ -114,10 +114,15 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }))
     }
     
-    private func updateControlVisibility() {
+    private func updateControlVisibility(_ isMouseUpOrDown: Bool = false) {
         updateIdleTimer()
         if let rootView = genericView.superview?.superview {
-            hideControls.set(!genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0)
+            var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0
+            if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
+                hide = true
+                NSCursor.hide()
+            }
+            hideControls.set(hide)
         } else {
             hideControls.set(false)
         }
@@ -155,7 +160,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }, with: self, for: .mouseEntered, priority: .modal)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
-            self?.updateControlVisibility()
+            self?.updateControlVisibility(true)
             
             return .rejected
         }, with: self, for: .leftMouseDown, priority: .modal)
@@ -163,7 +168,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             
-            self.updateControlVisibility()
+            self.updateControlVisibility(true)
             self.genericView.subviews.last?.mouseUp(with: event)
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)

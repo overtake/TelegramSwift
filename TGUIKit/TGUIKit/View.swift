@@ -119,7 +119,14 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public weak var displayDelegate:ViewDisplayDelegate?
     
-    public let customHandler:CustomViewHandlers = CustomViewHandlers()
+    public var _customHandler:CustomViewHandlers?
+
+    public var customHandler:CustomViewHandlers {
+        if _customHandler == nil {
+            _customHandler = CustomViewHandlers()
+        }
+        return _customHandler!
+    }
     public var viewDidChangedEffectiveAppearance:(()->Void)? = nil
 
     
@@ -162,9 +169,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
 
     open override func layout() {
         super.layout()
-        if let layout = customHandler.layout {
-            layout(self)
-        }
+        _customHandler?.layout?(self)
     }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -248,9 +253,9 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
       //  self.layer?.drawsAsynchronously = System.drawAsync
     }
     
-    open override var wantsDefaultClipping: Bool {
-        return false
-    }
+//    open override var wantsDefaultClipping: Bool {
+//        return false
+//    }
     
     open override var translatesAutoresizingMaskIntoConstraints: Bool {
         get {
@@ -307,10 +312,8 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        
-        if let size = customHandler.size {
-            size(newSize)
-        }
+        _customHandler?.size?(newSize)
+
         guard #available(OSX 10.12, *) else {
             self.needsLayout = true
             return
@@ -348,9 +351,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin)
-        if let origin = customHandler.origin {
-            origin(newOrigin)
-        }
+        _customHandler?.origin?(newOrigin)
         guard #available(OSX 10.12, *) else {
             self.needsLayout = true
             return
@@ -410,6 +411,5 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return super.window as? Window
     }
     
-   
     
 }

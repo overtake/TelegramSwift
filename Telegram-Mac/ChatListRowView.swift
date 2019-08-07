@@ -293,6 +293,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
        // ctx.setFillColor(theme.colors.background.cgColor)
        // ctx.fill(bounds)
         super.draw(layer, in: ctx)
+        
 //
          if let item = self.item as? ChatListRowItem {
             
@@ -1171,7 +1172,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
                 let duration: Double = 0.2
 
-                
                 containerView.change(pos: NSMakePoint(leftRevealWidth, containerView.frame.minY), animated: true, duration: duration, timingFunction: .spring)
                 revealLeftView.change(size: NSMakeSize(leftRevealWidth, revealLeftView.frame.height), animated: true, duration: duration, timingFunction: .spring)
                 
@@ -1284,7 +1284,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             } else {
                 additionalDelta = 0
             }
-            
             
             containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -70 : 0, frame.width - .borderSize, 70)
             revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)

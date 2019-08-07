@@ -955,7 +955,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         }))
         
         self.genericView.tableView.setScrollHandler { [weak self] position in
-            if let `self` = self, let entries = previous.with ({ $0 }) {
+            if let `self` = self {
+                let entries = previous.with ({ $0 })
                 let index:StickerPacksIndex?
                 switch position.direction {
                 case .bottom:

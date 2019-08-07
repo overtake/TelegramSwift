@@ -510,6 +510,9 @@ class SVideoView: NSView {
         })
     }
     
+    override var isOpaque: Bool {
+        return true
+    }
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)

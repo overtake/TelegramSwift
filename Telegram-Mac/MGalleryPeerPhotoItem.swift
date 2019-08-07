@@ -27,11 +27,11 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         return NSZeroSize
     }
     
-    override func smallestValue(for size: NSSize) -> Signal<NSSize, NoError> {
+    override func smallestValue(for size: NSSize) -> NSSize {
         if let largest = media.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
-            return .single(largest.dimensions.fitted(size))
+            return largest.dimensions.fitted(size)
         }
-        return .single(pagerSize)
+        return pagerSize
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
@@ -51,25 +51,28 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         
         let result = combineLatest(size.get(), rotate.get()) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
             guard let `self` = self else {return .complete()}
-            
-            return self.smallestValue(for: size) |> map { size in
-                var newSize = size
-                if let orientation = orientation {
-                    if orientation == .right || orientation == .left {
-                        newSize = NSMakeSize(newSize.height, newSize.width)
-                    }
+            var newSize = self.smallestValue(for: size)
+            if let orientation = orientation {
+                if orientation == .right || orientation == .left {
+                    newSize = NSMakeSize(newSize.height, newSize.width)
                 }
-                return (newSize, orientation)
             }
-            
-            } |> mapToSignal { size, orientation -> Signal<CGImage?, NoError> in
+            return .single((newSize, orientation))
+         } |> mapToSignal { size, orientation -> Signal<NSImage?, NoError> in
                 return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(1280, 1280), scale: System.backingScale, synchronousLoad: true)
                     |> map { transform in
                         let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                         if let orientation = orientation {
-                            return image?.createMatchingBackingDataWithImage(orienation: orientation)
+                            let transformed = image?.createMatchingBackingDataWithImage(orienation: orientation)
+                            if let transformed = transformed {
+                                return NSImage(cgImage: transformed, size: transformed.size)
+                            }
                         }
-                        return image
+                        if let image = image {
+                            return NSImage(cgImage: image, size: image.size)
+                        } else {
+                            return nil
+                        }
                 }
         }
         

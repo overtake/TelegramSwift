@@ -286,34 +286,26 @@ private final class PlayerRenderer {
         self.release()
     }
     
-    private func with(_ f:@escaping(PlayerRenderer?)->Void) {
-        stateQueue.async { [weak self] in
-            f(self)
-        }
-    }
     
     func initializeAndPlay() {
         self.updateState(.initializing)
-        self.with({ renderer in
-            if let renderer = renderer {
-                let decompressed = TGGUnzipData(renderer.animation.compressed, 8 * 1024 * 1024)
-                let data: Data?
-                if let decompressed = decompressed {
-                    data = decompressed
-                } else {
-                    data = renderer.animation.compressed
-                }
-                if let data = data, !data.isEmpty, let json = String(data: data, encoding: .utf8) {
-                    if let bridge = RLottieBridge(json: json, key: renderer.animation.cacheKey) {
-                        renderer.play(renderer.layer.modify({_ in bridge})!)
-                    } else {
-                        self.updateState(.failed)
-                    }
-                } else {
-                    self.updateState(.failed)
-                }
+        assert(stateQueue.isCurrent())
+        let decompressed = TGGUnzipData(self.animation.compressed, 8 * 1024 * 1024)
+        let data: Data?
+        if let decompressed = decompressed {
+            data = decompressed
+        } else {
+            data = self.animation.compressed
+        }
+        if let data = data, !data.isEmpty, let json = String(data: data, encoding: .utf8) {
+            if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
+                self.play(self.layer.modify({_ in bridge})!)
+            } else {
+                self.updateState(.failed)
             }
-        })
+        } else {
+            self.updateState(.failed)
+        }
     }
     
     func playAgain() {
@@ -349,7 +341,6 @@ private final class PlayerRenderer {
             _ = stateValue.takeUnretainedValue().modify(f)
         }
         
-        var firstTask: ThreadPoolTask? = nil
         var framesTask: ThreadPoolTask? = nil
         
         var releaseState: Bool = false
@@ -359,12 +350,6 @@ private final class PlayerRenderer {
             updateState {
                 $0.cancel()
             }
-            firstTask?.cancel()
-            framesTask?.cancel()
-            
-            firstTask = nil
-            framesTask = nil
-            
             isRendering.with { value in
                 if !value {
                     stateValue.release()
@@ -372,6 +357,8 @@ private final class PlayerRenderer {
                     releaseState = true
                 }
             }
+            framesTask?.cancel()
+            framesTask = nil
         }
         
         let currentState:(_ state: Unmanaged<RenderAtomic<RendererState>>) -> RendererState = { state in
@@ -384,10 +371,10 @@ private final class PlayerRenderer {
         
         let render:()->Void = { [weak self] in
             assert(stateQueue.isCurrent())
+            var hungry: Bool = false
+            var cancelled: Bool = false
             if let renderer = self {
                 var current: RenderedFrame?
-                var hungry: Bool = false
-                var cancelled: Bool = false
                 updateState { state in
                     guard !state.frames.isEmpty else {
                         return state
@@ -413,32 +400,21 @@ private final class PlayerRenderer {
                             if current.frame == currentState(stateValue).endFrame - 1 {
                                 renderer.finished = true
                                 renderer.timer?.invalidate()
-                                firstTask?.cancel()
                                 framesTask?.cancel()
                             }
                         }
                         
                     }
                 }
-                
-                isRendering.with { isRendering in
-                    if hungry && !isRendering && !cancelled && !askedRender {
-                        askedRender = true
-                        add_frames_impl?()
-                    }
+            }
+            isRendering.with { isRendering in
+                if hungry && !isRendering && !cancelled && !askedRender {
+                    askedRender = true
+                    add_frames_impl?()
                 }
             }
         }
         
-        firstTask = ThreadPoolTask({ state in
-            stateQueue.async {
-                if !state.cancelled.with({$0}) {
-                    render()
-                } else {
-                    askedRender = false
-                }
-            }
-        })
         
         
        // var prerender: Bool = true
@@ -499,8 +475,6 @@ private final class PlayerRenderer {
         add_frames()
         
         self.timer = SwiftSignalKitMac.Timer(timeout: (1.0 / TimeInterval(fps)), repeat: true, completion: {
-            firstTask?.cancel()
-            firstTask = nil
             render()
         }, queue: stateQueue)
         
@@ -860,6 +834,7 @@ class LottiePlayerView : NSView {
         super.init(frame: frameRect)
         
     }
+    
     
     override func layout() {
         super.layout()

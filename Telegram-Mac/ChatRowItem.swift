@@ -1646,7 +1646,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
             items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
                 if peer.isSupergroup {
-                    modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
                         chatInteraction.updatePinned(message.id, false, result != .thrid)
                     })
                 } else {
