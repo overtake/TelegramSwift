@@ -395,8 +395,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         if message.media.isEmpty {
             if message.text.length <= 6 {
-                let text = message.text.fixed
-                if let item = animatedEmojiStickers[text] {
+                let original = message.text.fixed
+                let unmodified = original.emojiUnmodified
+                if let item = animatedEmojiStickers[unmodified] {
                     var file = item.file
                     var attributes = file.attributes
                     attributes.removeAll { attr in
@@ -406,7 +407,16 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                             return false
                         }
                     }
-                    attributes.append(.FileName(fileName: "animated-emoji.tgs"))
+                    attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
+                        switch attribute {
+                        case let .Sticker(_, packReference, maskData):
+                            return .Sticker(displayText: original, packReference: packReference, maskData: maskData)
+                        default:
+                            return attribute
+                        }
+                    }
+                    
+                    attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
                     file = file.withUpdatedAttributes(attributes)
                     message = message.withUpdatedMedia([file])
                 }

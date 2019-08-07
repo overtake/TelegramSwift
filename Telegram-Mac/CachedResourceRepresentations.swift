@@ -116,20 +116,53 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
-        return "animated-sticker-v1-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)"
+        let version: Int = 1
+        if let fitzModifier = self.fitzModifier {
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)"
+        } else {
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)"
+        }
     }
     let thumb: Bool
     let size: NSSize
-    init(thumb: Bool, size: NSSize) {
+    let fitzModifier: EmojiFitzModifier?
+    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil) {
         self.thumb = thumb
         self.size = size
+        self.fitzModifier = fitzModifier
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedAnimatedStickerRepresentation {
-            return self.thumb == to.thumb && self.size == to.size
+            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier
         } else {
             return false
+        }
+    }
+}
+
+
+public enum EmojiFitzModifier: Int32, Equatable {
+    case type12
+    case type3
+    case type4
+    case type5
+    case type6
+    
+    public init?(emoji: String) {
+        switch emoji.unicodeScalars.first?.value {
+        case 0x1f3fb:
+            self = .type12
+        case 0x1f3fc:
+            self = .type3
+        case 0x1f3fd:
+            self = .type4
+        case 0x1f3fe:
+            self = .type5
+        case 0x1f3ff:
+            self = .type6
+        default:
+            return nil
         }
     }
 }
