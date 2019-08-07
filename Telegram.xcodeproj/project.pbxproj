@@ -735,6 +735,7 @@
 		D0558D7C215141CF006B403D /* ChatInfoTouchbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */; };
 		D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D842152B4D3006B403D /* GalleryTouchBar.swift */; };
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
+		D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */; };
 		D0675D6B217E20B9004900A7 /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0675D6A217E20B9004900A7 /* Zip.framework */; };
 		D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D0675D6A217E20B9004900A7 /* Zip.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0675D83217F1F27004900A7 /* ArchiverContext.swift */; };
@@ -1758,6 +1759,7 @@
 		D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoTouchbar.swift; sourceTree = "<group>"; };
 		D0558D842152B4D3006B403D /* GalleryTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBar.swift; sourceTree = "<group>"; };
 		D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBarThumbItemView.swift; sourceTree = "<group>"; };
+		D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledMessageModalController.swift; sourceTree = "<group>"; };
 		D0675D6A217E20B9004900A7 /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0675D83217F1F27004900A7 /* ArchiverContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiverContext.swift; sourceTree = "<group>"; };
 		D070DB8022D3638F008A0BBE /* StickersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickersViewController.swift; sourceTree = "<group>"; };
@@ -4141,6 +4143,14 @@
 			name = gallery;
 			sourceTree = "<group>";
 		};
+		D05F392122FB448E0040F341 /* experemental */ = {
+			isa = PBXGroup;
+			children = (
+				D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */,
+			);
+			name = experemental;
+			sourceTree = "<group>";
+		};
 		D070DB7F22D36359008A0BBE /* modern-stickers */ = {
 			isa = PBXGroup;
 			children = (
@@ -4215,6 +4225,7 @@
 		D098C7171D7E175A007784E4 /* Telegram-Mac */ = {
 			isa = PBXGroup;
 			children = (
+				D05F392122FB448E0040F341 /* experemental */,
 				9FDA713020E64541001ED8ED /* media */,
 				C279824C1E72C83500262BFD /* legacy */,
 				C25F71461E410DD50046AF4E /* inapp-settings */,
@@ -5000,6 +5011,7 @@
 				C28BAB2C1DF9C2790027CE3A /* DateUtils.mm in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
 				C2A8E1481F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m in Sources */,
+				D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */,
 				C209C38D1F276D4C009231FE /* ChatSearchView.swift in Sources */,
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
 				C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */,

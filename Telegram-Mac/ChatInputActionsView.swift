@@ -413,15 +413,24 @@ class ChatInputActionsView: View, Notifable {
         
         send.set(handler: { [weak chatInteraction] control in
             if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, !peer.isSecretChat, peer.id != chatInteraction.context.account.peerId {
+                let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                     return
                 }
                 if chatInteraction.presentation.state != .normal {
                     return
                 }
-                showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
+                var items:[SPopoverItem] = []
+                
+                items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
                     chatInteraction?.sendMessage(true)
-                })]))
+                }))
+                
+                items.append(SPopoverItem("Scheduled Message", {
+                    showModal(with: ScheduledMessageModalController(context: context), for: context.window)
+                }))
+                
+                showPopover(for: control, with: SPopoverViewController(items: items))
             }
         }, for: .RightDown)
         
