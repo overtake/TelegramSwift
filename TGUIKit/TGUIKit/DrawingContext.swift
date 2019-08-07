@@ -126,7 +126,7 @@ public let deviceColorSpace: CGColorSpace = {
 
 public func generateImagePixel(_ size: CGSize, scale: CGFloat, pixelGenerator: (CGSize, UnsafeMutablePointer<UInt8>) -> Void) -> CGImage? {
     let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
-    let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
+    let bytesPerRow = 4 * Int(scaledSize.width)
     let length = bytesPerRow * Int(scaledSize.height)
     let bytes = malloc(length)!.assumingMemoryBound(to: UInt8.self)
     guard let provider = CGDataProvider(dataInfo: bytes, data: bytes, size: length, releaseData: { bytes, _, _ in
