@@ -254,7 +254,7 @@ private final class PlayerRenderer {
         }
         
         if let data = data, !data.isEmpty {
-            let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.fitzModifier)
+            let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
             if let json = String(data: modified, encoding: .utf8) {
                 if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
                     self.play(self.layer.modify({_ in bridge})!)
@@ -488,14 +488,16 @@ struct LottieAnimationEntryKey : Hashable {
     let size: CGSize
     let backingScale: Int
     let key:LottieAnimationKey
-    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale)) {
+    let fitzModifier: EmojiFitzModifier?
+    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil) {
         self.key = key
         self.size = size
         self.backingScale = backingScale
+        self.fitzModifier = fitzModifier
     }
     
     func withUpdatedBackingScale(_ backingScale: Int) -> LottieAnimationEntryKey {
-        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale)
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier)
     }
     
     func hash(into hasher: inout Hasher) {
@@ -531,14 +533,12 @@ final class LottieAnimation : Equatable {
     let cache: ASCachePurpose
     let maximumFps: Int
     let playPolicy: LottiePlayPolicy
-    let fitzModifier: EmojiFitzModifier?
-    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, fitzModifier: EmojiFitzModifier? = nil) {
+    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60) {
         self.compressed = compressed
         self.key = key
         self.cache = cachePurpose
         self.maximumFps = maximumFps
         self.playPolicy = playPolicy
-        self.fitzModifier = fitzModifier
     }
     
     var size: NSSize {
@@ -549,17 +549,17 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, fitzModifier: self.fitzModifier)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps)
     }
     
     var cacheKey: String {
         switch key.key {
-        case let .media(key):
-            if let key = key {
-                if let fitzModifier = self.fitzModifier {
-                    return "animation-\(key.namespace)-\(key.id)-fitz\(fitzModifier.rawValue)"
+        case let .media(id):
+            if let id = id {
+                if let fitzModifier = key.fitzModifier {
+                    return "animation-\(id.namespace)-\(id.id)-fitz\(fitzModifier.rawValue)"
                 } else {
-                    return "animation-\(key.namespace)-\(key.id)"
+                    return "animation-\(id.namespace)-\(id.id)"
                 }
             } else {
                 return "\(arc4random())"
