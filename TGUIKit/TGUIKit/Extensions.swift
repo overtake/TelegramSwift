@@ -1553,6 +1553,32 @@ public extension String {
         return ""
     }
     
+    var basicEmoji: (String, String?) {
+        let fitzCodes: [UInt32] = [
+            0x1f3fb,
+            0x1f3fc,
+            0x1f3fd,
+            0x1f3fe,
+            0x1f3ff
+        ]
+        
+        var string = ""
+        var fitzModifier: String?
+        for scalar in self.unicodeScalars {
+            if fitzCodes.contains(scalar.value) {
+                fitzModifier = String(scalar)
+                continue
+            }
+            string.unicodeScalars.append(scalar)
+            if scalar.value == 0x2764, self.unicodeScalars.count > 1, self.emojis.count == 1 {
+                break
+            }
+        }
+        return (string, fitzModifier)
+    }
+    
+
+    
     var canHaveSkinToneModifier: Bool {
         if self.isEmpty {
             return false

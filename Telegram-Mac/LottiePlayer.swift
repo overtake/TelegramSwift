@@ -49,52 +49,7 @@ final class RenderAtomic<T> {
 let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 private let stateQueue = Queue()
 
-//private struct RenderLoop {
-//    let fps: Int
-//    let action: ()->Void
-//    init(fps: Int, action: @escaping()->Void) {
-//        self.fps = fps
-//        self.action = action
-//    }
-//}
-//private final class RenderTimer {
-//    private var loopTimers: [Int : SwiftSignalKitMac.Timer]
-//
-//    private var loops: [RenderLoop] = []
-//    init() {
-//        assert(stateQueue.isCurrent())
-//    }
-//
-//    func add(loop: RenderLoop) {
-//        assert(stateQueue.isCurrent())
-//        loops.append(loop)
-//
-//    }
-//
-//    private func start() {
-//        self.loop60 = SwiftSignalKitMac.Timer(timeout: TimeInterval(1000) / TimeInterval(60), repeat: true, completion: { [weak self] in
-//            if let `self` = self {
-//                for loop in self.loops {
-//                    loop.action()
-//                }
-//            }
-//        }, queue: stateQueue)
-//
-//        self.loop30 = SwiftSignalKitMac.Timer(timeout: TimeInterval(1000) / TimeInterval(60), repeat: true, completion: { [weak self] in
-//            if let `self` = self {
-//                for loop in self.loops {
-//                    loop.action()
-//                }
-//            }
-//        }, queue: stateQueue)
-//
-//        self.loop30?.start()
-//    }
-//
-//    deinit {
-//        assert(stateQueue.isCurrent())
-//    }
-//}
+
 
 enum LottiePlayerState : Equatable {
     case initializing
@@ -297,9 +252,15 @@ private final class PlayerRenderer {
         } else {
             data = self.animation.compressed
         }
-        if let data = data, !data.isEmpty, let json = String(data: data, encoding: .utf8) {
-            if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
-                self.play(self.layer.modify({_ in bridge})!)
+        
+        if let data = data, !data.isEmpty {
+            let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.fitzModifier)
+            if let json = String(data: modified, encoding: .utf8) {
+                if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
+                    self.play(self.layer.modify({_ in bridge})!)
+                } else {
+                    self.updateState(.failed)
+                }
             } else {
                 self.updateState(.failed)
             }
@@ -570,12 +531,14 @@ final class LottieAnimation : Equatable {
     let cache: ASCachePurpose
     let maximumFps: Int
     let playPolicy: LottiePlayPolicy
-    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60) {
+    let fitzModifier: EmojiFitzModifier?
+    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, fitzModifier: EmojiFitzModifier? = nil) {
         self.compressed = compressed
         self.key = key
         self.cache = cachePurpose
         self.maximumFps = maximumFps
         self.playPolicy = playPolicy
+        self.fitzModifier = fitzModifier
     }
     
     var size: NSSize {
@@ -586,14 +549,18 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, fitzModifier: self.fitzModifier)
     }
     
     var cacheKey: String {
         switch key.key {
         case let .media(key):
             if let key = key {
-                return "animation-\(key.namespace)-\(key.id)"
+                if let fitzModifier = self.fitzModifier {
+                    return "animation-\(key.namespace)-\(key.id)-fitz\(fitzModifier.rawValue)"
+                } else {
+                    return "animation-\(key.namespace)-\(key.id)"
+                }
             } else {
                 return "\(arc4random())"
             }

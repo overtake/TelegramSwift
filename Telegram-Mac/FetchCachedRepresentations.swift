@@ -160,7 +160,7 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                     if dataValue == nil {
                         dataValue = data
                     }
-                    if let json = String(data: dataValue, encoding: .utf8), json.length > 0 {
+                    if let json = String(data: transformedWithFitzModifier(data: dataValue, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
                         let rlottie = RLottieBridge(json: json, key: resourceData.path)
                         
                         let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
@@ -207,7 +207,7 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                 umnanaged?.release()
                 
                 if image == nil, let data = TGGUnzipData(data, 8 * 1024 * 1024) {
-                    if let json = String(data: data, encoding: .utf8), json.length > 0 {
+                    if let json = String(data: transformedWithFitzModifier(data: data, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
                         let rlottie = RLottieBridge(json: json, key: resourceData.path)
                         let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
                         image = unmanaged?.takeRetainedValue()
