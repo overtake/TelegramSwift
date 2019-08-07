@@ -106,6 +106,7 @@
 		C2E869511F4449A700BDD0A2 /* GridItemNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E869501F4449A700BDD0A2 /* GridItemNode.swift */; };
 		C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */; };
 		D0558D8221528DF5006B403D /* ModalTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D8121528DF5006B403D /* ModalTouchBar.swift */; };
+		D05F392022FB37920040F341 /* DatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F391F22FB37920040F341 /* DatePicker.swift */; };
 		D0BEB9922163C1F00055B718 /* SelectionRectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9912163C1F00055B718 /* SelectionRectView.swift */; };
 /* End PBXBuildFile section */
 
@@ -215,6 +216,7 @@
 		C2E869501F4449A700BDD0A2 /* GridItemNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridItemNode.swift; sourceTree = "<group>"; };
 		C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressContainerView.swift; sourceTree = "<group>"; };
 		D0558D8121528DF5006B403D /* ModalTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalTouchBar.swift; sourceTree = "<group>"; };
+		D05F391F22FB37920040F341 /* DatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePicker.swift; sourceTree = "<group>"; };
 		D0BEB9912163C1F00055B718 /* SelectionRectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionRectView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -451,6 +453,7 @@
 		C2E0DEA91D7EF51C00EF1C8D /* TGUIKit */ = {
 			isa = PBXGroup;
 			children = (
+				D05F391E22FB377E0040F341 /* date */,
 				9FC76CAB20DBDD370050CE3B /* segment */,
 				C2449A0F1F0E475200DF5650 /* thrid-party */,
 				C2B9BE831EFC373200D6B96F /* presentation */,
@@ -520,6 +523,14 @@
 				D0558D8121528DF5006B403D /* ModalTouchBar.swift */,
 			);
 			name = touchbar;
+			sourceTree = "<group>";
+		};
+		D05F391E22FB377E0040F341 /* date */ = {
+			isa = PBXGroup;
+			children = (
+				D05F391F22FB37920040F341 /* DatePicker.swift */,
+			);
+			name = date;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -688,6 +699,7 @@
 				C2B1A1251DA2F3DC00ACB1DD /* ContextMenu.swift in Sources */,
 				C224A72B1EB7581500F43F3F /* MajorNavigationController.swift in Sources */,
 				C2B1A1301DA53E7D00ACB1DD /* BackNavigationBar.swift in Sources */,
+				D05F392022FB37920040F341 /* DatePicker.swift in Sources */,
 				C2303E761D996E6300098E12 /* ImageButton.swift in Sources */,
 				C226741B1DBCD6E8000BA9ED /* GridNode.swift in Sources */,
 				C2CBCABD1D814D4B00142EC0 /* System.swift in Sources */,
