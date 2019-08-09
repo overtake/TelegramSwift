@@ -66,6 +66,7 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
     
     private var previousAccept: Bool = false
     
+    
     @objc func updatePlayerIfNeeded() {
         let accept = ((self.window != nil && self.window!.isKeyWindow) || (self.window != nil && !(self.window is Window))) && !NSIsEmptyRect(self.visibleRect) && !self.isDynamicContentLocked && self.sticker != nil
                 
@@ -76,6 +77,16 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
         if accept && self.sticker != nil {
             nextForceAccept = false
         }
+        
+        if let sticker = self.sticker, previousAccept {
+            switch sticker.playPolicy {
+            case .once:
+                return
+            default:
+                break
+            }
+        }
+        
         if previousAccept != accept {
             self.playThrottleDisposable.set(signal.start(next: { [weak self] in
                 guard let `self` = self else {
@@ -86,6 +97,8 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
             }))
         }
         previousAccept = accept
+        
+        
     }
     
     private var nextForceAccept: Bool = false
