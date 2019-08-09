@@ -583,6 +583,7 @@ class SVideoView: NSView {
             guard let `self` = self else {return}
             if let status = self.status {
                 self.interactions?.scrobbling(value != nil ? status.duration * Double(value!) : nil)
+                self.setCurrentScrubblingState(self.currentPreviewState)
             }
         }
         
@@ -660,7 +661,10 @@ class SVideoView: NSView {
         previewView?.setFrameSize(initialedSize.aspectFitted(NSMakeSize(200, 200)))
     }
     
-    func setCurrentScrubblingState(_ state: MediaPlayerFramePreviewResult) {
+    private var currentPreviewState: MediaPlayerFramePreviewResult?
+    
+    func setCurrentScrubblingState(_ state: MediaPlayerFramePreviewResult?) {
+        self.currentPreviewState = state
         guard let previewView = self.previewView, let window = self.window, let status = self.status, !self.controls.isHidden else {
             self.previewView?.removeFromSuperview()
             self.previewView = nil
@@ -668,14 +672,16 @@ class SVideoView: NSView {
         }
         let point = self.controls.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         
-        switch state {
-        case let .image(image):
-            previewView.imageView.image = image
-            previewView.imageView.isHidden = false
-        case .waitingForData:
-            previewView.imageView.image = nil
-            previewView.imageView.isHidden = true
+        if let state = currentPreviewState {
+            switch state {
+            case let .image(image):
+                previewView.imageView.image = image
+                previewView.imageView.isHidden = false
+            case .waitingForData:
+                break
+            }
         }
+        
         
         let progressPoint = NSMakePoint(max(0, min(point.x, self.controls.progress.frame.width)), 0)
         let converted = self.convert(progressPoint, from: self.controls.progress)
@@ -700,5 +706,6 @@ class SVideoView: NSView {
     func hideScrubblerPreviewIfNeeded() {
         previewView?.removeFromSuperview()
         previewView = nil
+        self.currentPreviewState = nil
     }
 }

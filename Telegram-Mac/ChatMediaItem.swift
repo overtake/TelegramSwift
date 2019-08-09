@@ -20,6 +20,23 @@ class ChatMediaLayoutParameters : Equatable {
     let presentation: ChatMediaPresentation
     let media: Media
     
+    
+    private var _timeCodeInitializer: Double? = nil
+
+    var timeCodeInitializer:Double? {
+        let current = self._timeCodeInitializer
+        self._timeCodeInitializer = nil
+        return current
+    }
+    
+    func remove_timeCodeInitializer() {
+        self._timeCodeInitializer = nil
+    }
+    
+    func set_timeCodeInitializer(_ timecode: Double?) {
+        self._timeCodeInitializer = timecode
+    }
+    
     private var _automaticDownload: Bool
     
     var automaticDownload: Bool {
@@ -300,6 +317,22 @@ class ChatMediaItem: ChatRowItem {
             canAddCaption = false
         }
         
+        self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
+            guard let `self` = self else {return}
+            
+            var type:GalleryAppearType = .history
+            if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
+                type = .alone
+            } else if message.containsSecretMedia {
+                type = .secret
+            }
+            showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type)
+            
+            }, showMessage: { [weak self] message in
+                self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
+        
+        
         if !message.text.isEmpty, canAddCaption {
             
             
@@ -330,9 +363,18 @@ class ChatMediaItem: ChatRowItem {
                     break
                 }
             }
-            caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
-            if hasEntities {
-                caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
+            var mediaDuration: Double? = nil
+            if let file = message.media.first as? TelegramMediaFile, let duration = file.duration {
+                mediaDuration = Double(duration)
+            }
+            
+            caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
+                self?.parameters?.set_timeCodeInitializer(timecode)
+                self?.parameters?.showMedia(message)
+            }).mutableCopy() as! NSMutableAttributedString
+            
+            if !hasEntities {
+                caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
             captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false)
             
@@ -368,21 +410,7 @@ class ChatMediaItem: ChatRowItem {
         }
         
         
-        self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
-            guard let `self` = self else {return}
-            
-            var type:GalleryAppearType = .history
-            if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
-                type = .alone
-            } else if message.containsSecretMedia {
-                type = .secret
-            }
-            showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type)
-            
-        }, showMessage: { [weak self] message in
-            self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
-        }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
-        
+
         
         if isBubbleFullFilled  {
             var positionFlags: LayoutPositionFlags = []

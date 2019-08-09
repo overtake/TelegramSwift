@@ -67,6 +67,11 @@ private enum PhotoCacheKeyEntry : Hashable {
             }
             if let media = media as? TelegramMediaFile {
                 addition += "\(media.resource.id.uniqueId)-\(String(describing: media.resource.size))"
+                #if !SHARE
+                if let fitz = media.animatedEmojiFitzModifier {
+                    addition += "fitz-\(fitz.rawValue)"
+                }
+                #endif
             }
             return "media-\(String(describing: media.id?.id))-\(transform.imageSize.width)-\(transform.imageSize.height)-\(transform.boundingSize.width)-\(transform.boundingSize.height)-\(scale)-\(String(describing: layout?.rawValue))-\(addition)".nsstring
         case let .messageId(stableId, transform, scale, layout):

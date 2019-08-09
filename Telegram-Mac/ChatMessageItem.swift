@@ -139,7 +139,9 @@ class ChatMessageItem: ChatRowItem {
                 _ = attr.append(string: L10n.chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
+                
+                
+                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), timecode: { _ in }).mutableCopy() as! NSMutableAttributedString
 
                 messageAttr.fixUndefinedEmojies()
                 
@@ -651,11 +653,11 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxyServerSettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode ) -> NSAttributedString {
-        var entities: TextEntitiesMessageAttribute?
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxyServerSettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void) -> NSAttributedString {
+        var entities: [MessageTextEntity] = []
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
-                entities = attribute
+                entities = attribute.entities
                 break
             }
         }
@@ -665,94 +667,110 @@ class ChatMessageItem: ChatRowItem {
 
         
         let string = NSMutableAttributedString(string: text, attributes: [NSAttributedString.Key.font: NSFont.normal(fontSize), NSAttributedString.Key.foregroundColor: textColor])
-        if let entities = entities {
-            var nsString: NSString?
-            for entity in entities.entities {
-                let range = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
-
-                switch entity.type {
-                case .Url:
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
-                    if nsString == nil {
-                        nsString = text as NSString
-                    }
-                    let link = inApp(for:nsString!.substring(with: range) as NSString, context:context, openInfo:openInfo, applyProxy: applyProxy)
-                    string.addAttribute(NSAttributedString.Key.link, value: link, range: range)
-                case .Email:
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
-                    if nsString == nil {
-                        nsString = text as NSString
-                    }
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: "mailto:\(nsString!.substring(with: range))", false), range: range)
-                case let .TextUrl(url):
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
-                    if nsString == nil {
-                        nsString = text as NSString
-                    }
-                    
-                    string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
-                case .Bold:
-                    if let fontAttribute = fontAttributes[range] {
-                        fontAttributes[range] = fontAttribute.union(.bold)
-                    } else {
-                        fontAttributes[range] = .bold
-                    }
-                case .Italic:
-                    if let fontAttribute = fontAttributes[range] {
-                        fontAttributes[range] = fontAttribute.union(.italic)
-                    } else {
-                        fontAttributes[range] = .italic
-                    }
-                case .Mention:
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
-                    if nsString == nil {
-                        nsString = text as NSString
-                    }
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(link: nsString!.substring(with: range), username: nsString!.substring(with: range), postId:nil, context:context, action:nil, callback: openInfo), range: range)
-                case let .TextMention(peerId):
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
-                case .BotCommand:
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: textColor, range: range)
-                    if nsString == nil {
-                        nsString = text as NSString
-                    }
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
-                case .Code:
-                    string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                    if let fontAttribute = fontAttributes[range] {
-                        fontAttributes[range] = fontAttribute.union(.monospace)
-                    } else {
-                        fontAttributes[range] = .monospace
-                    }
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
-                        copyToClipboard(link)
-                        context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
-                    }), range: range)
-                case  .Pre:
-                    string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                    if let fontAttribute = fontAttributes[range] {
-                        fontAttributes[range] = fontAttribute.union(.monospace)
-                    } else {
-                        fontAttributes[range] = .monospace
-                    }
-                    string.addAttribute(.preformattedPre, value: 4.0, range: range)
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
-                case .Hashtag:
-                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
-                    if nsString == nil {
-                        nsString = text as NSString
-                    }
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
-                case .Strikethrough:
-                    string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
-                case .Underline:
-                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
-                default:
-                    break
+        
+        let new = addLocallyGeneratedEntities(text, enabledTypes: [.timecode], entities: entities, mediaDuration: mediaDuration)
+        var nsString: NSString?
+        
+        guard let localEntities = new else {
+            return string
+        }
+        
+        for entity in localEntities {
+            let range = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
+            
+            switch entity.type {
+            case .Url:
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                if nsString == nil {
+                    nsString = text as NSString
                 }
+                let link = inApp(for:nsString!.substring(with: range) as NSString, context:context, openInfo:openInfo, applyProxy: applyProxy)
+                string.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+            case .Email:
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                if nsString == nil {
+                    nsString = text as NSString
+                }
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: "mailto:\(nsString!.substring(with: range))", false), range: range)
+            case let .TextUrl(url):
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                if nsString == nil {
+                    nsString = text as NSString
+                }
+                
+                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
+            case .Bold:
+                if let fontAttribute = fontAttributes[range] {
+                    fontAttributes[range] = fontAttribute.union(.bold)
+                } else {
+                    fontAttributes[range] = .bold
+                }
+            case .Italic:
+                if let fontAttribute = fontAttributes[range] {
+                    fontAttributes[range] = fontAttribute.union(.italic)
+                } else {
+                    fontAttributes[range] = .italic
+                }
+            case .Mention:
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                if nsString == nil {
+                    nsString = text as NSString
+                }
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(link: nsString!.substring(with: range), username: nsString!.substring(with: range), postId:nil, context:context, action:nil, callback: openInfo), range: range)
+            case let .TextMention(peerId):
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
+            case .BotCommand:
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: textColor, range: range)
+                if nsString == nil {
+                    nsString = text as NSString
+                }
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
+            case .Code:
+                string.addAttribute(.preformattedCode, value: 4.0, range: range)
+                if let fontAttribute = fontAttributes[range] {
+                    fontAttributes[range] = fontAttribute.union(.monospace)
+                } else {
+                    fontAttributes[range] = .monospace
+                }
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
+                    copyToClipboard(link)
+                    context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
+                }), range: range)
+            case  .Pre:
+                string.addAttribute(.preformattedCode, value: 4.0, range: range)
+                if let fontAttribute = fontAttributes[range] {
+                    fontAttributes[range] = fontAttribute.union(.monospace)
+                } else {
+                    fontAttributes[range] = .monospace
+                }
+                string.addAttribute(.preformattedPre, value: 4.0, range: range)
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
+            case .Hashtag:
+                string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                if nsString == nil {
+                    nsString = text as NSString
+                }
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
+            case .Strikethrough:
+                string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
+            case .Underline:
+                string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+            case let .Custom(type):
+                if type == ApplicationSpecificEntityType.Timecode {
+                    string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                    if nsString == nil {
+                        nsString = text as NSString
+                    }
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(nsString!.substring(with: range), { code in
+                        timecode(parseTimecodeString(code))
+                    }), range: range)
+
+                }
+            default:
+                break
             }
         }
         for (range, fontAttributes) in fontAttributes {
