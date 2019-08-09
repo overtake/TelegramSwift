@@ -832,6 +832,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         selectedView.isHidden = false
                         selectedView.swapView(selectedView.contentView)
                         self?.lockedTransition = false
+                        self?.hasInited = true
+                        self?.selectedItem?.appear(for: selectedView.contentView)
                         if let completion = completion {
                             completion()
                             self?.window.applyResponderIfNeeded()

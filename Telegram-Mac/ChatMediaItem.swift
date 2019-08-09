@@ -364,7 +364,7 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             var mediaDuration: Double? = nil
-            if let file = message.media.first as? TelegramMediaFile, let duration = file.duration {
+            if let file = message.media.first as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                 mediaDuration = Double(duration)
             }
             

@@ -455,7 +455,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                 
                 
                 if let fullSizeImage = fullSizeImage {
-                    c.interpolationQuality = .low
+                    c.interpolationQuality = .medium
                     c.draw(fullSizeImage, in: fittedRect)
                 }
                 

@@ -62,9 +62,9 @@ private final class GAVPlayer : AVPlayer {
         }
         NotificationCenter.default.addObserver(self, selector: #selector(playerDidEnd(_:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
         
-        item?.addObserver(self, forKeyPath: "playbackBufferEmpty", options: [.new, .initial], context: nil)
-        item?.addObserver(self, forKeyPath: "playbackLikelyToKeepUp", options: [.new, .initial], context: nil)
-        item?.addObserver(self, forKeyPath: "playbackBufferFull", options: [.new, .initial], context: nil)
+        item?.addObserver(self, forKeyPath: "playbackBufferEmpty", options: [.new], context: nil)
+        item?.addObserver(self, forKeyPath: "playbackLikelyToKeepUp", options: [.new], context: nil)
+        item?.addObserver(self, forKeyPath: "playbackBufferFull", options: [.new], context: nil)
     }
     
     override init() {
@@ -83,21 +83,10 @@ private final class GAVPlayer : AVPlayer {
             if #available(OSX 10.12, *) {
                 _playerState.set(AVPlayerState(self))
             }
-            //  Status is not unknown
-            
         }
         
-        if object is AVPlayerItem {
-            switch keyPath {
-            case "playbackBufferEmpty":
-                bufferingValue.set(true)
-            case "playbackLikelyToKeepUp":
-                 bufferingValue.set(false)
-            case "playbackBufferFull":
-                 bufferingValue.set(false)
-            default:
-                break
-            }
+        if let item = object as? AVPlayerItem {
+            bufferingValue.set(!item.isPlaybackLikelyToKeepUp)
         }
     }
     
