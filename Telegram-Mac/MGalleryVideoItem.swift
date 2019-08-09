@@ -75,6 +75,7 @@ class MGalleryVideoItem: MGalleryItem {
         
         controller.play(startTime)
         controller.viewDidAppear(false)
+        self.startTime = 0
     }
     
     override var maxMagnify: CGFloat {

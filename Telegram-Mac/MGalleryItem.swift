@@ -193,7 +193,7 @@ enum GalleryEntry : Comparable, Identifiable {
     var webpage: TelegramMediaWebpage? {
         switch self {
         case let .message(entry):
-            return entry.message!.media[0] as! TelegramMediaWebpage
+            return entry.message!.media[0] as? TelegramMediaWebpage
         case let .instantMedia(media, _):
             return media.media as? TelegramMediaWebpage
         default:
