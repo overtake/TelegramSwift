@@ -49,52 +49,7 @@ final class RenderAtomic<T> {
 let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 private let stateQueue = Queue()
 
-//private struct RenderLoop {
-//    let fps: Int
-//    let action: ()->Void
-//    init(fps: Int, action: @escaping()->Void) {
-//        self.fps = fps
-//        self.action = action
-//    }
-//}
-//private final class RenderTimer {
-//    private var loopTimers: [Int : SwiftSignalKitMac.Timer]
-//
-//    private var loops: [RenderLoop] = []
-//    init() {
-//        assert(stateQueue.isCurrent())
-//    }
-//
-//    func add(loop: RenderLoop) {
-//        assert(stateQueue.isCurrent())
-//        loops.append(loop)
-//
-//    }
-//
-//    private func start() {
-//        self.loop60 = SwiftSignalKitMac.Timer(timeout: TimeInterval(1000) / TimeInterval(60), repeat: true, completion: { [weak self] in
-//            if let `self` = self {
-//                for loop in self.loops {
-//                    loop.action()
-//                }
-//            }
-//        }, queue: stateQueue)
-//
-//        self.loop30 = SwiftSignalKitMac.Timer(timeout: TimeInterval(1000) / TimeInterval(60), repeat: true, completion: { [weak self] in
-//            if let `self` = self {
-//                for loop in self.loops {
-//                    loop.action()
-//                }
-//            }
-//        }, queue: stateQueue)
-//
-//        self.loop30?.start()
-//    }
-//
-//    deinit {
-//        assert(stateQueue.isCurrent())
-//    }
-//}
+
 
 enum LottiePlayerState : Equatable {
     case initializing
@@ -297,9 +252,15 @@ private final class PlayerRenderer {
         } else {
             data = self.animation.compressed
         }
-        if let data = data, !data.isEmpty, let json = String(data: data, encoding: .utf8) {
-            if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
-                self.play(self.layer.modify({_ in bridge})!)
+        
+        if let data = data, !data.isEmpty {
+            let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
+            if let json = String(data: modified, encoding: .utf8) {
+                if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
+                    self.play(self.layer.modify({_ in bridge})!)
+                } else {
+                    self.updateState(.failed)
+                }
             } else {
                 self.updateState(.failed)
             }
@@ -527,14 +488,16 @@ struct LottieAnimationEntryKey : Hashable {
     let size: CGSize
     let backingScale: Int
     let key:LottieAnimationKey
-    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale)) {
+    let fitzModifier: EmojiFitzModifier?
+    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil) {
         self.key = key
         self.size = size
         self.backingScale = backingScale
+        self.fitzModifier = fitzModifier
     }
     
     func withUpdatedBackingScale(_ backingScale: Int) -> LottieAnimationEntryKey {
-        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale)
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier)
     }
     
     func hash(into hasher: inout Hasher) {
@@ -591,9 +554,13 @@ final class LottieAnimation : Equatable {
     
     var cacheKey: String {
         switch key.key {
-        case let .media(key):
-            if let key = key {
-                return "animation-\(key.namespace)-\(key.id)"
+        case let .media(id):
+            if let id = id {
+                if let fitzModifier = key.fitzModifier {
+                    return "animation-\(id.namespace)-\(id.id)-fitz\(fitzModifier.rawValue)"
+                } else {
+                    return "animation-\(id.namespace)-\(id.id)"
+                }
             } else {
                 return "\(arc4random())"
             }

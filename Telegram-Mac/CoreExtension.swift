@@ -392,8 +392,21 @@ public extension TelegramMediaFile {
     }
     
     var isEmojiAnimatedSticker: Bool {
-        return fileName == "animated-emoji.tgs"
+        if let fileName = fileName {
+            return fileName.hasPrefix("telegram-animoji") && fileName.hasSuffix("tgs") && isSticker
+        }
+        return false
     }
+    
+    var animatedEmojiFitzModifier: EmojiFitzModifier? {
+        if isEmojiAnimatedSticker, let fitz = self.stickerText?.basicEmoji.1 {
+            return EmojiFitzModifier(emoji: fitz)
+        } else {
+            return nil
+        }
+    }
+    
+    
     
     var musicText:(String,String) {
         

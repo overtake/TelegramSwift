@@ -771,6 +771,7 @@
 		D0CD309822197E62005D23DD /* FFMpegGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD309722197E62005D23DD /* FFMpegGlobals.m */; };
 		D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */ = {isa = PBXBuildFile; fileRef = D0D71385227ADE9400EC88B1 /* maccheck.json */; };
 		D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D752C722F8A76100E2CB74 /* Geocoding.swift */; };
+		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
 /* End PBXBuildFile section */
 
@@ -1798,6 +1799,7 @@
 		D0CD309722197E62005D23DD /* FFMpegGlobals.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FFMpegGlobals.m; sourceTree = "<group>"; };
 		D0D71385227ADE9400EC88B1 /* maccheck.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = maccheck.json; sourceTree = "<group>"; };
 		D0D752C722F8A76100E2CB74 /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
+		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
 		D0FFCEBD215A7CB700995AFE /* emoji14.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji14.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -3818,6 +3820,7 @@
 				9F0367EF227208E000456348 /* QRCode.swift */,
 				D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */,
 				D0276B7C22BD6511003155D8 /* DisplayLink.swift */,
+				D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -4707,6 +4710,7 @@
 				9F17E5BB212F191F00C25A65 /* AutoNightThemePreferences.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				9F0F8E82226DCD1C00A97F6A /* OpmizeDatabaseView.swift in Sources */,
+				D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */,
 				9F0367F72273260A00456348 /* ArchiveTooltipController.swift in Sources */,
 				9F21A7D321C167000037784F /* InstantPageImageItem.swift in Sources */,
 				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,
