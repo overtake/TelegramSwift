@@ -247,8 +247,8 @@ open class Control: View {
         }
         
         if userInteractionEnabled {
-            send(event: .Down)
             updateState()
+            send(event: .Down)
             let point = event.locationInWindow
             let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.35, queue: Queue.mainQueue())).start(next: { [weak self] in
                 if let inside = self?.mouseInside(), inside, let wPoint = self?.window?.mouseLocationOutsideOfEventStream, NSPointInRect(point, NSMakeRect(wPoint.x - 2, wPoint.y - 2, 4, 4)) {

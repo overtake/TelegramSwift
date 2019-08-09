@@ -2168,14 +2168,22 @@ func quadraticEaseOut <T: FloatingPoint> (_ x: T) -> T {
 
 extension Date {
     var startOfDay: Date {
-        return Calendar.current.startOfDay(for: self)
+        var calendar = NSCalendar.current
+        return calendar.startOfDay(for: self)
+    }
+    
+    var startOfDayUTC: Date {
+        var calendar = NSCalendar.current
+        calendar.timeZone = TimeZone(abbreviation: "UTC")!
+        return calendar.startOfDay(for: self)
     }
     
     var endOfDay: Date {
         var components = DateComponents()
         components.day = 1
         components.second = -1
-        return Calendar.current.date(byAdding: components, to: startOfDay)!
+        var calendar = NSCalendar.current
+        return calendar.date(byAdding: components, to: startOfDay)!
     }
     
     var startOfMonth: Date {

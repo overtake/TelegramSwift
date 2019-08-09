@@ -10,9 +10,9 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 class SPopoverRowItem: TableRowItem {
-
+    private let _height: CGFloat
     override var height: CGFloat {
-        return 40
+        return _height
     }
     
     private var unique:Int64
@@ -34,8 +34,9 @@ class SPopoverRowItem: TableRowItem {
         return SPopoverRowView.self
     }
     let alignAsImage: Bool
-    init(_ initialSize:NSSize, image:CGImage? = nil, alignAsImage: Bool, title:String, textColor: NSColor, clickHandler:@escaping() ->Void = {}) {
+    init(_ initialSize:NSSize, height: CGFloat, image:CGImage? = nil, alignAsImage: Bool, title:String, textColor: NSColor, clickHandler:@escaping() ->Void = {}) {
         self.image = image
+        self._height = height
         self.alignAsImage = alignAsImage
         self.title = TextViewLayout(.initialize(string: title, color: textColor, font: .normal(.title)))
         self.activeTitle = TextViewLayout(.initialize(string: title, color: .white, font: .normal(.title)))

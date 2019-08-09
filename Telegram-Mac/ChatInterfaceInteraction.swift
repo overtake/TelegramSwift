@@ -15,9 +15,9 @@ import MapKit
 
 
 final class ReplyMarkupInteractions {
-    let proccess:(ReplyMarkupButton, (Bool)->Void) -> Void
+    let proccess:(ReplyMarkupButton, @escaping(Bool)->Void) -> Void
     
-    init(proccess:@escaping (ReplyMarkupButton, (Bool)->Void)->Void) {
+    init(proccess:@escaping (ReplyMarkupButton, @escaping(Bool)->Void)->Void) {
         self.proccess = proccess
     }
     
@@ -136,6 +136,10 @@ final class ChatInteraction : InterfaceObserver  {
     var openDiscussion:()->Void = { }
     var addContact:()->Void = {}
     var blockContact: ()->Void = {}
+    
+    var updateReactions: (MessageId, [String], @escaping(Bool)->Void)->Void = { _, _, _ in }
+
+    
     let loadingMessage: Promise<Bool> = Promise()
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     

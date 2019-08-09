@@ -270,6 +270,14 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return super._mouseInside()
     }
     
+    open override func hitTest(_ point: NSPoint) -> NSView? {
+        if isEventLess {
+            return nil
+        } else {
+            return super.hitTest(point)
+        }
+    }
+    
     open func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion:((Bool)->Void)? = nil) -> Void  {
         super._change(pos: position, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
     }

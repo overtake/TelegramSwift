@@ -1331,13 +1331,14 @@ public class TextView: Control, NSViewToolTipOwner {
         }
         if !userInteractionEnabled {
             super.mouseDown(with: event)
-        } else if let layout = layout {
-            let point = self.convert(event.locationInWindow, from: nil)
-            let index = layout.findIndex(location: point)
-            if point.x > layout.lines[index].frame.maxX {
-                superview?.mouseDown(with: event)
-            }
         }
+//        else if let layout = layout {
+//            let point = self.convert(event.locationInWindow, from: nil)
+//            let index = layout.findIndex(location: point)
+//            if point.x > layout.lines[index].frame.maxX {
+//                superview?.mouseDown(with: event)
+//            }
+//        }
         
         _mouseDown(with: event)
         
