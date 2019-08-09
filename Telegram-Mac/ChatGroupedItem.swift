@@ -14,7 +14,7 @@ import SwiftSignalKitMac
 
 class ChatGroupedItem: ChatRowItem {
 
-    fileprivate var parameters: ChatMediaGalleryParameters?
+    fileprivate(set) var parameters: ChatMediaGalleryParameters?
     fileprivate let layout: GroupedLayout
     
     override var messages: [Message] {
