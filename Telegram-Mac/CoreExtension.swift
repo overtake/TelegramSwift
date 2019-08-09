@@ -2655,3 +2655,29 @@ func animatedEmojiResource(emoji: String) -> (LocalBundleResource, CGFloat)? {
         return nil
     }
 }
+
+
+extension TelegramMediaWebpageLoadedContent {
+    func withUpdatedYoutubeTimecode(_ timecode: Double) -> TelegramMediaWebpageLoadedContent {
+        var newUrl = self.url
+        if let range = self.url.range(of: "t=") {
+            let substr = String(newUrl[range.upperBound...])
+            var parsed: String = ""
+            for char in substr {
+                if "0987654321".contains(char) {
+                    parsed += String(char)
+                } else {
+                    break
+                }
+            }
+            newUrl = newUrl.replacingOccurrences(of: parsed, with: "\(timecode)", options: .caseInsensitive, range: range.lowerBound ..< newUrl.endIndex)
+        } else {
+            if url.contains("?") {
+                newUrl = self.url + "&t=\(timecode)"
+            } else {
+                newUrl = self.url + "?t=\(timecode)"
+            }
+        }
+        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, instantPage: self.instantPage)
+    }
+}

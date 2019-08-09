@@ -18,6 +18,8 @@ class ChatMessageItem: ChatRowItem {
     public private(set) var messageText:NSAttributedString
     public private(set) var textLayout:TextViewLayout
     
+    private let youtubeExternalLoader = MetaDisposable()
+    
     override var selectableLayout:[TextViewLayout] {
         return [textLayout]
     }
@@ -132,6 +134,7 @@ class ChatMessageItem: ChatRowItem {
             
             let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
 
+            var openSpecificTimecodeFromReply:((Double?)->Void)? = nil
             
             let messageAttr:NSMutableAttributedString
             if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
@@ -140,8 +143,44 @@ class ChatMessageItem: ChatRowItem {
                 messageAttr = attr
             } else {
                 
+                var mediaDuration: Double? = nil
+                var mediaDurationMessage:Message?
                 
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), timecode: { _ in }).mutableCopy() as! NSMutableAttributedString
+                var canAssignToReply: Bool = true
+                
+                if let media = message.media.first as? TelegramMediaWebpage {
+                    switch media.content {
+                    case let .Loaded(content):
+                        canAssignToReply = !ExternalVideoLoader.isPlayable(content)
+                    default:
+                        break
+                    }
+                }
+                
+                if canAssignToReply, let reply = message.replyAttribute  {
+                    mediaDurationMessage = message.associatedMessages[reply.messageId]
+                } else {
+                    mediaDurationMessage = message
+                }
+                if let message = mediaDurationMessage {
+                    if let file = message.media.first as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+                        mediaDuration = Double(duration)
+                    } else if let media = message.media.first as? TelegramMediaWebpage {
+                        switch media.content {
+                        case let .Loaded(content):
+                            if ExternalVideoLoader.isPlayable(content) {
+                                mediaDuration = 10 * 60 * 60
+                            }
+                        default:
+                            break
+                        }
+                    }
+                }
+                
+                
+                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
+                    openSpecificTimecodeFromReply?(timecode)
+                }).mutableCopy() as! NSMutableAttributedString
 
                 messageAttr.fixUndefinedEmojies()
                 
@@ -313,6 +352,63 @@ class ChatMessageItem: ChatRowItem {
                     }
                 }
                 showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
+            }
+            
+            openSpecificTimecodeFromReply = { [weak self] timecode in
+                if let timecode = timecode {
+                    var canAssignToReply: Bool = true
+                    if let media = message.media.first as? TelegramMediaWebpage {
+                        switch media.content {
+                        case let .Loaded(content):
+                            canAssignToReply = !ExternalVideoLoader.isPlayable(content)
+                        default:
+                            break
+                        }
+                    }
+                    var assignMessage: Message?
+                     if canAssignToReply, let reply = message.replyAttribute  {
+                        assignMessage = message.associatedMessages[reply.messageId]
+                    } else {
+                        assignMessage = message
+                    }
+                    if let message = assignMessage {
+                        let id = ChatHistoryEntryId.message(message)
+                        if let item = self?.table?.item(stableId: id) as? ChatMediaItem {
+                            item.parameters?.set_timeCodeInitializer(timecode)
+                            item.parameters?.showMedia(message)
+                        } else if let groupInfo = message.groupInfo {
+                            let id = ChatHistoryEntryId.groupedPhotos(groupInfo: groupInfo)
+                            if let item = self?.table?.item(stableId: id) as? ChatGroupedItem {
+                                item.parameters?.set_timeCodeInitializer(timecode)
+                                item.parameters?.showMedia(message)
+                            }
+                        } else if let item = self?.table?.item(stableId: id) as? ChatMessageItem {
+                            if let content = item.webpageLayout?.content {
+                                self?.youtubeExternalLoader.set((sharedVideoLoader.status(for: content) |> deliverOnMainQueue).start(next: { [weak item] status in
+                                    if let item = item, let message = item.message {
+                                        if let status = status {
+                                            let content = content.withUpdatedYoutubeTimecode(timecode)
+                                            if let media = message.media.first as? TelegramMediaWebpage {
+                                                switch status {
+                                                case .fail:
+                                                    execute(inapp: .external(link: content.url, false))
+                                                case .loaded:
+                                                    let message = message.withUpdatedMedia([TelegramMediaWebpage(webpageId: media.webpageId, content: .Loaded(content))])
+                                                    showChatGallery(context: item.context, message: message, item.table)
+                                                default:
+                                                    break
+                                                }
+                                            }
+                                            
+                                            
+                                        }
+                                    }
+                                    
+                                }))
+                            }
+                        }
+                    }
+                }
             }
             
             let interactions = globalLinkExecutor
@@ -649,6 +745,10 @@ class ChatMessageItem: ChatRowItem {
         }
     }
     
+    deinit {
+        youtubeExternalLoader.dispose()
+    }
+    
     override func viewClass() -> AnyClass {
         return ChatMessageView.self
     }
@@ -670,12 +770,8 @@ class ChatMessageItem: ChatRowItem {
         
         let new = addLocallyGeneratedEntities(text, enabledTypes: [.timecode], entities: entities, mediaDuration: mediaDuration)
         var nsString: NSString?
-        
-        guard let localEntities = new else {
-            return string
-        }
-        
-        for entity in localEntities {
+        entities  = entities + (new ?? [])
+        for entity in entities {
             let range = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
             
             switch entity.type {

@@ -256,7 +256,7 @@ public func addLocallyGeneratedEntities(_ text: String, enabledTypes: EnabledEnt
                     }
                 } else if scalar == ":" {
                     hasColons = true
-                    if !detectPhoneNumbers || hasDigits {
+                    if hasDigits {
                         break loop
                     }
                 }
