@@ -166,6 +166,15 @@ class Sender: NSObject {
         if input.attributes.isEmpty {
             input = ChatTextInputState(inputText: input.inputText.trimmed)
         }
+        
+        if emojis.joined(separator: "") == input.inputText.fixed, let replyId = replyId {
+            return requestUpdateMessageReaction(account: context.account, messageId: replyId, reactions: emojis)
+                |> `catch` { _ in return .complete() }
+                |> mapToSignal { _ in
+                    return .complete()
+            }
+        }
+        
         let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length

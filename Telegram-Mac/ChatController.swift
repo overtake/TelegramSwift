@@ -842,6 +842,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let editCurrentMessagePhotoDisposable = MetaDisposable()
     private let failedMessageEventsDisposable = MetaDisposable()
     private let selectMessagePollOptionDisposables: DisposableDict<MessageId> = DisposableDict()
+    private let updateReqctionsDisposable: DisposableDict<MessageId> = DisposableDict()
+
     private let onlineMemberCountDisposable = MetaDisposable()
     private let chatUndoDisposable = MetaDisposable()
     private let discussionDataLoadDisposable = MetaDisposable()
@@ -2300,6 +2302,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.focusInputField = { [weak self] in
             _ = self?.context.window.makeFirstResponder(self?.firstResponder())
         }
+        
+        chatInteraction.updateReactions = { [weak self] messageId, reactions, loading in
+            guard let `self` = self else {
+                return
+            }
+            loading(true)
+            self.updateReqctionsDisposable.set((requestUpdateMessageReaction(account: self.context.account, messageId: messageId, reactions: reactions) |> deliverOnMainQueue).start(error: { error in
+                
+                switch error {
+                case .generic:
+                    alert(for: self.context.window, info: L10n.unknownError)
+                }
+                
+                loading(false)
+            }, completed: {
+                loading(false)
+            }), forKey: messageId)
+        }
 
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in
             
@@ -3253,6 +3273,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         slowModeDisposable.dispose()
         slowModeInProgressDisposable.dispose()
         forwardMessagesDisposable.dispose()
+        updateReqctionsDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false

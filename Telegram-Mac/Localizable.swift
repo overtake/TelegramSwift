@@ -4349,6 +4349,14 @@ internal final class L10n {
   internal static var requestAccesErrorHaveNotAccessCall: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.Call") }
   /// Select All
   internal static var ruw6mB2mTitle: String  { return L10n.tr("Localizable", "Ruw-6m-B2m.title") }
+  /// Send on %@ at %@
+  internal static func scheduleSendDate(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Schedule.SendDate", p1, p2)
+  }
+  /// Send today at %@
+  internal static func scheduleSendToday(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Schedule.SendToday", p1)
+  }
   /// Are you sure you want to clear your search history?
   internal static var searchConfirmClearHistory: String  { return L10n.tr("Localizable", "Search.Confirm.ClearHistory") }
   /// %@ %d

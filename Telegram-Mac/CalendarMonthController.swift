@@ -34,8 +34,10 @@ struct CalendarMonthStruct {
     
     let components:DateComponents
     let dayHandler:(Int)->Void
-    init(month:Date, dayHandler:@escaping (Int)->Void) {
+    let onlyFuture: Bool
+    init(month:Date, selectDayAnyway: Bool, onlyFuture: Bool, dayHandler:@escaping (Int)->Void) {
         self.month = month
+        self.onlyFuture = onlyFuture
         self.dayHandler = dayHandler
         self.prevMonth = CalendarUtils.stepMonth(-1, date: month)
         self.nextMonth = CalendarUtils.stepMonth(1, date: month)
@@ -48,7 +50,7 @@ struct CalendarMonthStruct {
         let components = calendar.dateComponents([.year, .month, .day], from: month)
         self.currentStartDay = CalendarUtils.weekDay(Date(timeIntervalSince1970: month.timeIntervalSince1970 - TimeInterval(components.day! * 24*60*60)))
         
-        if CalendarUtils.isSameDate(month, date: Date(), checkDay: false) {
+        if selectDayAnyway {
             selectedDay = components.day!
         } else {
             selectedDay = nil
@@ -77,6 +79,10 @@ class CalendarMonthView : View {
             let day = TitleButton()
             day.set(font: .normal(.text), for: .Normal)
             day.set(background: theme.colors.background, for: .Normal)
+            
+            
+           
+            
             let current:Int
             if i + 1 < month.currentStartDay {
                 current = (month.lastDayOfPrevMonth - month.currentStartDay) + i + 2
@@ -88,30 +94,43 @@ class CalendarMonthView : View {
             } else {
                 current = (i + 1) - month.currentStartDay + 1
                 
-                day.set(color: .white, for: .Highlight)
+                var skipDay: Bool = false
                 
-                if (i + 1) % 7 == 0 || (i + 2) % 7 == 0 {
-                    day.set(color: theme.colors.redUI, for: .Normal)
-                } else {
-                    day.set(color: theme.colors.text, for: .Normal)
-                }
-                
-                day.layer?.cornerRadius = .cornerRadius
-                
-                if let selectedDay = month.selectedDay, current == selectedDay {
-                    day.isSelected = true
-                    day.set(background: theme.colors.blueSelect, for: .Highlight)
-                    day.apply(state: .Highlight)
-                } else {
-                    day.set(background: theme.colors.blueUI, for: .Highlight)
-                }
-                
-                day.set(handler: { (control) in
+                if month.onlyFuture, CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false) {
+                    var calendar = NSCalendar.current
+                    calendar.timeZone = TimeZone(abbreviation: "UTC")!
+                    let components = calendar.dateComponents([.day], from: Date())
                     
-                    month.dayHandler(current)
+                    if current < components.day! {
+                        day.set(color: .grayText, for: .Normal)
+                        skipDay = true
+                    }
+                }
+                if !skipDay {
+                    day.set(color: .white, for: .Highlight)
                     
-                }, for: .Click)
-                
+                    if (i + 1) % 7 == 0 || (i + 2) % 7 == 0 {
+                        day.set(color: theme.colors.redUI, for: .Normal)
+                    } else {
+                        day.set(color: theme.colors.text, for: .Normal)
+                    }
+                    
+                    day.layer?.cornerRadius = .cornerRadius
+                    
+                    if let selectedDay = month.selectedDay, current == selectedDay {
+                        day.isSelected = true
+                        day.set(background: theme.colors.blueSelect, for: .Highlight)
+                        day.apply(state: .Highlight)
+                    } else {
+                        day.set(background: theme.colors.blueUI, for: .Highlight)
+                    }
+                    
+                    day.set(handler: { (control) in
+                        
+                        month.dayHandler(current)
+                        
+                    }, for: .Click)
+                }
             }
             day.set(text: "\(current)", for: .Normal)
             
@@ -147,8 +166,10 @@ class CalendarMonthView : View {
 class CalendarMonthController: GenericViewController<CalendarMonthView> {
     let interactions:CalendarMonthInteractions
     let month:CalendarMonthStruct
-    init(_ month:Date, interactions:CalendarMonthInteractions) {
-        self.month = CalendarMonthStruct(month: month, dayHandler: { day in
+    let onlyFuture: Bool
+    init(_ month:Date, onlyFuture: Bool, selectDayAnyway: Bool, interactions:CalendarMonthInteractions) {
+        self.onlyFuture = onlyFuture
+        self.month = CalendarMonthStruct(month: month, selectDayAnyway: selectDayAnyway, onlyFuture: self.onlyFuture, dayHandler: { day in
             interactions.selectAction(CalendarUtils.monthDay(day, date: month))
         })
         self.interactions = interactions
@@ -169,10 +190,19 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
     }
     
     var isNextEnabled:Bool {
+        if self.onlyFuture {
+            if month.components.year! == 2037 && month.components.month! == 12 {
+                return false
+            }
+            return true
+        }
         return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
     }
     
     var isPrevEnabled:Bool {
+        if self.onlyFuture {
+            return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
+        }
         return month.components.year! > 2013 || (month.components.year == 2013 && month.components.month! >= 9)
     }
     
@@ -224,7 +254,10 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
         readyOnce()
     }
 
-    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     
 }

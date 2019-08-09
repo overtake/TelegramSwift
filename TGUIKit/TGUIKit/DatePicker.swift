@@ -9,8 +9,8 @@
 import Cocoa
 
 public final class DatePickerOption<T> : Equatable where T: Equatable {
-    let name: String
-    let value:T
+    public let name: String
+    public let value:T
     public init(name: String, value: T) {
         self.name = name
         self.value = value
@@ -67,6 +67,9 @@ public class DatePicker<T>: Control where T: Equatable {
     
     public override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
+        self.backgroundColor = presentation.colors.grayBackground
+        self.layer?.cornerRadius = .cornerRadius
+        
         self.borderView.layer?.borderWidth = .borderSize
         self.borderView.layer?.borderColor = presentation.colors.border.cgColor
         self.borderView.layer?.cornerRadius = .cornerRadius

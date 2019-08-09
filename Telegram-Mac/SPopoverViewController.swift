@@ -15,12 +15,14 @@ public struct SPopoverItem : Equatable {
     let title:String
     let image:CGImage?
     let textColor: NSColor
+    let height: CGFloat
     let handler:()->Void
-    public init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = presentation.colors.text) {
+    public init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = presentation.colors.text, height: CGFloat = 40.0) {
         self.title = title
         self.image = image
         self.textColor = textColor
         self.handler = handler
+        self.height = height
     }
     
     public static func ==(lhs: SPopoverItem, rhs: SPopoverItem) -> Bool {
@@ -46,20 +48,21 @@ public class SPopoverViewController: GenericViewController<TableView> {
     public init(items:[SPopoverItem], visibility:Int = 4, handlerDelay: Double = 0.15, headerItems: [TableRowItem] = []) {
         weak var controller:SPopoverViewController?
         let alignAsImage = !items.filter({$0.image != nil}).isEmpty
-        let items = items.map({ item in SPopoverRowItem(NSZeroSize, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
-            Queue.mainQueue().justDispatch {
-                controller?.popover?.hide()
-
-                if handlerDelay == 0 {
-                     item.handler()
-                } else {
-                    _ = (Signal<Void, NoError>.single(Void()) |> delay(handlerDelay, queue: Queue.mainQueue())).start(next: {
+        let items = items.map { item in
+            return SPopoverRowItem(NSZeroSize, height: item.height, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
+                Queue.mainQueue().justDispatch {
+                    controller?.popover?.hide()
+                    
+                    if handlerDelay == 0 {
                         item.handler()
-                    })
+                    } else {
+                        _ = (Signal<Void, NoError>.single(Void()) |> delay(handlerDelay, queue: Queue.mainQueue())).start(next: {
+                            item.handler()
+                        })
+                    }
+                    
                 }
-               
-            }
-        })})
+        })}
         
         
         

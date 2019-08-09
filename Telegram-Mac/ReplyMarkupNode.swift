@@ -73,7 +73,13 @@ class ReplyMarkupNode: Node {
                 
                 var urlView:ImageView?
                 switch button.button.action {
-                case .url, .switchInline:
+                case let .url(url):
+                    if !url.isSingleEmoji {
+                        urlView = ImageView()
+                        urlView?.image = theme.icons.chatActionUrl
+                        urlView?.sizeToFit()
+                    }
+                case .switchInline:
                     urlView = ImageView()
                     urlView?.image = theme.icons.chatActionUrl
                     urlView?.sizeToFit()
@@ -114,8 +120,8 @@ class ReplyMarkupNode: Node {
     }
     
     func proccess(_ control:Control, _ button:ReplyMarkupButton) {
-        interactions.proccess(button, { loading in
-            control.backgroundColor = loading ? .black : theme.colors.grayBackground
+        interactions.proccess(button, { [weak control] loading in
+           // control?.backgroundColor = loading ? .black : theme.colors.grayBackground
         })
     }
     
