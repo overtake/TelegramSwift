@@ -1166,6 +1166,12 @@ class GalleryViewer: NSResponder {
         self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
             if let strongSelf = self {
                 
+                if let startTime = strongSelf.contentInteractions?.timeCodeInitializer {
+                    if let item = strongSelf.pager.selectedItem as? MGalleryVideoItem {
+                        item.startTime = startTime
+                    }
+                }
+                
                // strongSelf.backgroundView.change(opacity: 1, animated: animated)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
@@ -1244,6 +1250,7 @@ class GalleryViewer: NSResponder {
         window.removeAllHandlers(for: self)
         readyDispose.dispose()
         messagesActionDisposable.dispose()
+        self.contentInteractions?.remove_timeCodeInitializer()
     }
     
 }
