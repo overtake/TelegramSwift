@@ -575,6 +575,11 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         searchStateDisposable.dispose()
     }
     
+    override func updateLocalizationAndTheme() {
+        super.updateLocalizationAndTheme()
+        self.genericView.packsView.updateLocalizationAndTheme()
+    }
+    
     func update(with interactions:EntertainmentInteractions, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction?.remove(observer: self)

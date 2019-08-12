@@ -223,7 +223,7 @@ fileprivate class PreviewSenderView : Control {
         }, for: .SingleClick)
         
         sendButton.set(handler: { [weak self] control in
-            if let controller = self?.controller, let peer = controller.chatInteraction.peer, !peer.isSecretChat, peer.id != controller.chatInteraction.context.account.peerId, peer.isSecretChat {
+            if let controller = self?.controller, let peer = controller.chatInteraction.peer, !peer.isSecretChat, peer.id != controller.chatInteraction.context.account.peerId {
                 if let slowMode = controller.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                     return
                 }

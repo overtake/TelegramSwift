@@ -515,7 +515,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let speeds:[CGFloat] = [0.1, 0.3, 0.5, 0.7, 1.0]
         if let magnigy = controller.selectedViewController?.view as? MagnifyView {
             if let animation = magnigy.contentView as? AnimationView {
-                if let index = speeds.index(of: animation.animationSpeed) {
+                if let index = speeds.firstIndex(of: animation.animationSpeed) {
                     animation.animationSpeed = speeds[max(0, index - 1)]
                 }
             } else {
@@ -528,7 +528,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let speeds:[CGFloat] = [0.1, 0.3, 0.5, 0.7, 1.0]
         if let magnigy = controller.selectedViewController?.view as? MagnifyView {
             if let animation = magnigy.contentView as? AnimationView {
-                if let index = speeds.index(of: animation.animationSpeed) {
+                if let index = speeds.firstIndex(of: animation.animationSpeed) {
                     animation.animationSpeed = speeds[min(speeds.count - 1, index + 1)]
                 }
             } else {
