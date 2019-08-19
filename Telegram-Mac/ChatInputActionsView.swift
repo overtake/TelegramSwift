@@ -412,7 +412,7 @@ class ChatInputActionsView: View, Notifable {
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
         send.set(handler: { [weak chatInteraction] control in
-            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, !peer.isSecretChat, peer.id != chatInteraction.context.account.peerId {
+            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, !peer.isSecretChat {
                 let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                     return
@@ -422,20 +422,30 @@ class ChatInputActionsView: View, Notifable {
                 }
                 var items:[SPopoverItem] = []
                 
-                items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
-                    chatInteraction?.sendMessage(true)
-                }))
-                
-                items.append(SPopoverItem("Scheduled Message", {
-                    showModal(with: ScheduledMessageModalController(context: context), for: context.window)
-                }))
-                
-                showPopover(for: control, with: SPopoverViewController(items: items))
+                if peer.id != chatInteraction.context.account.peerId {
+                    items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
+                        chatInteraction?.sendMessage(true, nil)
+                    }))
+                }
+                switch chatInteraction.mode {
+                case .history:
+                    items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                        showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak chatInteraction] date in
+                            chatInteraction?.sendMessage(false, date)
+                        }), for: context.window)
+                    }))
+                case .scheduled:
+                    break
+                }
+               
+                if !items.isEmpty {
+                    showPopover(for: control, with: SPopoverViewController(items: items))
+                }
             }
         }, for: .RightDown)
         
         send.set(handler: { [weak chatInteraction] control in
-             chatInteraction?.sendMessage(false)
+             chatInteraction?.sendMessage(false, nil)
         }, for: .Click)
         
         slowModeTimeout.set(handler: { [weak chatInteraction] control in

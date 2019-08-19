@@ -34,14 +34,9 @@ class ChatInputAttachView: ImageButton, Notifable {
         set(handler: { [weak self] control in
             
             guard let `self` = self else {return}
-            
-       
-            
             if let peer = chatInteraction.presentation.peer {
                 
                 var items:[SPopoverItem] = []
-
-                
                 if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                     
                     items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in

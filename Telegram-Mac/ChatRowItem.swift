@@ -1196,7 +1196,7 @@ class ChatRowItem: TableRowItem {
                         buttons.append(ReplyMarkupButton(title: reaction.value + " \(reaction.count)", titleWhenForwarded: nil, action: .url(reaction.value)))
                     }
                     if !buttons.isEmpty {
-                        replyMarkupModel = ReplyMarkupNode([ReplyMarkupRow(buttons: buttons)], [], ReplyMarkupInteractions(proccess: { (button, loading) in
+                        replyMarkupModel = ReplyMarkupNode([ReplyMarkupRow(buttons: buttons)], [], ReplyMarkupInteractions(proccess: { (button, _) in
                             switch button.action {
                             case let .url(buttonReaction):
                                 if let index = sorted.firstIndex(where: { $0.value == buttonReaction}) {
@@ -1207,9 +1207,7 @@ class ChatRowItem: TableRowItem {
                                     } else {
                                         newValues[index] = MessageReaction(value: reaction.value, count: reaction.count + 1, isSelected: true)
                                     }
-                                    let reactions = newValues.filter { $0.isSelected }.map { $0.value }
-                                    chatInteraction.updateReactions(message.id, reactions, { value in
-                                        loading(value)
+                                    chatInteraction.updateReactions(message.id, buttonReaction, { value in
                                     })
                                 }
                                 
@@ -1648,7 +1646,23 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
 
     
-    if canReplyMessage(message, peerId: chatInteraction.peerId) {
+    if message.isScheduledMessage {
+        items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
+            _ = sendScheduledMessageNowInteractively(postbox: account.postbox, messageId: message.id).start()
+        }))
+        items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
+            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)) , scheduleAt: { date in
+                _ = showModalProgress(signal: requestEditMessage(account: account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start(next: { result in
+                    
+                }, error: { error in
+                   
+                })
+           }), for: context.window)
+        }))
+        items.append(ContextSeparatorItem())
+    }
+    
+    if canReplyMessage(message, peerId: chatInteraction.peerId) && !message.isScheduledMessage  {
         items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: {
             chatInteraction.setupReplyMessage(message.id)
         }))
@@ -1675,37 +1689,38 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     items.append(ContextSeparatorItem())
     
-    if canEditMessage(message, context: context) {
+    if canEditMessage(message, context: context){
         items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: {
             chatInteraction.beginEditingMessage(message)
         }))
     }
     
-    if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
-        if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-            items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
-                if peer.isSupergroup {
-                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                        chatInteraction.updatePinned(message.id, false, result != .thrid)
-                    })
-                } else {
-                    chatInteraction.updatePinned(message.id, false, true)
-                }
+    if !message.isScheduledMessage {
+        if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
+            if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
+                items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
+                    if peer.isSupergroup {
+                        modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                            chatInteraction.updatePinned(message.id, false, result != .thrid)
+                        })
+                    } else {
+                        chatInteraction.updatePinned(message.id, false, true)
+                    }
+                }))
+            }
+        } else if message.id.peerId == account.peerId {
+            items.append(ContextMenuItem(L10n.messageContextPin, handler: {
+                chatInteraction.updatePinned(message.id, false, true)
+            }))
+        } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage {
+            items.append(ContextMenuItem(L10n.messageContextPin, handler: {
+                modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                    chatInteraction.updatePinned(message.id, false, result == .thrid)
+                })
             }))
         }
-    } else if message.id.peerId == account.peerId {
-        items.append(ContextMenuItem(L10n.messageContextPin, handler: {
-             chatInteraction.updatePinned(message.id, false, true)
-        }))
-    } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage {
-        items.append(ContextMenuItem(L10n.messageContextPin, handler: {
-            modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                chatInteraction.updatePinned(message.id, false, result == .thrid)
-            })
-        }))
     }
-    
-    
+   
     
     if canForwardMessage(message, account: account) {
         items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: {

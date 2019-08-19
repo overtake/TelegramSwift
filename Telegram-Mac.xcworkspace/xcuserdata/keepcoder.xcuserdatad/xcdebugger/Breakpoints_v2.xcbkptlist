@@ -155,11 +155,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/Appearance.swift"
-            timestampString = "586721211.964501"
+            timestampString = "587902613.1788909"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1966"
-            endingLineNumber = "1966"
+            startingLineNumber = "1971"
+            endingLineNumber = "1971"
             landmarkName = "generateTheme(palette:bubbled:fontSize:followSystemAppearance:wallpaper:c_wallpaper:)"
             landmarkType = "9">
             <Locations>
@@ -299,7 +299,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "587031423.322331"
+            timestampString = "587902613.178983"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1130"
@@ -506,24 +506,8 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "587031423.3225811"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3673"
-            endingLineNumber = "3673"
-            landmarkName = "init(context:chatLocation:messageId:initialAction:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatRowItem.swift"
-            timestampString = "587031746.530123"
+            timestampString = "587902613.179407"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "730"
@@ -619,11 +603,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/CoreExtension.swift"
-            timestampString = "587057850.464045"
+            timestampString = "587567735.7421499"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1989"
-            endingLineNumber = "1989"
+            startingLineNumber = "1997"
+            endingLineNumber = "1997"
             landmarkName = "mediaResourceMIMEType(from:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -647,59 +631,11 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "submodules/telegram-ios/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-            timestampString = "584994086.383095"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "340"
-            endingLineNumber = "340"
-            landmarkName = "checkState()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "submodules/telegram-ios/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-            timestampString = "584994086.383139"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "343"
-            endingLineNumber = "343"
-            landmarkName = "checkState()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "submodules/telegram-ios/submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
-            timestampString = "584994086.3831789"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "349"
-            endingLineNumber = "349"
-            landmarkName = "checkState()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/AccountContext.swift"
-            timestampString = "587304679.40493"
+            timestampString = "587311928.161888"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "140"
@@ -731,7 +667,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "587308164.353094"
+                  timestampString = "587902614.894575"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "93"
@@ -746,7 +682,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "587308164.355074"
+                  timestampString = "587902614.8975019"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "94"
@@ -770,6 +706,38 @@
             endingLineNumber = "121"
             landmarkName = "sendMessageContent(account:peerId:attributes:content:)"
             landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (PostboxMac.Transaction) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt; in TelegramCoreMac.(sendMessageContent in _DC400DAE2375192CCDA5FD62942353A6)(account: TelegramCoreMac.Account, peerId: PostboxMac.PeerId, attributes: Swift.Array&lt;PostboxMac.MessageAttribute&gt;, content: TelegramCoreMac.(StandaloneMessageContent in _DC400DAE2375192CCDA5FD62942353A6)) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/StandaloneSendMessage.swift"
+                  timestampString = "587902614.9012901"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "124"
+                  endingLineNumber = "124"
+                  offsetFromSymbolStart = "6273">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (PostboxMac.Transaction) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt; in TelegramCoreMac.(sendMessageContent in _DC400DAE2375192CCDA5FD62942353A6)(account: TelegramCoreMac.Account, peerId: PostboxMac.PeerId, attributes: Swift.Array&lt;PostboxMac.MessageAttribute&gt;, content: TelegramCoreMac.(StandaloneMessageContent in _DC400DAE2375192CCDA5FD62942353A6)) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/StandaloneSendMessage.swift"
+                  timestampString = "587902614.903883"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "124"
+                  endingLineNumber = "124"
+                  offsetFromSymbolStart = "6323">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -811,11 +779,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatRowItem.swift"
-            timestampString = "587031746.53074"
+            timestampString = "587902613.1796581"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1741"
-            endingLineNumber = "1741"
+            startingLineNumber = "1756"
+            endingLineNumber = "1756"
             landmarkName = "chatMenuItems(for:chatInteraction:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -843,11 +811,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/PreviewSenderController.swift"
-            timestampString = "587304679.405107"
+            timestampString = "587567735.742473"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "273"
-            endingLineNumber = "273"
+            startingLineNumber = "294"
+            endingLineNumber = "294"
             landmarkName = "updateHeight(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -939,11 +907,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "587031423.323624"
+            timestampString = "587902613.17983"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "66"
-            endingLineNumber = "66"
+            startingLineNumber = "71"
+            endingLineNumber = "71"
             landmarkName = "deinit"
             landmarkType = "7">
          </BreakpointContent>
@@ -971,12 +939,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatRowItem.swift"
-            timestampString = "587031746.531001"
+            timestampString = "587902613.180039"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1281"
-            endingLineNumber = "1281"
-            landmarkName = "makeSize(_:oldWidth:)"
+            startingLineNumber = "1279"
+            endingLineNumber = "1279"
+            landmarkName = "item(_:from:interaction:downloadSettings:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -994,22 +962,6 @@
             endingLineNumber = "241"
             landmarkName = "isEqualMessages(_:_:)"
             landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/PreviewSenderController.swift"
-            timestampString = "587304679.405308"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1025"
-            endingLineNumber = "1025"
-            landmarkName = "viewDidLoad()"
-            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -1131,13 +1083,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "submodules/telegram-ios/submodules/Postbox/Postbox/MessageHistoryView.swift"
-            timestampString = "586690256.101575"
+            timestampString = "587550239.189366"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "245"
             endingLineNumber = "245"
-            landmarkName = "sampledState"
-            landmarkType = "24">
+            landmarkName = "init(postbox:orderStatistics:peerIds:anchor:combinedReadStates:transientReadStates:tag:excludeNamespaces:count:topTaggedMessages:additionalDatas:getMessageCountInRange:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -1259,7 +1211,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/MGalleryItem.swift"
-            timestampString = "587304679.405557"
+            timestampString = "587567735.7430249"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "473"
@@ -1275,11 +1227,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/CalendarMonthController.swift"
-            timestampString = "587031423.324404"
+            timestampString = "587567735.7430609"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "254"
-            endingLineNumber = "254"
+            startingLineNumber = "265"
+            endingLineNumber = "265"
             landmarkName = "viewDidLoad()"
             landmarkType = "7">
          </BreakpointContent>
@@ -1290,24 +1242,8 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ScheduledMessageModalController.swift"
-            timestampString = "587031423.324514"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "168"
-            endingLineNumber = "168"
-            landmarkName = "applyDay(_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/CalendarMonthController.swift"
-            timestampString = "587031423.324616"
+            timestampString = "587567735.7430969"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "45"
@@ -1362,6 +1298,166 @@
                   offsetFromSymbolStart = "125">
                </Location>
             </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/TelegramCore/TelegramCore/AccountStateManager.swift"
+            timestampString = "587314523.584254"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "101"
+            endingLineNumber = "101"
+            landmarkName = "currentIsUpdatingValue"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/MtProtoKit/MTProtoKit/MTProto.m"
+            timestampString = "587667456.766736"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2120"
+            endingLineNumber = "2120"
+            landmarkName = "-transportHasIncomingData:scheme:data:transactionId:requestTransactionAfterProcessing:decodeResult:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/MtProtoKit/MTProtoKit/MTProto.m"
+            timestampString = "587667456.7670799"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2403"
+            endingLineNumber = "2403"
+            landmarkName = "-_parseIncomingMessages:dataMessageId:parseError:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/TelegramCore/TelegramCore/Serialization.swift"
+            timestampString = "587317084.674423"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "230"
+            endingLineNumber = "230"
+            landmarkName = "parseMessage(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/TelegramApi/Sources/Api0.swift"
+            timestampString = "587317305.798723"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "792"
+            endingLineNumber = "792"
+            landmarkName = "parse(_:signature:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/TGModernGrowingTextView.m"
+            timestampString = "587399885.080807"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "569"
+            endingLineNumber = "569"
+            landmarkName = "-keyDown:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/TelegramCore/TelegramCore/ManagedPendingPeerNotificationSettings.swift"
+            timestampString = "587473322.824596"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "67"
+            endingLineNumber = "67"
+            landmarkName = "managedPendingPeerNotificationSettings(postbox:network:)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TelegramCoreMac.managedPendingPeerNotificationSettings(postbox: PostboxMac.Postbox, network: TelegramCoreMac.Network) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/ManagedPendingPeerNotificationSettings.swift"
+                  timestampString = "587473323.041038"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "67"
+                  endingLineNumber = "67"
+                  offsetFromSymbolStart = "38">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (SwiftSignalKitMac.Subscriber&lt;(), SwiftSignalKitMac.NoError&gt;) -&gt; SwiftSignalKitMac.Disposable in TelegramCoreMac.managedPendingPeerNotificationSettings(postbox: PostboxMac.Postbox, network: TelegramCoreMac.Network) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt;"
+                  moduleName = "TelegramCoreMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/ManagedPendingPeerNotificationSettings.swift"
+                  timestampString = "587473323.0430681"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "68"
+                  endingLineNumber = "68"
+                  offsetFromSymbolStart = "129">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/Sparkle/Sparkle/SUPipedUnarchiver.m"
+            timestampString = "587644539.652442"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "147"
+            endingLineNumber = "147"
+            landmarkName = "-extractArchivePipingDataToCommand:arguments:notifier:"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

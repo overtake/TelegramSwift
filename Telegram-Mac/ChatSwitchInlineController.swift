@@ -16,8 +16,10 @@ import SwiftSignalKitMac
 
 class ChatSwitchInlineController: ChatController {
     private let fallbackId:PeerId
-    init(context:AccountContext, peerId:PeerId, fallbackId:PeerId, initialAction:ChatInitialAction? = nil) {
+    private let fallbackMode: ChatMode
+    init(context:AccountContext, peerId:PeerId, fallbackId:PeerId, fallbackMode: ChatMode, initialAction:ChatInitialAction? = nil) {
         self.fallbackId = fallbackId
+        self.fallbackMode = fallbackMode
         super.init(context: context, chatLocation: .peer(peerId), initialAction: initialAction)
     }
     
@@ -41,7 +43,14 @@ class ChatSwitchInlineController: ChatController {
                                 for button in row.buttons {
                                     if case let .switchInline(samePeer: _, query: query) = button.action {
                                         let text = "@\(message.inlinePeer?.username ?? "") \(query)"
-                                        self.navigationController?.push(ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic)))
+                                        let controller: ChatController
+                                        switch self.fallbackMode {
+                                        case .history:
+                                            controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
+                                        case .scheduled:
+                                            controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
+                                        }
+                                        self.navigationController?.push(controller)
                                     }
                                 }
                             }

@@ -27,7 +27,7 @@ final class ReplyMarkupInteractions {
 final class ChatInteraction : InterfaceObserver  {
     
     let chatLocation: ChatLocation
-    
+    let mode: ChatMode
     var peerId : PeerId {
         switch chatLocation {
         case let .peer(peerId):
@@ -49,12 +49,13 @@ final class ChatInteraction : InterfaceObserver  {
     private let requestSessionId:MetaDisposable = MetaDisposable()
     private let disableProxyDisposable = MetaDisposable()
     private let enableProxyDisposable = MetaDisposable()
-    init(chatLocation: ChatLocation, context: AccountContext, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
+    init(chatLocation: ChatLocation, context: AccountContext, mode: ChatMode = .history, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
         self.chatLocation = chatLocation
         self.context = context
         self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
         self.presentation = ChatPresentationInterfaceState(chatLocation)
+        self.mode = mode
         super.init()
         
         let signal = mediaPromise.get() |> deliverOnMainQueue |> mapToQueue { [weak self] (media) -> Signal<Void, NoError> in
@@ -79,15 +80,14 @@ final class ChatInteraction : InterfaceObserver  {
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([MessageId]) -> Void = {_ in}
-    var sendMessage: (Bool) -> Void = { _ in }
-    var forceSendMessage: (ChatTextInputState) -> Void = {_ in}
+    var sendMessage: (Bool, Date?) -> Void = { _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
 
     //
     var focusMessageId: (MessageId?, MessageId, TableScrollState) -> Void = {_,_,_  in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile) -> Void = {_ in}
-    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool) -> Void = {_,_,_,_, _ in}
+    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?) -> Void = {_,_,_,_,_,_ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
@@ -137,7 +137,7 @@ final class ChatInteraction : InterfaceObserver  {
     var addContact:()->Void = {}
     var blockContact: ()->Void = {}
     
-    var updateReactions: (MessageId, [String], @escaping(Bool)->Void)->Void = { _, _, _ in }
+    var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
 
     
     let loadingMessage: Promise<Bool> = Promise()

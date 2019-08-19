@@ -74,6 +74,7 @@ final class ScheduledMessageModalView : View {
         self.atView.userInteractionEnabled = false
         self.atView.isSelectable = false
         self.sendOn.layer?.cornerRadius = .cornerRadius
+        self.sendOn.disableActions()
         self.updateLocalizationAndTheme()
     }
     
@@ -86,7 +87,7 @@ final class ScheduledMessageModalView : View {
         self.sendOn.set(background: theme.colors.blueUI.withAlphaComponent(0.8), for: .Highlight)
 
         
-        let atLayout = TextViewLayout(.initialize(string: "At", color: theme.colors.text, font: .normal(.title)), alwaysStaticItems: true)
+        let atLayout = TextViewLayout(.initialize(string: L10n.scheduleControllerAt, color: theme.colors.text, font: .normal(.title)), alwaysStaticItems: true)
         atLayout.measure(width: .greatestFiniteMagnitude)
         atView.update(atLayout)
         
@@ -119,8 +120,12 @@ final class ScheduledMessageModalView : View {
 
 class ScheduledMessageModalController: ModalViewController {
     private let context: AccountContext
-    init(context: AccountContext) {
+    private let scheduleAt: (Date)->Void
+    private let defaultDate: Date?
+    init(context: AccountContext, defaultDate: Date? = nil, scheduleAt:@escaping(Date)->Void) {
         self.context = context
+        self.defaultDate = defaultDate
+        self.scheduleAt = scheduleAt
         super.init(frame: NSMakeRect(0, 0, 300, 120))
         self.bar = .init(height: 0)
     }
@@ -130,18 +135,13 @@ class ScheduledMessageModalController: ModalViewController {
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: "Schedule Message", handler: {
+        return (left: nil, center: ModalHeaderData(title: L10n.scheduleControllerTitle, handler: {
             
         }), right: ModalHeaderData(title: nil, image: theme.icons.modalClose, handler: {
             
         }))
     }
     
-//    override var modalInteractions: ModalInteractions? {
-//        return ModalInteractions(acceptTitle: "Schedule", accept: {
-//
-//        }, cancelTitle: L10n.modalCancel)
-//    }
     
     
     override open func measure(size: NSSize) {
@@ -188,10 +188,32 @@ class ScheduledMessageModalController: ModalViewController {
         }
     }
     
+    private func schedule() {
+        
+        let date = self.genericView.timePicker.selected.value
+        
+        self.scheduleAt(date.addingTimeInterval(-context.timeDifference))
+        self.close()
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        self.schedule()
+        return .invoked
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.applyDay(Date())
+        let date = self.defaultDate ?? Date()
+        
+        self.genericView.dayPicker.selected = DatePickerOption<Date>(name: formatDay(date), value: date)
+        self.genericView.timePicker.selected = DatePickerOption<Date>(name: formatTime(date), value: date)
+        
+        self.applyDay(date.startOfDayUTC)
+        
+        self.genericView.sendOn.set(handler: { [weak self] _ in
+            self?.schedule()
+        }, for: .Click)
         
         self.readyOnce()
         

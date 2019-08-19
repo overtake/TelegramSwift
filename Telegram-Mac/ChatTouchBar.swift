@@ -372,7 +372,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     }
     
     @objc private func saveEditingMessage() {
-        chatInteraction?.sendMessage(false)
+        chatInteraction?.sendMessage(false, nil)
     }
     @objc private func replaceWithFile() {
         chatInteraction?.updateEditingMessageMedia(nil, false)

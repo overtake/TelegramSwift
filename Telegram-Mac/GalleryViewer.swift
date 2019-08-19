@@ -383,13 +383,6 @@ class GalleryViewer: NSResponder {
         
         self.controls = GalleryModernControls(context, interactions: interactions, frame: NSMakeRect(0, -150, window.frame.width, 150), thumbsControl: pager.thumbsControl)
         
-//        switch type {
-//        case .secret:
-//            self.controls = GallerySecretControls(View(frame:NSMakeRect(0, 10, 200, 75)), interactions:interactions)
-//        default:
-//             self.controls = GalleryGeneralControls(View(frame:NSMakeRect(0, 10, 460, 75)), interactions:interactions)
-//        }
-//        self.controls.view?.backgroundColor = NSColor.black.withAlphaComponent(0.8)
 
         self.pager.view.addSubview(self.backgroundView)
         self.window.contentView?.addSubview(self.pager.view)
@@ -636,8 +629,22 @@ class GalleryViewer: NSResponder {
                 if tags == nil {
                    type = .alone
                 }
+                
+                let mode: ChatMode
+                if message.isScheduledMessage {
+                    mode = .scheduled
+                } else {
+                    mode = .history
+                }
+                
+                let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
+                switch mode {
+                case .history:
+                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                case .scheduled:
+                    signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(message.id.peerId))
+                }
 
-                let view = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
             
                 switch type {
                 case .alone:
@@ -672,7 +679,7 @@ class GalleryViewer: NSResponder {
                     return .single((UpdateTransition(deleted: [], inserted: inserted, updated: []), previous, entries)) |> deliverOnMainQueue
 
                 case .history:
-                    return view |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
+                    return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _, _, _):
@@ -810,7 +817,13 @@ class GalleryViewer: NSResponder {
         }))
         
         let context = self.context
-        if let item = pager.selectedItem as? MGalleryGIFItem {
+        
+        var chatMode: ChatMode = .history
+        if let message = pager.selectedItem?.entry.message, message.isScheduledMessage {
+            chatMode = .scheduled
+        }
+        
+        if let item = pager.selectedItem as? MGalleryGIFItem, chatMode == .history {
             let file = item.media
             if file.isAnimated && file.isVideo {
                 let reference = item.entry.fileReference(file)
@@ -820,7 +833,9 @@ class GalleryViewer: NSResponder {
             }
         }
         
-        if let _ = self.contentInteractions, case .history = type {
+       
+        
+        if let _ = self.contentInteractions, case .history = type, chatMode == .history {
             items.append(SPopoverItem(L10n.galleryContextShowMessage, {[weak self] in
                 self?.showMessage()
             }))

@@ -619,7 +619,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 applicationUpdateUrlPrefix = nil
                             }
                             setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
-                            resetUpdater()
+                            updater_resetWithUpdaterSource(.external(account: context.context.account))
                             
                         }))
                         #endif
@@ -678,8 +678,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                         applicationUpdateUrlPrefix = nil
                                     }
                                     setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
-                                    resetUpdater()
-                                    
+                                    updater_resetWithUpdaterSource(.external(account: nil))
+
                                 }))
                                 #endif
                                 
@@ -768,8 +768,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     @IBAction func checkForUpdates(_ sender: Any) {
         #if !APP_STORE
-         showModal(with: InputDataModalController(AppUpdateViewController()), for: window)
-         resetUpdater()
+        showModal(with: InputDataModalController(AppUpdateViewController()), for: window)
+        updater_resetWithUpdaterSource(.external(account: self.contextValue?.context.account))
         #endif
     }
     

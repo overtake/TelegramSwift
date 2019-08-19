@@ -479,6 +479,10 @@ public extension Message {
         return isCrosspostFromChannel
     }
     
+    var isScheduledMessage: Bool {
+        return self.id.namespace == Namespaces.Message.ScheduledCloud || self.id.namespace == Namespaces.Message.ScheduledLocal
+    }
+    
     var isHasInlineKeyboard: Bool {
         return replyMarkup?.flags.contains(.inline) ?? false
     }
@@ -714,6 +718,9 @@ func canForwardMessage(_ message:Message, account:Account) -> Bool {
     if message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
         return false
     }
+    if message.isScheduledMessage {
+        return false
+    }
     
     if message.media.first is TelegramMediaAction {
         return false
@@ -726,6 +733,7 @@ func canForwardMessage(_ message:Message, account:Account) -> Bool {
     
     return true
 }
+
 
 func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> Bool {
     if message.peers[message.id.peerId] is TelegramChannel || message.peers[message.id.peerId] is TelegramSecretChat {

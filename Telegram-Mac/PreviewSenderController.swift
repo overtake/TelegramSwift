@@ -223,13 +223,34 @@ fileprivate class PreviewSenderView : Control {
         }, for: .SingleClick)
         
         sendButton.set(handler: { [weak self] control in
-            if let controller = self?.controller, let peer = controller.chatInteraction.peer, !peer.isSecretChat, peer.id != controller.chatInteraction.context.account.peerId, peer.isSecretChat {
-                if let slowMode = controller.chatInteraction.presentation.slowMode, slowMode.hasLocked {
+            if let controller = self?.controller, let peer = controller.chatInteraction.peer, !peer.isSecretChat {
+                
+                let chatInteraction = controller.chatInteraction
+                let context = chatInteraction.context
+                if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                     return
                 }
-                showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.chatSendWithoutSound, { [weak controller] in
-                    controller?.send(true)
-                })]))
+                
+                var items:[SPopoverItem] = []
+                
+                if peer.id != chatInteraction.context.account.peerId {
+                    items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak controller] in
+                        controller?.send(true)
+                    }))
+                }
+                switch chatInteraction.mode {
+                case .history:
+                    items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                        showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak controller] date in
+                            controller?.send(false, atDate: date)
+                        }), for: context.window)
+                    }))
+                case .scheduled:
+                    break
+                }
+                if !items.isEmpty {
+                    showPopover(for: control, with: SPopoverViewController(items: items))
+                }
             }
         }, for: .RightDown)
         
@@ -727,7 +748,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return .high
     }
     
-    private var sendCurrentMedia:((Bool)->Void)? = nil
+    private var sendCurrentMedia:((Bool, Date?)->Void)? = nil
     private var runEditor:((URL)->Void)? = nil
     private var insertAdditionUrls:(([URL]) -> Void)? = nil
     
@@ -775,18 +796,23 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let currentEvent = NSApp.currentEvent {
-
             if FastSettings.checkSendingAbility(for: currentEvent), didSetReady {
                 send(false)
                 return .invoked
             }
         }
-        
         return .invokeNext
     }
     
-    func send(_ silent: Bool) {
-        sendCurrentMedia?(silent)
+    func send(_ silent: Bool, atDate: Date? = nil) {
+        switch chatInteraction.mode {
+        case .scheduled:
+            showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak self] date in
+                self?.sendCurrentMedia?(silent, date)
+            }), for: context.window)
+        case .history:
+            sendCurrentMedia?(silent, atDate)
+        }
     }
     
     
@@ -1011,7 +1037,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self.urlsAndStateValue.set(UrlAndState(self.urls, state))
         }
         
-        self.sendCurrentMedia = { [weak self] silent in
+        self.sendCurrentMedia = { [weak self] silent, atDate in
             guard let `self` = self else { return }
             
             let slowMode = self.chatInteraction.presentation.slowMode
@@ -1062,7 +1088,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                         
                     }
                 }
-                self.chatInteraction.sendMedias(medias, input, state == .collage, additionalMessage, silent)
+                self.chatInteraction.sendMedias(medias, input, state == .collage, additionalMessage, silent, atDate)
             }
             
             
