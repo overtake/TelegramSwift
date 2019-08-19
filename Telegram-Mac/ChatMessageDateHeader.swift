@@ -57,7 +57,7 @@ class ChatDateStickItem : TableStickItem {
         var timeinfoNow: tm = tm()
         localtime_r(&now, &timeinfoNow)
         
-        let text: String
+        var text: String
         if timeinfo.tm_year == timeinfoNow.tm_year && timeinfo.tm_yday == timeinfoNow.tm_yday {
             text = L10n.dateToday
         } else {
@@ -67,10 +67,19 @@ class ChatDateStickItem : TableStickItem {
             dateFormatter.dateFormat = "dd MMMM";
             if timeinfoNow.tm_year > timeinfo.tm_year && (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2) {
                 dateFormatter.dateFormat = "dd MMMM yyyy";
+            } else if timeinfoNow.tm_year < timeinfo.tm_year {
+                dateFormatter.dateFormat = "dd MMMM yyyy";
             }
             text = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
 
         }
+        switch interaction.mode {
+        case .scheduled:
+            text = L10n.chatDateScheduledFor(text)
+        default:
+            break
+        }
+        
         
         self.layout = TextViewLayout(.initialize(string: text, color: theme.chatServiceItemTextColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
 

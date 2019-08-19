@@ -149,10 +149,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var textPlaceholder: String {
         if let peer = chatInteraction.presentation.peer {
             if peer.isChannel {
-                return FastSettings.isChannelMessagesMuted(peer.id) ? tr(L10n.messagesPlaceholderSilentBroadcast) : tr(L10n.messagesPlaceholderBroadcast)
+                return FastSettings.isChannelMessagesMuted(peer.id) ? L10n.messagesPlaceholderSilentBroadcast : L10n.messagesPlaceholderBroadcast
             }
         }
-        return tr(L10n.messagesPlaceholderSentMessage)
+        return L10n.messagesPlaceholderSentMessage
     }
     
     override func updateLocalizationAndTheme() {
@@ -430,10 +430,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin)
-        if newOrigin.x > 0 {
-            var bp:Int = 0
-            bp += 1
-        }
     }
 
     
@@ -479,8 +475,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             bottomView._change(size: NSMakeSize(frame.width - 40, bottomHeight), animated: animated)
             bottomView._change(pos: NSMakePoint(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight), animated: animated)
             
-            
-            
             accessory.view?.change(opacity: accessory.isVisibility() ? 1.0 : 0.0, animated: animated)
             accessory.view?.change(pos: NSMakePoint(15, contentHeight + bottomHeight), animated: animated)
             
@@ -507,7 +501,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             }
             
             if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
-                chatInteraction.sendMessage(false)
+                chatInteraction.sendMessage(false, nil)
                 chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
                 markNextTextChangeToFalseActivity = true
             }

@@ -80,9 +80,6 @@ class CalendarMonthView : View {
             day.set(font: .normal(.text), for: .Normal)
             day.set(background: theme.colors.background, for: .Normal)
             
-            
-           
-            
             let current:Int
             if i + 1 < month.currentStartDay {
                 current = (month.lastDayOfPrevMonth - month.currentStartDay) + i + 2
@@ -96,12 +93,17 @@ class CalendarMonthView : View {
                 
                 var skipDay: Bool = false
                 
+                var calendar = NSCalendar.current
+                calendar.timeZone = TimeZone(abbreviation: "UTC")!
+                let components = calendar.dateComponents([.day, .year, .month], from: Date())
+                
                 if month.onlyFuture, CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false) {
-                    var calendar = NSCalendar.current
-                    calendar.timeZone = TimeZone(abbreviation: "UTC")!
-                    let components = calendar.dateComponents([.day], from: Date())
-                    
                     if current < components.day! {
+                        day.set(color: .grayText, for: .Normal)
+                        skipDay = true
+                    }
+                } else if month.onlyFuture, components.year! + 1 == month.components.year! && components.month! == month.components.month!  {
+                    if current > components.day! {
                         day.set(color: .grayText, for: .Normal)
                         skipDay = true
                     }
@@ -191,8 +193,17 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
     
     var isNextEnabled:Bool {
         if self.onlyFuture {
-            if month.components.year! == 2037 && month.components.month! == 12 {
-                return false
+            
+            var calendar = NSCalendar.current
+            
+            calendar.timeZone = TimeZone(abbreviation: "UTC")!
+            let components = calendar.dateComponents([.year, .month, .day], from: Date())
+
+            
+            if month.components.year! == components.year! {
+                return true
+            } else if components.year! + 1 == month.components.year! {
+                return month.components.month! < components.month!
             }
             return true
         }

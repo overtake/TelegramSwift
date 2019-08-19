@@ -2,6 +2,15 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:submodules/telegram-ios/submodules/libphonenumber/libphonenumber_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/Crc32/Crc32_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/sqlcipher/sqlcipher_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:submodules/telegram-ios/submodules/TelegramApi/TelegramApi_Xcode.xcodeproj">
    </FileRef>
    <FileRef

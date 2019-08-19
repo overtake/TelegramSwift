@@ -351,6 +351,12 @@ struct PeerStatusStringResult : Equatable {
         title.replaceCharacters(in: title.range, with: string)
         return PeerStatusStringResult(title, self.status, presence: presence)
     }
+    
+    func withUpdatedStatus(_ status: String) -> PeerStatusStringResult {
+        let status = self.status.mutableCopy() as! NSMutableAttributedString
+        status.replaceCharacters(in: status.range, with: status)
+        return PeerStatusStringResult(self.title, status, presence: presence)
+    }
 }
 
 func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {

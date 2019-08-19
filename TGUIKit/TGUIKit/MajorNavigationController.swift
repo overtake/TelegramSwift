@@ -168,7 +168,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                     strongSelf.stack.append(strongSelf.empty)
                 }
                 
-                if let index = strongSelf.stack.index(of: controller) {
+                if let index = strongSelf.stack.firstIndex(of: controller) {
                     strongSelf.stack.remove(at: index)
                 }
                 
@@ -215,7 +215,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     
     
     public func removeExceptMajor() {
-        let index = stack.index(where: { current in
+        let index = stack.firstIndex(where: { current in
             return current.className == NSStringFromClass(self.majorClass)
         })
         if let index = index {
@@ -335,7 +335,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     }
     
     public func add(listener:WeakReference<ViewController>) -> Void {
-        let index = listeners.index(where: { (weakView) -> Bool in
+        let index = listeners.firstIndex(where: { (weakView) -> Bool in
             return listener.value == weakView.value
         })
         if index == nil {
@@ -345,7 +345,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     
     public func remove(listener:WeakReference<ViewController>) -> Void {
         
-        let index = listeners.index(where: { (weakView) -> Bool in
+        let index = listeners.firstIndex(where: { (weakView) -> Bool in
             return listener.value == weakView.value
         })
         

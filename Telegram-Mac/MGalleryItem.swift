@@ -136,7 +136,7 @@ enum GalleryEntry : Comparable, Identifiable {
     }
     
     var canShare: Bool {
-        return message != nil
+        return message != nil && !message!.isScheduledMessage
     }
     
     var interfaceState:(PeerId, TimeInterval)? {

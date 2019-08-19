@@ -1129,6 +1129,9 @@ struct TelegramIconsTheme {
     let entertainment_Search:CGImage
     let entertainment_Settings:CGImage
     let entertainment_SearchCancel:CGImage
+    
+    let scheduledAvatar: CGImage
+    let scheduledInputAction: CGImage
 }
 
 final class TelegramChatListTheme {
@@ -1958,7 +1961,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                entertainment_Gifs: NSImage(named: "Icon_Entertainment_Gifs")!.precomposed(palette.grayIcon),
                                                entertainment_Search: NSImage(named: "Icon_Entertainment_Search")!.precomposed(palette.grayIcon),
                                                entertainment_Settings: NSImage(named: "Icon_Entertainment_Settings")!.precomposed(palette.grayIcon),
-                                               entertainment_SearchCancel: NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon)
+                                               entertainment_SearchCancel: NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon),
+                                               scheduledAvatar: NSImage(named: "Icon_AvatarScheduled")!.precomposed(.white),
+                                               scheduledInputAction: NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.blueIcon)
     )
 }
 

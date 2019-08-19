@@ -378,7 +378,8 @@ class ChatServiceRowView: TableRowView {
         textView = TextView()
         textView.isSelectable = false
         //textView.userInteractionEnabled = false
-        textView.isEventLess = true
+        //do not enable
+       // textView.isEventLess = true
         super.init(frame: frameRect)
         //layerContentsRedrawPolicy = .onSetNeedsDisplay
         addSubview(textView)

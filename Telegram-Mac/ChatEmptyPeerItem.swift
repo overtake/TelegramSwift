@@ -43,43 +43,51 @@ class ChatEmptyPeerItem: TableRowItem {
         
         let attr = NSMutableAttributedString()
         var lineSpacing: CGFloat? = 5
-        if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
-            _ = attr.append(string: L10n.chatSecretChatEmptyHeader, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.chatSecretChat1Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.chatSecretChat2Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.chatSecretChat3Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.chatSecretChat4Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
-
-        } else if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup, peer.groupAccess.isCreator {
-            _ = attr.append(string: L10n.emptyGroupInfoTitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.emptyGroupInfoSubtitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.emptyGroupInfoLine1(chatInteraction.presentation.limitConfiguration.maxSupergroupMemberCount.formattedWithSeparator), color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.emptyGroupInfoLine2, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.emptyGroupInfoLine3, color: theme.chatServiceItemTextColor, font: .medium(.text))
-            _ = attr.append(string: "\n")
-            _ = attr.append(string: L10n.emptyGroupInfoLine4, color: theme.chatServiceItemTextColor, font: .medium(.text))
-        } else {
-            if let restriction = chatInteraction.presentation.restrictionInfo {
-                let reason = restriction.reason.components(separatedBy: ":")
-                if reason.count == 2 {
-                    _ = attr.append(string: reason[1], color: theme.colors.grayText, font: .medium(.text))
-                } else {
-                    _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
-                    lineSpacing = nil
-                }
+        switch chatInteraction.mode {
+        case .history:
+            if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
+                _ = attr.append(string: L10n.chatSecretChatEmptyHeader, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.chatSecretChat1Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.chatSecretChat2Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.chatSecretChat3Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.chatSecretChat4Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                
+            } else if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup, peer.groupAccess.isCreator {
+                _ = attr.append(string: L10n.emptyGroupInfoTitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.emptyGroupInfoSubtitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.emptyGroupInfoLine1(chatInteraction.presentation.limitConfiguration.maxSupergroupMemberCount.formattedWithSeparator), color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.emptyGroupInfoLine2, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.emptyGroupInfoLine3, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: L10n.emptyGroupInfoLine4, color: theme.chatServiceItemTextColor, font: .medium(.text))
             } else {
-                lineSpacing = nil
-                _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                if let restriction = chatInteraction.presentation.restrictionInfo {
+                    let reason = restriction.reason.components(separatedBy: ":")
+                    if reason.count == 2 {
+                        _ = attr.append(string: reason[1], color: theme.colors.grayText, font: .medium(.text))
+                    } else {
+                        _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                        lineSpacing = nil
+                    }
+                } else {
+                    lineSpacing = nil
+                    _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                }
             }
+        case .scheduled:
+            lineSpacing = nil
+            _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
         }
+        
+        
         textViewLayout = TextViewLayout(attr, alignment: .center, lineSpacing: lineSpacing, alwaysStaticItems: true)
         textViewLayout.interactions = globalLinkExecutor
         

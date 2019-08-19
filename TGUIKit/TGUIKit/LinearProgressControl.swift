@@ -141,9 +141,7 @@ public class LinearProgressControl: Control {
             let progress = min(max(Float(max(location.x, 0) / containerView.frame.width), 0), 1)
             onUserChanged(progress)
             self.onLiveScrobbling?(nil)
-        } else {
-            super.mouseUp(with: event)
-        }
+        } 
     }
     
     public var interactiveValue:Float {

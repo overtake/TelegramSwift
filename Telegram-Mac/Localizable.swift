@@ -1103,6 +1103,8 @@ internal final class L10n {
   internal static var chatContextArchive: String  { return L10n.tr("Localizable", "Chat.Context.Archive") }
   /// Clear Chat History
   internal static var chatContextClearHistory: String  { return L10n.tr("Localizable", "Chat.Context.ClearHistory") }
+  /// Clear All
+  internal static var chatContextClearScheduled: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled") }
   /// Copy Preformatted Block
   internal static var chatContextCopyBlock: String  { return L10n.tr("Localizable", "Chat.Context.CopyBlock") }
   /// Unmute
@@ -1125,8 +1127,22 @@ internal final class L10n {
   internal static var chatContextSharedMedia: String  { return L10n.tr("Localizable", "Chat.Context.SharedMedia") }
   /// Unarchive
   internal static var chatContextUnarchive: String  { return L10n.tr("Localizable", "Chat.Context.Unarchive") }
+  /// Scheduled Messages
+  internal static var chatContextClearScheduledConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.Header") }
+  /// Are you sure you want to delete all scheduled messages?
+  internal static var chatContextClearScheduledConfirmInfo: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.Info") }
+  /// Clear All
+  internal static var chatContextClearScheduledConfirmOK: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.OK") }
+  /// Reschedule
+  internal static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
+  /// Send Now
+  internal static var chatContextScheduledSendNow: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.SendNow") }
   /// Copy Link to Proxy
   internal static var chatCopyProxyConfiguration: String  { return L10n.tr("Localizable", "Chat.Copy.ProxyConfiguration") }
+  /// Scheduled for %@
+  internal static func chatDateScheduledFor(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Date.ScheduledFor", p1)
+  }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
@@ -1335,6 +1351,10 @@ internal final class L10n {
   internal static var chatProxySponsoredCapTitle: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.CapTitle") }
   /// Are you sure you want to cancel recording?
   internal static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
+  /// Reminder
+  internal static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
+  /// Scheduled Messages
+  internal static var chatRightContextScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Right.Context.ScheduledMessages") }
   /// • Use end-to-end encryption
   internal static var chatSecretChat1Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.1Feature") }
   /// • Leave no trace on our servers
@@ -1345,6 +1365,10 @@ internal final class L10n {
   internal static var chatSecretChat4Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.4Feature") }
   /// Secret chats:
   internal static var chatSecretChatEmptyHeader: String  { return L10n.tr("Localizable", "Chat.SecretChat.EmptyHeader") }
+  /// Scheduled a Message
+  internal static var chatSendScheduledMessage: String  { return L10n.tr("Localizable", "Chat.Send.ScheduledMessage") }
+  /// Set a Reminder
+  internal static var chatSendSetReminder: String  { return L10n.tr("Localizable", "Chat.Send.SetReminder") }
   /// Send Without Sound
   internal static var chatSendWithoutSound: String  { return L10n.tr("Localizable", "Chat.Send.WithoutSound") }
   /// You allowed this bot to message you when you logged in on %@
@@ -1443,6 +1467,10 @@ internal final class L10n {
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
   }
+  /// Reminder
+  internal static var chatTitleReminder: String  { return L10n.tr("Localizable", "Chat.Title.Reminder") }
+  /// Scheduled Messages
+  internal static var chatTitleScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Title.ScheduledMessages") }
   /// Your cloud storage
   internal static var chatTitleSelf: String  { return L10n.tr("Localizable", "Chat.Title.self") }
   /// The account was hidden by the user
@@ -4357,6 +4385,10 @@ internal final class L10n {
   internal static func scheduleSendToday(_ p1: String) -> String {
     return L10n.tr("Localizable", "Schedule.SendToday", p1)
   }
+  /// at
+  internal static var scheduleControllerAt: String  { return L10n.tr("Localizable", "ScheduleController.at") }
+  /// Schedule Message
+  internal static var scheduleControllerTitle: String  { return L10n.tr("Localizable", "ScheduleController.Title") }
   /// Are you sure you want to clear your search history?
   internal static var searchConfirmClearHistory: String  { return L10n.tr("Localizable", "Search.Confirm.ClearHistory") }
   /// %@ %d

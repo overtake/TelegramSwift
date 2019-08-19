@@ -253,6 +253,8 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             return .copy
         case .withinApplication:
             return []
+        @unknown default:
+            return []
         }
     }
     private var dragpath:String? = nil
