@@ -227,7 +227,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 self.snoofEnabled = inAppSettings.showNotificationsOutOfFocus
                 
                 if inAppSettings.enabled && inAppSettings.muteUntil < Int32(Date().timeIntervalSince1970) {
-                    return .single((messages.filter({$0.2}).map {($0.0, $0.1)}, inAppSettings))
+                    
+                    return .single((messages.filter({$0.2 || ($0.0.isEmpty || $0.0[0].wasScheduled)}).map {($0.0, $0.1)}, inAppSettings))
                 } else {
                     return .complete()
                 }
@@ -240,7 +241,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 for message in messages.reduce([], { current, value in return current + value.0}) {
                     var peer = message.author
                     if let mainPeer = messageMainPeer(message) {
-                        if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
+                        if mainPeer is TelegramChannel || mainPeer is TelegramGroup || message.wasScheduled {
                             peer = mainPeer
                         }
                     }
@@ -280,7 +281,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             continue
                         }
                         
-                        if message.author?.id != account.peerId {
+                        if message.author?.id != account.peerId || message.wasScheduled {
                             var title:String = message.author?.displayTitle ?? ""
                             var hasReplyButton:Bool = !screenIsLocked
                             if let peer = message.peers[message.id.peerId] {
@@ -325,6 +326,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 title += " 🔕"
                             }
                             
+                            if message.wasScheduled {
+                                title = L10n.notificationScheduledTitle
+                            }
+                            
                             notification.title = title
                             notification.informativeText = text as String
                             notification.subtitle = subText
@@ -338,7 +343,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             var dict: [String : Any] = [:]
                             
                             
-                          
+                            if message.wasScheduled {
+                                dict["wasScheduled"] = true
+                            }
                             
                             
                             
@@ -376,7 +383,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         if accountId != self.activeAccounts.primary?.id {
             return true
         }
-        return !snoofEnabled || !NSApp.isActive
+        
+        let wasScheduled = notification.userInfo?["wasScheduled"] as? Bool ?? false
+        
+        return !snoofEnabled || !NSApp.isActive || wasScheduled
     }
     
     
@@ -390,7 +400,6 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             guard let account = activeAccounts.accounts.first(where: {$0.0 == accountId})?.1 else {
                 return
             }
-            
             
             _ = applyMaxReadIndexInteractively(postbox: account.postbox, stateManager: account.stateManager, index: MessageIndex(id: messageId, timestamp: timestamp)).start()
         }

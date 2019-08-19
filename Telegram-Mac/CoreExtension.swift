@@ -483,6 +483,15 @@ public extension Message {
         return self.id.namespace == Namespaces.Message.ScheduledCloud || self.id.namespace == Namespaces.Message.ScheduledLocal
     }
     
+    var wasScheduled: Bool {
+        for attr in attributes {
+            if attr is OutgoingScheduleInfoMessageAttribute {
+                return true
+            }
+        }
+        return self.flags.contains(.WasScheduled)
+    }
+    
     var isHasInlineKeyboard: Bool {
         return replyMarkup?.flags.contains(.inline) ?? false
     }
