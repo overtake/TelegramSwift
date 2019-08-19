@@ -180,13 +180,13 @@ final class AccountContext {
    
     
     func checkFirstRecentlyForDuplicate(peerId:PeerId) {
-        if let index = recentlyPeerUsed.index(of: peerId), index == 0 {
+        if let index = recentlyPeerUsed.firstIndex(of: peerId), index == 0 {
             recentlyPeerUsed.remove(at: index)
         }
     }
     
     func addRecentlyUsedPeer(peerId:PeerId) {
-        if let index = recentlyPeerUsed.index(of: peerId) {
+        if let index = recentlyPeerUsed.firstIndex(of: peerId) {
             recentlyPeerUsed.remove(at: index)
         }
         recentlyPeerUsed.insert(peerId, at: 0)
