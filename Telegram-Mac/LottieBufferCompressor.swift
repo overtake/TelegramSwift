@@ -276,8 +276,14 @@ final class TRLotFileSupplyment {
                 case let .success(data):
                     
                     let address = malloc(bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                    rendered = data.withUnsafeBytes({ (dataBytes: UnsafePointer<UInt8>) -> UnsafeRawPointer in
-                        let _ = compression_decode_buffer(address, bufferSize, dataBytes, data.count, nil, COMPRESSION_LZFSE)
+                    
+                    
+                    rendered = data.withUnsafeBytes { dataBytes -> UnsafeRawPointer in
+                        
+                        let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
+                        let unsafePointer = unsafeBufferPointer.baseAddress!
+                        
+                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZFSE)
                         
                         if let previous = previous {
                             
@@ -295,7 +301,7 @@ final class TRLotFileSupplyment {
                             
                         }
                         return UnsafeRawPointer(address)
-                    })
+                    }
                     
                 default:
                     rendered = nil

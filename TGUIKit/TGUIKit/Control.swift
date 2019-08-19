@@ -242,6 +242,11 @@ open class Control: View {
         longOverHandleDisposable.set(nil)
         
         if event.modifierFlags.contains(.control) {
+            for handler in handlers {
+                if handler.0 == .RightDown {
+                    handler.1(self)
+                }
+            }
             super.mouseDown(with: event)
             return
         }
@@ -324,6 +329,7 @@ open class Control: View {
             super.rightMouseDown(with: event)
         }
     }
+    
     
     public func updateState() -> Void {
         if mouseInside(), !inLiveResize {
