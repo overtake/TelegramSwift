@@ -1365,7 +1365,7 @@ internal final class L10n {
   internal static var chatSecretChat4Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.4Feature") }
   /// Secret chats:
   internal static var chatSecretChatEmptyHeader: String  { return L10n.tr("Localizable", "Chat.SecretChat.EmptyHeader") }
-  /// Scheduled a Message
+  /// Schedule a Message
   internal static var chatSendScheduledMessage: String  { return L10n.tr("Localizable", "Chat.Send.ScheduledMessage") }
   /// Set a Reminder
   internal static var chatSendSetReminder: String  { return L10n.tr("Localizable", "Chat.Send.SetReminder") }
@@ -3123,6 +3123,8 @@ internal final class L10n {
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mark as Read
   internal static var notificationMarkAsRead: String  { return L10n.tr("Localizable", "Notification.MarkAsRead") }
+  /// 📆 You
+  internal static var notificationScheduledTitle: String  { return L10n.tr("Localizable", "Notification.ScheduledTitle") }
   /// All Accounts
   internal static var notificationSettingsAllAccounts: String  { return L10n.tr("Localizable", "NotificationSettings.AllAccounts") }
   /// Switch off to show the number of unread chats instead of messages.

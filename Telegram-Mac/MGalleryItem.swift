@@ -446,7 +446,9 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 if let size = value.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height, size.width > 150 && size.height > 150, magnify.magnify == 1.0 {
                     self.modifiedSize = size
                     if magnify.contentSize != self.sizeValue {
-                        magnify.contentSize = self.sizeValue
+                        if self.isGraphicFile {
+                            magnify.contentSize = self.sizeValue
+                        }
                     } else {
                         let size = magnify.contentSize
                         magnify.contentSize = size
@@ -467,6 +469,14 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     
     var backgroundColor: NSColor {
         return .black
+    }
+    
+    var isGraphicFile: Bool {
+        if self.entry.message?.media.first is TelegramMediaFile {
+            return true
+        } else {
+            return false
+        }
     }
     
     func singleView() -> NSView {
