@@ -222,7 +222,7 @@ fileprivate class PreviewSenderView : Control {
             self?.controller?.send(false)
         }, for: .SingleClick)
         
-        sendButton.set(handler: { [weak self] control in
+        let handler:(Control)->Void = { [weak self] control in
             if let controller = self?.controller, let peer = controller.chatInteraction.peer, !peer.isSecretChat {
                 
                 let chatInteraction = controller.chatInteraction
@@ -252,8 +252,11 @@ fileprivate class PreviewSenderView : Control {
                     showPopover(for: control, with: SPopoverViewController(items: items))
                 }
             }
-        }, for: .RightDown)
+        }
         
+        sendButton.set(handler: handler, for: .RightDown)
+        sendButton.set(handler: handler, for: .LongMouseDown)
+
         textView.setFrameSize(NSMakeSize(280, 34))
 
         addSubview(tableView)

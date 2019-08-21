@@ -426,12 +426,13 @@ class GalleryViewer: NSResponder {
                 }
                 
                 var image:TelegramMediaImage? = nil
-                
+                var msg: Message? = nil
                 if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
                     let action = message.media.first as! TelegramMediaAction
                     switch action.action {
                     case let .photoUpdated(updated):
                         image = updated
+                        msg = message
                     default:
                         break
                     }
@@ -441,7 +442,7 @@ class GalleryViewer: NSResponder {
                     image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
                 }
                 
-                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, date: 0), pagerSize))], updated: []))
+                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0), pagerSize))], updated: []))
                 
                 
                 self.pager.set(index: 0, animated: false)
@@ -495,7 +496,7 @@ class GalleryViewer: NSResponder {
                      //   deleted.append(i)
                        // inserted.append((i, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peer: peer, date: photosDate[i]), pagerSize)))
                     } else {
-                        inserted.append((index, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peer: peer, date: photosDate[i]), pagerSize)))
+                        inserted.append((index, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]), pagerSize)))
                     }
                     index += 1
                 }
@@ -982,7 +983,7 @@ class GalleryViewer: NSResponder {
                 
                 pager.selectedIndex.set(index)
                 
-                if case let .photo(_, _, _, reference, _, _) = item.entry {
+                if case let .photo(_, _, _, reference, _, _, _) = item.entry {
                     _ = removeAccountPhoto(network: context.account.network, reference: index == 0 ? nil : reference).start()
                 }
             }

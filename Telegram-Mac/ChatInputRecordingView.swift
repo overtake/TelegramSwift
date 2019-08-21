@@ -66,7 +66,7 @@ class ChatInputRecordingView: View {
         backgroundColor = theme.colors.background
         descView.backgroundColor = theme.colors.background
         timerView.backgroundColor = theme.colors.background
-        recView.backgroundColor = theme.colors.blueUI
+        recView.backgroundColor = theme.colors.accent
     }
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {

@@ -1355,6 +1355,8 @@ internal final class L10n {
   internal static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
   /// Scheduled Messages
   internal static var chatRightContextScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Right.Context.ScheduledMessages") }
+  /// The buttons will become active as soon as the message is sent.
+  internal static var chatScheduledInlineButtonError: String  { return L10n.tr("Localizable", "Chat.Scheduled.InlineButton.Error") }
   /// • Use end-to-end encryption
   internal static var chatSecretChat1Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.1Feature") }
   /// • Leave no trace on our servers
@@ -2653,6 +2655,8 @@ internal final class L10n {
   internal static func instantPageRelatedArticleAuthorAndDateTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "InstantPage.RelatedArticleAuthorAndDateTitle", p1, p2)
   }
+  /// Sorry, you are a member of too many groups and channels. Please leave some before joining one.
+  internal static var joinChannelsTooMuch: String  { return L10n.tr("Localizable", "Join.ChannelsTooMuch") }
   /// Join
   internal static var joinLinkJoin: String  { return L10n.tr("Localizable", "JoinLink.Join") }
   /// Show All

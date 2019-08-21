@@ -22,7 +22,7 @@ private class TouchIdContainerView : View {
         addSubview(button)
         
         button.autohighlight = false
-        button.style = ControlStyle(font: .medium(.title), foregroundColor: .white, backgroundColor: theme.colors.blueUI, highlightColor: theme.colors.blueUI)
+        button.style = ControlStyle(font: .medium(.title), foregroundColor: .white, backgroundColor: theme.colors.accent, highlightColor: theme.colors.accent)
         button.set(font: .medium(.title), for: .Normal)
         button.set(color: .white, for: .Normal)
 

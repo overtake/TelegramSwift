@@ -201,7 +201,7 @@ class UsernameSettingsViewController: TableViewController {
                     }
                     if address != username {
                         if username?.length != 0 {
-                            mutableItems.insert(.stateEntry(text:tr(L10n.usernameSettingsAvailable(username ?? "")), color: theme.colors.blueUI), at: 2)
+                            mutableItems.insert(.stateEntry(text:tr(L10n.usernameSettingsAvailable(username ?? "")), color: theme.colors.accent), at: 2)
                         }
                     }
                     self?.doneButton?.isEnabled = address != username

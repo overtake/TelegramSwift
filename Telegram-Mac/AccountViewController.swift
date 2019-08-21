@@ -335,7 +335,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                         _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                     })
                 })]
-            }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { theme.colors.blueIcon }), compactText: true)
+            }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { theme.colors.accent }), compactText: true)
         case .addAccount:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, icon: theme.icons.peerInfoAddMember, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueIcon), type: .none, action: {
                 let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
@@ -570,7 +570,7 @@ class LayoutAccountController : TableViewController {
     override func requestUpdateRightBar() {
         super.requestUpdateRightBar()
         (rightBarView as? TextButtonBarView)?.set(text: L10n.navigationEdit, for: .Normal)
-        (rightBarView as? TextButtonBarView)?.set(color: theme.colors.blueUI, for: .Normal)
+        (rightBarView as? TextButtonBarView)?.set(color: theme.colors.accent, for: .Normal)
         (rightBarView as? TextButtonBarView)?.needsLayout = true
     }
     

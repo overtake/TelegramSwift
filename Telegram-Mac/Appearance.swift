@@ -553,7 +553,7 @@ private func generateRecentActionsTriangle(_ color: NSColor) -> CGImage {
 }
 
 var blueActionButton:ControlStyle {
-    return ControlStyle(font: NSFont.normal(.title), foregroundColor: theme.colors.blueUI)
+    return ControlStyle(font: NSFont.normal(.title), foregroundColor: theme.colors.accent)
 }
 var redActionButton:ControlStyle {
     return ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI)
@@ -603,536 +603,6 @@ final class TelegramTabBarTheme  {
     }
 }
 
-
-
-
-struct TelegramIconsTheme {
-    let dialogMuteImage: CGImage
-    let dialogMuteImageSelected: CGImage
-    let outgoingMessageImage: CGImage
-    let readMessageImage: CGImage
-    let outgoingMessageImageSelected: CGImage
-    let readMessageImageSelected: CGImage
-    let sendingImage: CGImage
-    let sendingImageSelected: CGImage
-    let secretImage:CGImage
-    let secretImageSelected: CGImage
-    let pinnedImage: CGImage
-    let pinnedImageSelected: CGImage
-    let verifiedImage: CGImage
-    let verifiedImageSelected: CGImage
-    let errorImage: CGImage
-    let errorImageSelected: CGImage
-    
-    let chatSearch: CGImage
-    let chatCall: CGImage
-    let chatActions: CGImage
-    
-    let chatFailedCall_incoming: CGImage
-    let chatFailedCall_outgoing: CGImage
-    let chatCall_incoming: CGImage
-    let chatCall_outgoing: CGImage
-    
-    let chatFailedCallBubble_incoming: CGImage
-    let chatFailedCallBubble_outgoing: CGImage
-    let chatCallBubble_incoming: CGImage
-    let chatCallBubble_outgoing: CGImage
-    
-    let chatFallbackCall: CGImage
-    
-    let chatFallbackCallBubble_incoming: CGImage
-    let chatFallbackCallBubble_outgoing: CGImage
-    
-    let chatToggleSelected: CGImage
-    let chatToggleUnselected: CGImage
-    let chatShare: CGImage
-    
-    
-    let chatMusicPlay: CGImage
-    let chatMusicPlayBubble_incoming: CGImage
-    let chatMusicPlayBubble_outgoing: CGImage
-    
-    let chatMusicPause: CGImage
-    let chatMusicPauseBubble_incoming: CGImage
-    let chatMusicPauseBubble_outgoing: CGImage
-    
-    let composeNewChat:CGImage
-    let composeNewChatActive: CGImage
-    let composeNewGroup:CGImage
-    let composeNewSecretChat: CGImage
-    let composeNewChannel: CGImage
-    
-    let contactsNewContact: CGImage
-    
-    let chatReadMarkInBubble1_incoming: CGImage
-    let chatReadMarkInBubble2_incoming: CGImage
-    let chatReadMarkInBubble1_outgoing: CGImage
-    let chatReadMarkInBubble2_outgoing: CGImage
-    
-    let chatReadMarkOutBubble1: CGImage
-    let chatReadMarkOutBubble2: CGImage
-    let chatReadMarkOverlayBubble1: CGImage
-    let chatReadMarkOverlayBubble2: CGImage
-    
-    let sentFailed: CGImage
-    
-    let chatChannelViewsInBubble_incoming:CGImage
-    let chatChannelViewsInBubble_outgoing:CGImage
-    let chatChannelViewsOutBubble: CGImage
-    let chatChannelViewsOverlayBubble: CGImage
-    
-    let chatNavigationBack: CGImage
-    
-    let peerInfoAddMember: CGImage
-    
-
-    let chatSearchUp: CGImage
-    let chatSearchUpDisabled: CGImage
-    let chatSearchDown: CGImage
-    let chatSearchDownDisabled: CGImage
-    let chatSearchCalendar: CGImage
-    
-    let dismissAccessory: CGImage
-    
-    let chatScrollUp: CGImage
-    let chatScrollUpActive: CGImage
-    
-
-    let audioPlayerPlay: CGImage
-    let audioPlayerPause: CGImage
-    let audioPlayerNext: CGImage
-    let audioPlayerPrev: CGImage
-    let auduiPlayerDismiss: CGImage
-    let audioPlayerRepeat: CGImage
-    let audioPlayerRepeatActive: CGImage
-    
-    let audioPlayerLockedPlay: CGImage
-    let audioPlayerLockedNext: CGImage
-    let audioPlayerLockedPrev: CGImage
-    
-
-    
-    let chatSendMessage: CGImage
-    let chatRecordVoice: CGImage
-    let chatEntertainment: CGImage
-    let chatInlineDismiss: CGImage
-    let chatActiveReplyMarkup: CGImage
-    let chatDisabledReplyMarkup: CGImage
-    let chatSecretTimer: CGImage
-
-    let chatForwardMessagesActive: CGImage
-    let chatForwardMessagesInactive: CGImage
-    let chatDeleteMessagesActive: CGImage
-    let chatDeleteMessagesInactive: CGImage
-    
-    let generalNext: CGImage
-    let generalNextActive: CGImage
-    let generalSelect: CGImage
-
-
-    let chatVoiceRecording: CGImage
-    let chatVideoRecording: CGImage
-    let chatRecord: CGImage
-    
-    let deleteItem: CGImage
-    let deleteItemDisabled: CGImage
-    
-    let chatAttach: CGImage
-    let chatAttachFile: CGImage
-    let chatAttachPhoto: CGImage
-    let chatAttachCamera: CGImage
-    let chatAttachLocation: CGImage
-    let chatAttachPoll: CGImage
-    
-    let mediaEmptyShared: CGImage
-    let mediaEmptyFiles: CGImage
-    let mediaEmptyMusic: CGImage
-    let mediaEmptyLinks: CGImage
-    
-    let mediaDropdown: CGImage
-    
-    let stickersAddFeatured: CGImage
-    let stickersAddedFeatured: CGImage
-    let stickersRemove: CGImage
-    
-    let peerMediaDownloadFileStart: CGImage
-    let peerMediaDownloadFilePause: CGImage
-    
-    let stickersShare: CGImage
-    
-    let emojiRecentTab: CGImage
-    let emojiSmileTab: CGImage
-    let emojiNatureTab: CGImage
-    let emojiFoodTab: CGImage
-    let emojiSportTab: CGImage
-    let emojiCarTab: CGImage
-    let emojiObjectsTab: CGImage
-    let emojiSymbolsTab: CGImage
-    let emojiFlagsTab: CGImage
-    
-    let emojiRecentTabActive: CGImage
-    let emojiSmileTabActive: CGImage
-    let emojiNatureTabActive: CGImage
-    let emojiFoodTabActive: CGImage
-    let emojiSportTabActive: CGImage
-    let emojiCarTabActive: CGImage
-    let emojiObjectsTabActive: CGImage
-    let emojiSymbolsTabActive: CGImage
-    let emojiFlagsTabActive: CGImage
-    
-    let stickerBackground: CGImage
-    let stickerBackgroundActive: CGImage
-    let stickersTabRecent: CGImage
-    let stickersTabGIF: CGImage
-    
-    let chatSendingInFrame_incoming: CGImage
-    let chatSendingInHour_incoming: CGImage
-    let chatSendingInMin_incoming: CGImage
-    
-    let chatSendingInFrame_outgoing: CGImage
-    let chatSendingInHour_outgoing: CGImage
-    let chatSendingInMin_outgoing: CGImage
-    
-    let chatSendingOutFrame: CGImage
-    let chatSendingOutHour: CGImage
-    let chatSendingOutMin: CGImage
-    
-    let chatSendingOverlayFrame: CGImage
-    let chatSendingOverlayHour: CGImage
-    let chatSendingOverlayMin: CGImage
-    
-    let chatActionUrl: CGImage
-
-    let callInlineDecline: CGImage
-    let callInlineMuted: CGImage
-    let callInlineUnmuted: CGImage
-    let eventLogTriangle: CGImage
-    let channelIntro: CGImage
-    
-    let chatFileThumb: CGImage
-    let chatFileThumbBubble_incoming: CGImage
-    let chatFileThumbBubble_outgoing: CGImage
-
-    
-    let chatSecretThumb: CGImage
-    let chatMapPin: CGImage
-    let chatSecretTitle: CGImage
-    let emptySearch: CGImage
-    let calendarBack: CGImage
-    let calendarNext: CGImage
-    let calendarBackDisabled: CGImage
-    let calendarNextDisabled: CGImage
-    let newChatCamera: CGImage
-    let peerInfoVerify: CGImage
-    let peerInfoCall: CGImage
-    let callOutgoing: CGImage
-    let recentDismiss: CGImage
-    let recentDismissActive: CGImage
-    let webgameShare: CGImage
-    
-    let chatSearchCancel: CGImage
-    let chatSearchFrom: CGImage
-    
-    let callWindowDecline: CGImage
-    let callWindowAccept: CGImage
-    let callWindowMute: CGImage
-    let callWindowUnmute: CGImage
-    let callWindowClose: CGImage
-    let callWindowDeviceSettings: CGImage
-    let callSettings: CGImage
-    let callWindowCancel: CGImage
-    
-    let chatActionEdit: CGImage
-    let chatActionInfo: CGImage
-    let chatActionMute: CGImage
-    let chatActionUnmute: CGImage
-    let chatActionClearHistory: CGImage
-    let chatActionDeleteChat: CGImage
-    
-    let dismissPinned: CGImage
-    let chatActionsActive: CGImage
-    let chatEntertainmentSticker: CGImage
-    let chatEmpty: CGImage
-    let stickerPackClose: CGImage
-    let stickerPackDelete: CGImage
-    
-    let modalShare: CGImage
-    let modalClose: CGImage
-    
-    let ivChannelJoined: CGImage
-    let chatListMention: CGImage
-    let chatListMentionActive: CGImage
-    
-    let chatListMentionArchived: CGImage
-    let chatListMentionArchivedActive: CGImage
-
-    
-    let chatMention: CGImage
-    let chatMentionActive: CGImage
-    
-    let sliderControl: CGImage
-    let sliderControlActive: CGImage
-    
-    let stickersTabFave: CGImage
-    let chatInstantView: CGImage
-    let chatInstantViewBubble_incoming: CGImage
-    let chatInstantViewBubble_outgoing: CGImage
-    
-    let instantViewShare: CGImage
-    let instantViewActions: CGImage
-    let instantViewActionsActive: CGImage
-    let instantViewSafari: CGImage
-    let instantViewBack: CGImage
-    let instantViewCheck: CGImage
-    
-    let groupStickerNotFound: CGImage
-    
-    let settingsAskQuestion: CGImage
-    let settingsFaq: CGImage
-    let settingsGeneral: CGImage
-    let settingsLanguage: CGImage
-    let settingsNotifications: CGImage
-    let settingsSecurity: CGImage
-    let settingsStickers: CGImage
-    let settingsStorage: CGImage
-    let settingsProxy: CGImage
-    let settingsAppearance: CGImage
-    let settingsPassport: CGImage
-    let settingsUpdate: CGImage
-    
-    let settingsAskQuestionActive: CGImage
-    let settingsFaqActive: CGImage
-    let settingsGeneralActive: CGImage
-    let settingsLanguageActive: CGImage
-    let settingsNotificationsActive: CGImage
-    let settingsSecurityActive: CGImage
-    let settingsStickersActive: CGImage
-    let settingsStorageActive: CGImage
-    let settingsProxyActive: CGImage
-    let settingsAppearanceActive: CGImage
-    let settingsPassportActive: CGImage
-    let settingsUpdateActive: CGImage
-    
-
-    let generalCheck: CGImage
-    let settingsAbout: CGImage
-    let settingsLogout: CGImage
-    
-    let fastSettingsLock: CGImage
-    let fastSettingsDark: CGImage
-    let fastSettingsSunny: CGImage
-    let fastSettingsMute: CGImage
-    let fastSettingsUnmute: CGImage
-    
-    let chatRecordVideo: CGImage
-    
-    let inputChannelMute: CGImage
-    let inputChannelUnmute: CGImage
-    
-    let changePhoneNumberIntro: CGImage
-    
-    let peerSavedMessages: CGImage
-    
-    let previewCollage: CGImage
-    let chatGoMessage: CGImage
-    
-    let chatGroupToggleSelected: CGImage
-    let chatGroupToggleUnselected: CGImage
-    
-    let successModalProgress: CGImage
-    
-    let accentColorSelect: CGImage
-    
-    let chatShareWallpaper: CGImage
-    let chatGotoMessageWallpaper: CGImage
-    let transparentBackground: CGImage
-    let lottieTransparentBackground: CGImage
-    
-    let passcodeTouchId: CGImage
-    let passcodeLogin: CGImage
-    let confirmDeleteMessagesAccessory: CGImage
-    let alertCheckBoxSelected: CGImage
-    let alertCheckBoxUnselected: CGImage
-    let confirmPinAccessory: CGImage
-    let confirmDeleteChatAccessory: CGImage
-    
-    let stickersEmptySearch: CGImage
-    
-    let twoStepVerificationCreateIntro: CGImage
-    let secureIdAuth: CGImage
-    
-    let ivAudioPlay: CGImage
-    let ivAudioPause: CGImage
-    
-    let proxyEnable: CGImage
-    let proxyEnabled: CGImage
-    let proxyState: CGImage
-    let proxyDeleteListItem: CGImage
-    let proxyInfoListItem: CGImage
-    let proxyConnectedListItem: CGImage
-    let proxyAddProxy: CGImage
-    let proxyNextWaitingListItem: CGImage
-    let passportForgotPassword: CGImage
-    
-    let confirmAppAccessoryIcon: CGImage
-    
-    let passportPassport: CGImage
-    let passportIdCardReverse: CGImage
-    let passportIdCard: CGImage
-    let passportSelfie: CGImage
-    let passportDriverLicense: CGImage
-    
-    let chatOverlayVoiceRecording: CGImage
-    let chatOverlayVideoRecording: CGImage
-    let chatOverlaySendRecording: CGImage
-    
-    let chatOverlayLockArrowRecording: CGImage
-    let chatOverlayLockerBodyRecording: CGImage
-    let chatOverlayLockerHeadRecording: CGImage
-    
-    let locationPin: CGImage
-    let locationMapPin: CGImage
-    let locationMapLocate: CGImage
-    let locationMapLocated: CGImage
-    
-    let chatTabIconSelected: CGImage
-    let chatTabIconSelectedUp: CGImage
-    let chatTabIconSelectedDown: CGImage
-    let chatTabIcon: CGImage
-    
-    let passportSettings: CGImage
-    let passportInfo: CGImage
-    
-    let editMessageMedia: CGImage
-    
-    let playerMusicPlaceholder: CGImage
-    let chatMusicPlaceholder: CGImage
-    let chatMusicPlaceholderCap: CGImage
-    
-    let searchArticle: CGImage
-    let searchSaved: CGImage
-    let archivedChats: CGImage
-
-    let hintPeerActive: CGImage
-    let hintPeerActiveSelected: CGImage
-    
-    let chatSwiping_delete: CGImage
-    let chatSwiping_mute: CGImage
-    let chatSwiping_unmute: CGImage
-    let chatSwiping_read: CGImage
-    let chatSwiping_unread: CGImage
-    let chatSwiping_pin: CGImage
-    let chatSwiping_unpin: CGImage
-    let chatSwiping_archive: CGImage
-    let chatSwiping_unarchive: CGImage
-    
-    
-    let galleryPrev: CGImage
-    let galleryNext: CGImage
-    let galleryMore: CGImage
-    let galleryShare: CGImage
-    let galleryFastSave: CGImage
-    
-    let playingVoice1x: CGImage
-    let playingVoice2x: CGImage
-    
-    
-    let galleryRotate: CGImage
-    let galleryZoomIn: CGImage
-    let galleryZoomOut: CGImage
-    
-    let previewSenderCrop: CGImage
-    let previewSenderDelete: CGImage
-    
-    let editMessageCurrentPhoto: CGImage
-    
-    let previewSenderDeleteFile: CGImage
-    let previewSenderArchive: CGImage
-    
-    let chatSwipeReply: CGImage
-    let chatSwipeReplyWallpaper: CGImage
-    
-    let videoPlayerPlay: CGImage
-    let videoPlayerPause: CGImage
-    let videoPlayerEnterFullScreen: CGImage
-    let videoPlayerExitFullScreen: CGImage
-    let videoPlayerPIPIn: CGImage
-    let videoPlayerPIPOut: CGImage
-    let videoPlayerRewind15Forward: CGImage
-    let videoPlayerRewind15Backward: CGImage
-    let videoPlayerVolume: CGImage
-    let videoPlayerVolumeOff: CGImage
-    let videoPlayerClose: CGImage
-    
-    let videoPlayerSliderInteractor: CGImage
-    
-    let streamingVideoDownload: CGImage
-    
-    let videoCompactFetching: CGImage
-    let compactStreamingFetchingCancel : CGImage
-    
-    let customLocalizationDelete: CGImage
-    
-    let pollAddOption: CGImage
-    let pollDeleteOption: CGImage
-    
-    let resort: CGImage
-    
-    let chatPollVoteUnselected: CGImage
-    let chatPollVoteUnselectedBubble_incoming: CGImage
-    let chatPollVoteUnselectedBubble_outgoing: CGImage
-
-    
-    let peerInfoAdmins: CGImage
-    let peerInfoPermissions: CGImage
-    let peerInfoBanned: CGImage
-    let peerInfoMembers: CGImage
-    
-    let chatUndoAction: CGImage
-    
-    let appUpdate: CGImage
-    
-    let inlineVideoSoundOff: CGImage
-    let inlineVideoSoundOn: CGImage
-    
-    
-    let logoutOptionAddAccount: CGImage
-    let logoutOptionSetPasscode: CGImage
-    let logoutOptionClearCache: CGImage
-    let logoutOptionChangePhoneNumber: CGImage
-    let logoutOptionContactSupport: CGImage
-
-    
-    let disableEmojiPrediction: CGImage
-    let scam: CGImage
-    let scamActive: CGImage
-    let chatScam: CGImage
-
-    let chatUnarchive: CGImage
-    let chatArchive: CGImage
-    
-    
-    let privacySettings_blocked: CGImage
-    let privacySettings_activeSessions: CGImage
-    let privacySettings_passcode: CGImage
-    let privacySettings_twoStep: CGImage
-    
-    
-    let deletedAccount: CGImage
-    
-    let stickerPackSelection: CGImage
-    let stickerPackSelectionActive: CGImage
-    
-    let entertainment_Emoji:CGImage
-    let entertainment_Stickers:CGImage
-    let entertainment_Gifs:CGImage
-    let entertainment_Search:CGImage
-    let entertainment_Settings:CGImage
-    let entertainment_SearchCancel:CGImage
-    
-    let scheduledAvatar: CGImage
-    let scheduledInputAction: CGImage
-}
 
 final class TelegramChatListTheme {
     let selectedBackgroundColor: NSColor
@@ -1426,7 +896,7 @@ class TelegramPresentationTheme : PresentationTheme {
     let chatServiceItemTextColor: NSColor
     let fontSize: CGFloat
     let followSystemAppearance: Bool
-    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: Wallpaper, c_wallpaper: Wallpaper?, followSystemAppearance: Bool) {
+    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: Wallpaper, c_wallpaper: Wallpaper?, followSystemAppearance: Bool, chat: TelegramChatColors? = nil) {
         self.chatList = chatList
         #if !SHARE
             self.chat = TelegramChatColors(colors, bubbled)
@@ -1535,6 +1005,10 @@ class TelegramPresentationTheme : PresentationTheme {
        
     }
     
+    func withUpdatedColors(_ colors: ColorPalette) -> TelegramPresentationTheme {
+        return TelegramPresentationTheme.init(colors: colors, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: self.icons, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, c_wallpaper: self.c_wallpaper, followSystemAppearance: self.followSystemAppearance)
+    }
+    
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {
         return activityResources.object(key, { () -> Any in
             return ActivitiesTheme(text: textActivityAnimation(foregroundColor), uploading: uploadFileActivityAnimation(foregroundColor, backgroundColor), recording: recordVoiceActivityAnimation(foregroundColor), textColor: foregroundColor, backgroundColor: backgroundColor)
@@ -1563,411 +1037,409 @@ extension ColorPalette {
 
 
 private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> TelegramIconsTheme {
-    return TelegramIconsTheme(dialogMuteImage: #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.grayIcon),
-                                               dialogMuteImageSelected: #imageLiteral(resourceName: "Icon_DialogMute").precomposed(.white),
-                                               outgoingMessageImage: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true),
-                                               readMessageImage: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true),
-                                               outgoingMessageImageSelected: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white, flipVertical:true),
-                                               readMessageImageSelected: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(.white, flipVertical:true),
-                                               sendingImage: #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.grayIcon, flipVertical:true),
-                                               sendingImageSelected: #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(.white, flipVertical:true),
-                                               secretImage:#imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true),
-                                               secretImageSelected: #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(.white, flipVertical:true),
-                                               pinnedImage: #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true),
-                                               pinnedImageSelected: #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(.white, flipVertical:true),
-                                               verifiedImage: #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true),
-                                               verifiedImageSelected: #imageLiteral(resourceName: "Icon_VerifyPeerActive").precomposed(flipVertical: true),
-                                               errorImage: #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true),
-                                               errorImageSelected: #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true),
-                                               chatSearch: #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.blueIcon),
-                                               chatCall: #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.blueIcon),
-                                               chatActions: #imageLiteral(resourceName: "Icon_ChatActions").precomposed(palette.blueIcon),
-                                               chatFailedCall_incoming: #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.redUI),
-                                               chatFailedCall_outgoing: #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.redUI),
-                                               chatCall_incoming: #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.greenUI),
-                                               chatCall_outgoing: #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.greenUI),
-                                               chatFailedCallBubble_incoming: #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.redBubble_incoming),
-                                               chatFailedCallBubble_outgoing: #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.redBubble_outgoing),
-                                               chatCallBubble_incoming: #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.greenBubble_incoming),
-                                               chatCallBubble_outgoing: #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.greenBubble_outgoing),
-                                               chatFallbackCall: #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.blueIcon),
-                                               chatFallbackCallBubble_incoming: #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_incoming),
-                                               chatFallbackCallBubble_outgoing: #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_outgoing),
+    return TelegramIconsTheme(dialogMuteImage: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.grayIcon) },
+                              dialogMuteImageSelected: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(.white) },
+                              outgoingMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
+                                               readMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
+                                               outgoingMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white, flipVertical:true) },
+                                               readMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(.white, flipVertical:true) },
+                                               sendingImage: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.grayIcon, flipVertical:true) },
+                                               sendingImageSelected: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(.white, flipVertical:true) },
+                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
+                                               secretImageSelected:{  #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(.white, flipVertical:true) },
+                                               pinnedImage: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true) },
+                                               pinnedImageSelected: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(.white, flipVertical:true) },
+                                               verifiedImage: { #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true) },
+                                               verifiedImageSelected: { #imageLiteral(resourceName: "Icon_VerifyPeerActive").precomposed(flipVertical: true) },
+                                               errorImage: { #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true) },
+                                               errorImageSelected: { #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true) },
+                                               chatSearch: { #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.blueIcon) },
+                                               chatCall: { #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.blueIcon) },
+                                               chatActions: { #imageLiteral(resourceName: "Icon_ChatActions").precomposed(palette.blueIcon) },
+                                               chatFailedCall_incoming: { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.redUI) },
+                                               chatFailedCall_outgoing:  { #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.redUI) },
+                                               chatCall_incoming:  { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.greenUI) },
+                                               chatCall_outgoing:  { #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.greenUI) },
+                                               chatFailedCallBubble_incoming:  { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.redBubble_incoming) },
+                                               chatFailedCallBubble_outgoing:  { #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.redBubble_outgoing) },
+                                               chatCallBubble_incoming:  { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.greenBubble_incoming) },
+                                               chatCallBubble_outgoing:  { #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.greenBubble_outgoing) },
+                                               chatFallbackCall: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.blueIcon) },
+                                               chatFallbackCallBubble_incoming: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_incoming) },
+                                               chatFallbackCallBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_outgoing) },
                                                
-                                               chatToggleSelected: generateChatGroupToggleSelected(foregroundColor: palette.blueIcon),
-                                               chatToggleUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(),
-                                               chatShare: #imageLiteral(resourceName: "Icon_ChannelShare").precomposed(palette.blueIcon),
-                                               chatMusicPlay: #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(),
-                                               chatMusicPlayBubble_incoming: #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_incoming),
-                                               chatMusicPlayBubble_outgoing: #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_outgoing),
-                                               chatMusicPause: #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(),
-                                               chatMusicPauseBubble_incoming: #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_incoming),
-                                               chatMusicPauseBubble_outgoing: #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing),
-                                               composeNewChat:#imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.blueIcon),
-                                               composeNewChatActive:#imageLiteral(resourceName: "Icon_NewMessage").precomposed(.white),
-                                               composeNewGroup:#imageLiteral(resourceName: "Icon_NewGroup").precomposed(palette.blueIcon),
-                                               composeNewSecretChat: #imageLiteral(resourceName: "Icon_NewSecretChat").precomposed(palette.blueIcon),
-                                               composeNewChannel: #imageLiteral(resourceName: "Icon_NewChannel").precomposed(palette.blueIcon),
-                                               contactsNewContact: #imageLiteral(resourceName: "Icon_NewContact").precomposed(palette.blueIcon),
-                                               chatReadMarkInBubble1_incoming: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.blueIconBubble_incoming),
-                                               chatReadMarkInBubble2_incoming: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIconBubble_incoming),
-                                               chatReadMarkInBubble1_outgoing: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.blueIconBubble_outgoing),
-                                               chatReadMarkInBubble2_outgoing: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIconBubble_outgoing),
-                                               chatReadMarkOutBubble1: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.blueIcon),
-                                               chatReadMarkOutBubble2: #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIcon),
-                                               chatReadMarkOverlayBubble1: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white),
-                                               chatReadMarkOverlayBubble2:#imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(.white),
-                                               sentFailed: generateImage(NSMakeSize(13, 13), contextGenerator: { size, ctx in
+                                               chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.blueIcon) },
+                                               chatToggleUnselected:  { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed() },
+                                               chatShare:  { #imageLiteral(resourceName: "Icon_ChannelShare").precomposed(palette.blueIcon) },
+                                               chatMusicPlay:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed() },
+                                               chatMusicPlayBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_incoming) },
+                                               chatMusicPlayBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_outgoing) },
+                                               chatMusicPause:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed() },
+                                               chatMusicPauseBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_incoming) },
+                                               chatMusicPauseBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing) },
+                                               composeNewChat: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.blueIcon) },
+                                               composeNewChatActive: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(.white) },
+                                               composeNewGroup: { #imageLiteral(resourceName: "Icon_NewGroup").precomposed(palette.blueIcon) },
+                                               composeNewSecretChat: { #imageLiteral(resourceName: "Icon_NewSecretChat").precomposed(palette.blueIcon) },
+                                               composeNewChannel: { #imageLiteral(resourceName: "Icon_NewChannel").precomposed(palette.blueIcon) },
+                                               contactsNewContact: { #imageLiteral(resourceName: "Icon_NewContact").precomposed(palette.blueIcon) },
+                                               chatReadMarkInBubble1_incoming: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.blueIconBubble_incoming) },
+                                               chatReadMarkInBubble2_incoming: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIconBubble_incoming) },
+                                               chatReadMarkInBubble1_outgoing: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.blueIconBubble_outgoing) },
+                                               chatReadMarkInBubble2_outgoing: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIconBubble_outgoing) },
+                                               chatReadMarkOutBubble1: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.blueIcon) },
+                                               chatReadMarkOutBubble2: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.blueIcon) },
+                                               chatReadMarkOverlayBubble1: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
+                                               chatReadMarkOverlayBubble2: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(.white) },
+                                               sentFailed: { generateImage(NSMakeSize(13, 13), contextGenerator: { size, ctx in
                                                     ctx.clear(NSMakeRect(0, 0, size.width, size.height))
                                                     ctx.draw(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(), in: NSMakeRect(0, 0, size.width, size.height))
-                                               })!,
-                                               chatChannelViewsInBubble_incoming: #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_incoming, flipVertical: true),
-                                               chatChannelViewsInBubble_outgoing: #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_outgoing, flipVertical: true),
-                                               chatChannelViewsOutBubble: #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIcon, flipVertical: true),
-                                               chatChannelViewsOverlayBubble: #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(.white, flipVertical: true),
-                                               chatNavigationBack: #imageLiteral(resourceName: "Icon_ChatNavigationBack").precomposed(palette.blueIcon),
-                                               peerInfoAddMember: #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon, flipVertical: true),
-                                               chatSearchUp: #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.blueIcon),
-                                               chatSearchUpDisabled: #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.grayIcon),
-                                               chatSearchDown: #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.blueIcon, flipVertical:true),
-                                               chatSearchDownDisabled: #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.grayIcon, flipVertical:true),
-                                               chatSearchCalendar: #imageLiteral(resourceName: "Icon_Calendar").precomposed(palette.blueIcon),
-                                               dismissAccessory: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.grayIcon),
-                                               chatScrollUp: generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.grayIcon, arrowColor: palette.grayIcon),
-                                               chatScrollUpActive: generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.blueIcon, arrowColor: palette.blueIcon),
-                                               audioPlayerPlay: #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.blueIcon),
-                                               audioPlayerPause: #imageLiteral(resourceName: "Icon_InlinePlayerPause").precomposed(palette.blueIcon),
-                                               audioPlayerNext: #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.blueIcon),
-                                               audioPlayerPrev: #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.blueIcon),
-                                               auduiPlayerDismiss: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
-                                               audioPlayerRepeat: #imageLiteral(resourceName: "Icon_RepeatAudio").precomposed(palette.grayIcon),
-                                               audioPlayerRepeatActive: #imageLiteral(resourceName: "Icon_RepeatAudio").precomposed(palette.blueIcon),
-                                               audioPlayerLockedPlay: #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.grayIcon),
-                                               audioPlayerLockedNext: #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.grayIcon),
-                                               audioPlayerLockedPrev: #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.grayIcon),
-                                               chatSendMessage: #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.blueIcon),
-                                               chatRecordVoice: #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon),
-                                               chatEntertainment: #imageLiteral(resourceName: "Icon_Entertainments").precomposed(palette.grayIcon),
-                                               chatInlineDismiss: #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(palette.grayIcon),
-                                               chatActiveReplyMarkup: #imageLiteral(resourceName: "Icon_ReplyMarkupButton").precomposed(palette.blueIcon),
-                                               chatDisabledReplyMarkup: #imageLiteral(resourceName: "Icon_ReplyMarkupButton").precomposed(palette.grayIcon),
-                                               chatSecretTimer: #imageLiteral(resourceName: "Icon_SecretTimer").precomposed(palette.grayIcon),
-                                               chatForwardMessagesActive: #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.blueIcon),
-                                               chatForwardMessagesInactive: #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.grayIcon),
-                                               chatDeleteMessagesActive: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.redUI),
-                                               chatDeleteMessagesInactive: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.grayIcon),
-                                               generalNext: #imageLiteral(resourceName: "Icon_GeneralNext").precomposed(palette.grayIcon.withAlphaComponent(0.5)),
-                                               generalNextActive: #imageLiteral(resourceName: "Icon_GeneralNext").precomposed(.white),
-                                               generalSelect: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.blueIcon),
-                                               chatVoiceRecording: #imageLiteral(resourceName: "Icon_RecordingVoice").precomposed(palette.blueIcon),
-                                               chatVideoRecording: #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(palette.blueIcon),
-                                               chatRecord: #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon),
-                                               deleteItem: deleteItemIcon(palette.redUI),
-                                               deleteItemDisabled: deleteItemIcon(palette.grayTransparent),
-                                               chatAttach: #imageLiteral(resourceName: "Icon_ChatAttach").precomposed(palette.grayIcon),
-                                               chatAttachFile: #imageLiteral(resourceName: "Icon_AttachFile").precomposed(palette.blueIcon),
-                                               chatAttachPhoto: #imageLiteral(resourceName: "Icon_AttachPhoto").precomposed(palette.blueIcon),
-                                               chatAttachCamera: #imageLiteral(resourceName: "Icon_AttachCamera").precomposed(palette.blueIcon),
-                                               chatAttachLocation: #imageLiteral(resourceName: "Icon_AttachLocation").precomposed(palette.blueIcon),
-                                               chatAttachPoll: #imageLiteral(resourceName: "Icon_AttachPoll").precomposed(palette.blueIcon),
-                                               mediaEmptyShared: #imageLiteral(resourceName: "Icon_EmptySharedMedia").precomposed(palette.grayIcon),
-                                               mediaEmptyFiles: #imageLiteral(resourceName: "Icon_EmptySharedFiles").precomposed(),
-                                               mediaEmptyMusic: #imageLiteral(resourceName: "Icon_EmptySharedMusic").precomposed(palette.grayIcon),
-                                               mediaEmptyLinks: #imageLiteral(resourceName: "Icon_EmptySharedLinks").precomposed(palette.grayIcon),
-                                               mediaDropdown: #imageLiteral(resourceName: "Icon_DropdownArrow").precomposed(palette.blueIcon),
-                                               stickersAddFeatured: #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon),
-                                               stickersAddedFeatured: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.grayIcon),
-                                               stickersRemove: #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(palette.grayIcon),
-                                               peerMediaDownloadFileStart: #imageLiteral(resourceName: "Icon_MediaDownload").precomposed(palette.blueIcon),
-                                               peerMediaDownloadFilePause: downloadFilePauseIcon(palette.blueIcon),
-                                               stickersShare: #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon),
-                                               emojiRecentTab: #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiSmileTab: #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiNatureTab: #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiFoodTab: #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiSportTab: #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiCarTab: #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiObjectsTab: #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiSymbolsTab: #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiFlagsTab: #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiRecentTabActive: #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiSmileTabActive: #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiNatureTabActive: #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiFoodTabActive: #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiSportTabActive: #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiCarTabActive: #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiObjectsTabActive: #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiSymbolsTabActive: #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               emojiFlagsTabActive: #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true),
-                                               stickerBackground: generateStickerBackground(NSMakeSize(83, 83), palette.background),
-                                               stickerBackgroundActive: generateStickerBackground(NSMakeSize(83, 83), palette.grayBackground),
-                                               stickersTabRecent: #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon),
-                                               stickersTabGIF: #imageLiteral(resourceName: "Icon_GifToggle").precomposed(palette.grayIcon),
-                                               chatSendingInFrame_incoming: generateSendingFrame(palette.grayIconBubble_incoming),
-                                               chatSendingInHour_incoming: generateSendingHour(palette.grayIconBubble_incoming),
-                                               chatSendingInMin_incoming: generateSendingMin(palette.grayIconBubble_incoming),
-                                               chatSendingInFrame_outgoing: generateSendingFrame(palette.grayIconBubble_outgoing),
-                                               chatSendingInHour_outgoing: generateSendingHour(palette.grayIconBubble_outgoing),
-                                               chatSendingInMin_outgoing: generateSendingMin(palette.grayIconBubble_outgoing),
-                                               chatSendingOutFrame: generateSendingFrame(palette.grayIcon),
-                                               chatSendingOutHour: generateSendingHour(palette.grayIcon),
-                                               chatSendingOutMin: generateSendingMin(palette.grayIcon),
-                                               chatSendingOverlayFrame: generateSendingFrame(.white),
-                                               chatSendingOverlayHour: generateSendingHour(.white),
-                                               chatSendingOverlayMin: generateSendingMin(.white),
-                                               chatActionUrl: #imageLiteral(resourceName: "Icon_InlineBotUrl").precomposed(palette.text),
-                                               callInlineDecline: #imageLiteral(resourceName: "Icon_CallDecline_Inline").precomposed(.white),
-                                               callInlineMuted: #imageLiteral(resourceName: "Icon_CallMute_Inline").precomposed(.white),
-                                               callInlineUnmuted: #imageLiteral(resourceName: "Icon_CallUnmuted_Inline").precomposed(.white),
-                                               eventLogTriangle: generateRecentActionsTriangle(palette.text),
-                                               channelIntro: #imageLiteral(resourceName: "Icon_ChannelIntro").precomposed(),
-                                               chatFileThumb: #imageLiteral(resourceName: "Icon_MessageFile").precomposed(flipVertical:true),
-                                               chatFileThumbBubble_incoming: #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_incoming,  flipVertical:true),
-                                               chatFileThumbBubble_outgoing: #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_outgoing, flipVertical:true),
-                                               chatSecretThumb: #imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true),
-                                               chatMapPin: #imageLiteral(resourceName: "Icon_MapPinned").precomposed(),
-                                               chatSecretTitle: #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.text, flipVertical:true),
-                                               emptySearch: #imageLiteral(resourceName: "Icon_EmptySearchResults").precomposed(palette.grayIcon),
-                                               calendarBack: #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.blueIcon),
-                                               calendarNext: #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.blueIcon, flipHorizontal: true),
-                                               calendarBackDisabled: #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.grayIcon),
-                                               calendarNextDisabled: #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.grayIcon, flipHorizontal: true),
-                                               newChatCamera: #imageLiteral(resourceName: "Icon_AttachCamera").precomposed(palette.grayIcon),
-                                               peerInfoVerify: #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true),
-                                               peerInfoCall: #imageLiteral(resourceName: "Icon_ProfileCall").precomposed(palette.blueUI),
-                                               callOutgoing: #imageLiteral(resourceName: "Icon_CallOutgoing").precomposed(palette.grayIcon, flipVertical: true),
-                                               recentDismiss: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon),
-                                               recentDismissActive: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(.white),
-                                               webgameShare: #imageLiteral(resourceName: "Icon_ShareExternal").precomposed(palette.blueIcon),
-                                               chatSearchCancel: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
-                                               chatSearchFrom: #imageLiteral(resourceName: "Icon_ChatSearchFrom").precomposed(palette.blueIcon),
-                                               callWindowDecline: #imageLiteral(resourceName: "Icon_CallDecline_Window").precomposed(),
-                                               callWindowAccept: #imageLiteral(resourceName: "Icon_CallAccept_Window").precomposed(),
-                                               callWindowMute: #imageLiteral(resourceName: "Icon_CallMic_Window").precomposed(),
-                                               callWindowUnmute: #imageLiteral(resourceName: "Icon_CallMute_Inline").precomposed(),
-                                               callWindowClose: #imageLiteral(resourceName: "Icon_CallWindowClose").precomposed(.white),
-                                               callWindowDeviceSettings: #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(.white),
-                                               callSettings: #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(palette.blueIcon),
-                                               callWindowCancel: #imageLiteral(resourceName: "Icon_CallCancelIcon").precomposed(.white),
-                                               chatActionEdit: #imageLiteral(resourceName: "Icon_ChatActionEdit").precomposed(palette.blueIcon),
-                                               chatActionInfo: #imageLiteral(resourceName: "Icon_ChatActionInfo").precomposed(palette.blueIcon),
-                                               chatActionMute: #imageLiteral(resourceName: "Icon_ChatActionMute").precomposed(palette.blueIcon),
-                                               chatActionUnmute: #imageLiteral(resourceName: "Icon_ChatActionUnmute").precomposed(palette.blueIcon),
-                                               chatActionClearHistory: #imageLiteral(resourceName: "Icon_ClearChat").precomposed(palette.blueIcon),
-                                               chatActionDeleteChat: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
-                                               dismissPinned: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
-                                               chatActionsActive: #imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.blueIcon),
-                                               chatEntertainmentSticker: #imageLiteral(resourceName: "Icon_ChatEntertainmentSticker").precomposed(palette.grayIcon),
-                                               chatEmpty: #imageLiteral(resourceName: "Icon_EmptyChat").precomposed(palette.grayForeground),
-                                               stickerPackClose: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
-                                               stickerPackDelete: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
-                                               modalShare: #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon),
-                                               modalClose: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon),
-                                               ivChannelJoined: #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white),
-                                               chatListMention: generateBadgeMention(backgroundColor: palette.blueUI, foregroundColor: palette.background),
-                                               chatListMentionActive: generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect),
-                                               chatListMentionArchived: generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background),
-                                               chatListMentionArchivedActive: generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect),
-                                               chatMention: generateChatMention(backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon),
-                                               chatMentionActive: generateChatMention(backgroundColor: palette.background, border: palette.blueIcon, foregroundColor: palette.blueIcon),
-                                               sliderControl: #imageLiteral(resourceName: "Icon_SliderNormal").precomposed(),
-                                               sliderControlActive: #imageLiteral(resourceName: "Icon_SliderNormal").precomposed(),
-                                               stickersTabFave: #imageLiteral(resourceName: "Icon_FaveStickers").precomposed(palette.grayIcon),
-                                               chatInstantView: #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivity),
-                                               chatInstantViewBubble_incoming: #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivityBubble_incoming),
-                                               chatInstantViewBubble_outgoing: #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivityBubble_outgoing),
-                                               instantViewShare: #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon),
-                                               instantViewActions: #imageLiteral(resourceName: "Icon_ChatActions").precomposed(palette.blueIcon),
-                                               instantViewActionsActive: #imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.blueIcon),
-                                               instantViewSafari: #imageLiteral(resourceName: "Icon_InstantViewSafari").precomposed(palette.blueIcon),
-                                               instantViewBack: #imageLiteral(resourceName: "Icon_InstantViewBack").precomposed(palette.blueIcon),
-                                               instantViewCheck: #imageLiteral(resourceName: "Icon_InstantViewCheck").precomposed(palette.blueIcon),
-                                               groupStickerNotFound: #imageLiteral(resourceName: "Icon_GroupStickerNotFound").precomposed(palette.grayIcon),
-                                               settingsAskQuestion: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)),
-                                               settingsFaq: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)),
-                                               settingsGeneral: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(flipVertical: true)),
-                                               settingsLanguage: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)),
-                                               settingsNotifications: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)),
-                                               settingsSecurity: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)),
-                                               settingsStickers: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(flipVertical: true)),
-                                               settingsStorage: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(flipVertical: true)),
-                                               settingsProxy: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(flipVertical: true)),
-                                               settingsAppearance: generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)),
-                                               settingsPassport: generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)),
-                                               settingsUpdate: generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)),
-                                               settingsAskQuestionActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsFaqActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsGeneralActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsLanguageActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsNotificationsActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsSecurityActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsStickersActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsStorageActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsProxyActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsAppearanceActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsPassportActive: generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               settingsUpdateActive: generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(.white, flipVertical: true), background: palette.blueSelect),
-                                               generalCheck: #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon),
-                                               settingsAbout: #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon),
-                                               settingsLogout: #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI),
-                                               fastSettingsLock: #imageLiteral(resourceName: "Icon_FastSettingsLock").precomposed(palette.blueIcon),
-                                               fastSettingsDark: #imageLiteral(resourceName: "Icon_FastSettingsDark").precomposed(palette.blueIcon),
-                                               fastSettingsSunny: #imageLiteral(resourceName: "Icon_FastSettingsSunny").precomposed(palette.blueIcon),
-                                               fastSettingsMute: #imageLiteral(resourceName: "Icon_ChatActionMute").precomposed(palette.blueIcon),
-                                               fastSettingsUnmute: #imageLiteral(resourceName: "Icon_ChatActionUnmute").precomposed(palette.blueIcon),
-                                               chatRecordVideo: #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(palette.grayIcon),
-                                               inputChannelMute: #imageLiteral(resourceName: "Icon_InputChannelMute").precomposed(palette.grayIcon),
-                                               inputChannelUnmute: #imageLiteral(resourceName: "Icon_InputChannelUnmute").precomposed(palette.grayIcon),
-                                               changePhoneNumberIntro: #imageLiteral(resourceName: "Icon_ChangeNumberIntro").precomposed(),
-                                               peerSavedMessages: #imageLiteral(resourceName: "Icon_SavedMessages").precomposed(),
-                                               previewCollage: #imageLiteral(resourceName: "Icon_PreviewCollage").precomposed(palette.grayIcon),
-                                               chatGoMessage: #imageLiteral(resourceName: "Icon_ChatGoMessage").precomposed(palette.blueIcon),
-                                               chatGroupToggleSelected: generateChatGroupToggleSelected(foregroundColor: palette.blueIcon),
-                                               chatGroupToggleUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(),
-                                               successModalProgress: #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(palette.grayIcon),
-                                               accentColorSelect: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white),
-                                               chatShareWallpaper: #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon),
-                                               chatGotoMessageWallpaper: #imageLiteral(resourceName: "Icon_GotoBubbleMessage").precomposed(palette.blueIcon),
-                                               transparentBackground: generateTransparentBackground(),
-                                               lottieTransparentBackground: generateLottieTransparentBackground(),
-                                               passcodeTouchId: #imageLiteral(resourceName: "Icon_TouchId").precomposed(),
-                                               passcodeLogin: #imageLiteral(resourceName: "Icon_PasscodeLogin").precomposed(),
-                                               confirmDeleteMessagesAccessory: generateConfirmDeleteMessagesAccessory(backgroundColor: palette.redUI),
-                                               alertCheckBoxSelected: generateAlertCheckBoxSelected(backgroundColor: palette.blueIcon),
-                                               alertCheckBoxUnselected: generateAlertCheckBoxUnselected(border: palette.grayIcon),
-                                               confirmPinAccessory: generateConfirmPinAccessory(backgroundColor: palette.blueIcon),
-                                               confirmDeleteChatAccessory: generateConfirmDeleteChatAccessory(backgroundColor: palette.background, foregroundColor: palette.redUI),
-                                               stickersEmptySearch: generateStickersEmptySearch(color: palette.grayIcon),
-                                               twoStepVerificationCreateIntro: #imageLiteral(resourceName: "Icon_TwoStepVerification_Create").precomposed(),
-                                               secureIdAuth: #imageLiteral(resourceName: "Icon_SecureIdAuth").precomposed(),
-                                               ivAudioPlay: generateIVAudioPlay(color: palette.text),
-                                               ivAudioPause: generateIVAudioPause(color: palette.text),
-                                               proxyEnable: #imageLiteral(resourceName: "Icon_ProxyEnable").precomposed(palette.blueUI),
-                                               proxyEnabled: #imageLiteral(resourceName: "Icon_ProxyEnabled").precomposed(palette.blueUI),
-                                               proxyState: #imageLiteral(resourceName: "Icon_ProxyState").precomposed(palette.blueUI),
-                                               proxyDeleteListItem: #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon),
-                                               proxyInfoListItem: #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon),
-                                               proxyConnectedListItem: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.blueIcon),
-                                               proxyAddProxy: #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon, flipVertical: true),
-                                               proxyNextWaitingListItem: #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.grayIcon),
-                                               passportForgotPassword: #imageLiteral(resourceName: "Icon_SecureIdForgotPassword").precomposed(palette.grayIcon),
-                                               confirmAppAccessoryIcon: #imageLiteral(resourceName: "Icon_ConfirmAppAccessory").precomposed(),
-                                               passportPassport: #imageLiteral(resourceName: "Icon_PassportPassport").precomposed(palette.blueIcon, flipVertical: true),
-                                               passportIdCardReverse: #imageLiteral(resourceName: "Icon_PassportIdCardReverse").precomposed(palette.blueIcon, flipVertical: true),
-                                               passportIdCard: #imageLiteral(resourceName: "Icon_PassportIdCard").precomposed(palette.blueIcon, flipVertical: true),
-                                               passportSelfie: #imageLiteral(resourceName: "Icon_PassportSelfie").precomposed(palette.blueIcon, flipVertical: true),
-                                               passportDriverLicense: #imageLiteral(resourceName: "Icon_PassportDriverLicense").precomposed(palette.blueIcon, flipVertical: true),
-                                               chatOverlayVoiceRecording: #imageLiteral(resourceName: "Icon_RecordingVoice").precomposed(.white),
-                                               chatOverlayVideoRecording: #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(.white),
-                                               chatOverlaySendRecording: #imageLiteral(resourceName: "Icon_ChatOverlayRecordingSend").precomposed(.white),
-                                               chatOverlayLockArrowRecording: #imageLiteral(resourceName: "Icon_DropdownArrow").precomposed(palette.blueIcon, flipVertical: true),
-                                               chatOverlayLockerBodyRecording: generateLockerBody(palette.blueIcon, backgroundColor: palette.background),
-                                               chatOverlayLockerHeadRecording: generateLockerHead(palette.blueIcon, backgroundColor: palette.background),
-                                               locationPin: generateLocationPinIcon(palette.blueIcon),
-                                               locationMapPin: generateLocationMapPinIcon(palette.blueIcon),
-                                               locationMapLocate: #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.grayIcon),
-                                               locationMapLocated: #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.blueIcon),
-                                               chatTabIconSelected: #imageLiteral(resourceName: "Icon_TabChatList_Highlighted").precomposed(palette.blueIcon),
-                                               chatTabIconSelectedUp: generateChatTabSelected(palette.blueIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background, flipVertical: true)),
-                                               chatTabIconSelectedDown: generateChatTabSelected(palette.blueIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background)),
-                                               chatTabIcon: #imageLiteral(resourceName: "Icon_TabChatList").precomposed(palette.grayIcon),
-                                               passportSettings: #imageLiteral(resourceName: "Icon_PassportSettings").precomposed(palette.grayIcon),
-                                               passportInfo: #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon),
-                                               editMessageMedia: generateEditMessageMediaIcon(#imageLiteral(resourceName: "Icon_ReplaceMessageMedia").precomposed(palette.blueIcon), background: palette.background),
-                                               playerMusicPlaceholder: generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.blueUI), background: palette.grayForeground, radius: .cornerRadius),
-                                               chatMusicPlaceholder: generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.fileActivityForeground), background: palette.fileActivityBackground, radius: 20),
-                                               chatMusicPlaceholderCap: generatePlayerListAlbumPlaceholder(nil, background: palette.fileActivityBackground, radius: 20),
-                                               searchArticle: #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white),
-                                               searchSaved: #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white),
-                                               archivedChats: #imageLiteral(resourceName: "Icon_ArchiveAvatar").precomposed(.white),
-                                               hintPeerActive: generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.background),
-                                               hintPeerActiveSelected: generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.blueSelect),
-                                               chatSwiping_delete: #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white),
-                                               chatSwiping_mute: #imageLiteral(resourceName: "Icon_ChatSwipingMute").precomposed(.white),
-                                               chatSwiping_unmute: #imageLiteral(resourceName: "Icon_ChatSwipingUnmute").precomposed(.white),
-                                               chatSwiping_read: #imageLiteral(resourceName: "Icon_ChatSwipingRead").precomposed(.white),
-                                               chatSwiping_unread: #imageLiteral(resourceName: "Icon_ChatSwipingUnread").precomposed(.white),
-                                               chatSwiping_pin: #imageLiteral(resourceName: "Icon_ChatSwipingPin").precomposed(.white),
-                                               chatSwiping_unpin: #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white),
-                                               chatSwiping_archive: #imageLiteral(resourceName: "Icon_ChatListSwiping_Archive").precomposed(.white),
-                                               chatSwiping_unarchive: #imageLiteral(resourceName: "Icon_ChatListSwiping_Unarchive").precomposed(.white),
-                                               galleryPrev: #imageLiteral(resourceName: "Icon_GalleryPrev").precomposed(.white),
-                                               galleryNext: #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white),
-                                               galleryMore: #imageLiteral(resourceName: "Icon_GalleryMore").precomposed(.white),
-                                               galleryShare: #imageLiteral(resourceName: "Icon_GalleryShare").precomposed(.white),
-                                               galleryFastSave: NSImage(named: "Icon_Gallery_FastSave")!.precomposed(.white),
-                                               playingVoice1x: #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.grayIcon),
-                                               playingVoice2x: #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.blueIcon),
-                                               galleryRotate: NSImage(named: "Icon_GalleryRotate")!.precomposed(.white),
-                                               galleryZoomIn: NSImage(named: "Icon_GalleryZoomIn")!.precomposed(.white),
-                                               galleryZoomOut: NSImage(named: "Icon_GalleryZoomOut")!.precomposed(.white),
-                                               previewSenderCrop: NSImage(named: "Icon_PreviewSenderCrop")!.precomposed(.white),
-                                               previewSenderDelete: NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(.white),
-                                               editMessageCurrentPhoto: NSImage(named: "Icon_EditMessageCurrentPhoto")!.precomposed(palette.blueIcon),
-                                               previewSenderDeleteFile: NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(palette.blueIcon),
-                                               previewSenderArchive: NSImage(named: "Icon_PreviewSenderArchive")!.precomposed(palette.grayIcon),
-                                               chatSwipeReply: #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.blueIcon, flipHorizontal: true),
-                                               chatSwipeReplyWallpaper: #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon, flipHorizontal: true),
-                                               videoPlayerPlay:  NSImage(named: "Icon_VideoPlayer_Play")!.precomposed(.white),
-                                               videoPlayerPause: NSImage(named: "Icon_VideoPlayer_Pause")!.precomposed(.white),
-                                               videoPlayerEnterFullScreen: NSImage(named: "Icon_VideoPlayer_EnterFullScreen")!.precomposed(.white),
-                                               videoPlayerExitFullScreen: NSImage(named: "Icon_VideoPlayer_ExitFullScreen")!.precomposed(.white),
-                                               videoPlayerPIPIn: NSImage(named: "Icon_VideoPlayer_PIPIN")!.precomposed(.white),
-                                               videoPlayerPIPOut: NSImage(named: "Icon_VideoPlayer_PIPOUT")!.precomposed(.white),
-                                               videoPlayerRewind15Forward: NSImage(named: "Icon_VideoPlayer_Rewind15Forward")!.precomposed(.white),
-                                               videoPlayerRewind15Backward: NSImage(named: "Icon_VideoPlayer_Rewind15Backward")!.precomposed(.white),
-                                               videoPlayerVolume: NSImage(named: "Icon_VideoPlayer_Volume")!.precomposed(.white),
-                                               videoPlayerVolumeOff: NSImage(named: "Icon_VideoPlayer_VolumeOff")!.precomposed(.white),
-                                               videoPlayerClose: NSImage(named: "Icon_VideoPlayer_Close")!.precomposed(.white),
-                                               videoPlayerSliderInteractor: NSImage(named: "Icon_Slider")!.precomposed(),
-                                               streamingVideoDownload: NSImage(named: "Icon_StreamingDownload")!.precomposed(.white),
-                                               videoCompactFetching: NSImage(named: "Icon_VideoCompactFetching")!.precomposed(.white),
-                                               compactStreamingFetchingCancel: NSImage(named: "Icon_CompactStreamingFetchingCancel")!.precomposed(.white),
-                                               customLocalizationDelete: NSImage(named: "Icon_MessageActionPanelDelete")!.precomposed(palette.blueIcon),
-                                               pollAddOption: generatePollAddOption(palette.blueIcon),
-                                               pollDeleteOption: generatePollDeleteOption(palette.redUI),
-                                               resort: NSImage(named: "Icon_Resort")!.precomposed(palette.grayIcon.withAlphaComponent(0.6)),
-                                               chatPollVoteUnselected: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayText.withAlphaComponent(0.3)),
-                                               chatPollVoteUnselectedBubble_incoming: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_incoming.withAlphaComponent(0.3)),
-                                               chatPollVoteUnselectedBubble_outgoing: #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_outgoing.withAlphaComponent(0.3)),
-                                               peerInfoAdmins: NSImage(named: "Icon_ChatAdmins")!.precomposed(flipVertical: true),
-                                               peerInfoPermissions: NSImage(named: "Icon_ChatPermissions")!.precomposed(flipVertical: true),
-                                               peerInfoBanned: NSImage(named: "Icon_ChatBanned")!.precomposed(flipVertical: true),
-                                               peerInfoMembers: NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true),
-                                               chatUndoAction: NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF)),
-                                               appUpdate: NSImage(named: "Icon_AppUpdate")!.precomposed(),
-                                               inlineVideoSoundOff: NSImage(named: "Icon_InlineVideoSoundOff")!.precomposed(),
-                                               inlineVideoSoundOn: NSImage(named: "Icon_InlineVideoSoundOn")!.precomposed(),
-                                               logoutOptionAddAccount: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_AddAccount")!.precomposed(flipVertical: true)),
-                                               logoutOptionSetPasscode: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_SetPasscode")!.precomposed(flipVertical: true)),
-                                               logoutOptionClearCache: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ClearCache")!.precomposed(flipVertical: true)),
-                                               logoutOptionChangePhoneNumber: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ChangePhoneNumber")!.precomposed(flipVertical: true)),
-                                               logoutOptionContactSupport: generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ContactSupport")!.precomposed(flipVertical: true)),
-                                               disableEmojiPrediction: NSImage(named: "Icon_CallWindowClose")!.precomposed(palette.grayIcon),
-                                               scam: generateScamIcon(foregroundColor: palette.redUI, backgroundColor: .clear),
-                                               scamActive: generateScamIcon(foregroundColor: .white, backgroundColor: .clear),
-                                               chatScam: generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear),
-                                               chatUnarchive: NSImage(named: "Icon_ChatUnarchive")!.precomposed(palette.blueIcon),
-                                               chatArchive: NSImage(named: "Icon_ChatArchive")!.precomposed(palette.blueIcon),
-                                               privacySettings_blocked: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_Blocked")!.precomposed(flipVertical: true)),
-                                               privacySettings_activeSessions: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_ActiveSessions")!.precomposed(flipVertical: true)),
-                                               privacySettings_passcode: generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(palette.greenUI, flipVertical: true)),
-                                               privacySettings_twoStep: generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true)),
-                                               deletedAccount: NSImage(named: "Icon_DeletedAccount")!.precomposed(),
-                                               stickerPackSelection: generateStickerPackSelection(.clear),
-                                               stickerPackSelectionActive: generateStickerPackSelection(palette.grayForeground),
-                                               entertainment_Emoji: NSImage(named: "Icon_Entertainment_Emoji")!.precomposed(palette.grayIcon),
-                                               entertainment_Stickers: NSImage(named: "Icon_Entertainment_Stickers")!.precomposed(palette.grayIcon),
-                                               entertainment_Gifs: NSImage(named: "Icon_Entertainment_Gifs")!.precomposed(palette.grayIcon),
-                                               entertainment_Search: NSImage(named: "Icon_Entertainment_Search")!.precomposed(palette.grayIcon),
-                                               entertainment_Settings: NSImage(named: "Icon_Entertainment_Settings")!.precomposed(palette.grayIcon),
-                                               entertainment_SearchCancel: NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon),
-                                               scheduledAvatar: NSImage(named: "Icon_AvatarScheduled")!.precomposed(.white),
-                                               scheduledInputAction: NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.blueIcon)
-    )
+                                               })! },
+                                               chatChannelViewsInBubble_incoming: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
+                                               chatChannelViewsInBubble_outgoing: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
+                                               chatChannelViewsOutBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIcon, flipVertical: true) },
+                                               chatChannelViewsOverlayBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(.white, flipVertical: true) },
+                                               chatNavigationBack: { #imageLiteral(resourceName: "Icon_ChatNavigationBack").precomposed(palette.blueIcon) },
+                                               peerInfoAddMember: { #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon, flipVertical: true) },
+                                               chatSearchUp: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.blueIcon) },
+                                               chatSearchUpDisabled: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.grayIcon) },
+                                               chatSearchDown: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.blueIcon, flipVertical:true) },
+                                               chatSearchDownDisabled: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.grayIcon, flipVertical:true) },
+                                               chatSearchCalendar: { #imageLiteral(resourceName: "Icon_Calendar").precomposed(palette.blueIcon) },
+                                               dismissAccessory: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.grayIcon) },
+                                               chatScrollUp: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.grayIcon, arrowColor: palette.grayIcon) },
+                                               chatScrollUpActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.blueIcon, arrowColor: palette.blueIcon) },
+                                               audioPlayerPlay: { #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.blueIcon) },
+                                               audioPlayerPause: { #imageLiteral(resourceName: "Icon_InlinePlayerPause").precomposed(palette.blueIcon) },
+                                               audioPlayerNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.blueIcon) },
+                                               audioPlayerPrev: { #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.blueIcon) },
+                                               auduiPlayerDismiss: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
+                                               audioPlayerRepeat: { #imageLiteral(resourceName: "Icon_RepeatAudio").precomposed(palette.grayIcon) },
+                                               audioPlayerRepeatActive: { #imageLiteral(resourceName: "Icon_RepeatAudio").precomposed(palette.blueIcon) },
+                                               audioPlayerLockedPlay: { #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.grayIcon) },
+                                               audioPlayerLockedNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.grayIcon) },
+                                               audioPlayerLockedPrev: { #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.grayIcon) },
+                                               chatSendMessage: { #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.blueIcon) },
+                                               chatRecordVoice: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
+                                               chatEntertainment: { #imageLiteral(resourceName: "Icon_Entertainments").precomposed(palette.grayIcon) },
+                                               chatInlineDismiss: { #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(palette.grayIcon) },
+                                               chatActiveReplyMarkup: { #imageLiteral(resourceName: "Icon_ReplyMarkupButton").precomposed(palette.blueIcon) },
+                                               chatDisabledReplyMarkup: { #imageLiteral(resourceName: "Icon_ReplyMarkupButton").precomposed(palette.grayIcon) },
+                                               chatSecretTimer: { #imageLiteral(resourceName: "Icon_SecretTimer").precomposed(palette.grayIcon) },
+                                               chatForwardMessagesActive: { #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.blueIcon) },
+                                               chatForwardMessagesInactive: { #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.grayIcon) },
+                                               chatDeleteMessagesActive: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.redUI) },
+                                               chatDeleteMessagesInactive: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.grayIcon) },
+                                               generalNext: { #imageLiteral(resourceName: "Icon_GeneralNext").precomposed(palette.grayIcon.withAlphaComponent(0.5)) },
+                                               generalNextActive: { #imageLiteral(resourceName: "Icon_GeneralNext").precomposed(.white) },
+                                               generalSelect: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.blueIcon) },
+                                               chatVoiceRecording: { #imageLiteral(resourceName: "Icon_RecordingVoice").precomposed(palette.blueIcon) },
+                                               chatVideoRecording: { #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(palette.blueIcon) },
+                                               chatRecord: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
+                                               deleteItem: { deleteItemIcon(palette.redUI) },
+                                               deleteItemDisabled: { deleteItemIcon(palette.grayTransparent) },
+                                               chatAttach: { #imageLiteral(resourceName: "Icon_ChatAttach").precomposed(palette.grayIcon) },
+                                               chatAttachFile: { #imageLiteral(resourceName: "Icon_AttachFile").precomposed(palette.blueIcon) },
+                                               chatAttachPhoto: { #imageLiteral(resourceName: "Icon_AttachPhoto").precomposed(palette.blueIcon) },
+                                               chatAttachCamera: { #imageLiteral(resourceName: "Icon_AttachCamera").precomposed(palette.blueIcon) },
+                                               chatAttachLocation: { #imageLiteral(resourceName: "Icon_AttachLocation").precomposed(palette.blueIcon) },
+                                               chatAttachPoll: { #imageLiteral(resourceName: "Icon_AttachPoll").precomposed(palette.blueIcon) },
+                                               mediaEmptyShared: { #imageLiteral(resourceName: "Icon_EmptySharedMedia").precomposed(palette.grayIcon) },
+                                               mediaEmptyFiles: { #imageLiteral(resourceName: "Icon_EmptySharedFiles").precomposed() },
+                                               mediaEmptyMusic: { #imageLiteral(resourceName: "Icon_EmptySharedMusic").precomposed(palette.grayIcon) },
+                                               mediaEmptyLinks: { #imageLiteral(resourceName: "Icon_EmptySharedLinks").precomposed(palette.grayIcon) },
+                                               mediaDropdown: { #imageLiteral(resourceName: "Icon_DropdownArrow").precomposed(palette.blueIcon) },
+                                               stickersAddFeatured: { #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon) },
+                                               stickersAddedFeatured: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.grayIcon) },
+                                               stickersRemove: { #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(palette.grayIcon) },
+                                               peerMediaDownloadFileStart: { #imageLiteral(resourceName: "Icon_MediaDownload").precomposed(palette.blueIcon) },
+                                               peerMediaDownloadFilePause: { downloadFilePauseIcon(palette.blueIcon) },
+                                               stickersShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon) },
+                                               emojiRecentTab: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiSmileTab: { #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiNatureTab: { #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiFoodTab: { #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiSportTab: { #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiCarTab: { #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiObjectsTab: { #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiSymbolsTab: { #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiFlagsTab: { #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiRecentTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiSmileTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiNatureTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiFoodTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiSportTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiCarTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiObjectsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiSymbolsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiFlagsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.blueIcon, flipVertical:true, flipHorizontal:true) },
+                                               stickerBackground: { generateStickerBackground(NSMakeSize(83, 83), palette.background) },
+                                               stickerBackgroundActive: { generateStickerBackground(NSMakeSize(83, 83), palette.grayBackground) },
+                                               stickersTabRecent: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon) },
+                                               stickersTabGIF: { #imageLiteral(resourceName: "Icon_GifToggle").precomposed(palette.grayIcon) },
+                                               chatSendingInFrame_incoming: { generateSendingFrame(palette.grayIconBubble_incoming) },
+                                               chatSendingInHour_incoming: { generateSendingHour(palette.grayIconBubble_incoming) },
+                                               chatSendingInMin_incoming: { generateSendingMin(palette.grayIconBubble_incoming) },
+                                               chatSendingInFrame_outgoing: { generateSendingFrame(palette.grayIconBubble_outgoing) },
+                                               chatSendingInHour_outgoing: { generateSendingHour(palette.grayIconBubble_outgoing) },
+                                               chatSendingInMin_outgoing: { generateSendingMin(palette.grayIconBubble_outgoing) },
+                                               chatSendingOutFrame: { generateSendingFrame(palette.grayIcon) },
+                                               chatSendingOutHour: { generateSendingHour(palette.grayIcon) },
+                                               chatSendingOutMin: { generateSendingMin(palette.grayIcon) },
+                                               chatSendingOverlayFrame: { generateSendingFrame(.white) },
+                                               chatSendingOverlayHour: { generateSendingHour(.white) },
+                                               chatSendingOverlayMin: { generateSendingMin(.white) },
+                                               chatActionUrl: { #imageLiteral(resourceName: "Icon_InlineBotUrl").precomposed(palette.text) },
+                                               callInlineDecline: { #imageLiteral(resourceName: "Icon_CallDecline_Inline").precomposed(.white) },
+                                               callInlineMuted: { #imageLiteral(resourceName: "Icon_CallMute_Inline").precomposed(.white) },
+                                               callInlineUnmuted: { #imageLiteral(resourceName: "Icon_CallUnmuted_Inline").precomposed(.white) },
+                                               eventLogTriangle: { generateRecentActionsTriangle(palette.text) },
+                                               channelIntro: { #imageLiteral(resourceName: "Icon_ChannelIntro").precomposed() },
+                                               chatFileThumb: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(flipVertical:true) },
+                                               chatFileThumbBubble_incoming: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_incoming,  flipVertical:true) },
+                                               chatFileThumbBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_outgoing, flipVertical:true) },
+                                               chatSecretThumb: { #imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true) },
+                                               chatMapPin: { #imageLiteral(resourceName: "Icon_MapPinned").precomposed() },
+                                               chatSecretTitle: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.text, flipVertical:true) },
+                                               emptySearch: { #imageLiteral(resourceName: "Icon_EmptySearchResults").precomposed(palette.grayIcon) },
+                                               calendarBack: { #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.blueIcon) },
+                                               calendarNext: { #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.blueIcon, flipHorizontal: true) },
+                                               calendarBackDisabled: { #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.grayIcon) },
+                                               calendarNextDisabled: { #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.grayIcon, flipHorizontal: true) },
+                                               newChatCamera: { #imageLiteral(resourceName: "Icon_AttachCamera").precomposed(palette.grayIcon) },
+                                               peerInfoVerify: { #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true) },
+                                               peerInfoCall: { #imageLiteral(resourceName: "Icon_ProfileCall").precomposed(palette.accent) },
+                                               callOutgoing: { #imageLiteral(resourceName: "Icon_CallOutgoing").precomposed(palette.grayIcon, flipVertical: true) },
+                                               recentDismiss: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon) },
+                                               recentDismissActive: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(.white) },
+                                               webgameShare: { #imageLiteral(resourceName: "Icon_ShareExternal").precomposed(palette.blueIcon) },
+                                               chatSearchCancel: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
+                                               chatSearchFrom: { #imageLiteral(resourceName: "Icon_ChatSearchFrom").precomposed(palette.blueIcon) },
+                                               callWindowDecline: { #imageLiteral(resourceName: "Icon_CallDecline_Window").precomposed() },
+                                               callWindowAccept: { #imageLiteral(resourceName: "Icon_CallAccept_Window").precomposed() },
+                                               callWindowMute: { #imageLiteral(resourceName: "Icon_CallMic_Window").precomposed() },
+                                               callWindowUnmute: { #imageLiteral(resourceName: "Icon_CallMute_Inline").precomposed() },
+                                               callWindowClose: { #imageLiteral(resourceName: "Icon_CallWindowClose").precomposed(.white) },
+                                               callWindowDeviceSettings: { #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(.white) },
+                                               callSettings: { #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(palette.blueIcon) },
+                                               callWindowCancel: { #imageLiteral(resourceName: "Icon_CallCancelIcon").precomposed(.white) },
+                                               chatActionEdit: { #imageLiteral(resourceName: "Icon_ChatActionEdit").precomposed(palette.blueIcon) },
+                                               chatActionInfo: { #imageLiteral(resourceName: "Icon_ChatActionInfo").precomposed(palette.blueIcon) },
+                                               chatActionMute: { #imageLiteral(resourceName: "Icon_ChatActionMute").precomposed(palette.blueIcon) },
+                                               chatActionUnmute: { #imageLiteral(resourceName: "Icon_ChatActionUnmute").precomposed(palette.blueIcon) },
+                                               chatActionClearHistory: { #imageLiteral(resourceName: "Icon_ClearChat").precomposed(palette.blueIcon) },
+                                               chatActionDeleteChat: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon) },
+                                               dismissPinned: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
+                                               chatActionsActive: { #imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.blueIcon) },
+                                               chatEntertainmentSticker: { #imageLiteral(resourceName: "Icon_ChatEntertainmentSticker").precomposed(palette.grayIcon) },
+                                               chatEmpty: { #imageLiteral(resourceName: "Icon_EmptyChat").precomposed(palette.grayForeground) },
+                                               stickerPackClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
+                                               stickerPackDelete: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon) },
+                                               modalShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon) },
+                                               modalClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
+                                               ivChannelJoined: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
+                                               chatListMention: { generateBadgeMention(backgroundColor: palette.accent, foregroundColor: palette.background) },
+                                               chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect) },
+                                               chatListMentionArchived: { generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
+                                               chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect) },
+                                               chatMention: { generateChatMention(backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon) },
+                                               chatMentionActive: { generateChatMention(backgroundColor: palette.background, border: palette.blueIcon, foregroundColor: palette.blueIcon) },
+                                               sliderControl: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
+                                               sliderControlActive: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
+                                               stickersTabFave: { #imageLiteral(resourceName: "Icon_FaveStickers").precomposed(palette.grayIcon) },
+                                               chatInstantView: { #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivity) },
+                                               chatInstantViewBubble_incoming: { #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivityBubble_incoming) },
+                                               chatInstantViewBubble_outgoing: { #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivityBubble_outgoing) },
+                                               instantViewShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon) },
+                                               instantViewActions: { #imageLiteral(resourceName: "Icon_ChatActions").precomposed(palette.blueIcon) },
+                                               instantViewActionsActive: { #imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.blueIcon) },
+                                               instantViewSafari: { #imageLiteral(resourceName: "Icon_InstantViewSafari").precomposed(palette.blueIcon) },
+                                               instantViewBack: { #imageLiteral(resourceName: "Icon_InstantViewBack").precomposed(palette.blueIcon) },
+                                               instantViewCheck: { #imageLiteral(resourceName: "Icon_InstantViewCheck").precomposed(palette.blueIcon) },
+                                               groupStickerNotFound: { #imageLiteral(resourceName: "Icon_GroupStickerNotFound").precomposed(palette.grayIcon) },
+                                               settingsAskQuestion: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)) },
+                                               settingsFaq: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)) },
+                                               settingsGeneral: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(flipVertical: true)) },
+                                               settingsLanguage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)) },
+                                               settingsNotifications: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)) },
+                                               settingsSecurity: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
+                                               settingsStickers: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(flipVertical: true)) },
+                                               settingsStorage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(flipVertical: true)) },
+                                               settingsProxy: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(flipVertical: true)) },
+                                               settingsAppearance: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)) },
+                                               settingsPassport: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
+                                               settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
+                                               settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsLanguageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsNotificationsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsSecurityActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsStickersActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsStorageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsProxyActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsAppearanceActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon) },
+                                               settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon) },
+                                               settingsLogout: { #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI) },
+                                               fastSettingsLock: { #imageLiteral(resourceName: "Icon_FastSettingsLock").precomposed(palette.blueIcon) },
+                                               fastSettingsDark: { #imageLiteral(resourceName: "Icon_FastSettingsDark").precomposed(palette.blueIcon) },
+                                               fastSettingsSunny: { #imageLiteral(resourceName: "Icon_FastSettingsSunny").precomposed(palette.blueIcon) },
+                                               fastSettingsMute: { #imageLiteral(resourceName: "Icon_ChatActionMute").precomposed(palette.blueIcon) },
+                                               fastSettingsUnmute: { #imageLiteral(resourceName: "Icon_ChatActionUnmute").precomposed(palette.blueIcon) },
+                                               chatRecordVideo: { #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(palette.grayIcon) },
+                                               inputChannelMute: { #imageLiteral(resourceName: "Icon_InputChannelMute").precomposed(palette.grayIcon) },
+                                               inputChannelUnmute: { #imageLiteral(resourceName: "Icon_InputChannelUnmute").precomposed(palette.grayIcon) },
+                                               changePhoneNumberIntro: { #imageLiteral(resourceName: "Icon_ChangeNumberIntro").precomposed() },
+                                               peerSavedMessages: { #imageLiteral(resourceName: "Icon_SavedMessages").precomposed() },
+                                               previewCollage: { #imageLiteral(resourceName: "Icon_PreviewCollage").precomposed(palette.grayIcon) },
+                                               chatGoMessage: { #imageLiteral(resourceName: "Icon_ChatGoMessage").precomposed(palette.blueIcon) },
+                                               chatGroupToggleSelected: { generateChatGroupToggleSelected(foregroundColor: palette.blueIcon) },
+                                               chatGroupToggleUnselected: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed() },
+                                               successModalProgress: { #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(palette.grayIcon) },
+                                               accentColorSelect: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white) },
+                                               chatShareWallpaper: { #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon) },
+                                               chatGotoMessageWallpaper: { #imageLiteral(resourceName: "Icon_GotoBubbleMessage").precomposed(palette.blueIcon) },
+                                               transparentBackground: { generateTransparentBackground() },
+                                               lottieTransparentBackground: { generateLottieTransparentBackground() },
+                                               passcodeTouchId: { #imageLiteral(resourceName: "Icon_TouchId").precomposed() },
+                                               passcodeLogin: { #imageLiteral(resourceName: "Icon_PasscodeLogin").precomposed() },
+                                               confirmDeleteMessagesAccessory: { generateConfirmDeleteMessagesAccessory(backgroundColor: palette.redUI) },
+                                               alertCheckBoxSelected: { generateAlertCheckBoxSelected(backgroundColor: palette.blueIcon) },
+                                               alertCheckBoxUnselected: { generateAlertCheckBoxUnselected(border: palette.grayIcon) },
+                                               confirmPinAccessory: { generateConfirmPinAccessory(backgroundColor: palette.blueIcon) },
+                                               confirmDeleteChatAccessory: { generateConfirmDeleteChatAccessory(backgroundColor: palette.background, foregroundColor: palette.redUI) },
+                                               stickersEmptySearch: { generateStickersEmptySearch(color: palette.grayIcon) },
+                                               twoStepVerificationCreateIntro: { #imageLiteral(resourceName: "Icon_TwoStepVerification_Create").precomposed() },
+                                               secureIdAuth: { #imageLiteral(resourceName: "Icon_SecureIdAuth").precomposed() },
+                                               ivAudioPlay: { generateIVAudioPlay(color: palette.text) },
+                                               ivAudioPause: { generateIVAudioPause(color: palette.text) },
+                                               proxyEnable: { #imageLiteral(resourceName: "Icon_ProxyEnable").precomposed(palette.accent) },
+                                               proxyEnabled: { #imageLiteral(resourceName: "Icon_ProxyEnabled").precomposed(palette.accent) },
+                                               proxyState: { #imageLiteral(resourceName: "Icon_ProxyState").precomposed(palette.accent) },
+                                               proxyDeleteListItem: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon) },
+                                               proxyInfoListItem: { #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon) },
+                                               proxyConnectedListItem: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.blueIcon) },
+                                               proxyAddProxy: { #imageLiteral(resourceName: "Icon_GroupInfoAddMember").precomposed(palette.blueIcon, flipVertical: true) },
+                                               proxyNextWaitingListItem: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(palette.grayIcon) },
+                                               passportForgotPassword: { #imageLiteral(resourceName: "Icon_SecureIdForgotPassword").precomposed(palette.grayIcon) },
+                                               confirmAppAccessoryIcon: { #imageLiteral(resourceName: "Icon_ConfirmAppAccessory").precomposed() },
+                                               passportPassport: { #imageLiteral(resourceName: "Icon_PassportPassport").precomposed(palette.blueIcon, flipVertical: true) },
+                                               passportIdCardReverse: { #imageLiteral(resourceName: "Icon_PassportIdCardReverse").precomposed(palette.blueIcon, flipVertical: true) },
+                                               passportIdCard: { #imageLiteral(resourceName: "Icon_PassportIdCard").precomposed(palette.blueIcon, flipVertical: true) },
+                                               passportSelfie: { #imageLiteral(resourceName: "Icon_PassportSelfie").precomposed(palette.blueIcon, flipVertical: true) },
+                                               passportDriverLicense: { #imageLiteral(resourceName: "Icon_PassportDriverLicense").precomposed(palette.blueIcon, flipVertical: true) },
+                                               chatOverlayVoiceRecording: { #imageLiteral(resourceName: "Icon_RecordingVoice").precomposed(.white) },
+                                               chatOverlayVideoRecording: { #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(.white) },
+                                               chatOverlaySendRecording: { #imageLiteral(resourceName: "Icon_ChatOverlayRecordingSend").precomposed(.white) },
+                                               chatOverlayLockArrowRecording: { #imageLiteral(resourceName: "Icon_DropdownArrow").precomposed(palette.blueIcon, flipVertical: true) },
+                                               chatOverlayLockerBodyRecording: { generateLockerBody(palette.blueIcon, backgroundColor: palette.background) },
+                                               chatOverlayLockerHeadRecording: { generateLockerHead(palette.blueIcon, backgroundColor: palette.background) },
+                                               locationPin: { generateLocationPinIcon(palette.blueIcon) },
+                                               locationMapPin: { generateLocationMapPinIcon(palette.blueIcon) },
+                                               locationMapLocate: { #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.grayIcon) },
+                                               locationMapLocated: { #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.blueIcon) },
+                                               chatTabIconSelected: { #imageLiteral(resourceName: "Icon_TabChatList_Highlighted").precomposed(palette.blueIcon) },
+                                               chatTabIconSelectedUp: { generateChatTabSelected(palette.blueIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background, flipVertical: true)) },
+                                               chatTabIconSelectedDown: { generateChatTabSelected(palette.blueIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background)) },
+                                               chatTabIcon: { #imageLiteral(resourceName: "Icon_TabChatList").precomposed(palette.grayIcon) },
+                                               passportSettings: { #imageLiteral(resourceName: "Icon_PassportSettings").precomposed(palette.grayIcon) },
+                                               passportInfo: { #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon) },
+                                               editMessageMedia: { generateEditMessageMediaIcon(#imageLiteral(resourceName: "Icon_ReplaceMessageMedia").precomposed(palette.blueIcon), background: palette.background) },
+                                               playerMusicPlaceholder: { generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.accent), background: palette.grayForeground, radius: .cornerRadius) },
+                                               chatMusicPlaceholder: { generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.fileActivityForeground), background: palette.fileActivityBackground, radius: 20) },
+                                               chatMusicPlaceholderCap: { generatePlayerListAlbumPlaceholder(nil, background: palette.fileActivityBackground, radius: 20) },
+                                               searchArticle: { #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white) },
+                                               searchSaved: { #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white) },
+                                               archivedChats: { #imageLiteral(resourceName: "Icon_ArchiveAvatar").precomposed(.white) },
+                                               hintPeerActive: { generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.background) },
+                                               hintPeerActiveSelected: { generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.blueSelect) },
+                                               chatSwiping_delete: { #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white) },
+                                               chatSwiping_mute: { #imageLiteral(resourceName: "Icon_ChatSwipingMute").precomposed(.white) },
+                                               chatSwiping_unmute: { #imageLiteral(resourceName: "Icon_ChatSwipingUnmute").precomposed(.white) },
+                                               chatSwiping_read: { #imageLiteral(resourceName: "Icon_ChatSwipingRead").precomposed(.white) },
+                                               chatSwiping_unread: { #imageLiteral(resourceName: "Icon_ChatSwipingUnread").precomposed(.white) },
+                                               chatSwiping_pin: { #imageLiteral(resourceName: "Icon_ChatSwipingPin").precomposed(.white) },
+                                               chatSwiping_unpin: { #imageLiteral(resourceName: "Icon_ChatSwipingUnpin").precomposed(.white) },
+                                               chatSwiping_archive: { #imageLiteral(resourceName: "Icon_ChatListSwiping_Archive").precomposed(.white) },
+                                               chatSwiping_unarchive: { #imageLiteral(resourceName: "Icon_ChatListSwiping_Unarchive").precomposed(.white) },
+                                               galleryPrev: { #imageLiteral(resourceName: "Icon_GalleryPrev").precomposed(.white) },
+                                               galleryNext: { #imageLiteral(resourceName: "Icon_GalleryNext").precomposed(.white) },
+                                               galleryMore: { #imageLiteral(resourceName: "Icon_GalleryMore").precomposed(.white) },
+                                               galleryShare: { #imageLiteral(resourceName: "Icon_GalleryShare").precomposed(.white) },
+                                               galleryFastSave: { NSImage(named: "Icon_Gallery_FastSave")!.precomposed(.white) },
+                                               playingVoice1x: { #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.grayIcon) },
+                                               playingVoice2x: { #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.blueIcon) },
+                                               galleryRotate: {NSImage(named: "Icon_GalleryRotate")!.precomposed(.white) },
+                                               galleryZoomIn: {NSImage(named: "Icon_GalleryZoomIn")!.precomposed(.white) },
+                                               galleryZoomOut: { NSImage(named: "Icon_GalleryZoomOut")!.precomposed(.white) },
+                                               previewSenderCrop: { NSImage(named: "Icon_PreviewSenderCrop")!.precomposed(.white) },
+                                               previewSenderDelete: { NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(.white) },
+                                               editMessageCurrentPhoto: { NSImage(named: "Icon_EditMessageCurrentPhoto")!.precomposed(palette.blueIcon) },
+                                               previewSenderDeleteFile: { NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(palette.blueIcon) },
+                                               previewSenderArchive: { NSImage(named: "Icon_PreviewSenderArchive")!.precomposed(palette.grayIcon) },
+                                               chatSwipeReply: { #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.blueIcon, flipHorizontal: true) },
+                                               chatSwipeReplyWallpaper: { #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.blueIcon, flipHorizontal: true) },
+                                               videoPlayerPlay: { NSImage(named: "Icon_VideoPlayer_Play")!.precomposed(.white) },
+                                               videoPlayerPause: { NSImage(named: "Icon_VideoPlayer_Pause")!.precomposed(.white) },
+                                               videoPlayerEnterFullScreen: { NSImage(named: "Icon_VideoPlayer_EnterFullScreen")!.precomposed(.white) },
+                                               videoPlayerExitFullScreen: { NSImage(named: "Icon_VideoPlayer_ExitFullScreen")!.precomposed(.white) },
+                                               videoPlayerPIPIn: { NSImage(named: "Icon_VideoPlayer_PIPIN")!.precomposed(.white) },
+                                               videoPlayerPIPOut: { NSImage(named: "Icon_VideoPlayer_PIPOUT")!.precomposed(.white) },
+                                               videoPlayerRewind15Forward: { NSImage(named: "Icon_VideoPlayer_Rewind15Forward")!.precomposed(.white) },
+                                               videoPlayerRewind15Backward: { NSImage(named: "Icon_VideoPlayer_Rewind15Backward")!.precomposed(.white) },
+                                               videoPlayerVolume: { NSImage(named: "Icon_VideoPlayer_Volume")!.precomposed(.white) },
+                                               videoPlayerVolumeOff: { NSImage(named: "Icon_VideoPlayer_VolumeOff")!.precomposed(.white) },
+                                               videoPlayerClose: { NSImage(named: "Icon_VideoPlayer_Close")!.precomposed(.white) },
+                                               videoPlayerSliderInteractor: { NSImage(named: "Icon_Slider")!.precomposed() },
+                                               streamingVideoDownload: { NSImage(named: "Icon_StreamingDownload")!.precomposed(.white) },
+                                               videoCompactFetching: { NSImage(named: "Icon_VideoCompactFetching")!.precomposed(.white) },
+                                               compactStreamingFetchingCancel: { NSImage(named: "Icon_CompactStreamingFetchingCancel")!.precomposed(.white) },
+                                               customLocalizationDelete: { NSImage(named: "Icon_MessageActionPanelDelete")!.precomposed(palette.blueIcon) },
+                                               pollAddOption: { generatePollAddOption(palette.blueIcon) },
+                                               pollDeleteOption: { generatePollDeleteOption(palette.redUI) },
+                                               resort: { NSImage(named: "Icon_Resort")!.precomposed(palette.grayIcon.withAlphaComponent(0.6)) },
+                                               chatPollVoteUnselected: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayText.withAlphaComponent(0.3)) },
+                                               chatPollVoteUnselectedBubble_incoming: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_incoming.withAlphaComponent(0.3)) },
+                                               chatPollVoteUnselectedBubble_outgoing: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_outgoing.withAlphaComponent(0.3)) },
+                                               peerInfoAdmins: { NSImage(named: "Icon_ChatAdmins")!.precomposed(flipVertical: true) },
+                                               peerInfoPermissions: { NSImage(named: "Icon_ChatPermissions")!.precomposed(flipVertical: true) },
+                                               peerInfoBanned: { NSImage(named: "Icon_ChatBanned")!.precomposed(flipVertical: true) },
+                                               peerInfoMembers: { NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true) },
+                                               chatUndoAction: { NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF)) },
+                                               appUpdate: { NSImage(named: "Icon_AppUpdate")!.precomposed() },
+                                               inlineVideoSoundOff: { NSImage(named: "Icon_InlineVideoSoundOff")!.precomposed() },
+                                               inlineVideoSoundOn: { NSImage(named: "Icon_InlineVideoSoundOn")!.precomposed() },
+                                               logoutOptionAddAccount: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_AddAccount")!.precomposed(flipVertical: true)) },
+                                               logoutOptionSetPasscode: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_SetPasscode")!.precomposed(flipVertical: true)) },
+                                               logoutOptionClearCache: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ClearCache")!.precomposed(flipVertical: true)) },
+                                               logoutOptionChangePhoneNumber: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ChangePhoneNumber")!.precomposed(flipVertical: true)) },
+                                               logoutOptionContactSupport: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ContactSupport")!.precomposed(flipVertical: true)) },
+                                               disableEmojiPrediction: { NSImage(named: "Icon_CallWindowClose")!.precomposed(palette.grayIcon) },
+                                               scam: { generateScamIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               scamActive: { generateScamIcon(foregroundColor: .white, backgroundColor: .clear) },
+                                               chatScam: { generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               chatUnarchive: { NSImage(named: "Icon_ChatUnarchive")!.precomposed(palette.blueIcon) },
+                                               chatArchive: { NSImage(named: "Icon_ChatArchive")!.precomposed(palette.blueIcon) },
+                                               privacySettings_blocked: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_Blocked")!.precomposed(flipVertical: true)) },
+                                               privacySettings_activeSessions: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_ActiveSessions")!.precomposed(flipVertical: true)) },
+                                               privacySettings_passcode: { generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(palette.greenUI, flipVertical: true)) },
+                                               privacySettings_twoStep: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true)) },
+                                               deletedAccount: { NSImage(named: "Icon_DeletedAccount")!.precomposed() },
+                                               stickerPackSelection: { generateStickerPackSelection(.clear) },
+                                               stickerPackSelectionActive: { generateStickerPackSelection(palette.grayForeground) },
+                                               entertainment_Emoji: { NSImage(named: "Icon_Entertainment_Emoji")!.precomposed(palette.grayIcon) },
+                                               entertainment_Stickers: { NSImage(named: "Icon_Entertainment_Stickers")!.precomposed(palette.grayIcon) },
+                                               entertainment_Gifs: { NSImage(named: "Icon_Entertainment_Gifs")!.precomposed(palette.grayIcon) },
+                                               entertainment_Search: { NSImage(named: "Icon_Entertainment_Search")!.precomposed(palette.grayIcon) },
+                                               entertainment_Settings: { NSImage(named: "Icon_Entertainment_Settings")!.precomposed(palette.grayIcon) },
+                                               entertainment_SearchCancel: { NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon) },
+                                               scheduledAvatar: { NSImage(named: "Icon_AvatarScheduled")!.precomposed(.white) },
+                                               scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.blueIcon) } )
+
 }
-
-
 private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: Wallpaper, c_wallpaper: Wallpaper?) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.blueSelect,
@@ -1977,12 +1449,12 @@ private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFlo
                                          contextMenuBackgroundColor: palette.background,
                                          textColor: palette.text,
                                          grayTextColor: palette.grayText,
-                                         secretChatTextColor: bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.blueUI,
+                                         secretChatTextColor: bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.accent,
                                          peerTextColor: palette.text,
-                                         activityColor: palette.blueUI,
+                                         activityColor: palette.accent,
                                          activitySelectedColor: .white,
-                                         activityContextMenuColor: palette.blueUI,
-                                         activityPinnedColor: palette.blueUI,
+                                         activityContextMenuColor: palette.accent,
+                                         activityPinnedColor: palette.accent,
                                          badgeTextColor: palette.background,
                                          badgeBackgroundColor: palette.badge,
                                          badgeSelectedTextColor: palette.blueSelect,
@@ -2050,7 +1522,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
             contentView.addSubview(imageView)
 
             
-            let signal = Signal<Void, NoError>.single(Void()) |> delay(0.3, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
+            let signal = Signal<Void, NoError>.single(Void()) |> delay(0.15, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
                 if let imageView = imageView {
                     imageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak imageView] completed in
                         imageView?.removeFromSuperview()

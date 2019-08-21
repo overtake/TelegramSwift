@@ -23,7 +23,7 @@ class ChatGroupedItem: ChatRowItem {
     
    
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
         var captionLayout: TextViewLayout?
         
@@ -89,7 +89,7 @@ class ChatGroupedItem: ChatRowItem {
             fatalError("")
         }
         
-        super.init(initialSize, chatInteraction, context, entry, downloadSettings)
+        super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)
         
          self.captionLayout = captionLayout
         

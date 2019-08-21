@@ -48,7 +48,7 @@ fileprivate class AboutModalView : Control {
         
         _ = attr.append(string: " (", color: theme.colors.grayText, font: .medium(.text))
 
-        let range = attr.append(string: L10n.x3vGGIWUTitle.lowercased(), color: theme.colors.blueUI, font: .medium(.text))
+        let range = attr.append(string: L10n.x3vGGIWUTitle.lowercased(), color: theme.colors.accent, font: .medium(.text))
         attr.addAttribute(.link, value: "copy", range: range)
         _ = attr.append(string: ")", color: theme.colors.grayText, font: .medium(.text))
 

@@ -40,7 +40,7 @@ private final class LockControl : View {
         body.sizeToFit()
         arrow.image = theme.icons.chatOverlayLockArrowRecording
         arrow.sizeToFit()
-        layer?.borderColor = theme.colors.blueUI.cgColor
+        layer?.borderColor = theme.colors.accent.cgColor
         layer?.borderWidth = .borderSize
     }
     
@@ -79,14 +79,14 @@ private class ChatRecorderOverlayView : Control {
         backgroundColor = .clear
        
         outerContainer.setFrameSize(NSMakeSize(frameRect.width - 20, frameRect.height - 20))
-        outerContainer.backgroundColor = theme.colors.blueUI.withAlphaComponent(0.5)
+        outerContainer.backgroundColor = theme.colors.accent.withAlphaComponent(0.5)
         outerContainer.layer?.cornerRadius = outerContainer.frame.width / 2
         addSubview(outerContainer)
         outerContainer.center()
       //  self.outerContainer.animates = true
         
         innerContainer.setFrameSize(NSMakeSize(frameRect.width - 20, frameRect.height - 20))
-        innerContainer.backgroundColor = theme.colors.blueUI
+        innerContainer.backgroundColor = theme.colors.accent
         innerContainer.layer?.cornerRadius = innerContainer.frame.width / 2
         addSubview(innerContainer)
         innerContainer.center()
@@ -116,8 +116,8 @@ private class ChatRecorderOverlayView : Control {
     }
     
     func updateInside() {
-        innerContainer.backgroundColor = mouseInside() ? theme.colors.blueUI : theme.colors.redUI
-        outerContainer.backgroundColor = (mouseInside() ? theme.colors.blueUI : theme.colors.redUI).withAlphaComponent(0.5)
+        innerContainer.backgroundColor = mouseInside() ? theme.colors.accent : theme.colors.redUI
+        outerContainer.backgroundColor = (mouseInside() ? theme.colors.accent : theme.colors.redUI).withAlphaComponent(0.5)
     }
     
     required init?(coder: NSCoder) {

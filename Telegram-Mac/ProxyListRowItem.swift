@@ -55,7 +55,7 @@ class ProxyListRowItem: GeneralRowItem {
                         break
                     }
                 }
-                color = theme.colors.blueUI
+                color = theme.colors.accent
                 self.status = (isConnecting: false, isCurrent: true)
             }
         } else {
@@ -169,7 +169,7 @@ private final class ProxyListRowView : GeneralRowView {
         connected.image = item.waiting ? theme.icons.proxyNextWaitingListItem : theme.icons.proxyConnectedListItem
         connected.sizeToFit()
         
-        connectingView.progressColor = theme.colors.blueUI
+        connectingView.progressColor = theme.colors.accent
         
         delete.set(image: theme.icons.proxyDeleteListItem, for: .Normal)
         _ = delete.sizeToFit()

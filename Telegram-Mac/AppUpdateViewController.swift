@@ -162,7 +162,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     
     switch state.loadingState {
     case let .failed(error):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, action: nil)))
         index += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.localizedDescription), color: theme.colors.redUI, detectBold: false))
@@ -170,7 +170,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
         
     case let .hasUpdate(item):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_download_update, data: InputDataGeneralData(name: L10n.appUpdateDownloadUpdate, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_download_update, data: InputDataGeneralData(name: L10n.appUpdateDownloadUpdate, color: theme.colors.accent, icon: nil, type: .none, action: nil)))
         index += 1
         
         currentItem = item
@@ -184,7 +184,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
         
         currentItem = item
     case .uptodate:
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, action: nil)))
         index += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appUpdateUptodate), color: theme.colors.grayText, detectBold: false))
@@ -195,7 +195,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
         
         currentItem = item
     case let .readyToInstall(item):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_install_update, data: InputDataGeneralData(name: L10n.updateUpdateTelegram, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_install_update, data: InputDataGeneralData(name: L10n.updateUpdateTelegram, color: theme.colors.accent, icon: nil, type: .none, action: nil)))
         index += 1
         
         currentItem = item

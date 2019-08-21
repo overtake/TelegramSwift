@@ -95,13 +95,13 @@ private class ModalInteractionsContainer : View {
     init(interactions:ModalInteractions, modal:Modal) {
         self.interactions = interactions
         acceptView = TitleButton()
-        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
+        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.accent, backgroundColor: presentation.colors.background)
         acceptView.set(text: interactions.acceptTitle, for: .Normal)
         acceptView.disableActions()
         _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
         if let cancelTitle = interactions.cancelTitle {
             cancelView = TitleButton()
-            cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.blueUI, backgroundColor: presentation.colors.background)
+            cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.accent, backgroundColor: presentation.colors.background)
             cancelView?.set(text: cancelTitle, for: .Normal)
             _ = cancelView?.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
             

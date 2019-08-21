@@ -298,7 +298,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         delayView.isSelectable = false
         
         editControl.set(font: .medium(.title), for: .Normal)
-        editControl.set(color: theme.colors.blueUI, for: .Normal)
+        editControl.set(color: theme.colors.accent, for: .Normal)
         editControl.set(text: tr(L10n.navigationEdit), for: .Normal)
         _ = editControl.sizeToFit()
         
@@ -383,7 +383,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
-        editControl.set(color: theme.colors.blueUI, for: .Normal)
+        editControl.set(color: theme.colors.accent, for: .Normal)
         
         
         codeText.textColor = theme.colors.text
@@ -408,7 +408,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         codeText.placeholderAttributedString = .initialize(string: L10n.loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
         
         
-        forgotPasswordView.set(color: theme.colors.blueUI, for: .Normal)
+        forgotPasswordView.set(color: theme.colors.accent, for: .Normal)
         resetAccountView.set(color: theme.colors.redUI, for: .Normal)
         
         forgotPasswordView.set(text: L10n.loginPasswordForgot, for: .Normal)
@@ -718,7 +718,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         super.init(frame: frameRect)
         
         
-        countrySelector.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background)
+        countrySelector.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
         countrySelector.set(text: "France", for: .Normal)
         _ = countrySelector.sizeToFit()
         addSubview(countrySelector)
@@ -771,7 +771,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
-        countrySelector.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background)
+        countrySelector.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
         
         
         codeText.backgroundColor = theme.colors.background

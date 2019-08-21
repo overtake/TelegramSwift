@@ -60,7 +60,7 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
         super.init(frame: frameRect)
         
         
-        countrySelector.style = ControlStyle(font: NSFont.medium(.title), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background)
+        countrySelector.style = ControlStyle(font: NSFont.medium(.title), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
         countrySelector.set(text: "France", for: .Normal)
         _ = countrySelector.sizeToFit()
         addSubview(countrySelector)

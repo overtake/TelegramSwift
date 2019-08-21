@@ -28,7 +28,7 @@ class ChatNavigationMention: ImageButton {
     
     func updateCount(_ count: Int32) {
         if count > 0 {
-            badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.blueUI)
+            badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.accent)
             badge!.view = badgeView
             badgeView.setFrameSize(badge!.size)
             addSubview(badgeView)

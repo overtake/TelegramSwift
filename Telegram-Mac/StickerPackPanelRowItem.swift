@@ -405,7 +405,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
         if let reference = item.packReference, !item.packInfo.installed {
             self.addButton = TitleButton()
-            self.addButton!.set(background: theme.colors.blueUI, for: .Normal)
+            self.addButton!.set(background: theme.colors.accent, for: .Normal)
             self.addButton!.set(background: theme.colors.blueIcon.withAlphaComponent(0.8), for: .Highlight)
             self.addButton!.set(font: .medium(.text), for: .Normal)
             self.addButton!.set(color: .white, for: .Normal)

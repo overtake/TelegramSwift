@@ -47,7 +47,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_phone_number, equatable: InputDataEquatable(state.phone), item: { initialSize, stableId in
-        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.newContactPhone, description: state.phone == nil ? L10n.newContactPhoneHidden : formatPhoneNumber(state.phone!), descTextColor: theme.colors.blueUI, type: .none, action: {
+        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.newContactPhone, description: state.phone == nil ? L10n.newContactPhoneHidden : formatPhoneNumber(state.phone!), descTextColor: theme.colors.accent, type: .none, action: {
             
         })
     }))

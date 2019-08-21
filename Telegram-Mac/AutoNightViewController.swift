@@ -61,7 +61,7 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
         switch schedule {
         case let .sunrise(latitude, longitude):
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_update, data: InputDataGeneralData(name: L10n.autoNightSettingsUpdateLocation, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_update, data: InputDataGeneralData(name: L10n.autoNightSettingsUpdateLocation, color: theme.colors.accent, icon: nil, type: .none, action: nil)))
             index += 1
             
             let sunriseSet = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: latitude, longitude: longitude)

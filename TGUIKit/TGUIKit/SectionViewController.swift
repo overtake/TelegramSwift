@@ -29,7 +29,7 @@ public class SectionControllerView : View {
                 for hContainer in header.subviews {
                     for t in hContainer.subviews {
                         if let t = t as? TextView {
-                            t.update(TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
+                            t.update(TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.accent : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
                         }
                         
                     }
@@ -58,7 +58,7 @@ public class SectionControllerView : View {
             title.isSelectable = false
             title.userInteractionEnabled = false
             title.backgroundColor = presentation.colors.background
-            title.update(TextViewLayout(.initialize(string: section.title(), color: i == selected ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
+            title.update(TextViewLayout(.initialize(string: section.title(), color: i == selected ? presentation.colors.accent : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
             headerContainer.addSubview(title)
             header.addSubview(headerContainer)
             headerContainer.border = [.Bottom]
@@ -124,14 +124,14 @@ public class SectionControllerView : View {
     public override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         self.backgroundColor = presentation.colors.background
-        selector.backgroundColor = presentation.colors.blueUI
+        selector.backgroundColor = presentation.colors.accent
         container.backgroundColor = presentation.colors.background
         var index:Int = 0
         for hContainer in header.subviews {
             hContainer.background = presentation.colors.background
             for t in hContainer.subviews {
                 if let t = t as? TextView {
-                    let layout = TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.blueUI : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle)
+                    let layout = TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.accent : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle)
                     layout.measure(width: hContainer.frame.width - 20)
                     t.update(layout)
                     t.center()

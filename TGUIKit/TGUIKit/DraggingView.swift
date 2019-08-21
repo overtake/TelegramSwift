@@ -46,7 +46,7 @@ class DragView : OverlayControl {
         self.layer?.borderColor = presentation.colors.border.cgColor
         self.backgroundColor = presentation.colors.background
 //        self.set(handler: { control in
-//            control.layer?.borderColor = presentation.colors.blueUI.cgColor
+//            control.layer?.borderColor = presentation.colors.accent.cgColor
 //            control.layer?.animateBorder()
 //        }, for: .Hover)
 //
@@ -136,7 +136,7 @@ public class DraggingView: SplitView {
     private func updateItems() {
         for itemView in container.subviews as! [DragView] {
             if itemView.mouseInside() {
-                itemView.layer?.borderColor = presentation.colors.blueUI.cgColor
+                itemView.layer?.borderColor = presentation.colors.accent.cgColor
                 itemView.layer?.animateBorder()
             } else {
                 itemView.layer?.borderColor = presentation.colors.border.cgColor

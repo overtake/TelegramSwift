@@ -298,7 +298,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                                     strongSelf.downloadProgressView = LinearProgressControl()
                                     strongSelf.addSubview(strongSelf.downloadProgressView!)
                                 }
-                                strongSelf.downloadProgressView?.style = ControlStyle(foregroundColor:theme.colors.blueUI)
+                                strongSelf.downloadProgressView?.style = ControlStyle(foregroundColor:theme.colors.accent)
                                 strongSelf.needsLayout = true
                             }
                             

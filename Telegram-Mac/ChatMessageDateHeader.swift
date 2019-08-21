@@ -37,7 +37,7 @@ class ChatDateStickItem : TableStickItem {
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout
-    init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction) {
+    init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction

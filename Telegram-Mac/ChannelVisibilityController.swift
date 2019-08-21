@@ -290,7 +290,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 text = availability.description(for: addressName)
                 switch availability {
                 case .available:
-                    color = theme.colors.blueUI
+                    color = theme.colors.accent
                 default:
                     color = theme.colors.redUI
                 }

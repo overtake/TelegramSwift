@@ -84,7 +84,7 @@ private final class ClueRowView : HorizontalRowView {
     
     override func updateColors() {
         super.updateColors()
-        containerView.backgroundColor = item?.isSelected == true ? theme.colors.blueUI : theme.colors.background
+        containerView.backgroundColor = item?.isSelected == true ? theme.colors.accent : theme.colors.background
     }
     
     override func set(item: TableRowItem, animated: Bool) {

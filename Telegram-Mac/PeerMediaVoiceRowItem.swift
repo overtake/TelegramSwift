@@ -229,7 +229,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         super.updateColors()
         titleView.backgroundColor = backdorColor
         nameView.backgroundColor = backdorColor
-        unreadDot.backgroundColor = theme.colors.blueUI
+        unreadDot.backgroundColor = theme.colors.accent
     }
     
     override func layout() {

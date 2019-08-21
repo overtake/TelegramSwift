@@ -32,12 +32,12 @@ class SEModalProgressView: View {
         header.backgroundColor = theme.colors.grayBackground
         containerView.setFrameSize(250, 80)
         containerView.layer?.cornerRadius = .cornerRadius
-        progress.style = ControlStyle(foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.grayBackground)
+        progress.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: theme.colors.grayBackground)
         progress.setFrameSize(250, 4)
         
         
         cancel.set(font: .medium(.title), for: .Normal)
-        cancel.set(color: theme.colors.blueUI, for: .Normal)
+        cancel.set(color: theme.colors.accent, for: .Normal)
         cancel.set(text: tr(L10n.shareExtensionCancel), for: .Normal)
         _ = cancel.sizeToFit()
         

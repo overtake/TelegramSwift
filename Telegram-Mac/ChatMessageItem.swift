@@ -128,7 +128,7 @@ class ChatMessageItem: ChatRowItem {
     
     var webpageLayout:WPLayout?
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
          if let message = entry.message {
             
@@ -336,7 +336,7 @@ class ChatMessageItem: ChatRowItem {
                 }
             }
             
-            super.init(initialSize, chatInteraction, context, entry, downloadSettings)
+            super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in

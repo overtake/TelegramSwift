@@ -77,7 +77,7 @@ private final class PassportTwoStepVerificationIntroRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        button.set(color: theme.colors.blueUI, for: .Normal)
+        button.set(color: theme.colors.accent, for: .Normal)
         headerView.backgroundColor = theme.colors.background
         descView.backgroundColor = theme.colors.background
         button.set(background: theme.colors.background, for: .Normal)

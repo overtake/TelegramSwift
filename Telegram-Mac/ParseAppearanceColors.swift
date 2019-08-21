@@ -57,11 +57,12 @@ func importPalette(_ path: String) -> ColorPalette? {
             if let isDark = isDark, let name = paletteName {
                 return ColorPalette(isDark: isDark,
                                     name: name,
+                                    basicAccent: colors["basicAccent"]!,
                                     background: colors["background"]!,
                                      text: colors["text"]!,
                                      grayText: colors["grayText"]!,
                                      link: colors["link"]!,
-                                     blueUI: colors["blueUI"]!,
+                                     accent: colors["accent"]!,
                                      redUI: colors["redUI"]!,
                                      greenUI: colors["greenUI"]!,
                                      blackTransparent: colors["blackTransparent"]!,

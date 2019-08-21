@@ -425,7 +425,7 @@ class ShareInfoView : Control {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        share.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        share.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
         
         share.set(text: L10n.peerInfoShareMyInfo, for: .Normal)
 
@@ -496,7 +496,7 @@ class AddContactView : Control {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        add.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        add.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
         blockButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.redUI)
         
         if blockButton.superview == nil, let peer = chatInteraction.peer {

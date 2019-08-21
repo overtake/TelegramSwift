@@ -127,13 +127,13 @@ private final class LocationMapView : View {
         
         locationPinView.updateLocalizationAndTheme()
         expandButton.set(font: .medium(.title), for: .Normal)
-        expandButton.set(color: theme.colors.blueUI, for: .Normal)
+        expandButton.set(color: theme.colors.accent, for: .Normal)
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
         _ = locateButton.sizeToFit()
         _ = dismiss.sizeToFit()
         header.backgroundColor = theme.colors.background
         header.border = [.Bottom]
-        loadingView.progressColor = theme.colors.blueUI
+        loadingView.progressColor = theme.colors.accent
         expandContainer.border = [.Top]
         expandContainer.backgroundColor = theme.colors.background
         let title = TextViewLayout(.initialize(string: L10n.locationSendTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)

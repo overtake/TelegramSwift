@@ -307,7 +307,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
                 arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadGIFs)
             }, enabled: enabled)
         case let .resetDownloadSettings(_, enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadReset, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI), type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadReset, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), type: .none, action: {
                 arguments.resetDownloadSettings()
             }, enabled: enabled)
         case let .downloadFolder(_, path):

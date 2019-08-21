@@ -37,7 +37,7 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         
         button.set(text: L10n.channelIntroCreateChannel, for: .Normal)
 
-        button.set(color: theme.colors.blueUI, for: .Normal)
+        button.set(color: theme.colors.accent, for: .Normal)
         _ = button.sizeToFit()
         
         backgroundColor = theme.colors.background

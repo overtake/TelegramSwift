@@ -463,7 +463,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, data: InputDataGeneralData(name: L10n.proxySettingsCopyLink, color: theme.colors.blueUI, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_export, data: InputDataGeneralData(name: L10n.proxySettingsCopyLink, color: theme.colors.accent, icon: nil, type: .none, action: nil)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))

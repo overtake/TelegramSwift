@@ -57,7 +57,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             switch identifier {
             case .forward:
                 let button = (item(forIdentifier: identifier) as? NSCustomTouchBarItem)?.view as? NSButton
-                button?.bezelColor = chatInteraction.presentation.canInvokeBasicActions.forward ? theme.colors.blueUI : nil
+                button?.bezelColor = chatInteraction.presentation.canInvokeBasicActions.forward ? theme.colors.accent : nil
                 button?.isEnabled = chatInteraction.presentation.canInvokeBasicActions.forward
                 
             case .delete:
@@ -146,7 +146,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesForward"))!
             let button = NSButton(title: L10n.messageActionsPanelForward, image: icon, target: self, action: #selector(forwardMessages))
             button.addWidthConstraint(size: 160)
-            button.bezelColor = theme.colors.blueUI
+            button.bezelColor = theme.colors.accent
             button.imageHugsTitle = true
             button.isEnabled = chatInteraction.presentation.canInvokeBasicActions.forward
             item.view = button

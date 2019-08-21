@@ -83,7 +83,7 @@ private final class LocationSendCurrentView : TableRowView {
 
         
         button.set(font: .medium(.title), for: .Normal)
-        button.set(color: theme.colors.blueUI, for: .Normal)
+        button.set(color: theme.colors.accent, for: .Normal)
         let text: String
         switch item.state {
         case .accurate:

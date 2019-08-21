@@ -126,7 +126,7 @@ private class WebAuthorizationRowView : TableRowView {
         self.statusTextView.update(item.statusLayout)
         self.dateView.update(item.dateLayout)
         
-        logoutButton.set(color: theme.colors.blueUI, for: .Normal)
+        logoutButton.set(color: theme.colors.accent, for: .Normal)
         logoutButton.set(font: .medium(.text), for: .Normal)
         logoutButton.set(text: L10n.webAuthorizationsLogout, for: .Normal)
         _ = logoutButton.sizeToFit()
