@@ -6,7 +6,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _dialogMuteImage()
-          cached["(dialogMuteImage)"] = image
+          cached["dialogMuteImage"] = image
           return image
       }
   }
@@ -15,7 +15,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _dialogMuteImageSelected()
-          cached["(dialogMuteImageSelected)"] = image
+          cached["dialogMuteImageSelected"] = image
           return image
       }
   }
@@ -24,7 +24,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _outgoingMessageImage()
-          cached["(outgoingMessageImage)"] = image
+          cached["outgoingMessageImage"] = image
           return image
       }
   }
@@ -33,7 +33,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _readMessageImage()
-          cached["(readMessageImage)"] = image
+          cached["readMessageImage"] = image
           return image
       }
   }
@@ -42,7 +42,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _outgoingMessageImageSelected()
-          cached["(outgoingMessageImageSelected)"] = image
+          cached["outgoingMessageImageSelected"] = image
           return image
       }
   }
@@ -51,7 +51,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _readMessageImageSelected()
-          cached["(readMessageImageSelected)"] = image
+          cached["readMessageImageSelected"] = image
           return image
       }
   }
@@ -60,7 +60,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _sendingImage()
-          cached["(sendingImage)"] = image
+          cached["sendingImage"] = image
           return image
       }
   }
@@ -69,7 +69,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _sendingImageSelected()
-          cached["(sendingImageSelected)"] = image
+          cached["sendingImageSelected"] = image
           return image
       }
   }
@@ -78,7 +78,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _secretImage()
-          cached["(secretImage)"] = image
+          cached["secretImage"] = image
           return image
       }
   }
@@ -87,7 +87,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _secretImageSelected()
-          cached["(secretImageSelected)"] = image
+          cached["secretImageSelected"] = image
           return image
       }
   }
@@ -96,7 +96,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _pinnedImage()
-          cached["(pinnedImage)"] = image
+          cached["pinnedImage"] = image
           return image
       }
   }
@@ -105,7 +105,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _pinnedImageSelected()
-          cached["(pinnedImageSelected)"] = image
+          cached["pinnedImageSelected"] = image
           return image
       }
   }
@@ -114,7 +114,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _verifiedImage()
-          cached["(verifiedImage)"] = image
+          cached["verifiedImage"] = image
           return image
       }
   }
@@ -123,7 +123,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _verifiedImageSelected()
-          cached["(verifiedImageSelected)"] = image
+          cached["verifiedImageSelected"] = image
           return image
       }
   }
@@ -132,7 +132,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _errorImage()
-          cached["(errorImage)"] = image
+          cached["errorImage"] = image
           return image
       }
   }
@@ -141,7 +141,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _errorImageSelected()
-          cached["(errorImageSelected)"] = image
+          cached["errorImageSelected"] = image
           return image
       }
   }
@@ -150,7 +150,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearch()
-          cached["(chatSearch)"] = image
+          cached["chatSearch"] = image
           return image
       }
   }
@@ -159,7 +159,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatCall()
-          cached["(chatCall)"] = image
+          cached["chatCall"] = image
           return image
       }
   }
@@ -168,7 +168,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActions()
-          cached["(chatActions)"] = image
+          cached["chatActions"] = image
           return image
       }
   }
@@ -177,7 +177,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFailedCall_incoming()
-          cached["(chatFailedCall_incoming)"] = image
+          cached["chatFailedCall_incoming"] = image
           return image
       }
   }
@@ -186,7 +186,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFailedCall_outgoing()
-          cached["(chatFailedCall_outgoing)"] = image
+          cached["chatFailedCall_outgoing"] = image
           return image
       }
   }
@@ -195,7 +195,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatCall_incoming()
-          cached["(chatCall_incoming)"] = image
+          cached["chatCall_incoming"] = image
           return image
       }
   }
@@ -204,7 +204,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatCall_outgoing()
-          cached["(chatCall_outgoing)"] = image
+          cached["chatCall_outgoing"] = image
           return image
       }
   }
@@ -213,7 +213,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFailedCallBubble_incoming()
-          cached["(chatFailedCallBubble_incoming)"] = image
+          cached["chatFailedCallBubble_incoming"] = image
           return image
       }
   }
@@ -222,7 +222,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFailedCallBubble_outgoing()
-          cached["(chatFailedCallBubble_outgoing)"] = image
+          cached["chatFailedCallBubble_outgoing"] = image
           return image
       }
   }
@@ -231,7 +231,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatCallBubble_incoming()
-          cached["(chatCallBubble_incoming)"] = image
+          cached["chatCallBubble_incoming"] = image
           return image
       }
   }
@@ -240,7 +240,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatCallBubble_outgoing()
-          cached["(chatCallBubble_outgoing)"] = image
+          cached["chatCallBubble_outgoing"] = image
           return image
       }
   }
@@ -249,7 +249,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFallbackCall()
-          cached["(chatFallbackCall)"] = image
+          cached["chatFallbackCall"] = image
           return image
       }
   }
@@ -258,7 +258,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFallbackCallBubble_incoming()
-          cached["(chatFallbackCallBubble_incoming)"] = image
+          cached["chatFallbackCallBubble_incoming"] = image
           return image
       }
   }
@@ -267,7 +267,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFallbackCallBubble_outgoing()
-          cached["(chatFallbackCallBubble_outgoing)"] = image
+          cached["chatFallbackCallBubble_outgoing"] = image
           return image
       }
   }
@@ -276,7 +276,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatToggleSelected()
-          cached["(chatToggleSelected)"] = image
+          cached["chatToggleSelected"] = image
           return image
       }
   }
@@ -285,7 +285,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatToggleUnselected()
-          cached["(chatToggleUnselected)"] = image
+          cached["chatToggleUnselected"] = image
           return image
       }
   }
@@ -294,7 +294,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatShare()
-          cached["(chatShare)"] = image
+          cached["chatShare"] = image
           return image
       }
   }
@@ -303,7 +303,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPlay()
-          cached["(chatMusicPlay)"] = image
+          cached["chatMusicPlay"] = image
           return image
       }
   }
@@ -312,7 +312,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPlayBubble_incoming()
-          cached["(chatMusicPlayBubble_incoming)"] = image
+          cached["chatMusicPlayBubble_incoming"] = image
           return image
       }
   }
@@ -321,7 +321,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPlayBubble_outgoing()
-          cached["(chatMusicPlayBubble_outgoing)"] = image
+          cached["chatMusicPlayBubble_outgoing"] = image
           return image
       }
   }
@@ -330,7 +330,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPause()
-          cached["(chatMusicPause)"] = image
+          cached["chatMusicPause"] = image
           return image
       }
   }
@@ -339,7 +339,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPauseBubble_incoming()
-          cached["(chatMusicPauseBubble_incoming)"] = image
+          cached["chatMusicPauseBubble_incoming"] = image
           return image
       }
   }
@@ -348,7 +348,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPauseBubble_outgoing()
-          cached["(chatMusicPauseBubble_outgoing)"] = image
+          cached["chatMusicPauseBubble_outgoing"] = image
           return image
       }
   }
@@ -357,7 +357,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _composeNewChat()
-          cached["(composeNewChat)"] = image
+          cached["composeNewChat"] = image
           return image
       }
   }
@@ -366,7 +366,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _composeNewChatActive()
-          cached["(composeNewChatActive)"] = image
+          cached["composeNewChatActive"] = image
           return image
       }
   }
@@ -375,7 +375,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _composeNewGroup()
-          cached["(composeNewGroup)"] = image
+          cached["composeNewGroup"] = image
           return image
       }
   }
@@ -384,7 +384,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _composeNewSecretChat()
-          cached["(composeNewSecretChat)"] = image
+          cached["composeNewSecretChat"] = image
           return image
       }
   }
@@ -393,7 +393,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _composeNewChannel()
-          cached["(composeNewChannel)"] = image
+          cached["composeNewChannel"] = image
           return image
       }
   }
@@ -402,7 +402,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _contactsNewContact()
-          cached["(contactsNewContact)"] = image
+          cached["contactsNewContact"] = image
           return image
       }
   }
@@ -411,7 +411,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkInBubble1_incoming()
-          cached["(chatReadMarkInBubble1_incoming)"] = image
+          cached["chatReadMarkInBubble1_incoming"] = image
           return image
       }
   }
@@ -420,7 +420,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkInBubble2_incoming()
-          cached["(chatReadMarkInBubble2_incoming)"] = image
+          cached["chatReadMarkInBubble2_incoming"] = image
           return image
       }
   }
@@ -429,7 +429,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkInBubble1_outgoing()
-          cached["(chatReadMarkInBubble1_outgoing)"] = image
+          cached["chatReadMarkInBubble1_outgoing"] = image
           return image
       }
   }
@@ -438,7 +438,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkInBubble2_outgoing()
-          cached["(chatReadMarkInBubble2_outgoing)"] = image
+          cached["chatReadMarkInBubble2_outgoing"] = image
           return image
       }
   }
@@ -447,7 +447,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkOutBubble1()
-          cached["(chatReadMarkOutBubble1)"] = image
+          cached["chatReadMarkOutBubble1"] = image
           return image
       }
   }
@@ -456,7 +456,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkOutBubble2()
-          cached["(chatReadMarkOutBubble2)"] = image
+          cached["chatReadMarkOutBubble2"] = image
           return image
       }
   }
@@ -465,7 +465,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkOverlayBubble1()
-          cached["(chatReadMarkOverlayBubble1)"] = image
+          cached["chatReadMarkOverlayBubble1"] = image
           return image
       }
   }
@@ -474,7 +474,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatReadMarkOverlayBubble2()
-          cached["(chatReadMarkOverlayBubble2)"] = image
+          cached["chatReadMarkOverlayBubble2"] = image
           return image
       }
   }
@@ -483,7 +483,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _sentFailed()
-          cached["(sentFailed)"] = image
+          cached["sentFailed"] = image
           return image
       }
   }
@@ -492,7 +492,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatChannelViewsInBubble_incoming()
-          cached["(chatChannelViewsInBubble_incoming)"] = image
+          cached["chatChannelViewsInBubble_incoming"] = image
           return image
       }
   }
@@ -501,7 +501,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatChannelViewsInBubble_outgoing()
-          cached["(chatChannelViewsInBubble_outgoing)"] = image
+          cached["chatChannelViewsInBubble_outgoing"] = image
           return image
       }
   }
@@ -510,7 +510,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatChannelViewsOutBubble()
-          cached["(chatChannelViewsOutBubble)"] = image
+          cached["chatChannelViewsOutBubble"] = image
           return image
       }
   }
@@ -519,7 +519,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatChannelViewsOverlayBubble()
-          cached["(chatChannelViewsOverlayBubble)"] = image
+          cached["chatChannelViewsOverlayBubble"] = image
           return image
       }
   }
@@ -528,7 +528,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatNavigationBack()
-          cached["(chatNavigationBack)"] = image
+          cached["chatNavigationBack"] = image
           return image
       }
   }
@@ -537,7 +537,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerInfoAddMember()
-          cached["(peerInfoAddMember)"] = image
+          cached["peerInfoAddMember"] = image
           return image
       }
   }
@@ -546,7 +546,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearchUp()
-          cached["(chatSearchUp)"] = image
+          cached["chatSearchUp"] = image
           return image
       }
   }
@@ -555,7 +555,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearchUpDisabled()
-          cached["(chatSearchUpDisabled)"] = image
+          cached["chatSearchUpDisabled"] = image
           return image
       }
   }
@@ -564,7 +564,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearchDown()
-          cached["(chatSearchDown)"] = image
+          cached["chatSearchDown"] = image
           return image
       }
   }
@@ -573,7 +573,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearchDownDisabled()
-          cached["(chatSearchDownDisabled)"] = image
+          cached["chatSearchDownDisabled"] = image
           return image
       }
   }
@@ -582,7 +582,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearchCalendar()
-          cached["(chatSearchCalendar)"] = image
+          cached["chatSearchCalendar"] = image
           return image
       }
   }
@@ -591,7 +591,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _dismissAccessory()
-          cached["(dismissAccessory)"] = image
+          cached["dismissAccessory"] = image
           return image
       }
   }
@@ -600,7 +600,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatScrollUp()
-          cached["(chatScrollUp)"] = image
+          cached["chatScrollUp"] = image
           return image
       }
   }
@@ -609,7 +609,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatScrollUpActive()
-          cached["(chatScrollUpActive)"] = image
+          cached["chatScrollUpActive"] = image
           return image
       }
   }
@@ -618,7 +618,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerPlay()
-          cached["(audioPlayerPlay)"] = image
+          cached["audioPlayerPlay"] = image
           return image
       }
   }
@@ -627,7 +627,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerPause()
-          cached["(audioPlayerPause)"] = image
+          cached["audioPlayerPause"] = image
           return image
       }
   }
@@ -636,7 +636,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerNext()
-          cached["(audioPlayerNext)"] = image
+          cached["audioPlayerNext"] = image
           return image
       }
   }
@@ -645,7 +645,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerPrev()
-          cached["(audioPlayerPrev)"] = image
+          cached["audioPlayerPrev"] = image
           return image
       }
   }
@@ -654,7 +654,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _auduiPlayerDismiss()
-          cached["(auduiPlayerDismiss)"] = image
+          cached["auduiPlayerDismiss"] = image
           return image
       }
   }
@@ -663,7 +663,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerRepeat()
-          cached["(audioPlayerRepeat)"] = image
+          cached["audioPlayerRepeat"] = image
           return image
       }
   }
@@ -672,7 +672,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerRepeatActive()
-          cached["(audioPlayerRepeatActive)"] = image
+          cached["audioPlayerRepeatActive"] = image
           return image
       }
   }
@@ -681,7 +681,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerLockedPlay()
-          cached["(audioPlayerLockedPlay)"] = image
+          cached["audioPlayerLockedPlay"] = image
           return image
       }
   }
@@ -690,7 +690,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerLockedNext()
-          cached["(audioPlayerLockedNext)"] = image
+          cached["audioPlayerLockedNext"] = image
           return image
       }
   }
@@ -699,7 +699,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _audioPlayerLockedPrev()
-          cached["(audioPlayerLockedPrev)"] = image
+          cached["audioPlayerLockedPrev"] = image
           return image
       }
   }
@@ -708,7 +708,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendMessage()
-          cached["(chatSendMessage)"] = image
+          cached["chatSendMessage"] = image
           return image
       }
   }
@@ -717,7 +717,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatRecordVoice()
-          cached["(chatRecordVoice)"] = image
+          cached["chatRecordVoice"] = image
           return image
       }
   }
@@ -726,7 +726,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatEntertainment()
-          cached["(chatEntertainment)"] = image
+          cached["chatEntertainment"] = image
           return image
       }
   }
@@ -735,7 +735,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatInlineDismiss()
-          cached["(chatInlineDismiss)"] = image
+          cached["chatInlineDismiss"] = image
           return image
       }
   }
@@ -744,7 +744,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActiveReplyMarkup()
-          cached["(chatActiveReplyMarkup)"] = image
+          cached["chatActiveReplyMarkup"] = image
           return image
       }
   }
@@ -753,7 +753,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatDisabledReplyMarkup()
-          cached["(chatDisabledReplyMarkup)"] = image
+          cached["chatDisabledReplyMarkup"] = image
           return image
       }
   }
@@ -762,7 +762,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSecretTimer()
-          cached["(chatSecretTimer)"] = image
+          cached["chatSecretTimer"] = image
           return image
       }
   }
@@ -771,7 +771,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatForwardMessagesActive()
-          cached["(chatForwardMessagesActive)"] = image
+          cached["chatForwardMessagesActive"] = image
           return image
       }
   }
@@ -780,7 +780,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatForwardMessagesInactive()
-          cached["(chatForwardMessagesInactive)"] = image
+          cached["chatForwardMessagesInactive"] = image
           return image
       }
   }
@@ -789,7 +789,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatDeleteMessagesActive()
-          cached["(chatDeleteMessagesActive)"] = image
+          cached["chatDeleteMessagesActive"] = image
           return image
       }
   }
@@ -798,7 +798,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatDeleteMessagesInactive()
-          cached["(chatDeleteMessagesInactive)"] = image
+          cached["chatDeleteMessagesInactive"] = image
           return image
       }
   }
@@ -807,7 +807,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _generalNext()
-          cached["(generalNext)"] = image
+          cached["generalNext"] = image
           return image
       }
   }
@@ -816,7 +816,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _generalNextActive()
-          cached["(generalNextActive)"] = image
+          cached["generalNextActive"] = image
           return image
       }
   }
@@ -825,7 +825,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _generalSelect()
-          cached["(generalSelect)"] = image
+          cached["generalSelect"] = image
           return image
       }
   }
@@ -834,7 +834,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatVoiceRecording()
-          cached["(chatVoiceRecording)"] = image
+          cached["chatVoiceRecording"] = image
           return image
       }
   }
@@ -843,7 +843,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatVideoRecording()
-          cached["(chatVideoRecording)"] = image
+          cached["chatVideoRecording"] = image
           return image
       }
   }
@@ -852,7 +852,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatRecord()
-          cached["(chatRecord)"] = image
+          cached["chatRecord"] = image
           return image
       }
   }
@@ -861,7 +861,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _deleteItem()
-          cached["(deleteItem)"] = image
+          cached["deleteItem"] = image
           return image
       }
   }
@@ -870,7 +870,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _deleteItemDisabled()
-          cached["(deleteItemDisabled)"] = image
+          cached["deleteItemDisabled"] = image
           return image
       }
   }
@@ -879,7 +879,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatAttach()
-          cached["(chatAttach)"] = image
+          cached["chatAttach"] = image
           return image
       }
   }
@@ -888,7 +888,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatAttachFile()
-          cached["(chatAttachFile)"] = image
+          cached["chatAttachFile"] = image
           return image
       }
   }
@@ -897,7 +897,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatAttachPhoto()
-          cached["(chatAttachPhoto)"] = image
+          cached["chatAttachPhoto"] = image
           return image
       }
   }
@@ -906,7 +906,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatAttachCamera()
-          cached["(chatAttachCamera)"] = image
+          cached["chatAttachCamera"] = image
           return image
       }
   }
@@ -915,7 +915,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatAttachLocation()
-          cached["(chatAttachLocation)"] = image
+          cached["chatAttachLocation"] = image
           return image
       }
   }
@@ -924,7 +924,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatAttachPoll()
-          cached["(chatAttachPoll)"] = image
+          cached["chatAttachPoll"] = image
           return image
       }
   }
@@ -933,7 +933,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _mediaEmptyShared()
-          cached["(mediaEmptyShared)"] = image
+          cached["mediaEmptyShared"] = image
           return image
       }
   }
@@ -942,7 +942,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _mediaEmptyFiles()
-          cached["(mediaEmptyFiles)"] = image
+          cached["mediaEmptyFiles"] = image
           return image
       }
   }
@@ -951,7 +951,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _mediaEmptyMusic()
-          cached["(mediaEmptyMusic)"] = image
+          cached["mediaEmptyMusic"] = image
           return image
       }
   }
@@ -960,7 +960,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _mediaEmptyLinks()
-          cached["(mediaEmptyLinks)"] = image
+          cached["mediaEmptyLinks"] = image
           return image
       }
   }
@@ -969,7 +969,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _mediaDropdown()
-          cached["(mediaDropdown)"] = image
+          cached["mediaDropdown"] = image
           return image
       }
   }
@@ -978,7 +978,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersAddFeatured()
-          cached["(stickersAddFeatured)"] = image
+          cached["stickersAddFeatured"] = image
           return image
       }
   }
@@ -987,7 +987,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersAddedFeatured()
-          cached["(stickersAddedFeatured)"] = image
+          cached["stickersAddedFeatured"] = image
           return image
       }
   }
@@ -996,7 +996,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersRemove()
-          cached["(stickersRemove)"] = image
+          cached["stickersRemove"] = image
           return image
       }
   }
@@ -1005,7 +1005,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerMediaDownloadFileStart()
-          cached["(peerMediaDownloadFileStart)"] = image
+          cached["peerMediaDownloadFileStart"] = image
           return image
       }
   }
@@ -1014,7 +1014,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerMediaDownloadFilePause()
-          cached["(peerMediaDownloadFilePause)"] = image
+          cached["peerMediaDownloadFilePause"] = image
           return image
       }
   }
@@ -1023,7 +1023,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersShare()
-          cached["(stickersShare)"] = image
+          cached["stickersShare"] = image
           return image
       }
   }
@@ -1032,7 +1032,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiRecentTab()
-          cached["(emojiRecentTab)"] = image
+          cached["emojiRecentTab"] = image
           return image
       }
   }
@@ -1041,7 +1041,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiSmileTab()
-          cached["(emojiSmileTab)"] = image
+          cached["emojiSmileTab"] = image
           return image
       }
   }
@@ -1050,7 +1050,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiNatureTab()
-          cached["(emojiNatureTab)"] = image
+          cached["emojiNatureTab"] = image
           return image
       }
   }
@@ -1059,7 +1059,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiFoodTab()
-          cached["(emojiFoodTab)"] = image
+          cached["emojiFoodTab"] = image
           return image
       }
   }
@@ -1068,7 +1068,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiSportTab()
-          cached["(emojiSportTab)"] = image
+          cached["emojiSportTab"] = image
           return image
       }
   }
@@ -1077,7 +1077,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiCarTab()
-          cached["(emojiCarTab)"] = image
+          cached["emojiCarTab"] = image
           return image
       }
   }
@@ -1086,7 +1086,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiObjectsTab()
-          cached["(emojiObjectsTab)"] = image
+          cached["emojiObjectsTab"] = image
           return image
       }
   }
@@ -1095,7 +1095,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiSymbolsTab()
-          cached["(emojiSymbolsTab)"] = image
+          cached["emojiSymbolsTab"] = image
           return image
       }
   }
@@ -1104,7 +1104,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiFlagsTab()
-          cached["(emojiFlagsTab)"] = image
+          cached["emojiFlagsTab"] = image
           return image
       }
   }
@@ -1113,7 +1113,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiRecentTabActive()
-          cached["(emojiRecentTabActive)"] = image
+          cached["emojiRecentTabActive"] = image
           return image
       }
   }
@@ -1122,7 +1122,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiSmileTabActive()
-          cached["(emojiSmileTabActive)"] = image
+          cached["emojiSmileTabActive"] = image
           return image
       }
   }
@@ -1131,7 +1131,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiNatureTabActive()
-          cached["(emojiNatureTabActive)"] = image
+          cached["emojiNatureTabActive"] = image
           return image
       }
   }
@@ -1140,7 +1140,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiFoodTabActive()
-          cached["(emojiFoodTabActive)"] = image
+          cached["emojiFoodTabActive"] = image
           return image
       }
   }
@@ -1149,7 +1149,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiSportTabActive()
-          cached["(emojiSportTabActive)"] = image
+          cached["emojiSportTabActive"] = image
           return image
       }
   }
@@ -1158,7 +1158,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiCarTabActive()
-          cached["(emojiCarTabActive)"] = image
+          cached["emojiCarTabActive"] = image
           return image
       }
   }
@@ -1167,7 +1167,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiObjectsTabActive()
-          cached["(emojiObjectsTabActive)"] = image
+          cached["emojiObjectsTabActive"] = image
           return image
       }
   }
@@ -1176,7 +1176,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiSymbolsTabActive()
-          cached["(emojiSymbolsTabActive)"] = image
+          cached["emojiSymbolsTabActive"] = image
           return image
       }
   }
@@ -1185,7 +1185,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emojiFlagsTabActive()
-          cached["(emojiFlagsTabActive)"] = image
+          cached["emojiFlagsTabActive"] = image
           return image
       }
   }
@@ -1194,7 +1194,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickerBackground()
-          cached["(stickerBackground)"] = image
+          cached["stickerBackground"] = image
           return image
       }
   }
@@ -1203,7 +1203,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickerBackgroundActive()
-          cached["(stickerBackgroundActive)"] = image
+          cached["stickerBackgroundActive"] = image
           return image
       }
   }
@@ -1212,7 +1212,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersTabRecent()
-          cached["(stickersTabRecent)"] = image
+          cached["stickersTabRecent"] = image
           return image
       }
   }
@@ -1221,7 +1221,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersTabGIF()
-          cached["(stickersTabGIF)"] = image
+          cached["stickersTabGIF"] = image
           return image
       }
   }
@@ -1230,7 +1230,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingInFrame_incoming()
-          cached["(chatSendingInFrame_incoming)"] = image
+          cached["chatSendingInFrame_incoming"] = image
           return image
       }
   }
@@ -1239,7 +1239,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingInHour_incoming()
-          cached["(chatSendingInHour_incoming)"] = image
+          cached["chatSendingInHour_incoming"] = image
           return image
       }
   }
@@ -1248,7 +1248,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingInMin_incoming()
-          cached["(chatSendingInMin_incoming)"] = image
+          cached["chatSendingInMin_incoming"] = image
           return image
       }
   }
@@ -1257,7 +1257,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingInFrame_outgoing()
-          cached["(chatSendingInFrame_outgoing)"] = image
+          cached["chatSendingInFrame_outgoing"] = image
           return image
       }
   }
@@ -1266,7 +1266,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingInHour_outgoing()
-          cached["(chatSendingInHour_outgoing)"] = image
+          cached["chatSendingInHour_outgoing"] = image
           return image
       }
   }
@@ -1275,7 +1275,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingInMin_outgoing()
-          cached["(chatSendingInMin_outgoing)"] = image
+          cached["chatSendingInMin_outgoing"] = image
           return image
       }
   }
@@ -1284,7 +1284,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingOutFrame()
-          cached["(chatSendingOutFrame)"] = image
+          cached["chatSendingOutFrame"] = image
           return image
       }
   }
@@ -1293,7 +1293,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingOutHour()
-          cached["(chatSendingOutHour)"] = image
+          cached["chatSendingOutHour"] = image
           return image
       }
   }
@@ -1302,7 +1302,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingOutMin()
-          cached["(chatSendingOutMin)"] = image
+          cached["chatSendingOutMin"] = image
           return image
       }
   }
@@ -1311,7 +1311,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingOverlayFrame()
-          cached["(chatSendingOverlayFrame)"] = image
+          cached["chatSendingOverlayFrame"] = image
           return image
       }
   }
@@ -1320,7 +1320,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingOverlayHour()
-          cached["(chatSendingOverlayHour)"] = image
+          cached["chatSendingOverlayHour"] = image
           return image
       }
   }
@@ -1329,7 +1329,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSendingOverlayMin()
-          cached["(chatSendingOverlayMin)"] = image
+          cached["chatSendingOverlayMin"] = image
           return image
       }
   }
@@ -1338,7 +1338,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionUrl()
-          cached["(chatActionUrl)"] = image
+          cached["chatActionUrl"] = image
           return image
       }
   }
@@ -1347,7 +1347,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callInlineDecline()
-          cached["(callInlineDecline)"] = image
+          cached["callInlineDecline"] = image
           return image
       }
   }
@@ -1356,7 +1356,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callInlineMuted()
-          cached["(callInlineMuted)"] = image
+          cached["callInlineMuted"] = image
           return image
       }
   }
@@ -1365,7 +1365,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callInlineUnmuted()
-          cached["(callInlineUnmuted)"] = image
+          cached["callInlineUnmuted"] = image
           return image
       }
   }
@@ -1374,7 +1374,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _eventLogTriangle()
-          cached["(eventLogTriangle)"] = image
+          cached["eventLogTriangle"] = image
           return image
       }
   }
@@ -1383,7 +1383,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _channelIntro()
-          cached["(channelIntro)"] = image
+          cached["channelIntro"] = image
           return image
       }
   }
@@ -1392,7 +1392,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFileThumb()
-          cached["(chatFileThumb)"] = image
+          cached["chatFileThumb"] = image
           return image
       }
   }
@@ -1401,7 +1401,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFileThumbBubble_incoming()
-          cached["(chatFileThumbBubble_incoming)"] = image
+          cached["chatFileThumbBubble_incoming"] = image
           return image
       }
   }
@@ -1410,7 +1410,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatFileThumbBubble_outgoing()
-          cached["(chatFileThumbBubble_outgoing)"] = image
+          cached["chatFileThumbBubble_outgoing"] = image
           return image
       }
   }
@@ -1419,7 +1419,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSecretThumb()
-          cached["(chatSecretThumb)"] = image
+          cached["chatSecretThumb"] = image
           return image
       }
   }
@@ -1428,7 +1428,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMapPin()
-          cached["(chatMapPin)"] = image
+          cached["chatMapPin"] = image
           return image
       }
   }
@@ -1437,7 +1437,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSecretTitle()
-          cached["(chatSecretTitle)"] = image
+          cached["chatSecretTitle"] = image
           return image
       }
   }
@@ -1446,7 +1446,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _emptySearch()
-          cached["(emptySearch)"] = image
+          cached["emptySearch"] = image
           return image
       }
   }
@@ -1455,7 +1455,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _calendarBack()
-          cached["(calendarBack)"] = image
+          cached["calendarBack"] = image
           return image
       }
   }
@@ -1464,7 +1464,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _calendarNext()
-          cached["(calendarNext)"] = image
+          cached["calendarNext"] = image
           return image
       }
   }
@@ -1473,7 +1473,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _calendarBackDisabled()
-          cached["(calendarBackDisabled)"] = image
+          cached["calendarBackDisabled"] = image
           return image
       }
   }
@@ -1482,7 +1482,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _calendarNextDisabled()
-          cached["(calendarNextDisabled)"] = image
+          cached["calendarNextDisabled"] = image
           return image
       }
   }
@@ -1491,7 +1491,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _newChatCamera()
-          cached["(newChatCamera)"] = image
+          cached["newChatCamera"] = image
           return image
       }
   }
@@ -1500,7 +1500,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerInfoVerify()
-          cached["(peerInfoVerify)"] = image
+          cached["peerInfoVerify"] = image
           return image
       }
   }
@@ -1509,7 +1509,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerInfoCall()
-          cached["(peerInfoCall)"] = image
+          cached["peerInfoCall"] = image
           return image
       }
   }
@@ -1518,7 +1518,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callOutgoing()
-          cached["(callOutgoing)"] = image
+          cached["callOutgoing"] = image
           return image
       }
   }
@@ -1527,7 +1527,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _recentDismiss()
-          cached["(recentDismiss)"] = image
+          cached["recentDismiss"] = image
           return image
       }
   }
@@ -1536,7 +1536,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _recentDismissActive()
-          cached["(recentDismissActive)"] = image
+          cached["recentDismissActive"] = image
           return image
       }
   }
@@ -1545,7 +1545,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _webgameShare()
-          cached["(webgameShare)"] = image
+          cached["webgameShare"] = image
           return image
       }
   }
@@ -1554,7 +1554,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearchCancel()
-          cached["(chatSearchCancel)"] = image
+          cached["chatSearchCancel"] = image
           return image
       }
   }
@@ -1563,7 +1563,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSearchFrom()
-          cached["(chatSearchFrom)"] = image
+          cached["chatSearchFrom"] = image
           return image
       }
   }
@@ -1572,7 +1572,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callWindowDecline()
-          cached["(callWindowDecline)"] = image
+          cached["callWindowDecline"] = image
           return image
       }
   }
@@ -1581,7 +1581,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callWindowAccept()
-          cached["(callWindowAccept)"] = image
+          cached["callWindowAccept"] = image
           return image
       }
   }
@@ -1590,7 +1590,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callWindowMute()
-          cached["(callWindowMute)"] = image
+          cached["callWindowMute"] = image
           return image
       }
   }
@@ -1599,7 +1599,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callWindowUnmute()
-          cached["(callWindowUnmute)"] = image
+          cached["callWindowUnmute"] = image
           return image
       }
   }
@@ -1608,7 +1608,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callWindowClose()
-          cached["(callWindowClose)"] = image
+          cached["callWindowClose"] = image
           return image
       }
   }
@@ -1617,7 +1617,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callWindowDeviceSettings()
-          cached["(callWindowDeviceSettings)"] = image
+          cached["callWindowDeviceSettings"] = image
           return image
       }
   }
@@ -1626,7 +1626,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callSettings()
-          cached["(callSettings)"] = image
+          cached["callSettings"] = image
           return image
       }
   }
@@ -1635,7 +1635,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _callWindowCancel()
-          cached["(callWindowCancel)"] = image
+          cached["callWindowCancel"] = image
           return image
       }
   }
@@ -1644,7 +1644,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionEdit()
-          cached["(chatActionEdit)"] = image
+          cached["chatActionEdit"] = image
           return image
       }
   }
@@ -1653,7 +1653,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionInfo()
-          cached["(chatActionInfo)"] = image
+          cached["chatActionInfo"] = image
           return image
       }
   }
@@ -1662,7 +1662,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionMute()
-          cached["(chatActionMute)"] = image
+          cached["chatActionMute"] = image
           return image
       }
   }
@@ -1671,7 +1671,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionUnmute()
-          cached["(chatActionUnmute)"] = image
+          cached["chatActionUnmute"] = image
           return image
       }
   }
@@ -1680,7 +1680,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionClearHistory()
-          cached["(chatActionClearHistory)"] = image
+          cached["chatActionClearHistory"] = image
           return image
       }
   }
@@ -1689,7 +1689,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionDeleteChat()
-          cached["(chatActionDeleteChat)"] = image
+          cached["chatActionDeleteChat"] = image
           return image
       }
   }
@@ -1698,7 +1698,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _dismissPinned()
-          cached["(dismissPinned)"] = image
+          cached["dismissPinned"] = image
           return image
       }
   }
@@ -1707,7 +1707,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatActionsActive()
-          cached["(chatActionsActive)"] = image
+          cached["chatActionsActive"] = image
           return image
       }
   }
@@ -1716,7 +1716,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatEntertainmentSticker()
-          cached["(chatEntertainmentSticker)"] = image
+          cached["chatEntertainmentSticker"] = image
           return image
       }
   }
@@ -1725,7 +1725,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatEmpty()
-          cached["(chatEmpty)"] = image
+          cached["chatEmpty"] = image
           return image
       }
   }
@@ -1734,7 +1734,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickerPackClose()
-          cached["(stickerPackClose)"] = image
+          cached["stickerPackClose"] = image
           return image
       }
   }
@@ -1743,7 +1743,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickerPackDelete()
-          cached["(stickerPackDelete)"] = image
+          cached["stickerPackDelete"] = image
           return image
       }
   }
@@ -1752,7 +1752,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _modalShare()
-          cached["(modalShare)"] = image
+          cached["modalShare"] = image
           return image
       }
   }
@@ -1761,7 +1761,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _modalClose()
-          cached["(modalClose)"] = image
+          cached["modalClose"] = image
           return image
       }
   }
@@ -1770,7 +1770,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _ivChannelJoined()
-          cached["(ivChannelJoined)"] = image
+          cached["ivChannelJoined"] = image
           return image
       }
   }
@@ -1779,7 +1779,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatListMention()
-          cached["(chatListMention)"] = image
+          cached["chatListMention"] = image
           return image
       }
   }
@@ -1788,7 +1788,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatListMentionActive()
-          cached["(chatListMentionActive)"] = image
+          cached["chatListMentionActive"] = image
           return image
       }
   }
@@ -1797,7 +1797,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatListMentionArchived()
-          cached["(chatListMentionArchived)"] = image
+          cached["chatListMentionArchived"] = image
           return image
       }
   }
@@ -1806,7 +1806,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatListMentionArchivedActive()
-          cached["(chatListMentionArchivedActive)"] = image
+          cached["chatListMentionArchivedActive"] = image
           return image
       }
   }
@@ -1815,7 +1815,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMention()
-          cached["(chatMention)"] = image
+          cached["chatMention"] = image
           return image
       }
   }
@@ -1824,7 +1824,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMentionActive()
-          cached["(chatMentionActive)"] = image
+          cached["chatMentionActive"] = image
           return image
       }
   }
@@ -1833,7 +1833,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _sliderControl()
-          cached["(sliderControl)"] = image
+          cached["sliderControl"] = image
           return image
       }
   }
@@ -1842,7 +1842,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _sliderControlActive()
-          cached["(sliderControlActive)"] = image
+          cached["sliderControlActive"] = image
           return image
       }
   }
@@ -1851,7 +1851,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersTabFave()
-          cached["(stickersTabFave)"] = image
+          cached["stickersTabFave"] = image
           return image
       }
   }
@@ -1860,7 +1860,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatInstantView()
-          cached["(chatInstantView)"] = image
+          cached["chatInstantView"] = image
           return image
       }
   }
@@ -1869,7 +1869,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatInstantViewBubble_incoming()
-          cached["(chatInstantViewBubble_incoming)"] = image
+          cached["chatInstantViewBubble_incoming"] = image
           return image
       }
   }
@@ -1878,7 +1878,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatInstantViewBubble_outgoing()
-          cached["(chatInstantViewBubble_outgoing)"] = image
+          cached["chatInstantViewBubble_outgoing"] = image
           return image
       }
   }
@@ -1887,7 +1887,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _instantViewShare()
-          cached["(instantViewShare)"] = image
+          cached["instantViewShare"] = image
           return image
       }
   }
@@ -1896,7 +1896,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _instantViewActions()
-          cached["(instantViewActions)"] = image
+          cached["instantViewActions"] = image
           return image
       }
   }
@@ -1905,7 +1905,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _instantViewActionsActive()
-          cached["(instantViewActionsActive)"] = image
+          cached["instantViewActionsActive"] = image
           return image
       }
   }
@@ -1914,7 +1914,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _instantViewSafari()
-          cached["(instantViewSafari)"] = image
+          cached["instantViewSafari"] = image
           return image
       }
   }
@@ -1923,7 +1923,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _instantViewBack()
-          cached["(instantViewBack)"] = image
+          cached["instantViewBack"] = image
           return image
       }
   }
@@ -1932,7 +1932,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _instantViewCheck()
-          cached["(instantViewCheck)"] = image
+          cached["instantViewCheck"] = image
           return image
       }
   }
@@ -1941,7 +1941,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _groupStickerNotFound()
-          cached["(groupStickerNotFound)"] = image
+          cached["groupStickerNotFound"] = image
           return image
       }
   }
@@ -1950,7 +1950,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsAskQuestion()
-          cached["(settingsAskQuestion)"] = image
+          cached["settingsAskQuestion"] = image
           return image
       }
   }
@@ -1959,7 +1959,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsFaq()
-          cached["(settingsFaq)"] = image
+          cached["settingsFaq"] = image
           return image
       }
   }
@@ -1968,7 +1968,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsGeneral()
-          cached["(settingsGeneral)"] = image
+          cached["settingsGeneral"] = image
           return image
       }
   }
@@ -1977,7 +1977,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsLanguage()
-          cached["(settingsLanguage)"] = image
+          cached["settingsLanguage"] = image
           return image
       }
   }
@@ -1986,7 +1986,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsNotifications()
-          cached["(settingsNotifications)"] = image
+          cached["settingsNotifications"] = image
           return image
       }
   }
@@ -1995,7 +1995,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsSecurity()
-          cached["(settingsSecurity)"] = image
+          cached["settingsSecurity"] = image
           return image
       }
   }
@@ -2004,7 +2004,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsStickers()
-          cached["(settingsStickers)"] = image
+          cached["settingsStickers"] = image
           return image
       }
   }
@@ -2013,7 +2013,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsStorage()
-          cached["(settingsStorage)"] = image
+          cached["settingsStorage"] = image
           return image
       }
   }
@@ -2022,7 +2022,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsProxy()
-          cached["(settingsProxy)"] = image
+          cached["settingsProxy"] = image
           return image
       }
   }
@@ -2031,7 +2031,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsAppearance()
-          cached["(settingsAppearance)"] = image
+          cached["settingsAppearance"] = image
           return image
       }
   }
@@ -2040,7 +2040,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsPassport()
-          cached["(settingsPassport)"] = image
+          cached["settingsPassport"] = image
           return image
       }
   }
@@ -2049,7 +2049,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsUpdate()
-          cached["(settingsUpdate)"] = image
+          cached["settingsUpdate"] = image
           return image
       }
   }
@@ -2058,7 +2058,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsAskQuestionActive()
-          cached["(settingsAskQuestionActive)"] = image
+          cached["settingsAskQuestionActive"] = image
           return image
       }
   }
@@ -2067,7 +2067,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsFaqActive()
-          cached["(settingsFaqActive)"] = image
+          cached["settingsFaqActive"] = image
           return image
       }
   }
@@ -2076,7 +2076,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsGeneralActive()
-          cached["(settingsGeneralActive)"] = image
+          cached["settingsGeneralActive"] = image
           return image
       }
   }
@@ -2085,7 +2085,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsLanguageActive()
-          cached["(settingsLanguageActive)"] = image
+          cached["settingsLanguageActive"] = image
           return image
       }
   }
@@ -2094,7 +2094,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsNotificationsActive()
-          cached["(settingsNotificationsActive)"] = image
+          cached["settingsNotificationsActive"] = image
           return image
       }
   }
@@ -2103,7 +2103,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsSecurityActive()
-          cached["(settingsSecurityActive)"] = image
+          cached["settingsSecurityActive"] = image
           return image
       }
   }
@@ -2112,7 +2112,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsStickersActive()
-          cached["(settingsStickersActive)"] = image
+          cached["settingsStickersActive"] = image
           return image
       }
   }
@@ -2121,7 +2121,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsStorageActive()
-          cached["(settingsStorageActive)"] = image
+          cached["settingsStorageActive"] = image
           return image
       }
   }
@@ -2130,7 +2130,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsProxyActive()
-          cached["(settingsProxyActive)"] = image
+          cached["settingsProxyActive"] = image
           return image
       }
   }
@@ -2139,7 +2139,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsAppearanceActive()
-          cached["(settingsAppearanceActive)"] = image
+          cached["settingsAppearanceActive"] = image
           return image
       }
   }
@@ -2148,7 +2148,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsPassportActive()
-          cached["(settingsPassportActive)"] = image
+          cached["settingsPassportActive"] = image
           return image
       }
   }
@@ -2157,7 +2157,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsUpdateActive()
-          cached["(settingsUpdateActive)"] = image
+          cached["settingsUpdateActive"] = image
           return image
       }
   }
@@ -2166,7 +2166,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _generalCheck()
-          cached["(generalCheck)"] = image
+          cached["generalCheck"] = image
           return image
       }
   }
@@ -2175,7 +2175,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsAbout()
-          cached["(settingsAbout)"] = image
+          cached["settingsAbout"] = image
           return image
       }
   }
@@ -2184,7 +2184,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _settingsLogout()
-          cached["(settingsLogout)"] = image
+          cached["settingsLogout"] = image
           return image
       }
   }
@@ -2193,7 +2193,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _fastSettingsLock()
-          cached["(fastSettingsLock)"] = image
+          cached["fastSettingsLock"] = image
           return image
       }
   }
@@ -2202,7 +2202,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _fastSettingsDark()
-          cached["(fastSettingsDark)"] = image
+          cached["fastSettingsDark"] = image
           return image
       }
   }
@@ -2211,7 +2211,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _fastSettingsSunny()
-          cached["(fastSettingsSunny)"] = image
+          cached["fastSettingsSunny"] = image
           return image
       }
   }
@@ -2220,7 +2220,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _fastSettingsMute()
-          cached["(fastSettingsMute)"] = image
+          cached["fastSettingsMute"] = image
           return image
       }
   }
@@ -2229,7 +2229,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _fastSettingsUnmute()
-          cached["(fastSettingsUnmute)"] = image
+          cached["fastSettingsUnmute"] = image
           return image
       }
   }
@@ -2238,7 +2238,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatRecordVideo()
-          cached["(chatRecordVideo)"] = image
+          cached["chatRecordVideo"] = image
           return image
       }
   }
@@ -2247,7 +2247,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _inputChannelMute()
-          cached["(inputChannelMute)"] = image
+          cached["inputChannelMute"] = image
           return image
       }
   }
@@ -2256,7 +2256,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _inputChannelUnmute()
-          cached["(inputChannelUnmute)"] = image
+          cached["inputChannelUnmute"] = image
           return image
       }
   }
@@ -2265,7 +2265,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _changePhoneNumberIntro()
-          cached["(changePhoneNumberIntro)"] = image
+          cached["changePhoneNumberIntro"] = image
           return image
       }
   }
@@ -2274,7 +2274,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerSavedMessages()
-          cached["(peerSavedMessages)"] = image
+          cached["peerSavedMessages"] = image
           return image
       }
   }
@@ -2283,7 +2283,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _previewCollage()
-          cached["(previewCollage)"] = image
+          cached["previewCollage"] = image
           return image
       }
   }
@@ -2292,7 +2292,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatGoMessage()
-          cached["(chatGoMessage)"] = image
+          cached["chatGoMessage"] = image
           return image
       }
   }
@@ -2301,7 +2301,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatGroupToggleSelected()
-          cached["(chatGroupToggleSelected)"] = image
+          cached["chatGroupToggleSelected"] = image
           return image
       }
   }
@@ -2310,7 +2310,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatGroupToggleUnselected()
-          cached["(chatGroupToggleUnselected)"] = image
+          cached["chatGroupToggleUnselected"] = image
           return image
       }
   }
@@ -2319,7 +2319,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _successModalProgress()
-          cached["(successModalProgress)"] = image
+          cached["successModalProgress"] = image
           return image
       }
   }
@@ -2328,7 +2328,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _accentColorSelect()
-          cached["(accentColorSelect)"] = image
+          cached["accentColorSelect"] = image
           return image
       }
   }
@@ -2337,7 +2337,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatShareWallpaper()
-          cached["(chatShareWallpaper)"] = image
+          cached["chatShareWallpaper"] = image
           return image
       }
   }
@@ -2346,7 +2346,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatGotoMessageWallpaper()
-          cached["(chatGotoMessageWallpaper)"] = image
+          cached["chatGotoMessageWallpaper"] = image
           return image
       }
   }
@@ -2355,7 +2355,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _transparentBackground()
-          cached["(transparentBackground)"] = image
+          cached["transparentBackground"] = image
           return image
       }
   }
@@ -2364,7 +2364,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _lottieTransparentBackground()
-          cached["(lottieTransparentBackground)"] = image
+          cached["lottieTransparentBackground"] = image
           return image
       }
   }
@@ -2373,7 +2373,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passcodeTouchId()
-          cached["(passcodeTouchId)"] = image
+          cached["passcodeTouchId"] = image
           return image
       }
   }
@@ -2382,7 +2382,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passcodeLogin()
-          cached["(passcodeLogin)"] = image
+          cached["passcodeLogin"] = image
           return image
       }
   }
@@ -2391,7 +2391,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _confirmDeleteMessagesAccessory()
-          cached["(confirmDeleteMessagesAccessory)"] = image
+          cached["confirmDeleteMessagesAccessory"] = image
           return image
       }
   }
@@ -2400,7 +2400,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _alertCheckBoxSelected()
-          cached["(alertCheckBoxSelected)"] = image
+          cached["alertCheckBoxSelected"] = image
           return image
       }
   }
@@ -2409,7 +2409,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _alertCheckBoxUnselected()
-          cached["(alertCheckBoxUnselected)"] = image
+          cached["alertCheckBoxUnselected"] = image
           return image
       }
   }
@@ -2418,7 +2418,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _confirmPinAccessory()
-          cached["(confirmPinAccessory)"] = image
+          cached["confirmPinAccessory"] = image
           return image
       }
   }
@@ -2427,7 +2427,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _confirmDeleteChatAccessory()
-          cached["(confirmDeleteChatAccessory)"] = image
+          cached["confirmDeleteChatAccessory"] = image
           return image
       }
   }
@@ -2436,7 +2436,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickersEmptySearch()
-          cached["(stickersEmptySearch)"] = image
+          cached["stickersEmptySearch"] = image
           return image
       }
   }
@@ -2445,7 +2445,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _twoStepVerificationCreateIntro()
-          cached["(twoStepVerificationCreateIntro)"] = image
+          cached["twoStepVerificationCreateIntro"] = image
           return image
       }
   }
@@ -2454,7 +2454,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _secureIdAuth()
-          cached["(secureIdAuth)"] = image
+          cached["secureIdAuth"] = image
           return image
       }
   }
@@ -2463,7 +2463,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _ivAudioPlay()
-          cached["(ivAudioPlay)"] = image
+          cached["ivAudioPlay"] = image
           return image
       }
   }
@@ -2472,7 +2472,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _ivAudioPause()
-          cached["(ivAudioPause)"] = image
+          cached["ivAudioPause"] = image
           return image
       }
   }
@@ -2481,7 +2481,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyEnable()
-          cached["(proxyEnable)"] = image
+          cached["proxyEnable"] = image
           return image
       }
   }
@@ -2490,7 +2490,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyEnabled()
-          cached["(proxyEnabled)"] = image
+          cached["proxyEnabled"] = image
           return image
       }
   }
@@ -2499,7 +2499,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyState()
-          cached["(proxyState)"] = image
+          cached["proxyState"] = image
           return image
       }
   }
@@ -2508,7 +2508,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyDeleteListItem()
-          cached["(proxyDeleteListItem)"] = image
+          cached["proxyDeleteListItem"] = image
           return image
       }
   }
@@ -2517,7 +2517,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyInfoListItem()
-          cached["(proxyInfoListItem)"] = image
+          cached["proxyInfoListItem"] = image
           return image
       }
   }
@@ -2526,7 +2526,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyConnectedListItem()
-          cached["(proxyConnectedListItem)"] = image
+          cached["proxyConnectedListItem"] = image
           return image
       }
   }
@@ -2535,7 +2535,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyAddProxy()
-          cached["(proxyAddProxy)"] = image
+          cached["proxyAddProxy"] = image
           return image
       }
   }
@@ -2544,7 +2544,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _proxyNextWaitingListItem()
-          cached["(proxyNextWaitingListItem)"] = image
+          cached["proxyNextWaitingListItem"] = image
           return image
       }
   }
@@ -2553,7 +2553,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportForgotPassword()
-          cached["(passportForgotPassword)"] = image
+          cached["passportForgotPassword"] = image
           return image
       }
   }
@@ -2562,7 +2562,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _confirmAppAccessoryIcon()
-          cached["(confirmAppAccessoryIcon)"] = image
+          cached["confirmAppAccessoryIcon"] = image
           return image
       }
   }
@@ -2571,7 +2571,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportPassport()
-          cached["(passportPassport)"] = image
+          cached["passportPassport"] = image
           return image
       }
   }
@@ -2580,7 +2580,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportIdCardReverse()
-          cached["(passportIdCardReverse)"] = image
+          cached["passportIdCardReverse"] = image
           return image
       }
   }
@@ -2589,7 +2589,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportIdCard()
-          cached["(passportIdCard)"] = image
+          cached["passportIdCard"] = image
           return image
       }
   }
@@ -2598,7 +2598,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportSelfie()
-          cached["(passportSelfie)"] = image
+          cached["passportSelfie"] = image
           return image
       }
   }
@@ -2607,7 +2607,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportDriverLicense()
-          cached["(passportDriverLicense)"] = image
+          cached["passportDriverLicense"] = image
           return image
       }
   }
@@ -2616,7 +2616,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatOverlayVoiceRecording()
-          cached["(chatOverlayVoiceRecording)"] = image
+          cached["chatOverlayVoiceRecording"] = image
           return image
       }
   }
@@ -2625,7 +2625,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatOverlayVideoRecording()
-          cached["(chatOverlayVideoRecording)"] = image
+          cached["chatOverlayVideoRecording"] = image
           return image
       }
   }
@@ -2634,7 +2634,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatOverlaySendRecording()
-          cached["(chatOverlaySendRecording)"] = image
+          cached["chatOverlaySendRecording"] = image
           return image
       }
   }
@@ -2643,7 +2643,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatOverlayLockArrowRecording()
-          cached["(chatOverlayLockArrowRecording)"] = image
+          cached["chatOverlayLockArrowRecording"] = image
           return image
       }
   }
@@ -2652,7 +2652,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatOverlayLockerBodyRecording()
-          cached["(chatOverlayLockerBodyRecording)"] = image
+          cached["chatOverlayLockerBodyRecording"] = image
           return image
       }
   }
@@ -2661,7 +2661,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatOverlayLockerHeadRecording()
-          cached["(chatOverlayLockerHeadRecording)"] = image
+          cached["chatOverlayLockerHeadRecording"] = image
           return image
       }
   }
@@ -2670,7 +2670,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _locationPin()
-          cached["(locationPin)"] = image
+          cached["locationPin"] = image
           return image
       }
   }
@@ -2679,7 +2679,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _locationMapPin()
-          cached["(locationMapPin)"] = image
+          cached["locationMapPin"] = image
           return image
       }
   }
@@ -2688,7 +2688,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _locationMapLocate()
-          cached["(locationMapLocate)"] = image
+          cached["locationMapLocate"] = image
           return image
       }
   }
@@ -2697,7 +2697,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _locationMapLocated()
-          cached["(locationMapLocated)"] = image
+          cached["locationMapLocated"] = image
           return image
       }
   }
@@ -2706,7 +2706,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatTabIconSelected()
-          cached["(chatTabIconSelected)"] = image
+          cached["chatTabIconSelected"] = image
           return image
       }
   }
@@ -2715,7 +2715,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatTabIconSelectedUp()
-          cached["(chatTabIconSelectedUp)"] = image
+          cached["chatTabIconSelectedUp"] = image
           return image
       }
   }
@@ -2724,7 +2724,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatTabIconSelectedDown()
-          cached["(chatTabIconSelectedDown)"] = image
+          cached["chatTabIconSelectedDown"] = image
           return image
       }
   }
@@ -2733,7 +2733,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatTabIcon()
-          cached["(chatTabIcon)"] = image
+          cached["chatTabIcon"] = image
           return image
       }
   }
@@ -2742,7 +2742,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportSettings()
-          cached["(passportSettings)"] = image
+          cached["passportSettings"] = image
           return image
       }
   }
@@ -2751,7 +2751,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _passportInfo()
-          cached["(passportInfo)"] = image
+          cached["passportInfo"] = image
           return image
       }
   }
@@ -2760,7 +2760,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _editMessageMedia()
-          cached["(editMessageMedia)"] = image
+          cached["editMessageMedia"] = image
           return image
       }
   }
@@ -2769,7 +2769,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _playerMusicPlaceholder()
-          cached["(playerMusicPlaceholder)"] = image
+          cached["playerMusicPlaceholder"] = image
           return image
       }
   }
@@ -2778,7 +2778,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPlaceholder()
-          cached["(chatMusicPlaceholder)"] = image
+          cached["chatMusicPlaceholder"] = image
           return image
       }
   }
@@ -2787,7 +2787,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatMusicPlaceholderCap()
-          cached["(chatMusicPlaceholderCap)"] = image
+          cached["chatMusicPlaceholderCap"] = image
           return image
       }
   }
@@ -2796,7 +2796,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _searchArticle()
-          cached["(searchArticle)"] = image
+          cached["searchArticle"] = image
           return image
       }
   }
@@ -2805,7 +2805,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _searchSaved()
-          cached["(searchSaved)"] = image
+          cached["searchSaved"] = image
           return image
       }
   }
@@ -2814,7 +2814,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _archivedChats()
-          cached["(archivedChats)"] = image
+          cached["archivedChats"] = image
           return image
       }
   }
@@ -2823,7 +2823,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _hintPeerActive()
-          cached["(hintPeerActive)"] = image
+          cached["hintPeerActive"] = image
           return image
       }
   }
@@ -2832,7 +2832,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _hintPeerActiveSelected()
-          cached["(hintPeerActiveSelected)"] = image
+          cached["hintPeerActiveSelected"] = image
           return image
       }
   }
@@ -2841,7 +2841,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_delete()
-          cached["(chatSwiping_delete)"] = image
+          cached["chatSwiping_delete"] = image
           return image
       }
   }
@@ -2850,7 +2850,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_mute()
-          cached["(chatSwiping_mute)"] = image
+          cached["chatSwiping_mute"] = image
           return image
       }
   }
@@ -2859,7 +2859,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_unmute()
-          cached["(chatSwiping_unmute)"] = image
+          cached["chatSwiping_unmute"] = image
           return image
       }
   }
@@ -2868,7 +2868,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_read()
-          cached["(chatSwiping_read)"] = image
+          cached["chatSwiping_read"] = image
           return image
       }
   }
@@ -2877,7 +2877,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_unread()
-          cached["(chatSwiping_unread)"] = image
+          cached["chatSwiping_unread"] = image
           return image
       }
   }
@@ -2886,7 +2886,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_pin()
-          cached["(chatSwiping_pin)"] = image
+          cached["chatSwiping_pin"] = image
           return image
       }
   }
@@ -2895,7 +2895,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_unpin()
-          cached["(chatSwiping_unpin)"] = image
+          cached["chatSwiping_unpin"] = image
           return image
       }
   }
@@ -2904,7 +2904,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_archive()
-          cached["(chatSwiping_archive)"] = image
+          cached["chatSwiping_archive"] = image
           return image
       }
   }
@@ -2913,7 +2913,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwiping_unarchive()
-          cached["(chatSwiping_unarchive)"] = image
+          cached["chatSwiping_unarchive"] = image
           return image
       }
   }
@@ -2922,7 +2922,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryPrev()
-          cached["(galleryPrev)"] = image
+          cached["galleryPrev"] = image
           return image
       }
   }
@@ -2931,7 +2931,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryNext()
-          cached["(galleryNext)"] = image
+          cached["galleryNext"] = image
           return image
       }
   }
@@ -2940,7 +2940,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryMore()
-          cached["(galleryMore)"] = image
+          cached["galleryMore"] = image
           return image
       }
   }
@@ -2949,7 +2949,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryShare()
-          cached["(galleryShare)"] = image
+          cached["galleryShare"] = image
           return image
       }
   }
@@ -2958,7 +2958,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryFastSave()
-          cached["(galleryFastSave)"] = image
+          cached["galleryFastSave"] = image
           return image
       }
   }
@@ -2967,7 +2967,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _playingVoice1x()
-          cached["(playingVoice1x)"] = image
+          cached["playingVoice1x"] = image
           return image
       }
   }
@@ -2976,7 +2976,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _playingVoice2x()
-          cached["(playingVoice2x)"] = image
+          cached["playingVoice2x"] = image
           return image
       }
   }
@@ -2985,7 +2985,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryRotate()
-          cached["(galleryRotate)"] = image
+          cached["galleryRotate"] = image
           return image
       }
   }
@@ -2994,7 +2994,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryZoomIn()
-          cached["(galleryZoomIn)"] = image
+          cached["galleryZoomIn"] = image
           return image
       }
   }
@@ -3003,7 +3003,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _galleryZoomOut()
-          cached["(galleryZoomOut)"] = image
+          cached["galleryZoomOut"] = image
           return image
       }
   }
@@ -3012,7 +3012,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _previewSenderCrop()
-          cached["(previewSenderCrop)"] = image
+          cached["previewSenderCrop"] = image
           return image
       }
   }
@@ -3021,7 +3021,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _previewSenderDelete()
-          cached["(previewSenderDelete)"] = image
+          cached["previewSenderDelete"] = image
           return image
       }
   }
@@ -3030,7 +3030,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _editMessageCurrentPhoto()
-          cached["(editMessageCurrentPhoto)"] = image
+          cached["editMessageCurrentPhoto"] = image
           return image
       }
   }
@@ -3039,7 +3039,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _previewSenderDeleteFile()
-          cached["(previewSenderDeleteFile)"] = image
+          cached["previewSenderDeleteFile"] = image
           return image
       }
   }
@@ -3048,7 +3048,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _previewSenderArchive()
-          cached["(previewSenderArchive)"] = image
+          cached["previewSenderArchive"] = image
           return image
       }
   }
@@ -3057,7 +3057,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwipeReply()
-          cached["(chatSwipeReply)"] = image
+          cached["chatSwipeReply"] = image
           return image
       }
   }
@@ -3066,7 +3066,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatSwipeReplyWallpaper()
-          cached["(chatSwipeReplyWallpaper)"] = image
+          cached["chatSwipeReplyWallpaper"] = image
           return image
       }
   }
@@ -3075,7 +3075,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerPlay()
-          cached["(videoPlayerPlay)"] = image
+          cached["videoPlayerPlay"] = image
           return image
       }
   }
@@ -3084,7 +3084,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerPause()
-          cached["(videoPlayerPause)"] = image
+          cached["videoPlayerPause"] = image
           return image
       }
   }
@@ -3093,7 +3093,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerEnterFullScreen()
-          cached["(videoPlayerEnterFullScreen)"] = image
+          cached["videoPlayerEnterFullScreen"] = image
           return image
       }
   }
@@ -3102,7 +3102,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerExitFullScreen()
-          cached["(videoPlayerExitFullScreen)"] = image
+          cached["videoPlayerExitFullScreen"] = image
           return image
       }
   }
@@ -3111,7 +3111,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerPIPIn()
-          cached["(videoPlayerPIPIn)"] = image
+          cached["videoPlayerPIPIn"] = image
           return image
       }
   }
@@ -3120,7 +3120,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerPIPOut()
-          cached["(videoPlayerPIPOut)"] = image
+          cached["videoPlayerPIPOut"] = image
           return image
       }
   }
@@ -3129,7 +3129,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerRewind15Forward()
-          cached["(videoPlayerRewind15Forward)"] = image
+          cached["videoPlayerRewind15Forward"] = image
           return image
       }
   }
@@ -3138,7 +3138,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerRewind15Backward()
-          cached["(videoPlayerRewind15Backward)"] = image
+          cached["videoPlayerRewind15Backward"] = image
           return image
       }
   }
@@ -3147,7 +3147,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerVolume()
-          cached["(videoPlayerVolume)"] = image
+          cached["videoPlayerVolume"] = image
           return image
       }
   }
@@ -3156,7 +3156,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerVolumeOff()
-          cached["(videoPlayerVolumeOff)"] = image
+          cached["videoPlayerVolumeOff"] = image
           return image
       }
   }
@@ -3165,7 +3165,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerClose()
-          cached["(videoPlayerClose)"] = image
+          cached["videoPlayerClose"] = image
           return image
       }
   }
@@ -3174,7 +3174,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoPlayerSliderInteractor()
-          cached["(videoPlayerSliderInteractor)"] = image
+          cached["videoPlayerSliderInteractor"] = image
           return image
       }
   }
@@ -3183,7 +3183,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _streamingVideoDownload()
-          cached["(streamingVideoDownload)"] = image
+          cached["streamingVideoDownload"] = image
           return image
       }
   }
@@ -3192,7 +3192,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _videoCompactFetching()
-          cached["(videoCompactFetching)"] = image
+          cached["videoCompactFetching"] = image
           return image
       }
   }
@@ -3201,7 +3201,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _compactStreamingFetchingCancel()
-          cached["(compactStreamingFetchingCancel)"] = image
+          cached["compactStreamingFetchingCancel"] = image
           return image
       }
   }
@@ -3210,7 +3210,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _customLocalizationDelete()
-          cached["(customLocalizationDelete)"] = image
+          cached["customLocalizationDelete"] = image
           return image
       }
   }
@@ -3219,7 +3219,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _pollAddOption()
-          cached["(pollAddOption)"] = image
+          cached["pollAddOption"] = image
           return image
       }
   }
@@ -3228,7 +3228,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _pollDeleteOption()
-          cached["(pollDeleteOption)"] = image
+          cached["pollDeleteOption"] = image
           return image
       }
   }
@@ -3237,7 +3237,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _resort()
-          cached["(resort)"] = image
+          cached["resort"] = image
           return image
       }
   }
@@ -3246,7 +3246,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatPollVoteUnselected()
-          cached["(chatPollVoteUnselected)"] = image
+          cached["chatPollVoteUnselected"] = image
           return image
       }
   }
@@ -3255,7 +3255,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatPollVoteUnselectedBubble_incoming()
-          cached["(chatPollVoteUnselectedBubble_incoming)"] = image
+          cached["chatPollVoteUnselectedBubble_incoming"] = image
           return image
       }
   }
@@ -3264,7 +3264,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatPollVoteUnselectedBubble_outgoing()
-          cached["(chatPollVoteUnselectedBubble_outgoing)"] = image
+          cached["chatPollVoteUnselectedBubble_outgoing"] = image
           return image
       }
   }
@@ -3273,7 +3273,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerInfoAdmins()
-          cached["(peerInfoAdmins)"] = image
+          cached["peerInfoAdmins"] = image
           return image
       }
   }
@@ -3282,7 +3282,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerInfoPermissions()
-          cached["(peerInfoPermissions)"] = image
+          cached["peerInfoPermissions"] = image
           return image
       }
   }
@@ -3291,7 +3291,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerInfoBanned()
-          cached["(peerInfoBanned)"] = image
+          cached["peerInfoBanned"] = image
           return image
       }
   }
@@ -3300,7 +3300,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _peerInfoMembers()
-          cached["(peerInfoMembers)"] = image
+          cached["peerInfoMembers"] = image
           return image
       }
   }
@@ -3309,7 +3309,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatUndoAction()
-          cached["(chatUndoAction)"] = image
+          cached["chatUndoAction"] = image
           return image
       }
   }
@@ -3318,7 +3318,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _appUpdate()
-          cached["(appUpdate)"] = image
+          cached["appUpdate"] = image
           return image
       }
   }
@@ -3327,7 +3327,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _inlineVideoSoundOff()
-          cached["(inlineVideoSoundOff)"] = image
+          cached["inlineVideoSoundOff"] = image
           return image
       }
   }
@@ -3336,7 +3336,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _inlineVideoSoundOn()
-          cached["(inlineVideoSoundOn)"] = image
+          cached["inlineVideoSoundOn"] = image
           return image
       }
   }
@@ -3345,7 +3345,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _logoutOptionAddAccount()
-          cached["(logoutOptionAddAccount)"] = image
+          cached["logoutOptionAddAccount"] = image
           return image
       }
   }
@@ -3354,7 +3354,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _logoutOptionSetPasscode()
-          cached["(logoutOptionSetPasscode)"] = image
+          cached["logoutOptionSetPasscode"] = image
           return image
       }
   }
@@ -3363,7 +3363,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _logoutOptionClearCache()
-          cached["(logoutOptionClearCache)"] = image
+          cached["logoutOptionClearCache"] = image
           return image
       }
   }
@@ -3372,7 +3372,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _logoutOptionChangePhoneNumber()
-          cached["(logoutOptionChangePhoneNumber)"] = image
+          cached["logoutOptionChangePhoneNumber"] = image
           return image
       }
   }
@@ -3381,7 +3381,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _logoutOptionContactSupport()
-          cached["(logoutOptionContactSupport)"] = image
+          cached["logoutOptionContactSupport"] = image
           return image
       }
   }
@@ -3390,7 +3390,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _disableEmojiPrediction()
-          cached["(disableEmojiPrediction)"] = image
+          cached["disableEmojiPrediction"] = image
           return image
       }
   }
@@ -3399,7 +3399,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _scam()
-          cached["(scam)"] = image
+          cached["scam"] = image
           return image
       }
   }
@@ -3408,7 +3408,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _scamActive()
-          cached["(scamActive)"] = image
+          cached["scamActive"] = image
           return image
       }
   }
@@ -3417,7 +3417,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatScam()
-          cached["(chatScam)"] = image
+          cached["chatScam"] = image
           return image
       }
   }
@@ -3426,7 +3426,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatUnarchive()
-          cached["(chatUnarchive)"] = image
+          cached["chatUnarchive"] = image
           return image
       }
   }
@@ -3435,7 +3435,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _chatArchive()
-          cached["(chatArchive)"] = image
+          cached["chatArchive"] = image
           return image
       }
   }
@@ -3444,7 +3444,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _privacySettings_blocked()
-          cached["(privacySettings_blocked)"] = image
+          cached["privacySettings_blocked"] = image
           return image
       }
   }
@@ -3453,7 +3453,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _privacySettings_activeSessions()
-          cached["(privacySettings_activeSessions)"] = image
+          cached["privacySettings_activeSessions"] = image
           return image
       }
   }
@@ -3462,7 +3462,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _privacySettings_passcode()
-          cached["(privacySettings_passcode)"] = image
+          cached["privacySettings_passcode"] = image
           return image
       }
   }
@@ -3471,7 +3471,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _privacySettings_twoStep()
-          cached["(privacySettings_twoStep)"] = image
+          cached["privacySettings_twoStep"] = image
           return image
       }
   }
@@ -3480,7 +3480,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _deletedAccount()
-          cached["(deletedAccount)"] = image
+          cached["deletedAccount"] = image
           return image
       }
   }
@@ -3489,7 +3489,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickerPackSelection()
-          cached["(stickerPackSelection)"] = image
+          cached["stickerPackSelection"] = image
           return image
       }
   }
@@ -3498,7 +3498,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _stickerPackSelectionActive()
-          cached["(stickerPackSelectionActive)"] = image
+          cached["stickerPackSelectionActive"] = image
           return image
       }
   }
@@ -3507,7 +3507,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _entertainment_Emoji()
-          cached["(entertainment_Emoji)"] = image
+          cached["entertainment_Emoji"] = image
           return image
       }
   }
@@ -3516,7 +3516,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _entertainment_Stickers()
-          cached["(entertainment_Stickers)"] = image
+          cached["entertainment_Stickers"] = image
           return image
       }
   }
@@ -3525,7 +3525,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _entertainment_Gifs()
-          cached["(entertainment_Gifs)"] = image
+          cached["entertainment_Gifs"] = image
           return image
       }
   }
@@ -3534,7 +3534,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _entertainment_Search()
-          cached["(entertainment_Search)"] = image
+          cached["entertainment_Search"] = image
           return image
       }
   }
@@ -3543,7 +3543,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _entertainment_Settings()
-          cached["(entertainment_Settings)"] = image
+          cached["entertainment_Settings"] = image
           return image
       }
   }
@@ -3552,7 +3552,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _entertainment_SearchCancel()
-          cached["(entertainment_SearchCancel)"] = image
+          cached["entertainment_SearchCancel"] = image
           return image
       }
   }
@@ -3561,7 +3561,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _scheduledAvatar()
-          cached["(scheduledAvatar)"] = image
+          cached["scheduledAvatar"] = image
           return image
       }
   }
@@ -3570,7 +3570,7 @@ final class TelegramIconsTheme {
           return image
       } else {
           let image = _scheduledInputAction()
-          cached["(scheduledInputAction)"] = image
+          cached["scheduledInputAction"] = image
           return image
       }
   }

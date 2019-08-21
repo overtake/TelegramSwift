@@ -421,7 +421,7 @@ func generateClass() -> String {
         lines.append("          return image")
         lines.append("      } else {")
         lines.append("          let image = _\(item)()")
-        lines.append("          cached[\"(\(item))\"] = image")
+        lines.append("          cached[\"\(item)\"] = image")
         lines.append("          return image")
         lines.append("      }")
         lines.append("  }")
