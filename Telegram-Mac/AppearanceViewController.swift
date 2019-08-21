@@ -134,7 +134,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
                 arguments.toggleFontSize(sizes[index])
             })
         case let .preview(_, _, entry):
-            let item = ChatRowItem.item(initialSize, from: entry, interaction: ChatInteraction(chatLocation: .peer(PeerId(0)), context: arguments.context, disableSelectAbility: true))
+            let item = ChatRowItem.item(initialSize, from: entry, interaction: ChatInteraction(chatLocation: .peer(PeerId(0)), context: arguments.context, disableSelectAbility: true), theme: theme)
             _ = item.makeSize(initialSize.width, oldWidth: 0)
             return item
         }
@@ -199,20 +199,15 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     entries.append(.chatBackground(sectionId, index))
     index += 1
     
-    if #available(OSX 10.14, *) {
-        entries.append(.section(sectionId))
-        sectionId += 1
-        entries.append(.followSystemAppearance(sectionId, index, settings.followSystemAppearance))
-        index += 1
-    }
+
     
     if !settings.followSystemAppearance {
-        if settings.colors.name == whitePalette.name && settings.colors.isDark == whitePalette.isDark {
+        if settings.colors.name != dayClassic.name {
             
             entries.append(.section(sectionId))
             sectionId += 1
             
-            entries.append(.accentColor(sectionId, index, theme.colors.blueUI))
+            entries.append(.accentColor(sectionId, index, theme.colors.accent))
             index += 1
         }
         
@@ -235,17 +230,17 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         installed[mojavePalette.name] = darkPalette
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == dayClassic, dayClassic, settings.bubbled ? .builtin : nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == dayClassic.name, dayClassic, settings.bubbled ? .builtin : nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == whitePalette, whitePalette, nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == whitePalette.name, whitePalette, nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == nightBluePalette, nightBluePalette, nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == nightBluePalette.name, nightBluePalette, nil))
         index += 1
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors == mojavePalette, mojavePalette, nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == mojavePalette.name, mojavePalette, nil))
         index += 1
         
         
@@ -318,6 +313,12 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
 
     entries.append(.section(sectionId))
     sectionId += 1
+
+    
+    if #available(OSX 10.14, *) {
+        entries.append(.followSystemAppearance(sectionId, index, settings.followSystemAppearance))
+        index += 1
+    }
     
    // #if BETA
     if !settings.followSystemAppearance {
@@ -403,7 +404,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
                 return settings.withUpdatedFontSize(CGFloat(size))
             }).start()
         }, selectAccentColor: {
-            showModal(with: AccentColorModalController(context, current: theme.colors.blueUI), for: mainWindow)
+            showModal(with: AccentColorModalController(context, current: theme.colors.accent), for: context.window)
         }, selectChatBackground: {
             showModal(with: ChatWallpaperModalController(context), for: mainWindow)
         }, openAutoNightSettings: { [weak self] in

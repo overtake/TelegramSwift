@@ -94,7 +94,7 @@ final class WallpaperPatternPreviewView: View {
         sliderView.roundCorners = true
         sliderView.alignment = .center
         sliderView.containerBackground = NSColor.grayBackground.withAlphaComponent(0.2)
-        sliderView.style = ControlStyle(foregroundColor: theme.colors.blueUI, backgroundColor: .clear, highlightColor: theme.colors.grayForeground)
+        sliderView.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: theme.colors.grayForeground)
         sliderView.set(progress: 0.8)
         sliderView.userInteractionEnabled = true
         sliderView.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)

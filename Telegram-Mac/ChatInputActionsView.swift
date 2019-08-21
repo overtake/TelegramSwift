@@ -411,7 +411,7 @@ class ChatInputActionsView: View, Notifable {
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
-        send.set(handler: { [weak chatInteraction] control in
+        let handler:(Control)->Void = { [weak chatInteraction] control in
             if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, !peer.isSecretChat {
                 let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
@@ -437,12 +437,16 @@ class ChatInputActionsView: View, Notifable {
                 case .scheduled:
                     break
                 }
-               
+                
                 if !items.isEmpty {
                     showPopover(for: control, with: SPopoverViewController(items: items))
                 }
             }
-        }, for: .RightDown)
+        }
+        
+        send.set(handler: handler, for: .RightDown)
+        send.set(handler: handler, for: .LongMouseDown)
+
         
         send.set(handler: { [weak chatInteraction] control in
              chatInteraction?.sendMessage(false, nil)

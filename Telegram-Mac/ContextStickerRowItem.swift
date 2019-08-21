@@ -91,9 +91,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 container.set(background: theme.colors.grayBackground, for: .Highlight)
                 
                 if item.selectedIndex == i {
-                    container.set(background: theme.colors.blueUI, for: .Normal)
-                    container.set(background: theme.colors.blueUI, for: .Hover)
-                    container.set(background: theme.colors.blueUI, for: .Highlight)
+                    container.set(background: theme.colors.accent, for: .Normal)
+                    container.set(background: theme.colors.accent, for: .Hover)
+                    container.set(background: theme.colors.accent, for: .Highlight)
 
                     container.apply(state: .Normal)
                 }

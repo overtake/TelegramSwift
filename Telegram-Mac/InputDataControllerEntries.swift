@@ -351,7 +351,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .selector(_, _, value, error, _, placeholder, values):
             return InputDataDataSelectorRowItem(initialSize, stableId: stableId, value: value, error: error, placeholder: placeholder, updated: arguments.dataUpdated, values: values)
         case let .dataSelector(_, _, _, error, _, placeholder, description, icon, action):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, icon: icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI), description: description, type: .none, action: action, error: error)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, icon: icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), description: description, type: .none, action: action, error: error)
         case let .general(_, _, value, error, identifier, data):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))

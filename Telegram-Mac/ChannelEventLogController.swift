@@ -86,7 +86,7 @@ private class SearchContainerView : View {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         cancelButton.set(background: theme.colors.background, for: .Normal)
-        cancelButton.set(color: theme.colors.blueUI, for: .Normal)
+        cancelButton.set(color: theme.colors.accent, for: .Normal)
         separator.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
         
@@ -145,7 +145,7 @@ class ChannelEventLogView : View {
     
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-        whatButton.set(color: theme.colors.blueUI, for: .Normal)
+        whatButton.set(color: theme.colors.accent, for: .Normal)
         whatButton.set(background: theme.colors.grayTransparent, for: .Highlight)
         whatButton.set(background: theme.colors.background, for: .Normal)
         emptyTextView.backgroundColor = theme.colors.background
@@ -292,14 +292,14 @@ private func eventLogItems(_ result:AdminLogEventsResult, initialSize: NSSize, c
     for event in result.events {
         switch event.action {
         case let .editMessage(prev, new):
-            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction)
+            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction, theme: theme)
             items.append(ChannelEventLogEditedPanelItem(initialSize, previous: prev, item: item))
             items.append(item)
         case let .deleteMessage(message):
-            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()), MessageIndex(message), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction))
+            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()), MessageIndex(message), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction, theme: theme))
         case let .updatePinned(message):
             if let message = message?.withUpdatedStableId(arc4random()) {
-                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, MessageIndex(message), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction))
+                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, MessageIndex(message), true, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings), interaction: chatInteraction, theme: theme))
             }
         default:
             break
@@ -314,7 +314,7 @@ private func eventLogItems(_ result:AdminLogEventsResult, initialSize: NSSize, c
             let nextDateId = chatDateId(for: nextEvent.date - timeDifference)
             if dateId != nextDateId {
                 let messageIndex = MessageIndex(id: MessageId(peerId: result.peerId, namespace: 0, id: INT_MAX), timestamp: Int32(dateId))
-                items.append(ChatDateStickItem(initialSize, .DateEntry(messageIndex, .list), interaction: chatInteraction))
+                items.append(ChatDateStickItem(initialSize, .DateEntry(messageIndex, .list), interaction: chatInteraction, theme: theme))
             }
         }
         

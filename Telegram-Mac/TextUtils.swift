@@ -326,7 +326,7 @@ struct PeerStatusStringTheme {
     let statusColor:NSColor
     let highlightColor:NSColor
     let highlightIfActivity:Bool
-    init(titleFont:NSFont = .normal(.title), titleColor:NSColor = theme.colors.text, statusFont:NSFont = .normal(.short), statusColor:NSColor = theme.colors.grayText, highlightColor:NSColor = theme.colors.blueUI, highlightIfActivity:Bool = true) {
+    init(titleFont:NSFont = .normal(.title), titleColor:NSColor = theme.colors.text, statusFont:NSFont = .normal(.short), statusColor:NSColor = theme.colors.grayText, highlightColor:NSColor = theme.colors.accent, highlightIfActivity:Bool = true) {
         self.titleFont = titleFont
         self.titleColor = titleColor
         self.statusFont = statusFont

@@ -98,8 +98,8 @@ final class ScheduledMessageModalView : View {
         
         self.sendOn.set(font: .medium(.text), for: .Normal)
         self.sendOn.set(color: .white, for: .Normal)
-        self.sendOn.set(background: theme.colors.blueUI, for: .Normal)
-        self.sendOn.set(background: theme.colors.blueUI.withAlphaComponent(0.8), for: .Highlight)
+        self.sendOn.set(background: theme.colors.accent, for: .Normal)
+        self.sendOn.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
 
         
         let atLayout = TextViewLayout(.initialize(string: L10n.scheduleControllerAt, color: theme.colors.text, font: .normal(.title)), alwaysStaticItems: true)

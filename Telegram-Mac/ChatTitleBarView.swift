@@ -185,7 +185,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             if let inputActivities = inputActivities, self.chatInteraction.mode == .history  {
-                activities.update(with: inputActivities, for: max(frame.width - 80, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background), layout: { [weak self] show in
+                activities.update(with: inputActivities, for: max(frame.width - 80, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background), layout: { [weak self] show in
                     guard let `self` = self else { return }
                     self.needsLayout = true
                     self.hiddenStatus = show

@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 
 fileprivate class AudioWaveformContainerView : View {
-    var color:NSColor = .blueUI {
+    var color:NSColor = .accent {
         didSet {
             self.setNeedsDisplayLayer()
         }

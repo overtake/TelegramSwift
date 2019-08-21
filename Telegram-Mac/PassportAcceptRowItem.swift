@@ -56,7 +56,7 @@ final class PassportAcceptRowView : TableRowView {
 
       //  button.userInteractionEnabled = item.enabled
         button.autohighlight = false
-        button.set(background: item.enabled ? theme.colors.blueUI : theme.colors.grayForeground, for: .Normal)
+        button.set(background: item.enabled ? theme.colors.accent : theme.colors.grayForeground, for: .Normal)
         button.set(image: theme.icons.secureIdAuth, for: .Normal)
         needsLayout = true
     }

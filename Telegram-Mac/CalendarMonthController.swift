@@ -124,7 +124,7 @@ class CalendarMonthView : View {
                         day.set(background: theme.colors.blueSelect, for: .Highlight)
                         day.apply(state: .Highlight)
                     } else {
-                        day.set(background: theme.colors.blueUI, for: .Highlight)
+                        day.set(background: theme.colors.accent, for: .Highlight)
                     }
                     
                     day.set(handler: { (control) in

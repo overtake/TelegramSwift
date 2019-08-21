@@ -22,10 +22,28 @@ class ChatScheduleController: ChatController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         chatInteraction.sendPlainText = { _ in
             
         }
+        let context = self.context
+        
+        chatInteraction.requestMessageActionCallback = { _, _, _ in
+            alert(for: context.window, info: L10n.chatScheduledInlineButtonError)
+        }
+        
+        chatInteraction.vote = { _, _ in
+            alert(for: context.window, info: L10n.chatScheduledInlineButtonError)
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        let controller = self.navigationController?.controller as? ChatController
+        let current = self.chatInteraction.presentation.interfaceState
+        
+        controller?.chatInteraction.update(animated: false, { $0.updatedInterfaceState { _ in return current } })
+        
     }
     
 }

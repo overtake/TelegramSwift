@@ -17,7 +17,7 @@ class ChatServiceItem: ChatRowItem {
     private(set) var imageArguments:TransformImageArguments?
     private(set) var image:TelegramMediaImage?
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
         
         
@@ -314,7 +314,7 @@ class ChatServiceItem: ChatRowItem {
         text = TextViewLayout(attributedString, truncationType: .end, cutout: nil, alignment: .center)
         text.mayItems = false
         text.interactions = globalLinkExecutor
-        super.init(initialSize, chatInteraction, entry, downloadSettings)
+        super.init(initialSize, chatInteraction, entry, downloadSettings, theme: theme)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

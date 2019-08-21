@@ -19,7 +19,7 @@ fileprivate final class SelectAccentColorView : View {
     
     func update(_ colors: [NSColor], selected: NSColor, callback: @escaping(NSColor)->Void) -> Void {
         var x: CGFloat = 20
-        var y: CGFloat = 70
+        var y: CGFloat = 20
         for i in 0 ..< colors.count {
             let button = ImageButton(frame: NSMakeRect(x, y, 40, 40))
             button.autohighlight = false
@@ -45,14 +45,6 @@ fileprivate final class SelectAccentColorView : View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        let textNode = TextNode.layoutText(NSAttributedString.initialize(string: tr(L10n.generalSettingsAccentColor), color: theme.colors.text, font: .normal(.text)), theme.colors.background, 1, .end, NSMakeSize(frame.width - 40, 20), nil, false, .center)
-        
-        let point = NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.width - textNode.0.size.width)/2), floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - textNode.0.size.height)/2))
-        textNode.1.draw(NSMakeRect(point.x, point.y, textNode.0.size.width, textNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-        
-        ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
-        
     }
     
     required init?(coder: NSCoder) {
@@ -66,23 +58,12 @@ class AccentColorModalController: ModalViewController {
     fileprivate let context: AccountContext
 
     
-    private let colorList: [NSColor] = [
-        NSColor(0xf83b4c), // red
-        NSColor(0xff7519), // orange
-        NSColor(0xeba239), // yellow
-        NSColor(0x29b327), // green
-        NSColor(0x00c2ed), // light blue
-        NSColor(0x2481cc), // blue
-        NSColor(0x7748ff), // purple
-        NSColor(0xff5da2)  // pink
-    ]
-    
     
     init(_ context: AccountContext, current: NSColor) {
         self.context = context
         self.current = current
         
-        super.init(frame: NSMakeRect(0, 0, 40 * 4 + 20 * 5, 40 * 2 + 50 + 20 * 3))
+        super.init(frame: NSMakeRect(0, 0, 40 * 4 + 20 * 5, 40 * 2 + 20 * 3))
         bar = .init(height: 0)
     }
     
@@ -90,19 +71,56 @@ class AccentColorModalController: ModalViewController {
         return self.view as! SelectAccentColorView
     }
     
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: nil, center: ModalHeaderData(title: L10n.generalSettingsAccentColor), right: ModalHeaderData(image: theme.icons.modalClose, handler: {
+            
+        }))
+    }
+    
+    override var dynamicSize: Bool {
+        return true
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context
         
+        self.modal?.resize(with: NSMakeSize(self.frame.width, self.frame.height), animated: false)
+        
+        var colorList: [NSColor]
+        if theme.dark {
+            colorList = [
+                NSColor(0xf83b4c).darker(amount: 0.23), // red
+                NSColor(0xff7519).darker(amount: 0.23), // orange
+                NSColor(0xeba239).darker(amount: 0.23), // yellow
+                NSColor(0x29b327).darker(amount: 0.23), // green
+                NSColor(0x00c2ed).darker(amount: 0.23), // light blue
+                theme.colors.basicAccent, // blue
+                NSColor(0x7748ff).darker(amount: 0.23), // purple
+                NSColor(0xff5da2).darker(amount: 0.23)  // pink
+            ]
+        } else {
+            colorList = [
+                NSColor(0xf83b4c), // red
+                NSColor(0xff7519), // orange
+                NSColor(0xeba239), // yellow
+                NSColor(0x29b327), // green
+                NSColor(0x00c2ed), // light blue
+                theme.colors.basicAccent, // blue
+                NSColor(0x7748ff), // purple
+                NSColor(0xff5da2)  // pink
+            ]
+        }
+        
         genericView.update(colorList, selected: current, callback: { [weak self] color in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                if color == whitePalette.blueUI {
-                    return settings.withUpdatedPalette(whitePalette)
+                if color == theme.colors.basicAccent {
+                    return settings.withUpdatedPalette(theme.colors.withoutAccentColor())
                 } else {
-                    return settings.withUpdatedPalette(whitePalette.withAccentColor(color))
+                    return settings.withUpdatedPalette(theme.colors.withAccentColor(color))
                 }
             }).start()
-            delay(0.3, closure: {
+            delay(0.2, closure: {
                 self?.close()
             })
         })

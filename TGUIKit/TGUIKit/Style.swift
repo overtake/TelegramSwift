@@ -16,7 +16,7 @@ public struct ControlStyle: Equatable {
     private var _highlightColor: NSColor?
     
     public var highlightColor:NSColor {
-        return _highlightColor ?? presentation.colors.blueUI
+        return _highlightColor ?? presentation.colors.accent
     }
     
     public func highlight(image:CGImage) -> CGImage {

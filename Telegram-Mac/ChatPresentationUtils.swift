@@ -111,59 +111,92 @@ private func generatePercentageImage(color: NSColor, value: Int, font: NSFont) -
 }
 
 
-struct TelegramChatColors {
+final class TelegramChatColors {
     
-    private let generatedPercentageAnimationImages:[CGImage]
     
-    private let generatedPercentageAnimationImagesIncomingBubbled:[CGImage]
-    private let generatedPercentageAnimationImagesOutgoingBubbled:[CGImage]
+    private var _generatedPercentageAnimationImages:[CGImage]?
+    private var _generatedPercentageAnimationImagesIncomingBubbled:[CGImage]?
+    private var _generatedPercentageAnimationImagesOutgoingBubbled:[CGImage]?
+    private var _generatedPercentageAnimationImagesPlain:[CGImage]?
+    private var _generatedPercentageAnimationImagesIncomingBubbledPlain:[CGImage]?
+    private var _generatedPercentageAnimationImagesOutgoingBubbledPlain:[CGImage]?
     
-    private let generatedPercentageAnimationImagesPlain:[CGImage]
-    
-    private let generatedPercentageAnimationImagesIncomingBubbledPlain:[CGImage]
-    private let generatedPercentageAnimationImagesOutgoingBubbledPlain:[CGImage]
+    private var generatedPercentageAnimationImages:[CGImage] {
+        if let _generatedPercentageAnimationImages = self._generatedPercentageAnimationImages {
+            return _generatedPercentageAnimationImages
+        } else {
+            var images:[CGImage] = []
+            for i in 0 ... 100 {
+                images.append(generatePercentageImage(color: palette.text, value: i, font: .bold(12)))
+            }
+            self._generatedPercentageAnimationImages = images
+            return images
+        }
+    }
+    private var generatedPercentageAnimationImagesIncomingBubbled:[CGImage] {
+        if let value = self._generatedPercentageAnimationImagesIncomingBubbled {
+            return value
+        } else {
+            var images:[CGImage] = []
+            for i in 0 ... 100 {
+                images.append(generatePercentageImage(color: palette.textBubble_incoming, value: i, font: .bold(12)))
+            }
+            self._generatedPercentageAnimationImagesIncomingBubbled = images
+            return images
+        }
+    }
+    private var generatedPercentageAnimationImagesOutgoingBubbled:[CGImage] {
+        if let value = self._generatedPercentageAnimationImagesOutgoingBubbled {
+            return value
+        } else {
+            var images:[CGImage] = []
+            for i in 0 ... 100 {
+                images.append(generatePercentageImage(color: palette.textBubble_outgoing, value: i, font: .bold(12)))
+            }
+            self._generatedPercentageAnimationImagesOutgoingBubbled = images
+            return images
+        }
+    }
+    private var generatedPercentageAnimationImagesPlain:[CGImage] {
+        if let value = self._generatedPercentageAnimationImagesPlain {
+            return value
+        } else {
+            var images:[CGImage] = []
+            for i in 0 ... 100 {
+                images.append(generatePercentageImage(color: palette.text, value: i, font: .bold(12)))
+            }
+            self._generatedPercentageAnimationImagesPlain = images
+            return images
+        }
+    }
+    private var generatedPercentageAnimationImagesIncomingBubbledPlain:[CGImage] {
+        if let value = self._generatedPercentageAnimationImagesIncomingBubbledPlain {
+            return value
+        } else {
+            var images:[CGImage] = []
+            for i in 0 ... 100 {
+                images.append(generatePercentageImage(color: palette.textBubble_incoming, value: i, font: .normal(12)))
+            }
+            self._generatedPercentageAnimationImagesIncomingBubbledPlain = images
+            return images
+        }
+    }
+    private var generatedPercentageAnimationImagesOutgoingBubbledPlain:[CGImage] {
+        if let value = self._generatedPercentageAnimationImagesOutgoingBubbledPlain {
+            return value
+        } else {
+            var images:[CGImage] = []
+            for i in 0 ... 100 {
+                images.append(generatePercentageImage(color: palette.textBubble_outgoing, value: i, font: .normal(12)))
+            }
+            self._generatedPercentageAnimationImagesOutgoingBubbledPlain = images
+            return images
+        }
+    }
     
     private let palette: ColorPalette
     init(_ palette: ColorPalette, _ bubbled: Bool) {
         self.palette = palette
-        
-        
-        var images:[CGImage] = []
-        for i in 0 ... 100 {
-            images.append(generatePercentageImage(color: palette.textBubble_incoming, value: i, font: .bold(12)))
-        }
-        self.generatedPercentageAnimationImagesIncomingBubbled = images
-       
-        images.removeAll()
-        for i in 0 ... 100 {
-            images.append(generatePercentageImage(color: palette.textBubble_outgoing, value: i, font: .bold(12)))
-        }
-        self.generatedPercentageAnimationImagesOutgoingBubbled = images
-        
-        images.removeAll()
-        for i in 0 ... 100 {
-            images.append(generatePercentageImage(color: palette.text, value: i, font: .bold(12)))
-        }
-        self.generatedPercentageAnimationImages = images
-         images.removeAll()
-        
-        for i in 0 ... 100 {
-            images.append(generatePercentageImage(color: palette.textBubble_incoming, value: i, font: .normal(12)))
-        }
-        self.generatedPercentageAnimationImagesIncomingBubbledPlain = images
-        
-        images.removeAll()
-        for i in 0 ... 100 {
-            images.append(generatePercentageImage(color: palette.textBubble_outgoing, value: i, font: .normal(12)))
-        }
-        self.generatedPercentageAnimationImagesOutgoingBubbledPlain = images
-        
-        images.removeAll()
-        for i in 0 ... 100 {
-            images.append(generatePercentageImage(color: palette.text, value: i, font: .normal(12)))
-        }
-        self.generatedPercentageAnimationImagesPlain = images
-        images.removeAll()
     }
     
     func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, selected: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {

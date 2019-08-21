@@ -153,7 +153,7 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     }
     
     if state.options.count < optionsLimit {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: L10n.newPollOptionsAddOption, color: theme.colors.blueUI, icon: theme.icons.pollAddOption, type: .none, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: L10n.newPollOptionsAddOption, color: theme.colors.accent, icon: theme.icons.pollAddOption, type: .none, action: nil)))
         index += 1
     }
 

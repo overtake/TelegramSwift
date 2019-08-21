@@ -59,8 +59,8 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, _, _, _, _, _):
-        if  case let .photo(rhsIndex, _, _, _, _, _) = rhs {
+    case let .photo(lhsIndex, _, _, _, _, _, _):
+        if  case let .photo(rhsIndex, _, _, _, _, _, _) = rhs {
             return lhsIndex < rhsIndex
         } else {
             return false
@@ -94,8 +94,8 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeer, lhsDate):
-        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeer, rhsDate) = rhs {
+    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeer, _, lhsDate):
+        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeer, _, rhsDate) = rhs {
             return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeer.isEqual(rhsPeer) && lhsDate == rhsDate
         } else {
             return false
@@ -116,7 +116,7 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
 }
 enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
-    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, date: TimeInterval)
+    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, message: Message?, date: TimeInterval)
     case instantMedia(InstantPageMedia, Message?)
     case secureIdDocument(SecureIdDocumentValue, Int)
     case lottie(Animation, ChatHistoryEntry)
@@ -124,7 +124,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case let .message(entry):
             return entry.stableId
-        case let .photo(_, stableId, _, _, _, _):
+        case let .photo(_, stableId, _, _, _, _, _):
             return stableId
         case let .instantMedia(media, _):
             return media.index
@@ -149,7 +149,7 @@ enum GalleryEntry : Comparable, Identifiable {
             if let message = message, let peerId = message.effectiveAuthor?.id {
                 return (peerId, TimeInterval(message.timestamp))
             }
-        case let .photo(_, _, _, _, peer, date):
+        case let .photo(_, _, _, _, peer, _, date):
             return (peer.id, date)
         default:
             return nil
@@ -218,12 +218,15 @@ enum GalleryEntry : Comparable, Identifiable {
     
     func peerPhotoResource() -> MediaResourceReference {
         switch self {
-        case let .photo(_, _, image, _, peer, _):
+        case let .photo(_, _, image, _, peer, message, _):
             if let representation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
+                if let message = message {
+                    return .media(media: .message(message: MessageReference(message), media: image), resource: representation.resource)
+                }
                 if let peerReference = PeerReference(peer) {
-                    return MediaResourceReference.avatar(peer: peerReference, resource: representation.resource)
+                    return .avatar(peer: peerReference, resource: representation.resource)
                 } else {
-                    return MediaResourceReference.standalone(resource: representation.resource)
+                    return .standalone(resource: representation.resource)
                 }
             } else {
                  preconditionFailure()
@@ -253,7 +256,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case let .message(entry):
             return "\(entry.message?.stableId ?? 0)"
-        case .photo(_, let stableId, _, _, _, _):
+        case .photo(_, let stableId, _, _, _, _, _):
             return "\(stableId)"
         case .instantMedia:
             return "\(stableId)"
@@ -289,7 +292,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, photo, _, _, _):
+        case let .photo(_, _, photo, _, _, _, _):
             return photo
         default:
             return nil
@@ -300,7 +303,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, _, reference, _, _):
+        case let .photo(_, _, _, reference, _, _, _):
             return reference
         default:
             return nil

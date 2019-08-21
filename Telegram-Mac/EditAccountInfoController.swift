@@ -184,7 +184,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     sectionId += 1
     
     if activeAccounts.count < 3 {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.editAccountAddAccount, color: theme.colors.blueUI, icon: nil, type: .none, action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.editAccountAddAccount, color: theme.colors.accent, icon: nil, type: .none, action: {
             arguments.addAccount()
         })))
         index += 1

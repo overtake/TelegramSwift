@@ -351,6 +351,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 addSubview(badgeNode!)
             }
             badge.view = badgeNode
+            badge.view?.needsDisplay = true
         } else {
             self.badgeNode?.removeFromSuperview()
             self.badgeNode = nil
@@ -366,7 +367,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             
             let inputActivites: (PeerId, [(Peer, PeerInputActivity)]) = (item.peer.id, [(item.peer, activity)])
             
-            activities.update(with: inputActivites, for: max(frame.width - 60, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.background), layout: { [weak self] show in
+            activities.update(with: inputActivites, for: max(frame.width - 60, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background), layout: { [weak self] show in
                 self?.needsLayout = true
                 self?.hiddenStatus = !show
                 self?.needsDisplay = true

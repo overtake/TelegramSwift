@@ -256,7 +256,7 @@ private enum WallpaperPreviewState  {
 }
 
 
-private final class WallpaperColorPickerContainerView : View, TGModernGrowingDelegate {
+final class WallpaperColorPickerContainerView : View, TGModernGrowingDelegate {
     func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
         
     }
@@ -554,8 +554,8 @@ private final class WallpaperPreviewView: View {
         let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, .bubble, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
         
         
-        let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction)
-        let item2 = ChatRowItem.item(frame.size, from: secondEntry, interaction: chatInteraction)
+        let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
+        let item2 = ChatRowItem.item(frame.size, from: secondEntry, interaction: chatInteraction, theme: theme)
         
 
         

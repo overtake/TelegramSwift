@@ -75,7 +75,7 @@ class EditMessageModel: ChatAccessoryModel {
     
     func make(with message:Message) -> Void {
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: L10n.chatInputAccessoryEditMessage, color: theme.colors.blueUI, font: .medium(.text))
+        _ = attr.append(string: L10n.chatInputAccessoryEditMessage, color: theme.colors.accent, font: .medium(.text))
 
         self.headerAttr = attr
         self.messageAttr = .initialize(string: pullText(from:message) as String, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))

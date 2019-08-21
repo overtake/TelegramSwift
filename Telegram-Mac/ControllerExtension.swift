@@ -154,7 +154,7 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
         case .Some:
             editBar.set(text: someString, for: .Normal)
         }
-        editBar.set(color: presentation.colors.blueUI, for: .Normal)
+        editBar.set(color: presentation.colors.accent, for: .Normal)
         self.editBar.needsLayout = true
     }
     

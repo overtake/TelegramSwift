@@ -18,7 +18,7 @@ class AddContactTableItem: TableRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, addContact: @escaping()->Void) {
         _stableId = stableId
         
-        self.text = TextViewLayout(.initialize(string: tr(L10n.contactsAddContact), color: theme.colors.blueUI, font: .normal(.title)), maximumNumberOfLines: 1)
+        self.text = TextViewLayout(.initialize(string: tr(L10n.contactsAddContact), color: theme.colors.accent, font: .normal(.title)), maximumNumberOfLines: 1)
         self.addContact = addContact
         super.init(initialSize)
     }

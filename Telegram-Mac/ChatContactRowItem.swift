@@ -21,7 +21,7 @@ class ChatContactRowItem: ChatRowItem {
     let vCard: CNContact?
     let contact: TelegramMediaContact
     let appearance: WPLayoutPresentation
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
@@ -63,7 +63,7 @@ class ChatContactRowItem: ChatRowItem {
             fatalError("contact not found for item")
         }
         
-        super.init(initialSize, chatInteraction, context, object, downloadSettings)
+        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {

@@ -131,7 +131,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
                 } else {
                     arguments.presentRestrictedPublicGroupPermissionsAlert()
                 }
-            }, enabled: enabled ?? true, switchAppearance: SwitchViewAppearance(backgroundColor: theme.colors.background, stateOnColor: enabled == true ? theme.colors.blueUI : theme.colors.blueUI.withAlphaComponent(0.6), stateOffColor: enabled == true ? theme.colors.redUI : theme.colors.redUI.withAlphaComponent(0.6), disabledColor: .grayBackground, borderColor: .clear), autoswitch: false)
+            }, enabled: enabled ?? true, switchAppearance: SwitchViewAppearance(backgroundColor: theme.colors.background, stateOnColor: enabled == true ? theme.colors.accent : theme.colors.accent.withAlphaComponent(0.6), stateOffColor: enabled == true ? theme.colors.redUI : theme.colors.redUI.withAlphaComponent(0.6), disabledColor: .grayBackground, borderColor: .clear), autoswitch: false)
         case let .kicked(_, _, text, value):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .nextContext(value), action: {
                 arguments.openKicked()

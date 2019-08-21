@@ -191,7 +191,7 @@ class AuthHeaderView : View {
     override func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
         
-        switchLanguage.set(color: theme.colors.blueUI, for: .Normal)
+        switchLanguage.set(color: theme.colors.accent, for: .Normal)
         
         let headerLayout = TextViewLayout(.initialize(string: appName, color: theme.colors.text, font: NSFont.normal(30.0)), maximumNumberOfLines: 1)
         headerLayout.measure(width: .greatestFiniteMagnitude)
@@ -206,19 +206,19 @@ class AuthHeaderView : View {
         desc.update(descLayout)
         
         nextButton.set(text: L10n.loginNext, for: .Normal)
-        nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: .white, backgroundColor: theme.colors.blueUI)
+        nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: .white, backgroundColor: theme.colors.accent)
         proxyConnecting.progressColor = theme.colors.blueIcon
         proxyConnecting.lineWidth = 1.0
         
         
         backButton.set(font: .medium(.header), for: .Normal)
-        backButton.set(color: theme.colors.blueUI, for: .Normal)
+        backButton.set(color: theme.colors.accent, for: .Normal)
         backButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
         backButton.set(text: L10n.navigationBack, for: .Normal)
         _ = backButton.sizeToFit()
         
         cancelButton.set(font: .medium(.header), for: .Normal)
-        cancelButton.set(color: theme.colors.blueUI, for: .Normal)
+        cancelButton.set(color: theme.colors.accent, for: .Normal)
         cancelButton.set(text: L10n.navigationCancel, for: .Normal)
         _ = cancelButton.sizeToFit()
         

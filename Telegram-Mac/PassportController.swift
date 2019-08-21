@@ -1792,7 +1792,7 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
             placeholder = ""
         }
         
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(email), error: nil, identifier: _id_email_def, data: InputDataGeneralData(name: L10n.secureIdEmailUseSame(email), color: theme.colors.blueUI, icon: nil, type: .next, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(email), error: nil, identifier: _id_email_def, data: InputDataGeneralData(name: L10n.secureIdEmailUseSame(email), color: theme.colors.accent, icon: nil, type: .next, action: nil)))
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
@@ -1819,7 +1819,7 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     sectionId += 1
     //
     if let phone = (state.peer as? TelegramUser)?.phone, !phone.isEmpty {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(phone), error: nil, identifier: _id_phone_def, data: InputDataGeneralData(name: L10n.secureIdPhoneNumberUseSame(formatPhoneNumber(phone)), color: theme.colors.blueUI, icon: nil, type: .next, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(phone), error: nil, identifier: _id_phone_def, data: InputDataGeneralData(name: L10n.secureIdPhoneNumberUseSame(formatPhoneNumber(phone)), color: theme.colors.accent, icon: nil, type: .next, action: nil)))
         
         entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberUseSameDesc), color: theme.colors.grayText, detectBold: true))
         index += 1

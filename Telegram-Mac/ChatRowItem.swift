@@ -786,7 +786,7 @@ class ChatRowItem: TableRowItem {
         }
     }
     
-    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         self.entry = object
         self.context = chatInteraction.context
         self.presentation = theme
@@ -1189,34 +1189,35 @@ class ChatRowItem: TableRowItem {
                 }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
                     replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message))
-                } else if let attribute = attribute as? ReactionsMessageAttribute {
-                    var buttons:[ReplyMarkupButton] = []
-                    let sorted = attribute.reactions.sorted(by: { $0.count > $1.count })
-                    for reaction in sorted {
-                        buttons.append(ReplyMarkupButton(title: reaction.value + " \(reaction.count)", titleWhenForwarded: nil, action: .url(reaction.value)))
-                    }
-                    if !buttons.isEmpty {
-                        replyMarkupModel = ReplyMarkupNode([ReplyMarkupRow(buttons: buttons)], [], ReplyMarkupInteractions(proccess: { (button, _) in
-                            switch button.action {
-                            case let .url(buttonReaction):
-                                if let index = sorted.firstIndex(where: { $0.value == buttonReaction}) {
-                                    let reaction = sorted[index]
-                                    var newValues = sorted
-                                    if reaction.isSelected {
-                                        newValues.remove(at: index)
-                                    } else {
-                                        newValues[index] = MessageReaction(value: reaction.value, count: reaction.count + 1, isSelected: true)
-                                    }
-                                    chatInteraction.updateReactions(message.id, buttonReaction, { value in
-                                    })
-                                }
-                                
-                            default:
-                                break
-                            }
-                        }))
-                    }
                 }
+//                else if let attribute = attribute as? ReactionsMessageAttribute {
+//                    var buttons:[ReplyMarkupButton] = []
+//                    let sorted = attribute.reactions.sorted(by: { $0.count > $1.count })
+//                    for reaction in sorted {
+//                        buttons.append(ReplyMarkupButton(title: reaction.value + " \(reaction.count)", titleWhenForwarded: nil, action: .url(reaction.value)))
+//                    }
+//                    if !buttons.isEmpty {
+//                        replyMarkupModel = ReplyMarkupNode([ReplyMarkupRow(buttons: buttons)], [], ReplyMarkupInteractions(proccess: { (button, _) in
+//                            switch button.action {
+//                            case let .url(buttonReaction):
+//                                if let index = sorted.firstIndex(where: { $0.value == buttonReaction}) {
+//                                    let reaction = sorted[index]
+//                                    var newValues = sorted
+//                                    if reaction.isSelected {
+//                                        newValues.remove(at: index)
+//                                    } else {
+//                                        newValues[index] = MessageReaction(value: reaction.value, count: reaction.count + 1, isSelected: true)
+//                                    }
+//                                    chatInteraction.updateReactions(message.id, buttonReaction, { value in
+//                                    })
+//                                }
+//
+//                            default:
+//                                break
+//                            }
+//                        }))
+//                    }
+//                }
                 
                 /*
                  let reactions = object.message?.attributes.first(where: { attr -> Bool in
@@ -1237,7 +1238,7 @@ class ChatRowItem: TableRowItem {
         }
     }
     
-    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings) {
+    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.context = chatInteraction.context
         self.message = entry.message
@@ -1252,58 +1253,58 @@ class ChatRowItem: TableRowItem {
         super.init(initialSize)
     }
     
-    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, interaction:ChatInteraction, downloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings) -> ChatRowItem {
+    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, interaction:ChatInteraction, downloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings, theme: TelegramPresentationTheme) -> ChatRowItem {
         
         if let message = entry.message {
             if message.media.count == 0 || message.media.first is TelegramMediaWebpage {
-                return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                    return ChatServiceItem(initialSize,interaction, interaction.context,entry, downloadSettings)
+                    return ChatServiceItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
                 } else if let file = message.media[0] as? TelegramMediaFile {
                     if file.isInstantVideo {
-                        return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings)
+                        return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isVideo && !file.isAnimated {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     } else if file.isStaticSticker {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     } else if file.isVoice {
-                        return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, downloadSettings)
+                        return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isVideo && file.isAnimated {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     } else if !file.isVideo && (file.isAnimated && !file.mimeType.hasSuffix("gif")) {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     } else if file.isMusic {
-                        return ChatMusicRowItem(initialSize,interaction, interaction.context, entry, downloadSettings)
+                        return ChatMusicRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                     } else if file.isAnimatedSticker {
-                        return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, downloadSettings)
+                        return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                     }
-                    return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings)
+                    return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if let action = message.media[0] as? TelegramMediaAction {
                     switch action.action {
                     case .phoneCall:
-                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     default:
-                        return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                        return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     }
                     
                 } else if message.media[0] is TelegramMediaMap {
-                    return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings)
+                    return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {
-                    return ChatContactRowItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                    return ChatContactRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaInvoice {
-                    return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                    return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaExpiredContent {
-                    return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings)
+                    return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media.first is TelegramMediaGame {
-                    return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                    return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media.first is TelegramMediaPoll {
-                    return ChatPollItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                    return ChatPollItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media.first is TelegramMediaUnsupported {
-                    return ChatMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings)
+                    return ChatMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                 }
                 
-                return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings)
+                return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             }
             
         }
@@ -1675,7 +1676,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     }
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
-        if !message.flags.contains(.Failed), !message.flags.contains(.Unsent) {
+        if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), message.scheduleTime == nil {
             items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                 _ = showModalProgress(signal: exportMessageLink(account: account, peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
                     if let link = link {
@@ -1897,7 +1898,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     return signal |> map { items in
         var items = items
-        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author {
+        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, message.scheduleTime == nil {
             items.append(ContextSeparatorItem())
             items.append(ContextMenuItem(L10n.chatServiceSearchAllMessages(author.compactDisplayTitle), handler: {
                 chatInteraction.searchPeerMessages(author)

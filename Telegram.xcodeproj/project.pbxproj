@@ -730,6 +730,9 @@
 		D02F0A0022E8875800553411 /* SoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F09FF22E8875800553411 /* SoftwareVideoSource.swift */; };
 		D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */; };
 		D02F0A0422E88C9900553411 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */; };
+		D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */; };
+		D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
+		D04D2145230DB57300609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
 		D0558D7C215141CF006B403D /* ChatInfoTouchbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */; };
 		D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D842152B4D3006B403D /* GalleryTouchBar.swift */; };
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
@@ -1761,6 +1764,8 @@
 		D02F0A0622EF1CA300553411 /* lol.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = lol.tgs; sourceTree = "<group>"; };
 		D02F0A0822EF1CA300553411 /* meh.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = meh.tgs; sourceTree = "<group>"; };
 		D02F0A0922EF1CA300553411 /* heart.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = heart.tgs; sourceTree = "<group>"; };
+		D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAccentColorModalController.swift; sourceTree = "<group>"; };
+		D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramIconsTheme.swift; sourceTree = "<group>"; };
 		D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoTouchbar.swift; sourceTree = "<group>"; };
 		D0558D842152B4D3006B403D /* GalleryTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBar.swift; sourceTree = "<group>"; };
 		D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBarThumbItemView.swift; sourceTree = "<group>"; };
@@ -2386,6 +2391,7 @@
 				9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */,
 				9F0B8F181FFB9DFC00073D3F /* AccentColorModalController.swift */,
 				9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */,
+				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
 			);
 			name = appearance;
 			sourceTree = "<group>";
@@ -2929,6 +2935,7 @@
 			isa = PBXGroup;
 			children = (
 				C2B9BE881EFC5E7000D6B96F /* Appearance.swift */,
+				D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */,
 			);
 			name = appearance;
 			sourceTree = "<group>";
@@ -4561,6 +4568,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D04D2145230DB57300609388 /* TelegramIconsTheme.swift in Sources */,
 				D06CD4F022F22F1100E444DF /* PhotoCache.swift in Sources */,
 				D00CE4F82284D5E3008C1B4F /* TransformOutgoingMessageMedia.swift in Sources */,
 				D00CE4F72284D530008C1B4F /* BuildConfig.m in Sources */,
@@ -4957,6 +4965,7 @@
 				9FFAE509205A92B9000C028E /* RingBuffer.m in Sources */,
 				C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
+				D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				C29F4C761F45F58B00DBFC00 /* MIHSliderView.m in Sources */,
 				D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */,
@@ -5127,6 +5136,7 @@
 				9F10CE8A20611536002DD61A /* PassportHeaderItem.swift in Sources */,
 				C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */,
 				9F0E6F76203EC7090086699C /* DFRPrivateHeader.m in Sources */,
+				D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
 				C2E8BA0A1FB5F15900DEB5E2 /* GalleryThumbsControlView.swift in Sources */,
 				C2DF47BF1DE79574003AA6C0 /* opusenc.m in Sources */,

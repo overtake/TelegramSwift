@@ -199,7 +199,7 @@ struct SelectPeerValue : Equatable {
             (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
         } else {
             if let addressName = peer.addressName {
-                color = theme.colors.blueUI
+                color = theme.colors.accent
                 string = "@\(addressName)"
             }
         }

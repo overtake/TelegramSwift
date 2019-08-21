@@ -166,7 +166,7 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             //ControlStyle(font: NSFont.)
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), action: {
                 arguments.toggleRight(right, !value)
-            }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: .white, stateOnColor: theme.colors.blueUI, stateOffColor: theme.colors.redUI, disabledColor: theme.colors.grayBackground, borderColor: .clear), disabledAction: {
+            }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: .white, stateOnColor: theme.colors.accent, stateOffColor: theme.colors.redUI, disabledColor: theme.colors.grayBackground, borderColor: .clear), disabledAction: {
                 arguments.alertError()
             })
         case .description(_, _, let name):

@@ -167,7 +167,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         blockedActionView?.disableActions()
         textView.textFont = .normal(theme.fontSize)
         chatDiscussionView?.updateLocalizationAndTheme()
-        blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueUI,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
+        blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
         replyMarkupModel?.layout()
@@ -296,7 +296,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         case let .action(text,action):
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView = TitleButton(frame: bounds)
-            self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.blueUI)
+            self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.accent)
             self.blockedActionView?.set(text: text, for: .Normal)
             self.blockedActionView?.set(background: theme.colors.grayBackground, for: .Highlight)
             if animated {

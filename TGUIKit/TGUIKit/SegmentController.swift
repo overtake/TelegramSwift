@@ -121,7 +121,7 @@ private final class SegmentItemView : Control {
 
 private class SegmentedControlView: View {
     
-    public var theme: SegmentTheme = SegmentTheme(backgroundColor: presentation.colors.background, foregroundColor: presentation.colors.blueUI, textColor: presentation.colors.blueUI) {
+    public var theme: SegmentTheme = SegmentTheme(backgroundColor: presentation.colors.background, foregroundColor: presentation.colors.accent, textColor: presentation.colors.accent) {
         didSet {
             for subview in subviews.compactMap({ $0 as? SegmentItemView}) {
                 subview.theme = theme

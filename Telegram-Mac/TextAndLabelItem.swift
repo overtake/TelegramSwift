@@ -26,7 +26,7 @@ class TextAndLabelItem: GeneralRowItem {
     let isTextSelectable:Bool
     let callback:()->Void
     let canCopy: Bool
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, labelColor: NSColor = theme.colors.blueUI, text:String, context: AccountContext, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, labelColor: NSColor = theme.colors.accent, text:String, context: AccountContext, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true) {
         self.callback = callback
         self.isTextSelectable = isTextSelectable
         self.label = NSAttributedString.initialize(string: label, color: labelColor, font: .normal(FontSize.text))

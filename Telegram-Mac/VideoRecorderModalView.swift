@@ -24,7 +24,7 @@ class VideoRecorderModalView: View {
     }
     
     init(frame frameRect: NSRect, thumbnail: CGImage?) {
-        progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.blueUI, icon: nil, iconInset: NSEdgeInsets(), lineWidth: 4), twist: false)
+        progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.accent, icon: nil, iconInset: NSEdgeInsets(), lineWidth: 4), twist: false)
         super.init(frame: frameRect)
         addSubview(shadowView)
         addSubview(captureContainer)

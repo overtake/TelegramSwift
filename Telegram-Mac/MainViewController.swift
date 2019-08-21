@@ -93,7 +93,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         didSet {
             switch state {
             case .common:
-                genericView.backgroundColor = theme.colors.blueUI
+                genericView.backgroundColor = theme.colors.accent
             case .important:
                 genericView.backgroundColor = theme.colors.greenUI
             case .critical:
@@ -374,7 +374,7 @@ class MainViewController: TelegramViewController {
                 
                 let item = ShortPeerRowItem(NSZeroSize, peer: account.peer, account: account.account, height: 40, photoSize: NSMakeSize(25, 25), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: .white), drawCustomSeparator: false, inset: NSEdgeInsets(left: 10), action: {
                     context.sharedContext.switchToAccount(id: account.account.id, action: nil)
-                }, highlightOnHover: true, badgeNode: GlobalBadgeNode(account.account, sharedContext: context.sharedContext, getColor: { theme.colors.blueUI }), compactText: true)
+                }, highlightOnHover: true, badgeNode: GlobalBadgeNode(account.account, sharedContext: context.sharedContext, getColor: { theme.colors.accent }), compactText: true)
                 
                 headerItems.append(item)
 //                items.append(SPopoverItem(account.peer.displayTitle, {

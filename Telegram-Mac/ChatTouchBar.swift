@@ -438,7 +438,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             let item = NSCustomTouchBarItem(identifier: identifier)
             let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction(_:)))
             button.addWidthConstraint(size: 200)
-            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.blueUI
+            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -538,7 +538,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .chatEditMessageDone:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let button = NSButton(title: L10n.navigationDone, target: self, action: #selector(saveEditingMessage))
-            button.bezelColor = theme.colors.blueUI
+            button.bezelColor = theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -561,7 +561,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .chatEditMessageDone:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let button = NSButton(title: L10n.navigationDone, target: self, action: #selector(attachFile))
-            button.bezelColor = theme.colors.blueUI
+            button.bezelColor = theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -575,7 +575,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 //            let item = NSCustomTouchBarItem(identifier: identifier)
 //            let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction))
 //            button.addWidthConstraint(size: 200)
-//            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.blueUI
+//            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.accent
 //            item.view = button
 //            item.customizationLabel = button.title
 //            return item
@@ -584,7 +584,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesForward"))!
             let button = NSButton(title: L10n.messageActionsPanelForward, image: icon, target: self, action: #selector(forwardMessages))
             button.addWidthConstraint(size: 160)
-            button.bezelColor = theme.colors.blueUI
+            button.bezelColor = theme.colors.accent
             button.imageHugsTitle = true
             button.isEnabled = self.chatInteraction?.presentation.canInvokeBasicActions.forward ?? false
             item.view = button
@@ -625,7 +625,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             switch identifier {
             case .chatForwardMessages:
                 let button = (item(forIdentifier: identifier) as? NSCustomTouchBarItem)?.view as? NSButton
-                button?.bezelColor = self.chatInteraction?.presentation.canInvokeBasicActions.forward ?? false ? theme.colors.blueUI : nil
+                button?.bezelColor = self.chatInteraction?.presentation.canInvokeBasicActions.forward ?? false ? theme.colors.accent : nil
                 button?.isEnabled = self.chatInteraction?.presentation.canInvokeBasicActions.forward ?? false
                 
             case .chatDeleteMessages:

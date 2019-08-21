@@ -80,7 +80,7 @@ class MessageActionsPanelView: Control, Notifable {
         forwardButton.userInteractionEnabled = canForward
         
         deleteButton.set(color: !canDelete ? theme.colors.grayText : theme.colors.redUI, for: .Normal)
-        forwardButton.set(color: !canForward ? theme.colors.grayText : theme.colors.blueUI, for: .Normal)
+        forwardButton.set(color: !canForward ? theme.colors.grayText : theme.colors.accent, for: .Normal)
         
         deleteButton.set(image: !deleteButton.userInteractionEnabled ? theme.icons.chatDeleteMessagesInactive : theme.icons.chatDeleteMessagesActive, for: .Normal)
         forwardButton.set(image: !forwardButton.userInteractionEnabled ? theme.icons.chatForwardMessagesInactive : theme.icons.chatForwardMessagesActive, for: .Normal)
@@ -136,7 +136,7 @@ class MessageActionsPanelView: Control, Notifable {
         forwardButton.set(image: !forwardButton.userInteractionEnabled ? theme.icons.chatForwardMessagesInactive : theme.icons.chatForwardMessagesActive, for: .Normal)
         
         deleteButton.set(color: !deleteButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.redUI, for: .Normal)
-        forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.blueUI, for: .Normal)
+        forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.accent, for: .Normal)
         
         deleteButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
         forwardButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))

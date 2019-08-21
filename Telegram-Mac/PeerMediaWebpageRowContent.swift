@@ -280,7 +280,7 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             
             if let readProgress = item.readPercent {
                 if readProgressView == nil {
-                    readProgressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: theme.colors.blueUI, icon: nil, lineWidth: 3), twist: false, size: NSMakeSize(item.iconSize.width, item.iconSize.height))
+                    readProgressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: theme.colors.accent, icon: nil, lineWidth: 3), twist: false, size: NSMakeSize(item.iconSize.width, item.iconSize.height))
                     imageView.addSubview(readProgressView!)
                     readProgressView?.isEventLess = true
                     readProgressView?.userInteractionEnabled = false

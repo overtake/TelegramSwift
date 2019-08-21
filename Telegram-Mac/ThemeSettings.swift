@@ -95,11 +95,12 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         
         self.palette = ColorPalette(isDark: dark,
             name: name,
+            basicAccent: parseColor(decoder, "basicAccent") ?? palette.basicAccent,
             background: parseColor(decoder, "background") ?? palette.background,
             text: parseColor(decoder, "text") ?? palette.text,
             grayText: parseColor(decoder, "grayText") ?? palette.grayText,
             link: parseColor(decoder, "link") ?? palette.link,
-            blueUI: parseColor(decoder, "blueUI") ?? palette.blueUI,
+            accent: parseColor(decoder, "accent") ?? palette.accent,
             redUI: parseColor(decoder, "redUI") ?? palette.redUI,
             greenUI: parseColor(decoder, "greenUI") ?? palette.greenUI,
             blackTransparent: parseColor(decoder, "blackTransparent") ?? palette.blackTransparent,

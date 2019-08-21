@@ -76,20 +76,15 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         super.init()
         
      
-        
-       
-        
         NSUserNotificationCenter.default.delegate = self
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
         
         
-        
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsLocked), name: NSNotification.Name(rawValue: "com.apple.screenIsLocked"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsUnlocked), name: NSNotification.Name(rawValue: "com.apple.screenIsUnlocked"), object: nil)
 
-        
         
         _ = (_passlock.get() |> mapToSignal { show in additionalSettings(accountManager: accountManager) |> map { (show, $0) }} |> deliverOnMainQueue |> mapToSignal { show, settings -> Signal<Bool, NoError> in
             if show {
@@ -296,9 +291,11 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 title = appName
                             }
                             
-                            if self.activeAccounts.accounts.count > 1 && !screenIsLocked {
-                                title += " → \(accountPeer.addressName ?? accountPeer.displayTitle)"
+                            if message.wasScheduled {
+                                title = L10n.notificationScheduledTitle
                             }
+                            
+                           
                             
                             var text = chatListText(account: account, for: message).string.nsstring
                             var subText:String?
@@ -326,8 +323,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 title += " 🔕"
                             }
                             
-                            if message.wasScheduled {
-                                title = L10n.notificationScheduledTitle
+                            if self.activeAccounts.accounts.count > 1 && !screenIsLocked {
+                                title += " → \(accountPeer.addressName ?? accountPeer.displayTitle)"
                             }
                             
                             notification.title = title

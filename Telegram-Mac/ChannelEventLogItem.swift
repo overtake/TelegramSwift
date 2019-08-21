@@ -595,7 +595,7 @@ class ServiceEventLogItem: TableRowItem {
                 
                 let panel:ServiceEventLogMessagePanel?
                 if let _ = changedInfo.panelText {
-                    panel = ServiceEventLogMessagePanel(header: TextViewLayout(.initialize(string: changedInfo.panelText, color: theme.colors.blueUI, font: .medium(.text)), maximumNumberOfLines: 1), content: TextViewLayout(prevContentAttributed))
+                    panel = ServiceEventLogMessagePanel(header: TextViewLayout(.initialize(string: changedInfo.panelText, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1), content: TextViewLayout(prevContentAttributed))
                 } else {
                     panel = nil
                 }
@@ -712,7 +712,7 @@ class ChannelEventLogEditedPanelItem : TableRowItem {
     init(_ initialSize: NSSize, previous:Message, item:ChatRowItem) {
         self.previous = previous
         self.associatedItem = item
-        let header = TextViewLayout(.initialize(string: tr(L10n.channelEventLogOriginalMessage), color: theme.colors.blueUI, font: .medium(.text)), maximumNumberOfLines: 1)
+        let header = TextViewLayout(.initialize(string: tr(L10n.channelEventLogOriginalMessage), color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
         
         let text = TextViewLayout(.initialize(string: previous.text.isEmpty ? tr(L10n.channelEventLogEmpty) : previous.text, color: theme.colors.text, font: .italic(.text)))
        

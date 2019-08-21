@@ -166,7 +166,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
     
     private var playProgressStyle:ControlStyle {
-        return ControlStyle(foregroundColor: theme.colors.blueUI, backgroundColor: .clear)
+        return ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear)
     }
     private var fetchProgressStyle:ControlStyle {
         return ControlStyle(foregroundColor: theme.colors.grayTransparent, backgroundColor: .clear)
@@ -181,7 +181,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
         dismiss.set(image: theme.icons.auduiPlayerDismiss, for: .Normal)
         
-        progressView.fetchingColor = theme.colors.blueUI.withAlphaComponent(0.5)
+        progressView.fetchingColor = theme.colors.accent.withAlphaComponent(0.5)
         
         if let controller = controller {
             repeatControl.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)

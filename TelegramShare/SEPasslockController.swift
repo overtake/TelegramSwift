@@ -39,7 +39,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.stringValue = ""
         super.init(frame: frameRect)
         self.backgroundColor = theme.colors.background
-        nextButton.set(color: theme.colors.blueUI, for: .Normal)
+        nextButton.set(color: theme.colors.accent, for: .Normal)
         nextButton.set(font: .normal(.title), for: .Normal)
         nextButton.set(text: tr(L10n.shareExtensionPasscodeNext), for: .Normal)
         _ = nextButton.sizeToFit()

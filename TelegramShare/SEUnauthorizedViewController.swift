@@ -21,7 +21,7 @@ class SEUnauthorizedView : View {
         imageView.sizeToFit()
         self.backgroundColor = theme.colors.background
         cancel.set(font: .medium(.title), for: .Normal)
-        cancel.set(color: theme.colors.blueUI, for: .Normal)
+        cancel.set(color: theme.colors.accent, for: .Normal)
         cancel.set(text: tr(L10n.shareExtensionUnauthorizedOK), for: .Normal)
         
         let layout = TextViewLayout(.initialize(string: tr(L10n.shareExtensionUnauthorizedDescription), color: theme.colors.text, font: .normal(.text)), alignment: .center)

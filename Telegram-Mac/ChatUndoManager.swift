@@ -401,7 +401,7 @@ final class ChatUndoManager  {
         return status
     }
     
-    func clearHistoryInteractively(postbox: Postbox, peerId: PeerId, type: InteractiveMessagesDeletionType = .forLocalPeer) {
+    func clearHistoryInteractively(postbox: Postbox, peerId: PeerId, type: InteractiveHistoryClearingType = .forLocalPeer) {
         _ = TelegramCoreMac.clearHistoryInteractively(postbox: postbox, peerId: peerId, type: type).start(completed: { [weak context] in
             queue.async {
               context?.finishAction(for: peerId, type: .clearHistory)

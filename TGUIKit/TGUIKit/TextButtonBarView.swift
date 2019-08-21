@@ -135,7 +135,7 @@ open class TextButtonBarView: BarView {
     
     override open func updateLocalizationAndTheme() {
         super.updateLocalizationAndTheme()
-
+        button.set(color: navigationButtonStyle.foregroundColor, for: .Normal)
         button.set(background: presentation.colors.background, for: .Normal)
     }
     

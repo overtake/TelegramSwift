@@ -19,7 +19,7 @@ class VCardLocationRowItem: GeneralRowItem {
         let attr = NSMutableAttributedString()
         
         if let label = address.label {
-            _ = attr.append(string: label, color: theme.colors.blueUI, font: .normal(.text))
+            _ = attr.append(string: label, color: theme.colors.accent, font: .normal(.text))
             _ = attr.append(string: "\n\n")
         }
         

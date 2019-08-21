@@ -105,7 +105,7 @@ class RecentSessionRowView : TableRowView {
         super.set(item: item)
         
         reset.set(text: tr(L10n.recentSessionsRevoke), for: .Normal)
-        reset.set(color: theme.colors.blueUI, for: .Normal)
+        reset.set(color: theme.colors.accent, for: .Normal)
         reset.set(background: theme.colors.background, for: .Normal)
         _ = reset.sizeToFit()
         
