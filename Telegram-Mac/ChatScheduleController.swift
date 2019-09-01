@@ -42,7 +42,9 @@ class ChatScheduleController: ChatController {
         let controller = self.navigationController?.controller as? ChatController
         let current = self.chatInteraction.presentation.interfaceState
         
-        controller?.chatInteraction.update(animated: false, { $0.updatedInterfaceState { _ in return current } })
+        let count = self.genericView.tableView.count
+        
+        controller?.chatInteraction.update(animated: false, { $0.withUpdatedHasScheduled(count > 1).updatedInterfaceState { _ in return current } })
         
     }
     

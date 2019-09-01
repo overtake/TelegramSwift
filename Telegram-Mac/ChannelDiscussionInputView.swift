@@ -70,8 +70,8 @@ class ChannelDiscussionInputView: View {
         }
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         leftButton.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.accent)
         leftButton.set(background: theme.colors.grayBackground, for: .Highlight)
         rightButton.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.accent)

@@ -399,7 +399,9 @@ func initialize() -> [String] {
     array.append("entertainment_SearchCancel")
     array.append("scheduledAvatar")
     array.append("scheduledInputAction")
-    
+    array.append("verifyDialog")
+    array.append("verifyDialogActive")
+    array.append("chatInputScheduled")
     return array
 }
 
@@ -410,18 +412,26 @@ func generateClass() -> String {
     let items = initialize()
     
     var lines:[String] = []
-    
+    lines.append("import SwiftSignalKitMac")
+    lines.append("")
+
     lines.append("final class TelegramIconsTheme {")
     
-    lines.append("  private var cached:[String: CGImage] = [:]")
+    lines.append("  private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])")
     lines.append("")
     for item in items {
         lines.append("  var \(item): CGImage {")
-        lines.append("      if let image = cached[\"\(item)\"] {")
+        lines.append("      if let image = cached.with({ $0[\"\(item)\"] }) {")
         lines.append("          return image")
         lines.append("      } else {")
         lines.append("          let image = _\(item)()")
-        lines.append("          cached[\"\(item)\"] = image")
+        lines.append("          _ = cached.modify { current in ")
+        lines.append("              var current = current")
+        lines.append("              current[\"\(item)\"] = image")
+        lines.append("              return current")
+        lines.append("          }")
+
+        
         lines.append("          return image")
         lines.append("      }")
         lines.append("  }")
@@ -429,7 +439,7 @@ func generateClass() -> String {
     lines.append("")
     
     for item in items {
-        lines.append("  private var _\(item): ()->CGImage")
+        lines.append("  private let _\(item): ()->CGImage")
     }
     
     lines.append("")

@@ -22,6 +22,11 @@ struct TemporaryPasswordContainer {
 }
 
 
+enum ApplyThemeUpdate {
+    case local(ColorPalette)
+    case cloud(TelegramTheme)
+}
+
 final class AccountContextBindings {
     #if !SHARE
     let rootNavigation: () -> MajorNavigationController
@@ -102,6 +107,9 @@ final class AccountContext {
     
     private let updateDifferenceDisposable = MetaDisposable()
     private let temporaryPwdDisposable = MetaDisposable()
+    private let actualizeCloudTheme = MetaDisposable()
+    private let applyThemeDisposable = MetaDisposable()
+    private let cloudThemeObserver = MetaDisposable()
     private let limitsDisposable = MetaDisposable()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
@@ -140,6 +148,46 @@ final class AccountContext {
                     self?.timeDifference = account.network.globalTime - Date().timeIntervalSince1970
                 }
         }))
+        
+        
+        let cloudSignal = themeUnmodifiedSettings(accountManager: sharedContext.accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
+            return lhs.cloudTheme == rhs.cloudTheme
+        })
+        |> map { value in
+            return (value.cloudTheme, value.palette)
+        }
+        |> deliverOnMainQueue
+        
+        cloudThemeObserver.set(cloudSignal.start(next: { [weak self] (cloud, palette) in
+            let update: ApplyThemeUpdate
+            if let cloud = cloud {
+                update = .cloud(cloud)
+            } else {
+                update = .local(palette)
+            }
+            self?.updateTheme(update)
+        }))
+        
+        
+    }
+    
+    private func updateTheme(_ update: ApplyThemeUpdate) {
+        switch update {
+        case let .cloud(theme):
+            _ = applyTheme(accountManager: self.sharedContext.accountManager, account: self.account, theme: theme).start()
+            let signal = actualizedTheme(account: self.account, accountManager: self.sharedContext.accountManager, theme: theme) |> deliverOnMainQueue
+            self.actualizeCloudTheme.set(signal.start(next: { [weak self] cloudTheme in
+                if let `self` = self {
+                    self.applyThemeDisposable.set(downloadAndApplyCloudTheme(context: self, theme: cloudTheme, inBackground: true).start())
+                }
+            }))
+        case let .local(palette):
+            actualizeCloudTheme.set(applyTheme(accountManager: self.sharedContext.accountManager, account: self.account, theme: nil).start())
+            applyThemeDisposable.set(updateThemeInteractivetly(accountManager: self.sharedContext.accountManager, f: {
+                return $0.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
+            }).start())
+        }
+       
     }
     
     var timestamp: Int32 {
@@ -176,6 +224,9 @@ final class AccountContext {
         updateDifferenceDisposable.dispose()
         temporaryPwdDisposable.dispose()
         limitsDisposable.dispose()
+        actualizeCloudTheme.dispose()
+        applyThemeDisposable.dispose()
+        cloudThemeObserver.dispose()
     }
    
     
@@ -227,4 +278,34 @@ final class AccountContext {
         })
     }
     #endif
+}
+
+
+func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme, inBackground: Bool = false) -> Signal<Never, Void> {
+    if let file = cloudTheme.file {
+        return Signal { subscriber in
+            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
+            
+            let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)
+            
+            let signal = inBackground ? resourceData : showModalProgress(signal: resourceData, for: context.window)
+            
+            let dataDisposable = signal.start(next: { data in
+                
+                if let palette = importPalette(data.path) {
+                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                        return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
+                    }).start()
+                }
+                subscriber.putCompletion()
+            })
+            
+            return ActionDisposable {
+                fetchDisposable.dispose()
+                dataDisposable.dispose()
+            }
+            } |> runOn(.mainQueue()) |> deliverOnMainQueue
+    } else {
+        return .complete()
+    }
 }

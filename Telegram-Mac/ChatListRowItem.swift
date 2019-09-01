@@ -326,7 +326,7 @@ class ChatListRowItem: TableRowItem {
         self.isScam = false
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
-        titleText.setSelected(color: .white ,range: titleText.range)
+        titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
         self.titleText = titleText
         if peers.count == 1 {
@@ -357,7 +357,7 @@ class ChatListRowItem: TableRowItem {
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= context.timeDifference
             let range = date.append(string: DateUtils.string(forMessageListDate: Int32(time)), color: theme.colors.grayText, font: .normal(.short))
-            date.setSelected(color: .white,range: range)
+            date.setSelected(color: theme.colors.underSelectedColor,range: range)
             self.date = date.copy() as? NSAttributedString
             
             dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
@@ -450,7 +450,7 @@ class ChatListRowItem: TableRowItem {
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: peer?.id == context.peerId ? L10n.peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
-        titleText.setSelected(color: .white ,range: titleText.range)
+        titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
 
         self.titleText = titleText
         var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState:embeddedState)
@@ -468,7 +468,7 @@ class ChatListRowItem: TableRowItem {
         if case .ad = pinnedType {
             let sponsored:NSMutableAttributedString = NSMutableAttributedString()
             let range = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
-            sponsored.setSelected(color: .white,range: range)
+            sponsored.setSelected(color: theme.colors.underSelectedColor, range: range)
             self.date = sponsored
             dateLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
@@ -478,7 +478,7 @@ class ChatListRowItem: TableRowItem {
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= context.timeDifference
             let range = date.append(string: DateUtils.string(forMessageListDate: Int32(time)), color: theme.colors.grayText, font: .normal(.short))
-            date.setSelected(color: .white,range: range)
+            date.setSelected(color: theme.colors.underSelectedColor, range: range)
             self.date = date.copy() as? NSAttributedString
             
             dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)

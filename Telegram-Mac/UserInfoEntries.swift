@@ -908,11 +908,11 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                     if cachedData.commonGroupCount > 0 {
                         entries.append(UserInfoEntry.groupInCommon(sectionId: sectionId, count: Int(cachedData.commonGroupCount)))
                     }
-                    if !(peer is TelegramSecretChat) {
+                   // if !(peer is TelegramSecretChat) {
                         entries.append(UserInfoEntry.section(sectionId: sectionId))
                         sectionId += 1
                         entries.append(UserInfoEntry.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot))
-                    }
+                   // }
                 } else {
                     entries.append(UserInfoEntry.section(sectionId: sectionId))
                     sectionId += 1
@@ -922,8 +922,6 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                 
             }
             if peer is TelegramSecretChat {
-                entries.append(UserInfoEntry.section(sectionId: sectionId))
-                sectionId += 1
                 
                 entries.append(UserInfoEntry.deleteChat(sectionId: sectionId))
             }

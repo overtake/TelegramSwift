@@ -94,7 +94,7 @@ private class SignupView : View, NSTextFieldDelegate {
         firstName.font = .medium(14)
         
         photoView.layer?.cornerRadius = 50
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
@@ -119,8 +119,8 @@ private class SignupView : View, NSTextFieldDelegate {
         }
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         firstNameSeparator.backgroundColor = theme.colors.border
         lastNameSeparator.backgroundColor = theme.colors.border
@@ -210,7 +210,7 @@ private class InputPasswordContainerView : View {
         input.isBezeled = false
         input.focusRingType = .none
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         addSubview(input)
 
@@ -222,8 +222,8 @@ private class InputPasswordContainerView : View {
       //  addSubview(passwordLabel)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         let attr = NSMutableAttributedString()
         _ = attr.append(string: L10n.loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
         input.backgroundColor = theme.colors.background
@@ -380,8 +380,8 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         }, for: .Click)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         editControl.set(color: theme.colors.accent, for: .Normal)
         
@@ -732,7 +732,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
             self?.showCountrySelector()
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         codeText.stringValue = "+"
         
@@ -768,8 +768,8 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         countrySelector.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
         
@@ -1018,7 +1018,7 @@ private final class AwaitingResetConfirmationView : View {
     func update(with phoneNumber: String, until:Int32, reset: @escaping()-> Void) -> Void {
         self.phoneNumber = phoneNumber
         self.protectedUntil = until
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         self.reset.removeAllHandlers()
         self.reset.set(handler: { _ in
@@ -1038,8 +1038,8 @@ private final class AwaitingResetConfirmationView : View {
         timer?.invalidate()
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         reset.set(color: theme.colors.redUI, for: .Normal)
         reset.set(text: L10n.loginResetAccount, for: .Normal)
@@ -1198,7 +1198,7 @@ class LoginAuthInfoView : View {
         
         switch state {
         case let .phoneEntry(countryCode, phoneNumber):
-            phoneNumberContainer.updateLocalizationAndTheme()
+            phoneNumberContainer.updateLocalizationAndTheme(theme: theme)
             phoneNumberContainer.errorLabel.state.set(.single(.normal))
             phoneNumberContainer.update(countryCode: countryCode, number: phoneNumber)
             phoneNumberContainer.isHidden = false
@@ -1214,7 +1214,7 @@ class LoginAuthInfoView : View {
             resetAccountContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
         case .empty:
-            phoneNumberContainer.updateLocalizationAndTheme()
+            phoneNumberContainer.updateLocalizationAndTheme(theme: theme)
             phoneNumberContainer.isHidden = false
             phoneNumberContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
@@ -1228,7 +1228,7 @@ class LoginAuthInfoView : View {
             signupView.change(opacity: 0, animated: animated)
 
         case let .confirmationCodeEntry(number, type, hash, timeout, nextType, _):
-            codeInputContainer.updateLocalizationAndTheme()
+            codeInputContainer.updateLocalizationAndTheme(theme: theme)
             codeInputContainer.isHidden = false
             codeInputContainer.undo = []
             codeInputContainer.update(number: number, type: type, hash: hash, timeout: timeout, nextType: nextType, animated: animated)
@@ -1246,7 +1246,7 @@ class LoginAuthInfoView : View {
                 }
             })
         case let .passwordEntry(hint, number, code, _, _):
-            codeInputContainer.updateLocalizationAndTheme()
+            codeInputContainer.updateLocalizationAndTheme(theme: theme)
             codeInputContainer.isHidden = false
             codeInputContainer.showPasswordInput(hint, number ?? "", code ?? "", animated: animated)
             phoneNumberContainer.change(opacity: 0, animated: animated)
@@ -1262,7 +1262,7 @@ class LoginAuthInfoView : View {
                 }
             })
         case .signUp:
-            signupView.updateLocalizationAndTheme()
+            signupView.updateLocalizationAndTheme(theme: theme)
             signupView.isHidden = false
             phoneNumberContainer.change(opacity: 0, animated: animated)
             codeInputContainer.change(opacity: 0, animated: animated)

@@ -25,6 +25,8 @@ class ChatInputActionsView: View, Notifable {
     private let slowModeTimeout:TitleButton = TitleButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
+    private var scheduled:ImageButton?
+
     private var secretTimer:ImageButton?
     private var inlineProgress: ProgressIndicator? = nil
     
@@ -71,7 +73,7 @@ class ChatInputActionsView: View, Notifable {
         muteChannelMessages.set(handler: { [weak self] _ in
             if let chatInteraction = self?.chatInteraction {
                 FastSettings.toggleChannelMessagesMuted(chatInteraction.peerId)
-                (self?.superview?.superview as? View)?.updateLocalizationAndTheme()
+                (self?.superview?.superview as? View)?.updateLocalizationAndTheme(theme: theme)
             }
         }, for: .Click)
 
@@ -98,11 +100,12 @@ class ChatInputActionsView: View, Notifable {
         entertaiments.canHighlight = false
         muteChannelMessages.hideAnimated = false
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         send.set(image: theme.icons.chatSendMessage, for: .Normal)
         _ = send.sizeToFit()
         voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
@@ -202,6 +205,14 @@ class ChatInputActionsView: View, Notifable {
         secretTimer?.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
         keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
         muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width)
+        
+        if let scheduled = scheduled {
+            if muteChannelMessages.isHidden {
+                scheduled.centerY(x: entertaiments.frame.minX - scheduled.frame.width)
+            } else {
+                scheduled.centerY(x: muteChannelMessages.frame.minX - scheduled.frame.width - iconsInset)
+            }
+        }
     }
     
     func stop() {
@@ -245,7 +256,7 @@ class ChatInputActionsView: View, Notifable {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled {
             
                 var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
                 
@@ -254,7 +265,7 @@ class ChatInputActionsView: View, Notifable {
                 }
               
                 if let peer = value.peer {
-                    muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage || !value.effectiveInput.inputText.isEmpty
+                    muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil
                 }
                 
                 if !muteChannelMessages.isHidden {
@@ -387,6 +398,23 @@ class ChatInputActionsView: View, Notifable {
                     let seconds = timeout % 60
                     let string = String(format: "%@:%@", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
                     self.slowModeTimeout.set(text: string, for: .Normal)
+                }
+                
+                if value.hasScheduled && value.effectiveInput.inputText.isEmpty && value.interfaceState.editState == nil {
+                    if scheduled == nil {
+                        scheduled = ImageButton()
+                        addSubview(scheduled!)
+                    }
+                    scheduled?.removeAllHandlers()
+                    scheduled?.set(handler: { [weak self] _ in
+                        self?.chatInteraction.openScheduledMessages()
+                    }, for: .Click)
+                    scheduled!.set(image: theme.icons.chatInputScheduled, for: .Normal)
+                    _ = scheduled!.sizeToFit()
+                    size.width += scheduled!.frame.width + iconsInset + (muteChannelMessages.isHidden ? 0 : iconsInset)
+                } else {
+                    scheduled?.removeFromSuperview()
+                    scheduled = nil
                 }
                 
                 setFrameSize(size)

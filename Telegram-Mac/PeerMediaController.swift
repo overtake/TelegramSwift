@@ -30,13 +30,14 @@ class PeerMediaControllerView : View {
         addSubview(separator)
         segmentContainerView.addSubview(segmentControl.view)
         addSubview(segmentContainerView)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         separator.backgroundColor = theme.colors.border
         mainView?.background = theme.colors.background
+        segmentControl.theme = SegmentTheme(backgroundColor: theme.colors.background, foregroundColor: theme.colors.accent, textColor: theme.colors.accent)
     }
     
     func updateInteraction(_ chatInteraction:ChatInteraction) {
@@ -381,7 +382,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         mediaGrid.viewDidAppear(false)
         
         requestUpdateCenterBar()
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     private func toggle(with mode:PeerMediaCollectionMode, animated:Bool = false) {
@@ -436,8 +437,8 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         loadSelectionMessagesDisposable.dispose()
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         genericView.segmentControl.removeAll()
         
         genericView.segmentControl.add(segment: SegmentedItem(title: L10n.peerMediaMedia, handler: { [weak self] in

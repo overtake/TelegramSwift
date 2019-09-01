@@ -210,8 +210,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override var backdorColor: NSColor {
         guard let item = item as? ChatRowItem else {return super.backdorColor}
-        
-        return item.renderType == .bubble ? .clear : contextMenu != nil || isSelect ? item.presentation.colors.selectMessage : item.presentation.colors.background
+        if let forceBackgroundColor = item.forceBackgroundColor {
+            return forceBackgroundColor
+        }
+        return item.renderType == .bubble ? .clear : contextMenu != nil || isSelect ? item.presentation.colors.selectMessage : item.presentation.colors.chatBackground
     }
     
     var contentColor: NSColor {

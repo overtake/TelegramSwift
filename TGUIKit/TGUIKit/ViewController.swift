@@ -60,12 +60,12 @@ class ControllerToasterView : View {
         textView.isSelectable = false
         self.autoresizingMask = [.width]
         self.border = [.Bottom]
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
     }
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        self.backgroundColor = presentation.colors.background
-        self.textView.backgroundColor = presentation.colors.background
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        self.backgroundColor = theme.colors.background
+        self.textView.backgroundColor = theme.colors.background
     }
    
     
@@ -256,9 +256,9 @@ open class ViewController : NSObject {
         }
     }
     
-    open func updateLocalizationAndTheme() {
-        (view as? AppearanceViewProtocol)?.updateLocalizationAndTheme()
-        self.navigationController?.updateLocalizationAndTheme()
+    open func updateLocalizationAndTheme(theme: PresentationTheme) {
+        (view as? AppearanceViewProtocol)?.updateLocalizationAndTheme(theme: theme)
+        self.navigationController?.updateLocalizationAndTheme(theme: theme)
     }
     
     open func loadView() -> Void {
@@ -655,8 +655,8 @@ open class GenericViewController<T> : ViewController where T:NSView {
         return super.view as! T
     }
     
-    open override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    open override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         genericView.background = presentation.colors.background
     }
     

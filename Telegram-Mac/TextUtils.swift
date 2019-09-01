@@ -85,7 +85,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
         let mutableAttributedText = NSMutableAttributedString()
         _ = mutableAttributedText.append(string: L10n.chatListDraft, color: theme.colors.redUI, font: .normal(.text))
         _ = mutableAttributedText.append(string: " \(embeddedState.text.fullTrimmed.replacingOccurrences(of: "\n", with: " "))", color: theme.chatList.grayTextColor, font: .normal(.text))
-        mutableAttributedText.setSelected(color: .white, range: mutableAttributedText.range)
+        mutableAttributedText.setSelected(color: theme.colors.underSelectedColor, range: mutableAttributedText.range)
         return mutableAttributedText
     }
     
@@ -109,7 +109,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
                     
                 }
             }
-            subAttr.setSelected(color: .white, range: subAttr.range)
+            subAttr.setSelected(color: theme.colors.underSelectedColor, range: subAttr.range)
             if subAttr.length > 0 {
                 return subAttr
             }
@@ -121,7 +121,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
         if message.text.isEmpty && message.media.isEmpty {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: L10n.chatListUnsupportedMessage, color: theme.chatList.grayTextColor, font: .normal(.text))
-            attr.setSelected(color: .white, range: attr.range)
+            attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
             return attr
         }
         
@@ -144,10 +144,10 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
             } else {
                 _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
             }
-            attributedText.setSelected(color: .white,range: attributedText.range)
+            attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
         } else if message.media.first is TelegramMediaAction {
             _ = attributedText.append(string: serviceMessageText(message, account:account), color: theme.chatList.grayTextColor, font: .normal(.text))
-            attributedText.setSelected(color: .white,range: attributedText.range)
+            attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
         } else if let media = message.media.first as? TelegramMediaExpiredContent {
             let text:String
             switch media.data {
@@ -157,7 +157,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
                 text = L10n.serviceMessageExpiredVideo
             }
             _ = attributedText.append(string: text, color: theme.chatList.grayTextColor, font: .normal(.text))
-            attributedText.setSelected(color: .white,range: attributedText.range)
+            attributedText.setSelected(color: theme.colors.underSelectedColor,range: attributedText.range)
         }
         return attributedText
 

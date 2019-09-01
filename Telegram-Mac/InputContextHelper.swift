@@ -211,12 +211,12 @@ class InputContextView : TableView {
         // addSubview(tableView)
         addSubview(separatorView)
         separatorView.autoresizingMask = [.width, .maxYMargin]
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
 
     }
     
     
-     override func updateLocalizationAndTheme() {
+     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         separatorView.backgroundColor = theme.colors.border
        // backgroundColor = theme.colors.background
     }
@@ -706,7 +706,7 @@ class InputContextHelper: NSObject {
         controller.superview = view
         controller.genericView.relativeView = relativeView
         controller.genericView.position = position
-        controller.updateLocalizationAndTheme()
+        controller.updateLocalizationAndTheme(theme: theme)
         var currentResult = result
         
         let initialSize = controller.atomicSize

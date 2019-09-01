@@ -85,11 +85,21 @@ private class ModalInteractionsContainer : View {
     let interactions:ModalInteractions
     let borderView:View?
     
+    
+    
     override func mouseUp(with event: NSEvent) {
         
     }
     override func mouseDown(with event: NSEvent) {
         
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
+        cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
+        borderView?.backgroundColor = theme.colors.border
+        backgroundColor = theme.colors.background
     }
     
     init(interactions:ModalInteractions, modal:Modal) {
@@ -217,6 +227,7 @@ private final class ModalHeaderView: View {
     let titleView: TextView = TextView()
     var leftButton: ImageButton?
     var rightButton: ImageButton?
+    weak var controller:ModalViewController?
     required init(frame frameRect: NSRect, data: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)) {
         super.init(frame: frameRect)
         
@@ -252,6 +263,27 @@ private final class ModalHeaderView: View {
         titleView.layout?.measure(width: frame.width - 40 - additionalSize)
         titleView.update(titleView.layout)
         titleView.center()
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        
+        guard let controller = controller else {
+            return
+        }
+        
+        background = theme.colors.background
+        borderColor = theme.colors.border
+
+        let header = controller.modalHeader
+        if let header = header {
+            titleView.update(TextViewLayout(.initialize(string: header.center?.title, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
+            
+            if let image = header.right?.image {
+                rightButton?.set(image: image, for: .Normal)
+            }
+        }
+        needsLayout = true
     }
     
     required public init?(coder: NSCoder) {
@@ -322,6 +354,7 @@ public class Modal: NSObject {
         }
         if let header = controller.modalHeader {
             headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), data: header)
+            headerView?.controller = controller
         }
        
         if controller.isFullScreen {
@@ -457,6 +490,11 @@ public class Modal: NSObject {
             CATransaction.commit()
         }
        
+    }
+    
+    public func updateLocalizationAndTheme(theme: PresentationTheme) {
+        self.interactionsView?.updateLocalizationAndTheme(theme: theme)
+        self.headerView?.updateLocalizationAndTheme(theme: theme)
     }
     
     private var containerRect:NSRect {

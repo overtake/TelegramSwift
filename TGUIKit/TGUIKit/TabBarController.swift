@@ -18,8 +18,8 @@ private class TabBarViewController : View {
         addSubview(tabView)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         self.background = presentation.colors.background
     }
     
@@ -63,11 +63,11 @@ public class TabBarController: ViewController, TabViewDelegate {
         return TabBarViewController.self
     }
     
-    public override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         genericView.tabView.enumerateItems({ item in
             if item.controller.isLoaded() {
-                item.controller.updateLocalizationAndTheme()
+                item.controller.updateLocalizationAndTheme(theme: theme)
             }
             return false
         })

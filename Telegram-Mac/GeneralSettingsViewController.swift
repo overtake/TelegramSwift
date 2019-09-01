@@ -164,10 +164,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
                 arguments.toggleLatestArticles(!enabled)
             })
         case let .darkMode(sectionId: _, enabled: enabled):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsDarkMode), description: tr(L10n.generalSettingsDarkModeDescription), type: .switchable(enabled), action: {
-                _ = updateThemeInteractivetly(accountManager: arguments.context.sharedContext.accountManager, f: { settings in
-                    return settings.withUpdatedPalette(!enabled ? darkPalette : whitePalette)
-                }).start()
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsDarkMode, description: L10n.generalSettingsDarkModeDescription, type: .switchable(enabled), action: {
+
             })
         case let .handleInAppKeys(sectionId: _, enabled: enabled):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsMediaKeysForInAppPlayer, type: .switchable(enabled), action: {

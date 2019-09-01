@@ -13,33 +13,47 @@ import PostboxMac
 import SwiftSignalKitMac
 
 private final class CustomAccentColorView : View {
-    private let tableView: TableView = TableView.init(frame: NSZeroRect, isFlipped: true)
+    private let tableView: TableView = TableView(frame: NSZeroRect)
+    weak var controller: ModalViewController?
     let colorPicker = WallpaperColorPickerContainerView(frame: NSZeroRect)
+    let tintedCheckbox: ApplyblurCheckbox = ApplyblurCheckbox(frame: NSMakeRect(0, 0, 70, 24), title: L10n.accentColorsTinted)
     private let context: AccountContext
-    required init(frame frameRect: NSRect, context: AccountContext) {
+    fileprivate var disableTint: Bool = false {
+        didSet {
+            colorPicker.colorChanged?(colorPicker.colorPicker.color)
+        }
+    }
+    required init(frame frameRect: NSRect, theme: TelegramPresentationTheme, context: AccountContext) {
         self.context = context
         super.init(frame: frameRect)
         self.addSubview(tableView)
         self.addSubview(colorPicker)
-        
+        self.addSubview(tintedCheckbox)
         colorPicker.colorPicker.color = theme.colors.accent
         colorPicker.defaultColor = colorPicker.colorPicker.color
-
-        
+        tintedCheckbox.update(by: nil)
+        tintedCheckbox.isSelected = theme.colors.tinted
+        tintedCheckbox.isHidden = true//!theme.colors.tinted || !theme.bubbled
         colorPicker.colorPicker.colorChanged = { [weak self] color in
             guard let `self` = self else {return}
             self.colorPicker.textView.setString(color.hexString)
         }
         
+        tintedCheckbox.onChangedValue = { [weak self] value in
+            self?.disableTint = !value
+        }
+        
         colorPicker.colorChanged = { [weak self] color in
             guard let `self` = self else {return}
-            if self.colorPicker.colorPicker.color != color {
-                self.colorPicker.colorPicker.color = color
-                self.colorPicker.colorPicker.needsLayout = true
-                let colors = theme.colors.withoutAccentColor().withAccentColor(color)
-                let newTheme = theme.withUpdatedColors(colors)
-                self.addTableItems(self.context, theme: newTheme)
-            }
+            self.colorPicker.colorPicker.color = color
+            self.colorPicker.colorPicker.needsLayout = true
+            let colors = theme.colors.withoutAccentColor().withAccentColor(color, disableTint: self.disableTint)
+            let newTheme = theme.withUpdatedColors(colors)
+            self.addTableItems(self.context, theme: newTheme)
+            self.tableView.updateLocalizationAndTheme(theme: newTheme)
+            self.controller?.updateLocalizationAndTheme(theme: newTheme)
+            self.colorPicker.updateLocalizationAndTheme(theme: newTheme)
+            self.tintedCheckbox.update(by: nil)
         }
         layout()
     }
@@ -48,6 +62,7 @@ private final class CustomAccentColorView : View {
         super.layout()
         tableView.frame = NSMakeRect(0, 0, frame.width, frame.height - 160)
         colorPicker.frame = NSMakeRect(0, frame.height - 160, frame.width, 160)
+        tintedCheckbox.centerX(y: frame.height - 160 - 35)
     }
     
     required init?(coder: NSCoder) {
@@ -62,7 +77,7 @@ private final class CustomAccentColorView : View {
         
         tableView.removeAll()
         
-        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: 0))
+        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random()))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
@@ -93,6 +108,7 @@ private final class CustomAccentColorView : View {
         _ = tableView.addItem(item: item1)
         _ = tableView.addItem(item: item2)
         
+        
     }
     
 }
@@ -103,12 +119,21 @@ class CustomAccentColorModalController: ModalViewController {
     private let context: AccountContext
     init(context: AccountContext) {
         self.context = context
-        super.init(frame: NSMakeRect(0, 0, 350, 350))
+        super.init(frame: NSMakeRect(0, 0, 350, 370))
         self.bar = .init(height: 0)
+    }
+    private var currentTheme: TelegramPresentationTheme = theme
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        currentTheme = theme as! TelegramPresentationTheme
+        self.modal?.updateLocalizationAndTheme(theme: theme)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.controller = self
         
         genericView.addTableItems(self.context, theme: theme)
         
@@ -116,8 +141,8 @@ class CustomAccentColorModalController: ModalViewController {
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: L10n.generalSettingsAccentColor), right: ModalHeaderData(image: theme.icons.modalClose, handler: {
-            
+        return (left: nil, center: ModalHeaderData(title: L10n.generalSettingsAccentColor), right: ModalHeaderData(image: currentTheme.icons.modalClose, handler: { [weak self] in
+            self?.close()
         }))
     }
     
@@ -126,16 +151,16 @@ class CustomAccentColorModalController: ModalViewController {
         
         let color = genericView.colorPicker.colorPicker.color
         let context = self.context
-        
+        let disableTint = self.genericView.disableTint
         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
             if color == theme.colors.basicAccent {
                 return settings.withUpdatedPalette(theme.colors.withoutAccentColor())
             } else {
-                return settings.withUpdatedPalette(theme.colors.withAccentColor(color))
+                return settings.withUpdatedPalette(theme.colors.withoutAccentColor().withAccentColor(color, disableTint: disableTint))
             }
         }).start()
         
-        delay(0.16, closure: { [weak self] in
+        delay(0.1, closure: { [weak self] in
            self?.close()
         })
     }
@@ -151,11 +176,11 @@ class CustomAccentColorModalController: ModalViewController {
     }
     
     override func initializer() -> NSView {
-        return CustomAccentColorView.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), context: self.context)
+        return CustomAccentColorView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), theme: currentTheme, context: self.context)
     }
     
     override func measure(size: NSSize) {
-        self.modal?.resize(with: NSMakeSize(350, 350), animated: false)
+        self.modal?.resize(with: NSMakeSize(350, 370), animated: false)
     }
     
     private var genericView:CustomAccentColorView {
@@ -163,5 +188,13 @@ class CustomAccentColorModalController: ModalViewController {
     }
     override func viewClass() -> AnyClass {
         return CustomAccentColorView.self
+    }
+    
+    override var handleAllEvents: Bool {
+        return false
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        return genericView.colorPicker.textView
     }
 }

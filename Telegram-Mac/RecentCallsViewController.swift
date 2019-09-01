@@ -313,9 +313,9 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     override var enableBack: Bool {
         return true
     }
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        navigationController?.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        navigationController?.updateLocalizationAndTheme(theme: theme)
     }
     
     override func viewDidLoad() {
@@ -405,7 +405,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     override func backSettings() -> (String, CGImage?) {

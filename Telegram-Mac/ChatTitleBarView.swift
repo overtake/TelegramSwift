@@ -74,11 +74,11 @@ private class ConnectionStatusView : View {
         addSubview(textView)
         addSubview(indicator)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         textView.backgroundColor = theme.colors.background
         disableProxyButton?.set(background: theme.colors.background, for: .Normal)
@@ -295,7 +295,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
         addSubview(badgeNode.view!)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         self.continuesAction = true
         
@@ -487,9 +487,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         searchButton.set(image: theme.icons.chatSearch, for: .Normal)
         _ = searchButton.sizeToFit()
         

@@ -829,13 +829,21 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         containerView.addSubview(shadowView, positioned: .below, relativeTo: navigationBar)
     }
     
-    open override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        navigationBar.updateLocalizationAndTheme()
-        callHeader?.view.updateLocalizationAndTheme()
-        header?.view.updateLocalizationAndTheme()
-        undoHeader?.view.updateLocalizationAndTheme()
+    open override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        navigationBar.updateLocalizationAndTheme(theme: theme)
+        callHeader?.view.updateLocalizationAndTheme(theme: theme)
+        header?.view.updateLocalizationAndTheme(theme: theme)
+        undoHeader?.view.updateLocalizationAndTheme(theme: theme)
         navigationRightBorder.backgroundColor = presentation.colors.border
+        
+        for controller in self.stack {
+            if controller != self.controller, controller.isLoaded() {
+                controller.leftBarView.updateLocalizationAndTheme(theme: theme)
+                controller.centerBarView.updateLocalizationAndTheme(theme: theme)
+                controller.rightBarView.updateLocalizationAndTheme(theme: theme)
+            }
+        }
     }
     
 
@@ -948,7 +956,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     }
     
     
-    private var previousController: ViewController? {
+    open var previousController: ViewController? {
         if stackCount > 1 {
             return stack[stackCount - 2]
         }

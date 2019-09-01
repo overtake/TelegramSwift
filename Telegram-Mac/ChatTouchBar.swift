@@ -491,6 +491,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             segment.trackingMode = .momentary
             item.visibilityPriority = .high
             item.collapsedRepresentation = segment
+            item.customizationLabel = L10n.touchBarLabelEmojiAndStickers;
             return item
             
 //            let item = NSPopoverTouchBarItem(identifier: identifier)
@@ -516,6 +517,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             segment.target = self
             segment.action = #selector(infoAndAttach(_:))
             item.collapsedRepresentation = segment
+            item.customizationLabel = L10n.touchBarLabelChatActions;
             return item
         case .markdown:
             let item = NSPopoverTouchBarItem(identifier: identifier)
@@ -581,8 +583,9 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 //            return item
         case .chatForwardMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesForward"))!
-            let button = NSButton(title: L10n.messageActionsPanelForward, image: icon, target: self, action: #selector(forwardMessages))
+            let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesForward"))!.precomposed(theme.colors.underSelectedColor)
+            let image = NSImage.init(cgImage: icon, size: icon.backingSize)
+            let button = NSButton(title: L10n.messageActionsPanelForward, image: image, target: self, action: #selector(forwardMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.accent
             button.imageHugsTitle = true

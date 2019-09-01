@@ -37,7 +37,7 @@ class MessageActionsPanelView: Control, Notifable {
         addSubview(forwardButton)
         addSubview(countTitle)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     private var buttonActiveStyle:ControlStyle {
@@ -126,9 +126,9 @@ class MessageActionsPanelView: Control, Notifable {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         deleteButton.set(text: tr(L10n.messageActionsPanelDelete), for: .Normal)
         forwardButton.set(text: tr(L10n.messageActionsPanelForward), for: .Normal)
         
@@ -138,8 +138,8 @@ class MessageActionsPanelView: Control, Notifable {
         deleteButton.set(color: !deleteButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.redUI, for: .Normal)
         forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.accent, for: .Normal)
         
-        deleteButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
-        forwardButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
+        _ = deleteButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
+        _ = forwardButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
         
         deleteButton.style = deleteButtonActiveStyle
         forwardButton.style = buttonActiveStyle

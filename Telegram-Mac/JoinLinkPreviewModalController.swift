@@ -161,11 +161,21 @@ class JoinLinkPreviewModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
+        let context = self.context
         return ModalInteractions(acceptTitle: L10n.joinLinkJoin, accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
-                _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.context.account), for: window).start(next: { [weak strongSelf] (peerId) in
+                _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.context.account), for: window).start(next: { [weak strongSelf] peerId in
                     strongSelf?.interaction(peerId)
                     self?.close()
+                }, error: { error in
+                    let text: String
+                    switch error {
+                    case .generic:
+                        text = L10n.unknownError
+                    case .tooMuchJoined:
+                        text = L10n.joinChannelsTooMuch
+                    }
+                    alert(for: context.window, info: text)
                 })
             }
         }, cancelTitle: tr(L10n.modalCancel))

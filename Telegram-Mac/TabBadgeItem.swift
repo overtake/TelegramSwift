@@ -35,8 +35,8 @@ private final class AvatarTabContainer : View {
         avatar.setPeer(account: account, peer: peer)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         circle.layer?.borderColor = theme.colors.blueIcon.cgColor
     }
     

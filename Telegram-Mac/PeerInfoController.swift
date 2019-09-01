@@ -20,15 +20,16 @@ class PeerInfoTitleBarView : TitledBarView {
             handler()
         }, for: .Click)
         addSubview(search)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     func updateSearchVisibility(_ visible: Bool) {
         search.isHidden = !visible
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         search.set(image: theme.icons.chatSearch, for: .Normal)
         _ = search.sizeToFit()
         backgroundColor = theme.colors.background

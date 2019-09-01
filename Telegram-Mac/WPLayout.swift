@@ -69,7 +69,7 @@ class WPLayout: Equatable {
     
     var webPage: TelegramMediaWebpage {
         if let game = parent.media.first as? TelegramMediaGame {
-            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, instantPage: nil)))
+            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, files: nil, instantPage: nil)))
         }
         return parent.media.first as! TelegramMediaWebpage
     }
@@ -161,9 +161,9 @@ class WPLayout: Equatable {
     var isGalleryAssemble: Bool {
         // && content.instantPage != nil
         if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram")) || content.text == nil {
-            return !content.url.isEmpty && content.type != "telegram_background"
+            return !content.url.isEmpty && content.type != "telegram_background" && content.type != "telegram_theme"
         }
-        return content.type == "telegram_album" && content.type != "telegram_background"
+        return content.type == "telegram_album" && content.type != "telegram_background" && content.type != "telegram_theme"
     }
     
     var wallpaper: inAppLink? {
@@ -171,6 +171,17 @@ class WPLayout: Equatable {
             return inApp(for: content.url as NSString, context: context)
         }
         return nil
+    }
+    
+    var themeLink: inAppLink? {
+        if content.type == "telegram_theme" {
+            return inApp(for: content.url as NSString, context: context)
+        }
+        return nil
+    }
+    
+    var isTheme: Bool {
+        return content.type == "telegram_theme" && content.file != nil
     }
     
     func viewClass() -> AnyClass {

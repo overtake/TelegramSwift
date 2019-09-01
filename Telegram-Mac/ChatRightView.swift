@@ -53,7 +53,7 @@ class ChatRightView: View {
                     readImageView?.removeFromSuperview()
                     readImageView = nil
                 } else {
-                    let stateImage = theme.chat.stateStateIcon(item)
+                    let stateImage = item.presentation.chat.stateStateIcon(item)
                     
                     if stateView == nil {
                         stateView = ImageView()

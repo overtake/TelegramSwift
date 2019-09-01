@@ -43,8 +43,8 @@ class NavigationModalView: Control {
         }, for: .Click)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         let attr:NSMutableAttributedString = NSMutableAttributedString()
         
         _ = attr.append(string: action.reason, color: presentation.colors.text, font: .normal(20.0))

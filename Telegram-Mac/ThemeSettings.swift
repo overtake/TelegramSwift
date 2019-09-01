@@ -33,7 +33,7 @@ struct DefaultWallpaper : Equatable, PostboxCoding {
     }
     
     init(decoder: PostboxDecoder) {
-        self.paletteName = decoder.decodeStringForKey("pn", orElse: dayClassic.name)
+        self.paletteName = decoder.decodeStringForKey("pn", orElse: dayClassicPalette.name)
         self.wallpaper = decoder.decodeObjectForKey("w", decoder: { Wallpaper(decoder: $0) }) as! Wallpaper
     }
     
@@ -52,7 +52,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     let defaultDayName: String
     let wallpaper: Wallpaper
     let customWallpaper: Wallpaper?
-    
+    let cloudTheme: TelegramTheme?
     fileprivate let defaultWallpapers: [DefaultWallpaper]
     
     init(palette: ColorPalette,
@@ -62,7 +62,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
          defaultNightName: String,
          defaultDayName: String,
          followSystemAppearance: Bool,
-         customWallpaper: Wallpaper?, defaultWallpapers: [DefaultWallpaper]) {
+         customWallpaper: Wallpaper?, defaultWallpapers: [DefaultWallpaper],
+         cloudTheme: TelegramTheme?) {
         
         self.palette = palette
         self.bubbled = bubbled
@@ -73,6 +74,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         self.followSystemAppearance = followSystemAppearance
         self.customWallpaper = customWallpaper
         self.defaultWallpapers = defaultWallpapers
+        self.cloudTheme = cloudTheme
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -89,12 +91,21 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         self.defaultWallpapers = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("dw", decoder: {DefaultWallpaper(decoder: $0)})) ?? []
         
         let dark = decoder.decodeBoolForKey("dark", orElse: false)
+        let tinted = decoder.decodeBoolForKey("tinted", orElse: false)
+        
+        let parent: TelegramBuiltinTheme = TelegramBuiltinTheme(rawValue: decoder.decodeStringForKey("parent", orElse: TelegramBuiltinTheme.dayClassic.rawValue)) ?? (dark ? .nightBlue : .dayClassic)
+        let copyright = decoder.decodeStringForKey("copyright", orElse: "Telegram")
+
+        
         let name = decoder.decodeStringForKey("name", orElse: "Default")
 
         let palette: ColorPalette = dark ? nightBluePalette : whitePalette
         
         self.palette = ColorPalette(isDark: dark,
+            tinted: tinted,
             name: name,
+            parent: parent,
+            copyright: copyright,
             basicAccent: parseColor(decoder, "basicAccent") ?? palette.basicAccent,
             background: parseColor(decoder, "background") ?? palette.background,
             text: parseColor(decoder, "text") ?? palette.text,
@@ -209,7 +220,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             revealAction_warning_background: parseColor(decoder, "revealAction_warning_background") ?? palette.revealAction_warning_background,
             revealAction_warning_foreground: parseColor(decoder, "revealAction_warning_foreground") ?? palette.revealAction_warning_foreground,
             revealAction_inactive_background: parseColor(decoder, "revealAction_inactive_background") ?? palette.revealAction_inactive_background,
-            revealAction_inactive_foreground: parseColor(decoder, "revealAction_inactive_foreground") ?? palette.revealAction_inactive_foreground
+            revealAction_inactive_foreground: parseColor(decoder, "revealAction_inactive_foreground") ?? palette.revealAction_inactive_foreground,
+            chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground
         )
         
         
@@ -218,8 +230,9 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         self.bubbled = decoder.decodeBoolForKey("bubbled", orElse: false)
         self.fontSize = CGFloat(decoder.decodeDoubleForKey("fontSize", orElse: 13))
         self.defaultNightName = decoder.decodeStringForKey("defaultNightName", orElse: nightBluePalette.name)
-        self.defaultDayName = decoder.decodeStringForKey("defaultDayName", orElse: dayClassic.name)
+        self.defaultDayName = decoder.decodeStringForKey("defaultDayName", orElse: dayClassicPalette.name)
         self.followSystemAppearance = decoder.decodeBoolForKey("fsa", orElse: false)
+        self.cloudTheme = decoder.decodeObjectForKey("cloudTheme", decoder: { TelegramTheme(decoder: $0) }) as? TelegramTheme
     }
     
     public func encode(_ encoder: PostboxEncoder) {
@@ -231,7 +244,10 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             }
         }
         encoder.encodeString(palette.name, forKey: "name")
+        encoder.encodeString(palette.copyright, forKey: "copyright")
+        encoder.encodeString(palette.parent.rawValue, forKey: "parent")
         encoder.encodeBool(palette.isDark, forKey: "dark")
+        encoder.encodeBool(palette.tinted, forKey: "tinted")
         encoder.encodeBool(bubbled, forKey: "bubbled")
         encoder.encodeDouble(Double(fontSize), forKey: "fontSize")
         encoder.encodeObject(wallpaper, forKey: "wallpaper")
@@ -244,6 +260,11 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         encoder.encodeString(defaultNightName, forKey: "defaultNightName")
         encoder.encodeBool(followSystemAppearance, forKey: "fsa")
         encoder.encodeObjectArray(defaultWallpapers, forKey: "dw")
+        if let cloudTheme = self.cloudTheme {
+            encoder.encodeObject(cloudTheme, forKey: "cloudTheme")
+        } else {
+            encoder.encodeNil(forKey: "cloudTheme")
+        }
     }
     
     func withUpdatedPalette(_ palette: ColorPalette) -> ThemePaletteSettings {
@@ -254,7 +275,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             wallpaper = self.defaultWallpapers.first(where: {$0.paletteName == palette.name})?.wallpaper ?? wallpaper
         }
         
-        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
+        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
     func withUpdatedBubbled(_ bubbled: Bool) -> ThemePaletteSettings {
         
@@ -265,13 +286,13 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             wallpaper = self.defaultWallpapers.first(where: {$0.paletteName == palette.name})?.wallpaper ?? wallpaper
         }
         
-        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
+        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
     func withUpdatedFontSize(_ fontSize: CGFloat) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
     func withUpdatedFollowSystemAppearance(_ followSystemAppearance: Bool) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
     func withUpdatedWallpaper(_ wallpaper: Wallpaper) -> ThemePaletteSettings {
         
@@ -284,19 +305,36 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             }
         }
         
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: defaultWallpapers)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: defaultWallpapers, cloudTheme: self.cloudTheme)
     }
     func withUpdatedCustomWallpaper(_ wallpaper: Wallpaper?) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: wallpaper, defaultWallpapers: self.defaultWallpapers)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: wallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
     
     func withUpdatedDefaultDayName(_ defaultDayName: String) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: self.defaultNightName, defaultDayName: defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
     func withUpdatedDefaultNightName(_ defaultNightName: String) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultNightName: defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
-    
+    func withUpdatedCloudTheme(_ cloudTheme: TelegramTheme?) -> ThemePaletteSettings {
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: cloudTheme)
+    }
+    func withUpdatedPaletteToDefault() -> ThemePaletteSettings {
+        var palettes:[String : ColorPalette] = [:]
+        palettes[dayClassicPalette.name] = dayClassicPalette
+        palettes[whitePalette.name] = whitePalette
+        palettes[darkPalette.name] = darkPalette
+        palettes[nightBluePalette.name] = nightBluePalette
+        palettes[mojavePalette.name] = mojavePalette
+        let palette: ColorPalette
+        if self.palette.isDark {
+            palette = palettes[self.defaultNightName] ?? nightBluePalette
+        } else {
+            palette = palettes[self.defaultDayName] ?? dayClassicPalette
+        }
+        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: self.followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
+    }
     
     static var defaultTheme: ThemePaletteSettings {
         let followSystemAppearance: Bool
@@ -308,7 +346,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             followSystemAppearance = false
             defaultNightName = nightBluePalette.name
         }
-        return ThemePaletteSettings(palette: dayClassic, bubbled: false, fontSize: 13, wallpaper: .none, defaultNightName: defaultNightName, defaultDayName: dayClassic.name, followSystemAppearance: followSystemAppearance, customWallpaper: nil, defaultWallpapers: [])
+        return ThemePaletteSettings(palette: dayClassicPalette, bubbled: false, fontSize: 13, wallpaper: .none, defaultNightName: defaultNightName, defaultDayName: dayClassicPalette.name, followSystemAppearance: followSystemAppearance, customWallpaper: nil, defaultWallpapers: [], cloudTheme: nil)
     }
 }
 
@@ -321,7 +359,8 @@ func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
     lhs.defaultDayName == rhs.defaultDayName &&
     lhs.followSystemAppearance == rhs.followSystemAppearance &&
     lhs.customWallpaper == rhs.customWallpaper &&
-    lhs.defaultWallpapers == rhs.defaultWallpapers
+    lhs.defaultWallpapers == rhs.defaultWallpapers &&
+    lhs.cloudTheme == rhs.cloudTheme
 }
 
 
@@ -333,22 +372,22 @@ func themeSettingsView(accountManager: AccountManager)-> Signal<ThemePaletteSett
             switch NSApp.effectiveAppearance.name {
             case NSAppearance.Name.aqua:
                 switch settings.defaultDayName {
-                case dayClassic.name:
-                    pallete = dayClassic
+                case dayClassicPalette.name:
+                    pallete = dayClassicPalette
                 case whitePalette.name:
-                    pallete = whitePalette
+                    pallete = whitePalette.withAccentColor(settings.palette.accent)
                 default:
-                    pallete = dayClassic
+                    pallete = dayClassicPalette
                 }
             case NSAppearance.Name.darkAqua:
                 switch settings.defaultNightName {
                 case nightBluePalette.name:
-                    pallete = nightBluePalette
+                    pallete = nightBluePalette.withAccentColor(settings.palette.accent)
                 case mojavePalette.name:
                     
-                    pallete = mojavePalette
+                    pallete = mojavePalette.withAccentColor(settings.palette.accent)
                 default:
-                    pallete = nightBluePalette
+                    pallete = nightBluePalette.withAccentColor(settings.palette.accent)
                 }
                 
             default:

@@ -136,6 +136,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openDiscussion:()->Void = { }
     var addContact:()->Void = {}
     var blockContact: ()->Void = {}
+    var openScheduledMessages: ()->Void = {}
     
     var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
 

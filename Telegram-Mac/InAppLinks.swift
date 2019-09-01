@@ -407,13 +407,26 @@ func execute(inapp:inAppLink) {
                     }
                 })
             } else {
-                showModal(with: LocalizationPreviewModalController(context, info: info), for: mainWindow)
+                showModal(with: LocalizationPreviewModalController(context, info: info), for: context.window)
             }
            
         }, error: { error in
             switch error {
             case .generic:
-                alert(for: mainWindow, info: L10n.localizationPreviewErrorGeneric)
+                alert(for: context.window, info: L10n.localizationPreviewErrorGeneric)
+            }
+        })
+    case let .theme(_, context, name):
+        _ = showModalProgress(signal: getTheme(account: context.account, slug: name), for: context.window).start(next: { theme in
+            showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(theme)), for: context.window)
+        }, error: { error in
+            switch error {
+            case .generic:
+                alert(for: context.window, info: L10n.themeGetThemeError)
+            case .unsupported:
+                alert(for: context.window, info: L10n.themeGetThemeError)
+            case .slugInvalid:
+                alert(for: context.window, info: L10n.themeGetThemeError)
             }
         })
     case let .unsupportedScheme(_, context, path):
@@ -530,7 +543,7 @@ enum inAppLink {
     case unsupportedScheme(link: String, context: AccountContext, path: String)
     case applyLocalization(link: String, context: AccountContext, value: String)
     case wallpaper(link: String, context: AccountContext, preview: WallpaperPreview)
-    
+    case theme(link: String, context: AccountContext, name: String)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -564,6 +577,8 @@ enum inAppLink {
             return values.link
         case let .wallpaper(values):
             return values.link
+        case let .theme(values):
+            return values.link
         case .nothing:
             return ""
         case .logout:
@@ -573,10 +588,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg"]
+let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme"]
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -679,6 +694,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                         return .external(link: url as String, false)
+                    case actions_me[7]:
+                        let userAndPost = string.components(separatedBy: "/")
+                        if userAndPost.count == 2, let context = context {
+                            return .theme(link: urlString, context: context, name: userAndPost[1])
+                        }
+                        return .external(link: url as String, false)
                     default:
                         break
                     }
@@ -725,6 +746,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     } else if name == "s" {
                         return .external(link: url as String, false)
+                    } else if name == "addtheme" {
+                        if let context = context {
+                            return .theme(link: url as String, context: context, name: userAndPost[1])
+                        }
                     } else {
                         let post = userAndPost[1].isEmpty ? nil : Int32(userAndPost[1])//.intValue
                         if name.hasPrefix("iv?") {
@@ -781,6 +806,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if username == legacyPassportUsername {
                             return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, context: context, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
                             //return inapp
+                        } else if username == "addtheme", let context = context {
+                            return .theme(link: urlString, context: context, name:"")
                         } else if let context = context {
                             return .followResolvedName(link: urlString, username: username, postId: post, context: context, action: action, callback:openInfo)
                         }
@@ -872,7 +899,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if let context = context {
                             return .followResolvedName(link: urlString, username: "_private_\(username)", postId: post, context: context, action:nil, callback: openInfo)
                         }
-                    } 
+                    }
+                case known_scheme[11]:
+                    if let context = context, let value = vars["slug"] {
+                        return .theme(link: urlString, context: context, name: value)
+                    }
                 default:
                     break
                 }

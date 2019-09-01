@@ -177,7 +177,7 @@ class ShortPeerRowItem: GeneralRowItem {
             _ = tAttr.append(string: titleAddition, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
         }
         
-        tAttr.addAttribute(.selectedColor, value: NSColor.white, range: tAttr.range)
+        tAttr.addAttribute(.selectedColor, value: theme.colors.underSelectedColor, range: tAttr.range)
 
         
         titleAttr = tAttr.copy() as? NSAttributedString
@@ -186,7 +186,7 @@ class ShortPeerRowItem: GeneralRowItem {
         if let status = status {
             let sAttr:NSMutableAttributedString = NSMutableAttributedString()
             let _ = sAttr.append(string: status, color: enabled ? self.statusStyle.foregroundColor : theme.colors.grayText, font: self.statusStyle.font, coreText: true)
-            sAttr.addAttribute(.selectedColor, value: NSColor.white, range: sAttr.range)
+            sAttr.addAttribute(.selectedColor, value: theme.colors.underSelectedColor, range: sAttr.range)
             statusAttr = sAttr.copy() as? NSAttributedString
         }
         

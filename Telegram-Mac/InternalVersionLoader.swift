@@ -6,11 +6,3 @@
 //  Copyright © 2019 Telegram. All rights reserved.
 //
 
-import Cocoa
-import Sparkle
-import TelegramCoreMac
-import TelegramApiMac
-import SwiftSignalKitMac
-import PostboxMac
-
-

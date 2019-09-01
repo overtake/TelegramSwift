@@ -38,8 +38,9 @@ class ChatNavigationMention: ImageButton {
         needsLayout = true
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         set(image: theme.icons.chatMention, for: .Normal)
         set(image: theme.icons.chatMentionActive, for: .Highlight)
     }

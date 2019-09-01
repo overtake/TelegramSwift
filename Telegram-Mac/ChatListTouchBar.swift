@@ -111,6 +111,7 @@ class ChatListTouchBar: NSTouchBar, NSTouchBarDelegate {
             
             item.popoverTouchBar = ComposePopoverTouchBar(newGroup: self.newGroup, newSecretChat: self.newSecretChat, newChannel: self.newChannel)
             item.collapsedRepresentation = button
+            item.customizationLabel = L10n.touchBarLabelNewChat
             return item
         case .chatListSearch:
             let item = NSCustomTouchBarItem(identifier: identifier)

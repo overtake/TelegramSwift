@@ -31,7 +31,7 @@ private class TokenView : Control {
     fileprivate var immediatlyPaste: Bool = true
     override var isSelected: Bool {
         didSet {
-            updateLocalizationAndTheme()
+            updateLocalizationAndTheme(theme: presentation)
         }
     }
 
@@ -48,7 +48,7 @@ private class TokenView : Control {
         
         setFrameSize(NSMakeSize(layout.layoutSize.width + 30, maxSize.height))
         dismiss.autohighlight = false
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
         needsLayout = true
         addSubview(nameView)
         addSubview(dismiss)
@@ -62,7 +62,7 @@ private class TokenView : Control {
     
     fileprivate func setFailed(_ isFailed: Bool, animated: Bool) {
         self.isFailed = isFailed
-        self.updateLocalizationAndTheme()
+        self.updateLocalizationAndTheme(theme: presentation)
         if isFailed {
             self.shake()
         }
@@ -104,8 +104,8 @@ private class TokenView : Control {
         return isSelected ? (isFailed ? redSelected : presentation.colors.blueSelect) : (isFailed ? presentation.colors.redUI : presentation.colors.blueFill)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white.withAlphaComponent(0.7)), for: .Normal)
         dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white), for: .Highlight)
         _ = dismiss.sizeToFit()
@@ -383,7 +383,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         wantsLayer = true
         self.layer?.cornerRadius = .cornerRadius
         self.layer?.backgroundColor = presentation.colors.grayBackground.cgColor
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
     }
     
     public func markAsFailed(_ ids:[Int64], animated: Bool) {
@@ -437,7 +437,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         return input
     }
     
-    public func updateLocalizationAndTheme() {
+    public func updateLocalizationAndTheme(theme: PresentationTheme) {
         background = presentation.colors.background
         contentView.background = presentation.colors.background
         self.container.backgroundColor = presentation.colors.grayBackground

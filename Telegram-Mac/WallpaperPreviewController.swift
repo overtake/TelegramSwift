@@ -191,9 +191,9 @@ private final class blurCheckbox : View {
     }
 }
 
-private final class ApplyblurCheckbox : View {
+final class ApplyblurCheckbox : View {
     private let title:(TextNodeLayout,TextNode)
-    let checkbox: blurCheckbox = blurCheckbox(frame: NSMakeRect(0, 0, 16, 16))
+    fileprivate let checkbox: blurCheckbox = blurCheckbox(frame: NSMakeRect(0, 0, 16, 16))
     
     var isSelected: Bool {
         get {
@@ -227,6 +227,8 @@ private final class ApplyblurCheckbox : View {
         if let image = image {
             let color = getAverageColor(NSImage(cgImage: image, size: image.backingSize))
             backgroundColor = color
+        } else {
+            backgroundColor = .blackTransparent
         }
     }
     
@@ -282,6 +284,14 @@ final class WallpaperColorPickerContainerView : View, TGModernGrowingDelegate {
                 colorChanged?(color)
             }
         }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        background = theme.colors.background
+        textView.background = theme.colors.background
+        textView.textColor = theme.colors.text
+        topBorderView.backgroundColor = theme.colors.border
     }
     
     func textViewTextDidChangeSelectedRange(_ range: NSRange) {

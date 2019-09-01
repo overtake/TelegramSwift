@@ -67,12 +67,12 @@ func selectFolder(for window:Window, completion:@escaping (String)->Void) {
     }
 }
 
-func savePanel(file:String, ext:String, for window:Window) {
+func savePanel(file:String, ext:String, for window:Window, defaultName: String? = nil, completion:((String?)->Void)? = nil) {
     
     let savePanel:NSSavePanel = NSSavePanel()
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
-    savePanel.nameFieldStringValue = "\(dateFormatter.string(from: Date())).\(ext)"
+    savePanel.nameFieldStringValue = defaultName ?? "\(dateFormatter.string(from: Date())).\(ext)"
     
     let wLevel = window.level
     if wLevel == .screenSaver {
@@ -81,10 +81,12 @@ func savePanel(file:String, ext:String, for window:Window) {
     
     
     savePanel.beginSheetModal(for: window, completionHandler: { [weak window] result in
-    
         if result == NSApplication.ModalResponse.OK, let saveUrl = savePanel.url {
             try? FileManager.default.removeItem(atPath: saveUrl.path)
             try? FileManager.default.copyItem(atPath: file, toPath: saveUrl.path)
+            completion?(saveUrl.path)
+        } else {
+            completion?(nil)
         }
         window?.level = wLevel
     })

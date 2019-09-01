@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-
+import SwiftSignalKitMac
 
 
 struct GeneralThumbAdditional {
@@ -49,9 +49,12 @@ class GeneralInteractedRowItem: GeneralRowItem {
         return width
     }
     
+    private let menuItems:(()->[ContextMenuItem])?
+    
    
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}) {
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}, menuItems:(()->[ContextMenuItem])? = nil) {
         self.name = name
+        self.menuItems = menuItems
         if let description = description {
             descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)))
         } else {
@@ -81,7 +84,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         nameLayout = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: enabled ? nameStyle.foregroundColor : theme.colors.grayText, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, self.size.height), nil, isSelected, .left)
-        nameLayoutSelected = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: .white, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, self.size.height), nil, isSelected, .left)
+        nameLayoutSelected = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: theme.colors.underSelectedColor, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, self.size.height), nil, isSelected, .left)
         descLayout?.measure(width: nameWidth)
         
         return result
@@ -95,4 +98,13 @@ class GeneralInteractedRowItem: GeneralRowItem {
         return GeneralInteractedRowView.self
     }
     
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        
+        if let menuItems = self.menuItems {
+            return .single(menuItems())
+        } else {
+            return super.menuItems(in: location)
+        }
+    }
 }

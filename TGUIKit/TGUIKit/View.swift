@@ -11,7 +11,7 @@ import SwiftSignalKitMac
 public let kUIKitAnimationBackground = "UIKitAnimationBackground"
 
 public protocol AppearanceViewProtocol {
-     func updateLocalizationAndTheme()
+    func updateLocalizationAndTheme(theme: PresentationTheme)
 }
 
 class ViewLayer : CALayer {
@@ -111,7 +111,13 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         }
     }
     
-    public var borderColor: NSColor?
+    public var borderColor: NSColor? {
+        didSet {
+            if oldValue != self.borderColor {
+                setNeedsDisplay()
+            }
+        }
+    }
     
     public var animates:Bool = false
     
@@ -298,10 +304,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         super.beginGesture(with: event)
     }
     
-    open func updateLocalizationAndTheme() {
+    open func updateLocalizationAndTheme(theme: PresentationTheme) {
         for subview in subviews {
             if let subview = subview as? AppearanceViewProtocol {
-                subview.updateLocalizationAndTheme()
+                subview.updateLocalizationAndTheme(theme: theme)
             }
         }
     }

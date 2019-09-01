@@ -139,7 +139,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 actionButton?.set(text: text, for: .Normal)
                 actionButton?.layer?.borderColor = item.wpPresentation.activity.cgColor
                 actionButton?.set(color: item.wpPresentation.activity, for: .Normal)
-                _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.contentSize.width, 30), thatFit: true)
+                _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.actionButtonWidth, 30), thatFit: true)
                 
             } else {
                 actionButton?.removeFromSuperview()

@@ -211,11 +211,12 @@ private final class ChatSponsoredView : Control {
         container.userInteractionEnabled = false
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         addSubview(container)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         self.backgroundColor = theme.colors.background
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         container.backgroundColor = theme.colors.background
@@ -280,11 +281,12 @@ class ChatPinnedView : Control {
                 _ = requestUpdatePinnedMessage(account: chatInteraction.context.account, peerId: chatInteraction.peerId, update: .clear).start()
             }
         }))
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         node.update()
         self.backgroundColor = theme.colors.background
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
@@ -351,11 +353,12 @@ class ChatReportView : Control {
         
         addSubview(dismiss)
         addSubview(report)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
         report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
@@ -410,7 +413,7 @@ class ShareInfoView : Control {
         
         addSubview(share)
         addSubview(dismiss)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     override func viewDidMoveToWindow() {
@@ -422,8 +425,9 @@ class ShareInfoView : Control {
         }
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         share.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
         
@@ -490,11 +494,12 @@ class AddContactView : Control {
         }
         addSubview(buttonsContainer)
         addSubview(dismiss)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         add.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
         blockButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.redUI)
@@ -967,11 +972,12 @@ class ChatSearchHeader : View, Notifable {
         addSubview(cancel)
         addSubview(separator)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         backgroundColor = theme.colors.background
         
         next.set(image: theme.icons.chatSearchDown, for: .Normal)

@@ -1044,11 +1044,11 @@ final class SelectPeersControllerView: View, TokenizedProtocol {
         addSubview(separatorView)
         tokenView.delegate = self
         needsLayout = true
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         separatorView.backgroundColor = theme.colors.border
     }
@@ -1238,12 +1238,12 @@ fileprivate class SelectPeersView : View, TokenizedProtocol {
         tokenView.delegate = self
         backgroundColor = theme.colors.background
        
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         layout()
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         separatorView.backgroundColor = theme.colors.border
     }
     

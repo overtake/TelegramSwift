@@ -70,13 +70,19 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: L10n.emptyGroupInfoLine4, color: theme.chatServiceItemTextColor, font: .medium(.text))
             } else {
                 if let restriction = chatInteraction.presentation.restrictionInfo {
-                    let reason = restriction.reason.components(separatedBy: ":")
-                    if reason.count == 2 {
-                        _ = attr.append(string: reason[1], color: theme.colors.grayText, font: .medium(.text))
-                    } else {
+                    var hasRule: Bool = false
+                    for rule in restriction.rules {
+                        if rule.platform == "ios" || rule.platform == "all" {
+                            _ = attr.append(string: rule.reason, color: theme.colors.grayText, font: .medium(.text))
+                            hasRule = true
+                            break
+                        }
+                    }
+                    if !hasRule {
                         _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
                         lineSpacing = nil
                     }
+                    
                 } else {
                     lineSpacing = nil
                     _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))

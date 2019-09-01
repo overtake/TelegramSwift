@@ -311,6 +311,9 @@ private final class PlayerRenderer {
             updateState {
                 $0.cancel()
             }
+            framesTask?.cancel()
+            framesTask = nil
+            
             isRendering.with { value in
                 if !value {
                     stateValue.release()
@@ -318,8 +321,6 @@ private final class PlayerRenderer {
                     releaseState = true
                 }
             }
-            framesTask?.cancel()
-            framesTask = nil
         }
         
         let currentState:(_ state: Unmanaged<RenderAtomic<RendererState>>) -> RendererState = { state in

@@ -164,7 +164,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     
                     if item.peer.isVerified && item.highlightVerified {
-                        ctx.draw(theme.icons.verifiedImage, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 2, theme.icons.verifiedImage.backingSize.width, theme.icons.verifiedImage.backingSize.height))
+                        ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width - 1, tY - 3, theme.icons.verifyDialog.backingSize.width, theme.icons.verifyDialog.backingSize.height))
                     }
                     if item.peer.isScam && item.highlightVerified {
                         ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
@@ -186,6 +186,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         super.updateMouse()
         updateColors()
         container.needsDisplay = true
+        
+        guard let item = item as? ShortPeerRowItem else {
+           return
+        }
+        item.badgeNode?.isSelected = isRowSelected
     }
     
     override func layout() {

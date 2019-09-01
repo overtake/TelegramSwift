@@ -116,7 +116,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         bottomView.documentView = View()
        
         self.addSubview(_ts)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     public override var responder:NSResponder? {
@@ -155,8 +155,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return L10n.messagesPlaceholderSentMessage
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         _ts.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
@@ -166,7 +167,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         actionsView.backgroundColor = theme.colors.background
         blockedActionView?.disableActions()
         textView.textFont = .normal(theme.fontSize)
-        chatDiscussionView?.updateLocalizationAndTheme()
+        chatDiscussionView?.updateLocalizationAndTheme(theme: theme)
         blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background

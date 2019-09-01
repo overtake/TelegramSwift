@@ -83,7 +83,7 @@ class GeneralInputRowItem: TableRowItem {
     var _height:CGFloat = 24
     
     override var height: CGFloat {
-        return _height + insets.top + insets.bottom
+        return _height + insets.top + insets.bottom + 5
     }
     
 
@@ -167,7 +167,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
             textView.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right,textView.frame.height)
             secureField.frame = NSMakeRect(item.insets.left, item.insets.top, frame.width - item.insets.left - item.insets.right, secureField.frame.height)
             cleanImage.centerY(x: frame.width - item.insets.right - cleanImage.frame.width)
-            separator.frame = NSMakeRect(item.insets.left, frame.height - .borderSize, frame.width - item.insets.left - item.insets.right, .borderSize)
+            separator.frame = NSMakeRect(item.insets.left + 2, frame.height - .borderSize, frame.width - item.insets.left - item.insets.right, .borderSize)
         }
     }
     

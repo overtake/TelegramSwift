@@ -595,7 +595,7 @@ private func resetUpdater() {
         update()
         subscriber.putCompletion()
         return EmptyDisposable
-        } |> delay(20 * 60, queue: .mainQueue()) |> restart
+    } |> delay(20 * 60, queue: .mainQueue()) |> restart
     disposable.set(signal.start())
     
     update()

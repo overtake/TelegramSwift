@@ -41,7 +41,7 @@ class AccountInfoItem: GeneralRowItem {
         textLayout = TextViewLayout(attr, maximumNumberOfLines: 4)
         
         let active = attr.mutableCopy() as! NSMutableAttributedString
-        active.addAttribute(.foregroundColor, value: NSColor.white, range: active.range)
+        active.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: active.range)
         activeTextlayout = TextViewLayout(active, maximumNumberOfLines: 4)
         super.init(initialSize, height: 90, stableId: stableId, action: action)
     }

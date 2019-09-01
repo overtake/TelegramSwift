@@ -33,7 +33,7 @@ class ChatSearchView: SearchView {
                 countView.removeFromSuperview()
                 updateClearVisibility(true)
             }
-            updateLocalizationAndTheme()
+            updateLocalizationAndTheme(theme: theme)
             self.needsLayout = true
         }
     }
@@ -53,7 +53,7 @@ class ChatSearchView: SearchView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let fromLayout = TextViewLayout(.initialize(string: "\(tr(L10n.chatSearchFrom)) ", color: theme.colors.text, font: .normal(.text)))
         fromLayout.measure(width: .greatestFiniteMagnitude)
         fromView.update(fromLayout)
@@ -65,7 +65,7 @@ class ChatSearchView: SearchView {
         let countLayout = TextViewLayout(.initialize(string: tr(L10n.chatSearchCount(countValue.current, countValue.total)), color: theme.search.placeholderColor, font: .normal(.text)))
         countLayout.measure(width: .greatestFiniteMagnitude)
         countView.update(countLayout)
-        super.updateLocalizationAndTheme()
+        super.updateLocalizationAndTheme(theme: theme)
     }
     
     override func cancelSearch() {
@@ -164,7 +164,7 @@ class ChatSearchView: SearchView {
                     tokenView.removeFromSuperview()
                 }
             }
-            updateLocalizationAndTheme()
+            updateLocalizationAndTheme(theme: theme)
             self.needsLayout = true
         }
     }

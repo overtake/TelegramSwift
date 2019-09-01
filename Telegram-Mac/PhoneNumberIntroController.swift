@@ -22,11 +22,11 @@ class ChaneNumberIntroView : NSScrollView, AppearanceViewProtocol {
         documentView?.addSubview(imageView)
         documentView?.addSubview(textView)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
     }
-    func updateLocalizationAndTheme() {
-        
+    func updateLocalizationAndTheme(theme: PresentationTheme) {
+        let theme = (theme as! TelegramPresentationTheme)
         imageView.image = theme.icons.changePhoneNumberIntro
         imageView.sizeToFit()
         

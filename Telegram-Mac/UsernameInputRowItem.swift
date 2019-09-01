@@ -50,6 +50,7 @@ class UsernameInputRowView: GeneralInputRowView {
         indicator.isHidden = true
         
     }
+
     
     override func updateColors() {
         super.updateColors()
@@ -62,9 +63,9 @@ class UsernameInputRowView: GeneralInputRowView {
             imageView.setFrameOrigin(textView.frame.maxX - imageView.frame.width, textView.frame.maxY - imageView.frame.height - item.insets.bottom - 5)
             indicator.setFrameOrigin(textView.frame.maxX - indicator.frame.width, textView.frame.maxY - indicator.frame.height - item.insets.bottom - 5)
             if !imageView.isHidden || !indicator.isHidden {
-                textView.setFrameSize(frame.width - item.insets.right - 30, textView.frame.height)
+                textView.setFrameSize(frame.width - item.insets.right - item.insets.left, textView.frame.height)
             } else {
-                textView.setFrameSize(frame.width - item.insets.right, textView.frame.height)
+                textView.setFrameSize(frame.width - item.insets.right - item.insets.left, textView.frame.height)
             }
         }
     }

@@ -194,7 +194,7 @@ class ChatControllerView : View, ChatInputDelegate {
         tableView.backgroundColor = .clear
         tableView.layer?.backgroundColor = .clear
 
-       // updateLocalizationAndTheme()
+       // updateLocalizationAndTheme(theme: theme)
         
         tableView.set(stickClass: ChatDateStickItem.self, handler: { stick in
             
@@ -436,11 +436,12 @@ class ChatControllerView : View, ChatInputDelegate {
     }
 
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         progressView?.backgroundColor = theme.colors.background
         (progressView?.subviews.first as? ProgressIndicator)?.set(color: theme.colors.indicatorColor)
-        scroller.updateLocalizationAndTheme()
+        scroller.updateLocalizationAndTheme(theme: theme)
         tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction)
     }
 
@@ -1460,7 +1461,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .complete()
                                 }
                                 
-                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, silent: silent)
+                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, silent: silent, atDate: atDate)
                             }
                             
                             invokeSignal = invokeSignal |> then( fwd |> ignoreValues)
@@ -1478,7 +1479,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .scheduled:
                         if let atDate = atDate {
                             apply(strongSelf, atDate: atDate)
-                        } else {
+                        } else if presentation.state != .editing {
                             DispatchQueue.main.async {
                                 showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak strongSelf] date in
                                     if let strongSelf = strongSelf {
@@ -1486,13 +1487,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                 }), for: context.window)
                             }
+                        } else {
+                             apply(strongSelf, atDate: nil)
                         }
                     case .history:
-                        DispatchQueue.main.async {
+                        delay(0.1, closure: {
                             if atDate != nil {
                                 strongSelf.openScheduledChat()
                             }
-                        }
+                        })
                         apply(strongSelf, atDate: atDate)
                     }
                     
@@ -1679,32 +1682,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     
                                 }), for: context.window)
                                 
-                            } else {
-                                let thrid:String? = canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : unsendMyMessages ? L10n.chatMessageUnsendMessages : nil
+                            } else if let `self` = self {
+                                let thrid:String? = self.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : unsendMyMessages ? L10n.chatMessageUnsendMessages : nil)
                                 
-                               
-                              
-                                if let window = self?.window {
-                                    modernConfirm(for: window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages, information: thrid == nil ? L10n.chatConfirmDeleteMessages : nil, okTitle: tr(L10n.confirmDelete), thridTitle: thrid, successHandler: { [weak strongSelf] result in
-                                        
-                                        guard let strongSelf = strongSelf else {return}
-                                        
-                                        let type:InteractiveMessagesDeletionType
-                                        switch result {
-                                        case .basic:
-                                            type = .forLocalPeer
-                                        case .thrid:
-                                            type = .forEveryone
+                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages, information: thrid == nil ? L10n.chatConfirmDeleteMessages : nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                    
+                                    guard let strongSelf = strongSelf else {return}
+                                    
+                                    let type:InteractiveMessagesDeletionType
+                                    switch result {
+                                    case .basic:
+                                        type = .forLocalPeer
+                                    case .thrid:
+                                        type = .forEveryone
+                                    }
+                                    if let editingState = strongSelf.chatInteraction.presentation.interfaceState.editState {
+                                        if messageIds.contains(editingState.message.id) {
+                                            strongSelf.chatInteraction.update({$0.withoutEditMessage()})
                                         }
-                                        if let editingState = strongSelf.chatInteraction.presentation.interfaceState.editState {
-                                            if messageIds.contains(editingState.message.id) {
-                                                strongSelf.chatInteraction.update({$0.withoutEditMessage()})
-                                            }
-                                        }
-                                        _ = deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: type).start()
-                                        strongSelf.chatInteraction.update({$0.withoutSelectionState()})
-                                    })
-                                }
+                                    }
+                                    _ = deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: type).start()
+                                    strongSelf.chatInteraction.update({$0.withoutSelectionState()})
+                                })
                             }
                         }
                     }
@@ -2205,7 +2204,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     controller.chatInteraction.updateInput(with: "")
                     controller.nextTransaction.set(handler: afterSentTransition)
                 }
-                
+                switch strongSelf.mode {
+                case .scheduled:
+                    DispatchQueue.main.async {
+                        showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak strongSelf] date in
+                            if let strongSelf = strongSelf {
+                                apply(strongSelf, atDate: date)
+                            }
+                        }), for: context.window)
+                    }
+                case .history:
+                    apply(strongSelf, atDate: nil)
+                }
             }
         }
         
@@ -2297,7 +2307,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        
+        chatInteraction.openScheduledMessages = { [weak self] in
+            self?.openScheduledChat()
+        }
         
         chatInteraction.shareContact = { [weak self] peer in
             if let strongSelf = self, let main = strongSelf.chatInteraction.peer, main.canSendMessage {
@@ -2424,11 +2436,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
                                     .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
+                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present
                                     .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                
+                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 if let peer = present.peer as? TelegramChannel {
                                     switch peer.info {
                                     case let .group(info):
@@ -2455,6 +2468,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                                 present = present
                                     .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
+                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else {
                                 present = present.withUpdatedPinnedMessageId(nil)
                             }
@@ -2552,12 +2566,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         .withUpdatedBlocked(cachedData.isBlocked)
                                         .withUpdatedPeerStatusSettings(contactStatus)
                                         .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
+                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages && !(present.peer is TelegramSecretChat))
                                 } else if let cachedData = peerView.cachedData as? CachedChannelData {
                                     present = present
                                         .withUpdatedPeerStatusSettings(contactStatus)
                                         .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
                                         .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                    
+                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                     if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
                                         switch peer.info {
                                         case let .group(info):
@@ -2581,6 +2596,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     present = present
                                         .withUpdatedPeerStatusSettings(contactStatus)
                                         .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
+                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 } else if let _ = peerView.cachedData as? CachedSecretChatData {
                                     present = present
                                         .withUpdatedPeerStatusSettings(contactStatus)
@@ -3107,12 +3123,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 showRightControlsDisposable.set((peerView.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] view in
                     guard let `self` = self else {return}
                     var items:[SPopoverItem] = []
-
+                    let peerId = self.chatLocation.peerId
                     switch self.mode {
                     case .scheduled:
                         items.append(SPopoverItem(L10n.chatContextClearScheduled, {
                             confirm(for: context.window, header: L10n.chatContextClearScheduledConfirmHeader, information: L10n.chatContextClearScheduledConfirmInfo, okTitle: L10n.chatContextClearScheduledConfirmOK, successHandler: { _ in
-                                
+                                _ = clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: .scheduledMessages).start()
                             })
                         }, theme.icons.chatActionClearHistory))
                     case .history:
@@ -3447,6 +3463,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     text = L10n.chatSendMessageErrorGroupRestricted
                 case .slowmodeActive:
                     text = L10n.chatSendMessageSlowmodeError
+                case .tooMuchScheduled:
+                    text = L10n.chatSendMessageErrorTooMuchScheduled
                 }
                 confirm(for: mainWindow, information: text, cancelTitle: "", thridTitle: L10n.genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}
@@ -4189,8 +4207,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         updateBackgroundColor(theme.backgroundMode)
         (centerBarView as? ChatTitleBarView)?.updateStatus()
     }

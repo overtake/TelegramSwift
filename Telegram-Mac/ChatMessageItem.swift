@@ -80,6 +80,15 @@ class ChatMessageItem: ChatRowItem {
         }
     }
     
+    var actionButtonWidth: CGFloat {
+        if let webpage = webpageLayout {
+            if webpage.isTheme {
+                return webpage.size.width
+            }
+        }
+        return self.contentSize.width
+    }
+    
     var actionButtonText: String? {
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
@@ -93,6 +102,9 @@ class ChatMessageItem: ChatRowItem {
             }
             if webpage.wallpaper != nil {
                 return L10n.chatViewBackground
+            }
+            if webpage.isTheme {
+                return L10n.chatActionViewTheme
             }
         }
         
@@ -303,10 +315,10 @@ class ChatMessageItem: ChatRowItem {
             
             var media = message.media.first
             if let game = media as? TelegramMediaGame {
-                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, instantPage: nil)))
+                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, files: nil, instantPage: nil)))
             }
             
-            self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble), renderType: entry.renderType)
+            self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
 
             
             if let webpage = media as? TelegramMediaWebpage {
@@ -436,14 +448,16 @@ class ChatMessageItem: ChatRowItem {
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
                                 
-                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range).string
-                                
-                                let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                
-                                if let attribute = attribute as? inAppLink {
-                                    pb.setString(attribute.link.isEmpty ? selectedText : attribute.link, forType: .string)
-                                } else {
-                                    pb.setString(selectedText, forType: .string)
+                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
+                                let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
+                                if !isCopied {
+                                    let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                    
+                                    if let attribute = attribute as? inAppLink {
+                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                    } else {
+                                        pb.setString(selectedText.string, forType: .string)
+                                    }
                                 }
                             }
                             

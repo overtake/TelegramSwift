@@ -1188,9 +1188,8 @@ public class TextView: Control, NSViewToolTipOwner {
                 layout.selectWord(at : location)
             }
             self.setNeedsDisplayLayer()
-            if layout.selectedRange.hasSelectText || !layout.alwaysStaticItems {
+            if (layout.selectedRange.hasSelectText && isSelectable) || !layout.alwaysStaticItems {
                 let link = layout.link(at: convert(event.locationInWindow, from: nil))
-                
                 
                 if let menuItems = layout.interactions.menuItems?(link?.1) {
                     menuDisposable.set((menuItems |> deliverOnMainQueue).start(next:{ [weak self] items in
@@ -1439,7 +1438,9 @@ public class TextView: Control, NSViewToolTipOwner {
                 layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
             } else if !layout.selectedRange.hasSelectText || !isSelectable && (event.clickCount == 1 || !isSelectable) {
                 if let (link, _, _, _) = layout.link(at: point) {
-                    layout.interactions.processURL(link)
+                    if event.clickCount == 1 {
+                        layout.interactions.processURL(link)
+                    }
                 } else {
                     super.mouseUp(with: event)
                 }

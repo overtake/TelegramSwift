@@ -238,7 +238,7 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         secureField.setFrameOrigin(item.inset.left + item.textFieldLeftInset, 14)
 
         textView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - item.textFieldLeftInset - additionalRightInset, item.inputHeight))
-        textView.setFrameOrigin(item.inset.left + item.textFieldLeftInset - 3, 5)
+        textView.setFrameOrigin(item.inset.left + item.textFieldLeftInset - 3, 6)
         
         textLimitation.setFrameOrigin(NSMakePoint(frame.width - item.inset.right - textLimitation.frame.width + 4, frame.height - textLimitation.frame.height - 4))
         
@@ -248,7 +248,7 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         if let item = item as? InputDataRowItem {
             return item.limit
         }
-        return 100
+        return 100000
     }
     
     func textViewDidReachedLimit(_ textView: Any) {

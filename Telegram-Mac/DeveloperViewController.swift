@@ -206,7 +206,7 @@ class DeveloperViewController: TableViewController {
                         try? FileManager.default.removeItem(atPath: palettesDir + "/" + path.nsstring.lastPathComponent)
                         try? FileManager.default.copyItem(atPath: path, toPath: palettesDir + "/" + path.nsstring.lastPathComponent)
                         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                            return settings.withUpdatedPalette(theme)
+                            return settings.withUpdatedPalette(theme).withUpdatedCloudTheme(nil)
                         }).start()
                     } else {
                         alert(for: mainWindow, info: "Parsing Error")
@@ -214,7 +214,7 @@ class DeveloperViewController: TableViewController {
                 }
             })
         }, exportColors: {
-            exportCurrentPalette()
+            exportPalette(palette: theme.colors)
         }, toggleLogs: { _ in
             let enabled = !UserDefaults.standard.bool(forKey: "enablelogs")
             MTLogSetEnabled(enabled)

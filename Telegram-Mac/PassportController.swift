@@ -2455,11 +2455,11 @@ final class PassportControllerView : View {
         super.init(frame: frameRect)
         addSubview(tableView)
         addSubview(authorize)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         layout()
     }
     
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         backgroundColor = theme.colors.background
     }
     

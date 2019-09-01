@@ -21,10 +21,10 @@ class RestrictionWrappedView : Control {
         super.init()
         addSubview(textView)
         textView.userInteractionEnabled = false
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         self.backgroundColor = theme.colors.background
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         textView.update(layout)

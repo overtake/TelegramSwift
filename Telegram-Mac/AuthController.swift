@@ -44,7 +44,7 @@ class AuthHeaderView : View {
         let logoImage = #imageLiteral(resourceName: "Icon_LegacyIntro").precomposed()
         self.logo.image = logoImage
         self.logo.sizeToFit()
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
 
         intro.addSubview(logo)
         intro.addSubview(header)
@@ -188,9 +188,9 @@ class AuthHeaderView : View {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         switchLanguage.set(color: theme.colors.accent, for: .Normal)
         
         let headerLayout = TextViewLayout(.initialize(string: appName, color: theme.colors.text, font: NSFont.normal(30.0)), maximumNumberOfLines: 1)
@@ -627,16 +627,16 @@ class AuthController : GenericViewController<AuthHeaderView> {
         
        
         localizationDisposable.set(appearanceSignal.start(next: { [weak self] _ in
-            self?.updateLocalizationAndTheme()
+            self?.updateLocalizationAndTheme(theme: theme)
         }))
         
         
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         #if !APP_STORE
-        updateController.updateLocalizationAndTheme()
+        updateController.updateLocalizationAndTheme(theme: theme)
         #endif
     }
     

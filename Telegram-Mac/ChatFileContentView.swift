@@ -87,7 +87,11 @@ class ChatFileContentView: ChatMediaContentView {
                 if let _ = Animation.filepath(context.account.postbox.mediaBox.resourcePath(media.resource)) {
                     showChatGallery(context: context, message: parent, self.table, self.parameters as? ChatMediaGalleryParameters, type: .alone)
                 } else {
-                    QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
+                    if let palette = paletteFromFile(context: context, file: media) {
+                        showModal(with: ThemePreviewModalController(context: context, source: .localTheme(theme.withUpdatedColors(palette))), for: context.window)
+                    } else {
+                        QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
+                    }
                 }
                 
             }
