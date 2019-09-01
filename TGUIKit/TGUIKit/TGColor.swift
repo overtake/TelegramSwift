@@ -32,6 +32,13 @@ public extension NSColor {
         return (hue, saturation, value)
     }
 
+    var lightness: CGFloat {
+        var red: CGFloat = 0.0
+        var green: CGFloat = 0.0
+        var blue: CGFloat = 0.0
+        self.getRed(&red, green: &green, blue: &blue, alpha: nil)
+        return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+    }
     
     var brightnessAdjustedColor: NSColor{
         
@@ -41,6 +48,27 @@ public extension NSColor {
         let color = CGFloat(1-(components?.max())! >= 0.5 ? 1.0 : 0.0)
         return NSColor(red: color, green: color, blue: color, alpha: alpha!)
     }
+    
+    func withMultipliedBrightnessBy(_ factor: CGFloat) -> NSColor {
+        var hue: CGFloat = 0.0
+        var saturation: CGFloat = 0.0
+        var brightness: CGFloat = 0.0
+        var alpha: CGFloat = 0.0
+        self.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+        
+        return NSColor(hue: hue, saturation: saturation, brightness: max(0.0, min(1.0, brightness * factor)), alpha: alpha)
+    }
+    
+    func withMultiplied(hue: CGFloat, saturation: CGFloat, brightness: CGFloat) -> NSColor {
+        var hueValue: CGFloat = 0.0
+        var saturationValue: CGFloat = 0.0
+        var brightnessValue: CGFloat = 0.0
+        var alphaValue: CGFloat = 0.0
+        self.getHue(&hueValue, saturation: &saturationValue, brightness: &brightnessValue, alpha: &alphaValue)
+        
+        return NSColor(hue: max(0.0, min(1.0, hueValue * hue)), saturation: max(0.0, min(1.0, saturationValue * saturation)), brightness: max(0.0, min(1.0, brightnessValue * brightness)), alpha: alphaValue)
+    }
+
     
     static var link:NSColor {
         return .colorFromRGB(rgbValue: 0x2481cc)

@@ -108,8 +108,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
-    override open func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override open func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
@@ -212,7 +212,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             }
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
         
         
         

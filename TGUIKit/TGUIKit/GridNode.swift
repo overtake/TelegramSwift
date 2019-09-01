@@ -286,12 +286,12 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func updateLocalizationAndTheme() {
+    public func updateLocalizationAndTheme(theme: PresentationTheme) {
         guard let documentView = documentView else {return}
         layer?.backgroundColor = presentation.colors.background.cgColor
         for view in documentView.subviews {
             if let view = view as? AppearanceViewProtocol {
-                view.updateLocalizationAndTheme()
+                view.updateLocalizationAndTheme(theme: theme)
             }
         }
     }

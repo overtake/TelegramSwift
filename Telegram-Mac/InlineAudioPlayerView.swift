@@ -116,7 +116,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         textView.userInteractionEnabled = false
         textView.isEventLess = true
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         containerView.set(handler: { [weak self] _ in
             self?.showAudioPlayerList()
@@ -172,9 +172,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         return ControlStyle(foregroundColor: theme.colors.grayTransparent, backgroundColor: .clear)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         playingSpeed.set(image: FastSettings.playingRate != 1.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
         previous.set(image: theme.icons.audioPlayerPrev, for: .Normal)
         next.set(image: theme.icons.audioPlayerNext, for: .Normal)

@@ -43,7 +43,7 @@ public class SectionControllerView : View {
         addSubview(header)
         addSubview(container)
         addSubview(selector)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
         needsLayout = true
     }
     
@@ -121,8 +121,8 @@ public class SectionControllerView : View {
         needsLayout = true
     }
     
-    public override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         self.backgroundColor = presentation.colors.background
         selector.backgroundColor = presentation.colors.accent
         container.backgroundColor = presentation.colors.background
@@ -195,12 +195,12 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         sections.append(section)
     }
     
-    public override func updateLocalizationAndTheme() {
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let arguments = SectionControllerArguments { [weak self] index in
             self?.select(index, true)
         }
         genericView.layout(sections: sections, selected: selectedIndex, hasHeaderView: self.hasHeaderView, arguments: arguments)
-        genericView.updateLocalizationAndTheme()
+        genericView.updateLocalizationAndTheme(theme: theme)
     }
     
     deinit {

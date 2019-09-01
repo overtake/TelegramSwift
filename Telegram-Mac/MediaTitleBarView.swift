@@ -38,10 +38,10 @@ class MediaTitleBarView: TitledBarView {
         super.init(controller: controller)
 
         addSubview(segmentController.view)
-       // updateLocalizationAndTheme()
+       // updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         needsLayout = true
         segmentController.removeAll()
         segmentController.add(segment: SegmentedItem(title: L10n.peerMediaMedia, handler: { [weak self] in

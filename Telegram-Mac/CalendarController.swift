@@ -13,9 +13,15 @@ class CalendarControllerView : View {
     
 }
 
+private final class CalendarNavigation : NavigationViewController {
+    
+    
+   
+}
+
 class CalendarController: GenericViewController<CalendarControllerView> {
     
-    private var navigation:NavigationViewController!
+    private var navigation:CalendarNavigation!
     private var interactions:CalendarMonthInteractions!
     private let onlyFuture: Bool
     private let current: Date
@@ -27,6 +33,8 @@ class CalendarController: GenericViewController<CalendarControllerView> {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        self.navigation.viewDidAppear(animated)
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             if let current = self?.navigation.controller as? CalendarMonthController, current.isPrevEnabled, let backAction = self?.interactions.backAction {
@@ -45,8 +53,18 @@ class CalendarController: GenericViewController<CalendarControllerView> {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        self.navigation.viewWillDisappear(animated)
         self.window?.remove(object: self, for: .LeftArrow)
         self.window?.remove(object: self, for: .RightArrow)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.navigation.viewDidDisappear(animated)
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigation.viewWillAppear(animated)
     }
     
     init(_ frameRect:NSRect, _ window: Window, current: Date = Date(), onlyFuture: Bool = false, selectHandler:@escaping (Date)->Void) {
@@ -67,8 +85,9 @@ class CalendarController: GenericViewController<CalendarControllerView> {
             }
         })
         
-        self.navigation = NavigationViewController(stepMonth(date: current), window)
+        self.navigation = CalendarNavigation(stepMonth(date: current), window)
         self.navigation._frameRect = frameRect
+        
     }
     
     func stepMonth(date:Date) -> CalendarMonthController {

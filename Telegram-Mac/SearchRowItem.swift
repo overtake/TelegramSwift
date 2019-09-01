@@ -58,7 +58,7 @@ class SearchRowView : TableRowView {
         super.set(item: item)
         if let item = item as? SearchRowItem {
             self.searchView.isLoading = item.isLoading
-            self.searchView.updateLocalizationAndTheme()
+            self.searchView.updateLocalizationAndTheme(theme: theme)
             
             
             searchView.searchInteractions = SearchInteractions ({ [weak self] state, animated in

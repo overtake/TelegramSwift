@@ -276,6 +276,10 @@ extension TelegramMediaFile {
         return 0
     }
     
+    var isTheme: Bool {
+        return mimeType == "application/x-tgtheme-macos"
+    }
+    
     func withUpdatedResource(_ resource: TelegramMediaResource) -> TelegramMediaFile {
         return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
     }
@@ -770,6 +774,9 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
 
 func canReplyMessage(_ message: Message, peerId: PeerId) -> Bool {
     if let peer = messageMainPeer(message) {
+        if message.isScheduledMessage {
+            return false
+        }
         if peer.canSendMessage, peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && message.id.namespace != Namespaces.Message.Local {
             return true
         }
@@ -864,6 +871,9 @@ func canPinMessage(_ message:Message, for peer:Peer, account:Account) -> Bool {
 }
 
 func canReportMessage(_ message: Message, _ account: Account) -> Bool {
+    if message.isScheduledMessage {
+        return false
+    }
     if let peer = messageMainPeer(message), message.author?.id != account.peerId {
         return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(account.peerId)?.isBot == true)
     } else {
@@ -976,14 +986,11 @@ extension Peer {
         if let peer = self as? TelegramChannel {
             if let restrictionInfo = peer.restrictionInfo {
                 #if APP_STORE
-                    let reason = restrictionInfo.reason.components(separatedBy: ":")
-                    
-                    if reason.count == 2 {
-                        let platform = reason[0]
-                        if platform.hasSuffix("ios") || platform.hasSuffix("macos") || platform.hasSuffix("all") {
-                            return true
-                        }
+                for rule in restrictionInfo.rules {
+                    if rule.platform == "ios" || rule.platform == "all" {
+                        return true
                     }
+                }
                 #endif
             }
         }
@@ -993,10 +1000,10 @@ extension Peer {
     var restrictionText:String? {
         if let peer = self as? TelegramChannel {
             if let restrictionInfo = peer.restrictionInfo {
-                let reason = restrictionInfo.reason.components(separatedBy: ":")
-                
-                if reason.count == 2 {
-                    return reason[1]
+                for rule in restrictionInfo.rules {
+                    if rule.platform == "ios" || rule.platform == "all" {
+                        return rule.reason
+                    }
                 }
             }
         }
@@ -2695,6 +2702,15 @@ extension TelegramMediaWebpageLoadedContent {
                 newUrl = self.url + "?t=\(timecode)"
             }
         }
-        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, files: self.files, instantPage: self.instantPage)
+    }
+    func withUpdatedFile(_ file: TelegramMediaFile) -> TelegramMediaWebpageLoadedContent {
+        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: file, files: self.files, instantPage: self.instantPage)
     }
 }
+
+
+//
+
+
+

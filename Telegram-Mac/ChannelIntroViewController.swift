@@ -26,11 +26,11 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         documentView?.addSubview(button)
 
         button.set(font: .medium(.title), for: .Normal)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
     }
-    func updateLocalizationAndTheme() {
-        
+    func updateLocalizationAndTheme(theme: PresentationTheme) {
+        let theme = (theme as! TelegramPresentationTheme)
         imageView.image = theme.icons.channelIntro
         imageView.sizeToFit()
         

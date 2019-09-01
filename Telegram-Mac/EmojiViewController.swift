@@ -158,11 +158,12 @@ class EmojiControllerView : View {
         tabsContainer.addSubview(tabs)
         tabsContainer.addSubview(borderView)
         addSubview(tabsContainer)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         self.backgroundColor = theme.colors.background
         self.borderView.backgroundColor = theme.colors.border
         emptyResults.image = theme.icons.stickersEmptySearch
@@ -227,7 +228,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     override func loadView() {
         super.loadView()
         genericView.tabs.delegate = self
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     

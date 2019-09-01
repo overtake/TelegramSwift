@@ -124,6 +124,7 @@
 		D004D6FA22B7B84D00926F46 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D004D6F922B7B84D00926F46 /* Accelerate.framework */; };
 		D004D6FC22B7B91A00926F46 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D004D6FB22B7B91900926F46 /* CoreGraphics.framework */; };
 		D014270522B83A5500E8E2AC /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D014270422B83A5500E8E2AC /* libstdc++.tbd */; };
+		D014AA1B2316BAB100CE5362 /* lottieitem.h in Headers */ = {isa = PBXBuildFile; fileRef = D014AA1A2316BAB100CE5362 /* lottieitem.h */; };
 		D0276B7F22BDA232003155D8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0276B7E22BDA232003155D8 /* AppKit.framework */; };
 		D0276B8222BE4437003155D8 /* YUV.m in Sources */ = {isa = PBXBuildFile; fileRef = D0276B8022BE4436003155D8 /* YUV.m */; };
 		D0276B8322BE4437003155D8 /* YUV.h in Headers */ = {isa = PBXBuildFile; fileRef = D0276B8122BE4437003155D8 /* YUV.h */; };
@@ -431,6 +432,10 @@
 		D004D6F922B7B84D00926F46 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		D004D6FB22B7B91900926F46 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		D014270422B83A5500E8E2AC /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
+		D014AA1A2316BAB100CE5362 /* lottieitem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lottieitem.h; sourceTree = "<group>"; };
+		D014AA1C2316BABE00CE5362 /* lottieitem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lottieitem.cpp; sourceTree = "<group>"; };
+		D014AA1E2316BC2500CE5362 /* lottieanimation_capi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lottieanimation_capi.cpp; sourceTree = "<group>"; };
+		D014AA202316BC3200CE5362 /* lottieanimation_capi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = lottieanimation_capi.cpp; path = ../submodules/rlottie/src/binding/c/lottieanimation_capi.cpp; sourceTree = "<group>"; };
 		D0276B7E22BDA232003155D8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		D0276B8022BE4436003155D8 /* YUV.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YUV.m; sourceTree = "<group>"; };
 		D0276B8122BE4437003155D8 /* YUV.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YUV.h; sourceTree = "<group>"; };
@@ -464,6 +469,10 @@
 		D004D48222B7B0A300926F46 = {
 			isa = PBXGroup;
 			children = (
+				D014AA1E2316BC2500CE5362 /* lottieanimation_capi.cpp */,
+				D014AA202316BC3200CE5362 /* lottieanimation_capi.cpp */,
+				D014AA1C2316BABE00CE5362 /* lottieitem.cpp */,
+				D014AA1A2316BAB100CE5362 /* lottieitem.h */,
 				D004D48E22B7B0A300926F46 /* RLottieMac */,
 				D004D49922B7B0A400926F46 /* RLottieMacTests */,
 				D004D48D22B7B0A300926F46 /* Products */,
@@ -987,6 +996,7 @@
 			files = (
 				D0276B8322BE4437003155D8 /* YUV.h in Headers */,
 				D004D6E322B7B3AA00926F46 /* vimageloader.h in Headers */,
+				D014AA1B2316BAB100CE5362 /* lottieitem.h in Headers */,
 				D004D6ED22B7B42700926F46 /* RLottieBridge.h in Headers */,
 				D004D68E22B7B3AA00926F46 /* regex.h in Headers */,
 				D004D68122B7B3AA00926F46 /* fwd.h in Headers */,
@@ -1161,6 +1171,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D004D67222B7B3AA00926F46 /* lottieanimation_capi.cpp in Sources */,
 				D004D6AB22B7B3AA00926F46 /* vdrawhelper_neon.cpp in Sources */,
 				D004D67922B7B3AA00926F46 /* lottiekeypath.cpp in Sources */,
 				D004D67522B7B3AA00926F46 /* lottiemodel.cpp in Sources */,
@@ -1173,7 +1184,6 @@
 				D004D6BB22B7B3AA00926F46 /* v_ft_raster.cpp in Sources */,
 				D004D6E622B7B3AA00926F46 /* vrle.cpp in Sources */,
 				D004D6C222B7B3AA00926F46 /* vcompositionfunctions.cpp in Sources */,
-				D004D67222B7B3AA00926F46 /* lottieanimation_capi.cpp in Sources */,
 				D004D67B22B7B3AA00926F46 /* lottieparser.cpp in Sources */,
 				D004D6CE22B7B3AA00926F46 /* stb_image.cpp in Sources */,
 				D004D6EC22B7B42700926F46 /* RLottieBridge.mm in Sources */,
@@ -1270,7 +1280,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1381,7 +1391,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1492,7 +1502,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1597,7 +1607,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -1698,7 +1708,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;

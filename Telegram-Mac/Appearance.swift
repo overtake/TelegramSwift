@@ -24,6 +24,127 @@ private func generatePollAddOption(_ color: NSColor) -> CGImage {
     })!
 }
 
+func generateThemePreview(for palette: ColorPalette) -> CGImage {
+    return generateImage(NSMakeSize(320, 320), rotatedContext: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        
+        //background
+        ctx.setFillColor(palette.chatBackground.cgColor)
+        ctx.fill(rect)
+        ctx.setFillColor(palette.background.cgColor)
+        ctx.fill(NSMakeRect(0, 0, rect.width, 50))
+        ctx.setFillColor(palette.background.cgColor)
+        ctx.fill(NSMakeRect(0, rect.height - 50, rect.width, 50))
+        
+        //top border
+        ctx.setFillColor(palette.border.cgColor)
+        ctx.fill(NSMakeRect(0, 50, rect.width, .borderSize))
+        
+        //bottom border
+        ctx.setFillColor(palette.border.cgColor)
+        ctx.fill(NSMakeRect(0, rect.height - 50, rect.width, .borderSize))
+        
+        
+        //fill avatar
+        ctx.setFillColor(palette.grayForeground.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(20, (50 - 36) / 2, 36, 36))
+        
+        //fill chat actions
+        let chatAction = NSImage(named: "Icon_ChatActions")!.precomposed(palette.blueIcon)
+        ctx.draw(chatAction, in: NSMakeRect(rect.width - 20 - chatAction.backingSize.width, (50 - chatAction.backingSize.height) / 2, chatAction.backingSize.width, chatAction.backingSize.height))
+        
+        //fill attach icon
+        let inputAttach = NSImage(named: "Icon_ChatAttach")!.precomposed(palette.grayIcon, flipVertical: true)
+        ctx.draw(inputAttach, in: NSMakeRect(20, rect.height - 50 + ((50 - inputAttach.backingSize.height) / 2), inputAttach.backingSize.width, inputAttach.backingSize.height))
+        
+        //fill micro icon
+        let micro = NSImage(named: "Icon_RecordVoice")!.precomposed(palette.grayIcon, flipVertical: true)
+        ctx.draw(micro, in: NSMakeRect(rect.width - 20 - inputAttach.backingSize.width, (rect.height - 50 + (50 - micro.backingSize.height) / 2), micro.backingSize.width, micro.backingSize.height))
+        
+        
+        //fill date
+        ctx.setFillColor(getAverageColor(palette.chatBackground).cgColor)
+        let path = NSBezierPath(roundedRect: NSMakeRect(rect.width / 2 - 30, rect.height - 50 - 10 - 60 - 5 - 20 - 5, 60, 20), xRadius: 10, yRadius: 10)
+        ctx.addPath(path.cgPath)
+        ctx.closePath()
+        ctx.fillPath()
+        
+        
+        //fill outgoing bubble
+        if true {
+            let data = messageBubbleImageModern(incoming: false, fillColor: palette.bubbleBackground_outgoing, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
+            
+            let layer = CALayer()
+            layer.frame = NSMakeRect(0, 200, 150, 30)
+            layer.contentsScale = 2.0
+            let imageSize = data.0.backingSize
+            let insets = data.1
+            let halfPixelFudge: CGFloat = 0.49
+            let otherPixelFudge: CGFloat = 0.02
+            var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
+            if (insets.left > 0 || insets.right > 0) {
+                contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
+                contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
+            }
+            if (insets.top > 0 || insets.bottom > 0) {
+                contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
+                contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
+            }
+            layer.contentsGravity = .resize;
+            layer.contentsCenter = contentsCenter;
+            layer.contents = data.0
+            
+            ctx.translateBy(x: rect.width - 170, y: rect.height - 50 - 10)
+            ctx.scaleBy(x: 1.0, y: -1.0)
+            layer.render(in: ctx)
+        }
+        
+        //fill incoming bubble
+        if true {
+            let data = messageBubbleImageModern(incoming: true, fillColor: palette.bubbleBackground_incoming, strokeColor: palette.bubbleBorder_incoming, neighbors: .none)
+            
+            let layer = CALayer()
+            layer.frame = NSMakeRect(0, 200, 150, 30)
+            layer.contentsScale = 2.0
+            let imageSize = data.0.backingSize
+            let insets = data.1
+            let halfPixelFudge: CGFloat = 0.49
+            let otherPixelFudge: CGFloat = 0.02
+            var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
+            if (insets.left > 0 || insets.right > 0) {
+                contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
+                contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
+            }
+            if (insets.top > 0 || insets.bottom > 0) {
+                contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
+                contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
+            }
+            layer.contentsGravity = .resize;
+            layer.contentsCenter = contentsCenter;
+            layer.contents = data.0
+            
+            ctx.translateBy(x: -130, y: 35)
+            layer.render(in: ctx)
+        }
+        
+        
+    })!
+}
+
+private func generateDialogVerify(background: NSColor, foreground: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(24, 24), rotatedContext: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+        let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
+        
+        ctx.setFillColor(background.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+        
+        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+    })!
+}
+
 private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
     let image = NSImage(named: "Icon_PollDeleteOption")!.precomposed(color)
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
@@ -394,12 +515,12 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
     })!
 }
 
-private func generateChatGroupToggleSelected(foregroundColor: NSColor) -> CGImage {
+private func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
     return generateImage(NSMakeSize(icon.backingSize.width + 2, icon.backingSize.height + 2), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
         ctx.round(size, size.width/2)
-        ctx.setFillColor(NSColor.white.cgColor)
+        ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
         let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
@@ -859,6 +980,7 @@ func getAverageColor(_ image: NSImage) -> NSColor {
     var saturation: CGFloat = 0.0
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
+//    color = color.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
     saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)
@@ -873,6 +995,7 @@ private func getAverageColor(_ color: NSColor) -> NSColor {
     var saturation: CGFloat = 0.0
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
+    let color = color.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
     saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)
@@ -886,17 +1009,130 @@ class TelegramPresentationTheme : PresentationTheme {
     #if !SHARE
         let chat: TelegramChatColors
     #endif
+    let cloudTheme: TelegramTheme?
     let tabBar:TelegramTabBarTheme
     let icons: TelegramIconsTheme
     let bubbled: Bool
     let wallpaper: Wallpaper
     let c_wallpaper: Wallpaper?
-    let backgroundMode: TableBackgroundMode
-    let chatServiceItemColor: NSColor
-    let chatServiceItemTextColor: NSColor
+    
+    
+    private var _chatServiceItemColor: NSColor?
+    var chatServiceItemColor: NSColor {
+        if let value = _chatServiceItemColor {
+            return value
+        } else {
+            let chatServiceItemColor: NSColor
+            switch backgroundMode {
+            case let .background(image):
+                chatServiceItemColor = getAverageColor(image)
+            case let .color(color):
+                chatServiceItemColor = getAverageColor(color)
+            case let .tiled(image):
+                chatServiceItemColor = getAverageColor(image)
+            case .plain:
+                chatServiceItemColor = colors.chatBackground
+            }
+            self._chatServiceItemColor = chatServiceItemColor
+            return chatServiceItemColor
+        }
+    }
+    private var _chatServiceItemTextColor: NSColor?
+    var chatServiceItemTextColor: NSColor {
+        if let value = _chatServiceItemTextColor {
+            return value
+        } else {
+            let chatServiceItemTextColor: NSColor
+            switch backgroundMode {
+            case .background:
+                chatServiceItemTextColor = .white
+            case .color:
+                chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
+            case .tiled:
+                chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
+            case .plain:
+                chatServiceItemTextColor = colors.grayText
+            }
+            self._chatServiceItemTextColor = chatServiceItemTextColor
+            return chatServiceItemTextColor
+        }
+    }
     let fontSize: CGFloat
     let followSystemAppearance: Bool
-    init(colors: ColorPalette, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: Wallpaper, c_wallpaper: Wallpaper?, followSystemAppearance: Bool, chat: TelegramChatColors? = nil) {
+    
+    private var _backgroundMode: TableBackgroundMode?
+    var backgroundMode: TableBackgroundMode {
+        if let value = _backgroundMode {
+            return value
+        } else {
+            let backgroundMode: TableBackgroundMode
+            #if !SHARE
+            switch wallpaper {
+            case .builtin:
+                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            case let.color(color):
+                backgroundMode = .color(color: NSColor(UInt32(abs(color))))
+            case let .image(representation, settings):
+                if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
+                    backgroundMode = .background(image: image)
+                } else {
+                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                }
+                
+            case let .file(_, file, settings, isPattern):
+                if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
+                    if isPattern {
+                        let image = generateImage(image.size, contextGenerator: { size, ctx in
+                            let imageRect = NSMakeRect(0, 0, size.width, size.height)
+                            var _patternColor: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+                            
+                            var patternIntensity: CGFloat = 0.5
+                            if let color = settings.color {
+                                if let intensity = settings.intensity {
+                                    patternIntensity = CGFloat(intensity) / 100.0
+                                }
+                                _patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
+                            }
+                            
+                            let color = _patternColor.withAlphaComponent(1.0)
+                            let intensity = _patternColor.alpha
+                            
+                            ctx.setBlendMode(.copy)
+                            ctx.setFillColor(color.cgColor)
+                            ctx.fill(imageRect)
+                            
+                            ctx.setBlendMode(.normal)
+                            ctx.interpolationQuality = .high
+                            
+                            ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
+                            ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                            ctx.fill(imageRect)
+                        })!
+                        backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
+                    } else {
+                        backgroundMode = .background(image: image)
+                    }
+                } else {
+                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                }
+            case .none:
+                backgroundMode = .color(color: colors.chatBackground)
+            case let .custom(representation, blurred):
+                if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
+                    backgroundMode = .background(image: image)
+                } else {
+                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                }
+            }
+            #else
+            backgroundMode = .plain
+            #endif
+            
+            self._backgroundMode = backgroundMode
+            return backgroundMode
+        }
+    }
+    init(colors: ColorPalette, cloudTheme: TelegramTheme?, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: Wallpaper, c_wallpaper: Wallpaper?, followSystemAppearance: Bool) {
         self.chatList = chatList
         #if !SHARE
             self.chat = TelegramChatColors(colors, bubbled)
@@ -908,82 +1144,9 @@ class TelegramPresentationTheme : PresentationTheme {
         self.bubbled = bubbled
         self.fontSize = fontSize
         self.followSystemAppearance = followSystemAppearance
-        #if !SHARE
-        switch wallpaper {
-        case .builtin:
-            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-        case let.color(color):
-            backgroundMode = .color(color: NSColor(UInt32(abs(color))))
-        case let .image(representation, settings):
-            if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
-                backgroundMode = .background(image: image)
-            } else {
-                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-            }
-            
-        case let .file(_, file, settings, isPattern):
-            if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
-                if isPattern {
-                    let image = generateImage(image.size, contextGenerator: { size, ctx in
-                        let imageRect = NSMakeRect(0, 0, size.width, size.height)
-                        var _patternColor: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
-                        
-                        var patternIntensity: CGFloat = 0.5
-                        if let color = settings.color {
-                            if let intensity = settings.intensity {
-                                patternIntensity = CGFloat(intensity) / 100.0
-                            }
-                            _patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
-                        }
-                        
-                        let color = _patternColor.withAlphaComponent(1.0)
-                        let intensity = _patternColor.alpha
-                        
-                        ctx.setBlendMode(.copy)
-                        ctx.setFillColor(color.cgColor)
-                        ctx.fill(imageRect)
-                        
-                        ctx.setBlendMode(.normal)
-                        ctx.interpolationQuality = .high
-                        
-                        ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
-                        ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
-                        ctx.fill(imageRect)
-                    })!
-                     backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
-                } else {
-                    backgroundMode = .background(image: image)
-                }
-            } else {
-                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-            }
-        case .none:
-            backgroundMode = .plain
-        case let .custom(representation, blurred):
-            if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
-                backgroundMode = .background(image: image)
-            } else {
-                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-            }
-        }
-        #else
-            self.backgroundMode = .plain
-        #endif
+        self.cloudTheme = cloudTheme
 
-        switch backgroundMode {
-        case let .background(image):
-            chatServiceItemColor = getAverageColor(image)
-            chatServiceItemTextColor = .white
-        case let .color(color):
-            chatServiceItemColor = getAverageColor(color)
-            chatServiceItemTextColor = .white
-        case let .tiled(image):
-            chatServiceItemColor = getAverageColor(image)
-            chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
-        case .plain:
-            chatServiceItemColor = colors.background
-            chatServiceItemTextColor = colors.grayText
-        }
+        
         super.init(colors: colors, search: search)
     }
     
@@ -1006,7 +1169,7 @@ class TelegramPresentationTheme : PresentationTheme {
     }
     
     func withUpdatedColors(_ colors: ColorPalette) -> TelegramPresentationTheme {
-        return TelegramPresentationTheme.init(colors: colors, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: self.icons, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, c_wallpaper: self.c_wallpaper, followSystemAppearance: self.followSystemAppearance)
+        return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, c_wallpaper: self.c_wallpaper, followSystemAppearance: self.followSystemAppearance)
     }
     
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {
@@ -1038,17 +1201,17 @@ extension ColorPalette {
 
 private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> TelegramIconsTheme {
     return TelegramIconsTheme(dialogMuteImage: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.grayIcon) },
-                              dialogMuteImageSelected: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(.white) },
-                              outgoingMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
-                                               readMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.name == dayClassic.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
-                                               outgoingMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white, flipVertical:true) },
-                                               readMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(.white, flipVertical:true) },
+                              dialogMuteImageSelected: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.underSelectedColor) },
+                              outgoingMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.name == dayClassicPalette.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
+                                               readMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.name == dayClassicPalette.name && bubbled ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
+                                               outgoingMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.underSelectedColor, flipVertical:true) },
+                                               readMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                sendingImage: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.grayIcon, flipVertical:true) },
-                                               sendingImageSelected: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(.white, flipVertical:true) },
-                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
-                                               secretImageSelected:{  #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(.white, flipVertical:true) },
+                                               sendingImageSelected: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.underSelectedColor, flipVertical:true) },
+                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(bubbled && palette.name == dayClassicPalette.name ? palette.blueIconBubble_outgoing : palette.blueIcon, flipVertical:true) },
+                                               secretImageSelected:{  #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                pinnedImage: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true) },
-                                               pinnedImageSelected: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(.white, flipVertical:true) },
+                                               pinnedImageSelected: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                verifiedImage: { #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true) },
                                                verifiedImageSelected: { #imageLiteral(resourceName: "Icon_VerifyPeerActive").precomposed(flipVertical: true) },
                                                errorImage: { #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true) },
@@ -1068,7 +1231,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatFallbackCallBubble_incoming: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_incoming) },
                                                chatFallbackCallBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_outgoing) },
                                                
-                                               chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.blueIcon) },
+                                               chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.blueIcon, backgroundColor: palette.underSelectedColor) },
                                                chatToggleUnselected:  { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed() },
                                                chatShare:  { #imageLiteral(resourceName: "Icon_ChannelShare").precomposed(palette.blueIcon) },
                                                chatMusicPlay:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed() },
@@ -1078,7 +1241,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPauseBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPauseBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing) },
                                                composeNewChat: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.blueIcon) },
-                                               composeNewChatActive: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(.white) },
+                                               composeNewChatActive: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.underSelectedColor) },
                                                composeNewGroup: { #imageLiteral(resourceName: "Icon_NewGroup").precomposed(palette.blueIcon) },
                                                composeNewSecretChat: { #imageLiteral(resourceName: "Icon_NewSecretChat").precomposed(palette.blueIcon) },
                                                composeNewChannel: { #imageLiteral(resourceName: "Icon_NewChannel").precomposed(palette.blueIcon) },
@@ -1241,7 +1404,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatListMention: { generateBadgeMention(backgroundColor: palette.accent, foregroundColor: palette.background) },
                                                chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect) },
                                                chatListMentionArchived: { generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
-                                               chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect) },
+                                               chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: palette.underSelectedColor, foregroundColor: palette.blueSelect) },
                                                chatMention: { generateChatMention(backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon) },
                                                chatMentionActive: { generateChatMention(backgroundColor: palette.background, border: palette.blueIcon, foregroundColor: palette.blueIcon) },
                                                sliderControl: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
@@ -1269,18 +1432,18 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsAppearance: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)) },
                                                settingsPassport: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
                                                settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
-                                               settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsLanguageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsNotificationsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsSecurityActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsStickersActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsStorageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsProxyActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsAppearanceActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(.white, flipVertical: true), background: palette.blueSelect) },
-                                               settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(.white, flipVertical: true), background: palette.blueSelect) },
+                                               settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsLanguageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsNotificationsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsSecurityActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsStickersActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsStorageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsProxyActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsAppearanceActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
                                                generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon) },
                                                settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon) },
                                                settingsLogout: { #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI) },
@@ -1296,7 +1459,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                peerSavedMessages: { #imageLiteral(resourceName: "Icon_SavedMessages").precomposed() },
                                                previewCollage: { #imageLiteral(resourceName: "Icon_PreviewCollage").precomposed(palette.grayIcon) },
                                                chatGoMessage: { #imageLiteral(resourceName: "Icon_ChatGoMessage").precomposed(palette.blueIcon) },
-                                               chatGroupToggleSelected: { generateChatGroupToggleSelected(foregroundColor: palette.blueIcon) },
+                                               chatGroupToggleSelected: { generateChatGroupToggleSelected(foregroundColor: palette.blueIcon, backgroundColor: palette.underSelectedColor) },
                                                chatGroupToggleUnselected: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed() },
                                                successModalProgress: { #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(palette.grayIcon) },
                                                accentColorSelect: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white) },
@@ -1354,8 +1517,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                searchArticle: { #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white) },
                                                searchSaved: { #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white) },
                                                archivedChats: { #imageLiteral(resourceName: "Icon_ArchiveAvatar").precomposed(.white) },
-                                               hintPeerActive: { generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.background) },
-                                               hintPeerActiveSelected: { generateHitActiveIcon(activeColor: palette.greenUI, backgroundColor: palette.blueSelect) },
+                                               hintPeerActive: { generateHitActiveIcon(activeColor: palette.accent, backgroundColor: palette.background) },
+                                               hintPeerActiveSelected: { generateHitActiveIcon(activeColor: palette.underSelectedColor, backgroundColor: palette.blueSelect) },
                                                chatSwiping_delete: { #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white) },
                                                chatSwiping_mute: { #imageLiteral(resourceName: "Icon_ChatSwipingMute").precomposed(.white) },
                                                chatSwiping_unmute: { #imageLiteral(resourceName: "Icon_ChatSwipingUnmute").precomposed(.white) },
@@ -1419,7 +1582,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                logoutOptionContactSupport: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ContactSupport")!.precomposed(flipVertical: true)) },
                                                disableEmojiPrediction: { NSImage(named: "Icon_CallWindowClose")!.precomposed(palette.grayIcon) },
                                                scam: { generateScamIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
-                                               scamActive: { generateScamIcon(foregroundColor: .white, backgroundColor: .clear) },
+                                               scamActive: { generateScamIcon(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
                                                chatScam: { generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
                                                chatUnarchive: { NSImage(named: "Icon_ChatUnarchive")!.precomposed(palette.blueIcon) },
                                                chatArchive: { NSImage(named: "Icon_ChatArchive")!.precomposed(palette.blueIcon) },
@@ -1437,10 +1600,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                entertainment_Settings: { NSImage(named: "Icon_Entertainment_Settings")!.precomposed(palette.grayIcon) },
                                                entertainment_SearchCancel: { NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon) },
                                                scheduledAvatar: { NSImage(named: "Icon_AvatarScheduled")!.precomposed(.white) },
-                                               scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.blueIcon) } )
+                                               scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.blueIcon) },
+                                               verifyDialog: { generateDialogVerify(background: .white, foreground: palette.basicAccent) },
+                                               verifyDialogActive: { generateDialogVerify(background: palette.blueIcon, foreground: palette.underSelectedColor) },
+                                               chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) }
+    )
 
 }
-private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: Wallpaper, c_wallpaper: Wallpaper?) -> TelegramPresentationTheme {
+private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: Wallpaper, c_wallpaper: Wallpaper?) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.blueSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,
@@ -1449,21 +1616,21 @@ private func generateTheme(palette: ColorPalette, bubbled: Bool, fontSize: CGFlo
                                          contextMenuBackgroundColor: palette.background,
                                          textColor: palette.text,
                                          grayTextColor: palette.grayText,
-                                         secretChatTextColor: bubbled && palette.name == dayClassic.name ? palette.blueIconBubble_outgoing : palette.accent,
+                                         secretChatTextColor: bubbled && palette.name == dayClassicPalette.name ? palette.blueIconBubble_outgoing : palette.accent,
                                          peerTextColor: palette.text,
                                          activityColor: palette.accent,
-                                         activitySelectedColor: .white,
+                                         activitySelectedColor: palette.underSelectedColor,
                                          activityContextMenuColor: palette.accent,
                                          activityPinnedColor: palette.accent,
                                          badgeTextColor: palette.background,
                                          badgeBackgroundColor: palette.badge,
                                          badgeSelectedTextColor: palette.blueSelect,
-                                         badgeSelectedBackgroundColor: .white,
+                                         badgeSelectedBackgroundColor: palette.underSelectedColor,
                                          badgeMutedTextColor: .white,
                                          badgeMutedBackgroundColor: palette.badgeMuted)
     
     let tabBar = TelegramTabBarTheme(color: palette.grayIcon, selectedColor: palette.blueIcon, badgeTextColor: .white, badgeColor: palette.redUI)
-    return TelegramPresentationTheme(colors: palette, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, c_wallpaper: c_wallpaper, followSystemAppearance: followSystemAppearance)
+    return TelegramPresentationTheme(colors: palette, cloudTheme: cloudTheme, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, c_wallpaper: c_wallpaper, followSystemAppearance: followSystemAppearance)
 }
 
 
@@ -1482,9 +1649,9 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
         } else {
             palette = settings.palette
         }
-    case dayClassic.name:
-        if settings.palette.blueFill.hexString == dayClassic.blueFill.hexString {
-            palette = dayClassic
+    case dayClassicPalette.name:
+        if settings.palette.blueFill.hexString == dayClassicPalette.blueFill.hexString {
+            palette = dayClassicPalette
         } else {
             palette = settings.palette
         }
@@ -1503,7 +1670,7 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
     default:
         palette = settings.palette
     }
-    telegramUpdateTheme(generateTheme(palette: palette, bubbled: settings.bubbled, fontSize: settings.fontSize, followSystemAppearance: settings.followSystemAppearance, wallpaper: settings.wallpaper, c_wallpaper: settings.customWallpaper), window: window, animated: animated)
+    telegramUpdateTheme(generateTheme(palette: palette, cloudTheme: settings.cloudTheme, bubbled: settings.bubbled, fontSize: settings.fontSize, followSystemAppearance: settings.followSystemAppearance, wallpaper: settings.wallpaper, c_wallpaper: settings.customWallpaper), window: window, animated: animated)
 }
 
 private let appearanceDisposable = MetaDisposable()
@@ -1543,7 +1710,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
 }
 
 func setDefaultTheme(for window: Window? = nil) {
-    telegramUpdateTheme(generateTheme(palette: dayClassic, bubbled: false, fontSize: 13.0, followSystemAppearance: true, wallpaper: .none, c_wallpaper: nil), window: window, animated: false)
+    telegramUpdateTheme(generateTheme(palette: dayClassicPalette, cloudTheme: nil, bubbled: false, fontSize: 13.0, followSystemAppearance: true, wallpaper: .none, c_wallpaper: nil), window: window, animated: false)
 }
 
 

@@ -71,7 +71,7 @@ final class ArchiveTooltipView : View {
         needsLayout = true
     }
     
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         needsLayout = true
         self.backgroundColor = NSColor.black.withAlphaComponent(0.8)
     }
@@ -189,8 +189,8 @@ class ArchiveTooltipController: TelegramGenericViewController<ArchiveTooltipView
 
     }
     
-    override func updateLocalizationAndTheme() {
-        genericView.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        genericView.updateLocalizationAndTheme(theme: theme)
     }
     
     deinit {

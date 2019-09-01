@@ -42,11 +42,12 @@ private final class LocationPinView : View {
         addSubview(locationPin)
         addSubview(dotView)
         dotView.layer?.cornerRadius = 2
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         locationPin.image = theme.icons.locationMapPin
         locationPin.sizeToFit()
         dotView.backgroundColor = theme.colors.blueIcon
@@ -104,7 +105,7 @@ private final class LocationMapView : View {
         header.addSubview(locateButton)
         addSubview(header)
         addSubview(tableView)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         expandButton.isEventLess = true
         expandButton.userInteractionEnabled = false
@@ -122,10 +123,10 @@ private final class LocationMapView : View {
         return CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
-        locationPinView.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        locationPinView.updateLocalizationAndTheme(theme: theme)
         expandButton.set(font: .medium(.title), for: .Normal)
         expandButton.set(color: theme.colors.accent, for: .Normal)
         dismiss.set(image: theme.icons.modalClose, for: .Normal)

@@ -140,7 +140,7 @@ class ChatInputAttachView: ImageButton, Notifable {
         chatInteraction.add(observer: self)
         addSubview(editMediaAccessory)
         editMediaAccessory.layer?.opacity = 0
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -185,8 +185,9 @@ class ChatInputAttachView: ImageButton, Notifable {
         chatInteraction.remove(observer: self)
     }
 
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         editMediaAccessory.image = theme.icons.editMessageMedia
         editMediaAccessory.sizeToFit()
         set(image: theme.icons.chatAttach, for: .Normal)

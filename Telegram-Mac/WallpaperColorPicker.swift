@@ -417,7 +417,9 @@ final class WallpaperColorPickerView: View {
         
         switch pickerValue {
         case .color:
-            let location = self.convert(event.locationInWindow, from: nil)
+            var location = self.convert(event.locationInWindow, from: nil)
+            location.x = min(max(location.x, 1.0), frame.width)
+
             let newHue = max(0.0, min(1.0, location.x / size.width))
             let newSaturation = max(0.0, min(1.0, (1.0 - location.y / colorHeight)))
             self.colorHSV.0 = newHue

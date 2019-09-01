@@ -48,7 +48,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
             self?.manager.cancelAll()
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     var removeAnimationForNextTransition: Bool = true
@@ -160,8 +160,9 @@ class UndoOverlayHeaderView: NavigationHeaderView {
         textView.centerY(x: progress.frame.maxX + 18, addition: -1)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         undoButton.set(text: L10n.chatUndoManagerUndo, for: .Normal)
         undoButton.set(image: theme.icons.chatUndoAction, for: .Normal)
         undoButton.set(color: NSColor(0x29ACFF), for: .Normal)

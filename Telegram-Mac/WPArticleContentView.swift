@@ -114,6 +114,8 @@ class WPArticleContentView: WPContentView {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
             } else if let wallpaper = layout.wallpaper {
                 execute(inapp: wallpaper)
+            } else if let link = layout.themeLink {
+                execute(inapp: link)
             } else if !content.url.isEmpty {
                 execute(inapp: .external(link: content.url, false))
             }
@@ -127,6 +129,8 @@ class WPArticleContentView: WPContentView {
                 fetchDisposable.set(fetchedMediaResource(mediaBox: layout.context.account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: file.resource)).start())
             } else if let image = layout.content.image {
                 fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
+            } else if layout.isTheme, let file = layout.content.file {
+                fetchDisposable.set(fetchedMediaResource(mediaBox: layout.context.account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: file.resource)).start())
             }
         }
     }
@@ -137,6 +141,8 @@ class WPArticleContentView: WPContentView {
                 fileCancelInteractiveFetch(account: layout.context.account, file: file)
             } else if let image = layout.content.image {
                 chatMessagePhotoCancelInteractiveFetch(account: layout.context.account, photo: image)
+            } else if layout.isTheme, let file = layout.content.file {
+                fileCancelInteractiveFetch(account: layout.context.account, file: file)
             }
             fetchDisposable.set(nil)
         }
@@ -246,7 +252,7 @@ class WPArticleContentView: WPContentView {
             }
             
             var image = layout.content.image
-            if layout.content.image == nil, let file = layout.content.file, let dimension = file.dimensions {
+            if layout.content.image == nil, let file = layout.content.file, let dimension = layout.imageSize {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)
                 representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
@@ -255,7 +261,7 @@ class WPArticleContentView: WPContentView {
             }
             var updateImageSignal:Signal<ImageDataTransformation, NoError>?
             if let image = image {
-                if let _ = layout.wallpaper {
+                if layout.wallpaper != nil || layout.isTheme {
                     updateImageSignal = chatWallpaper(account: layout.context.account, representations: image.representations, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false)
                 } else {
                     updateImageSignal = chatWebpageSnippetPhoto(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)

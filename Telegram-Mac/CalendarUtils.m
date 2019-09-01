@@ -89,6 +89,7 @@
         month = 12;
         year--;
     }
+    components.day = 1;
     components.year = year;
     components.month = month;
     return [cal dateFromComponents:components];

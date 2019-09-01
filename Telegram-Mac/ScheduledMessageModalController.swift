@@ -90,11 +90,11 @@ final class ScheduledMessageModalView : View {
         self.atView.isSelectable = false
         self.sendOn.layer?.cornerRadius = .cornerRadius
         self.sendOn.disableActions()
-        self.updateLocalizationAndTheme()
+        self.updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         self.sendOn.set(font: .medium(.text), for: .Normal)
         self.sendOn.set(color: .white, for: .Normal)
@@ -249,7 +249,7 @@ class ScheduledMessageModalController: ModalViewController {
                 let day = self.genericView.dayPicker.selected.value
                 
                 for interval in timeIntervals {
-                    let date = Date().startOfDay.addingTimeInterval(interval)
+                    let date = day.startOfDay.addingTimeInterval(interval)
                     if CalendarUtils.isSameDate(Date(), date: day, checkDay: true) {
                         if Date() > date {
                             continue

@@ -60,7 +60,7 @@ private class HeaderView : View {
     }
     
     private func initialize() {
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         addSubview(borderView)
         addSubview(share)
         addSubview(actions)
@@ -143,8 +143,9 @@ private class HeaderView : View {
         back.centerY(x: 86)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         borderView.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
         titleView?.backgroundColor = theme.colors.background
@@ -195,8 +196,8 @@ class InstantWindowContentView : View {
         layout()
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         contentView.backgroundColor = theme.colors.background
         backgroundColor = theme.colors.background
         loadingIndicatorView.style = ControlStyle(foregroundColor: theme.colors.text, backgroundColor: backgroundColor)
@@ -437,8 +438,9 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         }
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         _window.appearance = theme.appearance
         _window.backgroundColor = theme.colors.grayBackground
     }

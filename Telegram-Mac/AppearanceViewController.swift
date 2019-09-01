@@ -17,11 +17,15 @@ private final class AppearanceViewArguments {
     let togglePalette:(ColorPalette, Wallpaper?)->Void
     let toggleBubbles:(Bool)->Void
     let toggleFontSize:(Int32)->Void
-    let selectAccentColor:()->Void
+    let selectAccentColor:(NSColor?)->Void
     let selectChatBackground:()->Void
     let openAutoNightSettings:()->Void
     let toggleFollowSystemAppearance:(Bool)->Void
-    init(context: AccountContext, togglePalette: @escaping(ColorPalette, Wallpaper?)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping()->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, toggleFollowSystemAppearance: @escaping(Bool)->Void) {
+    let removeTheme:(TelegramTheme)->Void
+    let editTheme:(TelegramTheme)->Void
+    let shareTheme:(TelegramTheme)->Void
+    let installCloudTheme: (TelegramTheme)->Void
+    init(context: AccountContext, togglePalette: @escaping(ColorPalette, Wallpaper?)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(Int32)->Void, selectAccentColor: @escaping(NSColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, toggleFollowSystemAppearance: @escaping(Bool)->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void, installCloudTheme:@escaping(TelegramTheme)->Void) {
         self.context = context
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
@@ -30,11 +34,16 @@ private final class AppearanceViewArguments {
         self.selectChatBackground = selectChatBackground
         self.openAutoNightSettings = openAutoNightSettings
         self.toggleFollowSystemAppearance = toggleFollowSystemAppearance
+        self.removeTheme = removeTheme
+        self.editTheme = editTheme
+        self.shareTheme = shareTheme
+        self.installCloudTheme = installCloudTheme
     }
 }
 
 private enum AppearanceViewEntry : TableItemListNodeEntry {
     case colorPalette(Int32, Int32, Bool, ColorPalette, Wallpaper?)
+    case telegramTheme(Int32, Int32, Bool, TelegramTheme)
     case chatView(Int32, Int32, Bool, Bool)
     case accentColor(Int32, Int32, NSColor)
     case chatBackground(Int32, Int32)
@@ -48,6 +57,8 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     var stableId: Int32 {
         switch self {
         case .colorPalette(_, let index, _, _, _):
+            return index
+        case .telegramTheme(_, let index, _, _):
             return index
         case .chatView(_, let index, _, _):
             return index
@@ -74,6 +85,8 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
         switch self {
         case let .colorPalette(section, index, _, _, _):
             return (section * 1000) + index
+        case let .telegramTheme(section, index, _, _):
+             return (section * 1000) + index
         case let .chatView(section, index, _, _):
             return (section * 1000) + index
         case let .accentColor(section, index, _):
@@ -104,8 +117,33 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: localized != localizationKey ? localized : palette.name, type: .selectable(selected), action: {
                 arguments.togglePalette(palette, wallpaper)
             })
+        case let .telegramTheme(_, _, selected, theme):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: theme.title, description: theme.file == nil ? L10n.appearanceCloudThemeUnsupported : nil, type: .selectable(selected), action: {
+               if theme.file == nil {
+                    arguments.editTheme(theme)
+                } else {
+                    arguments.installCloudTheme(theme)
+                }
+            }, menuItems: {
+                var items:[ContextMenuItem] = []
+                
+                if theme.isCreator {
+                    items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
+                        arguments.editTheme(theme)
+                    }))
+                }
+                items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                    arguments.shareTheme(theme)
+                }))
+                items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+                    arguments.removeTheme(theme)
+                }))
+                
+                
+                
+                return items
+            })
         case let .chatView(_, _, selected, value):
-            //, description: tr(L10n.generalSettingsDarkModeDescription)
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: !value ? tr(L10n.appearanceSettingsChatViewClassic) : tr(L10n.appearanceSettingsChatViewBubbles), type: .selectable(selected), action: {
                 arguments.toggleBubbles(value)
             })
@@ -121,9 +159,9 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.appearanceSettingsFollowSystemAppearance, type: .switchable(value), action: {
                 arguments.toggleFollowSystemAppearance(!value)
             })
-        case let .accentColor(_, _, color):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.generalSettingsAccentColor), type: .colorSelector(color), action: {
-                arguments.selectAccentColor()
+        case .accentColor:
+            return AccentColorRowItem(initialSize, stableId: stableId, selectAccentColor: { color in
+                arguments.selectAccentColor(color)
             })
         case .description(_, _, let text, let haveSeparator):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: haveSeparator, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
@@ -145,53 +183,33 @@ private func <(lhs: AppearanceViewEntry, rhs: AppearanceViewEntry) -> Bool {
     return lhs.index < rhs.index
 }
 
-private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSettings: ThemePaletteSettings) -> [AppearanceViewEntry] {
+private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSettings: ThemePaletteSettings, telegramThemes: [TelegramTheme]) -> [AppearanceViewEntry] {
     var entries:[AppearanceViewEntry] = []
     
     var sectionId:Int32 = 1
     var descIndex:Int32 = 1
-    entries.append(.section(sectionId))
-    sectionId += 1
-    
+   
     var index: Int32 = 0
     
-    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsTextSizeHeader, true))
-    descIndex += 1
-    
-    let sizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
-            
-    entries.append(.font(sectionId, index, Int32(settings.fontSize), sizes))
-    index += 1
-    
-    
-    entries.append(.section(sectionId))
-    sectionId += 1
-    
-    
-    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsChatPreviewHeader, true))
-    descIndex += 1
     
     let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     
     let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
 
     
-    entries.append(.section(sectionId))
-    sectionId += 1
-    
     let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
 
     
     let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
     
-    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, settings.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, themeSettings.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
     
     entries.append(.preview(sectionId, index, firstEntry))
     index += 1
     
     let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     
-    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, settings.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, themeSettings.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
     
     entries.append(.preview(sectionId, index, secondEntry))
     index += 1
@@ -199,21 +217,14 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     entries.append(.chatBackground(sectionId, index))
     index += 1
     
-
+    if settings.colors.name != dayClassicPalette.name, themeSettings.cloudTheme == nil {
+        entries.append(.accentColor(sectionId, index, settings.colors.accent))
+        index += 1
+    }
     
-    if !settings.followSystemAppearance {
-        if settings.colors.name != dayClassic.name {
-            
-            entries.append(.section(sectionId))
-            sectionId += 1
-            
-            entries.append(.accentColor(sectionId, index, theme.colors.accent))
-            index += 1
-        }
-        
-        
-        
-        
+
+    if !themeSettings.followSystemAppearance {
+       
         entries.append(.section(sectionId))
         sectionId += 1
         
@@ -225,22 +236,22 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         
         installed[whitePalette.name] = whitePalette
         installed[nightBluePalette.name] = nightBluePalette
-        installed[dayClassic.name] = dayClassic
+        installed[dayClassicPalette.name] = dayClassicPalette
         installed[darkPalette.name] = darkPalette
         installed[mojavePalette.name] = darkPalette
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors.name == dayClassic.name, dayClassic, settings.bubbled ? .builtin : nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == dayClassicPalette.name && themeSettings.cloudTheme == nil, dayClassicPalette, settings.bubbled ? .builtin : nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors.name == whitePalette.name, whitePalette, nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == whitePalette.name && themeSettings.cloudTheme == nil, whitePalette, nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, settings.colors.name == nightBluePalette.name, nightBluePalette, nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == nightBluePalette.name && themeSettings.cloudTheme == nil, nightBluePalette, nil))
         index += 1
         
         
-        entries.append(.colorPalette(sectionId, index, settings.colors.name == mojavePalette.name, mojavePalette, nil))
+        entries.append(.colorPalette(sectionId, index, settings.colors.name == mojavePalette.name && themeSettings.cloudTheme == nil, mojavePalette, nil))
         index += 1
         
         
@@ -253,16 +264,50 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         for palette in palettes {
             if palette != whitePalette && palette != darkPalette && palette != settings.colors, installed[palette.name] == nil {
                 installed[palette.name] = palette
-                entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name, palette, nil))
+                entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name && settings.cloudTheme == nil, palette, nil))
                 index += 1
             }
         }
         
-        if installed[settings.colors.name] == nil {
+        if installed[settings.colors.name] == nil && settings.cloudTheme == nil {
             installed[settings.colors.name] = settings.colors
             entries.append(.colorPalette(sectionId, index, true, settings.colors, settings.wallpaper))
             index += 1
         }
+        
+       
+       
+        if !telegramThemes.isEmpty {
+            
+            entries.append(.section(sectionId))
+            sectionId += 1
+            
+            entries.append(.description(sectionId, descIndex, L10n.appearanceCloudThemes, true))
+            descIndex += 1
+            
+            for theme in telegramThemes {
+                entries.append(.telegramTheme(sectionId, index, themeSettings.cloudTheme?.id == theme.id, theme))
+                index += 1
+            }
+        }
+        
+        
+       
+        let foundCloud: Bool = telegramThemes.contains {
+            themeSettings.cloudTheme?.id == $0.id
+        }
+        if !foundCloud, let theme = themeSettings.cloudTheme {
+            if telegramThemes.isEmpty {
+                entries.append(.section(sectionId))
+                sectionId += 1
+                
+                entries.append(.description(sectionId, descIndex, L10n.appearanceCloudThemes, true))
+                descIndex += 1
+            }
+            entries.append(.telegramTheme(sectionId, index, true, theme))
+            index += 1
+        }
+        
     } else {
         
         entries.append(.section(sectionId))
@@ -286,7 +331,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         sectionId += 1
         
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == dayClassic.name, dayClassic, nil))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == dayClassicPalette.name, dayClassicPalette, nil))
         index += 1
         
         entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == whitePalette.name, whitePalette, nil))
@@ -297,6 +342,17 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         
     }
     
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
+    entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsTextSizeHeader, true))
+    descIndex += 1
+    
+    let sizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
+    
+    entries.append(.font(sectionId, index, Int32(settings.fontSize), sizes))
+    index += 1
     
     
     entries.append(.section(sectionId))
@@ -357,12 +413,12 @@ final class AppeaanceView : View {
         tableView.verticalScrollElasticity = .none
         tableView.layer?.backgroundColor = .clear
         addSubview(bottomHolder)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-      //  super.updateLocalizationAndTheme()
-        tableView.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+      //  super.updateLocalizationAndTheme(theme: theme)
+        tableView.updateLocalizationAndTheme(theme: theme)
         bottomHolder.backgroundColor = theme.colors.background
     }
     
@@ -392,26 +448,56 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let arguments = AppearanceViewArguments(context: context, togglePalette: { palette, _ in
             _ = combineLatest(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedPalette(palette).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
+                return settings.withUpdatedPalette(palette).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName).withUpdatedCloudTheme(nil)
                 
             }), updateAutoNightSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedBubbled(enabled)//.withUpdatedWallpaper(enabled ? settings.wallpaper : .none)
+                return settings.withUpdatedBubbled(enabled)
             }).start()
         }, toggleFontSize: { size in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 return settings.withUpdatedFontSize(CGFloat(size))
             }).start()
-        }, selectAccentColor: {
-            showModal(with: AccentColorModalController(context, current: theme.colors.accent), for: context.window)
+        }, selectAccentColor: { color in
+            if let color = color {
+                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    if color == theme.colors.basicAccent {
+                        return settings.withUpdatedPalette(theme.colors.withoutAccentColor())
+                    } else {
+                        return settings.withUpdatedPalette(theme.colors.withoutAccentColor().withAccentColor(color))
+                    }
+                }).start()
+            } else {
+                showModal(with: CustomAccentColorModalController(context: context), for: context.window)
+            }
         }, selectChatBackground: {
             showModal(with: ChatWallpaperModalController(context), for: mainWindow)
         }, openAutoNightSettings: { [weak self] in
             self?.navigationController?.push(autoNightSettingsController(context.sharedContext))
         }, toggleFollowSystemAppearance: { value in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedFollowSystemAppearance(value).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none)
+                return settings.withUpdatedFollowSystemAppearance(value).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedCloudTheme(nil)
+            }).start()
+        }, removeTheme: { cloudTheme in
+            confirm(for: context.window, header: L10n.appearanceConfirmRemoveTitle, information: L10n.appearanceConfirmRemoveText, successHandler: { _ in
+                if theme.cloudTheme?.id == cloudTheme.id {
+                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
+                        return $0.withUpdatedCloudTheme(nil).withUpdatedPaletteToDefault()
+                    }).start()
+                    if theme.colors.isDark {
+                       
+                    }
+                }
+                _ = deleteThemeInteractively(account: context.account, accountManager: context.sharedContext.accountManager, theme: cloudTheme).start()
+            })
+        }, editTheme: { theme in
+            showEditThemeModalController(context: context, theme: theme)
+        }, shareTheme: { theme in
+            showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(theme.slug)")), for: context.window)
+        }, installCloudTheme: { theme in
+            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
+                return $0.withUpdatedCloudTheme(theme)
             }).start()
         })
         
@@ -420,8 +506,10 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<AppearanceViewEntry>]> = Atomic(value: [])
         
-        let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager)) |> map { appearance, themeSettings in
-            let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let telegramThemesSignal = telegramThemes(postbox: context.account.postbox, network: context.account.network, accountManager: context.sharedContext.accountManager)
+        
+        let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(queue: prepareQueue, appearanceSignal, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager), telegramThemesSignal) |> map { appearance, themeSettings, telegramThemes in
+            let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings, telegramThemes: telegramThemes).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
         } |> deliverOnMainQueue
         
@@ -433,6 +521,33 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
     }
     
+    override func getRightBarViewOnce() -> BarView {
+        let view = ImageBarView(controller: self, theme.icons.chatActions)
+        
+        let context = self.context
+        
+        view.button.set(handler: { control in
+            
+            var items:[SPopoverItem] = []
+            
+            items.append(SPopoverItem(L10n.appearanceNewTheme, {
+                showModal(with: NewThemeController(context: context, palette: theme.colors), for: context.window)
+            }))
+            items.append(SPopoverItem(L10n.appearanceExportTheme, {
+                exportPalette(palette: theme.colors.withUpdatedName(findBestNameForPalette(theme.colors)))
+            }))
+            
+            if let cloudTheme = theme.cloudTheme {
+                items.append(SPopoverItem(L10n.appearanceThemeShare, {
+                    showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(cloudTheme.slug)")), for: context.window)
+                }))
+            }
+            showPopover(for: control, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-50))
+        }, for: .Click)
+        view.set(image: theme.icons.chatActions, highlightImage: theme.icons.chatActionsActive)
+        return view
+    }
+    
     override public var isOpaque: Bool {
         return false
     }
@@ -441,14 +556,35 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         return true
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         genericView.backgroundColor = .clear
+        let theme = (theme as! TelegramPresentationTheme)
         self.navigationController?.backgroundMode = theme.backgroundMode
+    }
+    
+    override func requestUpdateRightBar() {
+        super.requestUpdateRightBar()
+        (self.rightBarView as? ImageBarView)?.set(image: theme.icons.chatActions, highlightImage: theme.icons.chatActionsActive)
     }
    
     deinit {
         disposable.dispose()
+    }
+    
+    override var supportSwipes: Bool {
+        var accentView: AccentColorRowView?
+        genericView.tableView.enumerateViews { view -> Bool in
+            if let view = view as? AccentColorRowView {
+                accentView = view
+                return false
+            }
+            return true
+        }
+        if let accentView = accentView {
+            return !accentView.mouseInside()
+        }
+        return true
     }
     
     override func firstResponder() -> NSResponder? {

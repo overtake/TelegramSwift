@@ -140,7 +140,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
             }
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     private var blueColor:NSColor {
@@ -174,9 +174,9 @@ class CallNavigationHeaderView: NavigationHeaderView {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         dropCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         _ = dropCall.sizeToFit()
         endCall.set(text: tr(L10n.callHeaderEndCall), for: .Normal)

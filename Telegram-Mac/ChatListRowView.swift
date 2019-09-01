@@ -92,7 +92,7 @@ private final class ChatListExpandView: View {
 
         self.addSubview(titleView)
     }
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let titleLayout = TextViewLayout(.initialize(string: L10n.chatListArchivedChats, color: theme.colors.grayText, font: .medium(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
         titleLayout.measure(width: .greatestFiniteMagnitude)
         titleView.update(titleLayout)
@@ -347,7 +347,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     var mutedInset:CGFloat = item.isSecret ? theme.icons.secretImage.backingSize.width + 2 : 0
                     
                     if item.isVerified {
-                        ctx.draw(highlighted ? theme.icons.verifiedImageSelected : theme.icons.verifiedImage, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.verifiedImage.backingSize.width, theme.icons.verifiedImage.backingSize.height))
+                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition - 2, item.margin - 3, theme.icons.verifyDialog.backingSize.width, theme.icons.verifyDialog.backingSize.height))
                         mutedInset += theme.icons.verifiedImage.backingSize.width + 3
                     }
                     
@@ -463,7 +463,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     expandView = ChatListExpandView(frame: NSMakeRect(0, frame.height, frame.width, item.height))
                     self.addSubview(expandView!, positioned: .below, relativeTo: containerView)
                 }
-                expandView?.updateLocalizationAndTheme()
+                expandView?.updateLocalizationAndTheme(theme: theme)
             }
         }
         

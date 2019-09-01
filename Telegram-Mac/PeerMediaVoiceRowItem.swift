@@ -167,8 +167,9 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     func delete() -> Void {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         let messageId = item.message.id
+        let mediaBox = item.interface.context.account.postbox.mediaBox
         _ = item.interface.context.account.postbox.transaction { transaction -> Void in
-            transaction.deleteMessages([messageId])
+            deleteMessages(transaction: transaction, mediaBox: mediaBox, ids: [messageId])
         }.start()
     }
     

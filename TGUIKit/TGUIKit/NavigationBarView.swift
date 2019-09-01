@@ -32,17 +32,17 @@ public class NavigationBarView: View {
     override init() {
         super.init()
    //     self.autoresizingMask = [.width]
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
     }
     
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
        // self.autoresizingMask = [.width]
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
     }
     
-    override public func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override public func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         bottomBorder.backgroundColor = presentation.colors.border
         backgroundColor = presentation.colors.background
     }
@@ -270,9 +270,9 @@ public class NavigationBarView: View {
                 right.layer?.opacity = 0
             }
             
-            pLeft.updateLocalizationAndTheme()
-            pCenter.updateLocalizationAndTheme()
-            pRight.updateLocalizationAndTheme()
+            pLeft.updateLocalizationAndTheme(theme: presentation)
+            pCenter.updateLocalizationAndTheme(theme: presentation)
+            pRight.updateLocalizationAndTheme(theme: presentation)
             
             self.leftView = left
             self.centerView = center

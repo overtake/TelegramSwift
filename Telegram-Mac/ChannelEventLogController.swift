@@ -41,8 +41,8 @@ class ChannelEventLogTitledView : TitledBarView {
         
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         needsDisplay = true
     }
@@ -80,11 +80,11 @@ private class SearchContainerView : View {
             self?.hideSearch?()
             }, for: .Click)
         addSubview(cancelButton)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         cancelButton.set(background: theme.colors.background, for: .Normal)
         cancelButton.set(color: theme.colors.accent, for: .Normal)
         separator.backgroundColor = theme.colors.border
@@ -140,11 +140,11 @@ class ChannelEventLogView : View {
             alert(for: mainWindow, header: tr(L10n.channelEventLogAlertHeader), info: tr(L10n.channelEventLogAlertInfo))
         }, for: .Click)
         setFrameSize(frameRect.size)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         whatButton.set(color: theme.colors.accent, for: .Normal)
         whatButton.set(background: theme.colors.grayTransparent, for: .Highlight)
         whatButton.set(background: theme.colors.background, for: .Normal)

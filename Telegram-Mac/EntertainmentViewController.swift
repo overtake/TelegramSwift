@@ -57,9 +57,10 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
-    override open func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override open func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
+        let theme = (theme as! TelegramPresentationTheme)
         inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
         input.backgroundColor = presentation.colors.background
@@ -137,7 +138,7 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             }
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         
         
@@ -523,8 +524,9 @@ final class EntertainmentView : View {
         self.bottomView.addSubview(self.borderView)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         self.borderView.background = theme.colors.border
         self.emoji.set(image: theme.icons.entertainment_Emoji, for: .Normal)
         self.stickers.set(image: theme.icons.entertainment_Stickers, for: .Normal)
@@ -682,9 +684,9 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     }
 
 
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        self.section.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        self.section.updateLocalizationAndTheme(theme: theme)
         self.view.background = theme.colors.background
         if emoji.isLoaded() {
             emoji.view.background = theme.colors.background
@@ -706,7 +708,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         section.viewWillAppear(animated)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -793,7 +795,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         self.ready.set(section.ready.get())
         
         languageDisposable.set((combineLatest(appearanceSignal, ready.get() |> filter {$0} |> take(1))).start(next: { [weak self] _ in
-            self?.updateLocalizationAndTheme()
+            self?.updateLocalizationAndTheme(theme: theme)
         }))
     }
     

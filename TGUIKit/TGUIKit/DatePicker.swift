@@ -54,7 +54,7 @@ public class DatePicker<T>: Control where T: Equatable {
         self.addSubview(self.selectedText)
         self.addSubview(self.borderView)
         self.addSubview(self.activeBorderView)
-        self.updateLocalizationAndTheme()
+        self.updateLocalizationAndTheme(theme: presentation)
     }
     
     public override func layout() {
@@ -65,8 +65,8 @@ public class DatePicker<T>: Control where T: Equatable {
         self.selectedText.center()
     }
     
-    public override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         self.backgroundColor = presentation.colors.grayBackground
         self.layer?.cornerRadius = .cornerRadius
         

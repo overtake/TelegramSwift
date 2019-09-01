@@ -27,8 +27,8 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         let file = media as! TelegramMediaFile
         
         
-        self.uploadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingOut1(100), font: .normal(.text)))
-        self.downloadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingIn1(100), font: .normal(.text)))
+        self.uploadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingOut1(100), font: .normal(.text)), alwaysStaticItems: true)
+        self.downloadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingIn1(100), font: .normal(.text)), alwaysStaticItems: true)
         
         
         var attr:NSMutableAttributedString = NSMutableAttributedString()
@@ -39,7 +39,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
             let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
             attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/finder", range: range)
         }
-        finderLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
+        finderLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)
 
         
         attr = NSMutableAttributedString()
@@ -49,7 +49,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
             let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
             attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/download", range: range)
         }
-        downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
+        downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)
         
 
         super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)

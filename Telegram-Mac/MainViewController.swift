@@ -61,9 +61,9 @@ final class UpdateTabView : Control {
         }
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        imageView.image = theme.icons.appUpdate
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        imageView.image = (theme as! TelegramPresentationTheme).icons.appUpdate
         imageView.sizeToFit()
         needsLayout = true
     }
@@ -165,8 +165,8 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         }, for: .Click)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         let item = self.appcastItem
         self.appcastItem = item
     }
@@ -199,14 +199,14 @@ class MainViewController: TelegramViewController {
     var isUpChatList: Bool = false {
         didSet {
             if isUpChatList != oldValue {
-                updateLocalizationAndTheme()
+                updateLocalizationAndTheme(theme: theme)
             }
         }
     }
     private var hasScollThumb: Bool = false {
         didSet {
             if hasScollThumb != oldValue {
-               updateLocalizationAndTheme()
+               updateLocalizationAndTheme(theme: theme)
             }
         }
     }
@@ -248,7 +248,7 @@ class MainViewController: TelegramViewController {
             self?.showFastSettings(control)
         }))
         
-        tabController.updateLocalizationAndTheme()
+        tabController.updateLocalizationAndTheme(theme: theme)
 
         
 
@@ -374,7 +374,13 @@ class MainViewController: TelegramViewController {
                 
                 let item = ShortPeerRowItem(NSZeroSize, peer: account.peer, account: account.account, height: 40, photoSize: NSMakeSize(25, 25), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: .white), drawCustomSeparator: false, inset: NSEdgeInsets(left: 10), action: {
                     context.sharedContext.switchToAccount(id: account.account.id, action: nil)
-                }, highlightOnHover: true, badgeNode: GlobalBadgeNode(account.account, sharedContext: context.sharedContext, getColor: { theme.colors.accent }), compactText: true)
+                }, highlightOnHover: true, badgeNode: GlobalBadgeNode(account.account, sharedContext: context.sharedContext, getColor: { selected in
+                    if selected {
+                        return theme.colors.underSelectedColor
+                    } else {
+                        return theme.colors.accent
+                    }
+                }), compactText: true)
                 
                 headerItems.append(item)
 //                items.append(SPopoverItem(account.peer.displayTitle, {
@@ -401,7 +407,7 @@ class MainViewController: TelegramViewController {
                 _ = updateThemeInteractivetly(accountManager: strongSelf.context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
                     let palette: ColorPalette
                     var palettes:[String : ColorPalette] = [:]
-                    palettes[dayClassic.name] = dayClassic
+                    palettes[dayClassicPalette.name] = dayClassicPalette
                     palettes[whitePalette.name] = whitePalette
                     palettes[darkPalette.name] = darkPalette
                     palettes[nightBluePalette.name] = nightBluePalette
@@ -410,9 +416,9 @@ class MainViewController: TelegramViewController {
                     if !theme.colors.isDark {
                         palette = palettes[settings.defaultNightName] ?? nightBluePalette
                     } else {
-                        palette = palettes[settings.defaultDayName] ?? dayClassic
+                        palette = palettes[settings.defaultDayName] ?? dayClassicPalette
                     }
-                    return settings.withUpdatedPalette(palette).withUpdatedFollowSystemAppearance(false)
+                    return settings.withUpdatedPalette(palette).withUpdatedFollowSystemAppearance(false).withUpdatedCloudTheme(nil)
                 }).start()
                 _ = updateAutoNightSettingsInteractively(accountManager: strongSelf.context.sharedContext.accountManager, { $0.withUpdatedSchedule(nil)}).start()
             }
@@ -435,12 +441,12 @@ class MainViewController: TelegramViewController {
         self.quickController = controller
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        tabController.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        tabController.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         #if !APP_STORE
-        updateController.updateLocalizationAndTheme()
+        updateController.updateLocalizationAndTheme(theme: theme)
         #endif
         
         if !tabController.isEmpty {

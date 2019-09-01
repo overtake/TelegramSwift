@@ -76,7 +76,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: title, color: nameColor, font: .medium(.text))
-        titleText.setSelected(color: .white ,range: titleText.range)
+        titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
         self.titleText = titleText
         let messageTitle = NSMutableAttributedString()
@@ -104,7 +104,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         var time:TimeInterval = TimeInterval(message.timestamp)
         time -= context.timeDifference
         let range = date.append(string: DateUtils.string(forMessageListDate: Int32(time)), color: theme.colors.grayText, font: .normal(.short))
-        date.setSelected(color: .white,range: range)
+        date.setSelected(color: theme.colors.underSelectedColor, range: range)
         self.date = date.copy() as? NSAttributedString
         
         dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)

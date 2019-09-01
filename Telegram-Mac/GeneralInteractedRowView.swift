@@ -14,16 +14,14 @@ class GeneralInteractedRowView: GeneralRowView {
     
     private(set) var switchView:SwitchView?
     private(set) var textView:TextView?
-    private(set) var overlay:OverlayControl = OverlayControl()
     private(set) var descriptionView: TextView?
     private var nextView:ImageView = ImageView()
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
-        overlay.removeAllHandlers()
         
         nextView.image = theme.icons.generalNext
-        overlay.animates = false
+        
 
         if let item = item as? GeneralInteractedRowItem {
             
@@ -69,9 +67,10 @@ class GeneralInteractedRowView: GeneralRowView {
                     textView = TextView()
                     textView?.animates = false
                     textView?.userInteractionEnabled = false
+                    textView?.isEventLess = true
                     addSubview(textView!)
                 }
-                let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? .white : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+                let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
                 
                 textView?.set(layout: layout)
                 
@@ -84,40 +83,7 @@ class GeneralInteractedRowView: GeneralRowView {
             
             textView?.backgroundColor = theme.colors.background
             
-            if item.enabled {
-                overlay.set(handler:{ [weak self, weak item] _ in
-                    
-                    guard let item = item, let `self` = self else {return}
-                    
-                    if let textView = self.textView {
-                        switch item.type {
-                        case let .contextSelector(_, items):
-                            showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
-                            return
-                        default:
-                            break
-                        }
-                    }
-                    
-                    
-                    item.action()
-                    switch item.type {
-                    case let .switchable(enabled):
-                        if item.autoswitch {
-                            item.type = .switchable(!enabled)
-                            self.switchView?.setIsOn(!enabled)
-                        }
-                        
-                    default:
-                        break
-                    }
-                   
-                }, for: .SingleClick)
-            } else {
-                overlay.set(handler:{ [weak item] _ in
-                    item?.disabledAction()
-                }, for: .SingleClick)
-            }
+           
             
             
             if case let .selectable(value) = item.type {
@@ -152,9 +118,43 @@ class GeneralInteractedRowView: GeneralRowView {
     override var backdorColor: NSColor {
         return isSelect ? theme.colors.blueSelect : theme.colors.background
     }
-    
+    private var mouseIsDown: Bool = false
     override func mouseDown(with event: NSEvent) {
-        
+        super.mouseDown(with: event)
+        mouseIsDown = true
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        if mouseInside(), mouseIsDown, event.clickCount == 1, let item = item as? GeneralInteractedRowItem {
+            if item.enabled {
+                if let textView = self.textView {
+                    switch item.type {
+                    case let .contextSelector(_, items):
+                        showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
+                        return
+                    default:
+                        break
+                    }
+                }
+                
+                
+                item.action()
+                switch item.type {
+                case let .switchable(enabled):
+                    if item.autoswitch {
+                        item.type = .switchable(!enabled)
+                        self.switchView?.setIsOn(!enabled)
+                    }
+                    
+                default:
+                    break
+                }
+            } else {
+                item.disabledAction()
+            }
+        }
+        mouseIsDown = false
     }
     
     override func updateColors() {
@@ -233,7 +233,6 @@ class GeneralInteractedRowView: GeneralRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(overlay)
         
         nextView.sizeToFit()
         addSubview(nextView)
@@ -251,7 +250,6 @@ class GeneralInteractedRowView: GeneralRowView {
         
         if let item = item as? GeneralInteractedRowItem {
             let inset = general?.inset ?? NSEdgeInsetsZero
-            self.overlay.frame = NSMakeRect(inset.left, 0, frame.width - inset.left - inset.right, frame.height)
             
             if let descriptionView = descriptionView {
                 

@@ -25,13 +25,13 @@ class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView 
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        languageDisposable.set(appearanceSignal.start(next: { [weak self] _ in
-            self?.updateLocalizationAndTheme()
+        languageDisposable.set(appearanceSignal.start(next: { [weak self] appearance in
+            self?.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         self.genericView.background = theme.colors.background
         requestUpdateBackBar()

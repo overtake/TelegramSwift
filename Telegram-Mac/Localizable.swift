@@ -47,6 +47,8 @@ internal final class L10n {
   internal static var _9yt4BNSMTitle: String  { return L10n.tr("Localizable", "9yt-4B-nSM.title") }
   /// Free messaging app for macOS based on MTProto for speed and security.
   internal static var aboutDescription: String  { return L10n.tr("Localizable", "About.Description") }
+  /// Tinted
+  internal static var accentColorsTinted: String  { return L10n.tr("Localizable", "AccentColors.Tinted") }
   /// Please note that Telegram Support is run by volunteers. We try to respond as quickly as possible, but it may take a while.\n\nPlease take a look at the Telegram FAQ: it has important troubleshooting tips and answers to most questions.
   internal static var accountConfirmAskQuestion: String  { return L10n.tr("Localizable", "Account.Confirm.AskQuestion") }
   /// Open FAQ
@@ -221,12 +223,30 @@ internal final class L10n {
   }
   /// PREVIOUS VERSIONS
   internal static var appUpdateTitlePrevious: String  { return L10n.tr("Localizable", "AppUpdate.Title.Previous") }
+  /// CLOUD THEMES
+  internal static var appearanceCloudThemes: String  { return L10n.tr("Localizable", "Appearance.CloudThemes") }
   /// Custom Background
   internal static var appearanceCustomBackground: String  { return L10n.tr("Localizable", "Appearance.CustomBackground") }
+  /// Export Theme
+  internal static var appearanceExportTheme: String  { return L10n.tr("Localizable", "Appearance.ExportTheme") }
+  /// New Theme
+  internal static var appearanceNewTheme: String  { return L10n.tr("Localizable", "Appearance.NewTheme") }
+  /// Unavailable. Click for Edit
+  internal static var appearanceCloudThemeUnsupported: String  { return L10n.tr("Localizable", "Appearance.CloudTheme.Unsupported") }
+  /// Are you sure you want to remove this theme?
+  internal static var appearanceConfirmRemoveText: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveText") }
+  /// Theme
+  internal static var appearanceConfirmRemoveTitle: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveTitle") }
   /// The file size must not exceed 2MB and the image dimensions must not exceed 500x500px.
   internal static var appearanceCustomBackgroundFileError: String  { return L10n.tr("Localizable", "Appearance.CustomBackground.FileError") }
   /// Auto-Night Mode
   internal static var appearanceSettingsAutoNight: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNight") }
+  /// Edit
+  internal static var appearanceThemeEdit: String  { return L10n.tr("Localizable", "Appearance.Theme.Edit") }
+  /// Remove
+  internal static var appearanceThemeRemove: String  { return L10n.tr("Localizable", "Appearance.Theme.Remove") }
+  /// Share
+  internal static var appearanceThemeShare: String  { return L10n.tr("Localizable", "Appearance.Theme.Share") }
   /// Follow System Appearance
   internal static var appearanceSettingsFollowSystemAppearance: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance") }
   /// Ah, you kids today with techno music! You should enjoy the classics, like Hasselhoff!
@@ -1059,6 +1079,8 @@ internal final class L10n {
   internal static var chatViewBackground: String  { return L10n.tr("Localizable", "Chat.ViewBackground") }
   /// VIEW CONTACT
   internal static var chatViewContact: String  { return L10n.tr("Localizable", "Chat.ViewContact") }
+  /// VIEW THEME
+  internal static var chatActionViewTheme: String  { return L10n.tr("Localizable", "Chat.Action.ViewTheme") }
   /// Forwarded from: [%@]()
   internal static func chatBubblesForwardedFrom(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom", p1)
@@ -1373,6 +1395,8 @@ internal final class L10n {
   internal static var chatSendSetReminder: String  { return L10n.tr("Localizable", "Chat.Send.SetReminder") }
   /// Send Without Sound
   internal static var chatSendWithoutSound: String  { return L10n.tr("Localizable", "Chat.Send.WithoutSound") }
+  /// Sorry, you can only send only 100 scheduled messages.
+  internal static var chatSendMessageErrorTooMuchScheduled: String  { return L10n.tr("Localizable", "Chat.SendMessageError.TooMuchScheduled") }
   /// You allowed this bot to message you when you logged in on %@
   internal static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
@@ -2033,6 +2057,28 @@ internal final class L10n {
   internal static var editImageControlReset: String  { return L10n.tr("Localizable", "EditImageControl.Reset") }
   /// Are you sure you want to close and discard all changes?
   internal static var editImageControlConfirmDiscard: String  { return L10n.tr("Localizable", "EditImageControl.Confirm.Discard") }
+  /// Save
+  internal static var editThemeEdit: String  { return L10n.tr("Localizable", "EditTheme.Edit") }
+  /// Theme Name
+  internal static var editThemeNamePlaceholder: String  { return L10n.tr("Localizable", "EditTheme.NamePlaceholder") }
+  /// Preview is unavailable.\nPlease, upload macOS theme file to see it.
+  internal static var editThemeNoPreview: String  { return L10n.tr("Localizable", "EditTheme.NoPreview") }
+  /// Select File...
+  internal static var editThemeSelectFile: String  { return L10n.tr("Localizable", "EditTheme.SelectFile") }
+  /// This theme will be based on your current theme and wallpaper. Otherwise, you can use a custom theme file if you already have one.
+  internal static var editThemeSelectFileDesc: String  { return L10n.tr("Localizable", "EditTheme.SelectFileDesc") }
+  /// Select Updated File...
+  internal static var editThemeSelectUpdatedFile: String  { return L10n.tr("Localizable", "EditTheme.SelectUpdatedFile") }
+  /// You can select a new file to update the theme. It will be updated for all users.
+  internal static var editThemeSelectUpdatedFileDesc: String  { return L10n.tr("Localizable", "EditTheme.SelectUpdatedFileDesc") }
+  /// You can add short link for your theme. Use a-z, 0-9 and underscopes. Minimum length is 5 characters.
+  internal static var editThemeSlugDesc: String  { return L10n.tr("Localizable", "EditTheme.SlugDesc") }
+  /// short link
+  internal static var editThemeSlugPlaceholder: String  { return L10n.tr("Localizable", "EditTheme.SlugPlaceholder") }
+  /// Edit Theme
+  internal static var editThemeTitle: String  { return L10n.tr("Localizable", "EditTheme.Title") }
+  /// This short name has already taken by someone. Please try again.
+  internal static var editThemeSlugErrorAlreadyExists: String  { return L10n.tr("Localizable", "EditTheme.SlugError.AlreadyExists") }
   /// Activity & Sport
   internal static var emojiActivityAndSport: String  { return L10n.tr("Localizable", "Emoji.ActivityAndSport") }
   /// Animals & Nature
@@ -3123,6 +3169,16 @@ internal final class L10n {
   internal static var newPollDisacardConfirmNo: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.No") }
   /// Discard
   internal static var newPollDisacardConfirmYes: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.Yes") }
+  /// Create
+  internal static var newThemeCreate: String  { return L10n.tr("Localizable", "NewTheme.Create") }
+  /// This theme will be based on your current theme.
+  internal static var newThemeDesc: String  { return L10n.tr("Localizable", "NewTheme.Desc") }
+  /// name can't be empty.
+  internal static var newThemeEmptyTextError: String  { return L10n.tr("Localizable", "NewTheme.EmptyTextError") }
+  /// Theme name
+  internal static var newThemePlaceholder: String  { return L10n.tr("Localizable", "NewTheme.Placeholder") }
+  /// New Theme
+  internal static var newThemeTitle: String  { return L10n.tr("Localizable", "NewTheme.Title") }
   /// You have a new message
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mark as Read
@@ -4055,6 +4111,10 @@ internal final class L10n {
   internal static var privacyAndSecurityItemOff: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.Item.Off") }
   /// On
   internal static var privacyAndSecurityItemOn: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.Item.On") }
+  /// Users who add your number to their contacts will see it on Telegram only if they are your contacts.
+  internal static var privacyPhoneNumberSettingsCustomDisabledHelp: String  { return L10n.tr("Localizable", "PrivacyPhoneNumberSettings.CustomDisabledHelp") }
+  /// WHO CAN FIND ME BY MY NUMBER
+  internal static var privacyPhoneNumberSettingsDiscoveryHeader: String  { return L10n.tr("Localizable", "PrivacyPhoneNumberSettings.DiscoveryHeader") }
   /// Active Sessions
   internal static var privacySettingsActiveSessions: String  { return L10n.tr("Localizable", "PrivacySettings.ActiveSessions") }
   /// Blocked Users
@@ -5309,6 +5369,10 @@ internal final class L10n {
   internal static var textViewTransformRemoveAll: String  { return L10n.tr("Localizable", "TextView.Transform.RemoveAll") }
   /// Make URL
   internal static var textViewTransformURL: String  { return L10n.tr("Localizable", "TextView.Transform.URL") }
+  /// Sorry, this theme doesn't seem to exist for macOS.
+  internal static var themeGetThemeError: String  { return L10n.tr("Localizable", "Theme.GetTheme.Error") }
+  /// Theme Preview
+  internal static var themePreviewTitle: String  { return L10n.tr("Localizable", "ThemePreview.Title") }
   /// at
   internal static var timeAt: String  { return L10n.tr("Localizable", "Time.at") }
   /// last seen
@@ -5589,6 +5653,12 @@ internal final class L10n {
   internal static var touchBarEditMessageReplaceWithFile: String  { return L10n.tr("Localizable", "TouchBar.EditMessage.ReplaceWithFile") }
   /// Replace with Media
   internal static var touchBarEditMessageReplaceWithMedia: String  { return L10n.tr("Localizable", "TouchBar.EditMessage.ReplaceWithMedia") }
+  /// Chat Actions
+  internal static var touchBarLabelChatActions: String  { return L10n.tr("Localizable", "TouchBarLabel.ChatActions") }
+  /// Emoji & Stickers
+  internal static var touchBarLabelEmojiAndStickers: String  { return L10n.tr("Localizable", "TouchBarLabel.EmojiAndStickers") }
+  /// New Chat
+  internal static var touchBarLabelNewChat: String  { return L10n.tr("Localizable", "TouchBarLabel.NewChat") }
   /// Skip
   internal static var twoStepAuthEmailSkip: String  { return L10n.tr("Localizable", "TwoStep.AuthEmailSkip") }
   /// An error occured. Please try again later.
@@ -5801,6 +5871,8 @@ internal final class L10n {
   internal static var d9MCDAMdTitle: String  { return L10n.tr("Localizable", "d9M-CD-aMd.title") }
   /// Undo
   internal static var drj4nYzgTitle: String  { return L10n.tr("Localizable", "dRJ-4n-Yzg.title") }
+  /// invalid format.
+  internal static var editThemeSlugErrorFormat: String  { return L10n.tr("Localizable", "editTheme.SlugError.Format") }
   /// Paste
   internal static var gvau4SdLTitle: String  { return L10n.tr("Localizable", "gVA-U4-sdL.title") }
   /// Smart Quotes

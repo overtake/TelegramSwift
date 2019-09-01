@@ -12,9 +12,7 @@
 		9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6281282037389200B2D3C9 /* CheckBox.swift */; };
 		9F9B5EAF2255FEDA00728CDC /* TooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */; };
 		9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */; };
-		9FF1DEB6225E285F009512C9 /* SPopoverRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEB3225E285F009512C9 /* SPopoverRowItem.swift */; };
 		9FF1DEB7225E285F009512C9 /* SPopoverRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */; };
-		9FF1DEB8225E285F009512C9 /* SPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEB5225E285F009512C9 /* SPopoverViewController.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
 		C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21178011F17E78E00AC706D /* TimableProgressView.swift */; };
@@ -105,6 +103,8 @@
 		C2E8694F1F44481400BDD0A2 /* GridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E8694E1F44481400BDD0A2 /* GridItem.swift */; };
 		C2E869511F4449A700BDD0A2 /* GridItemNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E869501F4449A700BDD0A2 /* GridItemNode.swift */; };
 		C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */; };
+		D04D214C230ED78300609388 /* SPopoverRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D214A230ED78300609388 /* SPopoverRowItem.swift */; };
+		D04D214D230ED78300609388 /* SPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D214B230ED78300609388 /* SPopoverViewController.swift */; };
 		D0558D8221528DF5006B403D /* ModalTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D8121528DF5006B403D /* ModalTouchBar.swift */; };
 		D05F392022FB37920040F341 /* DatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F391F22FB37920040F341 /* DatePicker.swift */; };
 		D0BEB9922163C1F00055B718 /* SelectionRectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9912163C1F00055B718 /* SelectionRectView.swift */; };
@@ -116,9 +116,7 @@
 		9F6281282037389200B2D3C9 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
 		9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TooltipController.swift; sourceTree = "<group>"; };
 		9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentController.swift; sourceTree = "<group>"; };
-		9FF1DEB3225E285F009512C9 /* SPopoverRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SPopoverRowItem.swift; path = "../../Telegram-Mac/SPopoverRowItem.swift"; sourceTree = "<group>"; };
 		9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SPopoverRowView.swift; path = "../../Telegram-Mac/SPopoverRowView.swift"; sourceTree = "<group>"; };
-		9FF1DEB5225E285F009512C9 /* SPopoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SPopoverViewController.swift; path = "../../Telegram-Mac/SPopoverViewController.swift"; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
 		C21178011F17E78E00AC706D /* TimableProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimableProgressView.swift; sourceTree = "<group>"; };
@@ -215,6 +213,8 @@
 		C2E8694E1F44481400BDD0A2 /* GridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridItem.swift; sourceTree = "<group>"; };
 		C2E869501F4449A700BDD0A2 /* GridItemNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridItemNode.swift; sourceTree = "<group>"; };
 		C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressContainerView.swift; sourceTree = "<group>"; };
+		D04D214A230ED78300609388 /* SPopoverRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverRowItem.swift; sourceTree = "<group>"; };
+		D04D214B230ED78300609388 /* SPopoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverViewController.swift; sourceTree = "<group>"; };
 		D0558D8121528DF5006B403D /* ModalTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalTouchBar.swift; sourceTree = "<group>"; };
 		D05F391F22FB37920040F341 /* DatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePicker.swift; sourceTree = "<group>"; };
 		D0BEB9912163C1F00055B718 /* SelectionRectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionRectView.swift; sourceTree = "<group>"; };
@@ -375,8 +375,8 @@
 		C2303E7D1D99881500098E12 /* overlay */ = {
 			isa = PBXGroup;
 			children = (
-				9FF1DEB5225E285F009512C9 /* SPopoverViewController.swift */,
-				9FF1DEB3225E285F009512C9 /* SPopoverRowItem.swift */,
+				D04D214A230ED78300609388 /* SPopoverRowItem.swift */,
+				D04D214B230ED78300609388 /* SPopoverViewController.swift */,
 				9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */,
 				C2B1A1241DA2F3DC00ACB1DD /* ContextMenu.swift */,
 				C2303E791D9987FE00098E12 /* Popover.swift */,
@@ -627,7 +627,6 @@
 				C22E06351D804C8200A11C88 /* TableView.swift in Sources */,
 				C232EA151E165AEF00C4D38C /* ImageBarView.swift in Sources */,
 				C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */,
-				9FF1DEB8225E285F009512C9 /* SPopoverViewController.swift in Sources */,
 				C22E062E1D7F3CC000A11C88 /* TGColor.swift in Sources */,
 				C2271DED1DAFE4D0001792B6 /* TransformImageArguments.swift in Sources */,
 				C2E0DEB71D7EF58200EF1C8D /* TGSplitView.swift in Sources */,
@@ -649,7 +648,6 @@
 				C219E1F31D8B02FA0042F0C8 /* CAAnimationUtils.swift in Sources */,
 				C291ED991DB35BC5008C6B2A /* Window.swift in Sources */,
 				C296AF841D8D9D7D001DBB59 /* RadialProgressView.swift in Sources */,
-				9FF1DEB6225E285F009512C9 /* SPopoverRowItem.swift in Sources */,
 				C24A371A1F338406004ADE5C /* SectionViewController.swift in Sources */,
 				C219E1EB1D8AD1470042F0C8 /* NavigationViewController.swift in Sources */,
 				C253A9761D9430A900CDC850 /* ImageView.swift in Sources */,
@@ -684,11 +682,13 @@
 				C2CBCAC31D81595900142EC0 /* Extensions.swift in Sources */,
 				C219E1ED1D8ADEE00042F0C8 /* NavigationBarView.swift in Sources */,
 				C2303E821D9A692B00098E12 /* TabBarController.swift in Sources */,
+				D04D214C230ED78300609388 /* SPopoverRowItem.swift in Sources */,
 				C2CBCABB1D80AD1F00142EC0 /* TGFont.swift in Sources */,
 				C2B1A12E1DA5148B00ACB1DD /* TextButtonBarView.swift in Sources */,
 				C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */,
 				C2271F361DB4CF270045E719 /* HorizontalRowView.swift in Sources */,
 				9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */,
+				D04D214D230ED78300609388 /* SPopoverViewController.swift in Sources */,
 				C22E06391D804DCD00A11C88 /* ScrollView.swift in Sources */,
 				C219E1F11D8AFD140042F0C8 /* AnimationBlockDelegate.swift in Sources */,
 				9FF1DEB7225E285F009512C9 /* SPopoverRowView.swift in Sources */,

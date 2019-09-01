@@ -88,7 +88,7 @@ final class TableContainer : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         emptyResults.contentGravity = .center
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         reinstall()
     }
@@ -150,9 +150,10 @@ final class TableContainer : View {
         tableView = nil
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        self.restrictedView?.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.restrictedView?.updateLocalizationAndTheme(theme: theme)
         emptyResults.background = theme.colors.background
         emptyResults.image = theme.icons.stickersEmptySearch
     }

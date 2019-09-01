@@ -35,11 +35,11 @@ class SidebarCapView : View {
        
         
         addSubview(close)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         text.textColor = theme.colors.grayText
         text.stringValue = restrictedByPeer ? L10n.sidebarPeerRestricted : L10n.sidebarAvalability
         text.setFrameSize(text.sizeThatFits(NSMakeSize(300, 100)))
@@ -121,7 +121,7 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
     override func navigationWillChangeController() {
         
         self.genericView.restrictedByPeer = !inChatAbility
-        self.genericView.updateLocalizationAndTheme()
+        self.genericView.updateLocalizationAndTheme(theme: theme)
         
         self.view.setFrameSize(context.sharedContext.bindings.entertainment().frame.size)
         

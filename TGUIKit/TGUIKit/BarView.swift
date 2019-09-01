@@ -51,8 +51,8 @@ open class BarView: Control {
         }
     }
     
-    override open func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override open func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         set(background: presentation.colors.background, for: .Normal)
         backgroundColor = presentation.colors.background
     }
@@ -62,7 +62,7 @@ open class BarView: Control {
         set(handler: { [weak self] control in
             self?.clickHandler()
         }, for: .Click)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: presentation)
     }
     
     required public init(frame frameRect: NSRect) {

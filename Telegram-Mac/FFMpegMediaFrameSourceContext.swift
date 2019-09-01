@@ -76,8 +76,6 @@ private func readPacketCallback(userData: UnsafeMutableRawPointer?, buffer: Unsa
     let readCount = min(resourceSize - context.readingOffset, Int(bufferSize))
     let requestRange: Range<Int> = context.readingOffset ..< (context.readingOffset + readCount)
     
-    precondition(readCount < 3 * 1024 * 1024)
-    
     if let maximumFetchSize = context.maximumFetchSize {
         context.touchedRanges.insert(integersIn: requestRange)
         var totalCount = 0
@@ -148,7 +146,6 @@ private func readPacketCallback(userData: UnsafeMutableRawPointer?, buffer: Unsa
                     let readCount = max(0, min(next.size - readingOffset, Int(bufferSize)))
                     let range = readingOffset ..< (readingOffset + readCount)
                     
-                    precondition(readCount < 1 * 1024 * 1024)
                     
                     let fd = open(next.path, O_RDONLY, S_IRUSR)
                     if fd >= 0 {

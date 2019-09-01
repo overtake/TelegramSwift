@@ -22,7 +22,7 @@ class SecretChatKeyView : View {
         addSubview(textView)
         addSubview(descriptionView)
         descriptionView.userInteractionEnabled = false
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     required init?(coder: NSCoder) {
@@ -77,8 +77,8 @@ class SecretChatKeyView : View {
         needsLayout = true
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         textView.backgroundColor = theme.colors.background
         descriptionView.backgroundColor = theme.colors.background

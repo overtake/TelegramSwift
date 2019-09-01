@@ -465,7 +465,7 @@ class NStickersView : View {
         emptySearchContainer.isHidden = true
         emptySearchContainer.isEventLess = true
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     func updateRestricion(_ peer: Peer?) {
@@ -499,10 +499,11 @@ class NStickersView : View {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        self.restrictedView?.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        self.restrictedView?.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         self.separator.backgroundColor = theme.colors.border
-        self.tableView.updateLocalizationAndTheme()
+        self.tableView.updateLocalizationAndTheme(theme: theme)
         self.tableView.backgroundColor = theme.colors.background
         self.tableView.documentView?.background = theme.colors.background
         self.emptySearchView.image = theme.icons.stickersEmptySearch
@@ -575,9 +576,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         searchStateDisposable.dispose()
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        self.genericView.packsView.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        self.genericView.packsView.updateLocalizationAndTheme(theme: theme)
     }
     
     func update(with interactions:EntertainmentInteractions, chatInteraction: ChatInteraction) {

@@ -92,8 +92,8 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
     }
     
     var currentState: InstantPageStoredState {

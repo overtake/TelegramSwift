@@ -203,7 +203,8 @@ public class TitleButton: ImageButton {
     public override var style: ControlStyle {
         set {
             super.style = newValue
-//            
+            apply(state: self.controlState)
+//
 //            self.set(color: style.foregroundColor, for: .Normal)
 //            self.set(color: style.highlightColor, for: .Highlight)
 //            self.set(font: style.font, for: .Normal)

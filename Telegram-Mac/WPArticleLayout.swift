@@ -34,6 +34,18 @@ class WPArticleLayout: WPLayout {
         } else {
             durationAttributed = nil
         }
+        
+        var content = content
+        if content.type == "telegram_theme" {
+            if let files = content.files {
+                for file in files {
+                    if file.mimeType == "application/x-tgtheme-macos", !file.previewRepresentations.isEmpty {
+                        content = content.withUpdatedFile(file)
+                    }
+                }
+            }
+        }
+        
         self.downloadSettings = downloadSettings
         
         super.init(with: content, context: context, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue)
@@ -93,6 +105,8 @@ class WPArticleLayout: WPLayout {
         if let file = content.file, groupLayout == nil {
             if let dimensions = file.dimensions {
                 imageSize = dimensions
+            } else if isTheme {
+                imageSize = NSMakeSize(200, 200)
             }
         }
         if let wallpaper = wallpaper {
@@ -108,7 +122,7 @@ class WPArticleLayout: WPLayout {
                 break
             }
         }
-        
+       
         if ExternalVideoLoader.isPlayable(content) {
             _ = sharedVideoLoader.fetch(for: content).start()
         }
@@ -126,7 +140,7 @@ class WPArticleLayout: WPLayout {
     private let fullSizeSites:[String] = ["instagram","twitter"]
     
     var isFullImageSize: Bool {
-        if content.type == "telegram_background" {
+        if content.type == "telegram_background" || content.type == "telegram_theme" {
             return true
         }
         let website = content.websiteName?.lowercased()
@@ -145,7 +159,7 @@ class WPArticleLayout: WPLayout {
         if oldWidth != width {
             super.measure(width: width)
             
-            let maxw = max(min(320, width - 50), 260)
+            let maxw = max(min(320, width - 50), 230)
             
             var contentSize:NSSize = NSMakeSize(width - insets.left, 0)
             
@@ -179,11 +193,15 @@ class WPArticleLayout: WPLayout {
             }
             
             if let imageSize = imageSize, isFullImageSize {
-                contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))
+                if isTheme {
+                    contrainedImageSize = imageSize
+                } else {
+                    contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))
+                }
               //  if presentation.renderType == .bubble {
                 if isColor {
                     contrainedImageSize = imageSize
-                } else {
+                } else if !isTheme  {
                     contrainedImageSize.width = max(contrainedImageSize.width, maxw)
                 }
               //  }
@@ -225,7 +243,7 @@ class WPArticleLayout: WPLayout {
             if let imageSize = imageSize {
                
                 
-                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: imageSize.aspectFilled(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground, emptyColor: emptyColor)
+                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: isTheme ? contrainedImageSize : imageSize.aspectFilled(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground, emptyColor: emptyColor)
                 
                 if imageArguments != self.imageArguments {
                     self.imageArguments = imageArguments

@@ -340,15 +340,15 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             updateTheme(with: themeSettings, for: window)
             
-            
-            
+//            actualizedTheme(account: <#T##Account#>, accountManager: <#T##AccountManager#>, theme: <#T##TelegramTheme#>)
             
             
             let basicTheme = Atomic<ThemePaletteSettings?>(value: themeSettings)
             let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
             _ = (viewDidChangedAppearance.get() |> mapToSignal { _ in return themeSettingsView(accountManager: accountManager) } |> deliverOnMainQueue).start(next: { settings in
-                if basicTheme.swap(settings) != settings {
-                    updateTheme(with: settings, for: window, animated: window.isKeyWindow)
+                let previous = basicTheme.swap(settings)
+                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper {
+                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && previous?.fontSize == settings.fontSize)
                     self.contextValue?.applyNewTheme()
                 }
             })
@@ -389,7 +389,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         
                         let palette: ColorPalette
                         var palettes:[String : ColorPalette] = [:]
-                        palettes[dayClassic.name] = dayClassic
+                        palettes[dayClassicPalette.name] = dayClassicPalette
                         palettes[whitePalette.name] = whitePalette
                         palettes[darkPalette.name] = darkPalette
                         palettes[nightBluePalette.name] = nightBluePalette
@@ -398,10 +398,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         if isDarkTheme {
                             palette = palettes[preference.themeName] ?? nightBluePalette
                         } else {
-                            palette = palettes[settings.defaultDayName] ?? dayClassic
+                            palette = palettes[settings.defaultDayName] ?? dayClassicPalette
                         }
                         if theme.colors.name != palette.name {
-                            return settings.withUpdatedPalette(palette)
+                            return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
                         } else {
                             return settings
                         }
@@ -420,6 +420,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     }
                 }
             })
+            
             
             
             let networkArguments = NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(nil))
@@ -593,6 +594,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     closeAllPopovers(for: window)
                     
                     self.contextValue = context
+                    
+                  
                     
                     
                     if let context = context {

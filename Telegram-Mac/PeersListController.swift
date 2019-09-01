@@ -62,7 +62,7 @@ import SwiftSignalKitMac
  
  proxyButton.addSubview(proxyConnecting)
  setFrameSize(frameRect.size)
- updateLocalizationAndTheme()
+ updateLocalizationAndTheme(theme: theme)
  proxyButton.disableActions()
  
  
@@ -100,7 +100,7 @@ import SwiftSignalKitMac
  // proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
  }
  
- override func updateLocalizationAndTheme() {
+ override func updateLocalizationAndTheme(theme: PresentationTheme) {
  self.backgroundColor = theme.colors.background
  compose.background = .clear
  compose.set(background: .clear, for: .Normal)
@@ -125,7 +125,7 @@ import SwiftSignalKitMac
  
  titleView.update(titleLayout)
  
- super.updateLocalizationAndTheme()
+ super.updateLocalizationAndTheme(theme: theme)
  }
  
  required init?(coder: NSCoder) {
@@ -208,7 +208,7 @@ class PeerListContainerView : View {
         addSubview(searchView)
         proxyButton.addSubview(proxyConnecting)
         setFrameSize(frameRect.size)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         proxyButton.disableActions()
         addSubview(backgroundView)
         backgroundView.isHidden = true
@@ -242,7 +242,8 @@ class PeerListContainerView : View {
         proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
     }
     
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        let theme = (theme as! TelegramPresentationTheme)
         self.backgroundColor = theme.colors.background
         compose.background = .clear
         compose.set(background: .clear, for: .Normal)
@@ -254,7 +255,7 @@ class PeerListContainerView : View {
         compose.setFrameSize(NSMakeSize(40, 30))
         proxyConnecting.progressColor = theme.colors.blueIcon
         proxyConnecting.lineWidth = 1.0
-        super.updateLocalizationAndTheme()
+        super.updateLocalizationAndTheme(theme: theme)
     }
     
     required init?(coder: NSCoder) {
@@ -681,8 +682,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return true
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
     }
 
     private var effectiveTableView: TableView {

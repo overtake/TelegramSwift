@@ -63,9 +63,23 @@ class GlobalBadgeNode: Node {
         super.setNeedDisplay()
     }
     
-    private let getColor: () -> NSColor
+    var isSelected: Bool = false {
+        didSet {
+            if oldValue != self.isSelected {
+                self.view?.needsDisplay = true
+                let copy = self.attributedString?.mutableCopy() as? NSMutableAttributedString
+                guard let attr = copy else {
+                    return
+                }
+                attr.addAttribute(.foregroundColor, value: getColor(!isSelected), range: attr.range)
+                self.attributedString = copy
+            }
+        }
+    }
     
-    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping() -> NSColor = { theme.colors.redUI }) {
+    private let getColor: (Bool) -> NSColor
+    
+    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }) {
         self.account = account
         self.excludePeerId = excludePeerId
         self.layoutChanged = layoutChanged
@@ -136,7 +150,7 @@ class GlobalBadgeNode: Node {
                 if excludeTotal == 0 {
                     strongSelf.attributedString = nil
                 } else {
-                    strongSelf.attributedString = .initialize(string: Int(excludeTotal).prettyNumber, color: .white, font: .bold(.small))
+                    strongSelf.attributedString = .initialize(string: Int(excludeTotal).prettyNumber, color: getColor(strongSelf.isSelected) != theme.colors.redUI ?  theme.colors.underSelectedColor : .white, font: .bold(.small))
                 }
                 strongSelf.layoutChanged?()
                 if dockTile {
@@ -150,7 +164,7 @@ class GlobalBadgeNode: Node {
     override public func draw(_ layer: CALayer, in ctx: CGContext) {
         
         if let view = view {
-            ctx.setFillColor(getColor().cgColor)
+            ctx.setFillColor(getColor(isSelected).cgColor)
             
             ctx.round(self.size, self.size.height/2.0)
             ctx.fill(layer.bounds)

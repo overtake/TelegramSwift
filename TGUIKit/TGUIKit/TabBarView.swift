@@ -141,7 +141,7 @@ public class TabBarView: View {
         setFrameSize(frame.size)
     }
     
-    public override func updateLocalizationAndTheme() {
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
         for subview in subviews {
             subview.background = presentation.colors.background
             for container in subview.subviews {
@@ -150,7 +150,7 @@ public class TabBarView: View {
         }
         self.backgroundColor = presentation.colors.background
         needsDisplay = true
-        super.updateLocalizationAndTheme()
+        super.updateLocalizationAndTheme(theme: theme)
     }
     
     

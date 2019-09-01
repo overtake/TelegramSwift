@@ -570,6 +570,9 @@ class ChatRowItem: TableRowItem {
         if authorIsChannel {
             return false
         }
+        if let message = message, message.isScheduledMessage {
+            return false
+        }
         if let info = message?.forwardInfo {
             if let author = info.author {
                 peers.append(author)
@@ -650,6 +653,9 @@ class ChatRowItem: TableRowItem {
         }
         
         if let message = message {
+            if message.isScheduledMessage {
+                return false
+            }
             for attr in message.attributes {
                 if attr is InlineBotMessageAttribute {
                     return false
@@ -785,6 +791,8 @@ class ChatRowItem: TableRowItem {
             return result
         }
     }
+    
+    var forceBackgroundColor: NSColor? = nil
     
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         self.entry = object
@@ -1094,8 +1102,8 @@ class ChatRowItem: TableRowItem {
                         if attr.length > 0 {
                             _ = attr.append(string: " ")
                         }
-                        _ = attr.append(string: "\(tr(L10n.chatMessageVia)) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
-                        let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                        _ = attr.append(string: "\(L10n.chatMessageVia) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                        let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, hasBubble && isBubbled), font:.medium(.text))
                         attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback("@" + address, { (parameter) in
                             chatInteraction.updateInput(with: parameter + " ")
                         }), range: range)
@@ -1563,7 +1571,9 @@ class ChatRowItem: TableRowItem {
     func deleteMessage() {
         _ = context.account.postbox.transaction { [weak message] transaction -> Void in
             if let message = message {
-                transaction.deleteMessages([message.id])
+                transaction.deleteMessages([message.id], forEachMedia: { media in
+                    
+                })
             }
         }.start()
     }
@@ -1676,7 +1686,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     }
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
-        if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), message.scheduleTime == nil {
+        if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), !message.isScheduledMessage {
             items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
                 _ = showModalProgress(signal: exportMessageLink(account: account, peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
                     if let link = link {
@@ -1898,7 +1908,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     return signal |> map { items in
         var items = items
-        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, message.scheduleTime == nil {
+        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, !message.isScheduledMessage {
             items.append(ContextSeparatorItem())
             items.append(ContextMenuItem(L10n.chatServiceSearchAllMessages(author.compactDisplayTitle), handler: {
                 chatInteraction.searchPeerMessages(author)

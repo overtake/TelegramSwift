@@ -231,8 +231,8 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
         self.genericView.background = theme.colors.background
         requestUpdateBackBar()
@@ -358,7 +358,7 @@ class InputDataController: GenericViewController<TableView> {
         
         
         appearanceDisposablet.set(appearanceSignal.start(next: { [weak self] _ in
-            self?.updateLocalizationAndTheme()
+            self?.updateLocalizationAndTheme(theme: theme)
         }))
         
         let arguments = InputDataArguments(select: { [weak self] (identifier, value) in

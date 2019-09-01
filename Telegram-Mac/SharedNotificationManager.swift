@@ -287,6 +287,11 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     hasReplyButton = false
                                 }
                             }
+                            
+                            if message.wasScheduled {
+                                hasReplyButton = false
+                            }
+                            
                             if screenIsLocked {
                                 title = appName
                             }
@@ -323,6 +328,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 title += " 🔕"
                             }
                             
+                   
+                            
                             if self.activeAccounts.accounts.count > 1 && !screenIsLocked {
                                 title += " → \(accountPeer.addressName ?? accountPeer.displayTitle)"
                             }
@@ -333,7 +340,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             notification.contentImage = screenIsLocked ? nil : images[message.id]
                             notification.hasReplyButton = hasReplyButton
                             
-                            notification.hasActionButton = true
+                            notification.hasActionButton = !message.wasScheduled
                             notification.otherButtonTitle = L10n.notificationMarkAsRead
                            // notification.additionalActions = [NSUserNotificationAction(identifier: "read", title: "Mark as Read")]
                             

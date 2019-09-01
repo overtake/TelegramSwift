@@ -441,27 +441,29 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     private var beforeRange: NSRange = NSMakeRange(NSNotFound, 0)
     
     override func mouseDown(with event: NSEvent) {
-        let point = self.convert(event.locationInWindow, from: nil)
-        let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
-        if beforeRange.length > 0 {
-            self.beforeRange = beforeRange
-            if let resortController = table?.resortController, beforeRange.length > 0 {
-                if resortController.resortRange.indexIn(beforeRange.location) {
-                    longDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(resortController.startTimeout, queue: Queue.mainQueue())).start(next: { [weak self] in
-                        let currentEvent = NSApp.currentEvent
-                        guard let `self` = self, let ev = currentEvent, ev.type == .leftMouseDown || ev.type == .leftMouseDragged || ev.type == .pressure else {return}
-                        let point = self.convert(ev.locationInWindow, from: nil)
-                        let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
-                        if afterRange == beforeRange {
-                            self.table?.startResorting()
-                        }
-                    }))
+        if event.clickCount == 1 {
+            let point = self.convert(event.locationInWindow, from: nil)
+            let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
+            if beforeRange.length > 0 {
+                self.beforeRange = beforeRange
+                if let resortController = table?.resortController, beforeRange.length > 0 {
+                    if resortController.resortRange.indexIn(beforeRange.location) {
+                        longDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(resortController.startTimeout, queue: Queue.mainQueue())).start(next: { [weak self] in
+                            let currentEvent = NSApp.currentEvent
+                            guard let `self` = self, let ev = currentEvent, ev.type == .leftMouseDown || ev.type == .leftMouseDragged || ev.type == .pressure else {return}
+                            let point = self.convert(ev.locationInWindow, from: nil)
+                            let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
+                            if afterRange == beforeRange {
+                                self.table?.startResorting()
+                            }
+                        }))
+                    } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
+                        sdelegate?.selectRow(index: beforeRange.location)
+                    }
+                    
                 } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
                     sdelegate?.selectRow(index: beforeRange.location)
                 }
-                
-            } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
-                sdelegate?.selectRow(index: beforeRange.location)
             }
         }
     }
@@ -564,6 +566,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var separator:TableSeparator = .none
     
+    public var getBackgroundColor:()->NSColor = { presentation.colors.background }
 
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
@@ -634,9 +637,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    open func updateLocalizationAndTheme() {
+    open func updateLocalizationAndTheme(theme: PresentationTheme) {
         if super.layer?.backgroundColor != .clear {
-            super.layer?.backgroundColor = presentation.colors.background.cgColor
+            super.layer?.backgroundColor = self.getBackgroundColor().cgColor
         }
         //tableView.background = .clear
       //  super.layer?.backgroundColor = .clear

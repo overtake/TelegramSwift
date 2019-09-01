@@ -71,7 +71,7 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
             self?.showCountrySelector()
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         codeText.stringValue = "+"
         
@@ -109,8 +109,8 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
         
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         
         numberText.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.loginPhoneFieldPlaceholder), color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
@@ -440,7 +440,7 @@ private final class PassportNewPhoneNumberRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        container.updateLocalizationAndTheme()
+        container.updateLocalizationAndTheme(theme: theme)
     }
     
     required init?(coder: NSCoder) {

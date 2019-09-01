@@ -31,7 +31,7 @@ open class ImageView: NSView {
         }
     }
 
-    open var contentGravity: CALayerContentsGravity = .resize {
+    open var contentGravity: CALayerContentsGravity = .center {
         didSet {
             layer?.contentsGravity = contentGravity
         }

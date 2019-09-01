@@ -57,7 +57,7 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
             self?.showCountrySelector()
             }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         codeText.stringValue = "+"
         
@@ -95,8 +95,8 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
         
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         countryLabel.attributedString = .initialize(string: tr(L10n.loginCountryLabel), color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
         countryLabel.sizeToFit()

@@ -31,7 +31,7 @@ class ChatNavigateScroller: ImageButton {
             if let strongSelf = self {
                 let count = unreadView.count(for: chatLocation.unreadMessageCountsItem) ?? 0
                 if count > 0 {
-                    strongSelf.badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.accent)
+                    strongSelf.badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: theme.colors.underSelectedColor, font: .bold(.small)), theme.colors.accent)
                     strongSelf.badge!.view = strongSelf.badgeView
                     strongSelf.badgeView.setFrameSize(strongSelf.badge!.size)
                     strongSelf.addSubview(strongSelf.badgeView)
@@ -44,8 +44,9 @@ class ChatNavigateScroller: ImageButton {
         }))
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         set(image: theme.icons.chatScrollUp, for: .Normal)
         set(image: theme.icons.chatScrollUpActive, for: .Highlight)
         badge?.fillColor = theme.colors.accent

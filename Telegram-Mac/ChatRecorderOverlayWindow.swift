@@ -27,12 +27,13 @@ private final class LockControl : View {
         addSubview(head)
         addSubview(arrow)
         addSubview(body)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         backgroundColor = theme.colors.background
         head.image = theme.icons.chatOverlayLockerHeadRecording
         head.sizeToFit()

@@ -21,13 +21,13 @@ class EmptyChatView : View {
         containerView.addSubview(label)
         label.userInteractionEnabled = false
         label.isSelectable = false
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         containerView.backgroundColor = theme.colors.background
-        
+        let theme = (theme as! TelegramPresentationTheme)
         //theme.chatServiceItemColor
         
         self.background = .clear
@@ -114,8 +114,9 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     override func escapeKeyAction() -> KeyHandlerResult {
         return .rejected
     }
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         updateBackgroundColor(theme.backgroundMode)
     }
     

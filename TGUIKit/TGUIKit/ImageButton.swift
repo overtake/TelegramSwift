@@ -10,7 +10,7 @@ import Cocoa
 
 open class ImageButton: Button {
 
-    var imageView:ImageView = ImageView()
+    let imageView:ImageView = ImageView()
     
     private var images:[ControlState:CGImage] = [:]
     private var backgroundImage:[ControlState:CGImage] = [:]
@@ -19,6 +19,11 @@ open class ImageButton: Button {
     public func removeImage(for state:ControlState) {
         images.removeValue(forKey: state)
         apply(state: self.controlState)
+        
+    }
+    
+    public func setImageContentGravity(_ gravity: CALayerContentsGravity) {
+        imageView.contentGravity = gravity
     }
     
     public func set(image:CGImage, for state:ControlState) -> Void {
@@ -81,7 +86,12 @@ open class ImageButton: Button {
     
     public override func updateLayout() {
         if let image = images[controlState] {
-            imageView.setFrameSize(image.backingSize)
+            switch imageView.contentGravity {
+            case .resize, .resizeAspectFill:
+                imageView.setFrameSize(frame.size)
+            default:
+                imageView.setFrameSize(image.backingSize)
+            }
         }
         imageView.center()
     }
