@@ -285,29 +285,42 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
         return Signal { subscriber in
             let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
             let wallpaperDisposable = DisposableSet()
-
+            
             let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)
 
             let dataDisposable = resourceData.start(next: { data in
                 
                 if let palette = importPalette(data.path) {
-                    var slug: String? = nil
-                    if let wallpaper = palette.wallpaperSlug {
-//                        switch theme.wallpaper {
-//                        case .none:
-//                            slug = wallpaper
-//                        default:
-//                            break
+                    var cloud_w:(String, WallpaperSettings?)? = nil
+                    #if !SHARE
+//                    if let wallpaper = palette.wallpaperSlug {
+//                        if !theme.isUsedOwnWallpaper {
+//                            if wallpaper == "builtin" {
+//                                cloud_w = (wallpaper, nil)
+//                            } else {
+//                                let link = inApp(for: wallpaper as NSString, context: context)
+//                                switch link {
+//                                case let .wallpaper(values):
+//                                    switch values.preview {
+//                                    case let .slug(slug, settings):
+//                                        cloud_w = (slug, settings)
+//                                    default:
+//                                        break
+//                                    }
+//                                default:
+//                                    break
+//                                }
+//                            }
 //                        }
-                    }
-                    
-                    if let slug = slug {
+//                    }
+                    #endif
+                    if let cloud_w = cloud_w {
                         #if !SHARE
                         let wallpaper: Signal<TelegramWallpaper, GetWallpaperError>
-                        if slug == "builtin" {
+                        if cloud_w.0 == "builtin" {
                             wallpaper = .single(.builtin(WallpaperSettings()))
                         } else {
-                            wallpaper = getWallpaper(account: context.account, slug: slug)
+                            wallpaper = getWallpaper(account: context.account, slug: cloud_w.0)
                         }
                         wallpaperDisposable.add(wallpaper.start(next: { wallpaper in
                             wallpaperDisposable.add(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(wallpaper)).start(next: { wallpaper in

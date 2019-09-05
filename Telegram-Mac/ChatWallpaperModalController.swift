@@ -192,12 +192,15 @@ class ChatWallpaperModalController: ModalViewController {
         let interaction = ThemeGridControllerInteraction(openWallpaper: { wallpaper, telegramWallpaper in
             switch wallpaper {
             case .image, .file, .color:
-                showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: mainWindow)
+                showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: context.window)
             default:
+                let isOwn = wallpaper != .none
                 _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                     return settings.withUpdatedWallpaper(wallpaper).withUpdatedBubbled(true)
                 }).start()
-                close()
+                delay(0.15, closure: {
+                    close()
+                })
             }
             
         }, deleteWallpaper: { wallpaper, telegramWallpaper in
@@ -219,6 +222,7 @@ class ChatWallpaperModalController: ModalViewController {
             |> map { wallpapers, deletedWallpapers, appearance -> (ThemeGridEntryTransition, Bool) in
                 var entries: [ThemeGridControllerEntry] = []
                 var index = 0
+                
                 entries.append(ThemeGridControllerEntry(index: index, wallpaper: .none, telegramWallapper: nil, selected: appearance.presentation.wallpaper.isSemanticallyEqual(to: .none)))
                 index += 1
                 

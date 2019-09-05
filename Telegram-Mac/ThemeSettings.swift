@@ -43,6 +43,44 @@ struct DefaultWallpaper : Equatable, PostboxCoding {
     }
 }
 
+struct AssociatedWallpaper : PostboxCoding {
+    let cloud: TelegramWallpaper?
+    let wallpaper: Wallpaper
+    init(decoder: PostboxDecoder) {
+        self.cloud = decoder.decodeObjectForKey("c", decoder: { TelegramWallpaper(decoder: $0) }) as? TelegramWallpaper
+        self.wallpaper = decoder.decodeObjectForKey("w", decoder: { Wallpaper(decoder: $0) }) as! Wallpaper
+    }
+    
+    func encode(_ encoder: PostboxEncoder) {
+        if let cloud = cloud {
+            encoder.encodeObject(cloud, forKey: "c")
+        } else {
+            encoder.encodeNil(forKey: "c")
+        }
+        encoder.encodeObject(self.wallpaper, forKey: "w")
+    }
+}
+
+struct ThemeWallpaperSettings : PostboxCoding {
+    let wallpaper: Wallpaper
+    let associated: AssociatedWallpaper?
+    
+    
+    init(decoder: PostboxDecoder) {
+        self.wallpaper = decoder.decodeObjectForKey("w", decoder: { Wallpaper(decoder: $0) }) as! Wallpaper
+        self.associated = decoder.decodeObjectForKey("aw", decoder: { AssociatedWallpaper(decoder: $0) }) as? AssociatedWallpaper
+    }
+    
+    func encode(_ encoder: PostboxEncoder) {
+        if let associated = associated {
+            encoder.encodeObject(associated, forKey: "aw")
+        } else {
+            encoder.encodeNil(forKey: "aw")
+        }
+        encoder.encodeObject(self.wallpaper, forKey: "w")
+    }
+}
+
 struct ThemePaletteSettings: PreferencesEntry, Equatable {
     let palette: ColorPalette
     let followSystemAppearance: Bool
@@ -99,14 +137,17 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         let isNative = decoder.decodeBoolForKey("isNative", orElse: false)
         let name = decoder.decodeStringForKey("name", orElse: "Default")
 
-        let palette: ColorPalette = dark ? nightBluePalette : whitePalette
+        let palette: ColorPalette = parent.palette
+        let pw = PaletteWallpaper(decoder.decodeStringForKey("pw", orElse: "none"))
         
         let accentList = decoder.decodeStringForKey("accentList", orElse: "").components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
         
-        self.palette = ColorPalette(isNative: isNative, isDark: dark,
+        self.palette = ColorPalette(isNative: isNative,
+            isDark: dark,
             tinted: tinted,
             name: name,
             parent: parent,
+            wallpaper: pw ?? palette.wallpaper,
             copyright: copyright,
             accentList: accentList,
             basicAccent: parseColor(decoder, "basicAccent") ?? palette.basicAccent,
@@ -224,12 +265,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             revealAction_warning_foreground: parseColor(decoder, "revealAction_warning_foreground") ?? palette.revealAction_warning_foreground,
             revealAction_inactive_background: parseColor(decoder, "revealAction_inactive_background") ?? palette.revealAction_inactive_background,
             revealAction_inactive_foreground: parseColor(decoder, "revealAction_inactive_foreground") ?? palette.revealAction_inactive_foreground,
-            chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground,
-            wallpaperSlug: decoder.decodeOptionalStringForKey("wallpaperSlug")
+            chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground
         )
-        
-        
-        
         
         self.bubbled = decoder.decodeBoolForKey("bubbled", orElse: false)
         self.fontSize = CGFloat(decoder.decodeDoubleForKey("fontSize", orElse: 13))
@@ -266,6 +303,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         encoder.encodeBool(followSystemAppearance, forKey: "fsa")
         encoder.encodeObjectArray(defaultWallpapers, forKey: "dw")
         
+        encoder.encodeString(palette.wallpaper.toString, forKey: "pw")
         encoder.encodeString(palette.accentList.map {$0.hexString}.joined(separator: ","), forKey: "accentList")
                 
         if let cloudTheme = self.cloudTheme {
@@ -302,6 +340,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     func withUpdatedFollowSystemAppearance(_ followSystemAppearance: Bool) -> ThemePaletteSettings {
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultNightName: self.defaultNightName, defaultDayName: self.defaultDayName, followSystemAppearance: followSystemAppearance, customWallpaper: self.customWallpaper, defaultWallpapers: self.defaultWallpapers, cloudTheme: self.cloudTheme)
     }
+    
     func withUpdatedWallpaper(_ wallpaper: Wallpaper) -> ThemePaletteSettings {
         
         var defaultWallpapers = self.defaultWallpapers
