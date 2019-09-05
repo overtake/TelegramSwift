@@ -3798,7 +3798,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private let isAdChat: Bool
     private let messageId: MessageId?
-    private let mode: ChatMode
+    let mode: ChatMode
     
     public init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, messageId:MessageId? = nil, initialAction:ChatInitialAction? = nil) {
         self.chatLocation = chatLocation
