@@ -225,36 +225,36 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     }
     
     
-    if !state.items.isEmpty {
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("previous"), equatable: nil, item: { initialSize, stableId in
-            let item = GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.appUpdateTitlePrevious, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
-            return item
-        }))
-        
-    }
-   
-    
-    var paths:[String: String] = [:]
-    for item in state.items {
-        if item.versionString != currentItem?.versionString {
-            let text = "**" + item.versionTitle + "**" + "\n" + item.updateText
-            if paths[item.fileURL.path] == nil {
-                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(item.fileURL.path), equatable: nil, item: { initialSize, stableId in
-                    return GeneralTextRowItem(initialSize, stableId: stableId, text: text, textColor: theme.colors.text, fontSize: 13, isTextSelectable: true)
-                }))
-                index += 1
-                entries.append(.sectionId(sectionId, type: .normal))
-                sectionId += 1
-                paths[item.fileURL.path] = item.fileURL.path
-            }
-            
-        }
-       
-    }
+//    if !state.items.isEmpty {
+//        entries.append(.sectionId(sectionId, type: .normal))
+//        sectionId += 1
+//        
+//        
+//        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("previous"), equatable: nil, item: { initialSize, stableId in
+//            let item = GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.appUpdateTitlePrevious, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
+//            return item
+//        }))
+//        
+//    }
+//   
+//    
+//    var paths:[String: String] = [:]
+//    for item in state.items {
+//        if item.versionString != currentItem?.versionString {
+//            let text = "**" + item.versionTitle + "**" + "\n" + item.updateText
+//            if paths[item.fileURL.path] == nil {
+//                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(item.fileURL.path), equatable: nil, item: { initialSize, stableId in
+//                    return GeneralTextRowItem(initialSize, stableId: stableId, text: text, textColor: theme.colors.text, fontSize: 13, isTextSelectable: true)
+//                }))
+//                index += 1
+//                entries.append(.sectionId(sectionId, type: .normal))
+//                sectionId += 1
+//                paths[item.fileURL.path] = item.fileURL.path
+//            }
+//
+//        }
+//
+//    }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -321,7 +321,9 @@ private final class InternalUpdaterDownloader : SPUDownloaderSession {
         return "Telegram.app.zip"
     }
     
-    override func move(_ fromPath: String!, to toPath: String!, error: Error!) -> Bool {
+    
+    
+    override func moveItem(atPath fromPath: String!, toPath: String!, error: Error) -> Bool {
         do {
             try FileManager.default.copyItem(atPath: fromPath, toPath: toPath)
             return true
@@ -329,6 +331,7 @@ private final class InternalUpdaterDownloader : SPUDownloaderSession {
             return false
         }
     }
+    
     
     override func startDownload(with request: SPUURLRequest!) {
         let fileName = "Telegram-\(self.updateItem.displayVersionString ?? "")-\(self.updateItem.versionString ?? "").app.zip"
