@@ -46,7 +46,7 @@ struct CalendarMonthStruct {
         self.lastDayOfNextMonth = CalendarUtils.lastDay(ofTheMonth: month)
         var calendar = NSCalendar.current
         
-        calendar.timeZone = TimeZone(abbreviation: "UTC")!
+//        calendar.timeZone = TimeZone(abbreviation: "UTC")!
         let components = calendar.dateComponents([.year, .month, .day], from: month)
         self.currentStartDay = CalendarUtils.weekDay(Date(timeIntervalSince1970: month.timeIntervalSince1970 - TimeInterval(components.day! * 24*60*60)))
         
@@ -94,7 +94,7 @@ class CalendarMonthView : View {
                 var skipDay: Bool = false
                 
                 var calendar = NSCalendar.current
-                calendar.timeZone = TimeZone(abbreviation: "UTC")!
+//                calendar.timeZone = TimeZone(abbreviation: "UTC")!
                 let components = calendar.dateComponents([.day, .year, .month], from: Date())
                 
                 if month.onlyFuture, CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false) {
@@ -196,7 +196,7 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
             
             var calendar = NSCalendar.current
             
-            calendar.timeZone = TimeZone(abbreviation: "UTC")!
+//            calendar.timeZone = TimeZone(abbreviation: "UTC")!
             let components = calendar.dateComponents([.year, .month, .day], from: Date())
 
             

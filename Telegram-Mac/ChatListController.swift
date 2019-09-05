@@ -992,11 +992,17 @@ class ChatListController : PeersListController {
         let navigation = context.sharedContext.bindings.rootNavigation()
         if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController {
-                if let modalAction = navigation.modalAction {
-                    navigation.controller.invokeNavigation(action: modalAction)
+                switch controller.mode {
+                case .history:
+                    if let modalAction = navigation.modalAction {
+                        navigation.controller.invokeNavigation(action: modalAction)
+                    }
+                    controller.clearReplyStack()
+                    controller.scrollup()
+                case .scheduled:
+                    navigation.back()
                 }
-                controller.clearReplyStack()
-                controller.scrollup()
+                
             } else {
                 open(with: item.entryId, initialAction: item.pinnedType == .ad && FastSettings.showAdAlert ? .ad : nil, addition: false)
             }
