@@ -146,9 +146,30 @@ class ThemePreviewModalController: ModalViewController {
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: L10n.themePreviewTitle), right: ModalHeaderData(image: currentTheme.icons.modalClose, handler: { [weak self] in
-            self?.close()
-        }))
+        switch self.source {
+        case let .cloudTheme(theme):
+            
+            let count:Int32 = theme.installCount
+            
+            var countTitle = L10n.themePreviewUsesCountCountable(Int(count))
+            countTitle = countTitle.replacingOccurrences(of: "\(count)", with: count.formattedWithSeparator)
+
+            return (left: nil, center: ModalHeaderData(title: theme.title, subtitle: count > 0 ? countTitle : nil), right: ModalHeaderData(image: currentTheme.icons.modalShare, handler: { [weak self] in
+                self?.share()
+            }))
+        case let .localTheme(theme):
+            return (left: nil, center: ModalHeaderData(title: theme.colors.name), right: nil)
+        }
+        
+    }
+    
+    private func share() {
+        switch self.source {
+        case let .cloudTheme(theme):
+            showModal(with: ShareModalController(ShareLinkObject(self.context, link: "https://t.me/addtheme/\(theme.slug)")), for: self.context.window)
+        default:
+            break
+        }
     }
     
     private func saveAccent() {
@@ -160,10 +181,15 @@ class ThemePreviewModalController: ModalViewController {
         switch self.source {
         case let .cloudTheme(t):
             cloudTheme = t
+            if t.id == theme.cloudTheme?.id {
+                self.close()
+                return
+            }
         default:
             cloudTheme = nil
         }
-                
+        
+        
         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
            return settings.withUpdatedPalette(colors).withUpdatedCloudTheme(cloudTheme)
         }).start()
@@ -176,6 +202,8 @@ class ThemePreviewModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: L10n.modalSet, accept: { [weak self] in
             self?.saveAccent()
+        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
+            self?.close()
         }, drawBorder: true)
     }
     

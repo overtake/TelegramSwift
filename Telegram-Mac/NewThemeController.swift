@@ -51,8 +51,17 @@ private func newThemeEntries(state: NewThemeState) -> [InputDataEntry] {
 }
 
 func NewThemeController(context: AccountContext, palette: ColorPalette) -> InputDataModalController {
-    
+    var palette = palette
     let initialState = NewThemeState(name: findBestNameForPalette(palette), error: nil)
+    
+    switch theme.wallpaper {
+    case .builtin:
+        palette = palette.withWallpaperSlug("builtin")
+    case let .file(value, _, _, _):
+        palette = palette.withWallpaperSlug(value)
+    default:
+        break
+    }
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

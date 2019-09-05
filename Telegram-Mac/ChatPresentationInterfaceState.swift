@@ -450,12 +450,17 @@ struct ChatPresentationInterfaceState: Equatable {
             }
             
             if let peer = peer as? TelegramChannel {
-                if let _ = restrictionInfo {
-                    return .action(L10n.chatInputClose, { chatInteraction in
-                        chatInteraction.context.sharedContext.bindings.rootNavigation().back()
-                    })
+                #if APP_STORE
+                if let restrictionInfo = restrictionInfo {
+                    for rule in restrictionInfo.rules {
+                        if rule.platform == "ios" || rule.platform == "all" {
+                            return .action(L10n.chatInputClose, { chatInteraction in
+                                chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+                            })
+                        }
+                    }
                 }
-                
+                #endif
                 
                 
                 

@@ -253,13 +253,11 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             let slug = state.slug ?? ""
             
             var failed:[InputDataIdentifier : InputDataValidationFailAction] = [:]
-            if !slug.isEmpty, slug.length <= 5 {
+            if !slug.isEmpty, slug.length < 5 {
                 failed[_id_input_slug] = .shake
-                return
             }
             if state.name.isEmpty {
                 failed[_id_input_title] = .shake
-                return
             }
             if !failed.isEmpty {
                 f(.fail(.fields(failed)))
@@ -312,6 +310,11 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
                 switch error {
                 case .generic:
                     alert(for: context.window, info: L10n.unknownError)
+                case .slugOccupied:
+                    updateState {
+                        $0.withUpdatedError(InputDataValueError(description: L10n.editThameNameAlreadyTaken, target: .data), for: _id_input_slug)
+                    }
+                    f(.fail(.fields([_id_input_slug : .shake])))
                 case .slugInvalid:
                     updateState {
                         $0.withUpdatedError(InputDataValueError(description: L10n.editThemeSlugErrorFormat, target: .data), for: _id_input_slug)

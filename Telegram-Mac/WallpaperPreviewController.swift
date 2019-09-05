@@ -1076,8 +1076,8 @@ class WallpaperPreviewController: ModalViewController {
                     c_wallpaper = nil
                 }
                 
-                return settings.withUpdatedWallpaper(wallpaper).withUpdatedCustomWallpaper(c_wallpaper ?? settings.customWallpaper).withUpdatedBubbled(true)
-                }) |> delay(0.1, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(completed: {
+                return settings.withUpdatedBubbled(true).withUpdatedWallpaper(wallpaper).withUpdatedCustomWallpaper(c_wallpaper ?? settings.customWallpaper)
+            }) |> delay(0.1, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(completed: {
                     var stats:[Signal<Void, NoError>] = []
                     switch self.source {
                     case let .gallery(wallpaper):

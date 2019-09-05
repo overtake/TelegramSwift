@@ -322,25 +322,18 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                                 }), for: mainWindow)
                             } else {
                                 let thrid:String? = canDeleteForEveryone ? peer.isUser ? tr(L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle)) : tr(L10n.chatConfirmDeleteMessagesForEveryone) : nil
-                                var okTitle: String? = tr(L10n.confirmDelete)
-                                if peer.isUser || peer.isGroup {
-                                    okTitle = peer.id == strongSelf.context.peerId ? tr(L10n.confirmDelete) : tr(L10n.chatMessageDeleteForMe)
-                                } else {
-                                    okTitle = tr(L10n.chatMessageDeleteForEveryone)
-                                }
-                                if let window = self?.window {
-                                    confirm(for: window, header: tr(L10n.chatConfirmActionUndonable), information: tr(L10n.chatConfirmDeleteMessages), okTitle: okTitle, thridTitle:thrid, successHandler: { result in
-                                        let type:InteractiveMessagesDeletionType
-                                        switch result {
-                                        case .basic:
-                                            type = .forLocalPeer
-                                        case .thrid:
-                                            type = .forEveryone
-                                        }
-                                        _ = deleteMessagesInteractively(postbox: strongSelf.context.account.postbox, messageIds: messageIds, type: type).start()
-                                        strongSelf.interactions.update({$0.withoutSelectionState()})
-                                    })
-                                }
+                                
+                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages, information: thrid == nil ? L10n.chatConfirmDeleteMessages : nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { result in
+                                    let type:InteractiveMessagesDeletionType
+                                    switch result {
+                                    case .basic:
+                                        type = .forLocalPeer
+                                    case .thrid:
+                                        type = .forEveryone
+                                    }
+                                    _ = deleteMessagesInteractively(postbox: strongSelf.context.account.postbox, messageIds: messageIds, type: type).start()
+                                    strongSelf.interactions.update({$0.withoutSelectionState()})
+                                })
                             }
                         }
                     }

@@ -275,7 +275,7 @@ final class TelegramChatColors {
     }
     
     func linkColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.linkBubble_incoming : palette.linkBubble_outgoing : palette.link
+        return bubbled ? incoming ? palette.linkBubble_incoming : palette.linkBubble_outgoing : palette.accent
     }
     
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {

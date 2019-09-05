@@ -41,22 +41,6 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/ReplyModel.swift"
-            timestampString = "586209933.592853"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "163"
-            endingLineNumber = "163"
-            landmarkName = "updateImageIfNeeded()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "submodules/TelegramCore/TelegramCore/MultipartUpload.swift"
             timestampString = "579545322.544114"
             startingColumnNumber = "9223372036854775807"
@@ -235,7 +219,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "588951221.6207"
+            timestampString = "589043373.681204"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1131"
@@ -443,13 +427,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatRowItem.swift"
-            timestampString = "588951221.62102"
+            timestampString = "589193025.699566"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "736"
             endingLineNumber = "736"
-            landmarkName = "hasBubble(_:entry:type:sharedContext:)"
-            landmarkType = "7">
+            landmarkName = "unknown"
+            landmarkType = "0">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -539,29 +523,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/CoreExtension.swift"
-            timestampString = "589014571.218261"
+            timestampString = "589193025.699736"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "2013"
             endingLineNumber = "2013"
             landmarkName = "mediaResourceMIMEType(from:)"
             landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Telegram-Mac/GeneralSettingsViewController.swift"
-            timestampString = "588856372.7270139"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "432"
-            endingLineNumber = "432"
-            landmarkName = "viewDidLoad()"
-            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -587,7 +555,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "589014942.911779"
+                  timestampString = "589364326.795715"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "93"
@@ -602,7 +570,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "589014942.913362"
+                  timestampString = "589364326.797837"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "94"
@@ -763,7 +731,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "588951221.621487"
+            timestampString = "589043373.6815391"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "71"
@@ -779,7 +747,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatListRowView.swift"
-            timestampString = "588528304.577883"
+            timestampString = "589234833.47701"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1261"
@@ -1051,11 +1019,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/MGalleryItem.swift"
-            timestampString = "588257364.425424"
+            timestampString = "589193025.700181"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "486"
-            endingLineNumber = "486"
+            startingLineNumber = "484"
+            endingLineNumber = "484"
             landmarkName = "singleView()"
             landmarkType = "7">
          </BreakpointContent>
@@ -1330,6 +1298,22 @@
             endingLineNumber = "100"
             landmarkName = "setWallpaper(account:wallpaper:size:)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/TelegramCore/TelegramCore/Themes.swift"
+            timestampString = "589153274.536322"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "387"
+            endingLineNumber = "387"
+            landmarkName = "updateTheme(account:accountManager:theme:title:slug:resource:thumbnailData:)"
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

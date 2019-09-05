@@ -189,7 +189,11 @@ class ScheduledMessageModalController: ModalViewController {
                 applyTime(date.addingTimeInterval(current.timeIntervalSince1970 - current.startOfDayUTC.timeIntervalSince1970))
             }
         } else {
-            applyTime(date.addingTimeInterval(current.timeIntervalSince1970 - current.startOfDayUTC.timeIntervalSince1970))
+            if date != current {
+                applyTime(date.addingTimeInterval(current.timeIntervalSince1970 - current.startOfDayUTC.timeIntervalSince1970))
+            } else {
+                applyTime(date)
+            }
         }
     }
     
@@ -224,7 +228,7 @@ class ScheduledMessageModalController: ModalViewController {
         self.genericView.dayPicker.selected = DatePickerOption<Date>(name: formatDay(date), value: date)
         self.genericView.timePicker.selected = DatePickerOption<Date>(name: formatTime(date), value: date)
         
-        self.applyDay(date.startOfDayUTC)
+        self.applyDay(date)
         
         self.genericView.sendOn.set(handler: { [weak self] _ in
             self?.schedule()

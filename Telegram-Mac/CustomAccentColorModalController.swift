@@ -62,7 +62,6 @@ private final class CustomAccentColorView : View {
         super.layout()
         tableView.frame = NSMakeRect(0, 0, frame.width, frame.height - 160)
         colorPicker.frame = NSMakeRect(0, frame.height - 160, frame.width, 160)
-        tintedCheckbox.centerX(y: frame.height - 160 - 35)
     }
     
     required init?(coder: NSCoder) {
@@ -77,7 +76,7 @@ private final class CustomAccentColorView : View {
         
         tableView.removeAll()
         
-        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random()))
+        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random(), backgroundColor: theme.colors.chatBackground))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
@@ -107,6 +106,9 @@ private final class CustomAccentColorView : View {
         
         _ = tableView.addItem(item: item1)
         _ = tableView.addItem(item: item2)
+        
+        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: max(10, 160 - tableView.listHeight), stableId: arc4random(), backgroundColor: theme.colors.chatBackground))
+
         
         
     }

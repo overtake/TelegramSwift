@@ -90,8 +90,6 @@
 		D004D6C822B7B3AA00926F46 /* vpathmesure.h in Headers */ = {isa = PBXBuildFile; fileRef = D004D5B322B7B3AA00926F46 /* vpathmesure.h */; };
 		D004D6C922B7B3AA00926F46 /* vdebug.h in Headers */ = {isa = PBXBuildFile; fileRef = D004D5B422B7B3AA00926F46 /* vdebug.h */; };
 		D004D6CA22B7B3AA00926F46 /* vpath.h in Headers */ = {isa = PBXBuildFile; fileRef = D004D5B522B7B3AA00926F46 /* vpath.h */; };
-		D004D6CD22B7B3AA00926F46 /* stb_image.h in Headers */ = {isa = PBXBuildFile; fileRef = D004D5B922B7B3AA00926F46 /* stb_image.h */; };
-		D004D6CE22B7B3AA00926F46 /* stb_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D004D5BA22B7B3AA00926F46 /* stb_image.cpp */; };
 		D004D6D022B7B3AA00926F46 /* vtaskqueue.h in Headers */ = {isa = PBXBuildFile; fileRef = D004D5BC22B7B3AA00926F46 /* vtaskqueue.h */; };
 		D004D6D122B7B3AA00926F46 /* vline.h in Headers */ = {isa = PBXBuildFile; fileRef = D004D5BD22B7B3AA00926F46 /* vline.h */; };
 		D004D6D222B7B3AA00926F46 /* vdrawable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D004D5BE22B7B3AA00926F46 /* vdrawable.cpp */; };
@@ -1066,7 +1064,6 @@
 				D004D6AC22B7B3AA00926F46 /* velapsedtimer.h in Headers */,
 				D004D6C022B7B3AA00926F46 /* v_ft_math.h in Headers */,
 				D004D6DA22B7B3AA00926F46 /* vpainter.h in Headers */,
-				D004D6CD22B7B3AA00926F46 /* stb_image.h in Headers */,
 				D004D6BF22B7B3AA00926F46 /* v_ft_stroker.h in Headers */,
 				D004D6D122B7B3AA00926F46 /* vline.h in Headers */,
 				D004D6C722B7B3AA00926F46 /* vpoint.h in Headers */,
@@ -1185,7 +1182,6 @@
 				D004D6E622B7B3AA00926F46 /* vrle.cpp in Sources */,
 				D004D6C222B7B3AA00926F46 /* vcompositionfunctions.cpp in Sources */,
 				D004D67B22B7B3AA00926F46 /* lottieparser.cpp in Sources */,
-				D004D6CE22B7B3AA00926F46 /* stb_image.cpp in Sources */,
 				D004D6EC22B7B42700926F46 /* RLottieBridge.mm in Sources */,
 				D004D6E822B7B3AA00926F46 /* vbrush.cpp in Sources */,
 				D004D6D222B7B3AA00926F46 /* vdrawable.cpp in Sources */,

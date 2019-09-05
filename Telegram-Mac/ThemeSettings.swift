@@ -96,16 +96,19 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         let parent: TelegramBuiltinTheme = TelegramBuiltinTheme(rawValue: decoder.decodeStringForKey("parent", orElse: TelegramBuiltinTheme.dayClassic.rawValue)) ?? (dark ? .nightBlue : .dayClassic)
         let copyright = decoder.decodeStringForKey("copyright", orElse: "Telegram")
 
-        
+        let isNative = decoder.decodeBoolForKey("isNative", orElse: false)
         let name = decoder.decodeStringForKey("name", orElse: "Default")
 
         let palette: ColorPalette = dark ? nightBluePalette : whitePalette
         
-        self.palette = ColorPalette(isDark: dark,
+        let accentList = decoder.decodeStringForKey("accentList", orElse: "").components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
+        
+        self.palette = ColorPalette(isNative: isNative, isDark: dark,
             tinted: tinted,
             name: name,
             parent: parent,
             copyright: copyright,
+            accentList: accentList,
             basicAccent: parseColor(decoder, "basicAccent") ?? palette.basicAccent,
             background: parseColor(decoder, "background") ?? palette.background,
             text: parseColor(decoder, "text") ?? palette.text,
@@ -221,7 +224,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             revealAction_warning_foreground: parseColor(decoder, "revealAction_warning_foreground") ?? palette.revealAction_warning_foreground,
             revealAction_inactive_background: parseColor(decoder, "revealAction_inactive_background") ?? palette.revealAction_inactive_background,
             revealAction_inactive_foreground: parseColor(decoder, "revealAction_inactive_foreground") ?? palette.revealAction_inactive_foreground,
-            chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground
+            chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground,
+            wallpaperSlug: decoder.decodeOptionalStringForKey("wallpaperSlug")
         )
         
         
@@ -243,6 +247,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
                 }
             }
         }
+        encoder.encodeBool(palette.isNative, forKey: "isNative")
         encoder.encodeString(palette.name, forKey: "name")
         encoder.encodeString(palette.copyright, forKey: "copyright")
         encoder.encodeString(palette.parent.rawValue, forKey: "parent")
@@ -260,6 +265,9 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         encoder.encodeString(defaultNightName, forKey: "defaultNightName")
         encoder.encodeBool(followSystemAppearance, forKey: "fsa")
         encoder.encodeObjectArray(defaultWallpapers, forKey: "dw")
+        
+        encoder.encodeString(palette.accentList.map {$0.hexString}.joined(separator: ","), forKey: "accentList")
+                
         if let cloudTheme = self.cloudTheme {
             encoder.encodeObject(cloudTheme, forKey: "cloudTheme")
         } else {

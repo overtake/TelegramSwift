@@ -50,8 +50,12 @@ private func generateSelectedRing(backgroundColor: NSColor) -> CGImage {
 
 class AccentColorRowItem: GeneralRowItem {
     let selectAccentColor:(NSColor?)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, selectAccentColor: @escaping(NSColor?)->Void) {
+    let list: [NSColor]
+    let isNative: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, list: [NSColor], isNative: Bool, selectAccentColor: @escaping(NSColor?)->Void) {
         self.selectAccentColor = selectAccentColor
+        self.list = list
+        self.isNative = isNative
         super.init(initialSize, height: 50, stableId: stableId)
     }
     
@@ -130,30 +134,8 @@ final class AccentColorRowView : TableRowView {
         selectedImageView.image = generateSelectedRing(backgroundColor: theme.colors.background)
         selectedImageView.sizeToFit()
         selectedImageView.removeFromSuperview()
-        let colorList: [NSColor]
-        if theme.dark {
-            colorList = [
-                theme.colors.basicAccent, // blue
-                NSColor(0xf83b4c), // red
-                NSColor(0xff7519), // orange
-                NSColor(0xeba239), // yellow
-                NSColor(0x29b327), // green
-                NSColor(0x00c2ed), // light blue
-                NSColor(0x7748ff), // purple
-                NSColor(0xff5da2)  // pink
-            ]
-        } else {
-            colorList = [
-                theme.colors.basicAccent,
-                NSColor(0xf83b4c), // red
-                NSColor(0xff7519), // orange
-                NSColor(0xeba239), // yellow
-                NSColor(0x29b327), // green
-                NSColor(0x00c2ed), // light blue
-                NSColor(0x7748ff), // purple
-                NSColor(0xff5da2)  // pink
-            ]
-        }
+        let colorList: [NSColor] = item.list
+        
         
         let addition: Int = 1 + (!colorList.contains(theme.colors.accent) ? 1 : 0)
         
@@ -192,17 +174,19 @@ final class AccentColorRowView : TableRowView {
             x += button.frame.width + insetWidth
             documentView.addSubview(button)
         }
-        
-        let custom = ImageButton(frame: NSMakeRect(x, 10, 36, 36))
-        custom.autohighlight = false
-        custom.set(image: generateCustomSwatchImage(), for: .Normal)
-        custom.setImageContentGravity(.resize)
-        custom.set(handler: { _ in
-            item.selectAccentColor(nil)
-        }, for: .Click)
-        documentView.addSubview(custom)
-        
-        x += custom.frame.width
+        if item.isNative {
+            let custom = ImageButton(frame: NSMakeRect(x, 10, 36, 36))
+            custom.autohighlight = false
+            custom.set(image: generateCustomSwatchImage(), for: .Normal)
+            custom.setImageContentGravity(.resize)
+            custom.set(handler: { _ in
+                item.selectAccentColor(nil)
+            }, for: .Click)
+            documentView.addSubview(custom)
+            
+            x += custom.frame.width
+        }
+       
         
         documentView.setFrameSize(NSMakeSize(x, frame.height))
     }
