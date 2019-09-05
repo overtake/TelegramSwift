@@ -124,6 +124,9 @@ class ChatInputActionsView: View, Notifable {
         _ = inlineCancel.sizeToFit()
         secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
         
+        scheduled?.set(image: theme.icons.scheduledInputAction, for: .Normal)
+
+        
         slowModeTimeout.set(font: .normal(.text), for: .Normal)
         slowModeTimeout.set(color: theme.colors.grayIcon, for: .Normal)
         _ = self.slowModeTimeout.sizeToFit(NSZeroSize, NSMakeSize(38, 30), thatFit: true)

@@ -31,6 +31,14 @@ public extension NSColor {
         self.getHue(&hue, saturation: &saturation, brightness: &value, alpha: nil)
         return (hue, saturation, value)
     }
+    
+    func isTooCloseHSV(to color: NSColor) -> Bool {
+        let hsv1 = abs(self.hsv.0) + abs(self.hsv.1) + abs(self.hsv.2)
+        let hsv2 = abs(color.hsv.0) + abs(color.hsv.1) + abs(color.hsv.2)
+
+        let dif = abs(hsv1 - hsv2)
+        return dif < 0.005
+    }
 
     var lightness: CGFloat {
         var red: CGFloat = 0.0

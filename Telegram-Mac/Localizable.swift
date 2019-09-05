@@ -231,7 +231,7 @@ internal final class L10n {
   internal static var appearanceExportTheme: String  { return L10n.tr("Localizable", "Appearance.ExportTheme") }
   /// New Theme
   internal static var appearanceNewTheme: String  { return L10n.tr("Localizable", "Appearance.NewTheme") }
-  /// Unavailable. Click for Edit
+  /// Incompatible with macOS, click to edit
   internal static var appearanceCloudThemeUnsupported: String  { return L10n.tr("Localizable", "Appearance.CloudTheme.Unsupported") }
   /// Are you sure you want to remove this theme?
   internal static var appearanceConfirmRemoveText: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveText") }
@@ -2057,28 +2057,30 @@ internal final class L10n {
   internal static var editImageControlReset: String  { return L10n.tr("Localizable", "EditImageControl.Reset") }
   /// Are you sure you want to close and discard all changes?
   internal static var editImageControlConfirmDiscard: String  { return L10n.tr("Localizable", "EditImageControl.Confirm.Discard") }
+  /// This name is already taken.
+  internal static var editThameNameAlreadyTaken: String  { return L10n.tr("Localizable", "EditThame.Name.AlreadyTaken") }
   /// Save
   internal static var editThemeEdit: String  { return L10n.tr("Localizable", "EditTheme.Edit") }
   /// Theme Name
   internal static var editThemeNamePlaceholder: String  { return L10n.tr("Localizable", "EditTheme.NamePlaceholder") }
-  /// Preview is unavailable.\nPlease, upload macOS theme file to see it.
-  internal static var editThemeNoPreview: String  { return L10n.tr("Localizable", "EditTheme.NoPreview") }
-  /// Select File...
+  /// Create from File...
   internal static var editThemeSelectFile: String  { return L10n.tr("Localizable", "EditTheme.SelectFile") }
   /// This theme will be based on your current theme and wallpaper. Otherwise, you can use a custom theme file if you already have one.
   internal static var editThemeSelectFileDesc: String  { return L10n.tr("Localizable", "EditTheme.SelectFileDesc") }
-  /// Select Updated File...
+  /// Update from File...
   internal static var editThemeSelectUpdatedFile: String  { return L10n.tr("Localizable", "EditTheme.SelectUpdatedFile") }
-  /// You can select a new file to update the theme. It will be updated for all users.
+  /// You can update your theme for all users by uploading manual changes from a file.
   internal static var editThemeSelectUpdatedFileDesc: String  { return L10n.tr("Localizable", "EditTheme.SelectUpdatedFileDesc") }
-  /// You can add short link for your theme. Use a-z, 0-9 and underscopes. Minimum length is 5 characters.
+  /// Your theme will be updated for all users each time you change it. Anyone can install it using this link.\n\nTheme links must be longer than 5 characters and can use a-z, 0-9 and underscores.
   internal static var editThemeSlugDesc: String  { return L10n.tr("Localizable", "EditTheme.SlugDesc") }
   /// short link
   internal static var editThemeSlugPlaceholder: String  { return L10n.tr("Localizable", "EditTheme.SlugPlaceholder") }
   /// Edit Theme
   internal static var editThemeTitle: String  { return L10n.tr("Localizable", "EditTheme.Title") }
-  /// This short name has already taken by someone. Please try again.
+  /// This link is already taken. Please try a different one.
   internal static var editThemeSlugErrorAlreadyExists: String  { return L10n.tr("Localizable", "EditTheme.SlugError.AlreadyExists") }
+  /// invalid format.
+  internal static var editThemeSlugErrorFormat: String  { return L10n.tr("Localizable", "EditTheme.SlugError.Format") }
   /// Activity & Sport
   internal static var emojiActivityAndSport: String  { return L10n.tr("Localizable", "Emoji.ActivityAndSport") }
   /// Animals & Nature
@@ -5373,6 +5375,34 @@ internal final class L10n {
   internal static var themeGetThemeError: String  { return L10n.tr("Localizable", "Theme.GetTheme.Error") }
   /// Theme Preview
   internal static var themePreviewTitle: String  { return L10n.tr("Localizable", "ThemePreview.Title") }
+  /// %d
+  internal static func themePreviewUsesCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ThemePreview.UsesCount_countable", p1)
+  }
+  /// %d people are using this theme
+  internal static func themePreviewUsesCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ThemePreview.UsesCount_few", p1)
+  }
+  /// %d people are using this theme
+  internal static func themePreviewUsesCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ThemePreview.UsesCount_many", p1)
+  }
+  /// %d person is using this theme
+  internal static func themePreviewUsesCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ThemePreview.UsesCount_one", p1)
+  }
+  /// %d people are using this theme
+  internal static func themePreviewUsesCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ThemePreview.UsesCount_other", p1)
+  }
+  /// %d people are using this theme
+  internal static func themePreviewUsesCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ThemePreview.UsesCount_two", p1)
+  }
+  /// %d person is using this theme
+  internal static func themePreviewUsesCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ThemePreview.UsesCount_zero", p1)
+  }
   /// at
   internal static var timeAt: String  { return L10n.tr("Localizable", "Time.at") }
   /// last seen
@@ -5871,8 +5901,6 @@ internal final class L10n {
   internal static var d9MCDAMdTitle: String  { return L10n.tr("Localizable", "d9M-CD-aMd.title") }
   /// Undo
   internal static var drj4nYzgTitle: String  { return L10n.tr("Localizable", "dRJ-4n-Yzg.title") }
-  /// invalid format.
-  internal static var editThemeSlugErrorFormat: String  { return L10n.tr("Localizable", "editTheme.SlugError.Format") }
   /// Paste
   internal static var gvau4SdLTitle: String  { return L10n.tr("Localizable", "gVA-U4-sdL.title") }
   /// Smart Quotes

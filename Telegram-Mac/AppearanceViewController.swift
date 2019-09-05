@@ -45,7 +45,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
     case colorPalette(Int32, Int32, Bool, ColorPalette, Wallpaper?)
     case telegramTheme(Int32, Int32, Bool, TelegramTheme)
     case chatView(Int32, Int32, Bool, Bool)
-    case accentColor(Int32, Int32, NSColor)
+    case accentColor(Int32, Int32, [NSColor], Bool)
     case chatBackground(Int32, Int32)
     case autoNight(Int32, Int32)
     case followSystemAppearance(Int32, Int32, Bool)
@@ -62,7 +62,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             return index
         case .chatView(_, let index, _, _):
             return index
-        case .accentColor(_, let index, _):
+        case .accentColor(_, let index, _, _):
             return index
         case .chatBackground(_, let index):
             return index
@@ -89,7 +89,7 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
              return (section * 1000) + index
         case let .chatView(section, index, _, _):
             return (section * 1000) + index
-        case let .accentColor(section, index, _):
+        case let .accentColor(section, index, _, _):
             return (section * 1000) + index
         case let .chatBackground(section, index):
             return (section * 1000) + index
@@ -159,8 +159,8 @@ private enum AppearanceViewEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.appearanceSettingsFollowSystemAppearance, type: .switchable(value), action: {
                 arguments.toggleFollowSystemAppearance(!value)
             })
-        case .accentColor:
-            return AccentColorRowItem(initialSize, stableId: stableId, selectAccentColor: { color in
+        case let .accentColor(_, _, list, isNative):
+            return AccentColorRowItem(initialSize, stableId: stableId, list: list, isNative: isNative, selectAccentColor: { color in
                 arguments.selectAccentColor(color)
             })
         case .description(_, _, let text, let haveSeparator):
@@ -217,8 +217,8 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     entries.append(.chatBackground(sectionId, index))
     index += 1
     
-    if settings.colors.name != dayClassicPalette.name, themeSettings.cloudTheme == nil {
-        entries.append(.accentColor(sectionId, index, settings.colors.accent))
+    if !themeSettings.palette.accentList.isEmpty {
+        entries.append(.accentColor(sectionId, index, settings.colors.accentList, themeSettings.palette.isNative))
         index += 1
     }
     
@@ -254,20 +254,6 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         entries.append(.colorPalette(sectionId, index, settings.colors.name == mojavePalette.name && themeSettings.cloudTheme == nil, mojavePalette, nil))
         index += 1
         
-        
-        var paths = Bundle.main.paths(forResourcesOfType: "palette", inDirectory: "palettes")
-        let globalPalettes = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Palettes/".nsstring.expandingTildeInPath + "/"
-        paths += ((try? FileManager.default.contentsOfDirectory(atPath: globalPalettes)) ?? []).map({globalPalettes + $0})
-        
-        let palettes = paths.map{importPalette($0)}.filter{$0 != nil}.map{$0!}
-        
-        for palette in palettes {
-            if palette != whitePalette && palette != darkPalette && palette != settings.colors, installed[palette.name] == nil {
-                installed[palette.name] = palette
-                entries.append(.colorPalette(sectionId, index, palette.name == settings.colors.name && settings.cloudTheme == nil, palette, nil))
-                index += 1
-            }
-        }
         
         if installed[settings.colors.name] == nil && settings.cloudTheme == nil {
             installed[settings.colors.name] = settings.colors
@@ -401,7 +387,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<AppearanceViewEn
         return entry.entry.item(arguments, initialSize: initialSize)
     }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: false)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: false, grouping: false)
 }
 
 final class AppeaanceView : View {
@@ -534,7 +520,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
                 showModal(with: NewThemeController(context: context, palette: theme.colors), for: context.window)
             }))
             items.append(SPopoverItem(L10n.appearanceExportTheme, {
-                exportPalette(palette: theme.colors.withUpdatedName(findBestNameForPalette(theme.colors)))
+                exportPalette(palette: theme.colors)
             }))
             
             if let cloudTheme = theme.cloudTheme {

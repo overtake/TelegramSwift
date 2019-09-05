@@ -178,7 +178,7 @@ final class AccountContext {
             let signal = actualizedTheme(account: self.account, accountManager: self.sharedContext.accountManager, theme: theme) |> deliverOnMainQueue
             self.actualizeCloudTheme.set(signal.start(next: { [weak self] cloudTheme in
                 if let `self` = self {
-                    self.applyThemeDisposable.set(downloadAndApplyCloudTheme(context: self, theme: cloudTheme, inBackground: true).start())
+                    self.applyThemeDisposable.set(downloadAndApplyCloudTheme(context: self, theme: cloudTheme).start())
                 }
             }))
         case let .local(palette):
@@ -187,7 +187,6 @@ final class AccountContext {
                 return $0.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
             }).start())
         }
-       
     }
     
     var timestamp: Int32 {
@@ -281,31 +280,71 @@ final class AccountContext {
 }
 
 
-func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme, inBackground: Bool = false) -> Signal<Never, Void> {
+func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme) -> Signal<Never, Void> {
     if let file = cloudTheme.file {
         return Signal { subscriber in
             let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
-            
+            let wallpaperDisposable = DisposableSet()
+
             let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)
-            
-            let signal = inBackground ? resourceData : showModalProgress(signal: resourceData, for: context.window)
-            
-            let dataDisposable = signal.start(next: { data in
+
+            let dataDisposable = resourceData.start(next: { data in
                 
                 if let palette = importPalette(data.path) {
-                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                        return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
-                    }).start()
+                    var slug: String? = nil
+                    if let wallpaper = palette.wallpaperSlug {
+//                        switch theme.wallpaper {
+//                        case .none:
+//                            slug = wallpaper
+//                        default:
+//                            break
+//                        }
+                    }
+                    
+                    if let slug = slug {
+                        #if !SHARE
+                        let wallpaper: Signal<TelegramWallpaper, GetWallpaperError>
+                        if slug == "builtin" {
+                            wallpaper = .single(.builtin(WallpaperSettings()))
+                        } else {
+                            wallpaper = getWallpaper(account: context.account, slug: slug)
+                        }
+                        wallpaperDisposable.add(wallpaper.start(next: { wallpaper in
+                            wallpaperDisposable.add(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(wallpaper)).start(next: { wallpaper in
+                                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                                    return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme).withUpdatedWallpaper(wallpaper)
+                                }).start()
+                                subscriber.putCompletion()
+                            }))
+                            
+                        }, error: { _ in
+                            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                                return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
+                            }).start()
+                            subscriber.putCompletion()
+                        }))
+                        #endif
+                        
+                        
+                        //
+                    } else {
+                        _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                            return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
+                        }).start()
+                        subscriber.putCompletion()
+                    }
                 }
-                subscriber.putCompletion()
             })
             
             return ActionDisposable {
                 fetchDisposable.dispose()
                 dataDisposable.dispose()
+                wallpaperDisposable.dispose()
             }
             } |> runOn(.mainQueue()) |> deliverOnMainQueue
     } else {
         return .complete()
     }
 }
+
+

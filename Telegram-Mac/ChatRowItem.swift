@@ -988,7 +988,7 @@ class ChatRowItem: TableRowItem {
                             var range = attr.append(string: author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                             
                             let appLink = inAppLink.peerInfo(link: "", peerId: author.id, action: nil, openChat: !(author is TelegramUser), postId: info.sourceMessageId?.id, callback: chatInteraction.openInfo)
-                            attr.add(link: appLink, for: range)
+                            attr.add(link: appLink, for: range, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble))
                         }
                     } else {
                         if let source = info.source, source.isChannel {
@@ -1000,7 +1000,7 @@ class ChatRowItem: TableRowItem {
                             
                             let link = source.addressName == nil ? "https://t.me/c/\(source.id.id)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")" : "https://t.me/\(source.addressName!)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")"
                             let appLink = inApp(for: link.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo)
-                            attr.add(link: appLink, for: range)
+                            attr.add(link: appLink, for: range, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble))
                             
                         } else {
                             let range = attr.append(string: info.authorTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: info.author == nil ? .normal(.text) : .medium(.text))

@@ -1027,7 +1027,7 @@ class TelegramPresentationTheme : PresentationTheme {
             case let .background(image):
                 chatServiceItemColor = getAverageColor(image)
             case let .color(color):
-                chatServiceItemColor = getAverageColor(color)
+                return color
             case let .tiled(image):
                 chatServiceItemColor = getAverageColor(image)
             case .plain:
@@ -1047,7 +1047,7 @@ class TelegramPresentationTheme : PresentationTheme {
             case .background:
                 chatServiceItemTextColor = .white
             case .color:
-                chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
+                chatServiceItemTextColor = colors.grayText
             case .tiled:
                 chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
             case .plain:

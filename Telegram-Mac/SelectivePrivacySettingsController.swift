@@ -94,7 +94,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     case phoneDiscoveryHeader(Int32, String)
     case phoneDiscoveryEverybody(Int32, String, Bool)
     case phoneDiscoveryMyContacts(Int32, String, Bool)
-
+    case phoneDiscoveryInfo(Int32, String)
     case peersInfo(Int32)
     case section(Int32)
 
@@ -119,6 +119,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case .phoneDiscoveryHeader: return 16
         case .phoneDiscoveryEverybody: return 17
         case .phoneDiscoveryMyContacts: return 18
+        case .phoneDiscoveryInfo: return 19
 
         case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
@@ -145,6 +146,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case .phoneDiscoveryHeader(let sectionId, _): return (sectionId * 1000) + stableId
         case .phoneDiscoveryEverybody(let sectionId, _, _): return (sectionId * 1000) + stableId
         case .phoneDiscoveryMyContacts(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryInfo(let sectionId, _): return (sectionId * 1000) + stableId
         case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -219,6 +221,8 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .selectable(selected), action: {
                 arguments.updatePhoneDiscovery(false)
             })
+        case let .phoneDiscoveryInfo(_, text):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -291,7 +295,7 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
     sectionId += 1
 
     let settingTitle: String
-    let settingInfoText: String
+    let settingInfoText: String?
     let disableForText: String
     let enableForText: String
     switch kind {
@@ -321,8 +325,8 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
         disableForText = L10n.privacySettingsControllerNeverAllow
         enableForText = L10n.privacySettingsControllerAlwaysAllow
     case .phoneNumber:
-        if state.setting == .nobody, state.phoneDiscoveryEnabled == false {
-            settingInfoText = L10n.privacyPhoneNumberSettingsCustomDisabledHelp
+        if state.setting == .nobody {
+            settingInfoText = nil
         } else {
             settingInfoText = L10n.privacySettingsControllerPhoneNumberCustomHelp
         }
@@ -342,8 +346,11 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
     case .groupInvitations, .profilePhoto:
         break
     }
-    entries.append(.settingInfo(sectionId, settingInfoText))
+    if let settingInfoText = settingInfoText {
+        entries.append(.settingInfo(sectionId, settingInfoText))
+    }
 
+    
     entries.append(.section(sectionId))
     sectionId += 1
     
@@ -351,6 +358,7 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
         entries.append(.phoneDiscoveryHeader(sectionId, L10n.privacyPhoneNumberSettingsDiscoveryHeader))
         entries.append(.phoneDiscoveryEverybody(sectionId, L10n.privacySettingsControllerEverbody, state.phoneDiscoveryEnabled != false))
         entries.append(.phoneDiscoveryMyContacts(sectionId, L10n.privacySettingsControllerMyContacts, state.phoneDiscoveryEnabled == false))
+        entries.append(.phoneDiscoveryInfo(sectionId, L10n.privacyPhoneNumberSettingsCustomDisabledHelp))
         
         entries.append(.section(sectionId))
         sectionId += 1

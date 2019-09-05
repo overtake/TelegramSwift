@@ -690,11 +690,13 @@ open class GenericViewController<T> : ViewController where T:NSView {
 
 public struct ModalHeaderData {
     public let title: String?
+    public let subtitle: String?
     public let image: CGImage?
     public let handler: (()-> Void)?
-    public init(title: String? = nil, image: CGImage? = nil, handler: (()->Void)? = nil) {
+    public init(title: String? = nil, subtitle: String? = nil, image: CGImage? = nil, handler: (()->Void)? = nil) {
         self.title = title
         self.image = image
+        self.subtitle = subtitle
         self.handler = handler
     }
 }

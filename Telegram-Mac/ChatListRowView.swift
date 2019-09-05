@@ -347,8 +347,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     var mutedInset:CGFloat = item.isSecret ? theme.icons.secretImage.backingSize.width + 2 : 0
                     
                     if item.isVerified {
-                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition - 2, item.margin - 3, theme.icons.verifyDialog.backingSize.width, theme.icons.verifyDialog.backingSize.height))
-                        mutedInset += theme.icons.verifiedImage.backingSize.width + 3
+                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition - 2, item.margin - 3, 24, 24))
+                        mutedInset += 15 + 3
                     }
                     
                     if item.isScam {
@@ -538,8 +538,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
                 self.archivedPhoto?.frame = self.photo.frame
                 self.archivedPhoto?.userInteractionEnabled = false
-                self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background)
-                self.archivedPhoto?.background = item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background
+                self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
+                self.archivedPhoto?.background = item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
                 self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
 
                 if item.animateArchive && animated {

@@ -297,9 +297,9 @@ private final class PlayerRenderer {
         
         let initialState = RendererState(cancelled: false, animation: self.animation, layer: player, fileSupplyment: fileSupplyment, frames: [], cachedFrames: [:], currentFrame: 0, startFrame: min(min(player.startFrame(), maxFrames), min(player.endFrame(), maxFrames)), endFrame: min(player.endFrame(), maxFrames), fps: max(min(player.fps(), 60), 30))
         
-        let stateValue:Unmanaged<RenderAtomic<RendererState>> = Unmanaged.passRetained(RenderAtomic(value: initialState));
-        let updateState:(_ f:(RendererState)->RendererState)->Void = { f in
-            _ = stateValue.takeUnretainedValue().modify(f)
+        let stateValue:RenderAtomic<RendererState?> = RenderAtomic(value: initialState)
+        let updateState:(_ f:(RendererState?)->RendererState?)->Void = { f in
+            _ = stateValue.modify(f)
         }
         
         var framesTask: ThreadPoolTask? = nil
@@ -309,22 +309,16 @@ private final class PlayerRenderer {
         
         self.onDispose = {
             updateState {
-                $0.cancel()
+                $0?.cancel()
             }
             framesTask?.cancel()
             framesTask = nil
+            _ = stateValue.swap(nil)
             
-            isRendering.with { value in
-                if !value {
-                    stateValue.release()
-                } else {
-                    releaseState = true
-                }
-            }
         }
         
-        let currentState:(_ state: Unmanaged<RenderAtomic<RendererState>>) -> RendererState = { state in
-            return state.takeUnretainedValue().with { $0 }
+        let currentState:(_ state: RenderAtomic<RendererState?>) -> RendererState? = { state in
+            return state.with { $0 }
         }
         
         
@@ -337,9 +331,9 @@ private final class PlayerRenderer {
             var cancelled: Bool = false
             if let renderer = self {
                 var current: RenderedFrame?
-                updateState { state in
-                    guard !state.frames.isEmpty else {
-                        return state
+                updateState { stateValue in
+                    guard let state = stateValue, !state.frames.isEmpty else {
+                        return stateValue
                     }
                     current = state.takeFirst()
                     hungry = state.frames.count < maximum_rendered_frames - 1
@@ -359,7 +353,7 @@ private final class PlayerRenderer {
                         case .loop:
                             break
                         case .once:
-                            if current.frame == currentState(stateValue).endFrame - 1 {
+                            if current.frame + 1 == currentState(stateValue)?.endFrame {
                                 renderer.finished = true
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
@@ -388,13 +382,16 @@ private final class PlayerRenderer {
             
             _ = isRendering.swap(true)
             
-            while !releaseState && !state.cancelled.with({$0}) && currentState(stateValue).frames.count < min(maximum_rendered_frames, maximum) {
+            while !releaseState && !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_rendered_frames, maximum) {
                 
-                let currentFrame = stateValue.takeUnretainedValue().with({ ($0.currentFrame) })
+                let currentFrame = stateValue.with { $0?.currentFrame ?? 0 }
                 
-                let frame: RenderedFrame? = currentState(stateValue).renderFrame(at: currentFrame)
+                let frame: RenderedFrame? = stateValue.with { $0?.renderFrame(at: currentFrame) }
                 
-                _ = stateValue.takeUnretainedValue().modify { state -> RendererState in
+                _ = stateValue.modify { stateValue -> RendererState? in
+                    guard let state = stateValue else {
+                        return stateValue
+                    }
                     var currentFrame = state.currentFrame
                     
                     if currentFrame % Int32(round(Float(state.fps) / Float(fps))) != 0 {
@@ -412,14 +409,7 @@ private final class PlayerRenderer {
                     break
                 }
             }
-            _ = isRendering.modify { value -> Bool in
-                if releaseState {
-                    stateQueue.async {
-                        stateValue.release()
-                    }
-                }
-                return false
-            }
+            _ = isRendering.swap(false)
             stateQueue.async {
                 askedRender = false
             }

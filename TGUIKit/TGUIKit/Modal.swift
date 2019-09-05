@@ -225,6 +225,7 @@ private class ModalInteractionsContainer : View {
 
 private final class ModalHeaderView: View {
     let titleView: TextView = TextView()
+    private var  subtitleView: TextView?
     var leftButton: ImageButton?
     var rightButton: ImageButton?
     weak var controller:ModalViewController?
@@ -235,6 +236,14 @@ private final class ModalHeaderView: View {
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         border = [.Bottom]
+        
+        if let subtitle = data.center?.subtitle {
+            subtitleView = TextView()
+            subtitleView!.update(TextViewLayout(.initialize(string: subtitle, color: presentation.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+            subtitleView!.userInteractionEnabled = false
+            subtitleView!.isSelectable = false
+            addSubview(subtitleView!)
+        }
         
         if let right = data.right {
             rightButton = ImageButton()
@@ -262,7 +271,18 @@ private final class ModalHeaderView: View {
         
         titleView.layout?.measure(width: frame.width - 40 - additionalSize)
         titleView.update(titleView.layout)
-        titleView.center()
+        
+        subtitleView?.layout?.measure(width: frame.width - 40 - additionalSize)
+        subtitleView?.update(subtitleView?.layout)
+        
+        if let subtitleView = subtitleView {
+            let center = frame.midY
+            titleView.centerX(y: center - titleView.frame.height - 1)
+            subtitleView.centerX(y: center + 1)
+        } else {
+            titleView.center()
+        }
+        
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -278,7 +298,8 @@ private final class ModalHeaderView: View {
         let header = controller.modalHeader
         if let header = header {
             titleView.update(TextViewLayout(.initialize(string: header.center?.title, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
-            
+            subtitleView?.update(TextViewLayout(.initialize(string: header.center?.subtitle, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+
             if let image = header.right?.image {
                 rightButton?.set(image: image, for: .Normal)
             }

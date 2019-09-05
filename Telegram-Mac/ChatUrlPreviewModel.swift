@@ -46,10 +46,10 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
             if content.text == nil && content.title == nil {
                 isEmptyText = true
             }
-            text = content.text ?? content.title ?? tr(L10n.chatEmptyLinkPreview)
+            text = content.text ?? content.title ?? L10n.chatEmptyLinkPreview
         }
         
-        self.headerAttr = .initialize(string: authorName, color: theme.colors.link, font: .medium(.text))
+        self.headerAttr = .initialize(string: authorName, color: theme.colors.accent, font: .medium(.text))
         self.messageAttr = .initialize(string: text, color: isEmptyText ? theme.colors.grayText : theme.colors.text, font: .normal(.text))
         
         nodeReady.set(.single(true))

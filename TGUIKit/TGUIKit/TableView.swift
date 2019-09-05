@@ -57,7 +57,7 @@ public enum TableBackgroundMode {
         case .plain:
             return false
         case let .color(color):
-            return color.hexString != presentation.colors.background.hexString
+            return color.hexString != presentation.colors.chatBackground.hexString
         default:
             return true
         }

@@ -270,7 +270,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
         
         
-
         launchInterface()
         
     }
@@ -338,6 +337,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 applyUILocalization(localization)
             }
             
+
+            
             updateTheme(with: themeSettings, for: window)
             
 //            actualizedTheme(account: <#T##Account#>, accountManager: <#T##AccountManager#>, theme: <#T##TelegramTheme#>)
@@ -347,7 +348,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
             _ = (viewDidChangedAppearance.get() |> mapToSignal { _ in return themeSettingsView(accountManager: accountManager) } |> deliverOnMainQueue).start(next: { settings in
                 let previous = basicTheme.swap(settings)
-                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper {
+                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize || previous?.cloudTheme?.id != settings.cloudTheme?.id {
                     updateTheme(with: settings, for: window, animated: window.isKeyWindow && previous?.fontSize == settings.fontSize)
                     self.contextValue?.applyNewTheme()
                 }

@@ -432,7 +432,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 case let .readyToInstall(item), let .unarchiving(item):
                     text = "\(item.displayVersionString!).\(item.versionString!)"
                 case .uptodate:
-                    text = L10n.accountViewControllerDescUpdated
+                    text = "" //L10n.accountViewControllerDescUpdated
                 case .failed:
                     text = L10n.accountViewControllerDescFailed
                 default:

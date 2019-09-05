@@ -165,10 +165,10 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     public func addToken(token: SearchToken, animated: Bool) -> Void {
         tokens.append(token)
         
-        let view = TokenView(token, maxSize: NSMakeSize(100, 22), onDismiss: { [weak self] in
+        let view = TokenView(token, maxSize: NSMakeSize(80, 22), onDismiss: { [weak self] in
             self?.removeToken(uniqueId: token.uniqueId, animated: true)
         }, onSelect: { [weak self] in
-            self?.selectedIndex = self?.tokens.index(of: token)
+            self?.selectedIndex = self?.tokens.firstIndex(of: token)
         })
         
         container.addSubview(view)
