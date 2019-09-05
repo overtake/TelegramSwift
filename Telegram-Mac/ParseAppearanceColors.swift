@@ -361,43 +361,45 @@ func importPalette(_ path: String) -> ColorPalette? {
         var tinted: Bool = false
         var paletteName: String? = nil
         var copyright: String = "Telegram"
-        var wallpaperSlug: String? = nil
+        var wallpaper: PaletteWallpaper?
         var parent: TelegramBuiltinTheme = .dayClassic
         var accentList:[NSColor] = []
         var colors:[String: NSColor] = [:]
         for line in lines {
-            let components = line.components(separatedBy: "=")
-            if components.count == 2 {
-                let name = components[0].trimmed
-                let value = components[1].trimmed
-                
-                if name == "name" {
-                    paletteName = value
-                } else if name == "isDark" {
-                    isDark = Int32(value) == 1
-                } else if name == "tinted" {
-                    tinted = Int32(value) == 1
-                } else if name == "accentList" {
-                    accentList = value.components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
-                } else if name == "copyright" {
-                    copyright = value
-                } else if name == "wallpaperSlug" {
-                    wallpaperSlug = value
-                } else if name == "parent" {
-                    parent = TelegramBuiltinTheme(rawValue: value) ?? .dayClassic
-                } else {
-                    let components = value.components(separatedBy: ":")
-                    var hex:UInt32?
-                    var alpha: Float = 1.0
+            if !line.trimmed.hasPrefix("//") {
+                let components = line.components(separatedBy: "=")
+                if components.count == 2 {
+                    let name = components[0].trimmed
+                    let value = components[1].trimmed
                     
-                    if components.count == 1 {
-                        hex = UInt32(String(components[0].trimmed.suffix(6)), radix: 16)
-                    } else if components.count == 2, let alphaValue = Float(components[1].trimmed) {
-                        hex = UInt32(String(components[0].trimmed.suffix(6)), radix: 16)
-                        alpha = max(0, min(1, alphaValue))
-                    }
-                    if let hex = hex {
-                        colors[name] = NSColor(hex, CGFloat(alpha))
+                    if name == "name" {
+                        paletteName = value
+                    } else if name == "isDark" {
+                        isDark = Int32(value) == 1
+                    } else if name == "tinted" {
+                        tinted = Int32(value) == 1
+                    } else if name == "accentList" {
+                        accentList = value.components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
+                    } else if name == "copyright" {
+                        copyright = value
+                    } else if name == "wallpaper" {
+                        wallpaper = PaletteWallpaper(value)
+                    } else if name == "parent" {
+                        parent = TelegramBuiltinTheme(rawValue: value) ?? .dayClassic
+                    } else {
+                        let components = value.components(separatedBy: ":")
+                        var hex:UInt32?
+                        var alpha: Float = 1.0
+                        
+                        if components.count == 1 {
+                            hex = UInt32(String(components[0].trimmed.suffix(6)), radix: 16)
+                        } else if components.count == 2, let alphaValue = Float(components[1].trimmed) {
+                            hex = UInt32(String(components[0].trimmed.suffix(6)), radix: 16)
+                            alpha = max(0, min(1, alphaValue))
+                        }
+                        if let hex = hex {
+                            colors[name] = NSColor(hex, CGFloat(alpha))
+                        }
                     }
                 }
             }
@@ -408,6 +410,7 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 tinted: tinted,
                                 name: name,
                                 parent: parent,
+                                wallpaper: wallpaper ?? parent.palette.wallpaper,
                                 copyright: copyright,
                                 accentList: accentList,
                                 basicAccent: colors["basicAccent"] ?? parent.palette.basicAccent,
@@ -525,8 +528,7 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 revealAction_warning_foreground: colors["revealAction_warning_foreground"] ?? parent.palette.revealAction_warning_foreground,
                                 revealAction_inactive_background: colors["revealAction_inactive_background"] ?? parent.palette.revealAction_inactive_background,
                                 revealAction_inactive_foreground: colors["revealAction_inactive_foreground"] ?? parent.palette.revealAction_inactive_foreground,
-                                chatBackground: colors["chatBackground"] ?? parent.palette.chatBackground,
-                                wallpaperSlug: wallpaperSlug)
+                                chatBackground: colors["chatBackground"] ?? parent.palette.chatBackground)
         }
         
     }

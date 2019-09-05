@@ -826,6 +826,35 @@ enum Wallpaper : Equatable, PostboxCoding {
         }
     }
     
+    var wallpaperUrl: String? {
+        switch self {
+        case .builtin:
+            return "builtin"
+        case let .file(slug, _, settings, isPattern):
+            var options: [String] = []
+            if settings.blur {
+                options.append("mode=blur")
+            }
+            if isPattern {
+                if let pattern = settings.color {
+                    var color = NSColor(rgb: UInt32(bitPattern: pattern)).hexString.lowercased()
+                    color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
+                    options.append("bg_color=\(color)")
+                }
+                if let intensity = settings.intensity {
+                    options.append("intensity=\(intensity)")
+                }
+            }
+            var optionsString = ""
+            if !options.isEmpty {
+                optionsString = "?\(options.joined(separator: "&"))"
+            }
+            return "https://t.me/bg/\(slug)\(optionsString)"
+        default:
+            return nil
+        }
+    }
+    
     public init(decoder: PostboxDecoder) {
         switch decoder.decodeInt32ForKey("v", orElse: 0) {
         case 0:
@@ -1145,7 +1174,6 @@ class TelegramPresentationTheme : PresentationTheme {
         self.fontSize = fontSize
         self.followSystemAppearance = followSystemAppearance
         self.cloudTheme = cloudTheme
-
         
         super.init(colors: colors, search: search)
     }
