@@ -291,59 +291,73 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
             let dataDisposable = resourceData.start(next: { data in
                 
                 if let palette = importPalette(data.path) {
-                    var cloud_w:(String, WallpaperSettings?)? = nil
+                    var wallpaper: Signal<TelegramWallpaper, GetWallpaperError>? = nil
+                    var newSettings: WallpaperSettings = WallpaperSettings()
                     #if !SHARE
-//                    if let wallpaper = palette.wallpaperSlug {
-//                        if !theme.isUsedOwnWallpaper {
-//                            if wallpaper == "builtin" {
-//                                cloud_w = (wallpaper, nil)
-//                            } else {
-//                                let link = inApp(for: wallpaper as NSString, context: context)
-//                                switch link {
-//                                case let .wallpaper(values):
-//                                    switch values.preview {
-//                                    case let .slug(slug, settings):
-//                                        cloud_w = (slug, settings)
-//                                    default:
-//                                        break
-//                                    }
-//                                default:
-//                                    break
-//                                }
-//                            }
-//                        }
-//                    }
-                    #endif
-                    if let cloud_w = cloud_w {
-                        #if !SHARE
-                        let wallpaper: Signal<TelegramWallpaper, GetWallpaperError>
-                        if cloud_w.0 == "builtin" {
+                    switch palette.wallpaper {
+                    case .none:
+                        wallpaper = nil
+                    case .builtin:
+                        if theme.wallpaper.associated?.wallpaper != .builtin {
                             wallpaper = .single(.builtin(WallpaperSettings()))
-                        } else {
-                            wallpaper = getWallpaper(account: context.account, slug: cloud_w.0)
                         }
-                        wallpaperDisposable.add(wallpaper.start(next: { wallpaper in
-                            wallpaperDisposable.add(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(wallpaper)).start(next: { wallpaper in
+                    case let .url(string):
+                        let link = inApp(for: string as NSString, context: context)
+                        switch link {
+                        case let .wallpaper(values):
+                            switch values.preview {
+                            case let .slug(slug, settings):
+                                if theme.wallpaper.wallpaper == theme.wallpaper.associated?.wallpaper {
+                                    if let associated = theme.wallpaper.associated, let cloud = associated.cloud {
+                                        switch cloud {
+                                        case let .file(values):
+                                            if values.slug == values.slug && values.settings == settings {
+                                                wallpaper = .single(cloud)
+                                            } else {
+                                                wallpaper = getWallpaper(account: context.account, slug: slug)
+                                            }
+                                        default:
+                                            wallpaper = getWallpaper(account: context.account, slug: slug)
+                                        }
+                                    } else {
+                                        wallpaper = getWallpaper(account: context.account, slug: slug)
+                                    }
+                                }
+                                newSettings = settings
+                            default:
+                                break
+                            }
+                        default:
+                            break
+                        }
+                    }
+                   
+                    #endif
+                    
+                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                        return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
+                    }).start()
+                    
+                    if let wallpaper = wallpaper {
+                        #if !SHARE
+                        wallpaperDisposable.add(wallpaper.start(next: { cloud in
+                            let wp = Wallpaper(cloud).withUpdatedSettings(newSettings)
+                            wallpaperDisposable.add(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wp).start(next: { wallpaper in
                                 _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                                    return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme).withUpdatedWallpaper(wallpaper)
+                                    return settings.updateWallpaper { value in
+                                        var value = value.withUpdatedWallpaper(wallpaper)
+                                        value = value.withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))
+                                        return value
+                                    }
                                 }).start()
                                 subscriber.putCompletion()
                             }))
                             
                         }, error: { _ in
-                            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                                return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
-                            }).start()
                             subscriber.putCompletion()
                         }))
                         #endif
-                        
-                        
-                        //
                     } else {
-                        _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                            return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
-                        }).start()
                         subscriber.putCompletion()
                     }
                 }

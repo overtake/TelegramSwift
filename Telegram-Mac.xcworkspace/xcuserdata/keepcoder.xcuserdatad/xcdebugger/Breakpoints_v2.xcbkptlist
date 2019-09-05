@@ -523,7 +523,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/CoreExtension.swift"
-            timestampString = "589193025.699736"
+            timestampString = "589401076.770479"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "2013"
@@ -555,7 +555,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "589388804.2159981"
+                  timestampString = "589401078.659408"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "93"
@@ -570,7 +570,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "589388804.218019"
+                  timestampString = "589401078.6617351"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "94"
@@ -987,7 +987,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/Extensions.swift"
-            timestampString = "589388802.338498"
+            timestampString = "589401076.770944"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "2166"
@@ -1243,7 +1243,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/Extensions.swift"
-            timestampString = "589388802.338726"
+            timestampString = "589401076.771198"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1708"
@@ -1275,7 +1275,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ThemeGridControllerItem.swift"
-            timestampString = "589382053.3632669"
+            timestampString = "589401076.771261"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "100"
@@ -1313,6 +1313,22 @@
             startingLineNumber = "928"
             endingLineNumber = "928"
             landmarkName = "scrollup()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Telegram-Mac/Appearance.swift"
+            timestampString = "589401076.771343"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "929"
+            endingLineNumber = "929"
+            landmarkName = "withUpdatedSettings(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

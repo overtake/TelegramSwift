@@ -976,7 +976,7 @@ class WallpaperPreviewController: ModalViewController {
     let source: WallpaperSource
     
     init(_ context: AccountContext, wallpaper: Wallpaper, source: WallpaperSource) {
-        self.wallpaper = wallpaper.isSemanticallyEqual(to: theme.wallpaper) ? wallpaper.withUpdatedBlurrred(theme.wallpaper.isBlurred) : wallpaper
+        self.wallpaper = wallpaper.isSemanticallyEqual(to: theme.wallpaper.wallpaper) ? wallpaper.withUpdatedBlurrred(theme.wallpaper.wallpaper.isBlurred) : wallpaper
         self.context = context
         self.source = source
         super.init(frame: NSMakeRect(0, 0, 380, 300))
@@ -1068,15 +1068,7 @@ class WallpaperPreviewController: ModalViewController {
         
         _ = showModalProgress(signal: signal, for: mainWindow).start(next: { wallpaper in
             _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                let c_wallpaper: Wallpaper?
-                switch wallpaper {
-                case .color:
-                    c_wallpaper = wallpaper
-                default:
-                    c_wallpaper = nil
-                }
-                
-                return settings.withUpdatedBubbled(true).withUpdatedWallpaper(wallpaper).withUpdatedCustomWallpaper(c_wallpaper ?? settings.customWallpaper)
+                return settings.withUpdatedBubbled(true).updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }
             }) |> delay(0.1, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(completed: {
                     var stats:[Signal<Void, NoError>] = []
                     switch self.source {

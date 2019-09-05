@@ -236,6 +236,7 @@ public final class ColorPalette : Equatable {
         string += "isDark = \(self.isDark ? 1 : 0)\n"
         string += "tinted = \(self.tinted ? 1 : 0)\n"
         string += "name = \(self.name)\n"
+        string += "//Available values: Day, Day Classic, Dark, Night Blue, Mojave\n"
         string += "parent = \(self.parent.rawValue)\n"
         string += "copyright = \(self.copyright)\n"
         string += "accentList = \(self.accentList.map{$0.hexString}.joined(separator: ","))\n"
@@ -244,7 +245,7 @@ public final class ColorPalette : Equatable {
                 string += "\(prop) = \(color.hexString.lowercased())\n"
             }
         }
-        string += "//Available params: none, builtin or link to cloud backgound like a t.me/bg/%slug%\n"
+        string += "//Available values: none, builtin or url to cloud backgound like a t.me/bg/%slug%\n"
         string += "wallpaper = \(wallpaper.toString)\n"
         return string
     }

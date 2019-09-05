@@ -41,7 +41,7 @@ final class SettingsThemeWallpaperView: View {
     
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = NSMenu(title: "")
-        if let wallpaper = self.wallpaper, wallpaper != theme.c_wallpaper {
+        if let wallpaper = self.wallpaper {
             switch wallpaper {
             case .file:
                 menu.addItem(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
