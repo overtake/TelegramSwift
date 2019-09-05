@@ -186,11 +186,15 @@ class ScheduledMessageModalController: ModalViewController {
                     }
                 }
              } else {
-                applyTime(date.addingTimeInterval(current.timeIntervalSince1970 - current.startOfDayUTC.timeIntervalSince1970))
+                if date != current {
+                    applyTime(date.addingTimeInterval(current.timeIntervalSince1970 - current.startOfDay.timeIntervalSince1970))
+                } else {
+                    applyTime(date)
+                }
             }
         } else {
             if date != current {
-                applyTime(date.addingTimeInterval(current.timeIntervalSince1970 - current.startOfDayUTC.timeIntervalSince1970))
+                applyTime(date.addingTimeInterval(current.timeIntervalSince1970 - current.startOfDay.timeIntervalSince1970))
             } else {
                 applyTime(date)
             }
