@@ -297,7 +297,11 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             }
                             
                             if message.wasScheduled {
-                                title = L10n.notificationScheduledTitle
+                                if message.id.peerId == account.peerId {
+                                    title = L10n.notificationReminder
+                                } else {
+                                    title = L10n.notificationScheduledTitle
+                                }
                             }
                             
                            

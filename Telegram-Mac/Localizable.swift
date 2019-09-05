@@ -3185,6 +3185,8 @@ internal final class L10n {
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mark as Read
   internal static var notificationMarkAsRead: String  { return L10n.tr("Localizable", "Notification.MarkAsRead") }
+  /// 📆 Reminder
+  internal static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
   /// 📆 You
   internal static var notificationScheduledTitle: String  { return L10n.tr("Localizable", "Notification.ScheduledTitle") }
   /// All Accounts

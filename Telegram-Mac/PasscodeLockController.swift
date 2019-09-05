@@ -89,6 +89,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input = PasscodeField(frame: NSZeroRect)
         input.stringValue = ""
         super.init(frame: frameRect)
+        autoresizingMask = [.width, .height]
         self.backgroundColor = .white
         
         nextButton.set(background: theme.colors.blueIcon, for: .Normal)
