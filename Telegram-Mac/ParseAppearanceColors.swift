@@ -353,9 +353,8 @@ private func generateThemeName(_ accentColor: NSColor) -> String {
 
 
 func importPalette(_ path: String) -> ColorPalette? {
-    if let data = try? String(contentsOf: URL(fileURLWithPath: path)) {
+    if let fs = fs(path), fs <= 30 * 1014 * 1024, let data = try? String(contentsOf: URL(fileURLWithPath: path)) {
         let lines = data.components(separatedBy: "\n").filter({!$0.isEmpty})
-        
         
         var isDark: Bool = false
         var tinted: Bool = false
@@ -367,7 +366,11 @@ func importPalette(_ path: String) -> ColorPalette? {
         var colors:[String: NSColor] = [:]
         for line in lines {
             if !line.trimmed.hasPrefix("//") {
-                let components = line.components(separatedBy: "=")
+                var components = line.components(separatedBy: "=")
+                if components.count > 2 {
+                    components[1] = components[1..<components.count].joined(separator: "=")
+                    components = Array(components[0..<2])
+                }
                 if components.count == 2 {
                     let name = components[0].trimmed
                     let value = components[1].trimmed

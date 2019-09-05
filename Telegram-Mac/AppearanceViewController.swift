@@ -257,7 +257,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         
         if installed[settings.colors.name] == nil && settings.cloudTheme == nil {
             installed[settings.colors.name] = settings.colors
-            entries.append(.colorPalette(sectionId, index, true, settings.colors, settings.wallpaper))
+            entries.append(.colorPalette(sectionId, index, true, settings.colors, settings.wallpaper.wallpaper))
             index += 1
         }
         
@@ -434,8 +434,12 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let arguments = AppearanceViewArguments(context: context, togglePalette: { palette, _ in
             _ = combineLatest(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedPalette(palette).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName).withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName).withUpdatedCloudTheme(nil)
-                
+                var settings = settings.withUpdatedPalette(palette)
+                settings = settings.withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName)
+                settings = settings.withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
+                settings = settings.withUpdatedCloudTheme(nil)
+                settings = settings.withStandartWallpaper()
+                return settings
             }), updateAutoNightSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
@@ -463,7 +467,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
             self?.navigationController?.push(autoNightSettingsController(context.sharedContext))
         }, toggleFollowSystemAppearance: { value in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedFollowSystemAppearance(value).withUpdatedWallpaper(settings.bubbled ? settings.wallpaper : .none).withUpdatedCloudTheme(nil)
+                return settings.withUpdatedFollowSystemAppearance(value).withUpdatedCloudTheme(nil)
             }).start()
         }, removeTheme: { cloudTheme in
             confirm(for: context.window, header: L10n.appearanceConfirmRemoveTitle, information: L10n.appearanceConfirmRemoveText, successHandler: { _ in
@@ -483,7 +487,9 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
             showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(theme.slug)")), for: context.window)
         }, installCloudTheme: { theme in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
-                return $0.withUpdatedCloudTheme(theme)
+                return $0.withUpdatedCloudTheme(theme).updateWallpaper { value in
+                    return value.withUpdatedWallpaper(.none).withUpdatedAssociated(AssociatedWallpaper(cloud: nil, wallpaper: .none))
+                }
             }).start()
         })
         
@@ -496,7 +502,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let signal:Signal<(TableUpdateTransition, Wallpaper), NoError> = combineLatest(queue: prepareQueue, appearanceSignal, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager), telegramThemesSignal) |> map { appearance, themeSettings, telegramThemes in
             let entries = AppearanceViewEntries(settings: appearance.presentation, themeSettings: themeSettings, telegramThemes: telegramThemes).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-            return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper)
+            return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), appearance.presentation.wallpaper.wallpaper)
         } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition, wallpaper in
@@ -517,10 +523,10 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
             var items:[SPopoverItem] = []
             
             items.append(SPopoverItem(L10n.appearanceNewTheme, {
-                showModal(with: NewThemeController(context: context, palette: theme.colors), for: context.window)
+                showModal(with: NewThemeController(context: context, palette: theme.colors.withUpdatedWallpaper(theme.wallpaper.paletteWallpaper)), for: context.window)
             }))
             items.append(SPopoverItem(L10n.appearanceExportTheme, {
-                exportPalette(palette: theme.colors)
+                exportPalette(palette: theme.colors.withUpdatedWallpaper(theme.wallpaper.paletteWallpaper))
             }))
             
             if let cloudTheme = theme.cloudTheme {

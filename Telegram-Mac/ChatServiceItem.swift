@@ -322,7 +322,7 @@ class ChatServiceItem: ChatRowItem {
     }
     
     override var isBubbled: Bool {
-        return theme.wallpaper != .none
+        return theme.wallpaper.wallpaper != .none
     }
     
     override var height: CGFloat {

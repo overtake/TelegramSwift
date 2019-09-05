@@ -31,7 +31,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(EmojiSkinModifier.self, f: { AutoNightThemePreferences(decoder: $0) })
     declareEncodable(InstantPageStoredDetailsState.self, f: { InstantPageStoredDetailsState(decoder: $0) })
     declareEncodable(CachedChannelAdminRanks.self, f: { CachedChannelAdminRanks(decoder: $0) })
-    declareEncodable(DefaultWallpaper.self, f: { DefaultWallpaper(decoder: $0) })
+    declareEncodable(StandartPaletteWallpaper.self, f: { StandartPaletteWallpaper(decoder: $0) })
     declareEncodable(LaunchSettings.self, f: { LaunchSettings(decoder: $0)})
     declareEncodable(AutoplayMediaPreferences.self, f: { AutoplayMediaPreferences(decoder: $0)})
     declareEncodable(VoiceCallSettings.self, f: { VoiceCallSettings(decoder: $0)})
@@ -40,6 +40,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(DownloadedPath.self, f: { DownloadedPath(decoder: $0)})
     declareEncodable(LocalBundleResource.self, f: { LocalBundleResource(decoder: $0)})
     declareEncodable(AssociatedWallpaper.self, f: { AssociatedWallpaper(decoder: $0) })
+    declareEncodable(ThemeWallpaper.self, f: { ThemeWallpaper(decoder: $0) })
     return
 }()
 
