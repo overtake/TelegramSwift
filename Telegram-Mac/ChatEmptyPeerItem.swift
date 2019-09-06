@@ -150,7 +150,7 @@ class ChatEmptyPeerView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return theme.wallpaper != .none ? .clear : theme.colors.chatBackground
+        return theme.wallpaper.wallpaper != .none ? .clear : theme.colors.chatBackground
     }
     
     override func set(item: TableRowItem, animated: Bool) {
