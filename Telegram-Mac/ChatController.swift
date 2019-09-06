@@ -1661,7 +1661,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                                 ModalOptionSet(title: L10n.supergroupDeleteRestrictionReportSpam, selected: false, editable: true),
                                                                 ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true)]
                                 
-                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (L10n.modalOK, theme.colors.accent), result: { result in
+                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (L10n.modalOK, theme.colors.accent), result: { [weak strongSelf] result in
                                     
                                     var signals:[Signal<Void, NoError>] = []
                                     
@@ -1679,7 +1679,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     
                                     _ = showModalProgress(signal: combineLatest(signals), for: context.window).start()
-                                    
+                                    strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
                                 }), for: context.window)
                                 
                             } else if let `self` = self {
