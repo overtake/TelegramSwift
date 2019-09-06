@@ -33,7 +33,8 @@ public struct SearchTheme {
 }
 
 
-public final class ColorPalette : Equatable {
+
+public struct ColorPalette : Equatable {
     
     public let isNative: Bool
     
@@ -1012,9 +1013,9 @@ public final class ColorPalette : Equatable {
     }
 }
 
-public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
-    return lhs.name == rhs.name && lhs.isDark == rhs.isDark && lhs.accent.hexString == rhs.accent.hexString && lhs.basicAccent == rhs.basicAccent && lhs.background == rhs.background && lhs.tinted == rhs.tinted && lhs.isNative == rhs.isNative && lhs.accentList == rhs.accentList
-}
+//public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
+//    return lhs.name == rhs.name && lhs.isDark == rhs.isDark && lhs.accent.hexString == rhs.accent.hexString && lhs.basicAccent == rhs.basicAccent && lhs.background == rhs.background && lhs.tinted == rhs.tinted && lhs.isNative == rhs.isNative && lhs.accentList == rhs.accentList
+//}
 
 
 open class PresentationTheme : Equatable {

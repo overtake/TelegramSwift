@@ -296,14 +296,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 title = appName
                             }
                             
-                            if message.wasScheduled {
-                                if message.id.peerId == account.peerId {
-                                    title = L10n.notificationReminder
-                                } else {
-                                    title = L10n.notificationScheduledTitle
-                                }
-                            }
-                            
+                           
                            
                             
                             var text = chatListText(account: account, for: message).string.nsstring
@@ -313,6 +306,16 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 text = parts[1] as NSString
                                 subText = parts[0]
                             }
+                            
+                            if message.wasScheduled {
+                                if message.id.peerId == account.peerId {
+                                    title = L10n.notificationReminder
+                                } else {
+                                    title = "📆 \(title)"
+                                }
+                                subText = nil
+                            }
+                            
                             
                             if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
                                 text = L10n.notificationLockedPreview.nsstring
