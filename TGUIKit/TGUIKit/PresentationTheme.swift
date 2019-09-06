@@ -32,48 +32,17 @@ public struct SearchTheme {
     }
 }
 
-public enum PaletteWallpaper : Equatable {
-    case none
-    case url(String)
-    case builtin
-    
-    public init?(_ string: String) {
-        switch string {
-        case "none":
-            self = .none
-        case "builtin":
-            self = .builtin
-        default:
-            if string.hasPrefix("t.me/bg/") || string.hasPrefix("https://t.me/bg/") || string.hasPrefix("http://t.me/bg/") {
-                self = .url(string)
-            } else {
-                return nil
-            }
-        }
-    }
-    
-    public var toString: String {
-        switch self {
-        case .builtin:
-            return "builtin"
-        case .none:
-            return "none"
-        case let .url(string):
-            return string
-        }
-    }
-}
 
-public final class ColorPalette : Equatable {
+
+public struct ColorPalette : Equatable {
     
     public let isNative: Bool
     
     public let isDark: Bool
     public let tinted: Bool
     public let name: String
-    public let copyright:String
     public let parent: TelegramBuiltinTheme
-    public let wallpaper: PaletteWallpaper
+    public let copyright:String
 
     public let basicAccent: NSColor
     
@@ -204,6 +173,7 @@ public final class ColorPalette : Equatable {
     public let revealAction_inactive_foreground: NSColor
 
     public let chatBackground: NSColor
+    public let wallpaperSlug: String?
     
     public var underSelectedColor: NSColor {
         if basicAccent != accent {
@@ -236,7 +206,6 @@ public final class ColorPalette : Equatable {
         string += "isDark = \(self.isDark ? 1 : 0)\n"
         string += "tinted = \(self.tinted ? 1 : 0)\n"
         string += "name = \(self.name)\n"
-        string += "//Available values: Day, Day Classic, Dark, Night Blue, Mojave\n"
         string += "parent = \(self.parent.rawValue)\n"
         string += "copyright = \(self.copyright)\n"
         string += "accentList = \(self.accentList.map{$0.hexString}.joined(separator: ","))\n"
@@ -245,8 +214,9 @@ public final class ColorPalette : Equatable {
                 string += "\(prop) = \(color.hexString.lowercased())\n"
             }
         }
-        string += "//Available values: none, builtin or url to cloud backgound like a t.me/bg/%slug%\n"
-        string += "wallpaper = \(wallpaper.toString)\n"
+        if let wallpaper = wallpaperSlug {
+       //     string += "wallpaperSlug = \(wallpaper)\n"
+        }
         return string
     }
     
@@ -254,7 +224,6 @@ public final class ColorPalette : Equatable {
                 tinted: Bool,
                 name: String,
                 parent: TelegramBuiltinTheme,
-                wallpaper: PaletteWallpaper,
                 copyright: String,
                 accentList: [NSColor],
                 basicAccent: NSColor,
@@ -372,7 +341,8 @@ public final class ColorPalette : Equatable {
                 revealAction_warning_foreground: NSColor,
                 revealAction_inactive_background: NSColor,
                 revealAction_inactive_foreground: NSColor,
-                chatBackground: NSColor) {
+                chatBackground: NSColor,
+                wallpaperSlug: String?) {
         
         let background: NSColor = background.withAlphaComponent(1.0)
         let grayBackground: NSColor = grayBackground.withAlphaComponent(1.0)
@@ -572,7 +542,7 @@ public final class ColorPalette : Equatable {
         self.revealAction_inactive_foreground = revealAction_inactive_foreground.withAlphaComponent(max(0.6, revealAction_inactive_foreground.alpha))
         
         self.chatBackground = chatBackground.withAlphaComponent(max(0.6, chatBackground.alpha))
-        self.wallpaper = wallpaper
+        self.wallpaperSlug = wallpaperSlug
         
     }
     
@@ -614,7 +584,6 @@ public final class ColorPalette : Equatable {
                                    tinted: tinted,
                                    name: name,
                                    parent: parent,
-                                   wallpaper: wallpaper,
                                    copyright: copyright,
                                    accentList: accentList,
                                    basicAccent: basicAccent,
@@ -732,15 +701,15 @@ public final class ColorPalette : Equatable {
                                    revealAction_warning_foreground: revealAction_warning_foreground,
                                    revealAction_inactive_background: revealAction_inactive_background,
                                    revealAction_inactive_foreground: revealAction_inactive_foreground,
-                                   chatBackground: chatBackground)
+                                   chatBackground: chatBackground,
+                                   wallpaperSlug: wallpaperSlug)
     }
     
-    public func withUpdatedWallpaper(_ wallpaper: PaletteWallpaper) -> ColorPalette {
+    public func withWallpaperSlug(_ wallpaperSlug: String?) -> ColorPalette {
         return ColorPalette(isNative: self.isNative, isDark: isDark,
                             tinted: tinted,
                             name: name,
                             parent: parent,
-                            wallpaper: wallpaper,
                             copyright: copyright,
                             accentList: accentList,
                             basicAccent: basicAccent,
@@ -858,7 +827,8 @@ public final class ColorPalette : Equatable {
                             revealAction_warning_foreground: revealAction_warning_foreground,
                             revealAction_inactive_background: revealAction_inactive_background,
                             revealAction_inactive_foreground: revealAction_inactive_foreground,
-                            chatBackground: chatBackground)
+                            chatBackground: chatBackground,
+                            wallpaperSlug: wallpaperSlug)
     }
     
     public func withAccentColor(_ color: NSColor, disableTint: Bool = false) -> ColorPalette {
@@ -921,7 +891,6 @@ public final class ColorPalette : Equatable {
                                  tinted: tinted,
                                  name: name,
                                  parent: parent,
-                                 wallpaper: wallpaper,
                                  copyright: copyright,
                                  accentList: accentList,
                                  basicAccent: basicAccent,
@@ -1039,13 +1008,14 @@ public final class ColorPalette : Equatable {
                                  revealAction_warning_foreground: revealAction_warning_foreground,
                                  revealAction_inactive_background: revealAction_inactive_background,
                                  revealAction_inactive_foreground: revealAction_inactive_foreground,
-                                 chatBackground: chatBackground)
+                                 chatBackground: chatBackground,
+                                 wallpaperSlug: wallpaperSlug)
     }
 }
 
-public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
-    return lhs.name == rhs.name && lhs.isDark == rhs.isDark && lhs.accent.hexString == rhs.accent.hexString && lhs.basicAccent == rhs.basicAccent && lhs.background == rhs.background && lhs.tinted == rhs.tinted && lhs.isNative == rhs.isNative && lhs.accentList == rhs.accentList && lhs.wallpaper == rhs.wallpaper && lhs.parent == rhs.parent
-}
+//public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
+//    return lhs.name == rhs.name && lhs.isDark == rhs.isDark && lhs.accent.hexString == rhs.accent.hexString && lhs.basicAccent == rhs.basicAccent && lhs.background == rhs.background && lhs.tinted == rhs.tinted && lhs.isNative == rhs.isNative && lhs.accentList == rhs.accentList
+//}
 
 
 open class PresentationTheme : Equatable {
@@ -1116,7 +1086,6 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
                                        tinted: false,
                                        name: "Day",
                                        parent: .day,
-                                       wallpaper: .none,
                                        copyright: "Telegram",
                                        accentList: [NSColor(0x2481cc),
                                                     NSColor(0xf83b4c),
@@ -1241,10 +1210,23 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
                                        revealAction_warning_foreground: NSColor(0xffffff),
                                        revealAction_inactive_background: NSColor(0xbcbcc3),
                                        revealAction_inactive_foreground: NSColor(0xffffff),
-                                       chatBackground: NSColor(0xffffff)
+                                       chatBackground: NSColor(0xffffff),
+                                       wallpaperSlug: nil
 )
 
 
+/*
+ itemDisclosureActions: PresentationThemeItemDisclosureActions(
+ neutral1: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0x4892f2), foregroundColor: NSColor(0xffffff)),
+ neutral2: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xf09a37), foregroundColor: NSColor(0xffffff)),
+ destructive: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xff3824), foregroundColor: NSColor(0xffffff)),
+ constructive: PresentationThemeItemDisclosureAction(fillColor: constructiveColor, foregroundColor: NSColor(0xffffff)),
+ accent: PresentationThemeItemDisclosureAction(fillColor: accentColor, foregroundColor: NSColor(0xffffff)),
+ warning: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xff9500), foregroundColor: NSColor(0xffffff)),
+ inactive: PresentationThemeItemDisclosureAction(fillColor: UIColor(rgb: 0xbcbcc3), foregroundColor: NSColor(0xffffff))
+ ),
+ 
+ */
 
 /*
  colors[0] = NSColor(0xfc5c51); // red
@@ -1260,7 +1242,6 @@ public let nightBluePalette = ColorPalette(isNative: true, isDark: true,
                                            tinted: true,
                                            name:"Night Blue",
                                            parent: .nightBlue,
-                                           wallpaper: .none,
                                            copyright: "Telegram",
                                            accentList: [NSColor(0x2ea6ff),
                                                         NSColor(0xf83b4c),
@@ -1385,15 +1366,14 @@ public let nightBluePalette = ColorPalette(isNative: true, isDark: true,
     revealAction_warning_foreground: NSColor(0xffffff),
     revealAction_inactive_background: NSColor(0x26384c),
     revealAction_inactive_foreground: NSColor(0xffffff),
-    chatBackground: NSColor(0x18222d)
+    chatBackground: NSColor(0x18222d),
+    wallpaperSlug: nil
 )
 
-public let dayClassicPalette = ColorPalette(isNative: true,
-    isDark: false,
+public let dayClassicPalette = ColorPalette(isNative: true, isDark: false,
     tinted: false,
     name:"Day Classic",
     parent: .dayClassic,
-    wallpaper: .builtin,
     copyright: "Telegram",
     accentList: [],
     basicAccent: NSColor(0x2481cc),
@@ -1511,14 +1491,14 @@ public let dayClassicPalette = ColorPalette(isNative: true,
     revealAction_warning_foreground: NSColor(0xffffff),
     revealAction_inactive_background: NSColor(0xbcbcc3),
     revealAction_inactive_foreground: NSColor(0xffffff),
-    chatBackground: NSColor(0xfffffff)
+    chatBackground: NSColor(0xfffffff),
+    wallpaperSlug: nil
 )
 
 public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       tinted: false,
                                       name:"Dark",
                                       parent: .dark,
-                                      wallpaper: .none,
                                       copyright: "Telegram",
                                       accentList: [NSColor(0x04afc8),
                                                    NSColor(0xf83b4c),
@@ -1643,7 +1623,8 @@ revealAction_warning_background: NSColor(0xcd7800),
 revealAction_warning_foreground: NSColor(0xffffff),
 revealAction_inactive_background: NSColor(0x666666),
 revealAction_inactive_foreground: NSColor(0xffffff),
-chatBackground: NSColor(0x292b36)
+chatBackground: NSColor(0x292b36),
+wallpaperSlug: nil
 )
 
 
@@ -1651,7 +1632,6 @@ public let mojavePalette = ColorPalette(isNative: true, isDark: true,
                                         tinted: false,
                                         name: "Mojave",
                                         parent: .mojave,
-                                        wallpaper: .none,
                                         copyright: "Telegram",
                                         accentList: [NSColor(0x2ea6ff),
                                                      NSColor(0xf83b4c),
@@ -1776,7 +1756,8 @@ revealAction_warning_background: NSColor(0xcd7800),
 revealAction_warning_foreground: NSColor(0xffffff),
 revealAction_inactive_background: NSColor(0x666666),
 revealAction_inactive_foreground: NSColor(0xffffff),
-chatBackground: NSColor(0x292a2f)
+chatBackground: NSColor(0x292a2f),
+wallpaperSlug: nil
 )
 
 
