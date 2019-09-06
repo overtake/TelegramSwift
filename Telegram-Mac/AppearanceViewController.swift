@@ -520,7 +520,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
                 showModal(with: NewThemeController(context: context, palette: theme.colors), for: context.window)
             }))
             items.append(SPopoverItem(L10n.appearanceExportTheme, {
-                exportPalette(palette: theme.colors)
+                exportPalette(palette: theme.colors.withUpdatedName(theme.cloudTheme?.title ?? theme.colors.name))
             }))
             
             if let cloudTheme = theme.cloudTheme {

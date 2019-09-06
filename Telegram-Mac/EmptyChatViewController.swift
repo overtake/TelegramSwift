@@ -39,13 +39,13 @@ class EmptyChatView : View {
             imageView.isHidden = true
         }
         
-        containerView.backgroundColor = imageView.isHidden ? .clear : theme.colors.background
+        containerView.backgroundColor = imageView.isHidden ? .clear : theme.colors.chatBackground
 
         
         imageView.sizeToFit()
         label.disableBackgroundDrawing = true
-        label.backgroundColor = imageView.isHidden ? theme.chatServiceItemColor : theme.colors.background
-        label.update(TextViewLayout(.initialize(string: L10n.emptyPeerDescription, color: imageView.isHidden ? .white : theme.colors.grayText, font: .medium(imageView.isHidden ? .text : .header)), maximumNumberOfLines: 1, alignment: .center))
+        label.backgroundColor = imageView.isHidden ? theme.chatServiceItemColor : theme.colors.chatBackground
+        label.update(TextViewLayout(.initialize(string: L10n.emptyPeerDescription, color: imageView.isHidden ? theme.chatServiceItemTextColor : theme.colors.grayText, font: .medium(imageView.isHidden ? .text : .header)), maximumNumberOfLines: 1, alignment: .center))
         needsLayout = true
     }
     
