@@ -219,7 +219,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "589492850.060663"
+            timestampString = "589564656.751164"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1131"
@@ -427,7 +427,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatRowItem.swift"
-            timestampString = "589544425.271247"
+            timestampString = "589564656.751596"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "736"
@@ -555,7 +555,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "589544427.086269"
+                  timestampString = "589564658.540948"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "93"
@@ -570,7 +570,7 @@
                   moduleName = "TelegramCoreMac"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "589544427.087841"
+                  timestampString = "589564658.543896"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "94"
@@ -731,7 +731,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "589492850.061253"
+            timestampString = "589564656.751802"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "71"
@@ -1307,12 +1307,108 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/ChatController.swift"
-            timestampString = "589492850.061836"
+            timestampString = "589564656.752259"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "928"
             endingLineNumber = "928"
             landmarkName = "scrollup()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/Postbox/Postbox/MessageHistoryTable.swift"
+            timestampString = "589554671.154621"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "587"
+            endingLineNumber = "587"
+            landmarkName = "applyInteractiveMaxReadIndex(postbox:messageIndex:operationsByPeerId:updatedPeerReadStateOperations:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/Postbox/Postbox/MessageHistoryTable.swift"
+            timestampString = "589554671.154918"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "589"
+            endingLineNumber = "589"
+            landmarkName = "applyInteractiveMaxReadIndex(postbox:messageIndex:operationsByPeerId:updatedPeerReadStateOperations:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/Postbox/Postbox/MessageHistoryTable.swift"
+            timestampString = "589554671.155098"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "593"
+            endingLineNumber = "593"
+            landmarkName = "applyInteractiveMaxReadIndex(postbox:messageIndex:operationsByPeerId:updatedPeerReadStateOperations:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "PostboxMac.MessageHistoryTable.applyInteractiveMaxReadIndex(postbox: PostboxMac.Postbox, messageIndex: PostboxMac.MessageIndex, operationsByPeerId: inout Swift.Dictionary&lt;PostboxMac.PeerId, Swift.Array&lt;PostboxMac.MessageHistoryOperation&gt;&gt;, updatedPeerReadStateOperations: inout Swift.Dictionary&lt;PostboxMac.PeerId, Swift.Optional&lt;PostboxMac.PeerReadStateSynchronizationOperation&gt;&gt;) -&gt; Swift.Array&lt;PostboxMac.MessageId&gt;"
+                  moduleName = "PostboxMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/Postbox/Postbox/MessageHistoryTable.swift"
+                  timestampString = "589554768.042327"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "593"
+                  endingLineNumber = "593"
+                  offsetFromSymbolStart = "804">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Int32, Swift.Int32, Swift.Int32) -&gt; (Swift.Int, Swift.Bool) in PostboxMac.MessageHistoryTable.applyInteractiveMaxReadIndex(postbox: PostboxMac.Postbox, messageIndex: PostboxMac.MessageIndex, operationsByPeerId: inout Swift.Dictionary&lt;PostboxMac.PeerId, Swift.Array&lt;PostboxMac.MessageHistoryOperation&gt;&gt;, updatedPeerReadStateOperations: inout Swift.Dictionary&lt;PostboxMac.PeerId, Swift.Optional&lt;PostboxMac.PeerReadStateSynchronizationOperation&gt;&gt;) -&gt; Swift.Array&lt;PostboxMac.MessageId&gt;"
+                  moduleName = "PostboxMac"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/Postbox/Postbox/MessageHistoryTable.swift"
+                  timestampString = "589554768.04356"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "594"
+                  endingLineNumber = "594"
+                  offsetFromSymbolStart = "119">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "submodules/telegram-ios/submodules/Postbox/Postbox/MessageHistoryReadStateTable.swift"
+            timestampString = "589564656.75254"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "273"
+            endingLineNumber = "273"
+            landmarkName = "applyIncomingMaxReadId(_:incomingStatsInRange:topMessageId:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
