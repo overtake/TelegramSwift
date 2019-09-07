@@ -76,7 +76,7 @@ private final class CustomAccentColorView : View {
         
         tableView.removeAll()
         
-        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random(), backgroundColor: theme.colors.chatBackground))
+        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random(), backgroundColor: theme.chatBackground))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
@@ -107,7 +107,7 @@ private final class CustomAccentColorView : View {
         _ = tableView.addItem(item: item1)
         _ = tableView.addItem(item: item2)
         
-        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: max(10, 160 - tableView.listHeight), stableId: arc4random(), backgroundColor: theme.colors.chatBackground))
+        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: max(10, 160 - tableView.listHeight), stableId: arc4random(), backgroundColor: theme.chatBackground))
 
         
         

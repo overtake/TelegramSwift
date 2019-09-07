@@ -263,6 +263,19 @@ class ChatGroupedItem: ChatRowItem {
         
         var items: [ContextMenuItem] = []
         
+        if chatInteraction.mode == .scheduled {
+            items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
+                _ = sendScheduledMessageNowInteractively(postbox: context.account.postbox, messageId: message.id).start()
+            }))
+            items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
+                showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)) , scheduleAt: { date in
+                    _ = showModalProgress(signal: requestEditMessage(account: context.account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start()
+                }), for: context.window)
+            }))
+            items.append(ContextSeparatorItem())
+        }
+        
+        
         items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: { [weak self] in
             guard let `self` = self else {return}
             let messageIds = self.layout.messages.map{$0.id}
@@ -296,7 +309,7 @@ class ChatGroupedItem: ChatRowItem {
         let chatInteraction = self.chatInteraction
         let account = self.context.account
         
-        if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
+        if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)), chatInteraction.mode == .history {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
                 items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
                     if peer.isSupergroup {
@@ -308,11 +321,11 @@ class ChatGroupedItem: ChatRowItem {
                     }
                 }))
             }
-        } else if message.id.peerId == account.peerId {
+        } else if message.id.peerId == account.peerId, chatInteraction.mode == .history {
             items.append(ContextMenuItem(L10n.messageContextPin, handler: {
                 chatInteraction.updatePinned(message.id, false, true)
             }))
-        } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage {
+        } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, chatInteraction.mode == .history {
             items.append(ContextMenuItem(L10n.messageContextPin, handler: {
                 modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
                     chatInteraction.updatePinned(message.id, false, result == .thrid)
@@ -328,13 +341,13 @@ class ChatGroupedItem: ChatRowItem {
             }))
         }
         
-        if let message = layout.messages.first, let peer = peer, peer.canSendMessage, chatInteraction.peerId == message.id.peerId {
+        if let message = layout.messages.first, let peer = peer, peer.canSendMessage, chatInteraction.peerId == message.id.peerId, chatInteraction.mode == .history {
             items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: { [weak self] in
                 self?.chatInteraction.setupReplyMessage(message.id)
             }))
         }
         
-        if let message = layout.messages.last, !message.flags.contains(.Failed), !message.flags.contains(.Unsent) {
+        if let message = layout.messages.last, !message.flags.contains(.Failed), !message.flags.contains(.Unsent), chatInteraction.mode == .history {
             if let peer = message.peers[message.id.peerId] as? TelegramChannel {
                 items.append(ContextMenuItem(L10n.messageContextCopyMessageLink1, handler: {
                     _ = showModalProgress(signal: exportMessageLink(account: context.account, peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in

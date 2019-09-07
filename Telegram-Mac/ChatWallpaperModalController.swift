@@ -135,10 +135,10 @@ class ChatWallpaperModalController: ModalViewController {
                         let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
                         representations.append(TelegramMediaImageRepresentation(dimensions: image.size, resource: resource))
                         
-                        showModal(with: WallpaperPreviewController(context, wallpaper: .image(representations, settings: WallpaperSettings()), source: .none), for: mainWindow)
+                        showModal(with: WallpaperPreviewController(context, wallpaper: .image(representations, settings: WallpaperSettings()), source: .none), for: context.window)
                         
                     } else {
-                        alert(for: mainWindow, header: appName, info: L10n.appearanceCustomBackgroundFileError)
+                        alert(for: context.window, header: appName, info: L10n.appearanceCustomBackgroundFileError)
                     }
                 }
             })
@@ -194,7 +194,6 @@ class ChatWallpaperModalController: ModalViewController {
             case .image, .file, .color:
                 showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: context.window)
             default:
-                let isOwn = wallpaper != .none
                 _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                     return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.withUpdatedBubbled(true)
                 }).start()

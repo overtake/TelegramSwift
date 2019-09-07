@@ -132,7 +132,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     func applyNewTheme() {
         rightController.backgroundColor = theme.colors.background
-        rightController.backgroundMode = theme.backgroundMode
+        rightController.backgroundMode = theme.controllerBackgroundMode
         splitView.backgroundColor = theme.colors.background
     }
     

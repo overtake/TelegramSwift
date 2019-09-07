@@ -266,7 +266,7 @@ class PeerListContainerView : View {
         super.layout()
         
         var offset: CGFloat
-        switch theme.backgroundMode {
+        switch theme.controllerBackgroundMode {
         case .background:
             offset = 50
         case .tiled:

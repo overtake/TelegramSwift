@@ -341,11 +341,7 @@ private func generateThemeName(_ accentColor: NSColor) -> String {
     }
     
     if let color = nearest?.color, let colorName = colors[color]?.capitalized {
-        if arc4random() % 2 == 0 {
-            return "\(adjectives[Int(arc4random()) % adjectives.count].capitalized) \(colorName)"
-        } else {
-            return "\(adjectives[Int(arc4random()) % adjectives.count].capitalized) \(colorName) \(subjectives[Int(arc4random()) % subjectives.count].capitalized)"
-        }
+        return "\(adjectives[Int(arc4random()) % adjectives.count].capitalized) \(colorName)"
     } else {
         return ""
     }
@@ -364,6 +360,13 @@ func importPalette(_ path: String) -> ColorPalette? {
         var parent: TelegramBuiltinTheme = .dayClassic
         var accentList:[NSColor] = []
         var colors:[String: NSColor] = [:]
+        
+        /*
+         else if name == "accentList" {
+         accentList = value.components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
+         }
+ */
+        
         for line in lines {
             if !line.trimmed.hasPrefix("//") {
                 var components = line.components(separatedBy: "=")
@@ -381,8 +384,6 @@ func importPalette(_ path: String) -> ColorPalette? {
                         isDark = Int32(value) == 1
                     } else if name == "tinted" {
                         tinted = Int32(value) == 1
-                    } else if name == "accentList" {
-                        accentList = value.components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
                     } else if name == "copyright" {
                         copyright = value
                     } else if name == "wallpaper" {
