@@ -2822,6 +2822,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var messageIdsWithViewCount: [MessageId] = []
                 var messageIdsWithUnseenPersonalMention: [MessageId] = []
                 var unsupportedMessagesIds: [MessageId] = []
+
+                
                 tableView.enumerateVisibleItems(with: { item in
                     if let item = item as? ChatRowItem {
                         if message == nil {
@@ -2856,11 +2858,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }
                         
-                        
+                        if let msg = message, let currentMsg = item.messages.last {
+                            if msg.id.namespace == Namespaces.Message.Local && currentMsg.id.namespace == Namespaces.Message.Local {
+                                if msg.id < currentMsg.id {
+                                    message = currentMsg
+                                }
+                            }
+                        }
                     }
                     return true
                 })
-                
                 
               
                 
