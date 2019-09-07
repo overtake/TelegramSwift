@@ -60,7 +60,7 @@ public class TabBarView: View {
     }
     
     func removeTab(_ tab: TabItem) {
-        self.tabs.remove(at: self.tabs.index(of: tab)!)
+        self.tabs.remove(at: self.tabs.firstIndex(of: tab)!)
         self.redraw()
     }
     

@@ -82,7 +82,7 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
             try? palette.toString.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
             let resource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fs(temp))
             var thumbnailData: Data? = nil
-            let preview = generateThemePreview(for: palette)
+            let preview = generateThemePreview(for: palette, wallpaper: theme.wallpaper.wallpaper, backgroundMode: theme.backgroundMode)
             if let mutableData = CFDataCreateMutable(nil, 0), let destination = CGImageDestinationCreateWithData(mutableData, "public.png" as CFString, 1, nil) {
                 CGImageDestinationAddImage(destination, preview, nil)
                 if CGImageDestinationFinalize(destination) {

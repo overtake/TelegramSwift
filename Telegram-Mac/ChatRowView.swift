@@ -213,7 +213,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let forceBackgroundColor = item.forceBackgroundColor {
             return forceBackgroundColor
         }
-        return item.renderType == .bubble ? .clear : contextMenu != nil || isSelect ? item.presentation.colors.selectMessage : item.presentation.colors.chatBackground
+        return item.renderType == .bubble ? .clear : contextMenu != nil || isSelect ? item.presentation.colors.selectMessage : item.presentation.chatBackground
     }
     
     var contentColor: NSColor {

@@ -22,7 +22,7 @@ class ChatServiceItem: ChatRowItem {
         
         
         
-        let linkColor: NSColor = theme.backgroundMode.hasWallpapaer ? theme.chatServiceItemTextColor : entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
+        let linkColor: NSColor = theme.controllerBackgroundMode.hasWallpapaer ? theme.chatServiceItemTextColor : entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
         let grayTextColor: NSColor = theme.chatServiceItemTextColor
 
         let authorId:PeerId? = message.author?.id
@@ -36,7 +36,7 @@ class ChatServiceItem: ChatRowItem {
         
         let nameColor:(PeerId) -> NSColor = { peerId in
             
-            if theme.backgroundMode.hasWallpapaer {
+            if theme.controllerBackgroundMode.hasWallpapaer {
                 return theme.chatServiceItemTextColor
             }
             
@@ -322,7 +322,7 @@ class ChatServiceItem: ChatRowItem {
     }
     
     override var isBubbled: Bool {
-        return theme.wallpaper.wallpaper != .none
+        return presentation.wallpaper.wallpaper != .none
     }
     
     override var height: CGFloat {
@@ -387,7 +387,7 @@ class ChatServiceRowView: TableRowView {
     
     override var backdorColor: NSColor {
         if let item = item as? ChatServiceItem {
-            return item.isBubbled ? .clear : theme.colors.chatBackground
+            return item.isBubbled ? .clear : theme.chatBackground
         } else {
             return .clear
         }

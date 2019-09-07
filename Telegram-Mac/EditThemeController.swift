@@ -20,14 +20,14 @@ private let _id_input_slug = InputDataIdentifier("_id_input_slug")
 
 private struct EditThemeState : Equatable {
     let current: TelegramTheme
-    let palette: ColorPalette
+    let presentation: TelegramPresentationTheme
     let name: String
     let slug: String?
     let path: String?
     let errors:[InputDataIdentifier : InputDataValueError]
-    init(current:TelegramTheme, palette: ColorPalette, name: String, slug: String?, path: String?, errors:[InputDataIdentifier : InputDataValueError]) {
+    init(current:TelegramTheme, presentation: TelegramPresentationTheme, name: String, slug: String?, path: String?, errors:[InputDataIdentifier : InputDataValueError]) {
         self.current = current
-        self.palette = palette
+        self.presentation = presentation
         self.name = name
         self.slug = slug
         self.path = path
@@ -40,19 +40,19 @@ private struct EditThemeState : Equatable {
         } else {
             errors.removeValue(forKey: key)
         }
-        return EditThemeState(current: self.current, palette: self.palette, name: self.name, slug: self.slug, path: self.path, errors: errors)
+        return EditThemeState(current: self.current, presentation: self.presentation, name: self.name, slug: self.slug, path: self.path, errors: errors)
     }
     func withUpdatedName(_ name: String) -> EditThemeState {
-        return EditThemeState(current: self.current, palette: self.palette, name: name, slug: self.slug, path: self.path, errors: self.errors)
+        return EditThemeState(current: self.current, presentation: self.presentation, name: name, slug: self.slug, path: self.path, errors: self.errors)
     }
     func withUpdatedSlug(_ slug: String?) -> EditThemeState {
-        return EditThemeState(current: self.current, palette: self.palette, name: self.name, slug: slug, path: self.path, errors: self.errors)
+        return EditThemeState(current: self.current, presentation: self.presentation, name: self.name, slug: slug, path: self.path, errors: self.errors)
     }
     func withUpdatedPath(_ path: String?) -> EditThemeState {
-        return EditThemeState(current: self.current, palette: self.palette, name: self.name, slug: self.slug, path: path, errors: self.errors)
+        return EditThemeState(current: self.current, presentation: self.presentation, name: self.name, slug: self.slug, path: path, errors: self.errors)
     }
-    func withUpdatedPalette(_ palette: ColorPalette) -> EditThemeState {
-        return EditThemeState(current: self.current, palette: palette, name: self.name, slug: self.slug, path: self.path, errors: self.errors)
+    func withUpdatedPresentation(_ presentation: TelegramPresentationTheme) -> EditThemeState {
+        return EditThemeState(current: self.current, presentation: presentation, name: self.name, slug: self.slug, path: self.path, errors: self.errors)
     }
 }
 
@@ -97,49 +97,36 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
         index += 1
     }
     
-    
-    entries.append(.sectionId(sectionId, type: .custom(10)))
-    sectionId += 1
-
-    
-    let previewTheme = theme.withUpdatedColors(state.palette)
+    let previewTheme = state.presentation
     
     let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: arguments.context, disableSelectAbility: true)
     let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
-    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
     let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
-    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_top"), equatable: InputDataEquatable(state.palette), item: { size, id in
-        return GeneralRowItem(size, height: 10, stableId: id, backgroundColor: state.palette.background)
-    }))
-    index += 1
+    entries.append(.sectionId(sectionId, type: .custom(10)))
+    sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview1, equatable: InputDataEquatable(state.palette), item: { size, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview1, equatable: InputDataEquatable(state.presentation), item: { size, stableId in
         let item = ChatRowItem.item(size, from: firstEntry, interaction: chatInteraction, theme: previewTheme)
-        item.forceBackgroundColor = state.palette.background
         _ = item.makeSize(size.width, oldWidth: 0)
         return item
     }))
     index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview2, equatable: InputDataEquatable(state.palette), item: { size, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview2, equatable: InputDataEquatable(state.presentation), item: { size, stableId in
         let item = ChatRowItem.item(size, from: secondEntry, interaction: chatInteraction, theme: previewTheme)
-        item.forceBackgroundColor = state.palette.background
         _ = item.makeSize(size.width, oldWidth: 0)
         return item
     }))
     index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_bottom"), equatable: InputDataEquatable(state.palette), item: { size, id in
-        return GeneralRowItem(size, height: 10, stableId: id, backgroundColor: state.palette.background)
-    }))
-    index += 1
-//    entries.append(.sectionId(sectionId, type: .normal))
-//    sectionId += 1
+    entries.append(.sectionId(sectionId, type: .custom(10)))
+    sectionId += 1
     
     let selectFileText: String
     let selectFileDesc: String
@@ -167,13 +154,11 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
- 
-
     return entries
 }
 
-func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, palette: ColorPalette) -> InputDataModalController {
-    let initialState = EditThemeState(current: telegramTheme, palette: palette, name: telegramTheme.title, slug: telegramTheme.slug, path: nil, errors: [:])
+func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, presentation: TelegramPresentationTheme) -> InputDataModalController {
+    let initialState = EditThemeState(current: telegramTheme, presentation: presentation, name: telegramTheme.title, slug: telegramTheme.slug, path: nil, errors: [:])
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -184,6 +169,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
     
     let slugDisposable = MetaDisposable()
     let disposable = MetaDisposable()
+    let updateWallpaper = MetaDisposable()
 
     
     func checkSlug(_ slug: String)->Void {
@@ -216,9 +202,50 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
     
     let arguments = EditThemeArguments(context: context, updateFile: { path in
         if let palette = importPalette(path) {
-            updateState {
-                $0.withUpdatedPath(path).withUpdatedPalette(palette)
+            let presentation = stateValue.with { $0.presentation }
+            if palette.wallpaper != presentation.colors.wallpaper {
+                switch palette.wallpaper {
+                case let .url(string):
+                    let link = inApp(for: string as NSString, context: context)
+                    switch link {
+                    case let .wallpaper(values):
+                        switch values.preview {
+                        case let .slug(slug, settings):
+                            let signal: Signal<(Wallpaper, TelegramWallpaper?), NoError> = getWallpaper(account: context.account, slug: slug)
+                                |> mapToSignal { cloud in
+                                    return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(cloud).withUpdatedSettings(settings)) |> map { wallpaper in
+                                        return (wallpaper, cloud)
+                                    } |> mapError { _ in return GetWallpaperError.generic }
+                                }
+                            |> `catch` { _ in
+                                return .single((.none, nil))
+                            }
+                            
+                            updateWallpaper.set(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { wallpaper, cloud in
+                                updateState {
+                                    $0.withUpdatedPresentation(presentation.withUpdatedColors(palette)
+                                        .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))))
+                                }
+                            }))
+                        default:
+                            break
+                        }
+                    default:
+                        break
+                    }
+                default:
+                    updateState {
+                        $0.withUpdatedPresentation(presentation.withUpdatedColors(palette)
+                            .withUpdatedWallpaper(ThemeWallpaper(wallpaper: palette.wallpaper.wallpaper, associated: AssociatedWallpaper(cloud: nil, wallpaper: palette.wallpaper.wallpaper))))
+                    }
+                }
+            } else {
+                updateState {
+                     $0.withUpdatedPresentation(presentation.withUpdatedColors(palette))
+                }
             }
+            
+
         } else {
             alert(for: context.window, info: L10n.unknownError)
         }
@@ -266,23 +293,16 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             
             var mediaResource: MediaResource? = nil
             var thumbnailData: Data? = nil
-            var palette: ColorPalette = state.palette
-            if let path = state.path {
-                if let importedColors = importPalette(path)?.withUpdatedName(state.name) {
-                    palette = importedColors
-                    let temp = NSTemporaryDirectory() + "\(arc4random()).palette"
-                    try? palette.toString.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
-                    mediaResource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fs(temp))
-                }
-            } else {
-                if state.current.file == nil {
-                    let temp = NSTemporaryDirectory() + "'\(arc4random())'.palette"
-                    try? palette.toString.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
-                    mediaResource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fs(temp))
-                }
+            let newTheme: TelegramPresentationTheme = state.presentation
+            
+            if newTheme.colors != presentation.colors || state.current.file == nil {
+                let temp = NSTemporaryDirectory() + "\(arc4random()).palette"
+                try? newTheme.colors.withUpdatedName(state.name).toString.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
+                mediaResource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fs(temp))
             }
+        
             if let _ = mediaResource {
-                let preview = generateThemePreview(for: palette)
+                let preview = generateThemePreview(for: newTheme.colors, wallpaper: newTheme.wallpaper.wallpaper, backgroundMode: newTheme.backgroundMode)
                 if let mutableData = CFDataCreateMutable(nil, 0), let destination = CGImageDestinationCreateWithData(mutableData, "public.png" as CFString, 1, nil) {
                     CGImageDestinationAddImage(destination, preview, nil)
                     if CGImageDestinationFinalize(destination) {
@@ -292,20 +312,34 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
                 }
             }
             
-            let signal = updateTheme(account: context.account, accountManager: context.sharedContext.accountManager, theme: telegramTheme, title: state.name, slug: state.slug, resource: mediaResource, thumbnailData: thumbnailData)
-            |> filter {
-                switch $0 {
-                case .progress:
-                    return false
-                case .result:
-                    return true
+            let updateSignal = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                if settings.cloudTheme?.id == telegramTheme.id {
+                    return settings
+                        .withUpdatedPalette(newTheme.colors)
+                        .updateWallpaper { _ in
+                            return newTheme.wallpaper
+                        }
+                        .withUpdatedFollowSystemAppearance(false)
+                        .withUpdatedCloudTheme(telegramTheme)
+                } else {
+                    return settings
                 }
+                
+            }) |> mapError { _ in CreateThemeError.generic } |> mapToSignal { _ in
+                return updateTheme(account: context.account, accountManager: context.sharedContext.accountManager, theme: telegramTheme, title: state.name, slug: state.slug, resource: mediaResource, thumbnailData: thumbnailData)
+                    |> filter {
+                        switch $0 {
+                        case .progress:
+                            return false
+                        case .result:
+                            return true
+                        }
+                    }
+                    |> take(1)
             }
-            |> take(1)
-            disposable.set(showModalProgress(signal: signal, for: context.window).start(next: { _ in
-                delay(0.2, closure: {
-                    close?()
-                })
+            
+            disposable.set(showModalProgress(signal: updateSignal, for: context.window).start(next: { _ in
+                close?()
             }, error: { error in
                 switch error {
                 case .generic:
@@ -346,8 +380,18 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
     }, afterDisappear: {
         disposable.dispose()
         slugDisposable.dispose()
+        updateWallpaper.dispose()
     }, afterTransaction: { controller in
-        
+        let theme = stateValue.with { $0.presentation }
+        controller.genericView.tableView.getBackgroundColor = {
+            if !theme.bubbled {
+                return theme.colors.chatBackground
+            } else {
+                return .clear
+            }
+        }
+        controller.genericView.tableView.updateLocalizationAndTheme(theme: theme)
+        controller.genericView.backgroundMode = theme.controllerBackgroundMode
     })
     
     
@@ -366,25 +410,23 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
 
 
 func showEditThemeModalController(context: AccountContext, theme telegramTheme: TelegramTheme) {
-    if let file = telegramTheme.file {
+    if let file = telegramTheme.file, telegramTheme != theme.cloudTheme {
+       let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
         
         
-        let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
-        
-        let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1) |> afterDisposed {
+        let signal = loadCloudPaletteAndWallpaper(context: context, file: file) |> afterDisposed {
             fetchDisposable.dispose()
         }
-        
-        _ = showModalProgress(signal: resourceData, for: context.window).start(next: { data in
-            if let palette = importPalette(data.path) {
-                showModal(with: EditThemeController(context: context, telegramTheme: telegramTheme, palette: palette), for: context.window)
+        _ = showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { data in
+            if let (palette, wallpaper, cloudWallpaper) = data {
+                let newTheme = theme.withUpdatedColors(palette).withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloudWallpaper, wallpaper: wallpaper)))
+                showModal(with: EditThemeController(context: context, telegramTheme: telegramTheme, presentation: newTheme), for: context.window)
             } else {
                 alert(for: context.window, info: L10n.unknownError)
             }
         })
-        
     } else {
-        showModal(with: EditThemeController(context: context, telegramTheme: telegramTheme, palette: theme.colors), for: context.window)
+        showModal(with: EditThemeController(context: context, telegramTheme: telegramTheme, presentation: theme), for: context.window)
     }
 }
 

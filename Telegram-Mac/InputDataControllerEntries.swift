@@ -343,7 +343,7 @@ enum InputDataEntry : Identifiable, Comparable {
             default:
                 break
             }
-            return GeneralRowItem(initialSize, height: height, stableId: stableId)
+            return GeneralRowItem(initialSize, height: height, stableId: stableId, backgroundColor: theme.colors.background)
         case let .desc(_, _, text, color, detectBold):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: detectBold, textColor: color)
         case let .custom(_, _, _, _, _, item):

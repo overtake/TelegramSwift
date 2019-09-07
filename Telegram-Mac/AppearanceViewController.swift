@@ -217,7 +217,7 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
     entries.append(.chatBackground(sectionId, index))
     index += 1
     
-    if !themeSettings.palette.accentList.isEmpty {
+    if !settings.colors.accentList.isEmpty {
         entries.append(.accentColor(sectionId, index, settings.colors.accentList, themeSettings.palette.isNative))
         index += 1
     }
@@ -303,11 +303,11 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         descIndex += 1
 
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == nightBluePalette.name, nightBluePalette, nil))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDark.name == nightBluePalette.parent, nightBluePalette, nil))
         index += 1
         
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultNightName == mojavePalette.name, mojavePalette, nil))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDark.name == mojavePalette.parent, mojavePalette, nil))
         index += 1
         
         entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultDark, false))
@@ -317,10 +317,10 @@ private func AppearanceViewEntries(settings: TelegramPresentationTheme, themeSet
         sectionId += 1
         
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == dayClassicPalette.name, dayClassicPalette, nil))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDay.name == dayClassicPalette.parent, dayClassicPalette, nil))
         index += 1
         
-        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDayName == whitePalette.name, whitePalette, nil))
+        entries.append(.colorPalette(sectionId, index, themeSettings.defaultDay.name == whitePalette.parent, whitePalette, nil))
         index += 1
         
         entries.append(.description(sectionId, descIndex, L10n.appearanceSettingsFollowSystemAppearanceDefaultDay, false))
@@ -434,11 +434,17 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         
         let arguments = AppearanceViewArguments(context: context, togglePalette: { palette, _ in
             _ = combineLatest(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                var settings = settings.withUpdatedPalette(palette)
-                settings = settings.withUpdatedDefaultDayName(!palette.isDark ? palette.name : settings.defaultDayName)
-                settings = settings.withUpdatedDefaultNightName(palette.isDark ? palette.name : settings.defaultNightName)
-                settings = settings.withUpdatedCloudTheme(nil)
-                settings = settings.withStandartWallpaper()
+                var settings = settings
+                if palette.isDark {
+                    settings = settings.withUpdatedDefaultDark(DefaultTheme(name: palette.parent, cloud: nil))
+                } else {
+                    settings = settings.withUpdatedDefaultDay(DefaultTheme(name: palette.parent, cloud: nil))
+                }
+                if !settings.followSystemAppearance {
+                    settings = settings.withUpdatedPalette(palette)
+                    settings = settings.withUpdatedCloudTheme(nil)
+                    settings = settings.withStandartWallpaper()
+                }
                 return settings
             }), updateAutoNightSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedSchedule(nil)})).start()
         }, toggleBubbles: { enabled in
@@ -467,17 +473,18 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
             self?.navigationController?.push(autoNightSettingsController(context.sharedContext))
         }, toggleFollowSystemAppearance: { value in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedFollowSystemAppearance(value).withUpdatedCloudTheme(nil)
+                return settings.withUpdatedFollowSystemAppearance(value)
+                    .withUpdatedDefaultDark(DefaultTheme(name: .nightBlue, cloud: nil))
+                    .withUpdatedDefaultDay(DefaultTheme(name: .dayClassic, cloud: nil))
+                    .withUpdatedCloudTheme(nil)
+                    .withStandartWallpaper()
             }).start()
         }, removeTheme: { cloudTheme in
             confirm(for: context.window, header: L10n.appearanceConfirmRemoveTitle, information: L10n.appearanceConfirmRemoveText, successHandler: { _ in
                 if theme.cloudTheme?.id == cloudTheme.id {
                     _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
-                        return $0.withUpdatedCloudTheme(nil).withUpdatedPaletteToDefault()
+                        return $0.withUpdatedCloudTheme(nil).withUpdatedPaletteToDefault(to: theme.colors.isDark)
                     }).start()
-                    if theme.colors.isDark {
-                       
-                    }
                 }
                 _ = deleteThemeInteractively(account: context.account, accountManager: context.sharedContext.accountManager, theme: cloudTheme).start()
             })
@@ -486,11 +493,7 @@ class AppearanceViewController: TelegramGenericViewController<AppeaanceView> {
         }, shareTheme: { theme in
             showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(theme.slug)")), for: context.window)
         }, installCloudTheme: { theme in
-            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
-                return $0.withUpdatedCloudTheme(theme).updateWallpaper { value in
-                    return value.withUpdatedWallpaper(.none).withUpdatedAssociated(AssociatedWallpaper(cloud: nil, wallpaper: .none))
-                }
-            }).start()
+            _ = showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: theme, install: true), for: context.window).start()
         })
         
         let initialSize = self.atomicSize

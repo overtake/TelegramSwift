@@ -24,7 +24,7 @@ private func generatePollAddOption(_ color: NSColor) -> CGImage {
     })!
 }
 
-func generateThemePreview(for palette: ColorPalette) -> CGImage {
+func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backgroundMode: TableBackgroundMode) -> CGImage {
     return generateImage(NSMakeSize(320, 320), rotatedContext: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
@@ -32,10 +32,31 @@ func generateThemePreview(for palette: ColorPalette) -> CGImage {
         //background
         ctx.setFillColor(palette.chatBackground.cgColor)
         ctx.fill(rect)
+        
+        switch wallpaper {
+        case .builtin, .file, .color:
+            switch backgroundMode {
+            case let .background(image):
+                let imageSize = image.size.aspectFilled(size)
+                ctx.draw(image.precomposed(flipVertical: true), in: rect.focus(imageSize))
+                break
+            case let .color(color):
+                ctx.setFillColor(color.cgColor)
+                ctx.fill(rect)
+            default:
+                break
+            }
+        default:
+            break
+        }
+        
+        //top and bottom
         ctx.setFillColor(palette.background.cgColor)
         ctx.fill(NSMakeRect(0, 0, rect.width, 50))
         ctx.setFillColor(palette.background.cgColor)
         ctx.fill(NSMakeRect(0, rect.height - 50, rect.width, 50))
+        
+        
         
         //top border
         ctx.setFillColor(palette.border.cgColor)
@@ -1051,16 +1072,25 @@ class TelegramPresentationTheme : PresentationTheme {
             return value
         } else {
             let chatServiceItemColor: NSColor
-            switch backgroundMode {
-            case let .background(image):
-                chatServiceItemColor = getAverageColor(image)
-            case let .color(color):
-                return color
-            case let .tiled(image):
-                chatServiceItemColor = getAverageColor(image)
-            case .plain:
+            if bubbled {
+                switch backgroundMode {
+                case let .background(image):
+                    chatServiceItemColor = getAverageColor(image)
+                case let .color(color):
+                    if color != colors.background {
+                        return getAverageColor(color)
+                    } else {
+                        return color
+                    }
+                case let .tiled(image):
+                    chatServiceItemColor = getAverageColor(image)
+                case .plain:
+                    chatServiceItemColor = colors.chatBackground
+                }
+            } else {
                 chatServiceItemColor = colors.chatBackground
             }
+           
             self._chatServiceItemColor = chatServiceItemColor
             return chatServiceItemColor
         }
@@ -1071,22 +1101,43 @@ class TelegramPresentationTheme : PresentationTheme {
             return value
         } else {
             let chatServiceItemTextColor: NSColor
-            switch backgroundMode {
-            case .background:
-                chatServiceItemTextColor = .white
-            case .color:
-                chatServiceItemTextColor = colors.grayText
-            case .tiled:
-                chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
-            case .plain:
+            if bubbled {
+                switch backgroundMode {
+                case .background:
+                    chatServiceItemTextColor = .white
+                case let .color(color):
+                    if color != colors.background {
+                        chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
+                    } else {
+                        chatServiceItemTextColor = colors.grayText
+                    }
+                case .tiled:
+                    chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
+                case .plain:
+                    chatServiceItemTextColor = colors.grayText
+                }
+            } else {
                 chatServiceItemTextColor = colors.grayText
             }
+            
             self._chatServiceItemTextColor = chatServiceItemTextColor
             return chatServiceItemTextColor
         }
     }
     let fontSize: CGFloat
     let followSystemAppearance: Bool
+    
+    var controllerBackgroundMode: TableBackgroundMode {
+        if self.bubbled {
+            return self.backgroundMode
+        } else {
+            return .color(color: colors.chatBackground)
+        }
+    }
+    
+    var chatBackground: NSColor {
+        return self.colors.chatBackground
+    }
     
     private var _backgroundMode: TableBackgroundMode?
     var backgroundMode: TableBackgroundMode {
@@ -1196,6 +1247,12 @@ class TelegramPresentationTheme : PresentationTheme {
     
     func withUpdatedColors(_ colors: ColorPalette) -> TelegramPresentationTheme {
         return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, followSystemAppearance: self.followSystemAppearance)
+    }
+    func withUpdatedChatMode(_ bubbled: Bool) -> TelegramPresentationTheme {
+        return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: bubbled), bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, followSystemAppearance: self.followSystemAppearance)
+    }
+    func withUpdatedWallpaper(_ wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
+        return TelegramPresentationTheme(colors: self.colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, followSystemAppearance: self.followSystemAppearance)
     }
     
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {

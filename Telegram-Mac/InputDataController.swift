@@ -104,15 +104,14 @@ public class InputDataModalController : ModalViewController {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(frame.width, min(size.height - 150, controller.genericView.listHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(frame.width, min(size.height - 150, controller.tableView.listHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(frame.width, min(contentSize.height - 150, controller.genericView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(frame.width, min(contentSize.height - 150, controller.tableView.listHeight)), animated: animated)
         }
     }
-    
     
     public override func viewClass() -> AnyClass {
         fatalError()
@@ -186,7 +185,23 @@ struct InputDataSignalValue {
     }
 }
 
-class InputDataController: GenericViewController<TableView> {
+final class InputDataView : BackgroundView {
+    let tableView = TableView()
+    required override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(tableView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    override func layout() {
+        super.layout()
+        tableView.frame = bounds
+    }
+}
+
+class InputDataController: GenericViewController<InputDataView> {
 
     fileprivate var modalTransitionHandler:((Bool)->Void)? = nil
     
@@ -257,10 +272,13 @@ class InputDataController: GenericViewController<TableView> {
     override var responderPriority: HandlerPriority {
         return .modal
     }
+    var tableView: TableView {
+        return self.genericView.tableView
+    }
     
     func fetchData() -> [InputDataIdentifier : InputDataValue] {
         var values:[InputDataIdentifier : InputDataValue] = [:]
-        genericView.enumerateItems { item -> Bool in
+        tableView.enumerateItems { item -> Bool in
             if let identifier = (item.stableId.base as? InputDataEntryId)?.identifier {
                 if let item = item as? InputDataRowDataValue {
                     values[identifier] = item.value
@@ -273,7 +291,7 @@ class InputDataController: GenericViewController<TableView> {
     
     private func findItem(for identifier: InputDataIdentifier) -> TableRowItem? {
         var item: TableRowItem?
-        genericView.enumerateItems { current -> Bool in
+        tableView.enumerateItems { current -> Bool in
             if let stableId = current.stableId.base as? InputDataEntryId {
                 if  stableId.identifier == identifier {
                     item = current
@@ -290,13 +308,13 @@ class InputDataController: GenericViewController<TableView> {
             
             if let focusIdentifier = focusIdentifier {
                 if let item = findItem(for: focusIdentifier) {
-                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
+                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
                 }
             } else if scrollIfNeeded {
                 if !scrollDown  {
-                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
+                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
                 } else {
-                    genericView.scroll(to: .down(true))
+                    tableView.scroll(to: .down(true))
                 }
             }
         }
@@ -318,7 +336,7 @@ class InputDataController: GenericViewController<TableView> {
                         if scrollFirstItem == nil {
                             scrollFirstItem = item
                             if let item = item {
-                                genericView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
+                                tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
                             }
                         }
                     }
@@ -384,7 +402,7 @@ class InputDataController: GenericViewController<TableView> {
         
         disposable.set(signal.start(next: { [weak self] transition in
             guard let `self` = self else {return}
-            self.genericView.merge(with: transition)
+            self.tableView.merge(with: transition)
             if !self.didSetReady {
                 self.didLoaded(self.fetchData())
             }
@@ -450,10 +468,10 @@ class InputDataController: GenericViewController<TableView> {
     }
     
     override func firstResponder() -> NSResponder? {
-        if self.window?.firstResponder == self.window || self.window?.firstResponder == genericView.documentView {
+        if self.window?.firstResponder == self.window || self.window?.firstResponder == tableView.documentView {
             var first: NSResponder? = nil
             
-            genericView.enumerateViews { view -> Bool in
+            tableView.enumerateViews { view -> Bool in
                 first = view.firstResponder
                 return first == nil
             }
@@ -505,9 +523,9 @@ class InputDataController: GenericViewController<TableView> {
         window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             
-            let index = self.genericView.row(at: self.genericView.documentView!.convert(event.locationInWindow, from: nil))
+            let index = self.tableView.row(at: self.tableView.documentView!.convert(event.locationInWindow, from: nil))
             
-            if index > -1, let view = self.genericView.item(at: index).view {
+            if index > -1, let view = self.tableView.item(at: index).view {
                 if view.mouseInsideField {
                     if self.window?.firstResponder != view.firstResponder {
                         _ = self.window?.makeFirstResponder(view.firstResponder)
@@ -556,7 +574,7 @@ class InputDataController: GenericViewController<TableView> {
     var currentFirstResponderIdentifier: InputDataIdentifier? {
         var identifier: InputDataIdentifier? = nil
         
-        genericView.enumerateViews { view -> Bool in
+        tableView.enumerateViews { view -> Bool in
             if view.hasFirstResponder() {
                 if view.firstResponder == view.window?.firstResponder {
                     identifier = (view.item?.stableId.base as? InputDataEntryId)?.identifier
@@ -579,14 +597,14 @@ class InputDataController: GenericViewController<TableView> {
         var first: NSResponder? = nil
 
         
-        genericView.enumerateViews { view -> Bool in
+        tableView.enumerateViews { view -> Bool in
             if view.hasFirstResponder() {
                 first = view.firstResponder
             }
             return first == nil
         }
         
-        genericView.enumerateViews { view -> Bool in
+        tableView.enumerateViews { view -> Bool in
             if view.hasFirstResponder() {
                 if selectNext {
                     next = view.firstResponder

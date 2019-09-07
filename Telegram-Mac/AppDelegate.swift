@@ -348,8 +348,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
             _ = (viewDidChangedAppearance.get() |> mapToSignal { _ in return themeSettingsView(accountManager: accountManager) } |> deliverOnMainQueue).start(next: { settings in
                 let previous = basicTheme.swap(settings)
-                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize || previous?.cloudTheme?.id != settings.cloudTheme?.id {
-                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && previous?.fontSize == settings.fontSize)
+                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize  {
+                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && previous?.fontSize == settings.fontSize && previous?.palette != settings.palette)
                     self.contextValue?.applyNewTheme()
                 }
             })
@@ -387,27 +387,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         isDarkTheme = to > from && t >= from && t < to || to < from && (t >= from || t < to)
                     }
                     _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
-                        
-                        let palette: ColorPalette
-                        var palettes:[String : ColorPalette] = [:]
-                        palettes[dayClassicPalette.name] = dayClassicPalette
-                        palettes[whitePalette.name] = whitePalette
-                        palettes[darkPalette.name] = darkPalette
-                        palettes[nightBluePalette.name] = nightBluePalette
-                        palettes[mojavePalette.name] = mojavePalette
-                        
-                        if isDarkTheme {
-                            palette = palettes[preference.themeName] ?? nightBluePalette
-                        } else {
-                            palette = palettes[settings.defaultDayName] ?? dayClassicPalette
-                        }
-                        if theme.colors.name != palette.name {
-                            return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
-                        } else {
-                            return settings
-                        }
-                        
-                        
+                        return settings.withUpdatedCloudTheme(nil).withUpdatedPaletteToDefault(to: isDarkTheme).withUpdatedFollowSystemAppearance(false)
                     }).start()
                 }
             })

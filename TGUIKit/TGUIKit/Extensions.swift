@@ -829,6 +829,16 @@ public extension CGRect {
     var center: CGPoint {
         return CGPoint(x: self.midX, y: self.midY)
     }
+    func focus(_ size:NSSize) -> NSRect {
+        var x:CGFloat = 0
+        var y:CGFloat = 0
+        
+        x = CGFloat(round((self.width - size.width)/2.0))
+        y = CGFloat(round((self.height - size.height)/2.0))
+        
+        
+        return NSMakeRect(x, y, size.width, size.height)
+    }
 }
 
 public extension CGPoint {
@@ -1316,7 +1326,7 @@ public extension NSColor {
         
         hexColor = rHex + gHex + bHex
         if a < 1 {
-            return "#" + hexColor + ":\(a * 100 / 100)"
+            return "#" + hexColor + ":\(String(format: "%.2f", Double(a * 100 / 100)))"
         } else {
             return "#" + hexColor
         }

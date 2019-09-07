@@ -2242,10 +2242,8 @@ func moveWallpaperToCache(postbox: Postbox, wallpaper: Wallpaper) -> Signal<Wall
         return moveWallpaperToCache(postbox: postbox, resource: representation.resource, blurred: blurred) |> map { _ in return wallpaper}
     case let .file(_, file, settings, isPattern):
         return moveWallpaperToCache(postbox: postbox, resource: file.resource, blurred: settings.blur) |> map { _ in return wallpaper}
-    case .color:
-        return .single(wallpaper)
     default:
-        return .complete()
+       return .single(wallpaper)
     }
 }
 

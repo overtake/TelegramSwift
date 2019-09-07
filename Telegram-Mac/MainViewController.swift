@@ -405,20 +405,7 @@ class MainViewController: TelegramViewController {
         items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, { [weak self] in
             if let strongSelf = self {
                 _ = updateThemeInteractivetly(accountManager: strongSelf.context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
-                    let palette: ColorPalette
-                    var palettes:[String : ColorPalette] = [:]
-                    palettes[dayClassicPalette.name] = dayClassicPalette
-                    palettes[whitePalette.name] = whitePalette
-                    palettes[darkPalette.name] = darkPalette
-                    palettes[nightBluePalette.name] = nightBluePalette
-                    palettes[mojavePalette.name] = mojavePalette
-                    
-                    if !theme.colors.isDark {
-                        palette = palettes[settings.defaultNightName] ?? nightBluePalette
-                    } else {
-                        palette = palettes[settings.defaultDayName] ?? dayClassicPalette
-                    }
-                    return settings.withUpdatedPalette(palette).withUpdatedFollowSystemAppearance(false).withUpdatedCloudTheme(nil)
+                    return settings.withUpdatedPaletteToDefault(to: !theme.colors.isDark).withUpdatedFollowSystemAppearance(false)
                 }).start()
                 _ = updateAutoNightSettingsInteractively(accountManager: strongSelf.context.sharedContext.accountManager, { $0.withUpdatedSchedule(nil)}).start()
             }
@@ -440,6 +427,7 @@ class MainViewController: TelegramViewController {
         }
         self.quickController = controller
     }
+    private var previousTheme:TelegramPresentationTheme?
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
@@ -449,7 +437,7 @@ class MainViewController: TelegramViewController {
         updateController.updateLocalizationAndTheme(theme: theme)
         #endif
         
-        if !tabController.isEmpty {
+        if !tabController.isEmpty && previousTheme?.colors != theme.colors  {
             var index: Int = 0
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts"), selected: false), theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts_Highlighted"), selected: true)), at: index)
             index += 1
@@ -462,6 +450,7 @@ class MainViewController: TelegramViewController {
             index += 1
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true)), at: index)
         }
+        self.previousTheme = theme
     }
     
     private var previousIndex: Int? = nil

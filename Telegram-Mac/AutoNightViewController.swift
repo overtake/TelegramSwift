@@ -89,15 +89,6 @@ private func autoNightEntries(_ settings: AutoNightThemePreferences) -> [InputDa
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        let nightBlueKey = "AppearanceSettings.ColorTheme." + nightBluePalette.name.lowercased().replacingOccurrences(of: " ", with: "_")
-        let darkKey = "AppearanceSettings.ColorTheme." + darkPalette.name.lowercased().replacingOccurrences(of: " ", with: "_")
-
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_night_blue, data: InputDataGeneralData(name: localizedString(nightBlueKey), color: theme.colors.text, icon: nil, type: .selectable(settings.themeName == _id_night_blue.identifier), action: nil)))
-        index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_dark, data: InputDataGeneralData(name: localizedString(darkKey), color: theme.colors.text, icon: nil, type: .selectable(settings.themeName == _id_dark.identifier), action: nil)))
-        index += 1
-        
     }
     
     
@@ -234,10 +225,10 @@ func autoNightSettingsController(_ sharedContext: SharedAccountContext) -> Input
         
        
         
-        if let _ = data[_id_from], let controller = getController?(), let control = (controller.genericView.item(stableId: InputDataEntryId.general(_id_from))?.view as? GeneralInteractedRowView)?.textView {
+        if let _ = data[_id_from], let controller = getController?(), let control = (controller.tableView.item(stableId: InputDataEntryId.general(_id_from))?.view as? GeneralInteractedRowView)?.textView {
             showPopover(for: control, with: SPopoverViewController(items: items(from: 0, to: 24, isTo: false), visibility: 10), edge: .minX, inset: NSMakePoint(0,-30))
         }
-        if let _ = data[_id_to], let controller = getController?(), let control = (controller.genericView.item(stableId: InputDataEntryId.general(_id_to))?.view as? GeneralInteractedRowView)?.textView {
+        if let _ = data[_id_to], let controller = getController?(), let control = (controller.tableView.item(stableId: InputDataEntryId.general(_id_to))?.view as? GeneralInteractedRowView)?.textView {
             showPopover(for: control, with: SPopoverViewController(items: items(from: 0, to: 24, isTo: true), visibility: 10), edge: .minX, inset: NSMakePoint(0,-30))
         }
         

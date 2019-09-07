@@ -343,7 +343,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         var range: NSRange = NSMakeRange(NSNotFound, 0)
         let state = stateValue.with { $0 }
         
-        controller.genericView.enumerateItems(with: { item -> Bool in
+        controller.tableView.enumerateItems(with: { item -> Bool in
             if let identifier = (item.stableId.base as? InputDataEntryId)?.identifier {
                 if let _ = state.indexOf(identifier) {
                     if range.location == NSNotFound {
@@ -378,7 +378,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
             }
 
         })
-        controller.genericView.resortController = resort
+        controller.tableView.resortController = resort
         
         interactions.updateDone { done in
             done.isEnabled = state.isEnabled

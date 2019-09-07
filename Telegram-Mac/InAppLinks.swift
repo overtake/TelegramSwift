@@ -418,7 +418,11 @@ func execute(inapp:inAppLink) {
         })
     case let .theme(_, context, name):
         _ = showModalProgress(signal: getTheme(account: context.account, slug: name), for: context.window).start(next: { theme in
-            showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(theme)), for: context.window)
+            if theme.file == nil {
+                showEditThemeModalController(context: context, theme: theme)
+            } else {
+                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(theme)), for: context.window)
+            }
         }, error: { error in
             switch error {
             case .generic:
@@ -669,7 +673,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 } else {
                                     let vars = urlVars(with: value)
                                     var blur: Bool = false
-                                    var intensity: Int32? = 0
+                                    var intensity: Int32? = 80
                                     var color: Int32? = nil
                                     
                                     if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: bgcolor)?.rgb {
@@ -873,7 +877,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     if let context = context, let value = vars["slug"] {
                         
                         var blur: Bool = false
-                        var intensity: Int32? = 0
+                        var intensity: Int32? = 80
                         var color: Int32? = nil
                         
                         if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: bgcolor)?.rgb {

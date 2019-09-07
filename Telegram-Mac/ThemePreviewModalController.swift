@@ -14,36 +14,49 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-private final class ThemePreviewView : View {
-    private let tableView: TableView = TableView.init(frame: NSZeroRect, isFlipped: false)
+private final class ThemePreviewView : BackgroundView {
+    fileprivate let segmentControl = SegmentController(frame: NSMakeRect(0, 0, 200, 28))
+    private let segmentContainer = View()
+    private let tableView: TableView = TableView(frame: NSZeroRect, isFlipped: false)
     weak var controller: ModalViewController?
     private let context: AccountContext
     required init(frame frameRect: NSRect, context: AccountContext) {
         self.context = context
         super.init(frame: frameRect)
         self.addSubview(tableView)
-        
+        segmentContainer.addSubview(segmentControl.view)
+        self.addSubview(segmentContainer)
         layout()
     }
     
     override func layout() {
         super.layout()
-        tableView.frame = bounds
+        segmentContainer.frame = NSMakeRect(0, 0, frame.width, 50)
+        self.segmentControl.view.center()
+        tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    required init(frame frameRect: NSRect) {
+    required override init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
     fileprivate func addTableItems(_ context: AccountContext, theme: TelegramPresentationTheme) {
         
         self.tableView.getBackgroundColor = {
-            return theme.colors.chatBackground
+            if theme.bubbled {
+                return .clear
+            } else {
+                return theme.chatBackground
+            }
         }
+        segmentContainer.backgroundColor = theme.colors.background
+        segmentContainer.borderColor = theme.colors.border
+        segmentContainer.border = [.Bottom]
+        segmentControl.theme = SegmentTheme(backgroundColor: theme.colors.background, foregroundColor: theme.colors.accent, textColor: theme.colors.accent)
         
         tableView.removeAll()
         tableView.updateLocalizationAndTheme(theme: theme)
@@ -115,23 +128,47 @@ class ThemePreviewModalController: ModalViewController {
         genericView.controller = self
         let context = self.context
         
+        let updateChatMode:(Bool)->Void = { [weak self] bubbled in
+            guard let `self` = self else {
+                return
+            }
+            let newTheme = self.currentTheme.withUpdatedChatMode(bubbled)
+            self.currentTheme = newTheme
+            self.genericView.addTableItems(self.context, theme: newTheme)
+            self.genericView.backgroundMode = newTheme.controllerBackgroundMode
+        }
+        
+        self.genericView.segmentControl.add(segment: SegmentedItem(title: L10n.appearanceSettingsChatViewBubbles, handler: {
+            updateChatMode(true)
+        }))
+        
+        self.genericView.segmentControl.add(segment: SegmentedItem(title: L10n.appearanceSettingsChatViewClassic, handler: {
+            updateChatMode(false)
+        }))
+        
         switch self.source {
         case let .localTheme(theme):
-            self.currentTheme = theme
+            self.currentTheme = theme.withUpdatedChatMode(true)
             genericView.addTableItems(self.context, theme: theme)
             modal?.updateLocalizationAndTheme(theme: theme)
+            genericView.backgroundMode = theme.controllerBackgroundMode
             self.readyOnce()
         case let .cloudTheme(theme):
             if let file = theme.file {
-                disposable.set(showModalProgress(signal: context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1), for: context.window).start(next: { [weak self] data in
+                let signal = loadCloudPaletteAndWallpaper(context: context, file: file)
+                disposable.set(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { [weak self] data in
                     guard let `self` = self else {
                         return
                     }
-                    if let palette = importPalette(data.path) {
-                        let newTheme = self.currentTheme.withUpdatedColors(palette)
+                    if let (palette, wallpaper, cloud) = data {
+                        let newTheme = self.currentTheme
+                            .withUpdatedColors(palette)
+                            .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper)))
+                            .withUpdatedChatMode(true)
                         self.currentTheme = newTheme
                         self.genericView.addTableItems(context, theme: newTheme)
                         self.modal?.updateLocalizationAndTheme(theme: newTheme)
+                        self.genericView.backgroundMode = newTheme.controllerBackgroundMode
                         self.readyOnce()
                     } else {
                         self.close()
@@ -175,23 +212,25 @@ class ThemePreviewModalController: ModalViewController {
     private func saveAccent() {
         
         let context = self.context
+        let currentTheme = self.currentTheme
         let colors = currentTheme.colors
         
         let cloudTheme: TelegramTheme?
         switch self.source {
         case let .cloudTheme(t):
             cloudTheme = t
-            if t.id == theme.cloudTheme?.id {
-                self.close()
-                return
-            }
         default:
             cloudTheme = nil
         }
-        
-        
         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-           return settings.withUpdatedPalette(colors).withUpdatedCloudTheme(cloudTheme)
+           return settings
+            .withUpdatedPalette(colors)
+            .updateWallpaper { _ in
+                return currentTheme.wallpaper
+            }
+            .withUpdatedFollowSystemAppearance(false)
+            .withUpdatedCloudTheme(cloudTheme)
+            .withUpdatedBubbled(currentTheme.bubbled)
         }).start()
         
         delay(0.1, closure: { [weak self] in
@@ -234,3 +273,45 @@ func paletteFromFile(context: AccountContext, file: TelegramMediaFile) -> ColorP
     return importPalette(path)
 }
 
+func loadCloudPaletteAndWallpaper(context: AccountContext, file: TelegramMediaFile) -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?)?, NoError> {
+    return context.account.postbox.mediaBox.resourceData(file.resource)
+        |> filter { $0.complete }
+        |> take(1)
+        |> map { importPalette($0.path) }
+        |> mapToSignal { palette -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?)?, NoError> in
+            if let palette = palette {
+                switch palette.wallpaper {
+                case .builtin:
+                    return .single((palette, Wallpaper.builtin, nil))
+                case .none:
+                    return .single((palette, Wallpaper.none, nil))
+                case let .color(color):
+                    return .single((palette, Wallpaper.color(Int32(color.rgb)), nil))
+                case let .url(url):
+                    let link = inApp(for: url as NSString, context: context)
+                    switch link {
+                    case let .wallpaper(values):
+                        switch values.preview {
+                        case let .slug(slug, settings):
+                            return getWallpaper(account: context.account, slug: slug)
+                                |> mapToSignal { cloud in
+                                    return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(cloud).withUpdatedSettings(settings)) |> map { wallpaper in
+                                        return (palette, wallpaper, cloud)
+                                        } |> mapError { _ in return GetWallpaperError.generic }
+                                }
+                                |> `catch` { _ in
+                                    return .single((palette, .none, nil))
+                            }
+                        default:
+                            break
+                        }
+                    default:
+                        break
+                    }
+                    return .single(nil)
+                }
+            } else {
+                return .single(nil)
+            }
+    }
+}

@@ -538,6 +538,9 @@ class ChatMessageItem: ChatRowItem {
         if isForceRightLine {
             return rightSize.height
         }
+        if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
+            return rightSize.height
+        }
        
         if let webpageLayout = webpageLayout {
             if let webpageLayout = webpageLayout as? WPArticleLayout {

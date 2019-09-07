@@ -343,11 +343,17 @@ final class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFi
         return true
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
+    
     override func updateColors() {
+        super.updateColors()
         placeholderTextView.backgroundColor = theme.colors.background
         textView.cursorColor = theme.colors.indicatorColor
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
+        textView.background = theme.colors.background
         secureField.font = .normal(13)
         secureField.backgroundColor = theme.colors.background
         secureField.textColor = theme.colors.text

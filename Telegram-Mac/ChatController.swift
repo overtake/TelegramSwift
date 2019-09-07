@@ -4210,7 +4210,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
-        updateBackgroundColor(theme.backgroundMode)
+        updateBackgroundColor(theme.controllerBackgroundMode)
         (centerBarView as? ChatTitleBarView)?.updateStatus()
     }
     

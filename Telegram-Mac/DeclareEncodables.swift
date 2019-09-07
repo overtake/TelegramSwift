@@ -41,6 +41,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(LocalBundleResource.self, f: { LocalBundleResource(decoder: $0)})
     declareEncodable(AssociatedWallpaper.self, f: { AssociatedWallpaper(decoder: $0) })
     declareEncodable(ThemeWallpaper.self, f: { ThemeWallpaper(decoder: $0) })
+    declareEncodable(DefaultTheme.self, f: { DefaultTheme(decoder: $0) })
     return
 }()
 

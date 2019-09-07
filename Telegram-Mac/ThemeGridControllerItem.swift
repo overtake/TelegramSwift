@@ -21,7 +21,7 @@ final class SettingsThemeWallpaperView: View {
     private let label: TextView = TextView()
     override init() {
         super.init()
-        backgroundColor = theme.colors.chatBackground
+        backgroundColor = theme.chatBackground
         layer?.borderColor = theme.colors.border.cgColor
         layer?.borderWidth = .borderSize
         addSubview(label)
@@ -32,7 +32,7 @@ final class SettingsThemeWallpaperView: View {
         let layout = TextViewLayout(.initialize(string: L10n.chatWallpaperEmpty, color: theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         label.update(layout)
-        label.backgroundColor = theme.colors.chatBackground
+        label.backgroundColor = theme.chatBackground
     }
     
     deinit {
