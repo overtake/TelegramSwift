@@ -12,7 +12,7 @@ url=https://github.com/overtake/Sparkle
 	url = https://github.com/overtake/Zip
 [submodule "submodules/lottie-ios"]
 	path = submodules/lottie-ios
-	url = https://github.com/airbnb/lottie-ios
+url=git@github.com:overtake/lottie-ios.git
 [submodule "submodules/telegram-ios"]
 	path = submodules/telegram-ios
 url=git@github.com:TelegramMessenger/Telegram-iOS.git
