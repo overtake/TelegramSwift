@@ -324,10 +324,11 @@ private final class InternalUpdaterDownloader : SPUDownloaderSession {
     
     
     override func moveItem(atPath fromPath: String!, toPath: String!, error: Error) -> Bool {
+        try? FileManager.default.removeItem(atPath: toPath)
         do {
             try FileManager.default.copyItem(atPath: fromPath, toPath: toPath)
             return true
-        } catch {
+        } catch { 
             return false
         }
     }

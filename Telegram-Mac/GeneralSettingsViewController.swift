@@ -374,6 +374,8 @@ class GeneralSettingsViewController: TableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
        
         let context = self.context
         let inputPromise:ValuePromise<SendingType> = ValuePromise(FastSettings.sendingType, ignoreRepeated: true)
