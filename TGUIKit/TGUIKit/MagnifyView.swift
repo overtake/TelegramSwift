@@ -48,7 +48,7 @@ open class MagnifyView : NSView {
     }
     
     private var magnifiedSize:NSSize {
-        return NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, contentSize.width * magnify), floorToScreenPixels(scaleFactor: backingScaleFactor, contentSize.height * magnify))
+        return NSMakeSize(floorToScreenPixels(backingScaleFactor, contentSize.width * magnify), floorToScreenPixels(backingScaleFactor, contentSize.height * magnify))
     }
     
     public func swapView(_ newView: NSView) {
@@ -203,8 +203,8 @@ open class MagnifyView : NSView {
     
     private func adjust(with point:NSPoint) -> NSPoint {
         var point = point
-        point.x = floorToScreenPixels(scaleFactor: backingScaleFactor, max(min(0, point.x), point.x + (frame.width - (point.x + magnifiedSize.width))))
-        point.y = floorToScreenPixels(scaleFactor: backingScaleFactor, max(min(0, point.y), point.y + (frame.height - (point.y + magnifiedSize.height))))
+        point.x = floorToScreenPixels(backingScaleFactor, max(min(0, point.x), point.x + (frame.width - (point.x + magnifiedSize.width))))
+        point.y = floorToScreenPixels(backingScaleFactor, max(min(0, point.y), point.y + (frame.height - (point.y + magnifiedSize.height))))
         return point
     }
     

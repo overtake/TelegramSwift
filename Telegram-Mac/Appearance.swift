@@ -275,7 +275,7 @@ private func generateEditMessageMediaIcon(_ icon: CGImage, background: NSColor) 
         ctx.setFillColor(background.cgColor)
         ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
         
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
         
     })!
@@ -290,7 +290,7 @@ private func generatePlayerListAlbumPlaceholder(_ icon: CGImage?, background: NS
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
         
         if let icon = icon {
-            let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+            let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
             ctx.draw(icon, in: imageRect)
         }
        
@@ -306,7 +306,7 @@ private func generateLocationPinIcon(_ background: NSColor) -> CGImage {
         ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
         
         let icon = #imageLiteral(resourceName: "Icon_LocationPin").precomposed(.white)
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
 
     })!
@@ -319,7 +319,7 @@ private func generateChatTabSelected(_ color: NSColor, _ icon: CGImage) -> CGIma
         ctx.draw(main, in: NSMakeRect(0, 0, size.width, size.height))
         
         
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2) - 2, floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2) + 2, icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2) - 2, floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2) + 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
         
     })!
@@ -350,11 +350,11 @@ private func generateLocationMapPinIcon(_ background: NSColor) -> CGImage {
         ctx.fillEllipse(in: NSMakeRect(0, 6, size.width, size.height - 6))
         
         let icon = #imageLiteral(resourceName: "Icon_LocationPin").precomposed(.white)
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2) + 3, icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2) + 3, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
         
         let triangle = generateTriangle(NSMakeSize(12, 10), color: background)
-        let triangleRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - triangle.backingSize.width) / 2), 0, triangle.backingSize.width, triangle.backingSize.height)
+        let triangleRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - triangle.backingSize.width) / 2), 0, triangle.backingSize.width, triangle.backingSize.height)
         
         ctx.draw(triangle, in: triangleRect)
 
@@ -372,7 +372,7 @@ private func generateLockerBody(_ color: NSColor, backgroundColor: NSColor) -> C
         ctx.setStrokeColor(color.cgColor)
         ctx.setLineWidth(1.0)
         ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
-        ctx.fillEllipse(in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - 2)/2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - 2)/2), 2, 2))
+        ctx.fillEllipse(in: NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - 2)/2), floorToScreenPixels(System.backingScale, (size.height - 2)/2), 2, 2))
        
     })!
 }
@@ -406,7 +406,7 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
         ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
 
         let icon = #imageLiteral(resourceName: "Icon_ChatMention").precomposed(foregroundColor)
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         
         ctx.draw(icon, in: imageRect)
     })!
@@ -437,7 +437,7 @@ private func generateStickersEmptySearch(color: NSColor) -> CGImage {
         
         let icon = #imageLiteral(resourceName: "Icon_EmptySearchResults").precomposed(color)
         let imageSize = icon.backingSize.fitted(size)
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - imageSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - imageSize.height) / 2), imageSize.width, imageSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - imageSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - imageSize.height) / 2), imageSize.width, imageSize.height)
         
         ctx.draw(icon, in: imageRect)
     })!
@@ -508,7 +508,7 @@ private func generateIVAudioPlay(color: NSColor) -> CGImage {
         ctx.strokeEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
         let icon = #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(color)
         
-        ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
+        ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
         
     })!
 }
@@ -520,7 +520,7 @@ private func generateIVAudioPause(color: NSColor) -> CGImage {
         ctx.setLineWidth(3)
         ctx.strokeEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
         let icon = #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(color)
-        ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
+        ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
     })!
 }
 
@@ -531,7 +531,7 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
         let icon = #imageLiteral(resourceName: "Icon_ChatListMention").precomposed(foregroundColor, flipVertical: true)
-        let imageRect = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
     })!
 }
@@ -1383,7 +1383,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatVideoRecording: { #imageLiteral(resourceName: "Icon_RecordVideoMessage").precomposed(palette.blueIcon) },
                                                chatRecord: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
                                                deleteItem: { deleteItemIcon(palette.redUI) },
-                                               deleteItemDisabled: { deleteItemIcon(palette.grayTransparent) },
+                                               deleteItemDisabled: { deleteItemIcon(palette.grayText) },
                                                chatAttach: { #imageLiteral(resourceName: "Icon_ChatAttach").precomposed(palette.grayIcon) },
                                                chatAttachFile: { #imageLiteral(resourceName: "Icon_AttachFile").precomposed(palette.blueIcon) },
                                                chatAttachPhoto: { #imageLiteral(resourceName: "Icon_AttachPhoto").precomposed(palette.blueIcon) },

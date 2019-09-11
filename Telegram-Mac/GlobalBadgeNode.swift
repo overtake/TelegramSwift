@@ -41,7 +41,7 @@ class GlobalBadgeNode: Node {
                         if strongSelf.layoutChanged == nil {
                             var origin:NSPoint = NSZeroPoint
                             let center = view.focus(strongSelf.size)
-                            origin = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, center.midX) + strongSelf.xInset, 4)
+                            origin = NSMakePoint(floorToScreenPixels(System.backingScale, center.midX) + strongSelf.xInset, 4)
                             origin.x = min(view.frame.width - strongSelf.size.width - 4, origin.x)
                             strongSelf.frame = NSMakeRect(origin.x,origin.y,strongSelf.size.width,strongSelf.size.height)
                         } else {

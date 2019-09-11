@@ -16,18 +16,25 @@ import TGUIKit
 class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, TableView> {
 
     private var nameItem:GroupNameRowItem!
-    private var descItem:GeneralInputRowItem!
+    private var descItem:InputDataRowItem!
     private var picture: String? {
         didSet {
             nameItem.photo = picture
-            genericView.reloadData(row: 0)
+            genericView.reloadData()
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.nextEnabled(false)
-        nameItem = GroupNameRowItem(atomicSize.modify({$0}), stableId: 0, account: context.account, placeholder: L10n.channelChannelNameHolder, limit: 140, textChangeHandler:{ [weak self] text in
+        
+        genericView.getBackgroundColor = {
+            theme.colors.grayBackground
+        }
+        
+        let initialSize = atomicSize.with { $0 }
+        
+        nameItem = GroupNameRowItem(initialSize, stableId: 0, account: context.account, placeholder: L10n.channelChannelNameHolder, viewType: .singleItem, limit: 140, textChangeHandler:{ [weak self] text in
             self?.nextEnabled(!text.isEmpty)
         }, pickPicture: { [weak self] select in
             if select {
@@ -46,24 +53,21 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
                         })
                     }
                 })
-                
-//                pickImage(for: mainWindow, completion: { image in
-//                    if let image = image {
-//                        _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak strongSelf] path in
-//                            strongSelf?.picture = path
-//                        })
-//                    }
-//                })
             } else {
                 self?.picture = nil
             }
         })
-        descItem = GeneralInputRowItem(atomicSize.modify({$0}), stableId: 2, placeholder: L10n.channelDescriptionHolder, limit: 300, automaticallyBecomeResponder: false)
+        descItem = InputDataRowItem(initialSize, stableId: arc4random(), mode: .plain, error: nil, viewType: .singleItem, currentText: "", placeholder: nil, inputPlaceholder: L10n.channelDescriptionHolder, filter: { $0 }, updated: { _ in }, limit: 255)
        
+    
+        _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 30, stableId: arc4random(), viewType: .separator))
+        _ = genericView.addItem(item: GeneralTextRowItem(initialSize, stableId: arc4random(), text: L10n.channelNameHeader, viewType: .textTopItem))
         _ = genericView.addItem(item: nameItem)
-        _ = genericView.addItem(item: GeneralRowItem(atomicSize.modify({$0}), height: 30, stableId: 1))
+        _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 30, stableId: arc4random(), viewType: .separator))
+        _ = genericView.addItem(item: GeneralTextRowItem(initialSize, stableId: arc4random(), text: L10n.channelDescHeader, viewType: .textTopItem))
         _ = genericView.addItem(item: descItem)
-        _ = genericView.addItem(item: GeneralTextRowItem(atomicSize.modify({$0}), stableId: 3, text: L10n.channelDescriptionHolderDescrpiton))
+        _ = genericView.addItem(item: GeneralTextRowItem(initialSize, stableId: arc4random(), text: L10n.channelDescriptionHolderDescrpiton, viewType: .textBottomItem))
+        _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 30, stableId: arc4random(), viewType: .separator))
         readyOnce()
     }
     
@@ -89,13 +93,12 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         let picture = self.picture
         let context = self.context
         
-        if nameItem.text.isEmpty {
+        if nameItem.currentText.isEmpty {
             nameItem.view?.shakeView()
             return
         }
         
-        
-        onComplete.set(showModalProgress(signal: createChannel(account: context.account, title: nameItem.text, description: descItem.text), for: window!, disposeAfterComplete: false) |> map(Optional.init) |> `catch` { _ in return .single(nil) } |> mapToSignal { peerId in
+        onComplete.set(showModalProgress(signal: createChannel(account: context.account, title: nameItem.currentText, description: descItem.currentText), for: window!, disposeAfterComplete: false) |> map(Optional.init) |> `catch` { _ in return .single(nil) } |> mapToSignal { peerId in
             if let peerId = peerId, let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
                 let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
@@ -125,7 +128,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
     
     override func firstResponder() -> NSResponder? {
         if let window = window {
-            if let nameView = genericView.viewNecessary(at: nameItem.index) as? GroupNameRowView, let descView = genericView.viewNecessary(at: descItem.index) as? GeneralInputRowView {
+            if let nameView = genericView.viewNecessary(at: nameItem.index) as? GroupNameRowView, let descView = genericView.viewNecessary(at: descItem.index) as? InputDataRowView {
                 nameView.textView.inputView.nextKeyView = descView.textView.inputView
                 nameView.textView.inputView.nextResponder = descView.textView.inputView
                 if window.firstResponder != nameView.textView.inputView && window.firstResponder != descView.textView.inputView {
@@ -143,3 +146,4 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
     }
     
 }
+

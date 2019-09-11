@@ -223,8 +223,9 @@ class InputDataController: GenericViewController<InputDataView> {
     private let deleteKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
     private let tabKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
     private let searchKeyInvocation:() -> InputDataDeleteResult
+    private let getBackgroundColor: ()->NSColor
     let identifier: String
-    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }) {
+    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.grayBackground }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
@@ -241,6 +242,7 @@ class InputDataController: GenericViewController<InputDataView> {
         self.deleteKeyInvocation = deleteKeyInvocation
         self.tabKeyInvocation = tabKeyInvocation
         self.searchKeyInvocation = searchKeyInvocation
+        self.getBackgroundColor = getBackgroundColor
         super.init()
         values.set(dataSignal)
     }
@@ -249,7 +251,7 @@ class InputDataController: GenericViewController<InputDataView> {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        self.genericView.background = theme.colors.background
+        (self.genericView as? AppearanceViewProtocol)?.updateLocalizationAndTheme(theme: theme)
         requestUpdateBackBar()
         requestUpdateCenterBar()
         requestUpdateRightBar()
@@ -373,6 +375,8 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.tableView.getBackgroundColor = self.getBackgroundColor
         
         
         appearanceDisposablet.set(appearanceSignal.start(next: { [weak self] _ in

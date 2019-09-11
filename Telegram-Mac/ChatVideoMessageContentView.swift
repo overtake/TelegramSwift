@@ -36,7 +36,7 @@ private let instantVideoMutedThumb = generateImage(NSMakeSize(30, 30), contextGe
     ctx.round(size, size.width / 2.0)
     ctx.fill(CGRect(origin: CGPoint(), size: size))
     let icon = #imageLiteral(resourceName: "Icon_VideoMessageMutedIcon").precomposed()
-    ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
+    ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
 })
 
 final class VideoMessageCorner : View {

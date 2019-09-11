@@ -291,10 +291,10 @@ private class ProgressLayer : CALayer {
         let startAngle = 2.0 * (CGFloat.pi) * 0.8 - CGFloat.pi / 2
         let endAngle = -(CGFloat.pi / 2)
         
-        let diameter = floorToScreenPixels(scaleFactor: System.backingScale, frame.height)
+        let diameter = floorToScreenPixels(System.backingScale, frame.height)
         
         let pathDiameter = diameter - lineWidth - lineWidth * 2
-        ctx.addArc(center: NSMakePoint(diameter / 2.0, floorToScreenPixels(scaleFactor: System.backingScale, diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+        ctx.addArc(center: NSMakePoint(diameter / 2.0, floorToScreenPixels(System.backingScale, diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: true)
         
         ctx.setLineWidth(lineWidth);
         ctx.setLineCap(.round);

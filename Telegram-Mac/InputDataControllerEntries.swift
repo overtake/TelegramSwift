@@ -208,19 +208,45 @@ final class InputDataGeneralData : Equatable {
     let color: NSColor
     let icon: CGImage?
     let type: GeneralInteractedType
+    let viewType: GeneralViewType
     let description: String?
     let action: (()->Void)?
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, description: String? = nil, action: (()->Void)? = nil) {
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, description: String? = nil, action: (()->Void)? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
         self.type = type
+        self.viewType = viewType
         self.description = description
         self.action = action
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
-        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description
+        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType
+    }
+}
+
+final class InputDataGeneralTextData : Equatable {
+    let color: NSColor
+    let detectBold: Bool
+    let viewType: GeneralViewType
+    init(color: NSColor = theme.colors.grayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy) {
+        self.color = color
+        self.detectBold = detectBold
+        self.viewType = viewType
+    }
+    static func ==(lhs: InputDataGeneralTextData, rhs: InputDataGeneralTextData) -> Bool {
+        return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType
+    }
+}
+
+final class InputDataRowData : Equatable {
+    let viewType: GeneralViewType
+    init(viewType: GeneralViewType = .legacy) {
+        self.viewType = viewType
+    }
+    static func ==(lhs: InputDataRowData, rhs: InputDataRowData) -> Bool {
+        return lhs.viewType == rhs.viewType
     }
 }
 
@@ -230,7 +256,7 @@ enum InputDataSectionType : Equatable {
     var height: CGFloat {
         switch self {
         case .normal:
-            return 20
+            return 30
         case let .custom(height):
             return height
         }
@@ -238,8 +264,8 @@ enum InputDataSectionType : Equatable {
 }
 
 enum InputDataEntry : Identifiable, Comparable {
-    case desc(sectionId: Int32, index: Int32, text: GeneralRowTextType, color: NSColor, detectBold: Bool)
-    case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, filter:(String)->String, limit: Int32)
+    case desc(sectionId: Int32, index: Int32, text: GeneralRowTextType, data: InputDataGeneralTextData)
+    case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, data: InputDataRowData, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, filter:(String)->String, limit: Int32)
     case general(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, data: InputDataGeneralData)
     case dateSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String)
     case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, values:[ValuesSelectorValue<InputDataValue>])
@@ -251,9 +277,9 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var stableId: InputDataEntryId {
         switch self {
-        case let .desc(_, index, _, _, _):
+        case let .desc(_, index, _, _):
             return .desc(index)
-        case let .input(_, _, _, _, identifier, _, _, _, _, _):
+        case let .input(_, _, _, _, identifier, _, _, _, _, _, _):
             return .input(identifier)
         case let .general(_, _, _, _, identifier, _):
             return .general(identifier)
@@ -276,9 +302,9 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var stableIndex: Int32 {
         switch self {
-        case let .desc(_, index, _, _, _):
+        case let .desc(_, index, _, _):
             return index
-        case let .input(_, index, _, _, _, _, _, _, _, _):
+        case let .input(_, index, _, _, _, _, _, _, _, _, _):
             return index
         case let .general(_, index, _, _, _, _):
             return index
@@ -301,9 +327,9 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var sectionIndex: Int32 {
         switch self {
-        case let .desc(index, _, _, _, _):
+        case let .desc(index, _, _, _):
             return index
-        case let .input(index, _, _, _, _, _, _, _, _, _):
+        case let .input(index, _, _, _, _, _, _, _, _, _, _):
             return index
         case let .selector(index, _, _, _, _, _, _):
             return index
@@ -336,16 +362,16 @@ enum InputDataEntry : Identifiable, Comparable {
     func item(arguments: InputDataArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .sectionId(_, type):
-            var height: CGFloat = 20
+            var height: CGFloat = 30
             switch type {
             case let .custom(h):
                 height = h
             default:
                 break
             }
-            return GeneralRowItem(initialSize, height: height, stableId: stableId, backgroundColor: theme.colors.background)
-        case let .desc(_, _, text, color, detectBold):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: detectBold, textColor: color)
+            return GeneralRowItem(initialSize, height: height, stableId: stableId, backgroundColor: theme.colors.grayBackground)
+        case let .desc(_, _, text, data):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType)
         case let .custom(_, _, _, _, _, item):
             return item(initialSize, stableId)
         case let .selector(_, _, value, error, _, placeholder, values):
@@ -353,15 +379,17 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dataSelector(_, _, _, error, _, placeholder, description, icon, action):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, icon: icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), description: description, type: .none, action: action, error: error)
         case let .general(_, _, value, error, identifier, data):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
             }, error: error)
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
-        case let .input(_, _, value, error, _, mode, placeholder, inputPlaceholder, filter, limit: limit):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: arguments.dataUpdated, limit: limit)
+        case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):
+            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: { _ in
+                arguments.dataUpdated()
+            }, limit: limit)
         case .loading:
-            return SearchEmptyRowItem.init(initialSize, stableId: stableId, isLoading: true)
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case let .search(_, _, value, _, update):
             return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state, _ in
                 update(state)
@@ -378,14 +406,14 @@ func <(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
 
 func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
     switch lhs {
-    case let .desc(sectionId, index, text, lhsColor, detectBold):
-        if case .desc(sectionId, index, text, let rhsColor, detectBold) = rhs {
-            return lhsColor == rhsColor
+    case let .desc(sectionId, index, text, data):
+        if case .desc(sectionId, index, text, data) = rhs {
+            return true
         } else {
             return false
         }
-    case let .input(sectionId, index, lhsValue, lhsError, identifier, mode, placeholder, inputPlaceholder, _, limit):
-        if case .input(sectionId, index, let rhsValue, let rhsError, identifier, mode, placeholder, inputPlaceholder, _, limit) = rhs {
+    case let .input(sectionId, index, lhsValue, lhsError, identifier, mode, data, placeholder, inputPlaceholder, _, limit):
+        if case .input(sectionId, index, let rhsValue, let rhsError, identifier, mode, data, placeholder, inputPlaceholder, _, limit) = rhs {
             return lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false

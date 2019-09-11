@@ -76,26 +76,26 @@ private func stringForUserCount(_ count: Int) -> String {
 }
 
 private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
-    case settingHeader(Int32, String)
-    case everybody(Int32, Bool)
-    case contacts(Int32, Bool)
-    case nobody(Int32, Bool)
-    case p2pAlways(Int32, Bool)
-    case p2pContacts(Int32, Bool)
-    case p2pNever(Int32, Bool)
-    case p2pHeader(Int32, String)
-    case p2pDesc(Int32, String)
-    case settingInfo(Int32, String)
-    case disableFor(Int32, String, Int)
-    case enableFor(Int32, String, Int)
-    case p2pDisableFor(Int32, String, Int)
-    case p2pEnableFor(Int32, String, Int)
-    case p2pPeersInfo(Int32)
-    case phoneDiscoveryHeader(Int32, String)
-    case phoneDiscoveryEverybody(Int32, String, Bool)
-    case phoneDiscoveryMyContacts(Int32, String, Bool)
-    case phoneDiscoveryInfo(Int32, String)
-    case peersInfo(Int32)
+    case settingHeader(Int32, String, GeneralViewType)
+    case everybody(Int32, Bool, GeneralViewType)
+    case contacts(Int32, Bool, GeneralViewType)
+    case nobody(Int32, Bool, GeneralViewType)
+    case p2pAlways(Int32, Bool, GeneralViewType)
+    case p2pContacts(Int32, Bool, GeneralViewType)
+    case p2pNever(Int32, Bool, GeneralViewType)
+    case p2pHeader(Int32, String, GeneralViewType)
+    case p2pDesc(Int32, String, GeneralViewType)
+    case settingInfo(Int32, String, GeneralViewType)
+    case disableFor(Int32, String, Int, GeneralViewType)
+    case enableFor(Int32, String, Int, GeneralViewType)
+    case p2pDisableFor(Int32, String, Int, GeneralViewType)
+    case p2pEnableFor(Int32, String, Int, GeneralViewType)
+    case p2pPeersInfo(Int32, GeneralViewType)
+    case phoneDiscoveryHeader(Int32, String, GeneralViewType)
+    case phoneDiscoveryEverybody(Int32, String, Bool, GeneralViewType)
+    case phoneDiscoveryMyContacts(Int32, String, Bool, GeneralViewType)
+    case phoneDiscoveryInfo(Int32, String, GeneralViewType)
+    case peersInfo(Int32, GeneralViewType)
     case section(Int32)
 
     var stableId: Int32 {
@@ -127,26 +127,26 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
 
     var index:Int32 {
         switch self {
-        case .settingHeader(let sectionId, _): return (sectionId * 1000) + stableId
-        case .everybody(let sectionId, _): return (sectionId * 1000) + stableId
-        case .contacts(let sectionId, _): return (sectionId * 1000) + stableId
-        case .nobody(let sectionId, _): return (sectionId * 1000) + stableId
-        case .settingInfo(let sectionId, _): return (sectionId * 1000) + stableId
-        case .disableFor(let sectionId, _, _): return (sectionId * 1000) + stableId
-        case .enableFor(let sectionId, _, _): return (sectionId * 1000) + stableId
-        case .peersInfo(let sectionId):  return (sectionId * 1000) + stableId
-        case .p2pAlways(let sectionId, _): return (sectionId * 1000) + stableId
-        case .p2pContacts(let sectionId, _): return (sectionId * 1000) + stableId
-        case .p2pNever(let sectionId, _): return (sectionId * 1000) + stableId
-        case .p2pHeader(let sectionId, _): return (sectionId * 1000) + stableId
-        case .p2pDesc(let sectionId, _): return (sectionId * 1000) + stableId
-        case .p2pDisableFor(let sectionId, _, _): return (sectionId * 1000) + stableId
-        case .p2pEnableFor(let sectionId, _, _): return (sectionId * 1000) + stableId
-        case .p2pPeersInfo(let sectionId): return (sectionId * 1000) + stableId
-        case .phoneDiscoveryHeader(let sectionId, _): return (sectionId * 1000) + stableId
-        case .phoneDiscoveryEverybody(let sectionId, _, _): return (sectionId * 1000) + stableId
-        case .phoneDiscoveryMyContacts(let sectionId, _, _): return (sectionId * 1000) + stableId
-        case .phoneDiscoveryInfo(let sectionId, _): return (sectionId * 1000) + stableId
+        case .settingHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .everybody(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .contacts(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .nobody(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .settingInfo(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .disableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .enableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .peersInfo(let sectionId, _):  return (sectionId * 1000) + stableId
+        case .p2pAlways(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pContacts(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pNever(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pDesc(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pDisableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .p2pEnableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .p2pPeersInfo(let sectionId, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryEverybody(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryMyContacts(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryInfo(let sectionId, _, _): return (sectionId * 1000) + stableId
         case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -158,73 +158,73 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
 
     func item(_ arguments: SelectivePrivacySettingsControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .settingHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
-        case let .everybody(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerEverbody, type: .selectable(value), action: {
+        case let .settingHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .everybody(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerEverbody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.everybody)
             })
 
-        case let .contacts(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerMyContacts, type: .selectable(value), action: {
+        case let .contacts(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerMyContacts, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.contacts)
             })
-        case let .nobody(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerNobody, type: .selectable(value), action: {
+        case let .nobody(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerNobody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.nobody)
             })
-        case let .p2pHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
-        case let .p2pAlways(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pAlways, type: .selectable(value), action: {
+        case let .p2pHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .p2pAlways(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pAlways, type: .selectable(value), viewType: viewType, action: {
                 arguments.p2pMode(.everybody)
             })
-        case let .p2pContacts(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pContacts, type: .selectable(value), action: {
+        case let .p2pContacts(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pContacts, type: .selectable(value), viewType: viewType, action: {
                 arguments.p2pMode(.contacts)
             })
-        case let .p2pNever(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pNever, type: .selectable(value), action: {
+        case let .p2pNever(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pNever, type: .selectable(value), viewType: viewType, action: {
                 arguments.p2pMode(.nobody)
             })
-        case let .p2pDesc(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
-        case let .settingInfo(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .disableFor(_, title, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), action: {
+        case let .p2pDesc(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .settingInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .disableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
                 arguments.openDisableFor(.main)
             })
-        case let .enableFor(_, title, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), action: {
+        case let .enableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
                 arguments.openEnableFor(.main)
             })
-        case .peersInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo)
-        case let .p2pDisableFor(_, title, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), action: {
+        case let .peersInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo, viewType: viewType)
+        case let .p2pDisableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
                 arguments.openDisableFor(.callP2P)
             })
-        case let .p2pEnableFor(_, title, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), action: {
+        case let .p2pEnableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
                 arguments.openEnableFor(.callP2P)
             })
-        case .p2pPeersInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo)
-        case let .phoneDiscoveryHeader(_, title):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: title)
-        case let .phoneDiscoveryEverybody(_, title, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .selectable(selected), action: {
+        case let .p2pPeersInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo, viewType: viewType)
+        case let .phoneDiscoveryHeader(_, title, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: title, viewType: viewType)
+        case let .phoneDiscoveryEverybody(_, title, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .selectable(selected), viewType: viewType, action: {
                 arguments.updatePhoneDiscovery(true)
             })
-        case let .phoneDiscoveryMyContacts(_, title, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .selectable(selected), action: {
+        case let .phoneDiscoveryMyContacts(_, title, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .selectable(selected), viewType: viewType, action: {
                 arguments.updatePhoneDiscovery(false)
             })
-        case let .phoneDiscoveryInfo(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
+        case let .phoneDiscoveryInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -336,18 +336,19 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
 
     }
 
-    entries.append(.settingHeader(sectionId, settingTitle))
+    entries.append(.settingHeader(sectionId, settingTitle, .textTopItem))
 
-    entries.append(.everybody(sectionId, state.setting == .everybody))
-    entries.append(.contacts(sectionId, state.setting == .contacts))
+    entries.append(.everybody(sectionId, state.setting == .everybody, .firstItem))
+    
     switch kind {
     case .presence, .voiceCalls, .forwards, .phoneNumber:
-        entries.append(.nobody(sectionId, state.setting == .nobody))
-    case .groupInvitations, .profilePhoto:
-        break
+        entries.append(.contacts(sectionId, state.setting == .contacts, .innerItem))
+        entries.append(.nobody(sectionId, state.setting == .nobody, .lastItem))
+    default:
+        entries.append(.contacts(sectionId, state.setting == .contacts, .lastItem))
     }
     if let settingInfoText = settingInfoText {
-        entries.append(.settingInfo(sectionId, settingInfoText))
+        entries.append(.settingInfo(sectionId, settingInfoText, .textBottomItem))
     }
 
     
@@ -355,10 +356,10 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
     sectionId += 1
     
     if case .phoneNumber = kind, state.setting == .nobody {
-        entries.append(.phoneDiscoveryHeader(sectionId, L10n.privacyPhoneNumberSettingsDiscoveryHeader))
-        entries.append(.phoneDiscoveryEverybody(sectionId, L10n.privacySettingsControllerEverbody, state.phoneDiscoveryEnabled != false))
-        entries.append(.phoneDiscoveryMyContacts(sectionId, L10n.privacySettingsControllerMyContacts, state.phoneDiscoveryEnabled == false))
-        entries.append(.phoneDiscoveryInfo(sectionId, L10n.privacyPhoneNumberSettingsCustomDisabledHelp))
+        entries.append(.phoneDiscoveryHeader(sectionId, L10n.privacyPhoneNumberSettingsDiscoveryHeader, .textTopItem))
+        entries.append(.phoneDiscoveryEverybody(sectionId, L10n.privacySettingsControllerEverbody, state.phoneDiscoveryEnabled != false, .firstItem))
+        entries.append(.phoneDiscoveryMyContacts(sectionId, L10n.privacySettingsControllerMyContacts, state.phoneDiscoveryEnabled == false, .lastItem))
+        entries.append(.phoneDiscoveryInfo(sectionId, L10n.privacyPhoneNumberSettingsCustomDisabledHelp, .textBottomItem))
         
         entries.append(.section(sectionId))
         sectionId += 1
@@ -368,39 +369,39 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
 
     switch state.setting {
     case .everybody:
-        entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor)))
+        entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor), .singleItem))
     case .contacts:
-        entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor)))
-        entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor)))
+        entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor), .firstItem))
+        entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor), .lastItem))
     case .nobody:
-        entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor)))
+        entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor), .singleItem))
     }
-    entries.append(.peersInfo(sectionId))
+    entries.append(.peersInfo(sectionId, .textBottomItem))
 
     if let callSettings = state.callP2PMode {
         switch kind {
         case .voiceCalls:
             entries.append(.section(sectionId))
             sectionId += 1
-            entries.append(.p2pHeader(sectionId, L10n.privacySettingsControllerP2pHeader))
-            entries.append(.p2pAlways(sectionId, callSettings == .everybody))
-            entries.append(.p2pContacts(sectionId, callSettings == .contacts))
-            entries.append(.p2pNever(sectionId, callSettings == .nobody))
-            entries.append(.p2pDesc(sectionId, L10n.privacySettingsControllerP2pDesc))
+            entries.append(.p2pHeader(sectionId, L10n.privacySettingsControllerP2pHeader, .textTopItem))
+            entries.append(.p2pAlways(sectionId, callSettings == .everybody, .firstItem))
+            entries.append(.p2pContacts(sectionId, callSettings == .contacts, .innerItem))
+            entries.append(.p2pNever(sectionId, callSettings == .nobody, .lastItem))
+            entries.append(.p2pDesc(sectionId, L10n.privacySettingsControllerP2pDesc, .textBottomItem))
 
             entries.append(.section(sectionId))
             sectionId += 1
 
             switch callSettings {
             case .everybody:
-                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor)))
+                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor), .textTopItem))
             case .contacts:
-                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor)))
-                entries.append(.p2pEnableFor(sectionId, enableForText, countForSelectivePeers(state.callP2PEnableFor)))
+                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor), .firstItem))
+                entries.append(.p2pEnableFor(sectionId, enableForText, countForSelectivePeers(state.callP2PEnableFor), .lastItem))
             case .nobody:
-                entries.append(.p2pEnableFor(sectionId, enableForText, countForSelectivePeers(state.callP2PEnableFor)))
+                entries.append(.p2pEnableFor(sectionId, enableForText, countForSelectivePeers(state.callP2PEnableFor), .singleItem))
             }
-            entries.append(.p2pPeersInfo(sectionId))
+            entries.append(.p2pPeersInfo(sectionId, .textBottomItem))
 
         default:
             break
@@ -439,6 +440,8 @@ class SelectivePrivacySettingsController: TableViewController {
 
 
     override func viewDidLoad() {
+        super.viewDidLoad()
+        
         let context = self.context
         let kind = self.kind
         let current = self.current

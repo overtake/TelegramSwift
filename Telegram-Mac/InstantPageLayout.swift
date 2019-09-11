@@ -294,9 +294,9 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
                 }
                 
                 if let textIndexItem = indexItem as? InstantPageTextItem, let line = textIndexItem.lines.first {
-                    itemFrame = itemFrame.offsetBy(dx: horizontalInset + maxIndexWidth - line.frame.width, dy: floorToScreenPixels(scaleFactor: System.backingScale, lineMidY - (itemFrame.height / 2.0)))
+                    itemFrame = itemFrame.offsetBy(dx: horizontalInset + maxIndexWidth - line.frame.width, dy: floorToScreenPixels(System.backingScale, lineMidY - (itemFrame.height / 2.0)))
                 } else {
-                    itemFrame = itemFrame.offsetBy(dx: horizontalInset, dy: floorToScreenPixels(scaleFactor: System.backingScale, lineMidY - itemFrame.height / 2.0))
+                    itemFrame = itemFrame.offsetBy(dx: horizontalInset, dy: floorToScreenPixels(System.backingScale, lineMidY - itemFrame.height / 2.0))
                 }
                 indexItems[i].frame = itemFrame
                 listItems.append(indexItems[i])
@@ -477,7 +477,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         
         let spacing: CGFloat = 2
         let itemsPerRow: CGFloat = min(round(boundingWidth / 150), CGFloat(blocks.count))
-        let itemSize: CGFloat = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - spacing * max(0, itemsPerRow - 1)) / itemsPerRow)
+        let itemSize: CGFloat = floorToScreenPixels(System.backingScale, (boundingWidth - spacing * max(0, itemsPerRow - 1)) / itemsPerRow)
         
         var items:[InstantPageItem] = []
         var nextItemOrigin: CGPoint = CGPoint()

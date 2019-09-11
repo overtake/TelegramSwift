@@ -333,30 +333,59 @@ class UserInfoArguments : PeerInfoArguments {
 
 
 enum UserInfoEntry: PeerInfoEntry {
-    case info(sectionId:Int, PeerView, editable:Bool)
-    case about(sectionId:Int, text: String)
-    case bio(sectionId:Int, text: String)
-    case scam(sectionId:Int, text: String)
-    case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool)
-    case userName(sectionId:Int, value: String)
-    case sendMessage(sectionId:Int)
-    case shareContact(sectionId:Int)
-    case shareMyInfo(sectionId:Int)
-    case addContact(sectionId:Int)
-    case botAddToGroup(sectionId: Int)
-    case botShare(sectionId: Int, name: String)
-    case botHelp(sectionId: Int)
-    case botSettings(sectionId: Int)
-    case botPrivacy(sectionId: Int)
-    case startSecretChat(sectionId:Int)
-    case sharedMedia(sectionId:Int)
-    case notifications(sectionId:Int, settings: PeerNotificationSettings?)
-    case groupInCommon(sectionId:Int, count:Int)
-    case block(sectionId:Int, peer: Peer, blocked: Bool, isBot: Bool)
-    case deleteChat(sectionId: Int)
-    case deleteContact(sectionId: Int)
-    case encryptionKey(sectionId: Int)
+    case info(sectionId:Int, peerView: PeerView, editable:Bool, viewType: GeneralViewType)
+    case about(sectionId:Int, text: String, viewType: GeneralViewType)
+    case bio(sectionId:Int, text: String, viewType: GeneralViewType)
+    case scam(sectionId:Int, text: String, viewType: GeneralViewType)
+    case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
+    case userName(sectionId:Int, value: String, viewType: GeneralViewType)
+    case sendMessage(sectionId:Int, viewType: GeneralViewType)
+    case shareContact(sectionId:Int, viewType: GeneralViewType)
+    case shareMyInfo(sectionId:Int, viewType: GeneralViewType)
+    case addContact(sectionId:Int, viewType: GeneralViewType)
+    case botAddToGroup(sectionId: Int, viewType: GeneralViewType)
+    case botShare(sectionId: Int, name: String, viewType: GeneralViewType)
+    case botHelp(sectionId: Int, viewType: GeneralViewType)
+    case botSettings(sectionId: Int, viewType: GeneralViewType)
+    case botPrivacy(sectionId: Int, viewType: GeneralViewType)
+    case startSecretChat(sectionId:Int, viewType: GeneralViewType)
+    case sharedMedia(sectionId:Int, viewType: GeneralViewType)
+    case notifications(sectionId:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
+    case groupInCommon(sectionId:Int, count:Int, viewType: GeneralViewType)
+    case block(sectionId:Int, peer: Peer, blocked: Bool, isBot: Bool, viewType: GeneralViewType)
+    case deleteChat(sectionId: Int, viewType: GeneralViewType)
+    case deleteContact(sectionId: Int, viewType: GeneralViewType)
+    case encryptionKey(sectionId: Int, viewType: GeneralViewType)
     case section(sectionId:Int)
+    
+    func withUpdatedViewType(_ viewType: GeneralViewType) -> UserInfoEntry {
+        switch self {
+        case let .info(sectionId, peerView, editable, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, viewType: viewType)
+        case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
+        case let .bio(sectionId, text, _): return .bio(sectionId: sectionId, text: text, viewType: viewType)
+        case let .scam(sectionId, text, _): return .scam(sectionId: sectionId, text: text, viewType: viewType)
+        case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
+        case let .userName(sectionId, value: String, _): return .userName(sectionId: sectionId, value: String, viewType: viewType)
+        case let .sendMessage(sectionId, _): return .sendMessage(sectionId: sectionId, viewType: viewType)
+        case let .shareContact(sectionId, _): return .shareContact(sectionId: sectionId, viewType: viewType)
+        case let .shareMyInfo(sectionId, _): return .shareMyInfo(sectionId: sectionId, viewType: viewType)
+        case let .addContact(sectionId, _): return .addContact(sectionId: sectionId, viewType: viewType)
+        case let .botAddToGroup(sectionId, _): return .botAddToGroup(sectionId: sectionId, viewType: viewType)
+        case let .botShare(sectionId, name, _): return .botShare(sectionId: sectionId, name: name, viewType: viewType)
+        case let .botHelp(sectionId, _): return .botHelp(sectionId: sectionId, viewType: viewType)
+        case let .botSettings(sectionId, _): return .botSettings(sectionId: sectionId, viewType: viewType)
+        case let .botPrivacy(sectionId, _): return .botPrivacy(sectionId: sectionId, viewType: viewType)
+        case let .startSecretChat(sectionId, _): return .startSecretChat(sectionId: sectionId, viewType: viewType)
+        case let .sharedMedia(sectionId, _): return .sharedMedia(sectionId: sectionId, viewType: viewType)
+        case let .notifications(sectionId, settings, _): return .notifications(sectionId: sectionId, settings: settings, viewType: viewType)
+        case let .groupInCommon(sectionId, count, _): return .groupInCommon(sectionId: sectionId, count: count, viewType: viewType)
+        case let .block(sectionId, peer, blocked, isBot, _): return .block(sectionId: sectionId, peer: peer, blocked: blocked, isBot: isBot, viewType: viewType)
+        case let .deleteChat(sectionId, _): return .deleteChat(sectionId: sectionId, viewType: viewType)
+        case let .deleteContact(sectionId, _): return .deleteContact(sectionId: sectionId, viewType: viewType)
+        case let .encryptionKey(sectionId, _): return .encryptionKey(sectionId: sectionId, viewType: viewType)
+        case .section: return self
+        }
+    }
     
     var stableId: PeerInfoEntryStableId {
         return IntPeerInfoEntryStableId(value: self.stableIndex)
@@ -368,11 +397,14 @@ enum UserInfoEntry: PeerInfoEntry {
         }
         
         switch self {
-        case let .info(lhsSectionId, lhsPeerView, lhsEditable):
+        case let .info(lhsSectionId, lhsPeerView, lhsEditable, lhsViewType):
             switch entry {
-            case let .info(rhsSectionId, rhsPeerView, rhsEditable):
+            case let .info(rhsSectionId, rhsPeerView, rhsEditable, rhsViewType):
                 
                 if lhsSectionId != rhsSectionId {
+                    return false
+                }
+                if lhsViewType != rhsViewType {
                     return false
                 }
                 
@@ -407,120 +439,120 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .about(sectionId, text):
+        case let .about(sectionId, text, viewType):
             switch entry {
-            case .about(sectionId, text):
+            case .about(sectionId, text, viewType):
                 return true
             default:
                 return false
             }
-        case let .bio(sectionId, text):
+        case let .bio(sectionId, text, viewType):
             switch entry {
-            case .bio(sectionId, text):
+            case .bio(sectionId, text, viewType):
                 return true
             default:
                 return false
             }
-        case let .scam(sectionId, text):
+        case let .scam(sectionId, text, viewType):
             switch entry {
-            case .scam(sectionId, text):
+            case .scam(sectionId, text, viewType):
                 return true
             default:
                 return false
             }
-        case let .phoneNumber(sectionid, index, value, canCopy):
+        case let .phoneNumber(sectionid, index, value, canCopy, viewType):
             switch entry {
-            case .phoneNumber(sectionid, index, value, canCopy):
+            case .phoneNumber(sectionid, index, value, canCopy, viewType):
                 return true
             default:
                 return false
             }
-        case let .userName(sectionId, value):
+        case let .userName(sectionId, value, viewType):
             switch entry {
-            case .userName(sectionId, value):
+            case .userName(sectionId, value, viewType):
                 return true
             default:
                 return false
             }
-        case let .sendMessage(sectionId):
+        case let .sendMessage(sectionId, viewType):
             switch entry {
-            case .sendMessage(sectionId):
+            case .sendMessage(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .botAddToGroup(sectionId):
+        case let .botAddToGroup(sectionId, viewType):
             switch entry {
-            case .botAddToGroup(sectionId):
+            case .botAddToGroup(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .botShare(sectionId, botName):
+        case let .botShare(sectionId, botName, viewType):
             switch entry {
-            case .botShare(sectionId, botName):
+            case .botShare(sectionId, botName, viewType):
                 return true
             default:
                 return false
             }
-        case let .botHelp(sectionId):
+        case let .botHelp(sectionId, viewType):
             switch entry {
-            case .botHelp(sectionId):
+            case .botHelp(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .botSettings(sectionId):
+        case let .botSettings(sectionId, viewType):
             switch entry {
-            case .botSettings(sectionId):
+            case .botSettings(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .botPrivacy(sectionId):
-            if case .botPrivacy(sectionId) = entry {
+        case let .botPrivacy(sectionId, viewType):
+            if case .botPrivacy(sectionId, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .shareContact(sectionId):
+        case let .shareContact(sectionId, viewType):
             switch entry {
-            case .shareContact(sectionId):
+            case .shareContact(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .shareMyInfo(sectionId):
+        case let .shareMyInfo(sectionId, viewType):
             switch entry {
-            case .shareMyInfo(sectionId):
+            case .shareMyInfo(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .addContact(sectionId):
+        case let .addContact(sectionId, viewType):
             switch entry {
-            case .addContact(sectionId):
+            case .addContact(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .startSecretChat(sectionId):
+        case let .startSecretChat(sectionId, viewType):
             switch entry {
-            case .startSecretChat(sectionId):
+            case .startSecretChat(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .sharedMedia(sectionId):
+        case let .sharedMedia(sectionId, viewType):
             switch entry {
-            case .sharedMedia(sectionId):
+            case .sharedMedia(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .notifications(lhsSectionId, lhsSettings):
+        case let .notifications(lhsSectionId, lhsSettings, lhsViewType):
             switch entry {
-            case let .notifications(rhsSectionId, rhsSettings):
+            case let .notifications(rhsSectionId, rhsSettings, rhsViewType):
                 if lhsSectionId != rhsSectionId {
                     return false
                 }
@@ -529,41 +561,41 @@ enum UserInfoEntry: PeerInfoEntry {
                 } else if (lhsSettings != nil) != (rhsSettings != nil) {
                     return false
                 }
-                return true
+                return lhsViewType == rhsViewType
             default:
                 return false
             }
-        case let .block(sectionId, lhsPeer, isBlocked, isBot):
+        case let .block(sectionId, lhsPeer, isBlocked, isBot, viewType):
             switch entry {
-            case .block(sectionId, let rhsPeer, isBlocked, isBot):
+            case .block(sectionId, let rhsPeer, isBlocked, isBot, viewType):
                 return lhsPeer.isEqual(rhsPeer)
             default:
                 return false
             }
-        case let .groupInCommon(sectionId, count):
+        case let .groupInCommon(sectionId, count, viewType):
             switch entry {
-            case .groupInCommon(sectionId, count):
+            case .groupInCommon(sectionId, count, viewType):
                 return true
             default:
                 return false
             }
-        case let .deleteChat(sectionId):
+        case let .deleteChat(sectionId, viewType):
             switch entry {
-            case .deleteChat(sectionId):
+            case .deleteChat(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .deleteContact(sectionId):
+        case let .deleteContact(sectionId, viewType):
             switch entry {
-            case .deleteContact(sectionId):
+            case .deleteContact(sectionId, viewType):
                 return true
             default:
                 return false
             }
-        case let .encryptionKey(sectionId):
+        case let .encryptionKey(sectionId, viewType):
             switch entry {
-            case .encryptionKey(sectionId):
+            case .encryptionKey(sectionId, viewType):
                 return true
             default:
                 return false
@@ -633,51 +665,51 @@ enum UserInfoEntry: PeerInfoEntry {
     
     private var sortIndex:Int {
         switch self {
-        case let .info(sectionId, _, _):
+        case let .info(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .about(sectionId, _):
+        case let .about(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .bio(sectionId, _):
+        case let .bio(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .phoneNumber(sectionId, _, _, _):
+        case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .userName(sectionId, _):
+        case let .userName(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .scam(sectionId, _):
+        case let .scam(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .sendMessage(sectionId):
+        case let .sendMessage(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .botAddToGroup(sectionId):
+        case let .botAddToGroup(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .botShare(sectionId, _):
+        case let .botShare(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .botSettings(sectionId):
+        case let .botSettings(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .botPrivacy(sectionId):
+        case let .botPrivacy(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .botHelp(sectionId):
+        case let .botHelp(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .shareContact(sectionId):
+        case let .shareContact(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .shareMyInfo(sectionId):
+        case let .shareMyInfo(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .addContact(sectionId):
+        case let .addContact(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .startSecretChat(sectionId):
+        case let .startSecretChat(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .sharedMedia(sectionId):
+        case let .sharedMedia(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .groupInCommon(sectionId, _):
+        case let .groupInCommon(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .notifications(sectionId, _):
+        case let .notifications(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .encryptionKey(sectionId):
+        case let .encryptionKey(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .block(sectionId, _, _, _):
+        case let .block(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .deleteChat(sectionId):
+        case let .deleteChat(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .deleteContact(sectionId):
+        case let .deleteContact(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .section(id):
             return (id + 1) * 1000 - id
@@ -700,98 +732,97 @@ enum UserInfoEntry: PeerInfoEntry {
         let arguments = arguments as! UserInfoArguments
         let state = arguments.state as! UserInfoState
         switch self {
-        case let .info(_, peerView, editable):
+        case let .info(_, peerView, editable, viewType):
             return PeerInfoHeaderItem(initialSize, stableId:stableId.hashValue, context: arguments.context, peerView:peerView, editable: editable, updatingPhotoState: nil, firstNameEditableText: state.editingState?.editingFirstName, lastNameEditableText: state.editingState?.editingLastName, textChangeHandler: { firstName, lastName in
                 arguments.updateEditingNames(firstName: firstName, lastName: lastName)
             })
-        case let .about(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoAbout, text:text, context: arguments.context, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
+        case let .about(_, text, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoAbout, text:text, context: arguments.context, viewType: viewType, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
             }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
-        case let .bio(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoBio, text:text, context: arguments.context, detectLinks:false)
-        case let .phoneNumber(_, _, value, canCopy):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, text: value.number, context: arguments.context, canCopy: canCopy)
-        case let .userName(_, value):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoUsername, text:"@\(value)", context: arguments.context)
-        case let .scam(_, text):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, detectLinks:false)
-        case .sendMessage:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSendMessage, nameStyle: blueActionButton, type: .none, action: {
+        case let .bio(_, text, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoBio, text:text, context: arguments.context, viewType: viewType, detectLinks:false)
+        case let .phoneNumber(_, _, value, canCopy, viewType):
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, text: value.number, context: arguments.context, viewType: viewType, canCopy: canCopy)
+        case let .userName(_, value, viewType):
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoUsername, text:"@\(value)", context: arguments.context, viewType: viewType)
+        case let .scam(_, text, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+        case let .sendMessage(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSendMessage, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.peerChat(arguments.peerId)
             })
-        case .botAddToGroup:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotAddToGroup, nameStyle: blueActionButton, type: .none, action: {
+        case let .botAddToGroup(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotAddToGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botAddToGroup()
             })
-        case .botShare(_, let name):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotShare, nameStyle: blueActionButton, type: .none, action: {
+        case let .botShare(_, name, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotShare, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botShare(name)
             })
-        case .botSettings:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotSettings, nameStyle: blueActionButton, type: .none, action: {
+        case let .botSettings(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotSettings, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botSettings()
             })
-        case .botHelp:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotHelp, nameStyle: blueActionButton, type: .none, action: {
+        case let .botHelp(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotHelp, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botHelp()
             })
-        case .botPrivacy:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotPrivacy, nameStyle: blueActionButton, type: .none, action: {
+        case let .botPrivacy(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotPrivacy, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botPrivacy()
             })
-        case .shareContact:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareContact, nameStyle: blueActionButton, type: .none, action: {
+        case let .shareContact(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareContact, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.shareContact()
             })
-        case .shareMyInfo:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareMyInfo, nameStyle: blueActionButton, type: .none, action: {
+        case let .shareMyInfo(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareMyInfo, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.shareMyInfo()
             })
-        case .addContact:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddContact, nameStyle: blueActionButton, type: .none, action: {
+        case let .addContact(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddContact, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addContact()
             })
-        case .startSecretChat:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStartSecretChat, nameStyle: blueActionButton, type: .none, action: {
+        case let .startSecretChat(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStartSecretChat, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.startSecretChat()
             })
-        case .sharedMedia:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .none, action: {
+        case let .sharedMedia(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .none, viewType: viewType, action: {
                 arguments.sharedMedia()
             })
-        case let .groupInCommon(sectionId: _, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupsInCommon, type: .context("\(count)"), action: {
+        case let .groupInCommon(sectionId: _, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupsInCommon, type: .context("\(count)"), viewType: viewType, action: {
                 arguments.groupInCommon()
             })
             
-        case let .notifications(_, settings):
-            
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action: {
+        case let .notifications(_, settings, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: {
                 arguments.toggleNotifications()
             })
-        case .encryptionKey:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .none, action: {
+        case let .encryptionKey(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .none, viewType: viewType, action: {
                 arguments.encryptionKey()
             })
-        case let .block(_, peer, isBlocked, isBot):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isBot ? (!isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot) : (!isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), nameStyle:redActionButton, type: .none, action: {
+        case let .block(_, peer, isBlocked, isBot, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isBot ? (!isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot) : (!isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), nameStyle:redActionButton, type: .none, viewType: viewType, action: {
                 arguments.updateBlocked(peer: peer, !isBlocked, isBot)
             })
-        case .deleteChat:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteSecretChat, nameStyle: redActionButton, type: .none, action: {
+        case let .deleteChat(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteSecretChat, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.delete()
             })
-        case .deleteContact:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteContact, nameStyle: redActionButton, type: .none, action: {
+        case let .deleteContact(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteContact, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.deleteContact()
             })
         case .section(_):
-            return GeneralRowItem(initialSize, height:20, stableId: stableId.hashValue)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
         }
         
     }
@@ -807,123 +838,154 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
     
     var entries: [PeerInfoEntry] = []
     
-    var sectionId:Int = 1
+    var sectionId:Int = 0
+    entries.append(UserInfoEntry.section(sectionId: sectionId))
+    sectionId += 1
     
+    entries.append(UserInfoEntry.info(sectionId: sectionId, peerView: view, editable: state.editingState != nil && (view.peers[view.peerId] as? TelegramUser)?.botInfo == nil && view.peerIsContact, viewType: .singleItem))
     
-    entries.append(UserInfoEntry.info(sectionId: sectionId, view, editable: state.editingState != nil && (view.peers[view.peerId] as? TelegramUser)?.botInfo == nil && view.peerIsContact))
+    entries.append(UserInfoEntry.section(sectionId: sectionId))
+    sectionId += 1
     
     if let peer = view.peers[view.peerId] {
         
         
         if let user = peerViewMainPeer(view) as? TelegramUser {
+            
+            var actionBlock:[UserInfoEntry] = []
+            var additionBlock:[UserInfoEntry] = []
+            var destructBlock:[UserInfoEntry] = []
+            var infoBlock:[UserInfoEntry] = []
+            
+            func applyBlock(_ block:[UserInfoEntry]) {
+                var block = block
+                for (i, item) in block.enumerated() {
+                    block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
+                }
+                entries.append(contentsOf: block)
+            }
+
+            
             if state.editingState == nil {
                 
                 if user.isScam {
-                    entries.append(UserInfoEntry.scam(sectionId: sectionId, text: L10n.peerInfoScamWarning))
+                    entries.append(UserInfoEntry.scam(sectionId: sectionId, text: L10n.peerInfoScamWarning, viewType: .singleItem))
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
                 }
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {
                     if let about = cachedUserData.about, !about.isEmpty, !user.isScam {
                         if peer.isBot {
-                            entries.append(UserInfoEntry.about(sectionId: sectionId, text: about))
+                            entries.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
                         } else {
-                            entries.append(UserInfoEntry.bio(sectionId: sectionId, text: about))
+                            entries.append(UserInfoEntry.bio(sectionId: sectionId, text: about, viewType: .singleItem))
                         }
+                        entries.append(UserInfoEntry.section(sectionId: sectionId))
+                        sectionId += 1
                     }
                 }
                 
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
-                    entries.append(UserInfoEntry.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: L10n.peerInfoPhone, number: formatPhoneNumber(phoneNumber)), canCopy: true))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: L10n.peerInfoPhone, number: formatPhoneNumber(phoneNumber)), canCopy: true, viewType: .singleItem))
                 } else if view.peerIsContact {
-                    entries.append(UserInfoEntry.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: L10n.peerInfoPhone, number: L10n.newContactPhoneHidden), canCopy: false))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: L10n.peerInfoPhone, number: L10n.newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
                 if let username = user.username, !username.isEmpty {
-                    entries.append(UserInfoEntry.userName(sectionId: sectionId, value: username))
+                    infoBlock.append(.userName(sectionId: sectionId, value: username, viewType: .singleItem))
                 }
                 
+                applyBlock(infoBlock)
                 
                 entries.append(UserInfoEntry.section(sectionId: sectionId))
                 sectionId += 1
                 
+                
                
                 if !(peer is TelegramSecretChat) {
-                    entries.append(UserInfoEntry.sendMessage(sectionId: sectionId))
+                    actionBlock.append(.sendMessage(sectionId: sectionId, viewType: .singleItem))
                     if !user.isBot {
                         if !view.peerIsContact {
-                            entries.append(UserInfoEntry.addContact(sectionId: sectionId))
+                            actionBlock.append(.addContact(sectionId: sectionId, viewType: .singleItem))
                         } else if let phone = user.phone, !phone.isEmpty {
-                            entries.append(UserInfoEntry.shareContact(sectionId: sectionId))
+                            actionBlock.append(.shareContact(sectionId: sectionId, viewType: .singleItem))
                         }
                         if let cachedData = view.cachedData as? CachedUserData, let statusSettings = cachedData.peerStatusSettings {
                             if statusSettings.contains(.canShareContact) {
-                                entries.append(UserInfoEntry.shareMyInfo(sectionId: sectionId))
+                                actionBlock.append(.shareMyInfo(sectionId: sectionId, viewType: .singleItem))
                             }
                         }
                     } else if let botInfo = user.botInfo {
                         if botInfo.flags.contains(.worksWithGroups) {
-                            entries.append(UserInfoEntry.botAddToGroup(sectionId: sectionId))
+                            actionBlock.append(.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
                         }
-                        entries.append(UserInfoEntry.botShare(sectionId: sectionId, name: user.addressName ?? ""))
+                        actionBlock.append(.botShare(sectionId: sectionId, name: user.addressName ?? "", viewType: .singleItem))
                         if let cachedData = view.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
                             for command in botInfo.commands {
                                 if command.text == "settings" {
-                                    entries.append(UserInfoEntry.botSettings(sectionId: sectionId))
+                                    actionBlock.append(.botSettings(sectionId: sectionId, viewType: .singleItem))
                                 }
                                 if command.text == "help" {
-                                    entries.append(UserInfoEntry.botHelp(sectionId: sectionId))
+                                    actionBlock.append(.botHelp(sectionId: sectionId, viewType: .singleItem))
                                 }
                                 if command.text == "privacy" {
-                                    entries.append(UserInfoEntry.botPrivacy(sectionId: sectionId))
+                                    actionBlock.append(.botPrivacy(sectionId: sectionId, viewType: .singleItem))
                                 }
                             }
                         }
                     }
                 } else {
                     if !view.peerIsContact {
-                        entries.append(UserInfoEntry.addContact(sectionId: sectionId))
+                        actionBlock.append(.addContact(sectionId: sectionId, viewType: .singleItem))
                     } else if let phone = user.phone, !phone.isEmpty {
-                        entries.append(UserInfoEntry.shareContact(sectionId: sectionId))
+                        actionBlock.append(.shareContact(sectionId: sectionId, viewType: .singleItem))
                     }
                 }
                 
                 if arguments.context.account.peerId != arguments.peerId, !(peer is TelegramSecretChat), let peer = peer as? TelegramUser, peer.botInfo == nil {
-                    entries.append(UserInfoEntry.startSecretChat(sectionId: sectionId))
+                    actionBlock.append(.startSecretChat(sectionId: sectionId, viewType: .singleItem))
                 }
+                
+                applyBlock(actionBlock)
+                
                 entries.append(UserInfoEntry.section(sectionId: sectionId))
                 sectionId += 1
                 
-                entries.append(UserInfoEntry.sharedMedia(sectionId: sectionId))
+                additionBlock.append(.sharedMedia(sectionId: sectionId, viewType: .singleItem))
             }
             if arguments.context.account.peerId != arguments.peerId {
-                entries.append(UserInfoEntry.notifications(sectionId: sectionId, settings: view.notificationSettings))
+                additionBlock.append(.notifications(sectionId: sectionId, settings: view.notificationSettings, viewType: .singleItem))
+                if let cachedData = view.cachedData as? CachedUserData, state.editingState == nil {
+                    if cachedData.commonGroupCount > 0 {
+                        additionBlock.append(.groupInCommon(sectionId: sectionId, count: Int(cachedData.commonGroupCount), viewType: .singleItem))
+                    }
+                }
             }
             
             if (peer is TelegramSecretChat) {
-                entries.append(UserInfoEntry.encryptionKey(sectionId: sectionId))
+                additionBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
             }
+            applyBlock(additionBlock)
+            
+            entries.append(UserInfoEntry.section(sectionId: sectionId))
+            sectionId += 1
             
             if let cachedData = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {
-                
                 if state.editingState == nil {
-                    if cachedData.commonGroupCount > 0 {
-                        entries.append(UserInfoEntry.groupInCommon(sectionId: sectionId, count: Int(cachedData.commonGroupCount)))
-                    }
-                   // if !(peer is TelegramSecretChat) {
-                        entries.append(UserInfoEntry.section(sectionId: sectionId))
-                        sectionId += 1
-                        entries.append(UserInfoEntry.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot))
-                   // }
+                    destructBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
                 } else {
-                    entries.append(UserInfoEntry.section(sectionId: sectionId))
-                    sectionId += 1
-                    entries.append(UserInfoEntry.deleteContact(sectionId: sectionId))
+                    destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
                 }
-                
-                
             }
             if peer is TelegramSecretChat {
-                
-                entries.append(UserInfoEntry.deleteChat(sectionId: sectionId))
+                destructBlock.append(.deleteChat(sectionId: sectionId, viewType: .singleItem))
+            }
+            
+            applyBlock(destructBlock)
+            
+            if !destructBlock.isEmpty {
+                entries.append(UserInfoEntry.section(sectionId: sectionId))
+                sectionId += 1
             }
         }
     }

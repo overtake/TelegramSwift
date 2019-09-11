@@ -17,12 +17,10 @@ final class LanguageControllerArguments {
     let context:AccountContext
     let change:(LocalizationInfo)->Void
     let delete:(LocalizationInfo)->Void
-    let searchInteractions:SearchInteractions
-    init(context: AccountContext, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void, searchInteractions: SearchInteractions) {
+    init(context: AccountContext, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void) {
         self.context = context
         self.change = change
         self.delete = delete
-        self.searchInteractions = searchInteractions
     }
 }
 
@@ -49,20 +47,17 @@ enum LanguageTableEntryId : Hashable {
 }
 
 enum LanguageTableEntry : TableItemListNodeEntry {
-    case search(sectionId: Int32)
-    case language(sectionId: Int32, index:Int32, selected: Bool, deletable: Bool, value: LocalizationInfo)
-    case section(Int32)
-    case header(sectionId: Int32, index:Int32, descId: Int32, value: String)
+    case language(sectionId: Int32, index:Int32, selected: Bool, deletable: Bool, value: LocalizationInfo, viewType: GeneralViewType)
+    case section(Int32, Bool)
+    case header(sectionId: Int32, index:Int32, descId: Int32, value: String, viewType: GeneralViewType)
     case loading
     var stableId: LanguageTableEntryId {
         switch self {
-        case .search:
-            return .search
-        case .language(_, _, _, _, let value):
+        case .language(_, _, _, _, let value, _):
             return .language(value.languageCode)
-        case let .section(sectionId):
+        case let .section(sectionId, _):
             return .sectionId(sectionId)
-        case let .header(_,_, id, _):
+        case let .header(_, _, id, _, _):
             return .headerId(id)
         case .loading:
             return .loading
@@ -72,13 +67,11 @@ enum LanguageTableEntry : TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case let .search(sectionId):
-            return (sectionId * 1000) + 0
-        case let .language(sectionId, index, _, _, _):
+        case let .language(sectionId, index, _, _, _, _):
             return (sectionId * 1000) + index
-        case let .header(sectionId, index, _, _):
+        case let .header(sectionId, index, _, _, _):
             return (sectionId * 1000) + index
-        case let .section(sectionId):
+        case let .section(sectionId, _):
             return (sectionId + 1) * 1000 - sectionId
         case .loading:
             return -1
@@ -87,18 +80,21 @@ enum LanguageTableEntry : TableItemListNodeEntry {
     
     func item(_ arguments: LanguageControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .search:
-            return SearchRowItem(initialSize, stableId: stableId, searchInteractions: arguments.searchInteractions, inset: NSEdgeInsets(left: 25, right: 25, top: 10, bottom: 10))
-        case let .language(_, _, selected, deletable, value):
-            return LanguageRowItem(initialSize: initialSize, stableId: stableId, selected: selected, deletable: deletable, value: value, action: {
+        case let .language(_, _, selected, deletable, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: value.title, description: value.localizedTitle, descTextColor: theme.colors.grayText, type: .selectable(selected), viewType: viewType, action: {
                 arguments.change(value)
-            }, deleteAction: {
-                arguments.delete(value)
+            }, menuItems: {
+                if deletable {
+                    return [ContextMenuItem(L10n.messageContextDelete, handler: {
+                        arguments.delete(value)
+                    })]
+                }
+                return []
             })
-        case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .header(_, _, _, value):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: value, drawCustomSeparator: true, inset: NSEdgeInsets(left: 25, right: 25, top:2, bottom:6))
+        case let .section(_, hasSearch):
+            return GeneralRowItem(initialSize, height: hasSearch ? 80 : 30, stableId: stableId, viewType: .separator)
+        case let .header(_, _, _, value, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: value, viewType: viewType)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         }
@@ -111,17 +107,23 @@ func <(lhs:LanguageTableEntry, rhs:LanguageTableEntry) -> Bool {
 
 
 
-private func languageControllerEntries(listState: LocalizationListState?, language: TelegramLocalization, state:SearchState) -> [LanguageTableEntry] {
+private func languageControllerEntries(listState: LocalizationListState?, language: TelegramLocalization, state:SearchState, searchViewState: TableSearchViewState) -> [LanguageTableEntry] {
 
     var sectionId: Int32 = 0
+    var index: Int32 = 0
     
     var entries: [LanguageTableEntry] = []
     if let listState = listState, !listState.availableSavedLocalizations.isEmpty || !listState.availableOfficialLocalizations.isEmpty {
         
-        entries.append(.search(sectionId: sectionId))
-        var index:Int32 = 1
         
-        
+        switch searchViewState {
+        case .visible:
+            entries.append(.section(sectionId, true))
+            sectionId += 1
+        default:
+            entries.append(.section(sectionId, false))
+            sectionId += 1
+        }
         
         let availableSavedLocalizations = listState.availableSavedLocalizations.filter({ info in !listState.availableOfficialLocalizations.contains(where: { $0.languageCode == info.languageCode }) }).filter { value in
             if state.request.isEmpty {
@@ -142,21 +144,25 @@ private func languageControllerEntries(listState: LocalizationListState?, langua
         var existingIds:Set<String> = Set()
         
         
-        for value in availableSavedLocalizations {
+        let saved = availableSavedLocalizations.filter { value in
             
             if existingIds.contains(value.languageCode) {
-                continue
+                return false
             }
             
             var accept: Bool = true
             if !state.request.isEmpty {
                 accept = (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
             }
-            if accept {
-                existingIds.insert(value.languageCode)
-                entries.append(.language(sectionId: sectionId, index: index, selected: value.languageCode == language.primaryLanguage.languageCode, deletable: true, value: value))
-                index += 1
-            }
+            return accept
+        }
+        
+        for value in saved {
+            let viewType: GeneralViewType = bestGeneralViewType(saved, for: value)
+            
+            existingIds.insert(value.languageCode)
+            entries.append(.language(sectionId: sectionId, index: index, selected: value.languageCode == language.primaryLanguage.languageCode, deletable: true, value: value, viewType: viewType))
+            index += 1
         }
         
         
@@ -164,33 +170,32 @@ private func languageControllerEntries(listState: LocalizationListState?, langua
         if !availableOfficialLocalizations.isEmpty {
             
             if !availableSavedLocalizations.isEmpty {
-                entries.append(.section(sectionId))
+                entries.append(.section(sectionId, false))
                 sectionId += 1
-                entries.append(.section(sectionId))
-                sectionId += 1
-                
-                
-              //  entries.append(.header(sectionId: sectionId, index: index, descId: randomInt32(), value: L10n.languageOfficialTransationsHeader))
-                //index += 1
             }
             
-           
-            for value in listState.availableOfficialLocalizations {
+            
+            let list = listState.availableOfficialLocalizations.filter { value in
                 if existingIds.contains(value.languageCode) {
-                    continue
+                    return false
                 }
                 var accept: Bool = true
                 if !state.request.isEmpty {
                     accept = (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
                 }
-                if accept {
-                    existingIds.insert(value.languageCode)
-                    entries.append(.language(sectionId: sectionId, index: index, selected: value.languageCode == language.primaryLanguage.languageCode, deletable: false, value: value))
-                    index += 1
-                }
+                return accept
+            }
+           
+            for value in list {
+                let viewType: GeneralViewType = bestGeneralViewType(list, for: value)
+                existingIds.insert(value.languageCode)
+                entries.append(.language(sectionId: sectionId, index: index, selected: value.languageCode == language.primaryLanguage.languageCode, deletable: false, value: value, viewType: viewType))
+                index += 1
             }
         }
         
+        entries.append(.section(sectionId, false))
+        sectionId += 1
         
     } else {
         entries.append(.loading)
@@ -200,14 +205,11 @@ private func languageControllerEntries(listState: LocalizationListState?, langua
     return entries
 }
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LanguageTableEntry>], right: [AppearanceWrapperEntry<LanguageTableEntry>], initialSize:NSSize, animated: Bool, arguments:LanguageControllerArguments) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LanguageTableEntry>], right: [AppearanceWrapperEntry<LanguageTableEntry>], initialSize:NSSize, animated: Bool, arguments:LanguageControllerArguments, searchViewState: TableSearchViewState) -> Signal<TableUpdateTransition, NoError> {
     
     
     return Signal { subscriber in
-        
-        
         var cancelled = false
-        
         
         if Thread.isMainThread {
             var initialIndex:Int = 0
@@ -226,9 +228,8 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LanguageTableEnt
                 }
             }
             
-            
             initialIndex = firstInsertion.count
-            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil)))
+            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil), searchState: searchViewState))
             
             prepareQueue.async {
                 if !cancelled {
@@ -243,7 +244,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LanguageTableEnt
                     }
                     
                     
-                    subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil)))
+                    subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), searchState: searchViewState))
                     subscriber.putCompletion()
                 }
             }
@@ -252,7 +253,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LanguageTableEnt
                 return entry.entry.item(arguments, initialSize: initialSize)
             })
             
-            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil)))
+            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: .none(nil), searchState: searchViewState))
             subscriber.putCompletion()
         }
         
@@ -270,6 +271,8 @@ class LanguageViewController: TableViewController {
     private let applyDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
     
+    private var toggleSearch:(()->Void)? = nil
+    
     override var enableBack: Bool {
         return true
     }
@@ -284,46 +287,90 @@ class LanguageViewController: TableViewController {
         disposable.dispose()
     }
     
+    override func getRightBarViewOnce() -> BarView {
+        let view = ImageBarView(controller: self, theme.icons.chatSearch)
+        
+        view.button.set(handler: { [weak self] _ in
+            self?.toggleSearch?()
+        }, for: .Click)
+        view.set(image: theme.icons.chatSearch, highlightImage: nil)
+        return view
+    }
+    
+    
+    override func requestUpdateRightBar() {
+        super.requestUpdateRightBar()
+        (self.rightBarView as? ImageBarView)?.set(image: theme.icons.chatSearch, highlightImage: nil)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.toggleSearch?()
+            return .invoked
+        }, with: self, for: .F, modifierFlags: [.command])
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         
-        let searchPromise = ValuePromise<SearchState>()
         let context = self.context
         
-        let removeItem: (String) -> Void = { id in
-            let _ = (context.account.postbox.transaction { transaction in
-                removeSavedLocalization(transaction: transaction, languageCode: id)
-            }).start()
+        
+        let stateValue: Atomic<SearchState> = Atomic(value: SearchState(state: .None, request: nil))
+        let statePromise:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
+        
+        let updateState:((SearchState)->SearchState)->Void = { f in
+            statePromise.set(stateValue.modify(f))
+        }
+
+        
+        let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none)
+        let searchState: ValuePromise<TableSearchViewState> = ValuePromise(.none, ignoreRepeated: true)
+        let updateSearchValue:((TableSearchViewState)->TableSearchViewState)->Void = { f in
+            searchState.set(searchValue.modify(f))
         }
         
-        var animated: Bool = false
-        
-        let searchInteractions = SearchInteractions({ state, _ in
-            animated = false
-            searchPromise.set(state)
-        }, { state in
-            animated = false
-            searchPromise.set(state)
+        let searchData = TableSearchVisibleData(cancelImage: theme.icons.chatSearchCancel, cancel: {
+            updateSearchValue { _ in
+                return .none
+            }
+        }, updateState: { searchState in
+            updateState { _ in
+                return searchState
+            }
         })
-        searchPromise.set(SearchState(state: .None, request: nil))
         
+        
+        self.toggleSearch = {
+            updateSearchValue { current in
+                switch current {
+                case .none:
+                    return .visible(searchData)
+                case .visible:
+                    return .none
+                }
+            }
+        }
         
         let arguments = LanguageControllerArguments(context: context, change: { [weak self] value in
             if value.languageCode != appCurrentLanguage.primaryLanguage.languageCode {
-                animated = true
                 self?.applyDisposable.set(showModalProgress(signal: downloadAndApplyLocalization(accountManager:context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: value.languageCode), for: mainWindow).start())
             }
         }, delete: { info in
-            confirm(for: mainWindow, information: L10n.languageRemovePack, successHandler: { _ in
-                animated = true
-                removeItem(info.languageCode)
+            confirm(for: context.window, information: L10n.languageRemovePack, successHandler: { _ in
+                let _ = (context.account.postbox.transaction { transaction in
+                    removeSavedLocalization(transaction: transaction, languageCode: info.languageCode)
+                }).start()
             })
-        }, searchInteractions: searchInteractions)
+        })
         
         let previous:Atomic<[AppearanceWrapperEntry<LanguageTableEntry>]> = Atomic(value: [])
         
@@ -334,15 +381,15 @@ class LanguageViewController: TableViewController {
         } |> deliverOnPrepareQueue
         
         let first: Atomic<Bool> = Atomic(value: true)
+        let prevSearch: Atomic<String?> = Atomic(value: nil)
+
         
-        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal)
-            |> mapToSignal { infos, appearance in
-                return searchPromise.get() |> map { state in
-                    return (infos, appearance, state)
-                }
-            } |> mapToSignal { listState, appearance, state in
-                let entries = languageControllerEntries(listState: listState, language: appearance.language, state: state).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-                return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), animated: animated, arguments: arguments) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue)
+        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal, statePromise.get(), searchState.get()) |> mapToSignal { listState, appearance, state, searchViewState in
+            let entries = languageControllerEntries(listState: listState, language: appearance.language, state: state, searchViewState: searchViewState)
+                .map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+            
+            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, animated: prevSearch.swap(state.request) == state.request, arguments: arguments, searchViewState: searchViewState)
+                    |> runOn(first.swap(false) ? .mainQueue() : prepareQueue)
             } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition in
@@ -353,6 +400,5 @@ class LanguageViewController: TableViewController {
         
     }
     
-    
-    
+
 }

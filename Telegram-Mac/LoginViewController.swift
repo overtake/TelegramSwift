@@ -180,7 +180,7 @@ private class SignupView : View, NSTextFieldDelegate {
         
         photoView.frame = NSMakeRect(0, 0, 100, 100)
         
-        addPhotoView.setFrameOrigin(NSMakePoint( floorToScreenPixels(scaleFactor: backingScaleFactor, (photoView.frame.width - addPhotoView.frame.width) / 2), floorToScreenPixels(scaleFactor: backingScaleFactor, (photoView.frame.height - addPhotoView.frame.height) / 2)))
+        addPhotoView.setFrameOrigin(NSMakePoint( floorToScreenPixels(backingScaleFactor, (photoView.frame.width - addPhotoView.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (photoView.frame.height - addPhotoView.frame.height) / 2)))
         
         firstName.frame = NSMakeRect(photoView.frame.maxX + 10, 20, frame.width - (photoView.frame.maxX + 10), 20)
         lastName.frame = NSMakeRect(photoView.frame.maxX + 10, 70, frame.width - (photoView.frame.maxX + 10), 20)
@@ -438,10 +438,10 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         
         
         
-        codeText.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        codeText.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
         
-        numberText.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
-        editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
+        numberText.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
+        editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
         
         
         textView.centerX(y: codeText.frame.maxY + 50 + (passwordEnabled ? inputPassword.frame.height : 0))
@@ -824,13 +824,13 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         
       //  let maxInset: CGFloat = max(countryLabel.frame.width,numberLabel.frame.width)
       //  let contentInset = maxInset + 20 + 5
-        countrySelector.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countrySelector.frame.height/2))
+        countrySelector.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 25 - countrySelector.frame.height/2))
         
-     //  countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countryLabel.frame.height/2))
-     //   numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - numberLabel.frame.height/2))
+     //  countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(backingScaleFactor, 25 - countryLabel.frame.height/2))
+     //   numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(backingScaleFactor, 75 - numberLabel.frame.height/2))
         
-        codeText.setFrameOrigin(0, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
-        numberText.setFrameOrigin(separatorInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        codeText.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
+        numberText.setFrameOrigin(separatorInset, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
         errorLabel.centerX(y: 110)
     }
     

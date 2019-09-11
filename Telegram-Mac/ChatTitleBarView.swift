@@ -107,8 +107,8 @@ private class ConnectionStatusView : View {
             textView.update(textViewLayout)
             
             if let disableProxyButton = disableProxyButton {
-                disableProxyButton.setFrameOrigin(indicator.frame.maxX + 2, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) + 2)
-                textView.setFrameOrigin(indicator.frame.maxX + 8, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2) - textView.frame.height + 2)
+                disableProxyButton.setFrameOrigin(indicator.frame.maxX + 2, floorToScreenPixels(backingScaleFactor, frame.height / 2) + 2)
+                textView.setFrameOrigin(indicator.frame.maxX + 8, floorToScreenPixels(backingScaleFactor, frame.height / 2) - textView.frame.height + 2)
             } else {
                 textView.setFrameOrigin(NSMakePoint(indicator.frame.maxX + 4, f.origin.y))
             }

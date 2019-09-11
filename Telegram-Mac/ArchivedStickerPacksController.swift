@@ -45,8 +45,8 @@ private enum ArchivedStickerPacksEntryId: Hashable {
 
 private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
     case section(sectionId:Int32)
-    case info(sectionId:Int32, String)
-    case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, ItemListStickerPackItemEditing)
+    case info(sectionId:Int32, String, GeneralViewType)
+    case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, ItemListStickerPackItemEditing, GeneralViewType)
     case loading(Bool)
     
     var stableId: ArchivedStickerPacksEntryId {
@@ -55,7 +55,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
             return .index(0)
         case .loading:
             return .loading
-        case let .pack(_, _, info, _, _, _, _):
+        case let .pack(_, _, info, _, _, _, _, _):
             return .pack(info.id)
         case let .section(sectionId):
             return .index((sectionId + 1) * 1000 - sectionId)
@@ -81,9 +81,9 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         switch self {
         case .loading:
             return 0
-        case let .info(sectionId, _):
+        case let .info(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .pack( sectionId, index, _, _, _, _, _):
+        case let .pack( sectionId, index, _, _, _, _, _, _):
             return (sectionId * 1000) + 100 + index
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -96,10 +96,10 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
     
     func item(_ arguments: ArchivedStickerPacksControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .info(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .pack(_, _, info, topItem, count, enabled, editing):
-            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .remove, action: {
+        case let .info(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .pack(_, _, info, topItem, count, enabled, editing, viewType):
+            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .remove, viewType: viewType, action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 
@@ -107,7 +107,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
                 arguments.removePack(info)
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case .loading(let loading):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: L10n.archivedStickersEmpty)
         }
@@ -151,32 +151,38 @@ private struct ArchivedStickerPacksControllerState: Equatable {
 private func archivedStickerPacksControllerEntries(state: ArchivedStickerPacksControllerState, packs: [ArchivedStickerPackItem]?, installedView: CombinedView) -> [ArchivedStickerPacksEntry] {
     var entries: [ArchivedStickerPacksEntry] = []
     
-    var sectionId:Int32 = 1
-    entries.append(.section(sectionId: sectionId))
-    sectionId += 1
+   
     
     if let packs = packs {
+        
+        
         if packs.isEmpty {
             entries.append(.loading(false))
         } else {
-            entries.append(.info(sectionId: sectionId, tr(L10n.archivedStickersDescription)))
+            var sectionId:Int32 = 1
             
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
             
+            entries.append(.info(sectionId: sectionId, L10n.archivedStickersDescription, .textTopItem))
+                        
             var installedIds = Set<ItemCollectionId>()
             if let view = installedView.views[.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionIdsView, let ids = view.idsByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
                 installedIds = ids
             }
             
+            let packs = packs.filter { item in
+                return !installedIds.contains(item.info.id)
+            }
+            
             var index: Int32 = 0
             for item in packs {
-                if !installedIds.contains(item.info.id) {
-                    entries.append(.pack(sectionId: sectionId, index, item.info, item.topItems.first, item.info.count, !state.removingPackIds.contains(item.info.id), ItemListStickerPackItemEditing(editable: true, editing: state.editing)))
-                    index += 1
-                }
+                entries.append(.pack(sectionId: sectionId, index, item.info, item.topItems.first, item.info.count, !state.removingPackIds.contains(item.info.id), ItemListStickerPackItemEditing(editable: true, editing: state.editing), bestGeneralViewType(packs, for: item)))
+                index += 1
             }
-        } 
+            entries.append(.section(sectionId: sectionId))
+            sectionId += 1
+        }
     } else {
         entries.append(.loading(true))
     }
@@ -194,6 +200,11 @@ private func prepareTransition(left:[AppearanceWrapperEntry<ArchivedStickerPacks
 
 
 class ArchivedStickerPacksController: TableViewController {
+    private let disposable = MetaDisposable()
+    
+    deinit {
+        disposable.dispose()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -265,15 +276,21 @@ class ArchivedStickerPacksController: TableViewController {
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<ArchivedStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnPrepareQueue, stickerPacks.get() |> deliverOnPrepareQueue, installedStickerPacks.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue)
+        
+        let signal = combineLatest(queue: self.queue, statePromise.get(), stickerPacks.get(), installedStickerPacks.get(), appearanceSignal)
             |> map { state, packs, installedView, appearance -> TableUpdateTransition in
                 
                 let entries = archivedStickerPacksControllerEntries(state: state, packs: packs, installedView: installedView).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
-            } |> afterDisposed {
+        } |> afterDisposed {
                 actionsDisposable.dispose()
-        })
+        } |> deliverOnMainQueue
         
-        readyOnce()
+        disposable.set(signal.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+            self?.readyOnce()
+        }))
+        
+        
     }
 }

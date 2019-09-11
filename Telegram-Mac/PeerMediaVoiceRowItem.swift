@@ -238,7 +238,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         
-        let center = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 2)
+        let center = floorToScreenPixels(backingScaleFactor, frame.height / 2)
         
         titleView.setFrameOrigin(item.inset.left, center - titleView.frame.height - 1)
         nameView.setFrameOrigin(item.inset.left, center + 1)

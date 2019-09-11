@@ -21,57 +21,49 @@ enum ItemListStickerPackItemControl: Equatable {
     case selected
 }
 
-class StickerSetTableRowItem: TableRowItem {
+class StickerSetTableRowItem: GeneralRowItem {
     
     fileprivate let context: AccountContext
     fileprivate let info:StickerPackCollectionInfo
     fileprivate let topItem:StickerPackItem?
     fileprivate let unread: Bool
     fileprivate let editing: ItemListStickerPackItemEditing
-    fileprivate let enabled:Bool
     fileprivate let _stableId:AnyHashable
     fileprivate let itemCount:Int32
     fileprivate let control: ItemListStickerPackItemControl
     fileprivate let nameLayout:TextViewLayout
     fileprivate let countLayout:TextViewLayout
     
-    let action:  () -> Void
     let addPack: () -> Void
     let removePack: () -> Void
     
-    fileprivate let insets: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30)
-    
-    override var stableId: AnyHashable {
-        return _stableId
-    }
-    init(_ initialSize: NSSize, context:AccountContext, stableId:AnyHashable, info:StickerPackCollectionInfo, topItem:StickerPackItem?, itemCount:Int32, unread: Bool, editing: ItemListStickerPackItemEditing, enabled: Bool, control: ItemListStickerPackItemControl, action:@escaping()->Void, addPack:@escaping()->Void = {}, removePack:@escaping() -> Void = {}) {
+    init(_ initialSize: NSSize, context:AccountContext, stableId:AnyHashable, info:StickerPackCollectionInfo, topItem:StickerPackItem?, itemCount:Int32, unread: Bool, editing: ItemListStickerPackItemEditing, enabled: Bool, control: ItemListStickerPackItemControl, viewType: GeneralViewType = .legacy, action:@escaping()->Void, addPack:@escaping()->Void = {}, removePack:@escaping() -> Void = {}) {
         self.context = context
         self._stableId = stableId
         self.info = info
         self.topItem = topItem
         self.unread = unread
         self.editing = editing
-        self.enabled = enabled
         self.itemCount = itemCount
         self.control = control
-        self.action = action
         self.addPack = addPack
         self.removePack = removePack
         nameLayout = TextViewLayout(.initialize(string: info.title, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
-        countLayout = TextViewLayout(.initialize(string: tr(L10n.stickersSetCount1Countable(Int(itemCount))), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
-        nameLayout.measure(width: initialSize.width - 50 - insets.left - insets.right)
-        countLayout.measure(width: initialSize.width - 50 - insets.left - insets.right)
-        super.init(initialSize)
+        countLayout = TextViewLayout(.initialize(string: L10n.stickersSetCount1Countable(Int(itemCount)), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, action: action, inset: NSEdgeInsets(left: 30, right: 30), enabled: enabled)
+        _ = makeSize(initialSize.width, oldWidth: 0)
     }
-    
-    override var height: CGFloat {
-        return 50
-    }
-    
+
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        nameLayout.measure(width: width - 50 - insets.left - insets.right)
-        countLayout.measure(width: width - 50 - insets.left - insets.right)
+        switch self.viewType {
+        case .legacy:
+            nameLayout.measure(width: width - 50 - inset.left - inset.right)
+            countLayout.measure(width: width - 50 - inset.left - inset.right)
+        case let .modern(_, insets):
+            nameLayout.measure(width: blockWidth - 50 - insets.left - insets.right)
+            countLayout.measure(width: blockWidth - 50 - insets.left - insets.right)
+        }
         return success
     }
     
@@ -80,7 +72,10 @@ class StickerSetTableRowItem: TableRowItem {
     }
 }
 
-class StickerSetTableRowView : TableRowView {
+class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
+    
+    private let containerView = GeneralRowContainerView(frame: NSZeroRect)
+    
     private let imageView:TransformImageView = TransformImageView()
     private let nameView:TextView = TextView()
     private let countView:TextView = TextView()
@@ -90,32 +85,37 @@ class StickerSetTableRowView : TableRowView {
     private let loadedStickerPackDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(imageView)
+        containerView.addSubview(imageView)
         imageView.setFrameSize(NSMakeSize(35, 35))
-        addSubview(nameView)
-        addSubview(countView)
+        containerView.addSubview(nameView)
+        containerView.addSubview(countView)
         countView.userInteractionEnabled = false
         nameView.userInteractionEnabled = false
-        addSubview(installationControl)
+        containerView.addSubview(installationControl)
 
-        removeControl.set(handler: { [weak self] _ in
-            if let item = self?.item as? StickerSetTableRowItem {
-                item.removePack()
+        containerView.displayDelegate = self
+        
+        containerView.set(handler: { control in
+            if let event = NSApp.currentEvent {
+                control.superview?.mouseDown(with: event)
             }
-        }, for: .SingleClick)
-        addSubview(removeControl)
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        if mouseInside() {
-            if let item = item as? StickerSetTableRowItem {
-                let point = convert(event.locationInWindow, from: nil)
-                 if NSPointInRect(point, NSMakeRect(installationControl.frame.minX, 0, installationControl.frame.width, frame.height)) {
+        }, for: .Down)
+        
+        containerView.set(handler: { control in
+            if let event = NSApp.currentEvent {
+                control.superview?.mouseUp(with: event)
+            }
+        }, for: .Up)
+        
+        containerView.set(handler: { [weak self] _ in
+            if let `self` = self, let item = self.item as? StickerSetTableRowItem, let event = NSApp.currentEvent {
+                let point = self.containerView.convert(event.locationInWindow, from: nil)
+                if NSPointInRect(point, self.installationControl.frame) {
                     switch item.control {
                     case .installation:
                         item.addPack()
                     case .none:
-                       break
+                        break
                     case .remove:
                         item.removePack()
                     case .empty:
@@ -127,9 +127,18 @@ class StickerSetTableRowView : TableRowView {
                     item.action()
                 }
             }
-        }
-
+        }, for: .Click)
+        
+        removeControl.set(handler: { [weak self] _ in
+            if let item = self?.item as? StickerSetTableRowItem {
+                item.removePack()
+            }
+        }, for: .SingleClick)
+        containerView.addSubview(removeControl)
+        self.addSubview(containerView)
     }
+    
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -137,30 +146,72 @@ class StickerSetTableRowView : TableRowView {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        if let item = item as? StickerSetTableRowItem {
+        
+        if let item = item as? StickerSetTableRowItem, layer == containerView.layer {
             ctx.setFillColor(theme.colors.border.cgColor)
-            ctx.fill(NSMakeRect(item.insets.left + 50, frame.height - .borderSize, frame.width - item.insets.left - item.insets.right - 50, .borderSize))
+            switch item.viewType {
+            case .legacy:
+                ctx.fill(NSMakeRect(item.inset.left + 50, frame.height - .borderSize, frame.width - item.inset.left - item.inset.right - 50, .borderSize))
+            case let .modern(position, insets):
+                switch position {
+                case .first, .inner:
+                    ctx.fill(NSMakeRect(insets.left + 50, containerView.frame.height - .borderSize, containerView.frame.width - insets.left - insets.right - 50, .borderSize))
+                default:
+                    break
+                }
+            }
         }
     }
     
     override func layout() {
         super.layout()
         if let item = item as? StickerSetTableRowItem {
-            imageView.centerY(x: item.insets.left)
-            nameView.update(item.nameLayout, origin: NSMakePoint(item.insets.left + 50, 7))
-            countView.update(item.countLayout, origin: NSMakePoint(item.insets.left + 50, frame.height - item.countLayout.layoutSize.height - 7))
-            installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
-            removeControl.centerY(x: frame.width - item.insets.left - removeControl.frame.width)
-            animatedView?.centerY(x: item.insets.left)
+            switch item.viewType {
+            case .legacy:
+                self.containerView.frame = self.bounds
+                self.containerView.setCorners([])
+                imageView.centerY(x: item.inset.left)
+                nameView.update(item.nameLayout, origin: NSMakePoint(item.inset.left + 50, 7))
+                countView.update(item.countLayout, origin: NSMakePoint(item.inset.left + 50, containerView.frame.height - item.countLayout.layoutSize.height - 7))
+                installationControl.centerY(x: containerView.frame.width - item.inset.left - installationControl.frame.width)
+                removeControl.centerY(x: containerView.frame.width - item.inset.left - removeControl.frame.width)
+                animatedView?.centerY(x: item.inset.left)
+            case let .modern(position, innerInsets):
+                self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
+                self.containerView.setCorners(position.corners)
+                imageView.centerY(x: innerInsets.left)
+                nameView.update(item.nameLayout, origin: NSMakePoint(innerInsets.left + 50, 7))
+                countView.update(item.countLayout, origin: NSMakePoint(innerInsets.left + 50, containerView.frame.height - item.countLayout.layoutSize.height - 7))
+                installationControl.centerY(x: containerView.frame.width - innerInsets.right - installationControl.frame.width)
+                removeControl.centerY(x: containerView.frame.width - innerInsets.right - removeControl.frame.width)
+                animatedView?.centerY(x: innerInsets.left)
+            }
+            
+        }
+    }
+    
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
+    
+    override func updateColors() {
+        nameView.backgroundColor = backdorColor
+        countView.backgroundColor = backdorColor
+        containerView.background = backdorColor
+        if let item = item as? GeneralRowItem {
+            switch item.viewType {
+            case .legacy:
+                self.layer?.backgroundColor = backdorColor.cgColor
+            case .modern:
+                self.layer?.backgroundColor = theme.colors.grayBackground.cgColor
+            }
         }
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
-        
+        self.updateMouse()
         if let item = item as? StickerSetTableRowItem {
-            nameView.backgroundColor = backdorColor
-            countView.backgroundColor = backdorColor
             
             removeControl.set(image: theme.icons.stickerPackDelete, for: .Normal)
             _ = removeControl.sizeToFit()
@@ -169,7 +220,7 @@ class StickerSetTableRowView : TableRowView {
                 
                 if self.animatedView == nil {
                     self.animatedView = ChatMediaAnimatedStickerView(frame: NSZeroRect)
-                    addSubview(self.animatedView!)
+                    containerView.addSubview(self.animatedView!)
                 }
                 self.imageView.isHidden = true
                 
@@ -210,35 +261,40 @@ class StickerSetTableRowView : TableRowView {
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(35, 35), boundingSize: NSMakeSize(35, 35), intrinsicInsets: NSEdgeInsets()))
             }
            
-            nameView.update(item.nameLayout, origin: NSMakePoint(item.insets.left + 50, 7))
-            countView.update(item.countLayout, origin: NSMakePoint(item.insets.left + 50, frame.height - item.countLayout.layoutSize.height - 7))
+            nameView.update(item.nameLayout)
+            countView.update(item.countLayout)
             switch item.control {
             case let .installation(installed: installed):
-                installationControl.isHidden = false
-                removeControl.isHidden = true
                 installationControl.image = installed ? theme.icons.stickersAddedFeatured : theme.icons.stickersAddFeatured
                 installationControl.sizeToFit()
-                installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
-            case .none:
-                installationControl.isHidden = true
-                removeControl.isHidden = false
-                removeControl.centerY(x: frame.width - item.insets.left - removeControl.frame.width)
             case .remove:
-                removeControl.isHidden = true
-                installationControl.isHidden = false
                 installationControl.image = theme.icons.stickersRemove
                 installationControl.sizeToFit()
-                installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
+            case .selected:
+                installationControl.image = theme.icons.generalSelect
+                installationControl.sizeToFit()
+            default:
+                break
+            }
+            
+            switch item.control {
+            case .installation:
+                installationControl.isHidden = false//!containerView.mouseInside()
+                removeControl.isHidden = true
+            case .none:
+                installationControl.isHidden = true
+                removeControl.isHidden = false//!containerView.mouseInside()
+            case .remove:
+                removeControl.isHidden = true
+                installationControl.isHidden = false//!containerView.mouseInside()
             case .empty:
                 removeControl.isHidden = true
                 installationControl.isHidden = true
             case .selected:
                 removeControl.isHidden = true
-                installationControl.isHidden = false
-                installationControl.image = theme.icons.generalSelect
-                installationControl.sizeToFit()
-                installationControl.centerY(x: frame.width - item.insets.left - installationControl.frame.width)
+                installationControl.isHidden = false//!containerView.mouseInside()
             }
+            
         }
         needsLayout = true
     }

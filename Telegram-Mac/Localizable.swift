@@ -405,6 +405,8 @@ internal final class L10n {
   internal static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
   internal static var bioDescription: String  { return L10n.tr("Localizable", "Bio.Description") }
+  /// BIO
+  internal static var bioHeader: String  { return L10n.tr("Localizable", "Bio.Header") }
   /// A few words about you
   internal static var bioPlaceholder: String  { return L10n.tr("Localizable", "Bio.Placeholder") }
   /// Save
@@ -611,6 +613,8 @@ internal final class L10n {
   internal static var channelChannelNameHolder: String  { return L10n.tr("Localizable", "Channel.ChannelNameHolder") }
   /// Create
   internal static var channelCreate: String  { return L10n.tr("Localizable", "Channel.Create") }
+  /// DESCRIPTION
+  internal static var channelDescHeader: String  { return L10n.tr("Localizable", "Channel.DescHeader") }
   /// Description
   internal static var channelDescriptionHolder: String  { return L10n.tr("Localizable", "Channel.DescriptionHolder") }
   /// You can provide an optional description for your channel.
@@ -627,6 +631,8 @@ internal final class L10n {
   internal static var channelIntroDescription: String  { return L10n.tr("Localizable", "Channel.IntroDescription") }
   /// What is a Channel?
   internal static var channelIntroDescriptionHeader: String  { return L10n.tr("Localizable", "Channel.IntroDescriptionHeader") }
+  /// CHANNEL NAME
+  internal static var channelNameHeader: String  { return L10n.tr("Localizable", "Channel.NameHeader") }
   /// New Channel
   internal static var channelNewChannel: String  { return L10n.tr("Localizable", "Channel.NewChannel") }
   /// Private
@@ -3187,8 +3193,6 @@ internal final class L10n {
   internal static var notificationMarkAsRead: String  { return L10n.tr("Localizable", "Notification.MarkAsRead") }
   /// 📆 Reminder
   internal static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
-  /// 📆 You
-  internal static var notificationScheduledTitle: String  { return L10n.tr("Localizable", "Notification.ScheduledTitle") }
   /// All Accounts
   internal static var notificationSettingsAllAccounts: String  { return L10n.tr("Localizable", "NotificationSettings.AllAccounts") }
   /// Switch off to show the number of unread chats instead of messages.

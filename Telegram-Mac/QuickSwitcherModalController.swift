@@ -151,9 +151,9 @@ private class QuickSwitcherView : View {
     
     override func layout() {
         super.layout()
-        searchView.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - 30)/2))
+        searchView.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - 30)/2))
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 100)
-        textView.centerX(y: frame.height - floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - textView.frame.height)/2) - textView.frame.height)
+        textView.centerX(y: frame.height - floorToScreenPixels(backingScaleFactor, (50 - textView.frame.height)/2) - textView.frame.height)
         separator.frame = NSMakeRect(0, frame.height - 50, frame.width, .borderSize)
     }
     

@@ -580,7 +580,6 @@
 		C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE01DDB18FF00C69F73 /* ThumbUtils.swift */; };
 		C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE21DDB2EBD00C69F73 /* GeneralSettingsViewController.swift */; };
 		C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */; };
-		C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */; };
 		C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */; };
 		C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */; };
 		C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */; };
@@ -1590,7 +1589,6 @@
 		C2A71CE01DDB18FF00C69F73 /* ThumbUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThumbUtils.swift; sourceTree = "<group>"; };
 		C2A71CE21DDB2EBD00C69F73 /* GeneralSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralSettingsViewController.swift; sourceTree = "<group>"; };
 		C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UsernameSettingsViewController.swift; sourceTree = "<group>"; };
-		C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationSettingsViewController.swift; sourceTree = "<group>"; };
 		C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatHeaderController.swift; sourceTree = "<group>"; };
 		C2A72D8F1DEC66F300C3B945 /* LoginErrorStateView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginErrorStateView.swift; sourceTree = "<group>"; };
 		C2A87DE71F4C6910002D3F73 /* InstantViewWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantViewWindow.swift; sourceTree = "<group>"; };
@@ -2649,7 +2647,6 @@
 				C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */,
 				C2A71CE21DDB2EBD00C69F73 /* GeneralSettingsViewController.swift */,
 				C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */,
-				C2A71CE81DDB342100C69F73 /* NotificationSettingsViewController.swift */,
 				D01CBE2C22A5384600F6A971 /* NotificationPreferencesController.swift */,
 			);
 			name = "settings-controllers";
@@ -4971,7 +4968,6 @@
 				D014193E22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift in Sources */,
 				C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */,
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
-				C2A71CE91DDB342100C69F73 /* NotificationSettingsViewController.swift in Sources */,
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
 				9FFAE4FD205A8C89000C028E /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
@@ -6569,7 +6565,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = NO;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;

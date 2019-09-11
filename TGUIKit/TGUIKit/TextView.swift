@@ -807,7 +807,7 @@ public final class TextViewLayout : Equatable {
         
         var point = point
         
-         //point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
+         //point.x -= floorToScreenPixels(System.backingScale, (frame.width - line.frame.width) / 2)
         
         
 //        var penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(frame.width))) + line.frame.minX

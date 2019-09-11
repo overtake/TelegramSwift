@@ -12,52 +12,67 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-
-fileprivate enum UsernameEntries : Comparable, Identifiable {
-    case whiteSpace(Int64, CGFloat)
-    case inputEntry(placeholder:String, state:AddressNameAvailabilityState)
-    case stateEntry(text:String, color:NSColor)
-    case descEntry(String)
+fileprivate enum UsernameEntryId : Hashable {
+    case section(Int32)
+    case inputEntry
+    case stateEntry
+    case descEntry
     
-    var index:Int64 {
+}
+
+fileprivate enum UsernameEntry : Comparable, Identifiable {
+    case section(Int32)
+    case inputEntry(sectionId: Int32, placeholder:String, state:AddressNameAvailabilityState, viewType: GeneralViewType)
+    case stateEntry(sectionId:Int32, text:String, color:NSColor, viewType: GeneralViewType)
+    case descEntry(sectionId:Int32, text: String, viewType: GeneralViewType)
+    
+    var index:Int32 {
         switch self {
-        case let .whiteSpace(index, _):
-            return index
-        case .inputEntry:
-            return 1000
-        case .stateEntry:
-            return 2000
-        case .descEntry:
-            return 3000
+        case let .section(sectionId):
+            return (sectionId + 1) * 1000 - sectionId
+        case let .inputEntry(sectionId, _, _, _):
+             return (sectionId * 1000) + 1
+        case let .stateEntry(sectionId, _, _, _):
+             return (sectionId * 1000) + 2
+        case let .descEntry(sectionId, _, _):
+             return (sectionId * 1000) + 3
         }
     }
     
-    fileprivate var stableId:Int64 {
-        return index
+    fileprivate var stableId:UsernameEntryId {
+        switch self {
+        case let .section(index):
+            return .section(index)
+        case .inputEntry:
+            return .inputEntry
+        case .stateEntry:
+            return .stateEntry
+        case .descEntry:
+            return .descEntry
+        }
     }
 
 }
 
-fileprivate func <(lhs:UsernameEntries, rhs:UsernameEntries) ->Bool {
+fileprivate func <(lhs:UsernameEntry, rhs:UsernameEntry) ->Bool {
     return lhs.index < rhs.index
 }
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntries>], to:[AppearanceWrapperEntry<UsernameEntries>], initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntry>], to:[AppearanceWrapperEntry<UsernameEntry>], initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
     
         let (removed, inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
             switch entry.entry {
-            case let .whiteSpace(index, height):
-                return GeneralRowItem(initialSize, height: height, stableId: index)
+            case .section:
+                return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
             case let .inputEntry(inputState):
-                
-                return UsernameInputRowItem(initialSize, stableId: entry.stableId, placeholder: inputState.placeholder, limit: 30, status: nil, text: inputState.state.username ?? "", changeHandler: { value in
-                    availability.set(value)
-                })
-            case let .stateEntry(state):
-                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: NSAttributedString.initialize(string: state.text, color: state.color, font: .normal(.text)), alignment: .left, inset:NSEdgeInsets(left: 30.0, right: 30.0, top:6, bottom:4))
-            case let .descEntry(desc):
-                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: desc)
+                return InputDataRowItem(initialSize, stableId: entry.stableId, mode: .plain, error: nil, viewType: inputState.viewType, currentText: inputState.state.username ?? "", placeholder: nil, inputPlaceholder: inputState.placeholder, filter: { $0 }, updated: { value in
+                     availability.set(value)
+                }, limit: 30)
+            case let .stateEntry(_, text, color, viewType):
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: NSAttributedString.initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
+            case let .descEntry(_, text, viewType):
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: text, viewType: viewType)
             }
         })
         
@@ -133,14 +148,11 @@ class UsernameSettingsViewController: TableViewController {
         
 
     
-        let previous:Atomic<[AppearanceWrapperEntry<UsernameEntries>]> = Atomic(value:[])
-        let entries:Promise<[UsernameEntries]> = Promise()
+        let previous:Atomic<[AppearanceWrapperEntry<UsernameEntry>]> = Atomic(value:[])
+        let entries:Promise<[UsernameEntry]> = Promise()
         let initialSize = self.atomicSize.modify({$0})
         let context = self.context
         let availability = self.availability
-        var mutableItems:[UsernameEntries] = [.whiteSpace(0, 16),
-                                              .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:.none(username: nil)),
-                                              .descEntry(tr(L10n.usernameSettingsChangeDescription))]
         
         
 
@@ -183,47 +195,53 @@ class UsernameSettingsViewController: TableViewController {
             }
             |> deliverOnMainQueue
             |> mapToSignal { [weak self] (availability,address) -> Signal<Void, NoError> in
-                mutableItems[1] = .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:availability)
+                //        var mutableItems:[UsernameEntry] = [.whiteSpace(0, 16),
+ //               .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:.none(username: nil)),
+//                .descEntry(tr(L10n.usernameSettingsChangeDescription))]
+
+                var items:[UsernameEntry] = []
+                var sectionId: Int32 = 0
+                
+                items.append(.section(sectionId))
+                sectionId += 1
+                
+                items.append(.inputEntry(sectionId: sectionId, placeholder: L10n.usernameSettingsInputPlaceholder, state: availability, viewType: .singleItem))
                 
                 switch availability {
                 case .none:
-                    if case .stateEntry = mutableItems[2] {
-                        mutableItems.remove(at: 2)
-                    }
                     self?.doneButton?.isEnabled = true
                     break
                 case .progress:
                     self?.doneButton?.isEnabled = false
                     break
                 case let .success(username:username):
-                    if case .stateEntry = mutableItems[2] {
-                        mutableItems.remove(at: 2)
-                    }
                     if address != username {
                         if username?.length != 0 {
-                            mutableItems.insert(.stateEntry(text:tr(L10n.usernameSettingsAvailable(username ?? "")), color: theme.colors.accent), at: 2)
+                            items.append(.stateEntry(sectionId: sectionId, text: L10n.usernameSettingsAvailable(username ?? ""), color: theme.colors.accent, viewType: .textBottomItem))
                         }
                     }
                     self?.doneButton?.isEnabled = address != username
                 case let .fail(fail):
-                    if case .stateEntry = mutableItems[2] {
-                        mutableItems.remove(at: 2)
-                    }
-                    
                     let enabled = fail.username?.length == 0 && address.length != 0
-                    
-                    let stateEntry:UsernameEntries
+                     let stateEntry:UsernameEntry
                     if let error = fail.formatError {
-                        stateEntry = .stateEntry(text: error.description, color: theme.colors.redUI)
+                        stateEntry = .stateEntry(sectionId: sectionId, text: error.description, color: theme.colors.redUI, viewType: .textBottomItem)
                     } else {
-                        stateEntry = .stateEntry(text: fail.availability.description(for: address), color: theme.colors.redUI)
+                        stateEntry = .stateEntry(sectionId: sectionId, text: fail.availability.description(for: address), color: theme.colors.redUI, viewType: .textBottomItem)
                     }
                     if fail.username?.length != 0 {
-                        mutableItems.insert(stateEntry, at: 2)
+                        items.append(stateEntry)
                     }
                     self?.doneButton?.isEnabled = enabled
                 }
-                entries.set(.single(mutableItems))
+                
+                items.append(.descEntry(sectionId: sectionId, text: L10n.usernameSettingsChangeDescription, viewType: .textBottomItem))
+
+                
+                items.append(.section(sectionId))
+                sectionId += 1
+                
+                entries.set(.single(items))
                 
                 self?.readyOnce()
                 return .single(Void())
@@ -248,7 +266,7 @@ class UsernameSettingsViewController: TableViewController {
     }
     
     override func firstResponder() -> NSResponder? {
-        if let item = genericView.item(stableId: Int64(1000)), let view = genericView.viewNecessary(at: item.index) as? GeneralInputRowView {
+        if let view = genericView.item(at: 1).view as? InputDataRowView {
             return view.textView
         }
         return nil

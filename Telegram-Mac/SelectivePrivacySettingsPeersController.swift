@@ -46,13 +46,13 @@ private enum SelectivePrivacyPeersEntryStableId: Hashable {
 }
 
 private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
-    case addItem(Int32, Bool)
-    case peerItem(Int32, Int32, SelectivePrivacyPeer, ShortPeerDeleting?)
+    case addItem(Int32, Bool, GeneralViewType)
+    case peerItem(Int32, Int32, SelectivePrivacyPeer, ShortPeerDeleting?, GeneralViewType)
     case section(Int32)
 
     var stableId: SelectivePrivacyPeersEntryStableId {
         switch self {
-        case let .peerItem(_, _, peer, _):
+        case let .peerItem(_, _, peer, _, _):
             return .peer(peer.peer.id)
         case .addItem:
             return .add
@@ -63,35 +63,12 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
 
     var stableIndex:Int32 {
         switch self {
-        case .addItem(let sectionId, _):
-            return (sectionId * 1000) + 0
-        case let .peerItem(sectionId, index, _, _):
-            return (sectionId * 1000) + index + 100
+        case .addItem(let sectionId, _, _):
+            return (sectionId * 1000) + 1_000_000
+        case let .peerItem(sectionId, index, _, _, _):
+            return (sectionId * 1000) + index
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
-        }
-    }
-
-    static func ==(lhs: SelectivePrivacyPeersEntry, rhs: SelectivePrivacyPeersEntry) -> Bool {
-        switch lhs {
-        case let .peerItem(sectionId, index, peer, editing):
-            if case .peerItem(sectionId, index, peer, editing) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .addItem(sectionId, editing):
-            if case .addItem(sectionId, editing) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
         }
     }
 
@@ -101,7 +78,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
 
     func item(_ arguments: SelectivePrivacyPeersControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .peerItem(_, _, peer, editing):
+        case let .peerItem(_, _, peer, editing, viewType):
 
 
 
@@ -124,7 +101,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             }
 
 
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(32, 32), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openInfo(peer.peer)
             }, contextMenuItems: {
                 return [ContextMenuItem(L10n.confirmDelete, handler: {
@@ -132,12 +109,12 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
                 })]
             })
 
-        case .addItem:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, action: {
+        case let .addItem(_, _, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addPeer()
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -176,18 +153,24 @@ private func selectivePrivacyPeersControllerEntries(state: SelectivePrivacyPeers
 
     entries.append(.section(sectionId))
     sectionId += 1
+    
+    entries.append(.addItem(sectionId, state.editing, .singleItem))
 
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
     var index: Int32 = 0
-    for peer in peers {
+    for (i, peer) in peers.enumerated() {
         var deleting:ShortPeerDeleting? = nil
         if state.editing {
             deleting = ShortPeerDeleting(editable: true)
         }
-        entries.append(.peerItem(sectionId, index, peer, deleting))
+        entries.append(.peerItem(sectionId, index, peer, deleting, bestGeneralViewType(peers, for: i)))
         index += 1
     }
-
-    entries.append(.addItem(sectionId, state.editing))
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
 
     return entries
 }
@@ -219,6 +202,10 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.getBackgroundColor = {
+            theme.colors.grayBackground
+        }
 
         let context = self.context
         let title = self.title

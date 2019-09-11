@@ -49,10 +49,10 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, placeholder: nil, inputPlaceholder: L10n.inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), color: theme.colors.grayText, detectBold: false))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(detectBold: false)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))

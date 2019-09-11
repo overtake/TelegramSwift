@@ -45,12 +45,12 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: GeneralRowTextType.markdown(L10n.twoStepAuthRecoveryCodeHelp + "\n\n" + L10n.twoStepAuthRecoveryEmailUnavailableNew(pattern), linkHandler: { _ in
         unavailable()
-    }), color: theme.colors.grayText, detectBold: false))
+    }), data: InputDataGeneralTextData(detectBold: false)))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1

@@ -509,14 +509,14 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
             switch gridLayout.type {
             case let .fixed(itemSize, lineSpacing):
                 
-               // let s = floorToScreenPixels(scaleFactor: backingScaleFactor, gridLayout.size.width/floor(gridLayout.size.width/itemSize.width))
+               // let s = floorToScreenPixels(backingScaleFactor, gridLayout.size.width/floor(gridLayout.size.width/itemSize.width))
                // let itemSize = NSMakeSize(s, s)
                 
                 let itemsInRow = Int(gridLayout.size.width / itemSize.width)
                 let itemsInRowWidth = CGFloat(itemsInRow) * itemSize.width
                 let remainingWidth = max(0.0, gridLayout.size.width - itemsInRowWidth)
                 
-                let itemSpacing = floorToScreenPixels(scaleFactor: backingScaleFactor, remainingWidth / CGFloat(itemsInRow + 1))
+                let itemSpacing = floorToScreenPixels(backingScaleFactor, remainingWidth / CGFloat(itemsInRow + 1))
                 
                 var incrementedCurrentRow = false
                 var nextItemOrigin = CGPoint(x: itemSpacing, y: 0.0)

@@ -137,7 +137,7 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     sectionId += 1
     
 //
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: state.limit))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: state.limit))
     index += 1
     
     var nextOptionText = ""
@@ -153,7 +153,7 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     if !nextOptionText.isEmpty {
         result += "\n\n" + nextOptionText
     }
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(result), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(result), data: InputDataGeneralTextData()))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1

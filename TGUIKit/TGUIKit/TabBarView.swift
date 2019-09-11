@@ -159,7 +159,7 @@ public class TabBarView: View {
        // if previous != newSize.width {
             let width = NSWidth(self.bounds)
             let height = NSHeight(self.bounds) - .borderSize
-            let defWidth = floorToScreenPixels(scaleFactor: backingScaleFactor, width / CGFloat( max(1, self.tabs.count) ))
+            let defWidth = floorToScreenPixels(backingScaleFactor, width / CGFloat( max(1, self.tabs.count) ))
             var xOffset:CGFloat = 0
             
             var idx:Int = 0
