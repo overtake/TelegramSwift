@@ -307,7 +307,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 }
                 
                 if defWidth < size.width && point.x > defWidth {
-                    input.setFrameOrigin(floorToScreenPixels(scaleFactor: backingScaleFactor, defWidth - point.x - additionalInset), input.frame.minY)
+                    input.setFrameOrigin(floorToScreenPixels(backingScaleFactor, defWidth - point.x - additionalInset), input.frame.minY)
                     if input.frame.maxX < inputContainer.frame.width {
                         input.setFrameOrigin(inputContainer.frame.width - input.frame.width + 4, input.frame.minY)
                     }

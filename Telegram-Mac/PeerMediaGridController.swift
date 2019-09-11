@@ -277,7 +277,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     
     var itemSize: NSSize {
         let count = ceil(bounds.width / 120)
-        let width = floorToScreenPixels(scaleFactor: view.backingScaleFactor, bounds.width / count)
+        let width = floorToScreenPixels(view.backingScaleFactor, bounds.width / count)
         return NSMakeSize(width - 4, width)
     }
     

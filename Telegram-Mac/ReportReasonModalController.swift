@@ -39,7 +39,7 @@ private class ReportReasonView: View {
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
         title.layout?.measure(width: frame.width - 60)
         title.update(title.layout)
-        title.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - title.frame.height) / 2))
+        title.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - title.frame.height) / 2))
         separator.frame = NSMakeRect(0, 49, frame.width, .borderSize)
     }
 }

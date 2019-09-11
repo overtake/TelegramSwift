@@ -50,7 +50,7 @@ private final class LockControl : View {
     override func layout() {
         super.layout()
         arrow.centerX(y: frame.height - arrow.frame.height - 8)
-        body.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (30 - body.frame.height)/2) + 3)
+        body.centerX(y: floorToScreenPixels(backingScaleFactor, (30 - body.frame.height)/2) + 3)
         head.centerX(y: 4)
     }
     

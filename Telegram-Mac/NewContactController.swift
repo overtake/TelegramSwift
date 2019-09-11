@@ -54,7 +54,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     index += 1
 
     if state.phone == nil {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactPhoneHiddenText(state.firstName)), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactPhoneHiddenText(state.firstName)), data: InputDataGeneralTextData()))
         index += 1
     }
     
@@ -69,7 +69,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactExceptionShareMyPhoneNumberDesc(state.firstName)), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactExceptionShareMyPhoneNumberDesc(state.firstName)), data: InputDataGeneralTextData()))
         index += 1
 
     }

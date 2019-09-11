@@ -302,7 +302,7 @@ private enum PassportEntry : TableItemListNodeEntry {
         case .createPassword(_, _, let peer):
             return PassportTwoStepVerificationIntroItem(initialSize, stableId: stableId, peer: peer, action: arguments.createPassword)
         case let .inputEmailCode(_, _, text, limit, error):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: error, currentText: text, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, updated: {
+            return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: error, currentText: text, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, updated: { _ in
                 arguments.updateEmailCode()
             }, limit: limit ?? 255)
         case let .description(_, _, text, detectBold):
@@ -1720,40 +1720,40 @@ private func createPasswordEntries( _ state: PassportState) -> [InputDataEntry] 
         return value
     }
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordHeader), data: InputDataGeneralTextData()))
     index += 1
     
     
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_password, mode: .secure, placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordPasswordPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordPasswordInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_password, mode: .secure, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordPasswordPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordPasswordInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value:  .string(""), error: nil, identifier: _id_c_repassword, mode: .secure, placeholder: InputDataInputPlaceholder(""), inputPlaceholder: L10n.secureIdCreatePasswordRePasswordInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value:  .string(""), error: nil, identifier: _id_c_repassword, mode: .secure, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(""), inputPlaceholder: L10n.secureIdCreatePasswordRePasswordInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
 
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordDescription), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordDescription), data: InputDataGeneralTextData()))
     index += 1
 
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordHintHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordHintHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_hint, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordHintPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordHintInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_hint, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordHintPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordHintInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordEmailHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordEmailHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_email, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordEmailPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordEmailInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_email, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordEmailPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordEmailInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordEmailDescription), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordEmailDescription), data: InputDataGeneralTextData()))
     index += 1
     
     return entries
@@ -1778,10 +1778,10 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
         if placeholder == email {
             placeholder = ""
         }
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdEmailActivateCodePlaceholder), inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: Int32(email.length)))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdEmailActivateCodePlaceholder), inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: Int32(email.length)))
         index += 1
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdEmailActivateDescription(email)), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdEmailActivateDescription(email)), data: InputDataGeneralTextData()))
         index += 1
         
         return entries
@@ -1798,10 +1798,10 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
     }
     
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(placeholder), error: nil, identifier: _id_email_new, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdEmailEmailPlaceholder), inputPlaceholder: L10n.secureIdEmailEmailInputPlaceholder, filter: {$0}, limit: 254))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(placeholder), error: nil, identifier: _id_email_new, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdEmailEmailPlaceholder), inputPlaceholder: L10n.secureIdEmailEmailInputPlaceholder, filter: {$0}, limit: 254))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdEmailUseSameDesc), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdEmailUseSameDesc), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -1821,13 +1821,13 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     if let phone = (state.peer as? TelegramUser)?.phone, !phone.isEmpty {
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(phone), error: nil, identifier: _id_phone_def, data: InputDataGeneralData(name: L10n.secureIdPhoneNumberUseSame(formatPhoneNumber(phone)), color: theme.colors.accent, icon: nil, type: .next, action: nil)))
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberUseSameDesc), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberUseSameDesc), data: InputDataGeneralTextData()))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
     index += 1
     
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(""), identifier: _id_phone_new, equatable: nil, item: { initialSize, stableId -> TableRowItem in
@@ -1837,7 +1837,7 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     }))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberNote), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberNote), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -1853,14 +1853,14 @@ private func confirmPhoneNumberEntries( _ state: PassportState, phoneNumber: Str
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_phone_code, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdPhoneNumberConfirmCodePlaceholder), inputPlaceholder: L10n.secureIdPhoneNumberConfirmCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_phone_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdPhoneNumberConfirmCodePlaceholder), inputPlaceholder: L10n.secureIdPhoneNumberConfirmCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberConfirmCodeDesc(formatPhoneNumber(phoneNumber))), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberConfirmCodeDesc(formatPhoneNumber(phoneNumber))), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -1887,17 +1887,17 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
 
     
     if hasMainField {
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdAddressHeader), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdAddressHeader), data: InputDataGeneralTextData()))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street1 ?? .string(address?.street1), error: aErrors?[_id_street1], identifier: _id_street1, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdAddressStreetPlaceholder), inputPlaceholder: L10n.secureIdAddressStreetInputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street1 ?? .string(address?.street1), error: aErrors?[_id_street1], identifier: _id_street1, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressStreetPlaceholder), inputPlaceholder: L10n.secureIdAddressStreetInputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street2 ?? .string(address?.street2), error: aErrors?[_id_street2], identifier: _id_street2, mode: .plain, placeholder: InputDataInputPlaceholder(""), inputPlaceholder: L10n.secureIdAddressStreet1InputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street2 ?? .string(address?.street2), error: aErrors?[_id_street2], identifier: _id_street2, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(""), inputPlaceholder: L10n.secureIdAddressStreet1InputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.city ?? .string(address?.city), error: aErrors?[_id_city], identifier: _id_city, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdAddressCityPlaceholder), inputPlaceholder: L10n.secureIdAddressCityInputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.city ?? .string(address?.city), error: aErrors?[_id_city], identifier: _id_city, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressCityPlaceholder), inputPlaceholder: L10n.secureIdAddressCityInputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.state ?? .string(address?.state), error: aErrors?[_id_state], identifier: _id_state, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdAddressRegionPlaceholder), inputPlaceholder: L10n.secureIdAddressRegionInputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.state ?? .string(address?.state), error: aErrors?[_id_state], identifier: _id_state, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressRegionPlaceholder), inputPlaceholder: L10n.secureIdAddressRegionInputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
         
         let filedata = try! String(contentsOfFile: Bundle.main.path(forResource: "countries", ofType: nil)!)
@@ -1914,7 +1914,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, values: countries))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdAddressPostcodePlaceholder), inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { text in
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressPostcodePlaceholder), inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { text in
             return latinFilter(text, .address, _id_postcode, true, updateState)
         }, limit: 10))
         index += 1
@@ -1929,11 +1929,11 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
     if let relative = relative {
         let rErrors = state.errors[relative.valueKey]
 
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdScansHeader), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdScansHeader), data: InputDataGeneralTextData()))
         index += 1
         
         if let scanError = rErrors?[_id_scan] {
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(scanError.description), color: theme.colors.redUI, detectBold: true))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(scanError.description), data: InputDataGeneralTextData(color: theme.colors.redUI)))
             index += 1
         }
         
@@ -1975,7 +1975,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         }
        
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityScanDescription), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityScanDescription), data: InputDataGeneralTextData()))
         index += 1
         
         
@@ -1984,11 +1984,11 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), color: theme.colors.grayText, detectBold: true))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), data: InputDataGeneralTextData()))
             index += 1
             
             if let translationError = rErrors?[_id_translation] {
-                entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(translationError.description), color: theme.colors.redUI, detectBold: true))
+                entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(translationError.description), data: InputDataGeneralTextData(color: theme.colors.redUI)))
                 index += 1
             }
             
@@ -2030,7 +2030,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             }
             
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationDesc), color: theme.colors.grayText, detectBold: true))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationDesc), data: InputDataGeneralTextData()))
             index += 1
         }
         
@@ -2091,7 +2091,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     let pdErrors = state.errors[.personalDetails]
 
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityDocumentDetailsHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityDocumentDetailsHeader), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -2121,7 +2121,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }
             
             
-            entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.identifier ?? .string(relativeValue?.identifier), error: rErrors?[_id_identifier], identifier: _id_identifier, mode: .plain, placeholder: InputDataInputPlaceholder(title), inputPlaceholder: subtitle, filter: { text in
+            entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.identifier ?? .string(relativeValue?.identifier), error: rErrors?[_id_identifier], identifier: _id_identifier, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(title), inputPlaceholder: subtitle, filter: { text in
                 return latinFilter(text, relative.valueKey, _id_identifier, true, updateState)
             }, limit: 20))
             index += 1
@@ -2132,18 +2132,18 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     }
     
     if let primary = primary {
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityNameInLatine), color: theme.colors.grayText, detectBold: true))
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.latinName.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderFirstName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: { text in
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityNameInLatine), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.latinName.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderFirstName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: { text in
             return latinFilter(text, primary.valueKey, _id_first_name, false, updateState)
         }, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleName ?? .string(personalDetails?.latinName.middleName ?? ""), error: pdErrors?[_id_middle_name], identifier: _id_middle_name, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderMiddleName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderMiddleName, filter: { text in
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleName ?? .string(personalDetails?.latinName.middleName ?? ""), error: pdErrors?[_id_middle_name], identifier: _id_middle_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderMiddleName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderMiddleName, filter: { text in
             return latinFilter(text, primary.valueKey, _id_middle_name, false, updateState)
         }, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.latinName.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderLastName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: { text in
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.latinName.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderLastName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: { text in
             return latinFilter(text, primary.valueKey, _id_last_name, false, updateState)
         }, limit: 255))
         index += 1
@@ -2203,21 +2203,21 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                         localizedDesc =  L10n.secureIdNameNativeDescLanguage(country)
                     }
                     
-                    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(localizedTitle), color: theme.colors.grayText, detectBold: true))
+                    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(localizedTitle), data: InputDataGeneralTextData()))
                     index += 1
                     
-                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstNameNative ?? .string(personalDetails?.nativeName?.firstName ?? ""), error: pdErrors?[_id_first_name_native], identifier: _id_first_name_native, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderFirstName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: {$0}, limit: 255))
+                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstNameNative ?? .string(personalDetails?.nativeName?.firstName ?? ""), error: pdErrors?[_id_first_name_native], identifier: _id_first_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderFirstName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: {$0}, limit: 255))
                     index += 1
                     
-                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleNameNative ?? .string(personalDetails?.nativeName?.middleName ?? ""), error: pdErrors?[_id_middle_name_native], identifier: _id_middle_name_native, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderMiddleName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderMiddleName, filter: {$0}, limit: 255))
+                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleNameNative ?? .string(personalDetails?.nativeName?.middleName ?? ""), error: pdErrors?[_id_middle_name_native], identifier: _id_middle_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderMiddleName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderMiddleName, filter: {$0}, limit: 255))
                     index += 1
                     
-                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastNameNative ?? .string(personalDetails?.nativeName?.lastName ?? ""), error: pdErrors?[_id_last_name_native], identifier: _id_last_name_native, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderLastName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: {$0}, limit: 255))
+                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastNameNative ?? .string(personalDetails?.nativeName?.lastName ?? ""), error: pdErrors?[_id_last_name_native], identifier: _id_last_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderLastName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: {$0}, limit: 255))
                     index += 1
                     
                     
                     
-                    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(localizedDesc), color: theme.colors.grayText, detectBold: true))
+                    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(localizedDesc), data: InputDataGeneralTextData()))
                     index += 1
 
                 }
@@ -2244,11 +2244,11 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         sectionId += 1
         
         let rErrors = state.errors[relative.valueKey]
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdScansHeader), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdScansHeader), data: InputDataGeneralTextData()))
         index += 1
         
         if let scanError = rErrors?[_id_scan] {
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(scanError.description), color: theme.colors.redUI, detectBold: true))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(scanError.description), data: InputDataGeneralTextData(color: theme.colors.redUI)))
             index += 1
         }
         if let accessContext = state.accessContext {
@@ -2351,11 +2351,11 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), color: theme.colors.grayText, detectBold: true))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), data: InputDataGeneralTextData()))
             index += 1
             
             if let translationError = rErrors?[_id_translation] {
-                entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(translationError.description), color: theme.colors.redUI, detectBold: true))
+                entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(translationError.description), data: InputDataGeneralTextData(color: theme.colors.redUI)))
                 index += 1
             }
             
@@ -2397,12 +2397,12 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }
             
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationDesc), color: theme.colors.grayText, detectBold: true))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationDesc), data: InputDataGeneralTextData()))
             index += 1
         }
         
         
-//        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.secureIdIdentityScanDescription, color: theme.colors.grayText, detectBold: true))
+//        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.secureIdIdentityScanDescription, data: InputDataGeneralTextData()))
 //        index += 1
         
     }
@@ -2431,7 +2431,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.secureIdEmailActivateCodePlaceholder), inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdEmailActivateCodePlaceholder), inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     index += 1
     
     
@@ -2439,7 +2439,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(info, linkHandler: { _ in
         unavailable()
-    }), color: theme.colors.grayText, detectBold: false))
+    }), data: InputDataGeneralTextData(detectBold: false)))
 
     
     index += 1

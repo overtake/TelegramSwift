@@ -115,10 +115,10 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? L10n.newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : L10n.newPollQuestionHeader), color: theme.colors.grayText, detectBold: false))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? L10n.newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : L10n.newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, placeholder: nil, inputPlaceholder: L10n.newPollQuestionPlaceholder, filter: { text in
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.newPollQuestionPlaceholder, filter: { text in
         
         var text = text
         while text.contains("\n\n\n") {
@@ -140,11 +140,11 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollOptionsHeader), color: theme.colors.grayText, detectBold: false))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollOptionsHeader), data: InputDataGeneralTextData(detectBold: false)))
     index += 1
     
     for (_, option) in state.options.enumerated() {
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, placeholder: InputDataInputPlaceholder(nil, icon: theme.icons.pollDeleteOption, drawBorderAfterPlaceholder: true, hasLimitationText: true, rightResoringImage: theme.icons.resort, action: {
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(nil, icon: theme.icons.pollDeleteOption, drawBorderAfterPlaceholder: true, hasLimitationText: true, rightResoringImage: theme.icons.resort, action: {
             deleteOption(option.identifier)
         }), inputPlaceholder: L10n.newPollOptionsPlaceholder, filter: { text in
             return text.trimmingCharacters(in: CharacterSet.newlines)
@@ -160,7 +160,7 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
 
     index = 50
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.options.count < 2 ? L10n.newPollOptionsDescriptionMinimumCountable(2) : optionsLimit == state.options.count ? L10n.newPollOptionsDescriptionLimitReached : L10n.newPollOptionsDescriptionCountable(optionsLimit - state.options.count)), color: theme.colors.grayText, detectBold: false))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.options.count < 2 ? L10n.newPollOptionsDescriptionMinimumCountable(2) : optionsLimit == state.options.count ? L10n.newPollOptionsDescriptionLimitReached : L10n.newPollOptionsDescriptionCountable(optionsLimit - state.options.count)), data: InputDataGeneralTextData(detectBold: false)))
     index += 1
     
     

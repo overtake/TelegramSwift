@@ -52,34 +52,34 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsAlternativeOptionsSection), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsAlternativeOptionsSection), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
     if activeAccounts.count < 3 {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.logoutOptionsAddAccountTitle, color: theme.colors.text, icon: theme.icons.logoutOptionAddAccount, type: .next, description: L10n.logoutOptionsAddAccountText, action: arguments.addAccount)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.logoutOptionsAddAccountTitle, color: theme.colors.text, icon: theme.icons.logoutOptionAddAccount, type: .next, viewType: .firstItem, description: L10n.logoutOptionsAddAccountText, action: arguments.addAccount)))
         index += 1
     }
 
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: L10n.logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, description: L10n.logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: L10n.logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, viewType: .innerItem, description: L10n.logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_cache, data: InputDataGeneralData(name: L10n.logoutOptionsClearCacheTitle, color: theme.colors.text, icon: theme.icons.logoutOptionClearCache, type: .next, description: L10n.logoutOptionsClearCacheText, action: arguments.clearCache)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_cache, data: InputDataGeneralData(name: L10n.logoutOptionsClearCacheTitle, color: theme.colors.text, icon: theme.icons.logoutOptionClearCache, type: .next, viewType: .innerItem, description: L10n.logoutOptionsClearCacheText, action: arguments.clearCache)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_change_phone_number, data: InputDataGeneralData(name: L10n.logoutOptionsChangePhoneNumberTitle, color: theme.colors.text, icon: theme.icons.logoutOptionChangePhoneNumber, type: .next, description: L10n.logoutOptionsChangePhoneNumberText, action: arguments.changePhoneNumber)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_change_phone_number, data: InputDataGeneralData(name: L10n.logoutOptionsChangePhoneNumberTitle, color: theme.colors.text, icon: theme.icons.logoutOptionChangePhoneNumber, type: .next, viewType: .innerItem, description: L10n.logoutOptionsChangePhoneNumberText, action: arguments.changePhoneNumber)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contact_support, data: InputDataGeneralData(name: L10n.logoutOptionsContactSupportTitle, color: theme.colors.text, icon: theme.icons.logoutOptionContactSupport, type: .next, description: L10n.logoutOptionsContactSupportText, action: arguments.contactSupport)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contact_support, data: InputDataGeneralData(name: L10n.logoutOptionsContactSupportTitle, color: theme.colors.text, icon: theme.icons.logoutOptionContactSupport, type: .next, viewType: .lastItem, description: L10n.logoutOptionsContactSupportText, action: arguments.contactSupport)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_log_out, data: InputDataGeneralData(name: L10n.logoutOptionsLogOut, color: theme.colors.redUI, action: arguments.logout)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_log_out, data: InputDataGeneralData(name: L10n.logoutOptionsLogOut, color: theme.colors.redUI, viewType: .singleItem, action: arguments.logout)))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsLogOutInfo), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsLogOutInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))

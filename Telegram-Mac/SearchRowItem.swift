@@ -21,10 +21,10 @@ class SearchRowItem: GeneralRowItem {
     }
     
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, searchInteractions:SearchInteractions, isLoading:Bool = false, drawCustomSeparator: Bool = true, border: BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left:30,right:30, top: 10, bottom: 10)) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, searchInteractions:SearchInteractions, isLoading:Bool = false, drawCustomSeparator: Bool = true, border: BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left:30,right:30, top: 10, bottom: 10), viewType: GeneralViewType = .legacy) {
         self.searchInteractions = searchInteractions
         self.isLoading = isLoading
-        super.init(initialSize, height: 0, stableId: stableId, type: .none, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
+        super.init(initialSize, height: 0, stableId: stableId, type: .none, viewType: viewType, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
     

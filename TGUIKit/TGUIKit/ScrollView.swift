@@ -191,7 +191,7 @@ open class ScrollView: NSScrollView{
 //        if deltaCorner > 0 {
 //            var origin = clipView.bounds.origin
 //
-//            deltaCorner = max(Int64(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 6.0)),40)
+//            deltaCorner = max(Int64(floorToScreenPixels(backingScaleFactor, frame.height / 6.0)),40)
 //
 //
 //

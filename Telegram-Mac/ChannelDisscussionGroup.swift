@@ -198,7 +198,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             }))
             index += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelSetDescription), color: theme.colors.grayText, detectBold: true))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelSetDescription), data: InputDataGeneralTextData()))
             index += 1
             
             if state.unlinkAbility {
@@ -231,7 +231,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
            
             applyList()
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelEmptyDescription), color: theme.colors.grayText, detectBold: true))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelEmptyDescription), data: InputDataGeneralTextData()))
             index += 1
             
         }
@@ -256,7 +256,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             }))
             index += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerGroupSetDescription), color: theme.colors.grayText, detectBold: true))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerGroupSetDescription), data: InputDataGeneralTextData()))
             index += 1
             
             entries.append(.sectionId(sectionId, type: .normal))

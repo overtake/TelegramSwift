@@ -40,9 +40,9 @@ private func newThemeEntries(state: NewThemeState) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, placeholder: nil, inputPlaceholder: L10n.newThemePlaceholder, filter: { $0 }, limit: 100))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.newThemePlaceholder, filter: { $0 }, limit: 100))
     index += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newThemeDesc), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newThemeDesc), data: InputDataGeneralTextData()))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1

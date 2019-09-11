@@ -81,12 +81,12 @@ private enum InstalledStickerPacksEntryId: Hashable {
 
 private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     case section(sectionId:Int32)
-    case suggestOptions(sectionId: Int32, String)
-    case trending(sectionId:Int32, Int32)
-    case archived(sectionId:Int32)
-    case packsTitle(sectionId:Int32, String)
-    case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, ItemListStickerPackItemEditing)
-    case packsInfo(sectionId:Int32, String)
+    case suggestOptions(sectionId: Int32, String, GeneralViewType)
+    case trending(sectionId:Int32, Int32, GeneralViewType)
+    case archived(sectionId:Int32, GeneralViewType)
+    case packsTitle(sectionId:Int32, String, GeneralViewType)
+    case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, ItemListStickerPackItemEditing, GeneralViewType)
+    case packsInfo(sectionId:Int32, String, GeneralViewType)
     
     
     var stableId: InstalledStickerPacksEntryId {
@@ -99,7 +99,7 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             return .index(2)
         case .packsTitle:
             return .index(3)
-        case let .pack(_, _, info, _, _, _, _):
+        case let .pack(_, _, info, _, _, _, _, _):
             return .pack(info.id)
         case .packsInfo:
             return .index(4)
@@ -130,17 +130,17 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case let .suggestOptions(sectionId, _):
+        case let .suggestOptions(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .trending(sectionId, _):
+        case let .trending(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .archived(sectionId):
+        case let .archived(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .packsTitle(sectionId, _):
+        case let .packsTitle(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .pack( sectionId, index, _, _, _, _, _):
+        case let .pack( sectionId, index, _, _, _, _, _, _):
             return (sectionId * 1000) + 100 + index
-        case let .packsInfo(sectionId, _):
+        case let .packsInfo(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -153,23 +153,23 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     
     func item(_ arguments: InstalledStickerPacksControllerArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
-        case let .suggestOptions(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.stickersSuggestStickers, type: .context(value), action: {
+        case let .suggestOptions(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.stickersSuggestStickers, type: .context(value), viewType: viewType, action: {
                 arguments.openSuggestionOptions()
             })
-        case let .trending(_, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersTranding), type: .context(count > 0 ? "\(count)" : ""), action: {
+        case let .trending(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersTranding), type: .context(count > 0 ? "\(count)" : ""), viewType: viewType, action: {
                 arguments.openFeatured()
             })
            
-        case .archived:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersArchived), type: .next, action: {
+        case let .archived(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.installedStickersArchived), type: .next, viewType: viewType, action: {
                 arguments.openArchived()
             })
-        case let .packsTitle(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .pack(_, _, info, topItem, count, enabled, editing):
-            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .none, action: {
+        case let .packsTitle(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .pack(_, _, info, topItem, count, enabled, editing, viewType):
+            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: editing, enabled: enabled, control: .none, viewType: viewType, action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 
@@ -177,10 +177,10 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
                 arguments.removePack(info.id)
             })
 
-        case let .packsInfo(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
+        case let .packsInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -232,7 +232,7 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
     case .installed:
         suggestString = L10n.stickersSuggestAdded
     }
-    entries.append(.suggestOptions(sectionId: sectionId, suggestString))
+    entries.append(.suggestOptions(sectionId: sectionId, suggestString, .firstItem))
     
     if featured.count != 0 {
         var unreadCount: Int32 = 0
@@ -241,29 +241,29 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
                 unreadCount += 1
             }
         }
-        entries.append(.trending(sectionId: sectionId, unreadCount))
+        entries.append(.trending(sectionId: sectionId, unreadCount, .innerItem))
     }
-    entries.append(.archived(sectionId: sectionId))
+    entries.append(.archived(sectionId: sectionId, .lastItem))
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.packsTitle(sectionId: sectionId, tr(L10n.installedStickersPacksTitle)))
+    entries.append(.packsTitle(sectionId: sectionId, tr(L10n.installedStickersPacksTitle), .textTopItem))
     
     if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
         if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
             var index: Int32 = 0
             for entry in packsEntries {
                 if let info = entry.info as? StickerPackCollectionInfo {
-                    entries.append(.pack(sectionId: sectionId, index, info, entry.firstItem as? StickerPackItem, info.count == 0 ? entry.count : info.count, true, ItemListStickerPackItemEditing(editable: true, editing: state.editing)))
+                    let viewType: GeneralViewType = bestGeneralViewType(packsEntries, for: entry)
+                   
+                    entries.append(.pack(sectionId: sectionId, index, info, entry.firstItem as? StickerPackItem, info.count == 0 ? entry.count : info.count, true, ItemListStickerPackItemEditing(editable: true, editing: state.editing), viewType))
                     index += 1
                 }
             }
         }
     }
-    entries.append(.section(sectionId: sectionId))
-    sectionId += 1
-    entries.append(.packsInfo(sectionId: sectionId, tr(L10n.installedStickersDescrpiption)))
+    entries.append(.packsInfo(sectionId: sectionId, L10n.installedStickersDescrpiption, .textBottomItem))
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     return entries
@@ -314,10 +314,10 @@ class InstalledStickerPacksController: TableViewController {
         actionsDisposable.add(resolveDisposable)
         
         let arguments = InstalledStickerPacksControllerArguments(context: context, openStickerPack: { info in
-            showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: context.window)
         }, removePack: { id in
             
-            confirm(for: mainWindow, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in
+            confirm(for: context.window, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in
                 switch result {
                 case .basic:
                     _ = removeStickerPackInteractively(postbox: context.account.postbox, id: id, option: RemoveStickerPackOption.archive).start()
@@ -401,7 +401,7 @@ class InstalledStickerPacksController: TableViewController {
                         
                         
                         let fromEntry = entries[fromIndex]
-                        guard case let .pack(_, _, fromPackInfo, _, _, _, _) = fromEntry else {
+                        guard case let .pack(_, _, fromPackInfo, _, _, _, _, _) = fromEntry else {
                             return
                         }
                         
@@ -410,7 +410,7 @@ class InstalledStickerPacksController: TableViewController {
                         var afterAll = false
                         if toIndex < entries.count {
                             switch entries[toIndex] {
-                            case let .pack(_, _, toPackInfo, _, _, _, _):
+                            case let .pack(_, _, toPackInfo, _, _, _, _, _):
                                 referenceId = toPackInfo.id
                             default:
                                 if entries[toIndex] < fromEntry {

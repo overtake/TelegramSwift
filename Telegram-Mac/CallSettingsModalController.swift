@@ -42,7 +42,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     sectionId += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOutputTitle), color: theme.colors.grayText, detectBold: false))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOutputTitle), data: InputDataGeneralTextData(detectBold: false)))
     index += 1
 
     let currentOutput = outputDevices.first(where: {$0.deviceId == state.outputDeviceId}) ?? inputDevices.first!
@@ -59,7 +59,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), color: theme.colors.grayText, detectBold: false))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), data: InputDataGeneralTextData(detectBold: false)))
     index += 1
     
     
@@ -80,7 +80,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     sectionId += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOtherSettingsTitle), color: theme.colors.grayText, detectBold: false))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOtherSettingsTitle), data: InputDataGeneralTextData(detectBold: false)))
     index += 1
     
     #if !APP_STORE

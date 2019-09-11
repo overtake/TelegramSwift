@@ -159,7 +159,7 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
             if  let header = header, let message = message {
                 header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0) + topOffset, header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
                 if headerAttr == nil {
-                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels(scaleFactor: view.backingScaleFactor, topOffset + (size.height - topOffset - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
+                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels(view.backingScaleFactor, topOffset + (size.height - topOffset - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
                 } else {
                     message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), header.0.size.height + yInset + (isSideAccessory ? 5 : 0) + topOffset, message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
                 }

@@ -335,7 +335,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
             default:
                 fittedSize = fittedSize.fitted(arguments.imageSize)
             }
-            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -1026,7 +1026,7 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
             default:
                 fittedSize = fittedSize.fitted(arguments.imageSize)
             }
-            var fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+            var fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             //
             //            let drawingRect = arguments.drawingRect
             //            var fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
@@ -2286,7 +2286,7 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize)//.fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(scaleFactor: System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             
             

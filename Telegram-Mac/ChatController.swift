@@ -574,7 +574,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             case .DateEntry:
                 item = ChatDateStickItem(initialSize, entry.appearance.entry, interaction: interaction, theme: theme)
             case .bottom:
-                item = GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId)
+                item = GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
             }
             _ = item.makeSize(initialSize.width)
             return item;

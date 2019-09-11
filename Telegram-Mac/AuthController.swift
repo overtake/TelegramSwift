@@ -245,7 +245,7 @@ class AuthHeaderView : View {
             intro.change(pos: NSMakePoint(intro.frame.minX, 20), animated: animated)
             intro.change(opacity: 1, animated: animated)
             loginView.change(pos: NSMakePoint(loginView.frame.minX, intro.frame.maxY + 30), animated: animated)
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - textHeaderView.frame.height)/2)), animated: animated)
+            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, floorToScreenPixels(backingScaleFactor, (frame.height - textHeaderView.frame.height)/2)), animated: animated)
             switchLanguage.isHidden = !needShowSuggestedButton
         case .confirmationCodeEntry:
             nextButton.change(opacity: 1, animated: animated)
@@ -283,7 +283,7 @@ class AuthHeaderView : View {
             loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 50), animated: animated)
             switchLanguage.isHidden = true
             backButton.isHidden = false
-            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(scaleFactor: backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
+            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
         case .passwordRecovery:
             break
         case .awaitingAccountReset:
@@ -302,7 +302,7 @@ class AuthHeaderView : View {
             
             nextButton.change(opacity: 0, animated: animated)
             backButton.isHidden = false
-            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(scaleFactor: backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
+            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
         }
     }
     

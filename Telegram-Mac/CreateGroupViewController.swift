@@ -25,46 +25,56 @@ fileprivate final class CreateGroupArguments {
 }
 
 fileprivate enum CreateGroupEntry : Comparable, Identifiable {
-    case info(String?, String)
-    case peer(Peer, Int, PeerPresence?)
-    
+    case info(Int32, String?, String, GeneralViewType)
+    case peer(Int32, Peer, Int32, PeerPresence?, GeneralViewType)
+    case section(Int32)
     fileprivate var stableId:AnyHashable {
         switch self {
         case .info:
-            return Int32(0)
-        case let .peer(peer, _, _):
+            return -1
+        case let .peer(_, peer, _, _, _):
             return peer.id
+        case let .section(sectionId):
+            return sectionId
         }
     }
     
-    var index:Int {
+    var index:Int32 {
         switch self {
-        case .info:
-            return 0
-        case let .peer(_, index, _):
-            return index + 1
+        case let .info(sectionId, _, _, _):
+            return (sectionId * 1000) + 0
+        case let .peer(sectionId, _, index, _, _):
+            return (sectionId * 1000) + index
+        case let .section(sectionId):
+             return (sectionId + 1) * 1000 - sectionId
         }
     }
 }
 
 fileprivate func ==(lhs:CreateGroupEntry, rhs:CreateGroupEntry) -> Bool {
     switch lhs {
-    case let .info(lhsPhoto, lhsText):
-        if case let .info(rhsPhoto, rhsText) = rhs {
-            return lhsPhoto == rhsPhoto && lhsText == rhsText
+    case let .info(section, photo, text, viewType):
+        if case .info(section, photo, text, viewType) = rhs {
+            return true
         } else {
             return false
         }
-    case let .peer(lhsPeer,lhsIndex, lhsPresence):
-        if case let .peer(rhsPeer,rhsIndex, rhsPresence) = rhs {
+    case let .section(sectionId):
+        if case .section(sectionId) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .peer(sectionId, lhsPeer, index, lhsPresence, viewType):
+        if case .peer(sectionId, let rhsPeer, index, let rhsPresence, viewType) = rhs {
             if let lhsPresence = lhsPresence, let rhsPresence = rhsPresence {
                 if !lhsPresence.isEqual(to: rhsPresence) {
                     return false
                 }
-         } else if (lhsPresence != nil) != (rhsPresence != nil) {
+            } else if (lhsPresence != nil) != (rhsPresence != nil) {
                 return false
             }
-            return lhsPeer.isEqual(rhsPeer) && lhsIndex == rhsIndex
+            return lhsPeer.isEqual(rhsPeer)
         } else {
             return false
         }
@@ -87,9 +97,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
         let (deleted,inserted,updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
             
             switch entry.entry {
-            case let .info(photo, currentText):
-                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: L10n.createGroupNameHolder, photo: photo, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
-            case let .peer(peer, _, presence):
+            case let .info(_, photo, currentText, viewType):
+                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: L10n.createGroupNameHolder, photo: photo, viewType: viewType, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
+            case let .peer(_, peer, _, presence, viewType):
                 
                 var color:NSColor = theme.colors.grayText
                 var string:String = L10n.peerStatusRecently
@@ -97,7 +107,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30))
+                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30), viewType: viewType)
+            case .section:
+                return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
             }
         })
         
@@ -113,12 +125,29 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
 
 private func createGroupEntries(_ view: MultiplePeersView, picture: String?, text: String, appearance: Appearance) -> [AppearanceWrapperEntry<CreateGroupEntry>] {
     
-    var entries:[CreateGroupEntry] = [.info(picture, text)]
-    var index:Int = 0
-    for peer in view.peers.map({$1}) {
-        entries.append(.peer(peer, index, view.presences[peer.id]))
+    
+    
+    var entries:[CreateGroupEntry] = []
+    var sectionId:Int32 = 0
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
+    entries.append(.info(sectionId, picture, text, .singleItem))
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
+    var index:Int32 = 0
+    let peers = view.peers.map({$1})
+    for (i, peer) in peers.enumerated() {
+        entries.append(.peer(sectionId, peer, index, view.presences[peer.id], bestGeneralViewType(peers, for: i)))
         index += 1
     }
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
     return entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
 }
 
@@ -196,7 +225,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
     }
     
     override func firstResponder() -> NSResponder? {
-        if let view = genericView.viewNecessary(at: 0) as? GroupNameRowView {
+        if let view = genericView.viewNecessary(at: 1) as? GroupNameRowView {
             return view.textView
         }
         return nil
@@ -213,6 +242,9 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        genericView.getBackgroundColor = {
+            return theme.colors.grayBackground
+        }
         readyOnce()
     }
     
@@ -221,7 +253,9 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
             let result = combineLatest(pictureValue.get() |> take(1), textValue.get() |> take(1)) |> map { value, text in
                 return CreateGroupResult(title: text, picture: value, peerIds: previousResult.result)
             }
-            onComplete.set(result)
+            onComplete.set(result |> filter {
+                !$0.title.isEmpty
+            })
         }
     }
     

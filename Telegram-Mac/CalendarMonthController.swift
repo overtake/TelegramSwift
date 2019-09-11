@@ -144,7 +144,7 @@ class CalendarMonthView : View {
     
     override func layout() {
         super.layout()
-        let oneSize:NSSize = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width / 7), floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height / 6))
+        let oneSize:NSSize = NSMakeSize(floorToScreenPixels(backingScaleFactor, frame.width / 7), floorToScreenPixels(backingScaleFactor, frame.height / 6))
         var inset:NSPoint = NSMakePoint(0, 0)
         for i in 0 ..< subviews.count {
             subviews[i].frame = NSMakeRect(inset.x, inset.y, oneSize.width, oneSize.height)

@@ -11,48 +11,56 @@ import TGUIKit
 import TelegramCoreMac
 import PostboxMac
 
-class GroupNameRowItem: GeneralInputRowItem {
+class GroupNameRowItem: InputDataRowItem {
 
     var photo:String?
     fileprivate let pickPicture: ((Bool)->Void)?
     fileprivate let account: Account
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, placeholder: String, photo: String? = nil, text:String = "", limit: Int32 = 140, textChangeHandler:@escaping(String)->Void = {_ in}, pickPicture: ((Bool)->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, placeholder: String, photo: String? = nil, viewType: GeneralViewType = .legacy, text:String = "", limit: Int32 = 140, textChangeHandler:@escaping(String)->Void = {_ in}, pickPicture: ((Bool)->Void)? = nil) {
         self.photo = photo
         self.account = account
         self.pickPicture = pickPicture
-        super.init(initialSize, stableId: stableId, placeholder: placeholder, text: text, limit: limit, textChangeHandler:textChangeHandler, automaticallyBecomeResponder: false)
+        super.init(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: placeholder, filter: { $0 }, updated: textChangeHandler, limit: limit)
+
     }
     
     override func viewClass() -> AnyClass {
         return GroupNameRowView.self
     }
     
+    override var textFieldLeftInset: CGFloat {
+        return 60
+    }
+    
     override var height: CGFloat {
-        return 80
+        switch viewType {
+        case .legacy:
+            return max(80, super.height)
+        case let .modern(_, insets):
+            return max(insets.bottom + insets.top + 50, super.height)
+        }
     }
     
 }
 
 
-
-
-class GroupNameRowView : GeneralInputRowView {
+class GroupNameRowView : InputDataRowView {
     private let imageView:ImageView = ImageView()
-    private let sepator:View = View()
     private let photoView: TransformImageView = TransformImageView()
     private let tranparentView: View = View()
+    private let circleView = View(frame: NSMakeRect(0, 0, 50, 50))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        textView.isSingleLine = true
-        addSubview(sepator)
-        addSubview(photoView)
-        addSubview(tranparentView)
-        addSubview(imageView)
+        containerView.addSubview(photoView)
+        containerView.addSubview(tranparentView)
+        containerView.addSubview(imageView)
+        containerView.addSubview(circleView)
         photoView.setFrameSize(50, 50)
         tranparentView.setFrameSize(50, 50)
         photoView.animatesAlphaOnFirstTransition = true
         tranparentView.layer?.cornerRadius = 25
-        separator.isHidden = true
+        circleView.layer?.cornerRadius = 25
+        circleView.layer?.borderWidth = .borderSize
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -72,16 +80,19 @@ class GroupNameRowView : GeneralInputRowView {
             photoView.set(arguments: arguments)
             
         }
+        circleView.isHidden = item.photo != nil
         tranparentView.backgroundColor = NSColor.clear
-        sepator.backgroundColor = theme.colors.border
         imageView.image = theme.icons.newChatCamera
         imageView.sizeToFit()
     }
     
-    
+    override func updateColors() {
+        super.updateColors()
+        circleView.layer?.borderColor = theme.colors.grayIcon.cgColor
+    }
     
     override func mouseUp(with event: NSEvent) {
-        let point = convert(event.locationInWindow, from: nil)
+        let point = containerView.convert(event.locationInWindow, from: nil)
         if NSPointInRect(point, photoView.frame) {
             if let item = item as? GroupNameRowItem {
                 if item.photo == nil {
@@ -99,12 +110,22 @@ class GroupNameRowView : GeneralInputRowView {
     
     override func layout() {
         super.layout()
-        textView.frame = NSMakeRect(100, 0, frame.width - 140 ,textView.frame.height)
-        textView.centerY()
-        imageView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - imageView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - imageView.frame.height)/2.0))
-        sepator.frame = NSMakeRect(105, textView.frame.maxY + 3 - .borderSize, frame.width - 140, .borderSize)
-        photoView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - photoView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - photoView.frame.height)/2.0))
-        tranparentView.setFrameOrigin(30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - tranparentView.frame.width)/2.0), 17 + floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - tranparentView.frame.height)/2.0))
+        
+        guard let item = item as? GroupNameRowItem else {return}
+
+        switch item.viewType {
+        case .legacy:
+            imageView.setFrameOrigin(30 + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.width)/2.0), 17 + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.height)/2.0))
+            photoView.setFrameOrigin(30 + floorToScreenPixels(backingScaleFactor, (50 - photoView.frame.width)/2.0), 17 + floorToScreenPixels(backingScaleFactor, (50 - photoView.frame.height)/2.0))
+            tranparentView.setFrameOrigin(30 + floorToScreenPixels(backingScaleFactor, (50 - tranparentView.frame.width)/2.0), 17 + floorToScreenPixels(backingScaleFactor, (50 - tranparentView.frame.height)/2.0))
+        case let .modern(_, insets):
+            circleView.setFrameOrigin(insets.left, insets.top)
+            imageView.setFrameOrigin(insets.left + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.width) / 2), insets.top + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.height) / 2))
+            photoView.setFrameOrigin(insets.left, insets.top)
+            tranparentView.setFrameOrigin(insets.left, insets.top)
+            textView.centerY(x: insets.left + item.textFieldLeftInset - 3)
+
+        }
 
     }
     
@@ -113,19 +134,11 @@ class GroupNameRowView : GeneralInputRowView {
     }
     
     override func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        textView._change(pos: NSMakePoint(100, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - height)/2.0)), animated: animated)
         super.textViewHeightChanged(height, animated: animated)
-        sepator._change(pos: NSMakePoint(105, textView.frame.maxY + 3 - .borderSize), animated: animated)
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        guard let item = item as? GroupNameRowItem else {return}
-
-        if item.photo == nil {
-            ctx.setStrokeColor(theme.colors.grayIcon.cgColor)
-            ctx.setLineWidth(1.0)
-            ctx.strokeEllipse(in: NSMakeRect(30, 17, 50, 50))
-        }
+        super.draw(layer, in: ctx)
     }
     
     required init?(coder: NSCoder) {

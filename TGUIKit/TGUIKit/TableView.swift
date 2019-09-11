@@ -566,7 +566,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var separator:TableSeparator = .none
     
-    public var getBackgroundColor:()->NSColor = { presentation.colors.background }
+    public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
+        didSet {
+            if super.layer?.backgroundColor != .clear {
+                super.layer?.backgroundColor = self.getBackgroundColor().cgColor
+            }
+            self.needsDisplay = true
+
+        }
+    }
+    
 
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
@@ -1572,7 +1581,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
-                view.setFrameSize(NSMakeSize(frame.width, item.heightValue))
+                view.change(size: NSMakeSize(frame.width, item.heightValue), animated: animated)
                 view.set(item: item, animated: animated)
                 view.needsDisplay = true
             } else {
@@ -2143,13 +2152,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let oldEmpty = self.isEmpty
         
-        for subview in tableView.subviews.reversed() {
-            if let subview = subview as? NSTableRowView {
-                if tableView.row(for: subview) == -1 {
-                    subview.removeFromSuperview()
-                }
-            }
-        }
+//        for subview in tableView.subviews.reversed() {
+//            if let subview = subview as? NSTableRowView {
+//                if tableView.row(for: subview) == -1 {
+//                    subview.removeFromSuperview()
+//                }
+//            }
+//        }
 
         
         self.beginUpdates()
@@ -2361,10 +2370,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             switch searchState {
             case .none:
-                searchView.change(pos: NSMakePoint(0, -searchView.frame.height), animated: transition.animated)
-                searchView.searchView.cancel(false)
+                searchView.change(pos: NSMakePoint(0, -searchView.frame.height), animated: true)
+                searchView.searchView.cancel(true)
             case let .visible(data):
-                searchView.change(pos: NSZeroPoint, animated: transition.animated)
+                searchView.change(pos: NSZeroPoint, animated: true)
                 searchView.applySearchResponder()
                 searchView.updateDatas(data)
             }
@@ -2652,11 +2661,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             case .center:
                 if !tableView.isFlipped {
-                    rowRect.origin.y -= floorToScreenPixels(scaleFactor: backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
+                    rowRect.origin.y -= floorToScreenPixels(backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
                 } else {
                     
                     if rowRect.maxY > height/2.0 {
-                        rowRect.origin.y -= floorToScreenPixels(scaleFactor: backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
+                        rowRect.origin.y -= floorToScreenPixels(backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
                     } else {
                         rowRect.origin.y = 0
                     }

@@ -76,7 +76,7 @@ class StickerPackPanelRowItem: TableRowItem {
             layout.measure(width: 300)
             self.packNameLayout = layout
             
-            self.namePoint = NSMakePoint(10, floorToScreenPixels(scaleFactor: System.backingScale, ((!packInfo.installed ? 50 : 30) - layout.layoutSize.height) / 2))
+            self.namePoint = NSMakePoint(10, floorToScreenPixels(System.backingScale, ((!packInfo.installed ? 50 : 30) - layout.layoutSize.height) / 2))
         } else {
             namePoint = NSZeroPoint
             self.packNameLayout = nil

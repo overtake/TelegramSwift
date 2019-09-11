@@ -43,7 +43,7 @@ private class CallRatingModalView: View {
             star.sizeToFit()
             star.setFrameOrigin(x, 0)
             rating.addSubview(star)
-            x += floorToScreenPixels(scaleFactor: backingScaleFactor, star.frame.width) + 10
+            x += floorToScreenPixels(backingScaleFactor, star.frame.width) + 10
             
             star.set(handler: { [weak self] current in
                 for j in 0 ... i {
@@ -56,7 +56,7 @@ private class CallRatingModalView: View {
                 self?.starsChangeHandler?( Int32(i + 1) )
             }, for: .Click)
         }
-        rating.setFrameSize(x - 10, floorToScreenPixels(scaleFactor: backingScaleFactor, rating.subviews[0].frame.height))
+        rating.setFrameSize(x - 10, floorToScreenPixels(backingScaleFactor, rating.subviews[0].frame.height))
         addSubview(rating)
         rating.center()
         

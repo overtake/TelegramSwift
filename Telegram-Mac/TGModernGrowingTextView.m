@@ -1078,12 +1078,15 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             [_placeholder.layer addAnimation:oAnim forKey:@"opacity"];
             
             
+            NSPoint toPoint = self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(self._endXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)));
+            
+            
             CABasicAnimation *pAnim = [CABasicAnimation animationWithKeyPath:@"position"];
             pAnim.removedOnCompletion = YES;
             pAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             pAnim.duration = 0.2;
             pAnim.fromValue = [NSValue valueWithPoint:NSMakePoint(presentX, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
-            pAnim.toValue =  [NSValue valueWithPoint:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(self._endXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
+            pAnim.toValue =  [NSValue valueWithPoint:toPoint];
             
             pAnim.delegate = self;
             [_placeholder.layer removeAnimationForKey:@"position"];

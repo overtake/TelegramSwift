@@ -358,6 +358,10 @@ class PeerInfoController: EditableViewController<TableView> {
     override func viewDidLoad() -> Void {
         super.viewDidLoad()
         
+        self.genericView.getBackgroundColor = {
+            theme.colors.grayBackground
+        }
+        
         let previousEntries = Atomic<[AppearanceWrapperEntry<PeerInfoSortableEntry>]?>(value: nil)
         let context = self.context
         let peerId = self.peerId

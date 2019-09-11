@@ -74,10 +74,10 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     var index:Int32 = 0
     
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.errors[_id_input_title], identifier: _id_input_title, mode: .plain, placeholder: nil, inputPlaceholder: L10n.editThemeNamePlaceholder, filter: { $0 }, limit: 128))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.errors[_id_input_title], identifier: _id_input_title, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.editThemeNamePlaceholder, filter: { $0 }, limit: 128))
     index += 1
 
-//    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.slug), error: state.errors[_id_input_slug], identifier: _id_input_slug, mode: .plain, placeholder: InputDataInputPlaceholder("t.me/addtheme/", hasLimitationText: true), inputPlaceholder: L10n.editThemeSlugPlaceholder, filter: { $0 }, limit: 64))
+//    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.slug), error: state.errors[_id_input_slug], identifier: _id_input_slug, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder("t.me/addtheme/", hasLimitationText: true), inputPlaceholder: L10n.editThemeSlugPlaceholder, filter: { $0 }, limit: 64))
 //    index += 1
     
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(state.slug), identifier: _id_input_slug, equatable: InputDataEquatable(state.slug), item: { size, id in
@@ -90,10 +90,10 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     let slugDesc = L10n.editThemeSlugDesc
     
     if let error = state.errors[_id_input_slug] {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.description), color: theme.colors.redUI, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.description), data: InputDataGeneralTextData(color: theme.colors.redUI)))
         index += 1
     } else {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(slugDesc), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(slugDesc), data: InputDataGeneralTextData()))
         index += 1
     }
     
@@ -148,7 +148,7 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     })))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(selectFileDesc), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(selectFileDesc), data: InputDataGeneralTextData()))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))

@@ -51,10 +51,10 @@ private class TouchIdContainerView : View {
         layout.draw(NSMakeRect(f.minX, 0, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(0, floorToScreenPixels(scaleFactor: backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
+        ctx.fill(NSMakeRect(0, floorToScreenPixels(backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
         
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(f.maxX + 10, floorToScreenPixels(scaleFactor: backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
+        ctx.fill(NSMakeRect(f.maxX + 10, floorToScreenPixels(backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
     }
 }
 
@@ -251,7 +251,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         logoutTextView.update(logoutTextView.layout)
         
         nameView.center()
-        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(scaleFactor: backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
+        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
         logoutTextView.centerX(y:frame.height - logoutTextView.frame.height - 20)
         
         inputContainer.centerX(y: nameView.frame.maxY + 30)

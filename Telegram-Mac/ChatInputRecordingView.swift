@@ -130,7 +130,7 @@ class ChatInputRecordingView: View {
         statusImage.centerY(x: frame.width - statusImage.frame.width - 20)
         
         let max = (frame.width - (statusImage.frame.width + 20 + 50))
-        descView.centerY(x:60 + floorToScreenPixels(scaleFactor: backingScaleFactor, (max - descView.frame.width)/2))
+        descView.centerY(x:60 + floorToScreenPixels(backingScaleFactor, (max - descView.frame.width)/2))
 
     }
     

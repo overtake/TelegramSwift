@@ -265,7 +265,7 @@ class InstantPageSelectText : NSObject {
                             var minX:CGFloat = item.0.frame.minX
                             switch textItem.alignment {
                             case .center:
-                                minX += floorToScreenPixels(scaleFactor: System.backingScale, (item.0.frame.width - line.frame.width) / 2)
+                                minX += floorToScreenPixels(System.backingScale, (item.0.frame.width - line.frame.width) / 2)
                             default:
                                 break
                             }
@@ -519,7 +519,7 @@ class InstantPageSelectText : NSObject {
                 for line in textItem.lines {
                     switch textItem.alignment {
                     case .center:
-                        itemRect.origin.x -= floorToScreenPixels(scaleFactor: System.backingScale, (textItem.frame.width - line.frame.width) / 2)
+                        itemRect.origin.x -= floorToScreenPixels(System.backingScale, (textItem.frame.width - line.frame.width) / 2)
                     case .right:
                         itemRect.origin.x = textItem.frame.width - itemRect.origin.x
                     default:
@@ -540,7 +540,7 @@ class InstantPageSelectText : NSObject {
             var minX:CGFloat = item.frame.minX
             switch alignment {
             case .center:
-                minX += floorToScreenPixels(scaleFactor: System.backingScale, (item.frame.width - line.frame.width) / 2)
+                minX += floorToScreenPixels(System.backingScale, (item.frame.width - line.frame.width) / 2)
             case .right:
                 minX = item.frame.width - minX
             default:
@@ -612,7 +612,7 @@ class InstantPageSelectText : NSObject {
 //            var minX:CGFloat = itemRect.minX
 //            switch item.alignment {
 //            case .center:
-//                minX += floorToScreenPixels(scaleFactor: System.backingScale, (itemRect.width - line.frame.width) / 2)
+//                minX += floorToScreenPixels(System.backingScale, (itemRect.width - line.frame.width) / 2)
 //            default:
 //                break
 //            }

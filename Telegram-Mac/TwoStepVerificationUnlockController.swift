@@ -234,32 +234,32 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
             case let .notSet(pendingEmail):
                 if let pendingEmail = pendingEmail {
                     
-                    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.emailCode), error: state.errors[_id_input_enter_email_code], identifier: _id_input_enter_email_code, mode: .plain, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: pendingEmail.email.codeLength ?? 255))
+                    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.emailCode), error: state.errors[_id_input_enter_email_code], identifier: _id_input_enter_email_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: pendingEmail.email.codeLength ?? 255))
                     index += 1
                     
                     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthConfirmationTextNew + "\n\n\(pendingEmail.email.pattern)\n\n[" + L10n.twoStepAuthConfirmationAbort + "]()", linkHandler: { url in
                         abort()
-                    }), color: theme.colors.grayText, detectBold: false))
+                    }), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
                     index += 1
 
         
                 } else {
-                    entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_set_password, data: InputDataGeneralData(name: L10n.twoStepAuthSetPassword, color: theme.colors.text, icon: nil, type: .none, action: nil)))
+                    entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_set_password, data: InputDataGeneralData(name: L10n.twoStepAuthSetPassword, color: theme.colors.text, icon: nil, type: .none, viewType: .singleItem, action: nil)))
                     index += 1
-                    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetPasswordHelp), color: theme.colors.grayText, detectBold: true))
+                    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetPasswordHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                     index += 1
                 }
             case let .set(hint, _, _):
-                entries.append(.input(sectionId: sectionId, index: index, value: .string(state.passwordText), error: state.errors[_id_input_enter_pwd], identifier: _id_input_enter_pwd, mode: .secure, placeholder: nil, inputPlaceholder: L10n.twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
+                entries.append(.input(sectionId: sectionId, index: index, value: .string(state.passwordText), error: state.errors[_id_input_enter_pwd], identifier: _id_input_enter_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
                 index += 1
                 if hint.isEmpty {
                     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
                         forgotPassword()
-                    }), color: theme.colors.grayText, detectBold: true))
+                    }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                 } else {
                     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHint(hint) + "\n\n" + L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
                          forgotPassword()
-                    }), color: theme.colors.grayText, detectBold: true))
+                    }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                 }
                 index += 1
             }
@@ -268,11 +268,11 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
         }
     case let .manage(_, emailSet, pendingEmail, _):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_change_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthChangePassword, color: theme.colors.text, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_change_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthChangePassword, color: theme.colors.text, icon: nil, type: .none, viewType: .firstItem, action: nil)))
         index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_remove_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthRemovePassword, color: theme.colors.text, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_remove_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthRemovePassword, color: theme.colors.text, icon: nil, type: .none, viewType: .innerItem, action: nil)))
         index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_setup_email, data: InputDataGeneralData(name: emailSet ? L10n.twoStepAuthChangeEmail : L10n.twoStepAuthSetupEmail, color: theme.colors.text, icon: nil, type: .none, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_setup_email, data: InputDataGeneralData(name: emailSet ? L10n.twoStepAuthChangeEmail : L10n.twoStepAuthSetupEmail, color: theme.colors.text, icon: nil, type: .none, viewType: .lastItem, action: nil)))
         index += 1
         
         
@@ -280,17 +280,19 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_enter_email_code, data: InputDataGeneralData(name: L10n.twoStepAuthEnterEmailCode, color: theme.colors.text, icon: nil, type: .none, action: nil)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_enter_email_code, data: InputDataGeneralData(name: L10n.twoStepAuthEnterEmailCode, color: theme.colors.text, icon: nil, type: .none, viewType: .singleItem, action: nil)))
             index += 1
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthEmailSent), color: theme.colors.grayText, detectBold: true))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthEmailSent), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
 
         } else {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthGenericHelp), color: theme.colors.grayText, detectBold: true))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthGenericHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
         }
 
     }
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
 
     
     return entries
@@ -846,14 +848,17 @@ private func twoStepVerificationResetPasswordEntries( state: TwoStepVerification
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.errors[_id_input_recovery_code], identifier: _id_input_recovery_code, mode: .plain, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.errors[_id_input_recovery_code], identifier: _id_input_recovery_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 255))
     index += 1
     
     let info = L10n.twoStepAuthRecoveryCodeHelp + "\n\n\(L10n.twoStepAuthRecoveryEmailUnavailableNew(state.emailPattern))"
 
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(info, linkHandler: { _ in
         unavailable()
-    }), color: theme.colors.grayText, detectBold: false))
+    }), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
     return entries
 }
@@ -974,42 +979,45 @@ private func twoStepVerificationPasswordEntryControllerEntries(state: TwoStepVer
             placeholder = L10n.twoStepAuthEnterPasswordPassword
         }
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_pwd], identifier: _id_input_entry_pwd, mode: .secure, placeholder: nil, inputPlaceholder: placeholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_pwd], identifier: _id_input_entry_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: placeholder, filter: { $0 }, limit: 255))
         index += 1
         
         switch mode {
         case .setup:
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupPasswordDesc), color: theme.colors.grayText, detectBold: true))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupPasswordDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
         case .change:
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthChangePasswordDesc), color: theme.colors.grayText, detectBold: true))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthChangePasswordDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
         default:
             break
         }
         
     case let .reentry(_, text):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_reentry_pwd], identifier: _id_input_reentry_pwd, mode: .secure, placeholder: nil, inputPlaceholder: L10n.twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_reentry_pwd], identifier: _id_input_reentry_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
         index += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupPasswordConfirmPassword), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupPasswordConfirmPassword), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
     case let .hint(_, text):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_hint], identifier: _id_input_entry_hint, mode: .plain, placeholder: nil, inputPlaceholder: L10n.twoStepAuthSetupHintPlaceholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_hint], identifier: _id_input_entry_hint, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthSetupHintPlaceholder, filter: { $0 }, limit: 255))
         index += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupHintDesc), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupHintDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
     case let .email(_, _, text, change):
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_email], identifier: _id_input_entry_email, mode: .plain, placeholder: nil, inputPlaceholder: L10n.twoStepAuthEmail, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_email], identifier: _id_input_entry_email, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthEmail, filter: { $0 }, limit: 255))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(change ? L10n.twoStepAuthEmailHelpChange : L10n.twoStepAuthEmailHelp), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(change ? L10n.twoStepAuthEmailHelpChange : L10n.twoStepAuthEmailHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     case let .code(text, codeLength, pattern):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_code], identifier: _id_input_entry_code, mode: .plain, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: codeLength ?? 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_code], identifier: _id_input_entry_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: codeLength ?? 255))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthConfirmEmailCodeDesc(pattern)), color: theme.colors.grayText, detectBold: false))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthConfirmEmailCodeDesc(pattern)), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     }
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
     return entries
 }

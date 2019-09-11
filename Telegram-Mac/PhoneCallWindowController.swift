@@ -152,7 +152,7 @@ private class PhoneCallWindowView : View {
         secureTextView.center()
         secureTextView.setFrameOrigin(secureTextView.frame.minX + 2, secureTextView.frame.minY)
         secureContainerView.centerX(y: frame.height - 170 - secureContainerView.frame.height)
-        muteControl.setFrameOrigin(frame.width - 60 - muteControl.frame.width, 30 + floorToScreenPixels(scaleFactor: backingScaleFactor, (declineControl.frame.height - muteControl.frame.height)/2))
+        muteControl.setFrameOrigin(frame.width - 60 - muteControl.frame.width, 30 + floorToScreenPixels(backingScaleFactor, (declineControl.frame.height - muteControl.frame.height)/2))
         
         closeMissedControl.setFrameOrigin(80, 30)
         
@@ -221,7 +221,7 @@ private class PhoneCallWindowView : View {
                     self?.declineControl.isHidden = true
                 }
             })
-            acceptControl.change(pos: NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.width - acceptControl.frame.width) / 2), 30), animated: animated)
+            acceptControl.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - acceptControl.frame.width) / 2), 30), animated: animated)
             acceptControl.set(image: theme.icons.callWindowDecline, for: .Normal)
             
             muteControl.isHidden = false
@@ -352,7 +352,7 @@ class PhoneCallWindowController {
         
         let size = NSMakeSize(300, 460)
         if let screen = NSScreen.main {
-            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView], backing: .buffered, defer: true, screen: screen)
+            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView], backing: .buffered, defer: true, screen: screen)
             self.window.level = .modalPanel
             self.window.backgroundColor = .clear
         } else {

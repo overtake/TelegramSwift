@@ -22,57 +22,57 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderGeneric), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderGeneric), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("messagesSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.generic.wifi.outgoing + stats.generic.cellular.outgoing))), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("messagesSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.generic.wifi.outgoing + stats.generic.cellular.outgoing))), viewType: .firstItem, action: nil)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("messagesReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.generic.wifi.incoming + stats.generic.cellular.incoming))), action: nil)))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderImages), color: theme.colors.grayText, detectBold: true))
-    index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("imagesSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.image.wifi.outgoing + stats.image.cellular.outgoing))), action: nil)))
-    index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("imagesReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.image.wifi.incoming + stats.image.cellular.incoming))), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("messagesReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.generic.wifi.incoming + stats.generic.cellular.incoming))), viewType: .lastItem, action: nil)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderVideos), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderImages), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("videosSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.video.wifi.outgoing + stats.video.cellular.outgoing))), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("imagesSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.image.wifi.outgoing + stats.image.cellular.outgoing))), viewType: .firstItem, action: nil)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("videosReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.video.wifi.incoming + stats.video.cellular.incoming))), action: nil)))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderAudio), color: theme.colors.grayText, detectBold: true))
-    index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("audioSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.audio.wifi.outgoing + stats.audio.cellular.outgoing))), action: nil)))
-    index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("audioReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.audio.wifi.incoming + stats.audio.cellular.incoming))), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("imagesReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.image.wifi.incoming + stats.image.cellular.incoming))), viewType: .lastItem, action: nil)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderFiles), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderVideos), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("filesSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.file.wifi.outgoing + stats.file.cellular.outgoing))), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("videosSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.video.wifi.outgoing + stats.video.cellular.outgoing))), viewType: .firstItem, action: nil)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("filesReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.file.wifi.incoming + stats.file.cellular.incoming))), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("videosReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.video.wifi.incoming + stats.video.cellular.incoming))), viewType: .lastItem, action: nil)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("reset"), data: InputDataGeneralData(name: L10n.networkUsageReset, color: theme.colors.accent, icon: nil, type: .none, action: nil)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderAudio), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    index += 1
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("audioSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.audio.wifi.outgoing + stats.audio.cellular.outgoing))), viewType: .firstItem, action: nil)))
+    index += 1
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("audioReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.audio.wifi.incoming + stats.audio.cellular.incoming))), viewType: .lastItem, action: nil)))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageHeaderFiles), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    index += 1
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("filesSent"), data: InputDataGeneralData(name: L10n.networkUsageBytesSent, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.file.wifi.outgoing + stats.file.cellular.outgoing))), viewType: .firstItem, action: nil)))
+    index += 1
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("filesReceived"), data: InputDataGeneralData(name: L10n.networkUsageBytesReceived, color: theme.colors.text, icon: nil, type: .context(.prettySized(with: Int(stats.file.wifi.incoming + stats.file.cellular.incoming))), viewType: .lastItem, action: nil)))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("reset"), data: InputDataGeneralData(name: L10n.networkUsageReset, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
     index += 1
     
     if stats.resetWifiTimestamp != 0 {
@@ -80,7 +80,7 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
         formatter.dateFormat = "E, d MMM yyyy HH:mm"
         let dateStringPlain = formatter.string(from: Date(timeIntervalSince1970: Double(stats.resetWifiTimestamp)))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageNetworkUsageSince(dateStringPlain)), color: theme.colors.grayText, detectBold: true))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.networkUsageNetworkUsageSince(dateStringPlain)), data: InputDataGeneralTextData(viewType: .textTopItem)))
     }
 
     entries.append(.sectionId(sectionId, type: .normal))
