@@ -187,12 +187,10 @@ struct InputDataInputPlaceholder : Equatable {
     let icon: CGImage?
     let action: (()-> Void)?
     let hasLimitationText: Bool
-    let rightResoringImage: CGImage?
-    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, rightResoringImage: CGImage? = nil, action: (()-> Void)? = nil) {
+    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, action: (()-> Void)? = nil) {
         self.drawBorderAfterPlaceholder = drawBorderAfterPlaceholder
         self.hasLimitationText = hasLimitationText
         self.placeholder = placeholder
-        self.rightResoringImage = rightResoringImage
         self.icon = icon
         self.action = action
     }
@@ -242,11 +240,13 @@ final class InputDataGeneralTextData : Equatable {
 
 final class InputDataRowData : Equatable {
     let viewType: GeneralViewType
-    init(viewType: GeneralViewType = .legacy) {
+    let rightItem: InputDataRightItem?
+    init(viewType: GeneralViewType = .legacy, rightItem: InputDataRightItem? = nil) {
         self.viewType = viewType
+        self.rightItem = rightItem
     }
     static func ==(lhs: InputDataRowData, rhs: InputDataRowData) -> Bool {
-        return lhs.viewType == rhs.viewType
+        return lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem
     }
 }
 
@@ -385,7 +385,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: { _ in
+            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, rightItem: data.rightItem, filter: filter, updated: { _ in
                 arguments.dataUpdated()
             }, limit: limit)
         case .loading:

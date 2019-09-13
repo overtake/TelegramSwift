@@ -226,7 +226,7 @@ class ShortPeerRowItem: GeneralRowItem {
         case .selectable(_):
             addition += 30
         case .deletable:
-            addition += 30
+            addition += 24 + 12
         default:
             break
         }
@@ -287,6 +287,10 @@ class ShortPeerRowItem: GeneralRowItem {
     }
     override func viewClass() -> AnyClass {
         return ShortPeerRowView.self
+    }
+    
+    override var instantlyResize: Bool {
+        return true
     }
     
     deinit {

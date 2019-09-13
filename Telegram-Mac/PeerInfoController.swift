@@ -226,7 +226,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
             let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { (peerInfoSortableEntry) -> TableRowItem in
                 return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
             })
-            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated:animated, state: animated ? .none(nil) : .saveVisible(.lower), animateVisibleOnly: false))
+            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower), grouping: true, animateVisibleOnly: false))
             subscriber.putCompletion()
         }
         

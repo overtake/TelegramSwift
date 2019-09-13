@@ -144,30 +144,50 @@ enum GeneralViewType : Equatable {
         case .legacy:
             return theme.colors.background
         case .modern:
-            return theme.colors.grayBackground
+            return .clear
+        }
+    }
+    
+    var corners:GeneralViewItemCorners {
+        switch self {
+        case .legacy:
+            return []
+        case let .modern(position, _):
+            return position.corners
+        }
+    }
+    var hasBorder: Bool {
+        switch self {
+        case .legacy:
+            return false
+        case let .modern(position, _):
+            return position.border
         }
     }
     
     static var firstItem: GeneralViewType {
-        return GeneralViewType.modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))
     }
     static var innerItem: GeneralViewType {
-        return GeneralViewType.modern(position: .inner, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .inner, insets: NSEdgeInsetsMake(12, 16, 12, 16))
     }
     static var lastItem: GeneralViewType {
-        return GeneralViewType.modern(position: .last, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .last, insets: NSEdgeInsetsMake(12, 16, 12, 16))
     }
     static var singleItem: GeneralViewType {
-        return GeneralViewType.modern(position: .single, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(12, 16, 12, 16))
     }
     static var textTopItem: GeneralViewType {
-        return GeneralViewType.modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 5, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 5, 0))
     }
     static var textBottomItem: GeneralViewType {
-        return GeneralViewType.modern(position: .single, insets: NSEdgeInsetsMake(5, 16, 0, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(5, 16, 0, 0))
     }
     static var separator: GeneralViewType {
-        return GeneralViewType.modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
+    }
+    static func plain(_ position: GeneralViewItemPosition) -> GeneralViewType {
+        return .modern(position: position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
     }
 }
 
@@ -212,8 +232,12 @@ class GeneralRowItem: TableRowItem {
     let errorLayout: TextViewLayout?
     
     
-    let viewType: GeneralViewType
+    private(set) var viewType: GeneralViewType
 
+    
+    func updateViewType(_ viewType: GeneralViewType) {
+        self.viewType = viewType
+    }
     
     init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil) {
         self.type = type

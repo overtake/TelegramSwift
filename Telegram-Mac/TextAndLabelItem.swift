@@ -58,11 +58,21 @@ class TextAndLabelItem: GeneralRowItem {
     }
     
     var textWidth:CGFloat {
-        return width - inset.left - inset.right
+        switch viewType {
+        case .legacy:
+            return width - inset.left - inset.right
+        case let .modern(_, inner):
+            return width - inset.left - inset.right - inner.left - inner.right
+        }
     }
     
     override var height: CGFloat {
-        return labelsHeight + 20
+        switch viewType {
+        case .legacy:
+            return labelsHeight + 20
+        case let .modern(_, insets):
+            return labelsHeight + insets.top + insets.bottom - 4
+        }
     }
     
     var labelsHeight:CGFloat {
@@ -136,6 +146,13 @@ class TextAndLabelRowView: GeneralRowView {
     override var backdorColor: NSColor {
         return theme.colors.background
     }
+    override func updateColors() {
+        if let item = item as? TextAndLabelItem {
+            self.labelView.backgroundColor = backdorColor
+            self.containerView.backgroundColor = backdorColor
+            self.background = item.viewType.rowBackground
+        }
+    }
     
     override func mouseUp(with event: NSEvent) {
         if mouseInside() {
@@ -199,8 +216,8 @@ class TextAndLabelRowView: GeneralRowView {
             labelView.userInteractionEnabled = item.canCopy
             labelView.isSelectable = item.isTextSelectable
             labelView.update(item.textLayout)
-            labelView.backgroundColor = theme.colors.background
         }
+        containerView.needsDisplay = true
         needsLayout = true
     }
     

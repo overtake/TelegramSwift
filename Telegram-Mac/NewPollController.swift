@@ -115,10 +115,10 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? L10n.newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : L10n.newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? L10n.newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : L10n.newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.newPollQuestionPlaceholder, filter: { text in
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.newPollQuestionPlaceholder, filter: { text in
         
         var text = text
         while text.contains("\n\n\n") {
@@ -140,32 +140,42 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollOptionsHeader), data: InputDataGeneralTextData(detectBold: false)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollOptionsHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
     
-    for (_, option) in state.options.enumerated() {
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(nil, icon: theme.icons.pollDeleteOption, drawBorderAfterPlaceholder: true, hasLimitationText: true, rightResoringImage: theme.icons.resort, action: {
+    let sorted = state.options
+    
+    
+    
+    for (i, option) in sorted.enumerated() {
+        
+        var viewType: GeneralViewType = bestGeneralViewType(sorted, for: i)
+        if i == sorted.count - 1, state.options.count < optionsLimit {
+            if i == 0 {
+                viewType = .firstItem
+            } else {
+                viewType = .innerItem
+            }
+        }
+        
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(viewType: viewType, rightItem: .action(theme.icons.resort, .resort)), placeholder: InputDataInputPlaceholder(nil, icon: theme.icons.pollDeleteOption, drawBorderAfterPlaceholder: true, hasLimitationText: true, action: {
             deleteOption(option.identifier)
         }), inputPlaceholder: L10n.newPollOptionsPlaceholder, filter: { text in
             return text.trimmingCharacters(in: CharacterSet.newlines)
         }, limit: maxOptionLength))
         index += 1
     }
-    
     if state.options.count < optionsLimit {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: L10n.newPollOptionsAddOption, color: theme.colors.accent, icon: theme.icons.pollAddOption, type: .none, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: L10n.newPollOptionsAddOption, color: theme.colors.accent, icon: theme.icons.pollAddOption, type: .none, viewType: state.options.isEmpty ? .singleItem : .lastItem, action: nil)))
         index += 1
     }
 
 
     index = 50
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.options.count < 2 ? L10n.newPollOptionsDescriptionMinimumCountable(2) : optionsLimit == state.options.count ? L10n.newPollOptionsDescriptionLimitReached : L10n.newPollOptionsDescriptionCountable(optionsLimit - state.options.count)), data: InputDataGeneralTextData(detectBold: false)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.options.count < 2 ? L10n.newPollOptionsDescriptionMinimumCountable(2) : optionsLimit == state.options.count ? L10n.newPollOptionsDescriptionLimitReached : L10n.newPollOptionsDescriptionCountable(optionsLimit - state.options.count)), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
     
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -377,6 +387,19 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
                 shouldMakeNextResponderAfterTransition = (identifier, false, nil, false)
             }
 
+        }, updateItems: { currentView, items in
+            
+//            let items = items.compactMap { $0 as? GeneralRowItem }.filter({ $0.view?.identifier != NSUserInterfaceItemIdentifier("-1")})
+//            for (i, item) in items.enumerated() {
+//                NSLog("\(item.view)")
+//                item.updateViewType(bestGeneralViewType(items, for: i))
+//                item.view?.set(item: item, animated: true)
+//            }
+//            if let item = currentView?.item as? GeneralRowItem {
+//                //item.updateViewType(.singleItem)
+//                currentView?.set(item: item, animated: true)
+//            }
+            
         })
         controller.tableView.resortController = resort
         

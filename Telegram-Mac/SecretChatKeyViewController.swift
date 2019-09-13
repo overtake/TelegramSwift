@@ -63,7 +63,7 @@ class SecretChatKeyView : View {
         textView.update(layout)
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.encryptionKeyDescription(participant.compactDisplayTitle, participant.compactDisplayTitle)), color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: tr(L10n.encryptionKeyDescription(participant.compactDisplayTitle, participant.compactDisplayTitle)), color: theme.colors.grayText, font: .normal(.text))
     
         attr.detectBoldColorInString(with: .medium(.text))
         
@@ -79,19 +79,19 @@ class SecretChatKeyView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundColor = theme.colors.background
-        textView.backgroundColor = theme.colors.background
-        descriptionView.backgroundColor = theme.colors.background
+        backgroundColor = theme.colors.grayBackground
+        textView.backgroundColor = theme.colors.grayBackground
+        descriptionView.backgroundColor = theme.colors.grayBackground
     }
     
     override func layout() {
         super.layout()
         
-        imageView.centerX(y: 20)
-        textView.centerX(y: imageView.frame.maxY + 20)
+        imageView.centerX(y: 30)
+        textView.centerX(y: imageView.frame.maxY + 30)
         
         descriptionView.layout?.measure(width: frame.width - 60)
-        descriptionView.centerX(y: textView.frame.maxY + 20)
+        descriptionView.centerX(y: textView.frame.maxY + 30)
     }
 }
 

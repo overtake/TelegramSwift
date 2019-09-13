@@ -53,20 +53,20 @@ private enum ChannelBlacklistEntryStableId: Hashable {
 }
 
 private enum ChannelBlacklistEntry: Identifiable, Comparable {
-    case peerItem(Int32, Int32, RenderedChannelParticipant, ShortPeerDeleting?, Bool, Bool)
+    case peerItem(Int32, Int32, RenderedChannelParticipant, ShortPeerDeleting?, Bool, Bool, GeneralViewType)
     case empty(Bool)
-    case header(Int32, Int32, String)
+    case header(Int32, Int32, String, GeneralViewType)
     case section(Int32)
-    case addMember(Int32, Int32)
+    case addMember(Int32, Int32, GeneralViewType)
     var stableId: ChannelBlacklistEntryStableId {
         switch self {
-        case let .peerItem(_, _, participant, _, _, _):
+        case let .peerItem(_, _, participant, _, _, _, _):
             return .peer(participant.peer.id)
         case .empty:
             return .empty
-        case .section(let section):
+        case let .section(section):
             return .section(section)
-        case .header(_, let index, _):
+        case let .header(_, index, _, _):
             return .header(index)
         case .addMember:
             return .addMember
@@ -79,13 +79,13 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
         switch self {
         case let .section(section):
             return (section * 1000) - section
-        case let .header(section, index, _):
+        case let .header(section, index, _, _):
             return (section * 1000) + index
-        case let .addMember(section, index):
+        case let .addMember(section, index, _):
             return (section * 1000) + index
         case .empty:
             return 0
-        case let .peerItem(section, index, _, _, _, _):
+        case let .peerItem(section, index, _, _, _, _, _):
             return (section * 1000) + index
 
         }
@@ -97,7 +97,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
     
     func item(_ arguments: ChannelBlacklistControllerArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
-        case let .peerItem(_, _, participant, editing, enabled, isChannel):
+        case let .peerItem(_, _, participant, editing, enabled, isChannel, viewType):
             
             let interactionType:ShortPeerItemInteractionType
             if let editing = editing {
@@ -128,7 +128,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 }
             }
 
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), status: string, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height:50, photoSize: NSMakeSize(36, 36), status: string, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 if case .plain = interactionType {
                     arguments.openInfo(participant.peer.id)
                 }
@@ -147,14 +147,14 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
             })
         case let .empty(progress):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: L10n.channelBlacklistEmptyDescrpition)
-        case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case .header(_, _, let text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: false, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
-        case .addMember:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelBlacklistRemoveUser, nameStyle: blueActionButton, action: {
+        case let .header(_, _, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .addMember(_, _, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelBlacklistRemoveUser, nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.addMember()
             })
+        case .section:
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -194,25 +194,20 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
     var index:Int32 = 0
     var sectionId:Int32 = 1
     
-    
-    
+   
     if let peer = peerViewMainPeer(view) as? TelegramChannel {
+        
+        entries.append(.section(sectionId))
+        sectionId += 1
+       
         if peer.hasPermission(.banMembers) {
-            
-            entries.append(.section(sectionId))
-            sectionId += 1
-            
-            entries.append(.addMember(sectionId, index))
+             entries.append(.addMember(sectionId, index, .singleItem))
             index += 1
             
-            if peer.isGroup {
-                 entries.append(.header(sectionId, index, L10n.channelBlacklistDescGroup))
-            } else {
-                entries.append(.header(sectionId, index, L10n.channelBlacklistDescChannel))
-            }
+            entries.append(.header(sectionId, index, peer.isGroup ? L10n.channelBlacklistDescGroup : L10n.channelBlacklistDescChannel, .textBottomItem))
             index += 1
+
         }
-    
         if let participants = participants {
             if !participants.isEmpty {
                 entries.append(.section(sectionId))
@@ -221,10 +216,9 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
             
             if !participants.isEmpty {
                 
-                entries.append(.header(sectionId, index, L10n.channelBlacklistBlocked))
+                entries.append(.header(sectionId, index, L10n.channelBlacklistBlocked, .textTopItem))
                 index += 1
-                for participant in participants.sorted(by: <) {
-                    
+                for (i, participant) in participants.sorted(by: <).enumerated() {
                     var editable = true
                     if case .creator = participant.participant {
                         editable = false
@@ -235,11 +229,13 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
                         deleting = ShortPeerDeleting(editable: editable)
                     }
                     
-                    entries.append(.peerItem(sectionId, index, participant, deleting, state.removingPeerId != participant.peer.id, peer.isChannel))
+                    entries.append(.peerItem(sectionId, index, participant, deleting, state.removingPeerId != participant.peer.id, peer.isChannel, bestGeneralViewType(participants, for: i)))
                     index += 1
                 }
             }
         }
+        entries.append(.section(sectionId))
+        sectionId += 1
     }
     if entries.isEmpty {
         entries.append(.empty(participants == nil))
@@ -277,6 +273,10 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         super.viewDidLoad()
         let context = self.context
         let peerId = self.peerId
+        
+        genericView.getBackgroundColor = {
+            theme.colors.grayBackground
+        }
         
         let actionsDisposable = DisposableSet()
         

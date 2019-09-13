@@ -2174,6 +2174,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var peerInfoVerifyProfile: CGImage {
+      if let image = cached.with({ $0["peerInfoVerifyProfile"] }) {
+          return image
+      } else {
+          let image = _peerInfoVerifyProfile()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoVerifyProfile"] = image
+              return current
+          }
+          return image
+      }
+  }
   var peerInfoCall: CGImage {
       if let image = cached.with({ $0["peerInfoCall"] }) {
           return image
@@ -5371,6 +5384,7 @@ final class TelegramIconsTheme {
   private let _calendarNextDisabled: ()->CGImage
   private let _newChatCamera: ()->CGImage
   private let _peerInfoVerify: ()->CGImage
+  private let _peerInfoVerifyProfile: ()->CGImage
   private let _peerInfoCall: ()->CGImage
   private let _callOutgoing: ()->CGImage
   private let _recentDismiss: ()->CGImage
@@ -5773,6 +5787,7 @@ final class TelegramIconsTheme {
       calendarNextDisabled: @escaping()->CGImage,
       newChatCamera: @escaping()->CGImage,
       peerInfoVerify: @escaping()->CGImage,
+      peerInfoVerifyProfile: @escaping()->CGImage,
       peerInfoCall: @escaping()->CGImage,
       callOutgoing: @escaping()->CGImage,
       recentDismiss: @escaping()->CGImage,
@@ -6174,6 +6189,7 @@ final class TelegramIconsTheme {
       self._calendarNextDisabled = calendarNextDisabled
       self._newChatCamera = newChatCamera
       self._peerInfoVerify = peerInfoVerify
+      self._peerInfoVerifyProfile = peerInfoVerifyProfile
       self._peerInfoCall = peerInfoCall
       self._callOutgoing = callOutgoing
       self._recentDismiss = recentDismiss

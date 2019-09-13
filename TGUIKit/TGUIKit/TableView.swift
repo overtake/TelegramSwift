@@ -79,12 +79,14 @@ public class TableResortController {
     fileprivate let start:(Int)->Void
     fileprivate let resort:(Int)->Void
     fileprivate let complete:(Int, Int)->Void
-    public init(resortRange: NSRange, startTimeout: Double = 0.3, start:@escaping(Int)->Void, resort:@escaping(Int)->Void, complete:@escaping(Int, Int)->Void) {
+    fileprivate let updateItems:(TableRowView?, [TableRowItem])->Void
+    public init(resortRange: NSRange, startTimeout: Double = 0.3, start:@escaping(Int)->Void, resort:@escaping(Int)->Void, complete:@escaping(Int, Int)->Void, updateItems:@escaping(TableRowView?, [TableRowItem])->Void = { _, _ in }) {
         self.resortRange = resortRange
         self.startTimeout = startTimeout
         self.start = start
         self.resort = resort
         self.complete = complete
+        self.updateItems = updateItems
     }
     
     func clear() {
@@ -1505,6 +1507,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         controller.currentHoleIndex = row
         if controller.prevHoleIndex != controller.currentHoleIndex {
             moveHole(at: controller.prevHoleIndex!, to: controller.currentHoleIndex!, animated: true)
+            controller.updateItems(controller.resortView, self.list.filter { controller.canResort($0.index) })
         }
     }
 
@@ -1583,7 +1586,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
                 view.change(size: NSMakeSize(frame.width, item.heightValue), animated: animated)
                 view.set(item: item, animated: animated)
-                view.needsDisplay = true
             } else {
                 self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : options)
                 self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  options)
@@ -2170,7 +2172,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if transition.grouping && !transition.isEmpty {
             self.tableView.beginUpdates()
         }
-        CATransaction.begin()
+        //CATransaction.begin()
         
         
         for (i, item) in list.enumerated() {
@@ -2222,7 +2224,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        CATransaction.commit()
+        //CATransaction.commit()
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }

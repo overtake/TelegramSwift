@@ -13,25 +13,34 @@ import PostboxMac
 import SwiftSignalKitMac
 class PeerInfoHeaderItem: GeneralRowItem {
 
-    fileprivate let firstTextEdited:String?
-    fileprivate let lastTextEdited:String?
+    fileprivate var firstTextEdited:String?
+    fileprivate var lastTextEdited:String?
     
     override var height: CGFloat {
-        return max(130.0, titleHeight + secondHeight + 60 + 8)
+        switch self.viewType {
+        case .legacy:
+            return max(130.0, titleHeight + secondHeight + 60 + 4)
+        case let .modern(_, insets):
+            return max(photoDimension + insets.top + insets.bottom, titleHeight + secondHeight + 2 + insets.top + insets.bottom)
+        }
     }
     
     override var instantlyResize: Bool {
-        return super.instantlyResize
+        return true
     }
     
     fileprivate let photoDimension:CGFloat = 70.0
-    fileprivate let textMargin:CGFloat = 15.0
     fileprivate var textInset:CGFloat {
-        return self.inset.left + photoDimension + textMargin
+        switch viewType {
+        case .legacy:
+            return self.inset.left + photoDimension + 15.0
+        case let .modern(_, insets):
+            return insets.left + photoDimension + insets.left
+        }
     }
     
     fileprivate var photo:Signal<(CGImage?, Bool), NoError>?
-    fileprivate var status:(TextNodeLayout, TextNode)?
+    fileprivate let statusLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
     
     fileprivate var titleHeight: CGFloat = 15
@@ -47,7 +56,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
     let updatingPhotoState:PeerInfoUpdatingPhotoState?
     let textChangeHandler:(String, String?)->Void
     let canCall:Bool
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, peerView:PeerView, editable:Bool = false, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, firstNameEditableText:String? = nil, lastNameEditableText:String? = nil, textChangeHandler:@escaping (String, String?)->Void = {_,_  in}) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, peerView:PeerView, viewType: GeneralViewType = .legacy, editable:Bool = false, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, firstNameEditableText:String? = nil, lastNameEditableText:String? = nil, textChangeHandler:@escaping (String, String?)->Void = {_,_  in}) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.peerView = peerView
@@ -69,33 +78,15 @@ class PeerInfoHeaderItem: GeneralRowItem {
         
         
         nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
+        statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alwaysStaticItems: true)
+        super.init(initialSize, stableId: stableId, viewType: viewType)
         
-        super.init(initialSize, stableId:stableId)
+        _ = self.makeSize(initialSize.width, oldWidth: 0)
         
-        if let firstNameEditableText = firstNameEditableText {
-            let textStorage = NSTextStorage(attributedString: .initialize(string: firstNameEditableText, font: .medium(.huge), coreText: false))
-            let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.right - textInset, .greatestFiniteMagnitude))
-            let layoutManager = NSLayoutManager()
-            layoutManager.addTextContainer(textContainer)
-            textStorage.addLayoutManager(layoutManager)
-            layoutManager.ensureLayout(for: textContainer)
-            titleHeight = layoutManager.usedRect(for: textContainer).height
-        } else {
-            titleHeight = 0
-        }
-        
-        if let lastNameEditableText = lastNameEditableText {
-            let textStorage = NSTextStorage(attributedString: .initialize(string: lastNameEditableText, font: .medium(.huge), coreText: false))
-            let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.right - textInset, .greatestFiniteMagnitude))
-            let layoutManager = NSLayoutManager()
-            layoutManager.addTextContainer(textContainer)
-            textStorage.addLayoutManager(layoutManager)
-            layoutManager.ensureLayout(for: textContainer)
-            secondHeight = layoutManager.usedRect(for: textContainer).height
-        } else {
-            secondHeight = 0
-        }
-        
+    }
+    
+    fileprivate func calculateHeight() {
+        _ = self.makeSize(width, oldWidth: 0)
     }
     
     override func viewClass() -> AnyClass {
@@ -104,22 +95,67 @@ class PeerInfoHeaderItem: GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        nameLayout.measure(width: size.width - textInset - inset.right - (canCall ? 40 : 0) - (isScam ? theme.icons.scam.backingSize.width + 5 : 0))
-        status = TextNode.layoutText(maybeNode: nil,  result.status, nil, 1, .end, NSMakeSize(size.width - textInset - inset.right - (canCall ? 40 : 0), size.height), nil, false, .left)
+        
+        if let firstTextEdited = firstTextEdited {
+            let textStorage = NSTextStorage(attributedString: .initialize(string: firstTextEdited, font: .normal(.huge), coreText: false))
+            let textContainer:NSTextContainer
+            switch viewType {
+            case .legacy:
+                textContainer = NSTextContainer(size: NSMakeSize(width - inset.right - textInset, .greatestFiniteMagnitude))
+            case let .modern(_, insets):
+                textContainer = NSTextContainer(size: NSMakeSize(width - textInset - insets.right - inset.left - inset.right, .greatestFiniteMagnitude))
+            }
+            let layoutManager = NSLayoutManager()
+            layoutManager.addTextContainer(textContainer)
+            textStorage.addLayoutManager(layoutManager)
+            layoutManager.ensureLayout(for: textContainer)
+            titleHeight = max(layoutManager.usedRect(for: textContainer).height, 34)
+        } else {
+            titleHeight = 0
+        }
+        
+        if let lastTextEdited = lastTextEdited {
+            let textStorage = NSTextStorage(attributedString: .initialize(string: lastTextEdited, font: .normal(.huge), coreText: false))
+            let textContainer:NSTextContainer
+            switch viewType {
+            case .legacy:
+                textContainer = NSTextContainer(size: NSMakeSize(width - inset.right - textInset, .greatestFiniteMagnitude))
+            case let .modern(_, insets):
+                textContainer = NSTextContainer(size: NSMakeSize(width - textInset - insets.right - inset.left - inset.right, .greatestFiniteMagnitude))
+            }
+            let layoutManager = NSLayoutManager()
+            layoutManager.addTextContainer(textContainer)
+            textStorage.addLayoutManager(layoutManager)
+            layoutManager.ensureLayout(for: textContainer)
+            secondHeight = max(layoutManager.usedRect(for: textContainer).height, 34)
+        } else {
+            secondHeight = 0
+        }
+        
+        switch viewType {
+        case .legacy:
+            break
+        case let .modern(_, inner):
+            let textWidth = blockWidth - textInset - inner.right - (canCall ? 40 : 0) - (isScam ? theme.icons.scam.backingSize.width + 5 : 0)
+            nameLayout.measure(width: textWidth)
+            statusLayout.measure(width: textWidth)
+        }
         return success
     }
 }
 
 
-class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
-    
+class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
+    private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let image:AvatarControl = AvatarControl(font: .avatar(26.0))
     private let nameTextView = TextView()
-    private let firstNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
-    private let lastNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
+    private let statusTextView = TextView()
+    private let imageView = ImageView()
+    private let firstNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 0, 34), unscrollable: true)
+    private let lastNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 0, 34), unscrollable: true)
     private let editableContainer:View = View()
     private let firstNameSeparator:View = View()
-    private let lastNameSeparator:View = View()
+    private let separatorView:View = View()
     private let progressView:RadialProgressContainerView = RadialProgressContainerView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
     private let callButton:ImageButton = ImageButton()
     private let callDisposable = MetaDisposable()
@@ -128,35 +164,33 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
         super.init(frame: frameRect)
         layerContentsRedrawPolicy = .onSetNeedsDisplay
         image.frame = NSMakeRect(0, 0, 70, 70)
-        addSubview(image)
+        containerView.addSubview(image)
         
-        addSubview(nameTextView)
-        
+        containerView.addSubview(nameTextView)
+        containerView.addSubview(statusTextView)
         image.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeaderItem, let peer = item.peer, let _ = peer.largeProfileImage {
                 showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
             }
         }, for: .Click)
         
+        firstNameTextView.max_height = 10000
+        lastNameTextView.max_height = 10000
         
         firstNameTextView.delegate = self
-        firstNameTextView.textFont = .medium(.huge)
-        
-        firstNameTextView.isSingleLine = true
+        firstNameTextView.textFont = .normal(.huge)
         
         lastNameTextView.delegate = self
-        lastNameTextView.textFont = .medium(.huge)
+        lastNameTextView.textFont = .normal(.huge)
         
-        lastNameTextView.isSingleLine = true
         
         editableContainer.addSubview(firstNameTextView)
         editableContainer.addSubview(lastNameTextView)
-        
-        
+
+        containerView.addSubview(imageView)
+
         editableContainer.addSubview(firstNameSeparator)
-        editableContainer.addSubview(lastNameSeparator)
         
-        addSubview(editableContainer)
         
         progressView.progress.fetchControls = FetchControls(fetch: { [weak self] in
             if let item = self?.item as? PeerInfoHeaderItem {
@@ -173,25 +207,39 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
             }
             }, for: .SingleClick)
         
-        addSubview(callButton)
-        
+        containerView.addSubview(callButton)
+        containerView.addSubview(separatorView)
         progressView.frame = image.bounds
         
-        // image.addSubview(progressView)
+        containerView.userInteractionEnabled = false
+        containerView.displayDelegate = self
+        containerView.addSubview(editableContainer)
+
+        addSubview(containerView)
     }
     
     func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
         if let item = item as? PeerInfoHeaderItem, let table = item.table {
-            item.titleHeight = firstNameTextView.frame.height
-            item.secondHeight = lastNameTextView.frame.height
+            
+            switch item.viewType {
+            case .legacy:
+                self.containerView.change(size: NSMakeSize(frame.width, item.height), animated: animated)
+            case .modern:
+                self.containerView.change(size: NSMakeSize(item.blockWidth, item.height - item.inset.bottom - item.inset.top), animated: animated, corners: item.viewType.corners)
+                firstNameSeparator.change(pos: NSMakePoint(4, item.titleHeight + 1), animated: animated)
+                lastNameTextView._change(pos: NSMakePoint(0, item.titleHeight + 2), animated: animated)
+                self.separatorView.change(pos: NSMakePoint(self.separatorView.frame.minX, self.containerView.frame.height - .borderSize), animated: animated)
+            }
+
             table.noteHeightOfRow(item.index, animated)
+            change(size: NSMakeSize(frame.width, item.height), animated: animated)
         }
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         guard let item = item as? PeerInfoHeaderItem else {return 100}
         if item.peer is TelegramUser {
-            return 128 - Int32(firstNameTextView.string().length) - Int32(lastNameTextView.string().length)
+            return 128
         }
         return 255
     }
@@ -221,6 +269,21 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
     func textViewTextDidChange(_ string: String) {
         if let item = item as? PeerInfoHeaderItem {
             item.textChangeHandler(firstNameTextView.string(), lastNameTextView.isHidden ? nil : lastNameTextView.string())
+            if !firstNameTextView.isHidden {
+                item.firstTextEdited = firstNameTextView.string()
+            }
+            if !lastNameTextView.isHidden {
+                item.lastTextEdited = lastNameTextView.string()
+            }
+
+            let titleHeight = item.titleHeight
+            let secondHeight = item.secondHeight
+            let prevHeight = item.height
+            item.calculateHeight()
+            if (titleHeight != item.titleHeight || secondHeight != item.secondHeight) && prevHeight == item.height {
+                textViewHeightChanged(0, animated: true)
+            }
+            self.needsLayout = true
         }
     }
     
@@ -251,48 +314,101 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
         return theme.colors.background
     }
     
+    override func updateColors() {
+        if let item = item as? PeerInfoHeaderItem {
+            self.containerView.background = backdorColor
+            editableContainer.backgroundColor = backdorColor
+            firstNameTextView.textColor = theme.colors.text
+            lastNameTextView.textColor = theme.colors.text
+            firstNameTextView.background = backdorColor
+            lastNameTextView.background = backdorColor
+            firstNameSeparator.backgroundColor = theme.colors.border
+            separatorView.backgroundColor = theme.colors.border
+            self.background = item.viewType.rowBackground
+        }
+    }
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        if let item = item as? PeerInfoHeaderItem, !item.editable {
-            
-            var nameY:CGFloat = focus(item.nameLayout.layoutSize).minY
-            
-            if let status = item.status {
-                
-                let t = item.nameLayout.layoutSize.height + status.0.size.height + 4.0
-                nameY = (frame.height - t) / 2.0
-                
-                let sY = nameY + item.nameLayout.layoutSize.height + 4.0
-                status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
-                
-            }
-            
-            if item.isVerified {
-                ctx.draw(theme.icons.peerInfoVerify, in: NSMakeRect(item.textInset + item.nameLayout.layoutSize.width + 3, nameY + 4, theme.icons.peerInfoVerify.backingSize.width, theme.icons.peerInfoVerify.backingSize.height))
-            }
-            if item.isScam {
-                ctx.draw(theme.icons.scam, in: NSMakeRect(item.textInset + item.nameLayout.layoutSize.width + 3, nameY + 3, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+        if let item = item as? PeerInfoHeaderItem, layer == containerView.layer {
+            if !item.editable {
             }
         }
         
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
         
         if let item = item as? PeerInfoHeaderItem {
-            image.frame = NSMakeRect(item.inset.left, item.inset.left, image.frame.width, image.frame.height)
             
             callButton.set(image: theme.icons.peerInfoCall, for: .Normal)
             _ = callButton.sizeToFit()
             
-            editableContainer.isHidden = !item.editable
-            editableContainer.backgroundColor = theme.colors.background
+            separatorView.isHidden = !item.viewType.hasBorder
             
+            switch item.viewType {
+            case .legacy:
+                self.containerView.change(size: NSMakeSize(frame.width, item.height), animated: animated, corners: item.viewType.corners)
+            case .modern:
+                self.containerView.change(size: NSMakeSize(item.blockWidth, item.height - item.inset.bottom - item.inset.top), animated: animated, corners: item.viewType.corners)
+            }
+            
+            if animated {
+                if item.editable {
+                    self.editableContainer.isHidden = false
+                }
+                self.editableContainer.layer?.animateAlpha(from: !item.editable ? 1 : 0, to: item.editable ? 1 : 0, duration: 0.2, completion: { [weak self] completed in
+                    if completed {
+                        self?.editableContainer.isHidden = !item.editable
+                    }
+                })
+                
+            } else {
+                editableContainer.isHidden = !item.editable
+                self.editableContainer.layer?.removeAllAnimations()
+            }
+            self.editableContainer.layer?.opacity = item.editable ? 1 : 0
+            
+            firstNameSeparator.isHidden = item.secondHeight == 0
+            
+            
+            
+            
+            if item.isVerified {
+                imageView.image = theme.icons.peerInfoVerifyProfile
+            } else if item.isScam {
+                imageView.image = theme.icons.chatScam
+            } else {
+                imageView.image = nil
+            }
+            imageView.sizeToFit()
+            
+            imageView.isHidden = imageView.image == nil || item.editable
+            
+            let containerRect: NSRect
+            switch item.viewType {
+            case .legacy:
+                containerRect = self.bounds
+            case .modern:
+                containerRect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, item.height - item.inset.bottom - item.inset.top)
+            }
+            containerView.change(size: containerRect.size, animated: animated)
+            containerView.change(pos: containerRect.origin, animated: animated)
+            containerView.setCorners(item.viewType.corners, animated: animated)
+            separatorView._change(opacity: item.viewType.hasBorder ? 1.0 : 0.0, animated: animated)
             
             nameTextView.update(item.nameLayout)
             nameTextView.isHidden = item.editable
+            
+            statusTextView.update(item.statusLayout)
+            statusTextView.isHidden = item.editable
+
+            self.needsLayout = true
           
             if let peer = item.peer {
                 image.setPeer(account: item.context.account, peer: peer)
@@ -315,10 +431,11 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                         firstNameTextView.setString(titleText, animated: false)
                     }
                     if peer.isChannel {
-                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoChannelNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: L10n.peerInfoChannelNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     } else {
-                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoGroupNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: L10n.peerInfoGroupNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     }
+
                     lastNameTextView.isHidden = true
                 }
                 
@@ -344,48 +461,51 @@ class PeerInfoHeaderView: TableRowView, TGModernGrowingDelegate {
                 
                 callButton.isHidden = !item.canCall
                 
-                lastNameSeparator.isHidden = lastNameTextView.isHidden
                 
             }
-            firstNameTextView.textColor = theme.colors.text
-            lastNameTextView.textColor = theme.colors.text
-            firstNameTextView.background = theme.colors.background
-            lastNameTextView.background = theme.colors.background
-            
-            firstNameSeparator.backgroundColor = theme.colors.border
-            lastNameSeparator.backgroundColor = theme.colors.border
             
             needsLayout = true
+            containerView.needsDisplay = true
         }
     }
     
     override func layout() {
         super.layout()
         if let item = item as? PeerInfoHeaderItem {
-            
-            editableContainer.setFrameSize(NSMakeSize(frame.width - item.textInset - item.inset.right, (lastNameTextView.isHidden ? firstNameTextView.frame.height : lastNameTextView.frame.height + firstNameTextView.frame.height) + 4))
-            
-            firstNameTextView.setFrameSize(editableContainer.frame.width, firstNameTextView.frame.height)
-            lastNameTextView.setFrameSize(editableContainer.frame.width, lastNameTextView.frame.height)
-            
-            firstNameSeparator.frame = NSMakeRect(4, firstNameTextView.frame.maxY, editableContainer.frame.width, .borderSize)
-            firstNameTextView.setFrameOrigin(0, 0)
-            lastNameTextView.setFrameOrigin(0, firstNameTextView.frame.maxY + 3)
-            
-            lastNameSeparator.frame = NSMakeRect(4, lastNameTextView.frame.maxY, editableContainer.frame.width, .borderSize)
-            
-            callButton.centerY(x: frame.width - callButton.frame.width - 30)
-            editableContainer.centerY(x: item.textInset)
-            
-            
-            
-            var nameY:CGFloat = focus(item.nameLayout.layoutSize).minY
-            if let status = item.status {
-                let t = item.nameLayout.layoutSize.height + status.0.size.height + 4.0
-                nameY = (frame.height - t) / 2.0
+            switch item.viewType {
+            case .legacy:
+                self.containerView.frame = bounds
+                break
+            case let .modern(_, innerInset):
+                self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
+
+                
+                image.frame = NSMakeRect(innerInset.left, innerInset.top, image.frame.width, image.frame.height)
+                
+                editableContainer.setFrameSize(NSMakeSize(containerView.frame.width - item.textInset - innerInset.right, item.titleHeight + item.secondHeight + 4))
+                editableContainer.centerY(x: item.textInset)
+                
+                firstNameTextView.setFrameSize(NSMakeSize(editableContainer.frame.width, item.titleHeight))
+                lastNameTextView.setFrameSize(NSMakeSize(editableContainer.frame.width, item.secondHeight))
+                
+                
+                firstNameTextView.setFrameOrigin(0, 0)
+                firstNameSeparator.frame = NSMakeRect(4, firstNameTextView.frame.maxY + 1, editableContainer.frame.width, .borderSize)
+                lastNameTextView.setFrameOrigin(0, firstNameTextView.frame.maxY + 2)
+                
+                separatorView.frame = NSMakeRect(innerInset.left, containerView.frame.height - .borderSize, containerView.frame.width - innerInset.left - innerInset.right, .borderSize)
+
+                callButton.centerY(x: containerView.frame.width - callButton.frame.width - innerInset.right)
+                
+                var nameY:CGFloat = focus(item.nameLayout.layoutSize).minY
+                let t = item.nameLayout.layoutSize.height + item.statusLayout.layoutSize.height + 4.0
+                nameY = (containerView.frame.height - t) / 2.0
+
+                nameTextView.setFrameOrigin(NSMakePoint(item.textInset, nameY))
+                statusTextView.setFrameOrigin(NSMakePoint(item.textInset, nameTextView.frame.maxY + 2))
+                imageView.setFrameOrigin(NSMakePoint(item.textInset + item.nameLayout.layoutSize.width + 3, nameY + 3))
+
             }
-            nameTextView.setFrameOrigin(NSMakePoint(item.textInset, nameY))
-            
         }
     }
     

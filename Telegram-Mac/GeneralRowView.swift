@@ -13,27 +13,41 @@ import TGUIKit
 
 final class GeneralRowContainerView : Control {
     private let maskLayer = CAShapeLayer()
-    
-    private var corners: GeneralViewItemCorners = []
-    func setCorners(_ corners: GeneralViewItemCorners, animated: Bool = false) {
-        self.corners = corners
-        if animated {
-            let animation = CABasicAnimation();
-            animation.duration = 0.2
-            animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            animation.keyPath = "path";
-            let newPath = self.createMask()
-            animation.fromValue = self.maskLayer.path
-            animation.toValue = newPath
-            self.maskLayer.path = newPath
-            self.maskLayer.add(animation, forKey: "path")
-        } else {
-            maskLayer.path = createMask()
-            layer?.mask = maskLayer
-        }
-        
+    private var newPath: CGPath?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layer?.mask = maskLayer
     }
-    private func createMask() -> CGPath {
+    
+    private var corners: GeneralViewItemCorners? = nil
+    func setCorners(_ corners: GeneralViewItemCorners, animated: Bool = false, frame: NSRect? = nil) {
+        if animated && self.corners != nil {
+            let newPath = self.createMask(for: corners, frame: frame ?? self.frame)
+            
+            var oldPath: CGPath = self.maskLayer.path ?? CGMutablePath()
+            
+            if let presentation = self.maskLayer.presentation(), let _ = self.maskLayer.animation(forKey:"path") {
+                oldPath = presentation.path ?? oldPath
+                if newPath == self.newPath {
+                    self.corners = corners
+                    return
+                }
+            }
+            self.newPath = newPath
+            
+            self.maskLayer.animate(from: oldPath, to: newPath, keyPath: "path", timingFunction: .easeOut, duration: 0.18, removeOnCompletion: false, additive: false, completion: { [weak self] completed in
+                if completed {
+                    self?.maskLayer.path = newPath
+                    self?.maskLayer.removeAllAnimations()
+                }
+            })
+            
+        } else {
+            self.maskLayer.path = createMask(for: corners, frame: frame ?? self.bounds)
+        }
+        self.corners = corners
+    }
+    private func createMask(for corners: GeneralViewItemCorners, frame: NSRect) -> CGPath {
         let path = CGMutablePath()
         
         let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
@@ -69,26 +83,15 @@ final class GeneralRowContainerView : Control {
         return path
     }
     
-    override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {
-        super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        
-        let animation = CABasicAnimation();
-        animation.duration = duration
-        animation.timingFunction = CAMediaTimingFunction(name: timingFunction)
-        animation.keyPath = "path";
-        
-        let newPath = self.createMask()
-        
-        animation.fromValue = self.maskLayer.path
-        animation.toValue = newPath
-        
-        self.maskLayer.path = newPath
-        self.maskLayer.add(animation, forKey: "path")
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
     }
     
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
+    func change(size: NSSize, animated: Bool, corners: GeneralViewItemCorners) {
+        super._change(size: size, animated: animated, animated, duration: 0.18)
+        setCorners(corners, animated: animated, frame: NSMakeRect(0, 0, size.width, size.height))
     }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

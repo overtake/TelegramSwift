@@ -375,6 +375,7 @@ public class Modal: NSObject {
         }
         if let header = controller.modalHeader {
             headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), data: header)
+            headerView?.backgroundColor = controller.headerBackground
             headerView?.controller = controller
         }
        

@@ -30,6 +30,10 @@ public class InputDataModalController : ModalViewController {
         })
     }
     
+    public override var containerBackground: NSColor {
+        return theme.colors.grayBackground
+    }
+    
     private func closeModal() {
         super.close()
     }
