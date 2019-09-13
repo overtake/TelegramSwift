@@ -105,7 +105,7 @@ class GeneralInteractedRowView: GeneralRowView {
         
             switch item.viewType {
             case .legacy:
-                containerView.setCorners([], animated: animated)
+                containerView.setCorners([], animated: false)
             case let .modern(position, _):
                 containerView.setCorners(position.corners, animated: animated)
             }
@@ -198,8 +198,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     if item.descLayout != nil {
                         f.origin.y = insets.top
                     }
-                    let icon = thumb.thumb //isSelect ? ControlStyle(highlightColor: .white).highlight(image: thumb.thumb) :
-                    ctx.draw(icon, in: NSMakeRect(insets.left, f.minY, f.width, f.height))
+                    let icon = thumb.thumb 
+                    ctx.draw(icon, in: NSMakeRect(insets.left + (thumb.thumbInset ?? 0), f.minY, f.width, f.height))
                 }
                 
                 if position.border, !isSelect  {

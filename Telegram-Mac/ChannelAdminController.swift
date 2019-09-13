@@ -45,13 +45,13 @@ private enum ChannelAdminEntryStableId: Hashable {
 }
 
 private enum ChannelAdminEntry: TableItemListNodeEntry {
-    case info(Int32, Peer, TelegramUserPresence?)
-    case rightItem(Int32, Int, String, TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags, Bool, Bool)
-    case roleHeader(Int32)
-    case roleDesc(Int32)
-    case role(Int32, String, String)
-    case description(Int32, Int32, String)
-    case changeOwnership(Int32, Int32, String)
+    case info(Int32, Peer, TelegramUserPresence?, GeneralViewType)
+    case rightItem(Int32, Int, String, TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags, Bool, Bool, GeneralViewType)
+    case roleHeader(Int32, GeneralViewType)
+    case roleDesc(Int32, GeneralViewType)
+    case role(Int32, String, String, GeneralViewType)
+    case description(Int32, Int32, String, GeneralViewType)
+    case changeOwnership(Int32, Int32, String, GeneralViewType)
     case section(Int32)
     
     
@@ -59,9 +59,9 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         switch self {
         case .info:
             return .info
-        case let .rightItem(_, _, _, right, _, _, _):
+        case let .rightItem(_, _, _, right, _, _, _, _):
             return .right(right)
-        case .description(_, let index, _):
+        case .description(_, let index, _, _):
             return .description(index)
         case .changeOwnership:
             return .changeOwnership
@@ -78,60 +78,53 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
     
     static func ==(lhs: ChannelAdminEntry, rhs: ChannelAdminEntry) -> Bool {
         switch lhs {
-        case let .info(lhsSectionId, lhsPeer, lhsPresence):
-            if case let .info(rhsSectionId, rhsPeer, rhsPresence) = rhs {
-                if lhsSectionId != rhsSectionId {
-                    return false
-                }
+        case let .info(sectionId, lhsPeer, presence, viewType):
+            if case .info(sectionId, let rhsPeer, presence, viewType) = rhs {
                 if !arePeersEqual(lhsPeer, rhsPeer) {
                     return false
                 }
-                if lhsPresence != rhsPresence {
-                    return false
-                }
-                
                 return true
             } else {
                 return false
             }
-        case let .rightItem(sectionId, index, text, right, flags, value, enabled):
-            if case .rightItem(sectionId, index, text, right, flags, value, enabled) = rhs {
+        case let .rightItem(sectionId, index, text, right, flags, value, enabled, viewType):
+            if case .rightItem(sectionId, index, text, right, flags, value, enabled, viewType) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .description(sectionId, index, text):
-            if case .description(sectionId, index, text) = rhs{
+        case let .description(sectionId, index, text, viewType):
+            if case .description(sectionId, index, text, viewType) = rhs{
                 return true
             } else {
                 return false
             }
-        case let .changeOwnership(sectionId, index, text):
-            if case .changeOwnership(sectionId, index, text) = rhs{
+        case let .changeOwnership(sectionId, index, text, viewType):
+            if case .changeOwnership(sectionId, index, text, viewType) = rhs{
                 return true
             } else {
                 return false
             }
-        case let .roleHeader(section):
-            if case .roleHeader(section) = rhs {
+        case let .roleHeader(section, viewType):
+            if case .roleHeader(section, viewType) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .roleDesc(section):
-            if case .roleDesc(section) = rhs {
+        case let .roleDesc(section, viewType):
+            if case .roleDesc(section, viewType) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .role(section, text, placeholder):
-            if case .role(section, text, placeholder) = rhs {
+        case let .role(section, text, placeholder, viewType):
+            if case .role(section, text, placeholder, viewType) = rhs {
                 return true
             } else {
                 return false
             }
         case let .section(sectionId):
-            if case .section(sectionId) = rhs{
+            if case .section(sectionId) = rhs {
                 return true
             } else {
                 return false
@@ -141,21 +134,21 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
 
     var index:Int32 {
         switch self {
-        case .info(let sectionId, _, _):
+        case .info(let sectionId, _, _, _):
             return (sectionId * 1000) + 0
-        case .description(let sectionId, let index, _):
+        case .description(let sectionId, let index, _, _):
             return (sectionId * 1000) + index
-        case let .changeOwnership(sectionId, index, _):
+        case let .changeOwnership(sectionId, index, _, _):
             return (sectionId * 1000) + index
-        case .rightItem(let sectionId, let index, _, _, _, _, _):
+        case .rightItem(let sectionId, let index, _, _, _, _, _, _):
             return (sectionId * 1000) + Int32(index) + 10
-        case let .roleHeader(sectionId):
+        case let .roleHeader(sectionId, _):
              return (sectionId * 1000)
-        case let .role(sectionId, _, _):
+        case let .role(sectionId, _, _, _):
             return (sectionId * 1000) + 1
-        case let .roleDesc(sectionId):
+        case let .roleDesc(sectionId, _):
             return (sectionId * 1000) + 2
-        case .section(let sectionId):
+        case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -167,43 +160,40 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
     func item(_ arguments: ChannelAdminControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case .info(_, let peer, let presence):
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+        case let .info(_, peer, presence, viewType):
             var string:String = peer.isBot ? L10n.presenceBot : L10n.peerStatusRecently
             var color:NSColor = theme.colors.grayText
             if let presence = presence, !peer.isBot {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
             }
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(50, 50), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, action: {})
-        case let .rightItem(_, _, name, right, flags, value, enabled):
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {})
+        case let .rightItem(_, _, name, right, flags, value, enabled, viewType):
             //ControlStyle(font: NSFont.)
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), action: { 
+            
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleRight(right, flags)
             }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: theme.colors.background, stateOnColor: enabled ? theme.colors.accent : theme.colors.accent.withAlphaComponent(0.6), stateOffColor: enabled ? theme.colors.redUI : theme.colors.redUI.withAlphaComponent(0.6), disabledColor: .grayBackground, borderColor: .clear), disabledAction: {
                 arguments.cantEditError()
             })
-        case let .changeOwnership(_, _, text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, action: {
+        case let .changeOwnership(_, _, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.transferOwnership()
             })
-        case .roleHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.channelAdminRoleHeader)
-        case let .role(_, text, placeholder):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: placeholder, text: text, limit: 16, textChangeHandler: { text in
-                arguments.updateRank(text)
-            }, textFilter: { text in
+        case let .roleHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.channelAdminRoleHeader, viewType: viewType)
+        case let .role(_, text, placeholder, viewType):
+            return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: placeholder, filter: { text in
                 let filtered = text.filter { character -> Bool in
                     return !String(character).containsOnlyEmoji
                 }
                 return filtered
-            }, pasteFilter: { text in
-                return (false, text)
-            })
-        case .roleDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: "")
-        case .description(_, _, let name):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: name)//GeneralInteractedRowItem(initialSize, stableId: stableId, name: name)
+            }, updated: arguments.updateRank, limit: 16)
+        case let .roleDesc(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: "", viewType: viewType)
+        case let .description(_, _, name, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: name, viewType: viewType)//GeneralInteractedRowItem(initialSize, stableId: stableId, name: name)
         }
         //return TableRowItem(initialSize)
     }
@@ -335,7 +325,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
     
     var addAdminsEnabled: Bool = false
     if let channel = channelView.peers[channelView.peerId] as? TelegramChannel, let admin = adminView.peers[adminView.peerId] {
-        entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence))
+        entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence, .singleItem))
         
         let isGroup: Bool
         let maskRightsFlags: TelegramChatAdminRightsFlags
@@ -377,9 +367,9 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 entries.append(.section(sectionId))
                 sectionId += 1
                 let placeholder = isCreator ? L10n.channelAdminRolePlaceholderOwner : L10n.channelAdminRolePlaceholderAdmin
-                entries.append(.roleHeader(sectionId))
-                entries.append(.role(sectionId, state.rank ?? "", placeholder))
-                entries.append(.description(sectionId, descId, isCreator ? L10n.channelAdminRoleOwnerDesc : L10n.channelAdminRoleAdminDesc))
+                entries.append(.roleHeader(sectionId, .textTopItem))
+                entries.append(.role(sectionId, state.rank ?? "", placeholder, .singleItem))
+                entries.append(.description(sectionId, descId, isCreator ? L10n.channelAdminRoleOwnerDesc : L10n.channelAdminRoleAdminDesc, .textBottomItem))
                 descId += 1
             }
             entries.append(.section(sectionId))
@@ -387,7 +377,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             
            
             if !isCreator || channel.isChannel {
-                entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo))
+                entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo, .textTopItem))
                 descId += 1
                 
                 let accountUserRightsFlags: TelegramChatAdminRightsFlags
@@ -413,21 +403,24 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 }
                 
                 var index = 0
-                for right in rightsOrder {
-                    if accountUserRightsFlags.contains(right) {
-                        
-                        entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating))
-                        index += 1
-                    }
+                
+                
+                let list = rightsOrder.filter {
+                    accountUserRightsFlags.contains($0)
                 }
-                entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted))
+                
+                for (i, right) in list.enumerated() {
+                    entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating, bestGeneralViewType(list, for: i)))
+                    index += 1
+                }
+                entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted, .textBottomItem))
                 descId += 1
                 
                 if channel.flags.contains(.isCreator), !admin.isBot {
                     if currentRightsFlags.contains(maskRightsFlags) {
                         entries.append(.section(sectionId))
                         sectionId += 1
-                        entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup))
+                        entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup, .singleItem))
                         entries.append(.section(sectionId))
                         sectionId += 1
                     }
@@ -440,27 +433,27 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             if let rank = state.rank {
                 entries.append(.section(sectionId))
                 sectionId += 1
-                entries.append(.roleHeader(sectionId))
-                entries.append(.description(sectionId, descId, rank))
+                entries.append(.roleHeader(sectionId, .textTopItem))
+                entries.append(.description(sectionId, descId, rank, .textTopItem))
                 descId += 1
                 entries.append(.section(sectionId))
                 sectionId += 1
             }
             
             var index = 0
-            for right in rightsOrder {
-                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, adminInfo.rights.flags, adminInfo.rights.flags.contains(right), false))
+            for (i, right) in rightsOrder.enumerated() {
+                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, adminInfo.rights.flags, adminInfo.rights.flags.contains(right), false, bestGeneralViewType(rightsOrder, for: i)))
                 index += 1
             }
-            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights))
+            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights, .textBottomItem))
             descId += 1
         } else if let initialParticipant = initialParticipant, case .creator = initialParticipant {
             
             if let rank = state.rank {
                 entries.append(.section(sectionId))
                 sectionId += 1
-                entries.append(.roleHeader(sectionId))
-                entries.append(.description(sectionId, descId, rank))
+                entries.append(.roleHeader(sectionId, .textTopItem))
+                entries.append(.description(sectionId, descId, rank, .textBottomItem))
                 descId += 1
                 entries.append(.section(sectionId))
                 sectionId += 1
@@ -468,15 +461,15 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             
             var index = 0
             for right in rightsOrder {
-                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, TelegramChatAdminRightsFlags(rightsOrder), true, false))
+                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, TelegramChatAdminRightsFlags(rightsOrder), true, false, bestGeneralViewType(rightsOrder, for: right)))
                 index += 1
             }
-            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights))
+            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights, .textBottomItem))
             descId += 1
         }
         
     } else if let group = channelView.peers[channelView.peerId] as? TelegramGroup, let admin = adminView.peers[adminView.peerId] {
-        entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence))
+        entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence, .singleItem))
 
         var isCreator = false
         if let initialParticipant = initialParticipant, case .creator = initialParticipant {
@@ -489,16 +482,16 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.roleHeader(sectionId))
-        entries.append(.role(sectionId, state.rank ?? "", placeholder))
-        entries.append(.description(sectionId, descId, isCreator ? L10n.channelAdminRoleOwnerDesc : L10n.channelAdminRoleAdminDesc))
+        entries.append(.roleHeader(sectionId, .textTopItem))
+        entries.append(.role(sectionId, state.rank ?? "", placeholder, .singleItem))
+        entries.append(.description(sectionId, descId, isCreator ? L10n.channelAdminRoleOwnerDesc : L10n.channelAdminRoleAdminDesc, .textBottomItem))
         descId += 1
         
         entries.append(.section(sectionId))
         sectionId += 1
         
         if !isCreator {
-            entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo))
+            entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo, .textTopItem))
             descId += 1
             
             let isGroup = true
@@ -524,15 +517,18 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             }
             
             var index = 0
-            for right in rightsOrder {
-                if accountUserRightsFlags.contains(right) {
-                    entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: group.defaultBannedRights), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating))
-                    index += 1
-                }
+            
+            let list = rightsOrder.filter {
+                accountUserRightsFlags.contains($0)
+            }
+            
+            for (i, right) in list.enumerated() {
+                entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: group.defaultBannedRights), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating, bestGeneralViewType(list, for: i)))
+                index += 1
             }
             
             if accountUserRightsFlags.contains(.canAddAdmins) {
-                entries.append(.description(sectionId, descId, currentRightsFlags.contains(.canAddAdmins) ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted))
+                entries.append(.description(sectionId, descId, currentRightsFlags.contains(.canAddAdmins) ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted, .textBottomItem))
                 descId += 1
             }
             
@@ -540,13 +536,17 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 if currentRightsFlags.contains(maskRightsFlags) {
                     entries.append(.section(sectionId))
                     sectionId += 1
-                    entries.append(.changeOwnership(sectionId, descId, L10n.channelAdminTransferOwnershipGroup))
+                    entries.append(.changeOwnership(sectionId, descId, L10n.channelAdminTransferOwnershipGroup, .singleItem))
                     entries.append(.section(sectionId))
                     sectionId += 1
                 }
             }
         }
     }
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
+    
     return entries
 }
 
@@ -578,7 +578,7 @@ class ChannelAdminController: ModalViewController {
         self.adminId = adminId
         self.initialParticipant = initialParticipant
         self.updated = updated
-        super.init(frame: NSMakeRect(0, 0, 300, 360))
+        super.init(frame: NSMakeRect(0, 0, 350, 360))
         bar = .init(height : 0)
     }
     
@@ -600,6 +600,10 @@ class ChannelAdminController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.getBackgroundColor = {
+            theme.colors.grayBackground
+        }
         
         let combinedPromise: Promise<CombinedView> = Promise()
         
@@ -1030,7 +1034,7 @@ class ChannelAdminController: ModalViewController {
     }
     
     override func firstResponder() -> NSResponder? {
-        let view = self.genericView.item(stableId: ChannelAdminEntryStableId.role)?.view as? GeneralInputRowView
+        let view = self.genericView.item(stableId: ChannelAdminEntryStableId.role)?.view as? InputDataRowView
         return view?.textView
     }
     
@@ -1040,12 +1044,16 @@ class ChannelAdminController: ModalViewController {
         return .invoked
     }
     
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: nil, center: ModalHeaderData(title: L10n.adminsAdmin), right: nil)
+    }
+    
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
              self?.okClick?()
         }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
             self?.arguments?.dismissAdmin()
-        }, height: 40)
+        }, drawBorder: true, height: 50)
     }
 }
 

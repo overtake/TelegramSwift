@@ -14,6 +14,12 @@ import SwiftSignalKitMac
 struct GeneralThumbAdditional {
     let thumb:CGImage
     let textInset:CGFloat?
+    let thumbInset: CGFloat?
+    init(thumb: CGImage, textInset: CGFloat? = nil, thumbInset: CGFloat? = nil) {
+        self.thumb = thumb
+        self.textInset = textInset
+        self.thumbInset = thumbInset
+    }
 }
 
 

@@ -151,7 +151,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                             ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
                         }
                     }
-                case let .modern(_, insets):
+                case .modern:
                     if backingScaleFactor == 1.0 {
                         ctx.setFillColor(backdorColor.cgColor)
                         ctx.fill(NSMakeRect(0, 0, layer.bounds.width - .borderSize, layer.bounds.height))
@@ -280,23 +280,22 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     deleteControl.centerY(x: item.deleteInset)
                 }
                 if let selectControl = selectControl {
-                    selectControl.centerY(x: container.frame.width - selectControl.frame.width)
+                    selectControl.centerY(x: containerView.frame.width - selectControl.frame.width)
                 }
                 image.frame = NSMakeRect((item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
                 if let switchView = switchView {
-                    switchView.centerY(x:container.frame.width - switchView.frame.width)
+                    switchView.centerY(x: containerView.frame.width - switchView.frame.width - innerInsets.right)
                 }
                 if let contextLabel = contextLabel {
-                    contextLabel.centerY(x: container.frame.width - contextLabel.frame.width)
+                    contextLabel.centerY(x: containerView.frame.width - contextLabel.frame.width - innerInsets.right)
                 }
-                container.needsDisplay = true
                 
                 if let choiceControl = choiceControl {
-                    choiceControl.centerY(x: container.frame.width - choiceControl.frame.width)
+                    choiceControl.centerY(x: containerView.frame.width - choiceControl.frame.width - innerInsets.right)
                 }
                 if let badgeNode = badgeNode, let itemNode = item.badgeNode {
                     badgeNode.setFrameSize(itemNode.size)
-                    badgeNode.centerY(x: frame.width - badgeNode.frame.width)
+                    badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width)
                 }
                 
                 separator.frame = NSMakeRect(container.frame.minX + item.textInset, containerView.frame.height - .borderSize, container.frame.width - item.textInset, .borderSize)
@@ -306,6 +305,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(backingScaleFactor, frame.height / 2 + 1))
                 }
                 #endif
+                
+                container.needsDisplay = true
                 
             }
             
@@ -339,7 +340,25 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
             }
             separatorRect = NSMakeRect(containerRect.minX + item.textInset, containerRect.height - .borderSize, containerRect.width - item.textInset, .borderSize)
+            
+            if let contextLabel = contextLabel {
+                var rect = containerView.focus(contextLabel.frame.size)
+                rect.origin.x = containerView.frame.width - contextLabel.frame.width - innerInsets.right
+                contextLabel.change(pos: rect.origin, animated: animated)
+            }
+            if let switchView = switchView {
+                var rect = containerView.focus(switchView.frame.size)
+                rect.origin.x = containerView.frame.width - switchView.frame.width - innerInsets.right
+                switchView.change(pos: rect.origin, animated: animated)
+            }
+            if let choiceControl = choiceControl {
+                var rect = containerView.focus(choiceControl.frame.size)
+                rect.origin.x = containerView.frame.width - choiceControl.frame.width - innerInsets.right
+                choiceControl.change(pos: rect.origin, animated: animated)
+            }
         }
+        
+       
         
         self.separator.change(size: separatorRect.size, animated: animated)
         self.separator.change(pos: separatorRect.origin, animated: animated)
@@ -348,6 +367,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         self.container.change(size: containerRect.size, animated: false)
         self.container.change(pos: containerRect.origin, animated: animated)
 
+        
+       
         
         switch interactionType {
         case .plain:
@@ -439,12 +460,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         super.set(item: item, animated: animated)
         
-        switch item.viewType {
-        case .legacy:
-            containerView.setCorners([], animated: animated)
-        case let .modern(position, _):
-            containerView.setCorners(position.corners, animated: animated)
-        }
+        
+        containerView.setCorners(item.viewType.corners, animated: animated)
+        
         
         self.border = item.border
         
@@ -518,7 +536,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             contextLabel = nil
             if switchView == nil {
                 switchView = SwitchView()
-                container.addSubview(switchView!)
+                containerView.addSubview(switchView!)
             }
             switchView?.stateChanged = item.action
             switchView?.setIsOn(stateback,animated:animated)
@@ -531,7 +549,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             if !label.isEmpty {
                 if contextLabel == nil {
                     contextLabel = TextViewLabel()
-                    container.addSubview(contextLabel!)
+                    containerView.addSubview(contextLabel!)
                 }
                 contextLabel?.attributedString = .initialize(string: label, color: theme.colors.grayText, font: item.statusStyle.font)
                 contextLabel?.sizeToFit()
@@ -544,7 +562,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 choiceControl = ImageView()
                 choiceControl?.image = theme.icons.generalSelect
                 choiceControl?.sizeToFit()
-                container.addSubview(choiceControl!)
+                containerView.addSubview(choiceControl!)
             }
             
         default:

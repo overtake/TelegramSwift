@@ -746,6 +746,9 @@ open class ModalViewController : ViewController {
     open var containerBackground: NSColor {
         return presentation.colors.background
     }
+    open var headerBackground: NSColor {
+        return presentation.colors.background
+    }
     
     open var dynamicSize:Bool {
         return false

@@ -733,7 +733,7 @@ enum UserInfoEntry: PeerInfoEntry {
         let state = arguments.state as! UserInfoState
         switch self {
         case let .info(_, peerView, editable, viewType):
-            return PeerInfoHeaderItem(initialSize, stableId:stableId.hashValue, context: arguments.context, peerView:peerView, editable: editable, updatingPhotoState: nil, firstNameEditableText: state.editingState?.editingFirstName, lastNameEditableText: state.editingState?.editingLastName, textChangeHandler: { firstName, lastName in
+            return PeerInfoHeaderItem(initialSize, stableId:stableId.hashValue, context: arguments.context, peerView:peerView, viewType: viewType, editable: editable, updatingPhotoState: nil, firstNameEditableText: state.editingState?.editingFirstName, lastNameEditableText: state.editingState?.editingLastName, textChangeHandler: { firstName, lastName in
                 arguments.updateEditingNames(firstName: firstName, lastName: lastName)
             })
         case let .about(_, text, viewType):
@@ -793,11 +793,11 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.startSecretChat()
             })
         case let .sharedMedia(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: {
                 arguments.sharedMedia()
             })
         case let .groupInCommon(sectionId: _, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupsInCommon, type: .context("\(count)"), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupsInCommon, type: .nextContext("\(count)"), viewType: viewType, action: {
                 arguments.groupInCommon()
             })
             
@@ -806,7 +806,7 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.toggleNotifications()
             })
         case let .encryptionKey(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .next, viewType: viewType, action: {
                 arguments.encryptionKey()
             })
         case let .block(_, peer, isBlocked, isBot, viewType):
@@ -953,17 +953,17 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                 
                 additionBlock.append(.sharedMedia(sectionId: sectionId, viewType: .singleItem))
             }
-            if arguments.context.account.peerId != arguments.peerId {
+            
+             if arguments.context.account.peerId != arguments.peerId {
                 additionBlock.append(.notifications(sectionId: sectionId, settings: view.notificationSettings, viewType: .singleItem))
+                if (peer is TelegramSecretChat) {
+                    additionBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
+                }
                 if let cachedData = view.cachedData as? CachedUserData, state.editingState == nil {
                     if cachedData.commonGroupCount > 0 {
                         additionBlock.append(.groupInCommon(sectionId: sectionId, count: Int(cachedData.commonGroupCount), viewType: .singleItem))
                     }
                 }
-            }
-            
-            if (peer is TelegramSecretChat) {
-                additionBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
             }
             applyBlock(additionBlock)
             

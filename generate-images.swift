@@ -169,6 +169,7 @@ func initialize() -> [String] {
     array.append("calendarNextDisabled")
     array.append("newChatCamera")
     array.append("peerInfoVerify")
+    array.append("peerInfoVerifyProfile")
     array.append("peerInfoCall")
     array.append("callOutgoing")
     array.append("recentDismiss")

@@ -59,6 +59,7 @@ private func modalOptionsSetEntries(state: ModalOptionsState, title: String?, ar
     var entries: [InputDataEntry] = []
     var sectionId: Int32 = 0
     var index: Int32 = 0
+    
     if let title = title {
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_title, equatable: InputDataEquatable(title), item: { initialSize, stableId in
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(title), textColor: theme.colors.grayText, alignment: .center, drawCustomSeparator: false, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 10, bottom: 10))
@@ -68,15 +69,16 @@ private func modalOptionsSetEntries(state: ModalOptionsState, title: String?, ar
             return GeneralLineSeparatorRowItem.init(initialSize: initialSize, stableId: stableId)
         }))
         index += 1
-    } else {
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-    }
+    } 
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
     
     
     for (i, option) in state.options.enumerated() {
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(i), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: option.title, type: .selectable(option.selected), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: option.title, type: .selectable(option.selected), viewType: bestGeneralViewType(state.options, for: i), action: {
                 arguments.toggleOption(i)
             }, enabled: option.editable, disabledAction: {
                 
@@ -85,7 +87,7 @@ private func modalOptionsSetEntries(state: ModalOptionsState, title: String?, ar
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .custom(10)))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries
@@ -140,7 +142,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     
     let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: actionText.0, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, cancelTitle: L10n.modalCancel, height: 50)
+        }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
     
     
     
