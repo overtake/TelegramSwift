@@ -738,7 +738,7 @@ class LayoutAccountController : TableViewController {
     }
     
     override func getLeftBarViewOnce() -> BarView {
-        return BarView(controller: self)
+        return BarView(68, controller: self)
     }
     
     override init(_ context: AccountContext) {
