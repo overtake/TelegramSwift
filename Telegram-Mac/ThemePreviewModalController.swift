@@ -61,7 +61,7 @@ private final class ThemePreviewView : BackgroundView {
         tableView.removeAll()
         tableView.updateLocalizationAndTheme(theme: theme)
         tableView.backgroundColor = theme.colors.background
-        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: 0))
+        _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: 0, backgroundColor: .clear))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
@@ -228,7 +228,6 @@ class ThemePreviewModalController: ModalViewController {
             .updateWallpaper { _ in
                 return currentTheme.wallpaper
             }
-            .withUpdatedFollowSystemAppearance(false)
             .withUpdatedCloudTheme(cloudTheme)
             .withUpdatedBubbled(currentTheme.bubbled)
         }).start()

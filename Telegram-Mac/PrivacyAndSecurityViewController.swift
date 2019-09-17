@@ -213,27 +213,27 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 arguments.openBlockedUsers()
             })
         case let .phoneNumberPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPhoneNumber, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPhoneNumber, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openPhoneNumberPrivacy()
             })
         case let .lastSeenPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsLastSeen, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsLastSeen, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openLastSeenPrivacy()
             })
         case let .groupPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsGroups, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsGroups, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openGroupsPrivacy()
             })
         case let .profilePhotoPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsProfilePhoto, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsProfilePhoto, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openProfilePhotoPrivacy()
             })
         case let .forwardPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsForwards, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsForwards, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openForwardPrivacy()
             })
         case let .voiceCallPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsVoiceCalls, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsVoiceCalls, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openVoiceCallPrivacy()
             })
         case .securityHeader:

@@ -133,7 +133,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             
             let signal = combineLatest(updateTitle, updateDescription)
             
-            updatePeerNameDisposable.set(showModalProgress(signal: (signal |> deliverOnMainQueue), for: mainWindow).start(error: { _ in
+            updatePeerNameDisposable.set(showModalProgress(signal: (signal |> deliverOnMainQueue), for: context.window).start(error: { _ in
                 updateState { state in
                     return state.withUpdatedSavingData(false)
                 }
@@ -873,13 +873,13 @@ enum GroupInfoEntry: PeerInfoEntry {
         switch self {
         case .info:
             return 0
-        case .scam:
-            return 1
-        case .about:
-            return 2
-        case .addressName:
-            return 3
         case .setGroupPhoto:
+            return 1
+        case .scam:
+            return 2
+        case .about:
+            return 3
+        case .addressName:
             return 4
         case .groupDescriptionSetup:
             return 5
@@ -954,7 +954,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return sectionId
         case let .usersHeader(sectionId, _, _):
             return sectionId
-        case let .member(sectionId, index, _, _, _, _, _, _, _, _):
+        case let .member(sectionId, _, _, _, _, _, _, _, _, _):
             return sectionId
         case let .leave(sectionId, _, _):
             return sectionId
@@ -1286,25 +1286,30 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             applyBlock(infoBlock)
             
             
+            
+            var aboutBlock:[GroupInfoEntry] = []
+            
             if group.isScam {
-                entries.append(GroupInfoEntry.scam(section: GroupInfoSection.desc.rawValue, text: L10n.groupInfoScamWarning, viewType: .singleItem))
+                aboutBlock.append(GroupInfoEntry.scam(section: GroupInfoSection.desc.rawValue, text: L10n.groupInfoScamWarning, viewType: .singleItem))
             }
             
             if let cachedChannelData = view.cachedData as? CachedChannelData {
                 if let about = cachedChannelData.about, !about.isEmpty, !group.isScam {
-                    entries.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
+                    aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
             
             if let cachedGroupData = view.cachedData as? CachedGroupData {
                 if let about = cachedGroupData.about, !about.isEmpty, !group.isScam {
-                    entries.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
+                    aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
             
             if let addressName = group.addressName {
-                entries.append(GroupInfoEntry.addressName(section: GroupInfoSection.info.rawValue, name: addressName, viewType: .singleItem))
+                aboutBlock.append(GroupInfoEntry.addressName(section: GroupInfoSection.desc.rawValue, name: addressName, viewType: .singleItem))
             }
+            
+            applyBlock(aboutBlock)
             
             
             entries.append(GroupInfoEntry.notifications(section: GroupInfoSection.addition.rawValue, settings: view.notificationSettings, viewType: .firstItem))

@@ -291,13 +291,13 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
             let dataDisposable = resourceData.start(next: { data in
                 
                 if let palette = importPalette(data.path) {                    
-                    var wallpaper: Signal<TelegramWallpaper, GetWallpaperError>? = nil
+                    var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError>? = nil
                     var newSettings: WallpaperSettings = WallpaperSettings()
                     #if !SHARE
                     switch palette.wallpaper {
                     case .none:
                         if theme.wallpaper.wallpaper == theme.wallpaper.associated?.wallpaper || install {
-                            wallpaper = nil
+                            wallpaper = .single(nil)
                         }
                     case .builtin:
                         if theme.wallpaper.wallpaper == theme.wallpaper.associated?.wallpaper || install {
@@ -320,13 +320,13 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                                             if values.slug == values.slug && values.settings == settings {
                                                 wallpaper = .single(cloud)
                                             } else {
-                                                wallpaper = getWallpaper(account: context.account, slug: slug)
+                                                wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
                                             }
                                         default:
-                                            wallpaper = getWallpaper(account: context.account, slug: slug)
+                                            wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
                                         }
                                     } else {
-                                        wallpaper = getWallpaper(account: context.account, slug: slug)
+                                        wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
                                     }
                                 }
                                 newSettings = settings
@@ -343,26 +343,42 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                     if let wallpaper = wallpaper {
                         #if !SHARE
                         wallpaperDisposable.add(wallpaper.start(next: { cloud in
-                            let wp = Wallpaper(cloud).withUpdatedSettings(newSettings)
-                            wallpaperDisposable.add(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wp).start(next: { wallpaper in
-                                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                                    var settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
-                                    if install {
-                                        if palette.isDark {
-                                            settings = settings.withUpdatedDefaultDark(DefaultTheme(name: settings.defaultDark.name, cloud: cloudTheme))
-                                        } else {
-                                            settings = settings.withUpdatedDefaultDay(DefaultTheme(name: settings.defaultDay.name, cloud: cloudTheme))
+                            if let cloud = cloud {
+                                let wp = Wallpaper(cloud).withUpdatedSettings(newSettings)
+                                wallpaperDisposable.add(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wp).start(next: { wallpaper in
+                                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                                        var settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
+                                        var updateDefault:DefaultTheme = palette.isDark ? settings.defaultDark : settings.defaultDay
+                                        updateDefault = updateDefault.updateCloud { _ in
+                                            return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: AssociatedWallpaper(cloud: cloud, wallpaper: wp))
                                         }
+                                        settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
+                                        settings = settings.withUpdatedDefaultIsDark(palette.isDark)
+                                        return settings.updateWallpaper { value in
+                                            return value.withUpdatedWallpaper(wallpaper)
+                                                .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))
+                                        }
+                                    }).start()
+                                    
+                                    subscriber.putCompletion()
+                                }))
+                            } else {
+                                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                                    var settings = settings
+                                    var updateDefault:DefaultTheme = palette.isDark ? settings.defaultDark : settings.defaultDay
+                                    updateDefault = updateDefault.updateCloud { _ in
+                                        return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: AssociatedWallpaper(cloud: cloud, wallpaper: .none))
                                     }
-                                    return settings.updateWallpaper { value in
-                                        return value.withUpdatedWallpaper(wallpaper)
-                                        .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))
-                                    }
+                                    settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
+                                    settings = settings.withUpdatedDefaultIsDark(palette.isDark)
+                                    
+                                    return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme).updateWallpaper({ value in
+                                        return value.withUpdatedWallpaper(.none)
+                                            .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: .none))
+                                    })
                                 }).start()
-                                
                                 subscriber.putCompletion()
-                            }))
-                            
+                            }
                         }, error: { _ in
                             subscriber.putCompletion()
                         }))
@@ -370,14 +386,12 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                     } else {
                         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                             var settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
-                            if install {
-                                settings = settings.updateWallpaper({$0.withUpdatedWallpaper(.none).withUpdatedAssociated(nil)})
-                                if palette.isDark {
-                                    settings = settings.withUpdatedDefaultDark(DefaultTheme(name: settings.defaultDark.name, cloud: cloudTheme))
-                                } else {
-                                    settings = settings.withUpdatedDefaultDay(DefaultTheme(name: settings.defaultDay.name, cloud: cloudTheme))
-                                }
+                            var updateDefault:DefaultTheme = palette.isDark ? settings.defaultDark : settings.defaultDay
+                            updateDefault = updateDefault.updateCloud { current in
+                                let associated = current?.wallpaper ?? AssociatedWallpaper(cloud: nil, wallpaper: palette.wallpaper.wallpaper)
+                                return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: associated)
                             }
+                            settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
                             return settings
                         }).start()
                         subscriber.putCompletion()

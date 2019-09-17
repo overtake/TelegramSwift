@@ -282,7 +282,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let peerId = self.peerId
         
         genericView.getBackgroundColor = {
-            theme.colors.grayBackground
+            theme.colors.listBackground
         }
         
         let updateState: ((ChannelMembersControllerState) -> ChannelMembersControllerState) -> Void = { [weak self] f in

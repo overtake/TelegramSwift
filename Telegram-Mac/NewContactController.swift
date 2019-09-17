@@ -39,22 +39,22 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_contact_info, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-        return EditAccountInfoItem(initialSize, stableId: stableId, account: arguments.context.account, state: state, updateText: arguments.updateText)
+        return EditAccountInfoItem(initialSize, stableId: stableId, account: arguments.context.account, state: state, viewType: .singleItem, updateText: arguments.updateText)
     }))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .custom(10)))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_phone_number, equatable: InputDataEquatable(state.phone), item: { initialSize, stableId in
-        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.newContactPhone, description: state.phone == nil ? L10n.newContactPhoneHidden : formatPhoneNumber(state.phone!), descTextColor: theme.colors.accent, type: .none, action: {
+        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.newContactPhone, description: state.phone == nil ? L10n.newContactPhoneHidden : formatPhoneNumber(state.phone!), descTextColor: theme.colors.accent, type: .none, viewType: .singleItem, action: {
             
         })
     }))
     index += 1
 
     if state.phone == nil {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactPhoneHiddenText(state.firstName)), data: InputDataGeneralTextData()))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactPhoneHiddenText(state.firstName)), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
     }
     
@@ -64,12 +64,12 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
 
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_exception, data: InputDataGeneralData(name: L10n.newContactExceptionShareMyPhoneNumber, color: theme.colors.text, type: .switchable(state.addToException), action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_exception, data: InputDataGeneralData(name: L10n.newContactExceptionShareMyPhoneNumber, color: theme.colors.text, type: .switchable(state.addToException), viewType: .singleItem, action: {
             arguments.toggleAddToException(!state.addToException)
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactExceptionShareMyPhoneNumberDesc(state.firstName)), data: InputDataGeneralTextData()))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactExceptionShareMyPhoneNumberDesc(state.firstName)), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
 
     }
@@ -144,7 +144,7 @@ func NewContactController(context: AccountContext, peerId: PeerId) -> InputDataM
     
     let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: L10n.navigationDone, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, cancelTitle: L10n.modalCancel, height: 50)
+    }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
     

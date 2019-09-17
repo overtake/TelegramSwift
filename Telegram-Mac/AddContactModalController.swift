@@ -59,24 +59,14 @@ private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsFirstNamePlaceholder.uppercased()), data: InputDataGeneralTextData(color: theme.colors.text)))
-    index += 1
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.firstName), error: state.errors[_id_input_first_name], identifier: _id_input_first_name, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.contactsFirstNamePlaceholder, filter: { $0 }, limit: 255))
+
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.firstName), error: state.errors[_id_input_first_name], identifier: _id_input_first_name, mode: .plain, data: InputDataRowData(viewType: .firstItem), placeholder: nil, inputPlaceholder: L10n.contactsFirstNamePlaceholder, filter: { $0 }, limit: 255))
     index += 1
 
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsLastNamePlaceholder.uppercased()), data: InputDataGeneralTextData(color: theme.colors.text)))
-    index += 1
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.lastName), error: state.errors[_id_input_last_name], identifier: _id_input_last_name, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.contactsLastNamePlaceholder, filter: { $0 }, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.lastName), error: state.errors[_id_input_last_name], identifier: _id_input_last_name, mode: .plain, data: InputDataRowData(viewType: .innerItem), placeholder: nil, inputPlaceholder: L10n.contactsLastNamePlaceholder, filter: { $0 }, limit: 255))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.contactsPhoneNumberPlaceholder.uppercased()), data: InputDataGeneralTextData(color: theme.colors.text)))
-    index += 1
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.phoneNumber), error: state.errors[_id_input_phone_number], identifier: _id_input_phone_number, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.contactsPhoneNumberPlaceholder, filter: { text in
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.phoneNumber), error: state.errors[_id_input_phone_number], identifier: _id_input_phone_number, mode: .plain, data: InputDataRowData(viewType: .lastItem), placeholder: nil, inputPlaceholder: L10n.contactsPhoneNumberPlaceholder, filter: { text in
         return text.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321+ ").inverted)
     }, limit: 30))
     index += 1
@@ -174,9 +164,9 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, cancelTitle: L10n.modalCancel)
+    }, cancelTitle: L10n.modalCancel, drawBorder: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
     
     close = { [weak modalController] in
         modalController?.close()

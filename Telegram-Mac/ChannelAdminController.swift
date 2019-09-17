@@ -602,7 +602,7 @@ class ChannelAdminController: ModalViewController {
         super.viewDidLoad()
         
         genericView.getBackgroundColor = {
-            theme.colors.grayBackground
+            theme.colors.listBackground
         }
         
         let combinedPromise: Promise<CombinedView> = Promise()

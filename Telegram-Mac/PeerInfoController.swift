@@ -359,7 +359,7 @@ class PeerInfoController: EditableViewController<TableView> {
         super.viewDidLoad()
         
         self.genericView.getBackgroundColor = {
-            theme.colors.grayBackground
+            theme.colors.listBackground
         }
         
         let previousEntries = Atomic<[AppearanceWrapperEntry<PeerInfoSortableEntry>]?>(value: nil)
@@ -455,9 +455,9 @@ class PeerInfoController: EditableViewController<TableView> {
             }
             self?.set(editable: editable)
             
-            self?.readyOnce()
             self?.genericView.merge(with:transition)
-            
+            self?.readyOnce()
+
         }))
         
        

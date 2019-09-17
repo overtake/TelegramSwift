@@ -117,7 +117,13 @@ enum GeneralViewItemPosition : Equatable {
             return [.topLeft, .topRight, .bottomRight, .bottomLeft]
         }
     }
+    
+    
+    
     var border: Bool {
+        guard theme.colors.listBackground != theme.colors.background else {
+            return true
+        }
         switch self {
         case .first, .inner:
             return true
@@ -138,6 +144,17 @@ enum GeneralViewType : Equatable {
     case legacy
     case modern(position: GeneralViewItemPosition, insets: NSEdgeInsets)
 
+    var isPlainMode: Bool {
+        return theme.colors.listBackground == theme.colors.background
+    }
+    var innerInset: NSEdgeInsets {
+        switch self {
+        case .legacy:
+            return NSEdgeInsetsMake(0, 0, 0, 0)
+        case let .modern(_, insets):
+            return insets
+        }
+    }
     
     var rowBackground: NSColor {
         switch self {
@@ -249,12 +266,7 @@ class GeneralRowItem: TableRowItem {
         if let backgroundColor = backgroundColor {
             self.backgroundColor = backgroundColor
         } else {
-            switch viewType {
-            case .legacy:
-                self.backgroundColor = theme.colors.background
-            case .modern:
-                self.backgroundColor = theme.colors.grayBackground
-            }
+            self.backgroundColor = viewType.rowBackground
         }
         
         self.drawCustomSeparator = drawCustomSeparator

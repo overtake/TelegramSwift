@@ -42,7 +42,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     sectionId += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOutputTitle), data: InputDataGeneralTextData(detectBold: false)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOutputTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
 
     let currentOutput = outputDevices.first(where: {$0.deviceId == state.outputDeviceId}) ?? inputDevices.first!
@@ -53,13 +53,13 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
         })
     }
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_device, data: InputDataGeneralData(name: L10n.callSettingsOutputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentOutput.deviceName, outputDevices))))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_device, data: InputDataGeneralData(name: L10n.callSettingsOutputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentOutput.deviceName, outputDevices), viewType: .singleItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), data: InputDataGeneralTextData(detectBold: false)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
     
     
@@ -72,7 +72,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     }
     
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_device, data: InputDataGeneralData(name: L10n.callSettingsInputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentInput.deviceName, inputDevices))))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_device, data: InputDataGeneralData(name: L10n.callSettingsInputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentInput.deviceName, inputDevices), viewType: .singleItem)))
     index += 1
     
     
@@ -80,16 +80,19 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     sectionId += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOtherSettingsTitle), data: InputDataGeneralTextData(detectBold: false)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOtherSettingsTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
     
+    var hasMuteSettings: Bool = false
+    
     #if !APP_STORE
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_mute_sounds, data: InputDataGeneralData(name: L10n.callSettingsMuteSound, color: theme.colors.text, icon: nil, type: .switchable(state.muteSounds), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_mute_sounds, data: InputDataGeneralData(name: L10n.callSettingsMuteSound, color: theme.colors.text, icon: nil, type: .switchable(state.muteSounds), viewType: .firstItem, action: {
         arguments.muteSound(!state.muteSounds)
     })))
     index += 1
+    hasMuteSettings = true
     #endif
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_open_settings, data: InputDataGeneralData(name: L10n.callSettingsOpenSystemPreferences, color: theme.colors.text, icon: nil, type: .next, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_open_settings, data: InputDataGeneralData(name: L10n.callSettingsOpenSystemPreferences, color: theme.colors.text, icon: nil, type: .next, viewType: hasMuteSettings ? .lastItem : .singleItem, action: {
         openSystemSettings(.microphone)
     })))
     index += 1

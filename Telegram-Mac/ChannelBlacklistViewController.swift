@@ -275,7 +275,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         let peerId = self.peerId
         
         genericView.getBackgroundColor = {
-            theme.colors.grayBackground
+            theme.colors.listBackground
         }
         
         let actionsDisposable = DisposableSet()

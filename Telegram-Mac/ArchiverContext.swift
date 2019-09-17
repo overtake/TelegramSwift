@@ -83,7 +83,7 @@ private final class Archiver {
             let contents = source.contents
             if !contents.isEmpty {
                 do {
-                    try Zip.zipFiles(paths: contents, zipFilePath: destination, password: nil, compression: ZipCompression.DefaultCompression, progress: { progress in
+                    try Zip.zipFiles(paths: contents, zipFilePath: destination, password: nil, compression: ZipCompression.BestCompression, progress: { progress in
                         status.set(.progress(progress))
                     }, cancel: cancelToken)
                    status.set(.done(destination))

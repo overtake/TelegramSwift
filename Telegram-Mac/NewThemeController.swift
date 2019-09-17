@@ -144,6 +144,8 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
         return .none
     }, afterDisappear: {
         disposable.dispose()
+    }, getBackgroundColor: {
+        theme.colors.background
     })
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.newThemeCreate, accept: { [weak controller] in

@@ -15,23 +15,23 @@ private var timeIntervals:[TimeInterval]  {
     for i in 0 ... 23 {
         let current = Double(i) * 60.0 * 60
         intervals.append(current)
-        #if DEBUG
+//        #if DEBUG
         for i in 1 ..< 59 {
             intervals.append(current + Double(i) * 60.0)
         }
-        #else
-        intervals.append(current + 5.0 * 60.0)
-        intervals.append(current + 10.0 * 60.0)
-        intervals.append(current + 15.0 * 60.0)
-        intervals.append(current + 20.0 * 60.0)
-        intervals.append(current + 25.0 * 60.0)
-        intervals.append(current + 30.0 * 60.0)
-        intervals.append(current + 35.0 * 60.0)
-        intervals.append(current + 40.0 * 60.0)
-        intervals.append(current + 45.0 * 60.0)
-        intervals.append(current + 50.0 * 60.0)
-        intervals.append(current + 55.0 * 60.0)
-        #endif
+//        #else
+//        intervals.append(current + 5.0 * 60.0)
+//        intervals.append(current + 10.0 * 60.0)
+//        intervals.append(current + 15.0 * 60.0)
+//        intervals.append(current + 20.0 * 60.0)
+//        intervals.append(current + 25.0 * 60.0)
+//        intervals.append(current + 30.0 * 60.0)
+//        intervals.append(current + 35.0 * 60.0)
+//        intervals.append(current + 40.0 * 60.0)
+//        intervals.append(current + 45.0 * 60.0)
+//        intervals.append(current + 50.0 * 60.0)
+//        intervals.append(current + 55.0 * 60.0)
+//        #endif
 
     }
     return intervals

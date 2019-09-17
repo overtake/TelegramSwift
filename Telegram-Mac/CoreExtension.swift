@@ -777,7 +777,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId) -> Bool {
         if message.isScheduledMessage {
             return false
         }
-        if peer.canSendMessage, peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && message.id.namespace != Namespaces.Message.Local {
+        if peer.canSendMessage, peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && (message.id.namespace != Namespaces.Message.Local || message.id.peerId.namespace == Namespaces.Peer.SecretChat) {
             return true
         }
     }

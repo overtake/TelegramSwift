@@ -309,18 +309,11 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
     }
     
     override func updateColors() {
-        super.updateColors()
         guard let item = item as? SelectSizeRowItem else {
             return
         }
         containerView.backgroundColor = backdorColor
-        
-        switch item.viewType {
-        case .legacy:
-            self.background = backdorColor
-        case .modern:
-            self.background = theme.colors.grayBackground
-        }
+        self.backgroundColor = item.viewType.rowBackground
         
     }
     
@@ -337,6 +330,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             self.containerView.setCorners(position.corners)
         }
         
+        needsLayout = true
         containerView.needsDisplay = true
     }
     

@@ -165,6 +165,7 @@ class ShortPeerRowItem: GeneralRowItem {
         }
         
         self.badgeNode = badgeNode
+        self.badgeNode?.customLayout = true
         self.alwaysHighlight = alwaysHighlight
         self.highlightOnHover = highlightOnHover
         self.interactionType = interactionType

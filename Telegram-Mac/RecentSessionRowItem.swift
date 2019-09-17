@@ -128,12 +128,7 @@ class RecentSessionRowView : TableRowView, ViewDisplayDelegate {
         
         if let item = item as? RecentSessionRowItem {
             reset.isHidden = item.session.isCurrent
-            switch item.viewType {
-            case .legacy:
-                containerView.setCorners([], animated: animated)
-            case let .modern(position, _):
-                containerView.setCorners(position.corners, animated: animated)
-            }
+            containerView.setCorners(item.viewType.corners, animated: animated)
         }
         
         self.needsLayout = true

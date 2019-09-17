@@ -52,11 +52,13 @@ class AccentColorRowItem: GeneralRowItem {
     let selectAccentColor:(NSColor?)->Void
     let list: [NSColor]
     let isNative: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, list: [NSColor], isNative: Bool, selectAccentColor: @escaping(NSColor?)->Void) {
+    let theme: TelegramPresentationTheme
+    init(_ initialSize: NSSize, stableId: AnyHashable, list: [NSColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(NSColor?)->Void) {
         self.selectAccentColor = selectAccentColor
         self.list = list
+        self.theme = theme
         self.isNative = isNative
-        super.init(initialSize, height: 50, stableId: stableId)
+        super.init(initialSize, height: 36 + viewType.innerInset.top + viewType.innerInset.bottom, stableId: stableId, viewType: viewType)
     }
     
     override func viewClass() -> AnyClass {
@@ -94,19 +96,36 @@ private final class AccentScrollView : ScrollView {
 }
 
 final class AccentColorRowView : TableRowView {
+    private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let scrollView: AccentScrollView = AccentScrollView()
+    private let borderView:View = View()
     private let documentView: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(scrollView)
+        containerView.addSubview(scrollView)
         scrollView.documentView = documentView
         scrollView.backgroundColor = .clear
         scrollView.background = .clear
-        
+        containerView.addSubview(borderView)
         documentView.backgroundColor = .clear
+        addSubview(containerView)
     }
 
+    override var backdorColor: NSColor {
+        guard let item = item as? AccentColorRowItem else {
+            return theme.colors.background
+        }
+        return item.theme.colors.background
+    }
     
+    override func updateColors() {
+        guard let item = item as? AccentColorRowItem else {
+            return
+        }
+        self.containerView.backgroundColor = backdorColor
+        borderView.backgroundColor = item.theme.colors.border
+        self.backgroundColor = item.viewType.rowBackground
+    }
     
     override func layout() {
         super.layout()
@@ -114,7 +133,14 @@ final class AccentColorRowView : TableRowView {
         guard let item = item as? AccentColorRowItem else {
             return
         }
-        scrollView.frame = NSMakeRect(item.inset.left, 0, frame.width - item.inset.left - item.inset.right, frame.height)
+        
+        let innerInset = item.viewType.innerInset
+        
+        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
+        self.containerView.setCorners(item.viewType.corners)
+        self.borderView.frame = NSMakeRect(innerInset.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInset.left - innerInset.right, .borderSize)
+
+        scrollView.frame = NSMakeRect(0, innerInset.top, item.blockWidth, containerView.frame.height - innerInset.top - innerInset.bottom)
     }
     
     private let selectedImageView = ImageView()
@@ -128,25 +154,21 @@ final class AccentColorRowView : TableRowView {
             return
         }
         
-        scrollView.frame = NSMakeRect(item.inset.left, 0, frame.width - item.inset.left - item.inset.right, frame.height)
-
+        self.layout()
         
         selectedImageView.image = generateSelectedRing(backgroundColor: theme.colors.background)
-        selectedImageView.sizeToFit()
+        selectedImageView.setFrameSize(NSMakeSize(32, 32))
         selectedImageView.removeFromSuperview()
         let colorList: [NSColor] = item.list
         
+        borderView.isHidden = !item.viewType.hasBorder
         
-        let addition: Int = 1 + (!colorList.contains(theme.colors.accent) ? 1 : 0)
+        let insetWidth: CGFloat = 20
         
-        var insetWidth = ( scrollView.frame.width - (36 * CGFloat(colorList.count + addition)) )
-        
-        insetWidth = max(min(insetWidth / CGFloat(colorList.count - 1 + addition), 15), 15)
-        
-        var x: CGFloat = 0
+        var x: CGFloat = insetWidth
         
         for i in 0 ..< colorList.count {
-            let button = ImageButton(frame: NSMakeRect(x, 10, 36, 36))
+            let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
             button.layer?.cornerRadius = button.frame.height / 2
             button.set(background: colorList[i], for: .Normal)
@@ -155,7 +177,7 @@ final class AccentColorRowView : TableRowView {
             button.set(handler: { _ in
                 item.selectAccentColor(colorList[i])
             }, for: .Click)
-            if colorList[i].hexString == theme.colors.accent.hexString {
+            if colorList[i] == theme.colors.accent {
                 button.addSubview(selectedImageView)
                 selectedImageView.center()
             }
@@ -165,7 +187,7 @@ final class AccentColorRowView : TableRowView {
         
        
         if !colorList.contains(theme.colors.accent) {
-            let button = ImageButton(frame: NSMakeRect(x, 10, 36, 36))
+            let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
             button.layer?.cornerRadius = button.frame.height / 2
             button.set(background: theme.colors.accent, for: .Normal)
@@ -175,7 +197,7 @@ final class AccentColorRowView : TableRowView {
             documentView.addSubview(button)
         }
         if item.isNative {
-            let custom = ImageButton(frame: NSMakeRect(x, 10, 36, 36))
+            let custom = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             custom.autohighlight = false
             custom.set(image: generateCustomSwatchImage(), for: .Normal)
             custom.setImageContentGravity(.resize)
@@ -188,7 +210,7 @@ final class AccentColorRowView : TableRowView {
         }
        
         
-        documentView.setFrameSize(NSMakeSize(x, frame.height))
+        documentView.setFrameSize(NSMakeSize(x + insetWidth, frame.height))
     }
     
     required init?(coder: NSCoder) {

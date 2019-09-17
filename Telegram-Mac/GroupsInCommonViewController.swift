@@ -124,9 +124,11 @@ class GroupsInCommonViewController: TableViewController {
         super.viewDidLoad()
         let context = self.context
         
+        genericView.alwaysOpenRowsOnMouseUp = true
+        
         let arguments = GroupsInCommonArguments(context: context, open: { [weak self] peerId in
             if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
+                strongSelf.navigationController?.push(ChatAdditionController(context: strongSelf.context, chatLocation: .peer(peerId)))
             }
         })
         

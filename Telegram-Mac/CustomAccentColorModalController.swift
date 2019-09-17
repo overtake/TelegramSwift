@@ -76,6 +76,10 @@ private final class CustomAccentColorView : View {
         
         tableView.removeAll()
         
+        self.tableView.getBackgroundColor = {
+            theme.colors.chatBackground
+        }
+        
         _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random(), backgroundColor: theme.chatBackground))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
@@ -119,8 +123,10 @@ private final class CustomAccentColorView : View {
 class CustomAccentColorModalController: ModalViewController {
 
     private let context: AccountContext
-    init(context: AccountContext) {
+    private let updateColor: (NSColor)->Void
+    init(context: AccountContext, updateColor: @escaping(NSColor)->Void) {
         self.context = context
+        self.updateColor = updateColor
         super.init(frame: NSMakeRect(0, 0, 350, 370))
         self.bar = .init(height: 0)
     }
@@ -149,18 +155,8 @@ class CustomAccentColorModalController: ModalViewController {
     }
     
     private func saveAccent() {
-        
-        
         let color = genericView.colorPicker.colorPicker.color
-        let context = self.context
-        let disableTint = self.genericView.disableTint
-        _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-            if color == theme.colors.basicAccent {
-                return settings.withUpdatedPalette(theme.colors.withoutAccentColor())
-            } else {
-                return settings.withUpdatedPalette(theme.colors.withoutAccentColor().withAccentColor(color, disableTint: disableTint))
-            }
-        }).start()
+        self.updateColor(color)
         
         delay(0.1, closure: { [weak self] in
            self?.close()

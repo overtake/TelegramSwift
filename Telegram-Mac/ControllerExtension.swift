@@ -63,16 +63,12 @@ class TableViewController: TelegramGenericViewController<TableView>, TableViewDe
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.getBackgroundColor = {
-           return theme.colors.grayBackground
+           return theme.colors.listBackground
         }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        
-        genericView.getBackgroundColor = {
-            return theme.colors.grayBackground
-        }
     }
     
     

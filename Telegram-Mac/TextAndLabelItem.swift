@@ -62,7 +62,7 @@ class TextAndLabelItem: GeneralRowItem {
         case .legacy:
             return width - inset.left - inset.right
         case let .modern(_, inner):
-            return width - inset.left - inset.right - inner.left - inner.right
+            return blockWidth - inner.left - inner.right
         }
     }
     
@@ -122,7 +122,6 @@ class TextAndLabelRowView: GeneralRowView {
     private var labelView:TextView = TextView()
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
         
         if let item = item as? TextAndLabelItem, let label = item.labelLayout, layer == containerView.layer {
             switch item.viewType {

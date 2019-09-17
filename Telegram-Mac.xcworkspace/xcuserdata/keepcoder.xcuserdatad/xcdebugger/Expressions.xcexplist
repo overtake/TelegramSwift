@@ -3,15 +3,10 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "specialized installedStickerPacksControllerEntries(state:stickerSettings:view:featured:):InstalledStickerPacksController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "i">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "importPalette(_:):ParseAppearanceColors.swift">
       </ContextState>
       <ContextState
-         contextName = "ChatMediaAnimatedStickerView.update(with:size:context:parent:table:parameters:animated:positionFlags:approximateSynchronousValue:):ChatMediaAnimatedStickerView.swift">
+         contextName = "closure #9 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
       </ContextState>
       <ContextState
          contextName = "closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
@@ -38,6 +33,9 @@
          contextName = "TelegramMediaFile.isAnimatedSticker.getter:CoreExtension.swift">
       </ContextState>
       <ContextState
+         contextName = "Wallpaper.withUpdatedSettings(_:):Appearance.swift">
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in TableView.scrollDidEndLiveScrolling():TableView.swift">
          <PersistentStrings>
             <PersistentString
@@ -46,13 +44,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "Wallpaper.withUpdatedSettings(_:):Appearance.swift">
+         contextName = "static ChatLayoutUtils.contentSize(for:with:hasText:):ChatLayoutUtils.swift">
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.isSharable.getter:ChatRowItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "static ChatLayoutUtils.contentSize(for:with:hasText:):ChatLayoutUtils.swift">
       </ContextState>
       <ContextState
          contextName = "Message.chatPeer.getter:CoreExtension.swift">
@@ -66,13 +61,13 @@
          contextName = "closure #1 in closure #1 in closure #3 in loadCloudPaletteAndWallpaper(context:file:):ThemePreviewModalController.swift">
       </ContextState>
       <ContextState
-         contextName = "specialized DefaultStringInterpolation.appendInterpolation&lt;A&gt;(_:) [inlined]:(null)">
+         contextName = "closure #1 in ThemePreviewView.addTableItems(_:theme:):ThemePreviewModalController.swift">
       </ContextState>
       <ContextState
          contextName = "closure #1 in closure #4 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in ThemePreviewView.addTableItems(_:theme:):ThemePreviewModalController.swift">
+         contextName = "specialized DefaultStringInterpolation.appendInterpolation&lt;A&gt;(_:) [inlined]:(null)">
       </ContextState>
       <ContextState
          contextName = "closure #1 in closure #5 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
@@ -84,6 +79,17 @@
       </ContextState>
       <ContextState
          contextName = "BufferDecompressor.init(compressor:):BufferCompressor.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ThemeListRowView.set(item:animated:):ThemeListRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.cloudThemes">
+            </PersistentString>
+            <PersistentString
+               value = "previous?.cloudThemes">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "TelegramPresentationTheme.controllerBackgroundMode.getter:Appearance.swift">
@@ -103,10 +109,15 @@
          contextName = "ChatRowItem.init(_:_:_:_:_:):ChatRowItem.swift">
       </ContextState>
       <ContextState
-         contextName = "importPalette(_:):ParseAppearanceColors.swift">
+         contextName = "ChatMediaAnimatedStickerView.update(with:size:context:parent:table:parameters:animated:positionFlags:approximateSynchronousValue:):ChatMediaAnimatedStickerView.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #9 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
+         contextName = "specialized installedStickerPacksControllerEntries(state:stickerSettings:view:featured:):InstalledStickerPacksController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "i">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
    </ContextStates>
 </VariablesViewState>
