@@ -241,6 +241,10 @@ internal final class L10n {
   internal static var appearanceCustomBackgroundFileError: String  { return L10n.tr("Localizable", "Appearance.CustomBackground.FileError") }
   /// Auto-Night Mode
   internal static var appearanceSettingsAutoNight: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNight") }
+  /// AUTO-NIGHT MODE
+  internal static var appearanceSettingsAutoNightHeader: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNightHeader") }
+  /// Bubbles Mode
+  internal static var appearanceSettingsBubblesMode: String  { return L10n.tr("Localizable", "Appearance.Settings.BubblesMode") }
   /// Edit
   internal static var appearanceThemeEdit: String  { return L10n.tr("Localizable", "Appearance.Theme.Edit") }
   /// Remove
@@ -385,10 +389,16 @@ internal final class L10n {
   internal static var autoNightSettingsDisabled: String  { return L10n.tr("Localizable", "AutoNight.Settings.Disabled") }
   /// From
   internal static var autoNightSettingsFrom: String  { return L10n.tr("Localizable", "AutoNight.Settings.From") }
+  /// PREFERRED NIGHT THEME
+  internal static var autoNightSettingsPreferredTheme: String  { return L10n.tr("Localizable", "AutoNight.Settings.PreferredTheme") }
   /// Scheduled
   internal static var autoNightSettingsScheduled: String  { return L10n.tr("Localizable", "AutoNight.Settings.Scheduled") }
   /// Use Local Sunset & Sunrise
   internal static var autoNightSettingsSunsetAndSunrise: String  { return L10n.tr("Localizable", "AutoNight.Settings.SunsetAndSunrise") }
+  /// System
+  internal static var autoNightSettingsSystemBased: String  { return L10n.tr("Localizable", "AutoNight.Settings.SystemBased") }
+  /// App interfaces will match the system appearance settings.
+  internal static var autoNightSettingsSystemBasedDesc: String  { return L10n.tr("Localizable", "AutoNight.Settings.SystemBasedDesc") }
   /// Auto-Night Theme
   internal static var autoNightSettingsTitle: String  { return L10n.tr("Localizable", "AutoNight.Settings.Title") }
   /// To
@@ -401,6 +411,8 @@ internal final class L10n {
   }
   /// Calculating sunset & sunrise times requires a one-time check of your approximate location. Note that this location is only stored locally on your device.\n\nSunset: N/A\nSunrise: N/A
   internal static var autoNightSettingsSunriseDescNA: String  { return L10n.tr("Localizable", "AutoNight.Settings.Sunrise.Desc.NA") }
+  /// Can't determine your location. Please check your system settings and try again.
+  internal static var autoNightSettingsUpdateLocationError: String  { return L10n.tr("Localizable", "AutoNight.Settings.UpdateLocation.Error") }
   /// Preferences…
   internal static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
@@ -1927,6 +1939,12 @@ internal final class L10n {
   internal static var crashOnLaunchOK: String  { return L10n.tr("Localizable", "CrashOnLaunch.OK") }
   /// Group Name
   internal static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
+  /// Night Mode
+  internal static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
+  /// Disable
+  internal static var darkModeConfirmNightModeOK: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.OK") }
+  /// You have enabled night mode. If you want to change dark mode you have to disable night mode.
+  internal static var darkModeConfirmNightModeText: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Text") }
   /// Auto-Download Media
   internal static var dataAndStorageAutomaticDownload: String  { return L10n.tr("Localizable", "DataAndStorage.AutomaticDownload") }
   /// Download Folder

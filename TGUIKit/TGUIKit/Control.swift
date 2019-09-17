@@ -393,6 +393,9 @@ open class Control: View {
     func apply(style:ControlStyle) -> Void {
         set(background: style.backgroundColor, for: .Normal)
         self.backgroundColor = style.backgroundColor
+        if self.animates {
+            self.layer?.animateBackground()
+        }
         self.setNeedsDisplayLayer()
     }
     

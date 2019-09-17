@@ -233,7 +233,7 @@ class BlockedPeersViewController: EditableViewController<TableView> {
         super.viewDidLoad()
         
         genericView.getBackgroundColor = {
-            return theme.colors.grayBackground
+            theme.colors.listBackground
         }
         
         let context = self.context

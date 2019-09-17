@@ -346,20 +346,26 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let basicTheme = Atomic<ThemePaletteSettings?>(value: themeSettings)
             let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
-            _ = (viewDidChangedAppearance.get() |> mapToSignal { _ in return themeSettingsView(accountManager: accountManager) } |> deliverOnMainQueue).start(next: { settings in
+            _ = (themeSettingsView(accountManager: accountManager) |> deliverOnMainQueue).start(next: { settings in
                 let previous = basicTheme.swap(settings)
                 if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize  {
-                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && previous?.fontSize == settings.fontSize && previous?.palette != settings.palette)
+                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled))
                     self.contextValue?.applyNewTheme()
                 }
             })
             
             
-            _ = combineLatest(autoNightSettings(accountManager: accountManager), Signal<Void, NoError>.single(Void()) |> then( Signal<Void, NoError>.single(Void()) |> delay(60, queue: Queue.mainQueue()) |> restart)).start(next: { preference, _ in
+            let autoNightSignal = viewDidChangedAppearance.get() |> mapToSignal { _ in
+                return combineLatest(autoNightSettings(accountManager: accountManager), Signal<Void, NoError>.single(Void()) |> then( Signal<Void, NoError>.single(Void()) |> delay(60, queue: Queue.mainQueue()) |> restart))
+            } |> deliverOnPrepareQueue
+            
+            var previousIsEnabled: Bool? = nil
+            
+            _ = autoNightSignal.start(next: { preference, _ in
+                
+                let isEnabled: Bool
+                
                 if let schedule = preference.schedule {
-                    
-                    let isDarkTheme: Bool
-                    
                     let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
                     var now: time_t = time_t(nowTimestamp)
                     var timeinfoNow: tm = tm()
@@ -369,27 +375,54 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     switch schedule {
                     case let .sunrise(coordinate):
                         if coordinate.latitude == 0 || coordinate.longitude == 0 {
-                            isDarkTheme = theme.colors.isDark
+                            isEnabled = theme.colors.isDark
                         } else {
                             if let sunrise = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: coordinate.latitude, longitude: coordinate.longitude) {
                                 let from = Int32(sunrise.sunset.timeIntervalSince1970 - sunrise.sunset.startOfDay.timeIntervalSince1970)
                                 let to = Int32(sunrise.sunrise.timeIntervalSince1970 - sunrise.sunrise.startOfDay.timeIntervalSince1970)
-                                isDarkTheme = to > from && t >= from && t <= to || to < from && (t >= from || t <= to)
+                                isEnabled = to > from && t >= from && t <= to || to < from && (t >= from || t <= to)
                             } else {
-                                isDarkTheme = false
+                                isEnabled = false
                             }
                         }
-                        
-                        
                     case let .timeSensitive(from, to):
                         let from = from * 60 * 60
                         let to = to * 60 * 60
-                        isDarkTheme = to > from && t >= from && t < to || to < from && (t >= from || t < to)
+                        isEnabled = to > from && t >= from && t < to || to < from && (t >= from || t < to)
                     }
-                    _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
-                        return settings.withUpdatedCloudTheme(nil).withUpdatedPaletteToDefault(to: isDarkTheme).withUpdatedFollowSystemAppearance(false)
-                    }).start()
+                    
+                } else if preference.systemBased {
+                    if #available(OSX 10.14, *) {
+                        switch NSApp.effectiveAppearance.name {
+                        case NSAppearance.Name.aqua:
+                            isEnabled = false
+                        case NSAppearance.Name.darkAqua:
+                            isEnabled = true
+                        default:
+                            isEnabled = false
+                        }
+                    } else {
+                        isEnabled = false
+                    }
+                } else {
+                    isEnabled = false
                 }
+                
+                _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
+                    var settings = settings
+                    if isEnabled {
+                        if let theme = preference.theme.cloud {
+                            settings = settings.withUpdatedCloudTheme(theme.cloud).withUpdatedPalette(theme.palette).updateWallpaper { current in
+                                return ThemeWallpaper(wallpaper: theme.wallpaper.wallpaper, associated: theme.wallpaper)
+                            }
+                        } else {
+                            settings = settings.withUpdatedPalette(preference.theme.local.palette).withUpdatedCloudTheme(nil).installDefaultWallpaper().installDefaultAccent()
+                        }
+                    } else {
+                        settings = settings.withUpdatedToDefault(dark: settings.defaultIsDark)
+                    }
+                    return settings
+                }).start()
             })
             
             

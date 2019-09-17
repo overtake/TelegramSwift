@@ -37,9 +37,9 @@ final class GeneralRowContainerView : Control {
             
             self.maskLayer.animate(from: oldPath, to: newPath, keyPath: "path", timingFunction: .easeOut, duration: 0.18, removeOnCompletion: false, additive: false, completion: { [weak self] completed in
                 if completed {
-                    self?.maskLayer.path = newPath
                     self?.maskLayer.removeAllAnimations()
                 }
+                self?.maskLayer.path = newPath
             })
             
         } else {

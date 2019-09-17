@@ -241,22 +241,27 @@ final class InputDataGeneralTextData : Equatable {
 final class InputDataRowData : Equatable {
     let viewType: GeneralViewType
     let rightItem: InputDataRightItem?
-    init(viewType: GeneralViewType = .legacy, rightItem: InputDataRightItem? = nil) {
+    let defaultText: String?
+    init(viewType: GeneralViewType = .legacy, rightItem: InputDataRightItem? = nil, defaultText: String? = nil) {
         self.viewType = viewType
         self.rightItem = rightItem
+        self.defaultText = defaultText
     }
     static func ==(lhs: InputDataRowData, rhs: InputDataRowData) -> Bool {
-        return lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem
+        return lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.defaultText == rhs.defaultText
     }
 }
 
 enum InputDataSectionType : Equatable {
     case normal
+    case legacy
     case custom(CGFloat)
     var height: CGFloat {
         switch self {
         case .normal:
             return 30
+        case .legacy:
+            return 20
         case let .custom(height):
             return height
         }
@@ -362,14 +367,14 @@ enum InputDataEntry : Identifiable, Comparable {
     func item(arguments: InputDataArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .sectionId(_, type):
-            var height: CGFloat = 30
+            let viewType: GeneralViewType
             switch type {
-            case let .custom(h):
-                height = h
+            case .legacy, .custom:
+                viewType = .legacy
             default:
-                break
+                viewType = .separator
             }
-            return GeneralRowItem(initialSize, height: height, stableId: stableId, backgroundColor: theme.colors.grayBackground)
+            return GeneralRowItem(initialSize, height: type.height, stableId: stableId, viewType: viewType)
         case let .desc(_, _, text, data):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType)
         case let .custom(_, _, _, _, _, item):
@@ -385,7 +390,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, rightItem: data.rightItem, filter: filter, updated: { _ in
+            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, defaultText: data.defaultText, rightItem: data.rightItem, filter: filter, updated: { _ in
                 arguments.dataUpdated()
             }, limit: limit)
         case .loading:

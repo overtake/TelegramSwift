@@ -208,6 +208,7 @@ public struct ColorPalette : Equatable {
     public let revealAction_inactive_foreground: NSColor
     
     public let chatBackground: NSColor
+    public let listBackground: NSColor
     
     public var underSelectedColor: NSColor {
         if basicAccent != accent {
@@ -240,7 +241,7 @@ public struct ColorPalette : Equatable {
         string += "isDark = \(self.isDark ? 1 : 0)\n"
         string += "tinted = \(self.tinted ? 1 : 0)\n"
         string += "name = \(self.name)\n"
-        string += "//Fallback for parameters which didn't define. Available values: Day, Day Classic, Dark, Night Blue, Mojave\n"
+        string += "//Fallback for parameters which didn't define. Available values: Day, Day Classic, Dark, Tinted Blue, Mojave\n"
         string += "parent = \(self.parent.rawValue)\n"
         string += "copyright = \(self.copyright)\n"
 //        string += "accentList = \(self.accentList.map{$0.hexString}.joined(separator: ","))\n"
@@ -379,7 +380,8 @@ public struct ColorPalette : Equatable {
                 revealAction_warning_foreground: NSColor,
                 revealAction_inactive_background: NSColor,
                 revealAction_inactive_foreground: NSColor,
-                chatBackground: NSColor) {
+                chatBackground: NSColor,
+                listBackground: NSColor) {
         
         let background: NSColor = background.withAlphaComponent(1.0)
         let grayBackground: NSColor = grayBackground.withAlphaComponent(1.0)
@@ -580,7 +582,7 @@ public struct ColorPalette : Equatable {
         
         self.chatBackground = chatBackground.withAlphaComponent(max(0.6, chatBackground.alpha))
         self.wallpaper = wallpaper
-        
+        self.listBackground = listBackground
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -603,8 +605,10 @@ public struct ColorPalette : Equatable {
         switch self.name {
         case whitePalette.name:
             return whitePalette
-        case nightBluePalette.name:
-            return nightBluePalette
+        case "Night Blue":
+            return tintedNightPalette
+        case tintedNightPalette.name:
+            return tintedNightPalette
         case darkPalette.name:
             return darkPalette
         case dayClassicPalette.name:
@@ -739,7 +743,8 @@ public struct ColorPalette : Equatable {
                             revealAction_warning_foreground: revealAction_warning_foreground,
                             revealAction_inactive_background: revealAction_inactive_background,
                             revealAction_inactive_foreground: revealAction_inactive_foreground,
-                            chatBackground: chatBackground)
+                            chatBackground: chatBackground,
+                            listBackground: listBackground)
     }
     
     public func withUpdatedWallpaper(_ wallpaper: PaletteWallpaper) -> ColorPalette {
@@ -865,7 +870,8 @@ public struct ColorPalette : Equatable {
                             revealAction_warning_foreground: revealAction_warning_foreground,
                             revealAction_inactive_background: revealAction_inactive_background,
                             revealAction_inactive_foreground: revealAction_inactive_foreground,
-                            chatBackground: chatBackground)
+                            chatBackground: chatBackground,
+                            listBackground: listBackground)
     }
     
     public func withAccentColor(_ color: NSColor, disableTint: Bool = false) -> ColorPalette {
@@ -883,6 +889,7 @@ public struct ColorPalette : Equatable {
         var bubbleBackgroundHighlight_incoming = self.bubbleBackgroundHighlight_incoming
         var bubbleBackgroundHighlight_outgoing = self.bubbleBackgroundHighlight_outgoing
         var chatBackground = self.chatBackground
+        var listBackground = self.listBackground
         var selectMessage = self.selectMessage
         if tinted && !disableTint {
             background = accentColor.withMultiplied(hue: 1.024, saturation: 0.585, brightness: 0.25)
@@ -894,6 +901,7 @@ public struct ColorPalette : Equatable {
             bubbleBackgroundHighlight_incoming = accentColor.withMultiplied(hue: 1.024, saturation: 0.573, brightness: 0.38)
             chatBackground = accentColor.withMultiplied(hue: 1.024, saturation: 0.570, brightness: 0.14)
             selectMessage = accentColor.withMultiplied(hue: 1.024, saturation: 0.570, brightness: 0.3)
+            listBackground = accentColor.withMultiplied(hue: 1.024, saturation: 0.572, brightness: 0.16)
         }
         
         
@@ -1046,7 +1054,8 @@ public struct ColorPalette : Equatable {
                             revealAction_warning_foreground: revealAction_warning_foreground,
                             revealAction_inactive_background: revealAction_inactive_background,
                             revealAction_inactive_foreground: revealAction_inactive_foreground,
-                            chatBackground: chatBackground)
+                            chatBackground: chatBackground,
+                            listBackground: listBackground)
     }
 }
 
@@ -1094,8 +1103,27 @@ public enum TelegramBuiltinTheme : String {
     case day = "Day"
     case dayClassic = "Day Classic"
     case dark = "Dark"
-    case nightBlue = "Night Blue"
+    case tintedNight = "Tinted Blue"
     case mojave = "Mojave"
+    
+    public init?(rawValue: String) {
+        switch rawValue {
+        case  "Day":
+            self = .day
+        case "Day Classic":
+            self = .dayClassic
+        case "Dark":
+            self = .dark
+        case "Tinted Blue":
+            self = .tintedNight
+        case "Night Blue":
+            self = .tintedNight
+        case "Mojave":
+            self = .mojave
+        default:
+            return nil
+        }
+    }
     
     public var palette: ColorPalette {
         switch self {
@@ -1107,8 +1135,8 @@ public enum TelegramBuiltinTheme : String {
             return dayClassicPalette
         case .mojave:
             return mojavePalette
-        case .nightBlue:
-            return nightBluePalette
+        case .tintedNight:
+            return tintedNightPalette
         }
     }
 }
@@ -1245,7 +1273,8 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
     revealAction_warning_foreground: NSColor(0xffffff),
     revealAction_inactive_background: NSColor(0xbcbcc3),
     revealAction_inactive_foreground: NSColor(0xffffff),
-    chatBackground: NSColor(0xffffff)
+    chatBackground: NSColor(0xffffff),
+    listBackground: NSColor(0xf4f4f4)
 )
 
 
@@ -1260,10 +1289,10 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
  colors[6] = NSColor(0x3d72ed); // blue
  */
 
-public let nightBluePalette = ColorPalette(isNative: true, isDark: true,
+public let tintedNightPalette = ColorPalette(isNative: true, isDark: true,
                                            tinted: true,
-                                           name:"Night Blue",
-                                           parent: .nightBlue,
+                                           name:"Tinted Blue",
+                                           parent: .tintedNight,
                                            wallpaper: .none,
                                            copyright: "Telegram",
                                            accentList: [NSColor(0x2ea6ff),
@@ -1389,7 +1418,8 @@ public let nightBluePalette = ColorPalette(isNative: true, isDark: true,
                                            revealAction_warning_foreground: NSColor(0xffffff),
                                            revealAction_inactive_background: NSColor(0x26384c),
                                            revealAction_inactive_foreground: NSColor(0xffffff),
-                                           chatBackground: NSColor(0x18222d)
+                                           chatBackground: NSColor(0x18222d),
+                                           listBackground: NSColor(0x213040)
 )
 
 public let dayClassicPalette = ColorPalette(isNative: true,
@@ -1515,7 +1545,8 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             revealAction_warning_foreground: NSColor(0xffffff),
                                             revealAction_inactive_background: NSColor(0xbcbcc3),
                                             revealAction_inactive_foreground: NSColor(0xffffff),
-                                            chatBackground: NSColor(0xfffffff)
+                                            chatBackground: NSColor(0xffffff),
+                                            listBackground: NSColor(0xf4f4f4)
 )
 
 public let darkPalette = ColorPalette(isNative: true, isDark:true,
@@ -1647,7 +1678,8 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       revealAction_warning_foreground: NSColor(0xffffff),
                                       revealAction_inactive_background: NSColor(0x666666),
                                       revealAction_inactive_foreground: NSColor(0xffffff),
-                                      chatBackground: NSColor(0x292b36)
+                                      chatBackground: NSColor(0x292b36),
+                                      listBackground: NSColor(0x3d414d)
 )
 
 
@@ -1780,7 +1812,8 @@ public let mojavePalette = ColorPalette(isNative: true, isDark: true,
                                         revealAction_warning_foreground: NSColor(0xffffff),
                                         revealAction_inactive_background: NSColor(0x666666),
                                         revealAction_inactive_foreground: NSColor(0xffffff),
-                                        chatBackground: NSColor(0x292a2f)
+                                        chatBackground: NSColor(0x292a2f),
+                                        listBackground: NSColor(0x3e464c)
 )
 
 

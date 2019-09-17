@@ -51,10 +51,45 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         }, for: .Normal)
         
         container.userInteractionEnabled = false
-        containerView.userInteractionEnabled = false
 
         addSubview(self.containerView)
         
+        containerView.set(handler: { [weak self] _ in
+            self?.invokeIfNeededDown()
+        }, for: .Down)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.invokeIfNeededUp()
+        }, for: .Up)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
+    }
+    
+    private func invokeIfNeededUp() {
+        if let event = NSApp.currentEvent {
+            super.mouseUp(with: event)
+            if let item = item as? ShortPeerRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp, mouseInside() {
+                if item.enabled {
+                    invokeAction(item, clickCount: event.clickCount)
+                }
+            }
+        }
+        
+    }
+    private func invokeIfNeededDown() {
+        if let event = NSApp.currentEvent {
+            super.mouseDown(with: event)
+            if let item = item as? ShortPeerRowItem, let table = item.table, !table.alwaysOpenRowsOnMouseUp, let event = NSApp.currentEvent, mouseInside() {
+                if item.enabled {
+                    invokeAction(item, clickCount: event.clickCount)
+                }
+            }
+        }
     }
     
     override var border: BorderType? {
@@ -64,32 +99,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     }
     
 
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-        
-        
-        
-        if let item = item as? ShortPeerRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp {
-            if item.enabled {
-                invokeAction(item, clickCount: event.clickCount)
-            }
-        }
-    }
-    
-    override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with: event)
-        
-//        if let item = item as? ShortPeerRowItem, item.alwaysHighlight {
-//            _ = item.table?.highlight(item: item)
-//        }
-        
-        if let item = item as? ShortPeerRowItem, let table = item.table, !table.alwaysOpenRowsOnMouseUp {
-            if item.enabled {
-                invokeAction(item, clickCount: event.clickCount)
-            }
-        }
-    }
-    
+
     private var isRowSelected: Bool {
         if let item = item as? ShortPeerRowItem {
             if item.highlightOnHover {
@@ -189,19 +199,27 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     }
     
     override func updateColors() {
+        
+        let highlighted = theme.colors.accent.withAlphaComponent(0.15)
+
+        
         self.containerView.background = backdorColor
-        self.separator.backgroundColor = theme.colors.border
+        self.separator.backgroundColor = containerView.controlState == .Highlight ? .clear : theme.colors.border
+        self.contextLabel?.background = containerView.controlState == .Highlight ? .clear : backdorColor
+        containerView.set(background: backdorColor, for: .Normal)
+        containerView.set(background: highlighted, for: .Highlight)
+
         guard let item = item as? ShortPeerRowItem else {
             return
         }
         self.background = item.viewType.rowBackground
+        needsDisplay = true
     }
     
     override func updateMouse() {
         super.updateMouse()
         updateColors()
         container.needsDisplay = true
-        
         guard let item = item as? ShortPeerRowItem else {
            return
         }
@@ -251,7 +269,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 if let badgeNode = badgeNode, let itemNode = item.badgeNode {
                     badgeNode.setFrameSize(itemNode.size)
-                    badgeNode.centerY(x: frame.width - badgeNode.frame.width - item.inset.left)
+                    badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width - item.inset.left)
                 }
                 
                 separator.frame = NSMakeRect(item.textInset, containerView.frame.height - .borderSize, containerView.frame.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset, .borderSize)
@@ -295,7 +313,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 }
                 if let badgeNode = badgeNode, let itemNode = item.badgeNode {
                     badgeNode.setFrameSize(itemNode.size)
-                    badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width)
+                    badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width - innerInsets.right)
                 }
                 
                 separator.frame = NSMakeRect(container.frame.minX + item.textInset, containerView.frame.height - .borderSize, container.frame.width - item.textInset, .borderSize)
@@ -461,7 +479,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         super.set(item: item, animated: animated)
         
         
-        containerView.setCorners(item.viewType.corners, animated: animated)
+        containerView.setCorners(item.viewType.corners, animated: animated && item.viewType != .legacy)
         
         
         self.border = item.border

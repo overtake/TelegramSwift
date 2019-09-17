@@ -376,7 +376,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .appearance:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, action: {
-                arguments.presentController(AppearanceViewController(arguments.context), true)
+                arguments.presentController(AppAppearanceViewController(context: arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case let .privacy(_,  privacySettings, webSessions):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, action: {
@@ -592,7 +592,9 @@ class LayoutAccountController : TableViewController {
         genericView.delegate = self
         self.rightBarView.border = [.Right]
         let context = self.context
-        
+        genericView.getBackgroundColor = {
+            theme.colors.background
+        }
         let previous:Atomic<[AppearanceWrapperEntry<AccountInfoEntry>]> = Atomic(value: [])
         
         
@@ -649,10 +651,6 @@ class LayoutAccountController : TableViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
                     _ = genericView.select(item: item)
                 }
-            } else if navigation.controller is AppearanceViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
-                    _ = genericView.select(item: item)
-                }
             } else if navigation.controller is PrivacyAndSecurityViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
                     _ = genericView.select(item: item)
@@ -693,6 +691,10 @@ class LayoutAccountController : TableViewController {
                     }
                 case controller.identifier == "notification-settings":
                     if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(4))) {
+                        _ = genericView.select(item: item)
+                    }
+                case controller.identifier == "app_appearance":
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
                         _ = genericView.select(item: item)
                     }
                 default:

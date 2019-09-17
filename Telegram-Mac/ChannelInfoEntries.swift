@@ -898,15 +898,20 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 entries.append(.scam(sectionId: .desc, text: L10n.channelInfoScamWarning, viewType: .singleItem))
             }
             
+            
+            var aboutBlock:[ChannelInfoEntry] = []
+            
             if let cachedData = view.cachedData as? CachedChannelData {
                 if let about = cachedData.about, !about.isEmpty, !channel.isScam {
-                    entries.append(.about(sectionId: .desc, text: about, viewType: .singleItem))
+                    aboutBlock.append(.about(sectionId: .desc, text: about, viewType: .singleItem))
                 }
             }
             
             if let username = channel.username, !username.isEmpty {
-                entries.append(.userName(sectionId: .info, value: username, viewType: .singleItem))
+                aboutBlock.append(.userName(sectionId: .desc, value: username, viewType: .singleItem))
             }
+            
+            applyBlock(aboutBlock)
             
             
             if channel.flags.contains(.isCreator) || (channel.adminRights != nil && !channel.adminRights!.isEmpty) {
@@ -924,8 +929,6 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
                 
                 entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
-                
-                
                 
             }
             

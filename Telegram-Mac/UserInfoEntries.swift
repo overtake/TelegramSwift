@@ -550,18 +550,16 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .notifications(lhsSectionId, lhsSettings, lhsViewType):
+        case let .notifications(sectionId, lhsSettings, viewType):
             switch entry {
-            case let .notifications(rhsSectionId, rhsSettings, rhsViewType):
-                if lhsSectionId != rhsSectionId {
-                    return false
-                }
+            case  .notifications(sectionId, let rhsSettings, viewType):
                 if let lhsSettings = lhsSettings, let rhsSettings = rhsSettings {
                     return lhsSettings.isEqual(to: rhsSettings)
                 } else if (lhsSettings != nil) != (rhsSettings != nil) {
                     return false
+                } else {
+                    return true
                 }
-                return lhsViewType == rhsViewType
             default:
                 return false
             }
@@ -618,9 +616,9 @@ enum UserInfoEntry: PeerInfoEntry {
             return 1
         case .about:
             return 2
-        case .phoneNumber:
-            return 3
         case .bio:
+            return 3
+        case .phoneNumber:
             return 4
         case .userName:
             return 5
@@ -802,9 +800,13 @@ enum UserInfoEntry: PeerInfoEntry {
             })
             
         case let .notifications(_, settings, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: {
+            
+            let settings = settings as? TelegramPeerNotificationSettings
+            let enabled = !(settings?.isMuted ?? false)
+            
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleNotifications()
-            })
+            }, enabled: settings != nil)
         case let .encryptionKey(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .next, viewType: viewType, action: {
                 arguments.encryptionKey()
@@ -869,20 +871,16 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
             if state.editingState == nil {
                 
                 if user.isScam {
-                    entries.append(UserInfoEntry.scam(sectionId: sectionId, text: L10n.peerInfoScamWarning, viewType: .singleItem))
-                    entries.append(UserInfoEntry.section(sectionId: sectionId))
-                    sectionId += 1
+                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, text: L10n.peerInfoScamWarning, viewType: .singleItem))
                 }
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {
                     if let about = cachedUserData.about, !about.isEmpty, !user.isScam {
                         if peer.isBot {
-                            entries.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
+                            infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
                         } else {
-                            entries.append(UserInfoEntry.bio(sectionId: sectionId, text: about, viewType: .singleItem))
+                            infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, viewType: .singleItem))
                         }
-                        entries.append(UserInfoEntry.section(sectionId: sectionId))
-                        sectionId += 1
                     }
                 }
                 

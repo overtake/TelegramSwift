@@ -328,13 +328,7 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
         }
     }
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
-        if let item = item as? PeerInfoHeaderItem, layer == containerView.layer {
-            if !item.editable {
-            }
-        }
-        
+       
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -349,7 +343,7 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
             callButton.set(image: theme.icons.peerInfoCall, for: .Normal)
             _ = callButton.sizeToFit()
             
-            separatorView.isHidden = !item.viewType.hasBorder
+            separatorView.isHidden = !item.viewType.hasBorder || item.viewType.isPlainMode
             
             switch item.viewType {
             case .legacy:

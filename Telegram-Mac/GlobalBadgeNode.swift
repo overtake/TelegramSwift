@@ -21,6 +21,7 @@ class GlobalBadgeNode: Node {
     private let excludePeerId:PeerId?
     private let disposable:MetaDisposable = MetaDisposable()
     private var textLayout:(TextNodeLayout, TextNode)?
+    var customLayout: Bool = false
     var xInset:CGFloat = 0
     private var attributedString:NSAttributedString? {
         didSet {
@@ -35,7 +36,7 @@ class GlobalBadgeNode: Node {
                 size = NSZeroSize
             }
             setNeedDisplay()
-            if let superview = view?.superview as? View {
+            if let superview = view?.superview as? View, !self.customLayout {
                 superview.customHandler.layout = { [weak self] view in
                     if let strongSelf = self {
                         if strongSelf.layoutChanged == nil {

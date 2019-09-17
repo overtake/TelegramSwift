@@ -204,7 +204,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         super.viewDidLoad()
         
         genericView.getBackgroundColor = {
-            theme.colors.grayBackground
+            theme.colors.listBackground
         }
 
         let context = self.context

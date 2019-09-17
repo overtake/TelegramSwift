@@ -1462,7 +1462,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         guard let controller = resortController, let resortRow = controller.resortRow, let resortView = controller.resortView else {return}
-        
+        if controller.resortRange.location == NSNotFound {
+            self.stopResorting()
+            return
+        }
         for i in 0 ..< controller.resortRange.location {
             y += self.list[i].heightValue
         }
@@ -2680,7 +2683,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 fatalError("not implemented")
             }
             
-            if toVisible {
+            if toVisible  {
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.heightValue {
                     if focus.focus {

@@ -100,7 +100,7 @@ private class PhoneCallWindowView : View {
         textNameView.font = .medium(18.0)
         textNameView.drawsBackground = false
         textNameView.backgroundColor = .clear
-        textNameView.textColor = nightBluePalette.text
+        textNameView.textColor = tintedNightPalette.text
         textNameView.isSelectable = false
         textNameView.isEditable = false
         textNameView.isBordered = false
@@ -112,7 +112,7 @@ private class PhoneCallWindowView : View {
         statusTextView.font = .normal(.header)
         statusTextView.drawsBackground = false
         statusTextView.backgroundColor = .clear
-        statusTextView.textColor = nightBluePalette.text
+        statusTextView.textColor = tintedNightPalette.text
         statusTextView.isSelectable = false
         statusTextView.isEditable = false
         statusTextView.isBordered = false

@@ -680,7 +680,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             textView.isHidden = false
             textView.animates = false
             textView.setPlaceholderAttributedString(item.inputPlaceholder, update: false)
-            if textView.defaultText != item.defaultText {
+            if textView.defaultText != (item.defaultText ?? "") {
                 textView.defaultText = item.defaultText ?? ""
                 textView.setString(item.currentText, animated: false)
             } else if item.currentText != textView.string() {

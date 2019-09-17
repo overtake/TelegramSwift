@@ -79,7 +79,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 textView?.removeFromSuperview()
                 textView = nil
             }
-            textView?.backgroundColor = theme.colors.background
+            textView?.backgroundColor = backdorColor
             
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
@@ -122,18 +122,15 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     
     override func updateColors() {
-        descriptionView?.backgroundColor = self.backdorColor
-        textView?.backgroundColor = self.backdorColor
-        containerView.backgroundColor = self.backdorColor
         if let item = item as? GeneralInteractedRowItem {
-            switch item.viewType {
-            case .legacy:
-                self.layer?.backgroundColor = backdorColor.cgColor
-            case .modern:
-                self.layer?.backgroundColor = theme.colors.grayBackground.cgColor
-            }
+            self.background = item.viewType.rowBackground
+            let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.accent.withAlphaComponent(0.15)
+            descriptionView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
+            textView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
+            containerView.set(background: self.backdorColor, for: .Normal)
+            containerView.set(background: highlighted, for: .Highlight)
         }
-        
+        containerView.needsDisplay = true
     }
     
     override func shakeView() {
@@ -155,13 +152,12 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
-        super.draw(layer, in: ctx)
-        
+                
         if let item = item as? GeneralInteractedRowItem, layer == containerView.layer {
             
             switch item.viewType {
             case .legacy:
+                super.draw(layer, in: ctx)
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
                     var f = focus(thumb.thumb.backingSize)
@@ -233,6 +229,13 @@ class GeneralInteractedRowView: GeneralRowView {
         containerView.addSubview(nextView)
         self.containerView.displayDelegate = self
         self.addSubview(self.containerView)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
         
         containerView.set(handler: { [weak self] _ in
             if let `self` = self, let item = self.item as? GeneralInteractedRowItem {

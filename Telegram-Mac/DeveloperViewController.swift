@@ -194,6 +194,11 @@ class DeveloperViewController: TableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.getBackgroundColor = {
+            theme.colors.background
+        }
+        
         let context = self.context
         let previousEntries:Atomic<[AppearanceWrapperEntry<DeveloperEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize

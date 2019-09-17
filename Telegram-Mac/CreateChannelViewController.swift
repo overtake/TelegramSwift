@@ -29,7 +29,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         self.nextEnabled(false)
         
         genericView.getBackgroundColor = {
-            theme.colors.grayBackground
+            theme.colors.listBackground
         }
         
         let initialSize = atomicSize.with { $0 }

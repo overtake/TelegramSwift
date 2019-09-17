@@ -61,8 +61,8 @@ class StickerSetTableRowItem: GeneralRowItem {
             nameLayout.measure(width: width - 50 - inset.left - inset.right)
             countLayout.measure(width: width - 50 - inset.left - inset.right)
         case let .modern(_, insets):
-            nameLayout.measure(width: blockWidth - 50 - insets.left - insets.right)
-            countLayout.measure(width: blockWidth - 50 - insets.left - insets.right)
+            nameLayout.measure(width: self.blockWidth - 80 - insets.left - insets.right)
+            countLayout.measure(width: self.blockWidth - 80 - insets.left - insets.right)
         }
         return success
     }
@@ -199,12 +199,7 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
         countView.backgroundColor = backdorColor
         containerView.background = backdorColor
         if let item = item as? GeneralRowItem {
-            switch item.viewType {
-            case .legacy:
-                self.layer?.backgroundColor = backdorColor.cgColor
-            case .modern:
-                self.layer?.backgroundColor = theme.colors.grayBackground.cgColor
-            }
+            self.backgroundColor = item.viewType.rowBackground
         }
     }
     

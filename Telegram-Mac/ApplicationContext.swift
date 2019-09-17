@@ -362,12 +362,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
     
         
-        #if DEBUG
-        window.set(handler: {  () -> KeyHandlerResult in
-           showModal(with: CustomAccentColorModalController(context: context), for: context.window)
-            return .invoked
-        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
-        #endif
         
         appUpdateDisposable.set((context.account.stateManager.appUpdateInfo |> deliverOnMainQueue).start(next: { info in
             

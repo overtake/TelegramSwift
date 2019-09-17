@@ -93,6 +93,7 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         
         
         //fill outgoing bubble
+        CATransaction.begin()
         if true {
             let data = messageBubbleImageModern(incoming: false, fillColor: palette.bubbleBackground_outgoing, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
             
@@ -148,7 +149,7 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
             ctx.translateBy(x: -130, y: 35)
             layer.render(in: ctx)
         }
-        
+        CATransaction.commit()
         
     })!
 }
@@ -805,11 +806,7 @@ final class TelegramChatListTheme {
 
 extension TelegramPresentationTheme {
     var appearance: NSAppearance? {
-        if #available(OSX 10.14, *), followSystemAppearance {
-            return nil
-        } else {
-            return colors.isDark ? NSAppearance(named: NSAppearance.Name.vibrantDark) : NSAppearance(named: NSAppearance.Name.vibrantLight)
-        }
+        return colors.isDark ? NSAppearance(named: NSAppearance.Name.vibrantDark) : NSAppearance(named: NSAppearance.Name.vibrantLight)
     }
 }
 
@@ -844,6 +841,47 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .image(image, settings: settings)
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
+        }
+    }
+    
+    static func ==(lhs: Wallpaper, rhs: Wallpaper) -> Bool {
+        switch lhs {
+        case .builtin:
+            if case .builtin = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .color(value):
+            if case .color(value) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .image(reps, settings):
+            if case .image(reps, settings: settings) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .file(slug, lhsFile, settings, isPattern):
+            if case .file(slug, let rhsFile, settings, isPattern) = rhs, lhsFile.isSemanticallyEqual(to: rhsFile) {
+                return true
+            } else {
+                return false
+            }
+        case let .custom(rep, blurred):
+            if case .custom(rep, blurred) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .none:
+            if case .none = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -1125,7 +1163,6 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     let fontSize: CGFloat
-    let followSystemAppearance: Bool
     
     var controllerBackgroundMode: TableBackgroundMode {
         if self.bubbled {
@@ -1211,7 +1248,7 @@ class TelegramPresentationTheme : PresentationTheme {
             return backgroundMode
         }
     }
-    init(colors: ColorPalette, cloudTheme: TelegramTheme?, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, followSystemAppearance: Bool) {
+    init(colors: ColorPalette, cloudTheme: TelegramTheme?, search: SearchTheme, chatList: TelegramChatListTheme, tabBar: TelegramTabBarTheme, icons: TelegramIconsTheme, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) {
         self.chatList = chatList
         #if !SHARE
             self.chat = TelegramChatColors(colors, bubbled)
@@ -1221,7 +1258,6 @@ class TelegramPresentationTheme : PresentationTheme {
         self.wallpaper = wallpaper
         self.bubbled = bubbled
         self.fontSize = fontSize
-        self.followSystemAppearance = followSystemAppearance
         self.cloudTheme = cloudTheme
         
         super.init(colors: colors, search: search)
@@ -1246,13 +1282,13 @@ class TelegramPresentationTheme : PresentationTheme {
     }
     
     func withUpdatedColors(_ colors: ColorPalette) -> TelegramPresentationTheme {
-        return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, followSystemAppearance: self.followSystemAppearance)
+        return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper)
     }
     func withUpdatedChatMode(_ bubbled: Bool) -> TelegramPresentationTheme {
-        return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: bubbled), bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, followSystemAppearance: self.followSystemAppearance)
+        return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: bubbled), bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper)
     }
     func withUpdatedWallpaper(_ wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
-        return TelegramPresentationTheme(colors: self.colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, followSystemAppearance: self.followSystemAppearance)
+        return TelegramPresentationTheme(colors: self.colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper)
     }
     
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {
@@ -1687,11 +1723,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.blueIcon) },
                                                verifyDialog: { generateDialogVerify(background: .white, foreground: palette.basicAccent) },
                                                verifyDialogActive: { generateDialogVerify(background: palette.blueIcon, foreground: palette.underSelectedColor) },
-                                               chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) }
+                                               chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) },
+                                               appearanceAddPlatformTheme: { NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.blueIcon) }
     )
 
 }
-private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, followSystemAppearance: Bool, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
+private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.blueSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,
@@ -1714,7 +1751,7 @@ private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bu
                                          badgeMutedBackgroundColor: palette.badgeMuted)
     
     let tabBar = TelegramTabBarTheme(color: palette.grayIcon, selectedColor: palette.blueIcon, badgeTextColor: .white, badgeColor: palette.redUI)
-    return TelegramPresentationTheme(colors: palette, cloudTheme: cloudTheme, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, followSystemAppearance: followSystemAppearance)
+    return TelegramPresentationTheme(colors: palette, cloudTheme: cloudTheme, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper)
 }
 
 
@@ -1739,9 +1776,9 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
         } else {
             palette = settings.palette
         }
-    case nightBluePalette.name:
-        if settings.palette.blueFill.hexString == nightBluePalette.blueFill.hexString {
-            palette = nightBluePalette
+    case tintedNightPalette.name:
+        if settings.palette.blueFill.hexString == tintedNightPalette.blueFill.hexString {
+            palette = tintedNightPalette
         } else {
             palette = settings.palette
         }
@@ -1754,7 +1791,7 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
     default:
         palette = settings.palette
     }
-    telegramUpdateTheme(generateTheme(palette: palette, cloudTheme: settings.cloudTheme, bubbled: settings.bubbled, fontSize: settings.fontSize, followSystemAppearance: settings.followSystemAppearance, wallpaper: settings.wallpaper), window: window, animated: animated)
+    telegramUpdateTheme(generateTheme(palette: palette, cloudTheme: settings.cloudTheme, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.wallpaper), window: window, animated: animated)
 }
 
 private let appearanceDisposable = MetaDisposable()
@@ -1794,7 +1831,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
 }
 
 func setDefaultTheme(for window: Window? = nil) {
-    telegramUpdateTheme(generateTheme(palette: dayClassicPalette, cloudTheme: nil, bubbled: false, fontSize: 13.0, followSystemAppearance: true, wallpaper: ThemeWallpaper()), window: window, animated: false)
+    telegramUpdateTheme(generateTheme(palette: dayClassicPalette, cloudTheme: nil, bubbled: false, fontSize: 13.0, wallpaper: ThemeWallpaper()), window: window, animated: false)
 }
 
 

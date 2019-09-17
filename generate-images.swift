@@ -403,6 +403,7 @@ func initialize() -> [String] {
     array.append("verifyDialog")
     array.append("verifyDialogActive")
     array.append("chatInputScheduled")
+    array.append("appearanceAddPlatformTheme")
     return array
 }
 

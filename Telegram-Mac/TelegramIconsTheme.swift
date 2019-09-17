@@ -5216,6 +5216,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var appearanceAddPlatformTheme: CGImage {
+      if let image = cached.with({ $0["appearanceAddPlatformTheme"] }) {
+          return image
+      } else {
+          let image = _appearanceAddPlatformTheme()
+          _ = cached.modify { current in 
+              var current = current
+              current["appearanceAddPlatformTheme"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -5618,6 +5631,7 @@ final class TelegramIconsTheme {
   private let _verifyDialog: ()->CGImage
   private let _verifyDialogActive: ()->CGImage
   private let _chatInputScheduled: ()->CGImage
+  private let _appearanceAddPlatformTheme: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -6020,7 +6034,8 @@ final class TelegramIconsTheme {
       scheduledInputAction: @escaping()->CGImage,
       verifyDialog: @escaping()->CGImage,
       verifyDialogActive: @escaping()->CGImage,
-      chatInputScheduled: @escaping()->CGImage
+      chatInputScheduled: @escaping()->CGImage,
+      appearanceAddPlatformTheme: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6423,6 +6438,7 @@ final class TelegramIconsTheme {
       self._verifyDialog = verifyDialog
       self._verifyDialogActive = verifyDialogActive
       self._chatInputScheduled = chatInputScheduled
+      self._appearanceAddPlatformTheme = appearanceAddPlatformTheme
   }
 
   deinit {

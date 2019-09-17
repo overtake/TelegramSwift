@@ -539,7 +539,7 @@ class ChatMessageItem: ChatRowItem {
             return rightSize.height
         }
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
-            return rightSize.height
+           // return rightSize.height
         }
        
         if let webpageLayout = webpageLayout {

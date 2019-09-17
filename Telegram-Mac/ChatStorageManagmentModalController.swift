@@ -37,7 +37,7 @@ class ChatStorageManagmentModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.getBackgroundColor = {
-            return theme.colors.grayBackground
+            theme.colors.listBackground
         }
         reloadData()
         

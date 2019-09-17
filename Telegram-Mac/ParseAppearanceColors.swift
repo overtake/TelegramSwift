@@ -532,7 +532,8 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 revealAction_warning_foreground: colors["revealAction_warning_foreground"] ?? parent.palette.revealAction_warning_foreground,
                                 revealAction_inactive_background: colors["revealAction_inactive_background"] ?? parent.palette.revealAction_inactive_background,
                                 revealAction_inactive_foreground: colors["revealAction_inactive_foreground"] ?? parent.palette.revealAction_inactive_foreground,
-                                chatBackground: colors["chatBackground"] ?? parent.palette.chatBackground)
+                                chatBackground: colors["chatBackground"] ?? parent.palette.chatBackground,
+                                listBackground: colors["listBackground"] ?? parent.palette.listBackground)
         }
         
     }

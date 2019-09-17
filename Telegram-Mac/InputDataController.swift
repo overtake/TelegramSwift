@@ -16,6 +16,7 @@ public class InputDataModalController : ModalViewController {
     private let controller: InputDataController
     private let _modalInteractions: ModalInteractions?
     private let closeHandler: (@escaping()-> Void) -> Void
+    private let themeDisposable = MetaDisposable()
     init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(350, 300)) {
         self.controller = controller
         self._modalInteractions = modalInteractions
@@ -30,8 +31,12 @@ public class InputDataModalController : ModalViewController {
         })
     }
     
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+    }
+    
     public override var containerBackground: NSColor {
-        return theme.colors.grayBackground
+        return controller.getBackgroundColor()
     }
     
     private func closeModal() {
@@ -140,9 +145,17 @@ public class InputDataModalController : ModalViewController {
         controller.viewDidLoad()
         ready.set(controller.ready.get())
         
+        themeDisposable.set(appearanceSignal.start(next: { [weak self] appearance in
+            self?.modal?.updateLocalizationAndTheme(theme: appearance.presentation)
+            self?.controller.updateLocalizationAndTheme(theme: appearance.presentation)
+        }))
+        
         controller.modalTransitionHandler = { [weak self] animated in
             self?.updateSize(animated)
         }
+    }
+    deinit {
+        themeDisposable.dispose()
     }
 }
 
@@ -189,11 +202,15 @@ struct InputDataSignalValue {
     }
 }
 
-final class InputDataView : BackgroundView {
+final class InputDataView : BackgroundView, AppearanceViewProtocol {
     let tableView = TableView()
     required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(tableView)
+    }
+    
+    func updateLocalizationAndTheme(theme: PresentationTheme) {
+        tableView.updateLocalizationAndTheme(theme: theme)
     }
     
     required init?(coder: NSCoder) {
@@ -227,9 +244,9 @@ class InputDataController: GenericViewController<InputDataView> {
     private let deleteKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
     private let tabKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
     private let searchKeyInvocation:() -> InputDataDeleteResult
-    private let getBackgroundColor: ()->NSColor
+    let getBackgroundColor: ()->NSColor
     let identifier: String
-    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.grayBackground }) {
+    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
@@ -255,7 +272,7 @@ class InputDataController: GenericViewController<InputDataView> {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        (self.genericView as? AppearanceViewProtocol)?.updateLocalizationAndTheme(theme: theme)
+        self.genericView.updateLocalizationAndTheme(theme: theme)
         requestUpdateBackBar()
         requestUpdateCenterBar()
         requestUpdateRightBar()
@@ -592,6 +609,14 @@ class InputDataController: GenericViewController<InputDataView> {
             return identifier == nil
         }
         return identifier
+    }
+    
+    override var supportSwipes: Bool {
+        let horizontal = HackUtils.findElements(byClass: "TGUIKit.HorizontalTableView", in: genericView.tableView)?.first as? HorizontalTableView
+        if let horizontal = horizontal {
+            return !horizontal._mouseInside()
+        }
+        return true
     }
     
     override func nextResponder() -> NSResponder? {
