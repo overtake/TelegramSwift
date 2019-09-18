@@ -399,6 +399,10 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         
     }
     
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        
+    }
+    
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         if let item = item as? InputDataRowItem, let pasteFilter = item.pasteFilter {
             if let string = pasteboard.string(forType: .string) {
