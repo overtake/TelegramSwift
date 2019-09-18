@@ -133,21 +133,24 @@ private class SPopoverRowView: TableRowView {
 }
 
 
-final class SPopoverSeparatorItem : TableRowItem {
+public final class SPopoverSeparatorItem : TableRowItem {
     
-    override var stableId: AnyHashable {
+    override public var stableId: AnyHashable {
         return arc4random()
     }
     
-    override init(_ initialSize: NSSize) {
+    override public init(_ initialSize: NSSize) {
         super.init(initialSize)
     }
+    public init() {
+        super.init(NSZeroSize)
+    }
     
-    override func viewClass() -> AnyClass {
+    override public func viewClass() -> AnyClass {
         return SPopoverSeparatorView.self
     }
     
-    override var height: CGFloat {
+    override public var height: CGFloat {
         return 10
     }
 }

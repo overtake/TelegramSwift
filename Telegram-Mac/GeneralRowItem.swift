@@ -170,7 +170,7 @@ enum GeneralViewType : Equatable {
         case .legacy:
             return []
         case let .modern(position, _):
-            return position.corners
+            return isPlainMode ? [] : position.corners
         }
     }
     var hasBorder: Bool {
