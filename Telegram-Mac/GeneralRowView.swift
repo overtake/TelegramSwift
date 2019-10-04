@@ -126,6 +126,9 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         if let item = item as? GeneralRowItem {
             self.border = item.border
             
+            let minX = (frame.width - item.blockWidth) / 2
+
+            
             if let errorLayout = item.errorLayout {
                 if errorTextView == nil {
                     errorTextView = TextView()
@@ -134,8 +137,12 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
                     addSubview(errorTextView!)
                 }
                 errorTextView!.update(errorLayout)
-                errorTextView!.change(pos: NSMakePoint(item.inset.left, frame.height - 6 - errorLayout.layoutSize.height), animated: animated)
-
+                switch item.viewType {
+                case .legacy:
+                    errorTextView!.change(pos: NSMakePoint(item.inset.left, frame.height - 6 - errorLayout.layoutSize.height), animated: animated)
+                case let .modern(_, insets):
+                    errorTextView!.change(pos: NSMakePoint(minX + insets.left, frame.height - 6 - errorLayout.layoutSize.height), animated: animated)
+                }
                 if animated {
                     errorTextView!.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
@@ -183,13 +190,14 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         
         guard let item = item as? GeneralRowItem else {return}
 
+        let minX = (frame.width - item.blockWidth) / 2
         
         if let errorTextView = errorTextView {
             switch item.viewType {
             case .legacy:
                 errorTextView.setFrameOrigin(item.inset.left, frame.height - 6 - errorTextView.frame.height)
             case let .modern(_, insets):
-                errorTextView.setFrameOrigin(item.inset.left + insets.left, frame.height - 2
+                errorTextView.setFrameOrigin(minX + insets.left, frame.height - 2
                     - errorTextView.frame.height)
             }
         }

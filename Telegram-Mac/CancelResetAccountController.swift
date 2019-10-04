@@ -306,6 +306,9 @@ func cancelResetAccountController(account: Account, phone: String, data: CancelA
         }
     }, hasDone: true)
     
+    controller.getBackgroundColor = {
+        theme.colors.background
+    }
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.modalSend, accept: { [weak controller] in
         _ = controller?.returnKeyAction()

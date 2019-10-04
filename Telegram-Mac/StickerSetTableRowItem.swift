@@ -81,7 +81,7 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
     private let countView:TextView = TextView()
     private let installationControl:ImageView = ImageView()
     private let removeControl = ImageButton()
-    private var animatedView: ChatMediaAnimatedStickerView?
+    private var animatedView: MediaAnimatedStickerView?
     private let loadedStickerPackDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -214,7 +214,7 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
             if item.info.flags.contains(.isAnimated) {
                 
                 if self.animatedView == nil {
-                    self.animatedView = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+                    self.animatedView = MediaAnimatedStickerView(frame: NSZeroRect)
                     containerView.addSubview(self.animatedView!)
                 }
                 self.imageView.isHidden = true

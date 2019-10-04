@@ -131,10 +131,12 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
             let connectionStatus: ConnectionStatus?
             let proxy: ProxyServerSettings
             let status: ProxyServerStatus?
+            let viewType: GeneralViewType
         }
-        let value = ProxyEquatable(enabled: state.settings.enabled, isActiveServer: state.settings.activeServer == proxy, connectionStatus: proxy == state.settings.effectiveActiveServer ? status : nil, proxy: proxy, status: statuses[proxy])
         
         let viewType = list.first == proxy ? .innerItem : bestGeneralViewType(list, for: proxy)
+
+        let value = ProxyEquatable(enabled: state.settings.enabled, isActiveServer: state.settings.activeServer == proxy, connectionStatus: proxy == state.settings.effectiveActiveServer ? status : nil, proxy: proxy, status: statuses[proxy], viewType: viewType)
         
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: InputDataIdentifier("_proxy_\(proxy.hashValue))"), equatable: InputDataEquatable(value), item: { initialSize, stableId -> TableRowItem in
             return ProxyListRowItem(initialSize, stableId: stableId, proxy: proxy, waiting: !value.enabled && state.settings.activeServer == proxy, connectionStatus: value.connectionStatus, status: value.status, viewType: viewType, action: {

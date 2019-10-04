@@ -14,8 +14,38 @@ protocol InputDataRowDataValue {
 }
 
 enum InputDataRightItemAction : Equatable {
+    static func == (lhs: InputDataRightItemAction, rhs: InputDataRightItemAction) -> Bool {
+        switch lhs {
+        case .clearText:
+            if case .clearText = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .resort:
+            if case .resort = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .none:
+            if case .none = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .custom:
+            if case .custom = rhs {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+    
     case clearText
     case resort
+    case custom(()->Void)
     case none
 }
 
@@ -94,24 +124,41 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let mode: InputDataInputMode
     fileprivate let rightItem: InputDataRightItem?
     fileprivate let pasteFilter:((String)->(Bool, String))?
-    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32) {
+    private let maxBlockWidth: CGFloat?
+    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32) {
         self.filter = filter
         self.limit = limit
         self.updated = updated
         self.placeholder = placeholder
         self.pasteFilter = pasteFilter
         self.defaultText = defaultText
+        self.maxBlockWidth = maxBlockWidth
         self.rightItem = rightItem
-        self.inputPlaceholder = .initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text))
+        let holder = NSMutableAttributedString()
+        switch mode {
+        case .secure:
+            holder.append(.initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .light(.text)))
+        case .plain:
+            holder.append(.initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)))
+        }
+        self.inputPlaceholder = holder
         placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
     
         self.currentText = currentText
         self.mode = mode
     
-        super.init(initialSize, stableId: stableId, viewType: viewType, error: error)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error)
         
        
         _ = makeSize(initialSize.width, oldWidth: oldWidth)
+    }
+    
+    override var blockWidth: CGFloat {
+        if let maxBlockWidth = maxBlockWidth {
+            return min(maxBlockWidth, super.blockWidth)
+        } else {
+            return super.blockWidth
+        }
     }
     
     var textFieldLeftInset: CGFloat {
@@ -229,8 +276,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         containerView.addSubview(textView)
         containerView.addSubview(secureField)
         containerView.addSubview(separator)
-        containerView.addSubview(rightActionView)
         containerView.addSubview(textLimitation)
+        containerView.addSubview(rightActionView)
         addSubview(containerView)
         placeholderAction.autohighlight = false
         rightActionView.autohighlight = false
@@ -271,8 +318,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         if !textView.isHidden {
             textView.shake()
             textView.setSelectedRange(NSMakeRange(0, textView.string().length))
-
         }
+        self.separator.shake()
     }
     
     override func hasFirstResponder() -> Bool {
@@ -346,7 +393,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             if let rightItem = item.rightItem {
                 switch rightItem {
                 case .action:
-                    if item.realInputHeight <= 16 {
+                    if item.realInputHeight <= 22 {
                         rightActionView.centerY(x: self.containerView.frame.width - rightActionView.frame.width - innerInsets.right)
                     } else {
                         rightActionView.setFrameOrigin(NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right, innerInsets.top))
@@ -364,7 +411,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             
             
             secureField.setFrameSize(NSMakeSize(item.blockWidth - innerInsets.left - innerInsets.right - item.textFieldLeftInset - item.additionRightInset, item.inputHeight))
-            secureField.setFrameOrigin(innerInsets.left + item.textFieldLeftInset, innerInsets.top)
+            secureField.setFrameOrigin(innerInsets.left + item.textFieldLeftInset + 1, innerInsets.top)
             
             textView.setFrameSize(NSMakeSize(item.blockWidth - innerInsets.left - innerInsets.right - item.textFieldLeftInset - item.additionRightInset, item.inputHeight))
             
@@ -642,6 +689,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                     rightActionView.set(handler: { [weak self] _ in
                         self?.secureField.stringValue = ""
                         self?.textView.setString("")
+                    }, for: .Click)
+                case let .custom(action):
+                    rightActionView.userInteractionEnabled = true
+                    rightActionView.autohighlight = true
+                    rightActionView.set(handler: { _ in
+                        action()
                     }, for: .Click)
                 }
             case .loading:

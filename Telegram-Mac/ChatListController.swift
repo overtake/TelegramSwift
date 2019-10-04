@@ -1004,6 +1004,13 @@ class ChatListController : PeersListController {
                 }
                 
             } else {
+                
+                let context = self.context
+                
+                _ = (context.globalPeerHandler.get() |> take(1)).start(next: { location in
+                    context.globalPeerHandler.set(.single(location))
+                })
+                
                 open(with: item.entryId, initialAction: item.pinnedType == .ad && FastSettings.showAdAlert ? .ad : nil, addition: false)
             }
         }

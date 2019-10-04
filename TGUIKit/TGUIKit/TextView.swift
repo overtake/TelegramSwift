@@ -852,6 +852,16 @@ public final class TextViewLayout : Equatable {
         return -1
     }
     
+    public func offset(for index: Int) -> CGFloat? {
+        let line = self.lines.first(where: {
+            $0.range.indexIn(index)
+        })
+        if let line = line {
+            return CTLineGetOffsetForStringIndex(line.line, index, nil)
+        }
+        return nil
+    }
+    
     public func selectAll(at point:NSPoint) -> Void {
         
         let startIndex = findCharacterIndex(at: point)

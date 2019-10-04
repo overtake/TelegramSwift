@@ -14,7 +14,8 @@ import SwiftSignalKitMac
 import Lottie
 
 
-class ChatMediaAnimatedStickerView: ChatMediaContentView {
+
+class MediaAnimatedStickerView: ChatMediaContentView {
 
     private let loadResourceDisposable = MetaDisposable()
     private let stateDisposable = MetaDisposable()
@@ -68,8 +69,12 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
     
     
     @objc func updatePlayerIfNeeded() {
-        let accept = ((self.window != nil && self.window!.isKeyWindow) || (self.window != nil && !(self.window is Window))) && !NSIsEmptyRect(self.visibleRect) && !self.isDynamicContentLocked && self.sticker != nil
-                
+        var accept = ((self.window != nil && self.window!.isKeyWindow) || (self.window != nil && !(self.window is Window))) && !NSIsEmptyRect(self.visibleRect) && !self.isDynamicContentLocked && self.sticker != nil
+        
+        let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
+        
+        accept = parameters?.alwaysAccept ?? accept
+        
         var signal = Signal<Void, NoError>.single(Void())
         if accept && !nextForceAccept {
             signal = signal |> delay(accept ? 0.25 : 0, queue: .mainQueue())
@@ -206,10 +211,12 @@ class ChatMediaAnimatedStickerView: ChatMediaContentView {
             return nil
         } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
             if let data = data, let file = file {
-                let playPolicy: LottiePlayPolicy = file.isEmojiAnimatedSticker ? .once : .loop
+                let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
+                let playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker ? .once : .loop)
                 let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? 30 : 60
+                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.thumb) : self?.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
-                self?.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: size.width < 200 ? .temporaryLZ4(.thumb) : self?.parent != nil ? .temporaryLZ4(.chat) : .none, playPolicy: playPolicy, maximumFps: maximumFps)
+                self?.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps)
                 self?.fetchStatus = .Local
             } else {
                 self?.sticker = nil

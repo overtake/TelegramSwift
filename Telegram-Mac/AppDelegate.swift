@@ -267,6 +267,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         let bundleId = Bundle.main.bundleIdentifier
         if let bundleId = bundleId {
             LSSetDefaultHandlerForURLScheme("tg" as CFString, bundleId as CFString)
+            LSSetDefaultHandlerForURLScheme("ton" as CFString, bundleId as CFString)
         }
         
         
@@ -480,7 +481,53 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 })
             
             
+            let tonKeychain: TonKeychain
             
+//            #if DEBUG
+//            tonKeychain = TonKeychain(encryptionPublicKey: {
+//                return .single(Data())
+//            }, encrypt: { data in
+//                return Signal { subscriber in
+//                    subscriber.putNext(data)
+//                    subscriber.putCompletion()
+//                    return EmptyDisposable
+//                }
+//            }, decrypt: { data in
+//                return Signal { subscriber in
+//                    subscriber.putNext(data)
+//                    subscriber.putCompletion()
+//                    return EmptyDisposable
+//                }
+//            })
+//            #else
+            tonKeychain = TonKeychain(encryptionPublicKey: {
+                return Signal { subscriber in
+//                    BuildConfig.getHardwareEncryptionAvailable(withBaseAppBundleId: self.baseAppBundleId, completion: { value in
+//                        subscriber.putNext(value)
+//                        subscriber.putCompletion()
+//                    })
+                    return EmptyDisposable
+                }
+            }, encrypt: { data in
+                return Signal { subscriber in
+                    if #available(OSX 10.12, *) {
+                        if let publicKey = TKPublicKey.get, let result = publicKey.encrypt(data: data) {
+                            subscriber.putNext(TonKeychainEncryptedData(publicKey: publicKey.key, data: result))
+                            subscriber.putCompletion()
+                            return EmptyDisposable
+                        }
+                    }
+                    subscriber.putError(.generic)
+                    return EmptyDisposable
+                }
+            }, decrypt: { encryptedData in
+                return Signal { subscriber in
+                    return EmptyDisposable
+                }
+            })
+//            #endif
+
+
             
             self.context.set(self.sharedContextPromise.get()
                 |> deliverOnMainQueue
@@ -508,8 +555,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                         }.start()
                                     semaphore.wait()
                                 }
-                                
-                                let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, account: account)
+                                let tonContext = StoredTonContext(basePath: account.basePath, postbox: account.postbox, network: account.network, keychain: tonKeychain)
+
+                                let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, tonContext: tonContext, account: account)
                                 return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings)
                                 
                             } else {
@@ -951,6 +999,29 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         #if !APP_STORE
             updateAppIfNeeded()
         #endif
+    }
+    
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        
+        if let context = self.contextValue?.context {
+            let navigation = context.sharedContext.bindings.rootNavigation()
+            
+            if let controller = navigation.controller as? InputDataController, controller.identifier == "wallet-create" {
+                let alert: NSAlert = NSAlert()
+                alert.addButton(withTitle: L10n.walletTerminateAppOK)
+                alert.addButton(withTitle: L10n.walletTerminateAppCancel)
+                alert.messageText = L10n.walletTerminateAppTitle
+                alert.informativeText = L10n.walletTerminateAppText
+                alert.alertStyle = .warning
+                if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
+                    return .terminateNow
+                } else {
+                    return .terminateLater
+                }
+            }
+        }
+        
+        return .terminateNow
     }
     
     

@@ -320,6 +320,13 @@ class ContactsController: PeersListController {
                     navigation.controller.invokeNavigation(action: modalAction)
                 }
             } else {
+                
+                let context = self.context
+                
+                _ = (context.globalPeerHandler.get() |> take(1)).start(next: { location in
+                    context.globalPeerHandler.set(.single(location))
+                })
+                
                 let chat:ChatController = ChatController(context: self.context, chatLocation: .peer(item.peer.id))
                 navigation.push(chat)
                 

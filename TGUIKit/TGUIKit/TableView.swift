@@ -477,6 +477,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func setFrameSize(_ newSize: NSSize) {
         let oldWidth: CGFloat = frame.width
+        let oldHeight: CGFloat = frame.height
+
         if newSize.width > 0 || newSize.height > 0 {
             super.setFrameSize(newSize)
             
@@ -484,6 +486,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                 if let table = table {
                     table.layoutIfNeeded(with: table.visibleRows(), oldWidth: oldWidth)
                 }
+            } else if oldHeight != frame.height {
+                table?.reloadHeightItems()
             }
         }
     }
@@ -1244,12 +1248,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updateScroll()
     }
     
-    public func scrollUp() {
-        self.clipView.scroll(to: NSMakePoint(0, min(clipView.bounds.minY + 30, clipView.bounds.maxY)), animated: true)
+    public func scrollUp(offset: CGFloat = 30.0) {
+        self.clipView.scroll(to: NSMakePoint(0, min(clipView.bounds.minY + offset, clipView.bounds.maxY)), animated: true)
         self.reflectScrolledClipView(clipView)
     }
-    public func scrollDown() {
-        self.clipView.scroll(to: NSMakePoint(0, max(clipView.bounds.minY - 30, 0)), animated: true)
+    
+    
+    public func scrollDown(offset: CGFloat = 30.0) {
+        self.clipView.scroll(to: NSMakePoint(0, max(clipView.bounds.minY - offset, 0)), animated: true)
         self.reflectScrolledClipView(clipView)
     }
     
@@ -1598,6 +1604,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
         //self.moveItem(from: row, to: row)
+    }
+    
+    fileprivate func reloadHeightItems() {
+        self.enumerateItems { item -> Bool in
+            if item.reloadOnTableHeightChanged {
+                self.reloadData(row: item.index)
+            }
+            return true
+        }
     }
     
     public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {

@@ -50,6 +50,10 @@ final class ChatMediaPresentation : Equatable {
                                      waveformForeground: theme.chat.waveformForeground(isIncoming, renderType == .bubble))
     }
     
+    static var empty: ChatMediaPresentation {
+        return .init(isIncoming: true, isBubble: true, activityBackground: .clear, activityForeground: .clear, text: .clear, grayText: .clear, link: .clear, waveformBackground: .clear, waveformForeground: .clear)
+    }
+    
     var fileThumb: CGImage {
         if isBubble {
             return isIncoming ? theme.icons.chatFileThumbBubble_incoming : theme.icons.chatFileThumbBubble_outgoing

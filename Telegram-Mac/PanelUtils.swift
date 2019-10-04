@@ -75,12 +75,11 @@ func savePanel(file:String, ext:String, for window:Window, defaultName: String? 
     savePanel.nameFieldStringValue = defaultName ?? "\(dateFormatter.string(from: Date())).\(ext)"
     
     let wLevel = window.level
-    if wLevel == .screenSaver {
+   // if wLevel == .screenSaver {
         window.level = .normal
-    }
+    //}
     
-    
-    savePanel.beginSheetModal(for: window, completionHandler: { [weak window] result in
+    savePanel.begin { (result) in
         if result == NSApplication.ModalResponse.OK, let saveUrl = savePanel.url {
             try? FileManager.default.removeItem(atPath: saveUrl.path)
             try? FileManager.default.copyItem(atPath: file, toPath: saveUrl.path)
@@ -88,10 +87,22 @@ func savePanel(file:String, ext:String, for window:Window, defaultName: String? 
         } else {
             completion?(nil)
         }
-        window?.level = wLevel
-    })
+        window.level = wLevel
+    }
     
+//    savePanel.beginSheetModal(for: window, completionHandler: { [weak window] result in
+//        if result == NSApplication.ModalResponse.OK, let saveUrl = savePanel.url {
+//            try? FileManager.default.removeItem(atPath: saveUrl.path)
+//            try? FileManager.default.copyItem(atPath: file, toPath: saveUrl.path)
+//            completion?(saveUrl.path)
+//        } else {
+//            completion?(nil)
+//        }
+//        window?.level = wLevel
+//    })
     
+//    
+//    
     if let editor = savePanel.fieldEditor(false, for: nil) {
         let exportFilename = savePanel.nameFieldStringValue
         let ext = exportFilename.nsstring.pathExtension

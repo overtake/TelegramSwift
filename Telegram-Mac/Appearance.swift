@@ -1519,7 +1519,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                stickerPackClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
                                                stickerPackDelete: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon) },
                                                modalShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon) },
-                                               modalClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
+                                               modalClose: { #imageLiteral(resourceName: "Icon_WalletClose").precomposed(palette.grayIcon) },
                                                ivChannelJoined: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
                                                chatListMention: { generateBadgeMention(backgroundColor: palette.accent, foregroundColor: palette.background) },
                                                chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect) },
@@ -1551,6 +1551,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsProxy: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(flipVertical: true)) },
                                                settingsAppearance: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)) },
                                                settingsPassport: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
+                                               settingsWallet: { generateSettingsIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(NSColor(0x59a7d8), flipVertical: true)) },
                                                settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
                                                settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
                                                settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
@@ -1563,6 +1564,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsProxyActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
                                                settingsAppearanceActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
                                                settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsWalletActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
                                                settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
                                                generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon) },
                                                settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon) },
@@ -1724,7 +1726,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                verifyDialog: { generateDialogVerify(background: .white, foreground: palette.basicAccent) },
                                                verifyDialogActive: { generateDialogVerify(background: palette.blueIcon, foreground: palette.underSelectedColor) },
                                                chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) },
-                                               appearanceAddPlatformTheme: { NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.blueIcon) }
+                                               appearanceAddPlatformTheme: { NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.blueIcon) },
+                                               wallet_close: { NSImage(named: "Icon_WalletClose")!.precomposed(palette.grayIcon) },
+                                               wallet_qr: { NSImage(named: "Icon_WalletQR")!.precomposed(palette.blueIcon) },
+                                               wallet_receive: { NSImage(named: "Icon_WalletReceive")!.precomposed(.black) },
+                                               wallet_send: { NSImage(named: "Icon_WalletSend")!.precomposed(.black) },
+                                               wallet_settings: { NSImage(named: "Icon_WalletSettings")!.precomposed(palette.blueIcon) },
+                                               wallet_update: { NSImage(named: "Icon_WalletUpdate")!.precomposed(.white) },
+                                               wallet_passcode_visible: { NSImage(named: "Icon_WalletPasscodeVisible")!.precomposed(palette.grayIcon) },
+                                               wallet_passcode_hidden: { NSImage(named: "Icon_WalletPasscodeHidden")!.precomposed(palette.grayIcon) }
+                                               
     )
 
 }

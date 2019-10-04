@@ -97,7 +97,7 @@ func networkUsageStatsController(context: AccountContext, f: @escaping((ViewCont
     
     f(InputDataController(dataSignal: promise.get() |> deliverOnPrepareQueue |> map {networkUsageStatsControllerEntries(stats: $0)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.networkUsageNetworkUsage, validateData: { data in
         if data[.init("reset")] != nil {
-            let reset: ResetNetworkUsageStats = [.wifi]
+            let reset: ResetNetworkUsageStats = [.wifi, .cellular]
             promise.set(accountNetworkUsageStats(account: context.account, reset: reset))
         }
         return .fail(.none)

@@ -439,6 +439,28 @@ func execute(inapp:inAppLink) {
                updateAppAsYouWish(text: info.message, updateApp: info.updateApp)
             }
         })
+    case let .tonTransfer(_, context, data: data):
+        let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox)).start(next: { config, wallets in
+            if #available(OSX 10.12, *) {
+                if let config = config.config {
+                    let tonContext = context.tonContext.context(config: config)
+                    if !wallets.wallets.isEmpty {
+                        let amount = data.amount ?? 0
+                        let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: amount > 0 ? formatAmountText("\(amount / 1000000000)") : "")
+                        showModal(with: controller, for: context.window)
+                    } else {
+                        confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in
+                            switch result {
+                            case .basic:
+                                context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
+                            default:
+                                break
+                            }
+                        })
+                    }
+                }
+            }
+        })
     }
     
 }
@@ -456,7 +478,7 @@ private func updateAppAsYouWish(text: String, updateApp: Bool) {
     })
 }
 
-private func escape(with link:String, addPercent: Bool = true) -> String {
+func escape(with link:String, addPercent: Bool = true) -> String {
     var escaped = addPercent ? link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link : link
     escaped = escaped.replacingOccurrences(of: "%21", with: "!")
     escaped = escaped.replacingOccurrences(of: "%24", with: "$")
@@ -548,6 +570,7 @@ enum inAppLink {
     case applyLocalization(link: String, context: AccountContext, value: String)
     case wallpaper(link: String, context: AccountContext, preview: WallpaperPreview)
     case theme(link: String, context: AccountContext, name: String)
+    case tonTransfer(link: String, context: AccountContext, data: ParsedWalletUrl)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -583,6 +606,8 @@ enum inAppLink {
             return values.link
         case let .theme(values):
             return values.link
+        case let .tonTransfer(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -596,6 +621,8 @@ let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "p
 
 let telegram_scheme:String = "tg://"
 let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme"]
+
+let ton_scheme:String = "ton://"
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -923,6 +950,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
             return .unsupportedScheme(link: urlString, context: context, path: path)
         }
        
+    } else if urlString.hasPrefix(ton_scheme), let urlValue = URL(string: urlString as String), let context = context {
+        if let parsed = parseWalletUrl(urlValue) {
+            return .tonTransfer(link: url as String, context: context, data: parsed)
+        }
+        return .nothing
     }
     
     return .external(link: urlString as String, confirm)
@@ -985,4 +1017,36 @@ func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
         }
     }
     return (nil, false)
+}
+
+public struct ParsedWalletUrl {
+    public let address: String
+    public let amount: Int64?
+    public let comment: String?
+}
+
+
+public func parseWalletUrl(_ url: URL) -> ParsedWalletUrl? {
+    guard url.scheme == "ton" && url.host == "transfer" else {
+        return nil
+    }
+    var address: String?
+    let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    if isValidAddress(path) {
+        address = path
+    }
+    var amount: Int64?
+    var comment: String?
+    if let query = url.query, let components = URLComponents(string: "/?" + query), let queryItems = components.queryItems {
+        for queryItem in queryItems {
+            if let value = queryItem.value {
+                if queryItem.name == "amount", !value.isEmpty, let amountValue = Int64(value) {
+                    amount = amountValue
+                } else if queryItem.name == "text", !value.isEmpty {
+                    comment = value
+                }
+            }
+        }
+    }
+    return address.flatMap { ParsedWalletUrl(address: $0, amount: amount, comment: comment) }
 }

@@ -25,6 +25,12 @@ public class InputDataModalController : ModalViewController {
         super.init(frame: controller._frameRect)
     }
     
+    var isFullScreenImpl: (()->Bool)? = nil
+    
+    public override var isFullScreen: Bool {
+        return self.isFullScreenImpl?() ?? super.isFullScreen
+    }
+    
     public override func close() {
         closeHandler({ [weak self] in
             self?.closeModal()
@@ -47,7 +53,7 @@ public class InputDataModalController : ModalViewController {
         if controller.defaultBarTitle.isEmpty {
             return nil
         }
-        return (left: nil, center: ModalHeaderData(title: controller.defaultBarTitle), right: nil)
+        return (left: nil, center: ModalHeaderData(title: controller.defaultBarTitle), right: self.controller.rightModalHeader)
     }
     
     
@@ -108,8 +114,10 @@ public class InputDataModalController : ModalViewController {
         updateSize(true)
     }
     
+    var dynamicSizeImpl:(()->Bool)? = nil
+    
     override open var dynamicSize: Bool {
-        return true
+        return self.dynamicSizeImpl?() ?? true
     }
     
     override open func measure(size: NSSize) {
@@ -151,7 +159,9 @@ public class InputDataModalController : ModalViewController {
         }))
         
         controller.modalTransitionHandler = { [weak self] animated in
-            self?.updateSize(animated)
+            if self?.dynamicSize == true {
+                self?.updateSize(animated)
+            }
         }
     }
     deinit {
@@ -207,6 +217,7 @@ final class InputDataView : BackgroundView, AppearanceViewProtocol {
     required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(tableView)
+        
     }
     
     func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -230,22 +241,28 @@ class InputDataController: GenericViewController<InputDataView> {
     private let disposable = MetaDisposable()
     private let appearanceDisposablet = MetaDisposable()
     private let title: String
-    private let validateData:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
-    private let afterDisappear: ()->Void
-    private let updateDatas:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
-    private let didLoaded:([InputDataIdentifier : InputDataValue]) -> Void
+    var validateData:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
+    var afterDisappear: ()->Void
+    var updateDatas:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
+    var didLoaded:([InputDataIdentifier : InputDataValue]) -> Void
     private let _removeAfterDisappear: Bool
     private let hasDone: Bool
-    private let updateDoneValue:([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void
-    private let customRightButton:((ViewController)->BarView?)?
-    private let afterTransaction: (InputDataController)->Void
-    private let backInvocation: ([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void
-    private let returnKeyInvocation:(InputDataIdentifier?, NSEvent) -> InputDataReturnResult
-    private let deleteKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
-    private let tabKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
+    var updateDoneValue:([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void
+    var customRightButton:((ViewController)->BarView?)?
+    var afterTransaction: (InputDataController)->Void
+    var backInvocation: ([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void
+    var returnKeyInvocation:(InputDataIdentifier?, NSEvent) -> InputDataReturnResult
+    var deleteKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
+    var tabKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
+    var rightModalHeader: ModalHeaderData? = nil
+    var keyWindowUpdate:(Bool, InputDataController) -> Void = { _, _ in }
+    var hasBackSwipe:()->Bool = { return true }
     private let searchKeyInvocation:() -> InputDataDeleteResult
-    let getBackgroundColor: ()->NSColor
+    var getBackgroundColor: ()->NSColor
     let identifier: String
+    
+    var ignoreRightBarHandler: Bool = false
+    
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
         self.title = title
         self.validateData = validateData
@@ -357,11 +374,16 @@ class InputDataController: GenericViewController<InputDataView> {
                         let item = findItem(for: identifier)
                         item?.view?.shakeView()
                         if scrollFirstItem == nil {
+                            var invoked: Bool = false
                             scrollFirstItem = item
-                            if let item = item {
+                            if let item = item, !invoked {
                                 tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
+                                invoked = true
                             }
                         }
+                    case let .shakeWithData(data):
+                        let item = findItem(for: identifier)
+                        item?.view?.shakeViewWithData(data)
                     }
                 }
             case let .doSomething(next):
@@ -414,7 +436,9 @@ class InputDataController: GenericViewController<InputDataView> {
         
         self.rightBarView.set(handler:{ [weak self] _ in
             guard let `self` = self else {return}
-            self.validateInput(data: self.fetchData())
+            if !self.ignoreRightBarHandler {
+                self.validateInput(data: self.fetchData())
+            }
         }, for: .Click)
         
         let previous: Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
@@ -616,7 +640,7 @@ class InputDataController: GenericViewController<InputDataView> {
         if let horizontal = horizontal {
             return !horizontal._mouseInside()
         }
-        return true
+        return self.hasBackSwipe()
     }
     
     override func nextResponder() -> NSResponder? {
@@ -659,6 +683,19 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override var removeAfterDisapper: Bool {
         return _removeAfterDisappear
+    }
+    
+    override func windowDidBecomeKey() {
+        self.keyWindowUpdate(true, self)
+    }
+   
+    override func windowDidResignKey() {
+        self.keyWindowUpdate(false, self)
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        self.executeReturn()
+        return .invoked
     }
     
     deinit {

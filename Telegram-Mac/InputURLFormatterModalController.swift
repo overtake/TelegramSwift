@@ -34,10 +34,10 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.text)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(state.text), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(state.text), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
     
@@ -45,10 +45,10 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.text)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.inputFormatterURLHeader, filter: { $0 }, limit: 10000))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.inputFormatterURLHeader, filter: { $0 }, limit: 10000))
     index += 1
 
     

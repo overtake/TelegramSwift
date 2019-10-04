@@ -376,6 +376,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    open func shakeViewWithData(_ data: Any) {
+        
+    }
+    
     public func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) -> Void  {
         super._change(pos: position, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
     }

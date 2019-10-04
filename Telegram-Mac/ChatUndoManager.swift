@@ -304,12 +304,15 @@ private final class ChatUndoManagerContext {
     
     func cancelAll() {
         for action in actions.reversed() {
-            if let status = statuses[action], status.status == .processing {
+            if statuses[action] == nil {
+                disposableDict.set(nil, forKey: action)
+                statuses[action]?.status = .cancelled
+                actions.remove(action)
+            } else if let status = statuses[action], status.status == .processing {
                 disposableDict.set(nil, forKey: action)
                 statuses[action]?.status = .cancelled
                 actions.remove(action)
             }
-            
         }
         notifyAllSubscribers()
     }

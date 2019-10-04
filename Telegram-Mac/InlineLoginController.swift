@@ -164,6 +164,10 @@ func InlineLoginController(context: AccountContext, url: String, originalURL: St
     
     let controller = InputDataController(dataSignal: signal, title: L10n.botInlineAuthHeader)
     
+    controller.getBackgroundColor = {
+        theme.colors.background
+    }
+    
     let modalController = InputDataModalController(controller, modalInteractions: interactions)
     
     close = { [weak modalController] in

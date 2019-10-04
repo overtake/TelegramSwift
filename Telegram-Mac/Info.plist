@@ -29,11 +29,12 @@
 			<array>
 				<string>tg</string>
 				<string>telegram</string>
+				<string>ton</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>182631</string>
+	<string>183922</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>

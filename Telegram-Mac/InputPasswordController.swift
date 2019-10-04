@@ -122,6 +122,10 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
         
     }, cancelTitle: L10n.modalCancel, height: 50)
     
+    controller.getBackgroundColor = {
+        theme.colors.background
+    }
+    
     let modalController = InputDataModalController(controller, modalInteractions: interactions, size: NSMakeSize(300, 300))
     
     dismiss = { [weak modalController] in

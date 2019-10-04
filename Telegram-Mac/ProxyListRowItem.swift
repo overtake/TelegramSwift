@@ -127,6 +127,18 @@ private final class ProxyListRowView : GeneralRowView {
             item.action()
         }, for: .Click)
         
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Hover)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
+        
         delete.set(handler: { [weak self] _ in
             guard let item = self?.item as? ProxyListRowItem else {return}
             item.delete()
@@ -144,17 +156,16 @@ private final class ProxyListRowView : GeneralRowView {
     }
     
     override func updateColors() {
-        headerView.backgroundColor = backdorColor
-        statusView.backgroundColor = backdorColor
-        containerView.backgroundColor = backdorColor
-        if let item = item as? GeneralRowItem {
-            switch item.viewType {
-            case .legacy:
-                self.layer?.backgroundColor = backdorColor.cgColor
-            case .modern:
-                self.layer?.backgroundColor = theme.colors.grayBackground.cgColor
-            }
-        }
+        guard let item = item as? ProxyListRowItem else {return}
+        
+        let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.grayHighlight
+        headerView.backgroundColor = containerView.controlState == .Highlight ? highlighted : backdorColor
+        statusView.backgroundColor = containerView.controlState == .Highlight ? highlighted : backdorColor
+        self.layer?.backgroundColor = item.viewType.rowBackground.cgColor
+        
+        containerView.set(background: self.backdorColor, for: .Normal)
+        containerView.set(background: highlighted, for: .Highlight)
+
     }
     
     override func layout() {

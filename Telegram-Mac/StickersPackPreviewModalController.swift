@@ -214,7 +214,7 @@ class StickersPackPreviewModalController: ModalViewController {
         arguments = StickerPackArguments(context: context, send: { [weak self] media, view in
             let interactions = (context.sharedContext.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
             
-            if let interactions = interactions, let media = media as? TelegramMediaFile {
+            if let interactions = interactions, let media = media as? TelegramMediaFile, media.maskData == nil {
                 if let slowMode = interactions.presentation.slowMode, slowMode.hasLocked {
                     showSlowModeTimeoutTooltip(slowMode, for: view)
                 } else {

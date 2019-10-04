@@ -69,7 +69,7 @@ final class StickerPackGridItem: GridItem {
 final class AnimatedStickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
     private var currentState: (AccountContext, TelegramMediaFile, CGSize)?
     
-    private let view: ChatMediaAnimatedStickerView = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+    private let view: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
 
     func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
         if let currentState = currentState {

@@ -395,6 +395,15 @@ public extension TelegramMediaFile {
         return nil
     }
     
+    var maskData: StickerMaskCoords? {
+        for attr in attributes {
+            if case let .Sticker(_, _, mask) = attr {
+                return mask
+            }
+        }
+        return nil
+    }
+    
     var isEmojiAnimatedSticker: Bool {
         if let fileName = fileName {
             return fileName.hasPrefix("telegram-animoji") && fileName.hasSuffix("tgs") && isSticker
@@ -2493,14 +2502,27 @@ struct SecureIdDocumentValue {
     }
 }
 
-func openFaq(context: AccountContext) {
+enum FaqDestination {
+    case telegram
+    case ton
+    var url:String {
+        switch self {
+        case .telegram:
+            return "https://telegram.org/faq/"
+        case .ton:
+            return "https://telegram.org/faq/gram_wallet";
+        }
+    }
+}
+
+func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    _ = showModalProgress(signal: webpagePreview(account: context.account, url: "https://telegram.org/faq/" + language) |> deliverOnMainQueue, for: context.window).start(next: { webpage in
+    _ = showModalProgress(signal: webpagePreview(account: context.account, url: dest.url + language) |> deliverOnMainQueue, for: context.window).start(next: { webpage in
         if let webpage = webpage {
             showInstantPage(InstantPageViewController(context, webPage: webpage, message: nil))
         } else {
-            execute(inapp: .external(link: "https://telegram.org/faq/" + language, true))
+            execute(inapp: .external(link: dest.url + language, true))
         }
     })
 }
