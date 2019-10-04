@@ -367,10 +367,28 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             
         }))
         
-//        window.set(handler: { [weak self] () -> KeyHandlerResult in
-//            self?.leftController.focusSearch(animated: true)
-//            return .invoked
-//        }, with: self, for: .E, priority: .low, modifierFlags: [.command])
+        if #available(OSX 10.12, *) {
+            #if DEBUG
+            window.set(handler: { [weak self] () -> KeyHandlerResult in
+                _ = walletConfiguration(postbox: context.account.postbox).start(next: { config in
+                    if let config = config.config {
+                        let tonContext = context.tonContext.context(config: config)
+                        self?.rightController.push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
+                    }
+                })
+                return .invoked
+                }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+            window.set(handler: { [weak self] () -> KeyHandlerResult in
+                _ = walletConfiguration(postbox: context.account.postbox).start(next: { config in
+                    if let config = config.config {
+                        let tonContext = context.tonContext.context(config: config)
+                        self?.rightController.push(WalletSplashController(context: context, tonContext: tonContext, mode: .importExist))
+                    }
+                })
+                return .invoked
+            }, with: self, for: .I, priority: .supreme, modifierFlags: [.command])
+            #endif
+        }
         
         suggestedLocalizationDisposable.set(( context.account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, NoError> in
             

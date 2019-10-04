@@ -68,9 +68,11 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 
                 textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
                 
-                let linkAttributed:NSMutableAttributedString = NSMutableAttributedString()
-                let _ = linkAttributed.append(string: content.displayUrl, color: theme.colors.link, font: NSFont.normal(FontSize.text))
-                linkAttributed.detectLinks(type: [.Links], context: interface.context, color: isFullRead ? theme.colors.link.withAlphaComponent(0.7) : theme.colors.link, openInfo: interface.openInfo)
+                
+                let linkAttributed: NSMutableAttributedString = parseMarkdownIntoAttributedString("[\(content.displayUrl)](\(content.displayUrl))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
+                })).mutableCopy() as! NSMutableAttributedString
+                
                 
                 linkLayout = TextViewLayout(linkAttributed, maximumNumberOfLines: 1, truncationType: .end)
             }

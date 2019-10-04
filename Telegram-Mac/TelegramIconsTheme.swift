@@ -2967,6 +2967,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var settingsWallet: CGImage {
+      if let image = cached.with({ $0["settingsWallet"] }) {
+          return image
+      } else {
+          let image = _settingsWallet()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsWallet"] = image
+              return current
+          }
+          return image
+      }
+  }
   var settingsUpdate: CGImage {
       if let image = cached.with({ $0["settingsUpdate"] }) {
           return image
@@ -3118,6 +3131,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["settingsPassportActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var settingsWalletActive: CGImage {
+      if let image = cached.with({ $0["settingsWalletActive"] }) {
+          return image
+      } else {
+          let image = _settingsWalletActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsWalletActive"] = image
               return current
           }
           return image
@@ -5229,6 +5255,110 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var wallet_close: CGImage {
+      if let image = cached.with({ $0["wallet_close"] }) {
+          return image
+      } else {
+          let image = _wallet_close()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_close"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallet_qr: CGImage {
+      if let image = cached.with({ $0["wallet_qr"] }) {
+          return image
+      } else {
+          let image = _wallet_qr()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_qr"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallet_receive: CGImage {
+      if let image = cached.with({ $0["wallet_receive"] }) {
+          return image
+      } else {
+          let image = _wallet_receive()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_receive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallet_send: CGImage {
+      if let image = cached.with({ $0["wallet_send"] }) {
+          return image
+      } else {
+          let image = _wallet_send()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_send"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallet_settings: CGImage {
+      if let image = cached.with({ $0["wallet_settings"] }) {
+          return image
+      } else {
+          let image = _wallet_settings()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_settings"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallet_update: CGImage {
+      if let image = cached.with({ $0["wallet_update"] }) {
+          return image
+      } else {
+          let image = _wallet_update()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_update"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallet_passcode_visible: CGImage {
+      if let image = cached.with({ $0["wallet_passcode_visible"] }) {
+          return image
+      } else {
+          let image = _wallet_passcode_visible()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_passcode_visible"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallet_passcode_hidden: CGImage {
+      if let image = cached.with({ $0["wallet_passcode_hidden"] }) {
+          return image
+      } else {
+          let image = _wallet_passcode_hidden()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallet_passcode_hidden"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -5458,6 +5588,7 @@ final class TelegramIconsTheme {
   private let _settingsProxy: ()->CGImage
   private let _settingsAppearance: ()->CGImage
   private let _settingsPassport: ()->CGImage
+  private let _settingsWallet: ()->CGImage
   private let _settingsUpdate: ()->CGImage
   private let _settingsAskQuestionActive: ()->CGImage
   private let _settingsFaqActive: ()->CGImage
@@ -5470,6 +5601,7 @@ final class TelegramIconsTheme {
   private let _settingsProxyActive: ()->CGImage
   private let _settingsAppearanceActive: ()->CGImage
   private let _settingsPassportActive: ()->CGImage
+  private let _settingsWalletActive: ()->CGImage
   private let _settingsUpdateActive: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
@@ -5632,6 +5764,14 @@ final class TelegramIconsTheme {
   private let _verifyDialogActive: ()->CGImage
   private let _chatInputScheduled: ()->CGImage
   private let _appearanceAddPlatformTheme: ()->CGImage
+  private let _wallet_close: ()->CGImage
+  private let _wallet_qr: ()->CGImage
+  private let _wallet_receive: ()->CGImage
+  private let _wallet_send: ()->CGImage
+  private let _wallet_settings: ()->CGImage
+  private let _wallet_update: ()->CGImage
+  private let _wallet_passcode_visible: ()->CGImage
+  private let _wallet_passcode_hidden: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -5862,6 +6002,7 @@ final class TelegramIconsTheme {
       settingsProxy: @escaping()->CGImage,
       settingsAppearance: @escaping()->CGImage,
       settingsPassport: @escaping()->CGImage,
+      settingsWallet: @escaping()->CGImage,
       settingsUpdate: @escaping()->CGImage,
       settingsAskQuestionActive: @escaping()->CGImage,
       settingsFaqActive: @escaping()->CGImage,
@@ -5874,6 +6015,7 @@ final class TelegramIconsTheme {
       settingsProxyActive: @escaping()->CGImage,
       settingsAppearanceActive: @escaping()->CGImage,
       settingsPassportActive: @escaping()->CGImage,
+      settingsWalletActive: @escaping()->CGImage,
       settingsUpdateActive: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
@@ -6035,7 +6177,15 @@ final class TelegramIconsTheme {
       verifyDialog: @escaping()->CGImage,
       verifyDialogActive: @escaping()->CGImage,
       chatInputScheduled: @escaping()->CGImage,
-      appearanceAddPlatformTheme: @escaping()->CGImage
+      appearanceAddPlatformTheme: @escaping()->CGImage,
+      wallet_close: @escaping()->CGImage,
+      wallet_qr: @escaping()->CGImage,
+      wallet_receive: @escaping()->CGImage,
+      wallet_send: @escaping()->CGImage,
+      wallet_settings: @escaping()->CGImage,
+      wallet_update: @escaping()->CGImage,
+      wallet_passcode_visible: @escaping()->CGImage,
+      wallet_passcode_hidden: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6265,6 +6415,7 @@ final class TelegramIconsTheme {
       self._settingsProxy = settingsProxy
       self._settingsAppearance = settingsAppearance
       self._settingsPassport = settingsPassport
+      self._settingsWallet = settingsWallet
       self._settingsUpdate = settingsUpdate
       self._settingsAskQuestionActive = settingsAskQuestionActive
       self._settingsFaqActive = settingsFaqActive
@@ -6277,6 +6428,7 @@ final class TelegramIconsTheme {
       self._settingsProxyActive = settingsProxyActive
       self._settingsAppearanceActive = settingsAppearanceActive
       self._settingsPassportActive = settingsPassportActive
+      self._settingsWalletActive = settingsWalletActive
       self._settingsUpdateActive = settingsUpdateActive
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
@@ -6439,6 +6591,14 @@ final class TelegramIconsTheme {
       self._verifyDialogActive = verifyDialogActive
       self._chatInputScheduled = chatInputScheduled
       self._appearanceAddPlatformTheme = appearanceAddPlatformTheme
+      self._wallet_close = wallet_close
+      self._wallet_qr = wallet_qr
+      self._wallet_receive = wallet_receive
+      self._wallet_send = wallet_send
+      self._wallet_settings = wallet_settings
+      self._wallet_update = wallet_update
+      self._wallet_passcode_visible = wallet_passcode_visible
+      self._wallet_passcode_hidden = wallet_passcode_hidden
   }
 
   deinit {

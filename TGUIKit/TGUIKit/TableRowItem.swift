@@ -36,6 +36,9 @@ open class TableRowItem: NSObject {
     open var instantlyResize:Bool {
         return false
     }
+    open var reloadOnTableHeightChanged: Bool {
+        return false
+    }
     
     open private(set) var height:CGFloat = 60;
     

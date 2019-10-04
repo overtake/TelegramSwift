@@ -124,7 +124,7 @@ class GeneralInteractedRowView: GeneralRowView {
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
-            let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.accent.withAlphaComponent(0.15)
+            let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.grayHighlight
             descriptionView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
             textView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
             containerView.set(background: self.backdorColor, for: .Normal)
@@ -236,6 +236,9 @@ class GeneralInteractedRowView: GeneralRowView {
         containerView.set(handler: { [weak self] _ in
             self?.updateColors()
         }, for: .Normal)
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Hover)
         
         containerView.set(handler: { [weak self] _ in
             if let `self` = self, let item = self.item as? GeneralInteractedRowItem {
@@ -249,17 +252,18 @@ class GeneralInteractedRowView: GeneralRowView {
                             break
                         }
                     }
-                    item.action()
+                    
                     switch item.type {
                     case let .switchable(enabled):
                         if item.autoswitch {
                             item.type = .switchable(!enabled)
-                            self.switchView?.setIsOn(!enabled)
+                            self.switchView?.send(event: .Click)
+                            return
                         }
-                        
                     default:
                         break
                     }
+                    item.action()
                 } else {
                     item.disabledAction()
                 }

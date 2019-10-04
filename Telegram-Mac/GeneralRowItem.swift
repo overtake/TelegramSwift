@@ -181,6 +181,14 @@ enum GeneralViewType : Equatable {
             return position.border
         }
     }
+    var position: GeneralViewItemPosition {
+        switch self {
+        case .legacy:
+            return .single
+        case let .modern(position, _):
+            return position
+        }
+    }
     
     static var firstItem: GeneralViewType {
         return .modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))

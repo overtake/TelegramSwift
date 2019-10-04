@@ -154,6 +154,10 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager, accoun
         }
     }, hasDone: true)
     
+    controller.getBackgroundColor = {
+        theme.colors.background
+    }
+    
     let modalInteractions = ModalInteractions(acceptTitle: L10n.modalSend, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
         }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)

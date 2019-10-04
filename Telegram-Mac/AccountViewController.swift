@@ -97,6 +97,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)
     case dataAndStorage(index: Int)
     case passport(index: Int, peer: Peer)
+    case wallet(index: Int)
     case update(index: Int, state: Any)
     case readArticles(index: Int)
     case about(index: Int)
@@ -132,14 +133,16 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(10)
         case .passport:
             return .index(11)
-        case .readArticles:
+        case .wallet:
             return .index(12)
-        case .about:
+        case .readArticles:
             return .index(13)
-        case .faq:
+        case .about:
             return .index(14)
-        case .ask:
+        case .faq:
             return .index(15)
+        case .ask:
+            return .index(16)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -172,6 +175,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .about(index):
             return index
         case let .passport(index, _):
+            return index
+        case let .wallet(index):
             return index
         case let .readArticles(index):
             return index
@@ -270,6 +275,12 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .passport(lhsIndex, lhsPeer):
             if case let .passport(rhsIndex, rhsPeer) = rhs {
                 return lhsIndex == rhsIndex && lhsPeer.isEqual(rhsPeer)
+            } else {
+                return false
+            }
+        case let .wallet(index):
+            if case let .wallet(index) = rhs {
+                return true
             } else {
                 return false
             }
@@ -394,6 +405,23 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, action: {
                 arguments.presentController(PassportController(arguments.context, peer, request: nil, nil), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+        case .wallet:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsWallet, icon: theme.icons.settingsWallet, activeIcon: theme.icons.settingsWalletActive, type: .next, action: {
+                let context = arguments.context
+                if #available(OSX 10.12, *) {
+                    let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox)).start(next: { config, wallets in
+                        if let config = config.config {
+                            let tonContext = context.tonContext.context(config: config)
+                            if wallets.wallets.isEmpty {
+                                arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .intro), true)
+                            } else {
+                                arguments.presentController(WalletInfoController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info), true)
+                            }
+                        }
+                    })
+                }
+                
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .faq:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
                 
@@ -453,7 +481,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -522,6 +550,10 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
         entries.append(.passport(index: index, peer: peer))
         index += 1
     }
+    if hasWallet {
+        entries.append(.wallet(index: index))
+        index += 1
+    }
     
 
 
@@ -585,6 +617,8 @@ class LayoutAccountController : TableViewController {
     private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus), Bool)> = Promise()
     private let syncLocalizations = MetaDisposable()
     fileprivate let passportPromise: Promise<Bool> = Promise(false)
+    fileprivate let hasWallet: Promise<Bool> = Promise(false)
+
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -595,12 +629,30 @@ class LayoutAccountController : TableViewController {
         genericView.getBackgroundColor = {
             theme.colors.background
         }
+        
+        self.hasWallet.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
+        |> map { view -> Bool in
+            let appConfiguration = view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? .defaultValue
+            let configuration = WalletConfiguration.with(appConfiguration: appConfiguration)
+            if #available(OSX 10.12, *) {
+                return configuration.config != nil
+            } else {
+                return false
+            }
+        })
+
+
+        
         let previous:Atomic<[AppearanceWrapperEntry<AccountInfoEntry>]> = Atomic(value: [])
         
         
         let arguments = AccountInfoArguments(context: context, presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.sharedContext.layout else {return}
+             var main = main
+            if let controller = navigation.controller as? InputDataController, controller.identifier == "wallet-create" {
+                main = false
+            }
             if main {
                 navigation.removeExceptMajor()
             }
@@ -629,8 +681,8 @@ class LayoutAccountController : TableViewController {
         #endif
         
         
-        let apply = combineLatest(queue: queue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState) |> map { peerView, accounts, appearance, settings, appUpdateState -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(queue: queue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -695,6 +747,10 @@ class LayoutAccountController : TableViewController {
                     }
                 case controller.identifier == "app_appearance":
                     if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                        _ = genericView.select(item: item)
+                    }
+                case controller.identifier == "wallet-info" || controller.identifier == "wallet-create" || controller.identifier == "wallet-splash":
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                         _ = genericView.select(item: item)
                     }
                 default:

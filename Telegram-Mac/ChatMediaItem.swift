@@ -493,6 +493,9 @@ class ChatMediaItem: ChatRowItem {
     }
    
     public func contentNode() -> ChatMediaContentView.Type {
+        if let file = media as? TelegramMediaFile, message?.id.peerId.namespace == Namespaces.Peer.SecretChat, file.isAnimatedSticker, file.stickerReference == nil {
+            return ChatFileContentView.self
+        }
         return ChatLayoutUtils.contentNode(for: media)
     }
     
@@ -534,7 +537,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return .image(reference, ImagePreviewModalView.self)
                 }
-            } else if contentNode is ChatMediaAnimatedStickerView {
+            } else if contentNode is MediaAnimatedStickerView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                     return .file(reference, AnimatedStickerPreviewModalView.self)

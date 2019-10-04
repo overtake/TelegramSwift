@@ -29,7 +29,8 @@
 	<true/>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)ru.keepcoder.Telegram</string>
+		<string>6N38VWS5BX.ru.keepcoder.Telegram</string>
+		<string>6N38VWS5BX.ru.keepcoder.TelegramShare</string>
 	</array>
 </dict>
 </plist>

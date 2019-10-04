@@ -604,7 +604,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         
-        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(Int32(timeDifference) > 0 ? message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference)) : message), entry.isRead, renderType, itemType, fwdType, entry.location, additionalData, autoplayMedia)
+        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, entry.location, additionalData, autoplayMedia)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
             

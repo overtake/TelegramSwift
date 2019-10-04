@@ -377,7 +377,11 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            _ = (confirmSignal(for: mainWindow, information: tr(L10n.recentSessionsConfirmTerminateOthers)) |> filter {$0} |> map {_ in} |> mapToSignal{terminateOtherAccountSessions(account: context.account)}).start()
+            confirm(for: context.window, information: L10n.recentSessionsConfirmTerminateOthers, successHandler: { _ in
+                _ = showModalProgress(signal: terminateOtherAccountSessions(account: context.account), for: context.window).start(error: { error in
+                    
+                })
+            })
         })
         
         let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(self.activeSessions) |> then(requestRecentAccountSessions(account: context.account) |> map { Optional($0) })

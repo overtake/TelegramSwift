@@ -230,6 +230,7 @@ func initialize() -> [String] {
     array.append("settingsProxy")
     array.append("settingsAppearance")
     array.append("settingsPassport")
+    array.append("settingsWallet")
     array.append("settingsUpdate")
     array.append("settingsAskQuestionActive")
     array.append("settingsFaqActive")
@@ -242,6 +243,7 @@ func initialize() -> [String] {
     array.append("settingsProxyActive")
     array.append("settingsAppearanceActive")
     array.append("settingsPassportActive")
+    array.append("settingsWalletActive")
     array.append("settingsUpdateActive")
     array.append("generalCheck")
     array.append("settingsAbout")
@@ -404,6 +406,18 @@ func initialize() -> [String] {
     array.append("verifyDialogActive")
     array.append("chatInputScheduled")
     array.append("appearanceAddPlatformTheme")
+    
+    array.append("wallet_close")
+    array.append("wallet_qr")
+    array.append("wallet_receive")
+    array.append("wallet_send")
+    array.append("wallet_settings")
+    array.append("wallet_update")
+    
+    array.append("wallet_passcode_visible")
+    array.append("wallet_passcode_hidden")
+    
+
     return array
 }
 

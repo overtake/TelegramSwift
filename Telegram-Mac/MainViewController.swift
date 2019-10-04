@@ -416,13 +416,13 @@ class MainViewController: TelegramViewController {
                             })
                             transaction.updateSharedData(ApplicationSharedPreferencesKeys.themeSettings, { entry in
                                 let settings = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
-                                return settings.withUpdatedToDefault(dark: !theme.colors.isDark)
+                                return settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark)
                             })
                             }.start()
                     })
                 } else {
                     _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
-                        return settings.withUpdatedToDefault(dark: !theme.colors.isDark)
+                        return settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark)
                     }).start()
                 }
             })
@@ -474,22 +474,29 @@ class MainViewController: TelegramViewController {
     
     func checkSettings(_ index:Int) {
         let isSettings = tabController.tab(at: index).controller is AccountViewController
-
-        if previousIndex == tabController.count - 1 || isSettings {
-            if isSettings && context.sharedContext.layout != .single {
-                context.sharedContext.bindings.rootNavigation().push(GeneralSettingsViewController(context), false)
-            } else {
-                context.sharedContext.bindings.rootNavigation().enumerateControllers( { controller, index in
-                    if (controller is ChatController) || (controller is PeerInfoController) || (controller is ChannelAdminsViewController) || (controller is ChannelAdminsViewController) || (controller is EmptyChatViewController) {
-                        self.backFromSettings(index)
-                        return true
-                    }
-                    return false
-                })
+        
+        let navigation = context.sharedContext.bindings.rootNavigation()
+        
+        if let controller = navigation.controller as? InputDataController, controller.identifier == "wallet-create" {
+            self.previousIndex = index
+            quickController?.popover?.hide()
+        } else {
+            if previousIndex == tabController.count - 1 || isSettings {
+                if isSettings && context.sharedContext.layout != .single {
+                    navigation.push(GeneralSettingsViewController(context), false)
+                } else {
+                    navigation.enumerateControllers( { controller, index in
+                        if (controller is ChatController) || (controller is PeerInfoController) || (controller is ChannelAdminsViewController) || (controller is ChannelAdminsViewController) || (controller is EmptyChatViewController) {
+                            self.backFromSettings(index)
+                            return true
+                        }
+                        return false
+                    })
+                }
             }
+            self.previousIndex = index
+            quickController?.popover?.hide()
         }
-        self.previousIndex = index
-        quickController?.popover?.hide()
     }
     
     private func backFromSettings(_ index:Int) {

@@ -119,7 +119,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     
                    
                     if data.file.isAnimatedSticker {
-                        let view = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+                        let view = MediaAnimatedStickerView(frame: NSZeroRect)
                         let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
                         view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
                         view.userInteractionEnabled = false

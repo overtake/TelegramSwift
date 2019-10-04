@@ -200,12 +200,12 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
     override func updateColors() {
         
-        let highlighted = theme.colors.accent.withAlphaComponent(0.15)
+        let highlighted = backdorColor
 
         
         self.containerView.background = backdorColor
-        self.separator.backgroundColor = containerView.controlState == .Highlight ? .clear : theme.colors.border
-        self.contextLabel?.background = containerView.controlState == .Highlight ? .clear : backdorColor
+        self.separator.backgroundColor = theme.colors.border
+        self.contextLabel?.background = backdorColor
         containerView.set(background: backdorColor, for: .Normal)
         containerView.set(background: highlighted, for: .Highlight)
 

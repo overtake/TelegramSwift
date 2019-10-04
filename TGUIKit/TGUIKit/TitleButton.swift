@@ -82,10 +82,12 @@ public class TitleButton: ImageButton {
             } else {
                 text.foregroundColor = style.foregroundColor.cgColor
             }
+            
         } else {
             text.foregroundColor = presentation.colors.grayText.cgColor
         }
         
+         text.backgroundColor = .clear
         
         if let stateFont = stateFont[state] {
             text.font = stateFont.fontName as CFTypeRef

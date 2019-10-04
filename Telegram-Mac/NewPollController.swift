@@ -235,7 +235,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     
     let interactions = ModalInteractions(acceptTitle: L10n.modalSend, accept: {
        checkAndSend()
-    }, cancelTitle: L10n.modalCancel, cancel: nil, drawBorder: true, height: 50, alignCancelLeft: false)
+    }, drawBorder: true, height: 50, alignCancelLeft: false, singleButton: true)
     
     
    
@@ -457,6 +457,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         return .default
     })
     
+    
     let modalController = InputDataModalController(controller, modalInteractions: interactions, closeHandler: { f in
         let state = stateValue.with { $0 }
         
@@ -473,7 +474,10 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         modalController?.modal?.close()
     }
     
-    mainWindow.set(handler: { [weak controller] () -> KeyHandlerResult in
+    controller.rightModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: close)
+    
+    
+    chatInteraction.context.window.set(handler: { [weak controller] () -> KeyHandlerResult in
         if let controller = controller {
             let state = stateValue.with {$0}
             

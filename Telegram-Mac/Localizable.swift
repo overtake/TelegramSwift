@@ -101,6 +101,8 @@ internal final class L10n {
   internal static var accountSettingsTheme: String  { return L10n.tr("Localizable", "AccountSettings.Theme") }
   /// Username
   internal static var accountSettingsUsername: String  { return L10n.tr("Localizable", "AccountSettings.Username") }
+  /// Gram Wallet
+  internal static var accountSettingsWallet: String  { return L10n.tr("Localizable", "AccountSettings.Wallet") }
   /// Connected
   internal static var accountSettingsProxyConnected: String  { return L10n.tr("Localizable", "AccountSettings.Proxy.Connected") }
   /// Connecting
@@ -435,6 +437,8 @@ internal final class L10n {
   internal static var blockContactOptionsDeleteChat: String  { return L10n.tr("Localizable", "BlockContact.Options.DeleteChat") }
   /// Report Spam
   internal static var blockContactOptionsReport: String  { return L10n.tr("Localizable", "BlockContact.Options.Report") }
+  /// Manage User
+  internal static var blockContactOptionsTitle: String  { return L10n.tr("Localizable", "BlockContact.Options.Title") }
   /// Blocked users can't send you messages or add you to groups. They will not see your profile pictures, online and last seen status.
   internal static var blockedPeersEmptyDescrpition: String  { return L10n.tr("Localizable", "BlockedPeers.EmptyDescrpition") }
   /// Open Link
@@ -1943,7 +1947,7 @@ internal final class L10n {
   internal static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
   /// Disable
   internal static var darkModeConfirmNightModeOK: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.OK") }
-  /// You have enabled night mode. If you want to change dark mode you have to disable night mode.
+  /// You have enabled night mode. If you want to change dark mode you have to disable it.
   internal static var darkModeConfirmNightModeText: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Text") }
   /// Auto-Download Media
   internal static var dataAndStorageAutomaticDownload: String  { return L10n.tr("Localizable", "DataAndStorage.AutomaticDownload") }
@@ -5249,6 +5253,8 @@ internal final class L10n {
   internal static var supergroupDeleteRestrictionDeleteMessage: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteMessage") }
   /// Report Spam
   internal static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
+  /// Manage Messages
+  internal static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
   /// Window
   internal static var td7AD5loTitle: String  { return L10n.tr("Localizable", "Td7-aD-5lo.title") }
   /// Appearance
@@ -5849,6 +5855,76 @@ internal final class L10n {
   internal static var updateAppTelegramUpdate: String  { return L10n.tr("Localizable", "UpdateApp.TelegramUpdate") }
   /// Update Telegram
   internal static var updateAppUpdateTelegram: String  { return L10n.tr("Localizable", "UpdateApp.UpdateTelegram") }
+  /// updated %@
+  internal static func updatedAtDate(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Updated.AtDate", p1)
+  }
+  /// updated %d hours ago
+  internal static func updatedHoursAgoAny(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.HoursAgo_any", p1)
+  }
+  /// %d
+  internal static func updatedHoursAgoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.HoursAgo_countable", p1)
+  }
+  /// updated %d hours ago
+  internal static func updatedHoursAgoFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.HoursAgo_few", p1)
+  }
+  /// updated %d hours ago
+  internal static func updatedHoursAgoMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.HoursAgo_many", p1)
+  }
+  /// updated %d hour ago
+  internal static func updatedHoursAgoOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.HoursAgo_one", p1)
+  }
+  /// updated %d hours ago
+  internal static func updatedHoursAgoTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.HoursAgo_two", p1)
+  }
+  /// updated %d hours ago
+  internal static func updatedHoursAgoZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.HoursAgo_zero", p1)
+  }
+  /// updated just now
+  internal static var updatedJustNow: String  { return L10n.tr("Localizable", "Updated.JustNow") }
+  /// updated %d minutes ago
+  internal static func updatedMinutesAgoAny(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.MinutesAgo_any", p1)
+  }
+  /// %d
+  internal static func updatedMinutesAgoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.MinutesAgo_countable", p1)
+  }
+  /// updated %d minutes ago
+  internal static func updatedMinutesAgoFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.MinutesAgo_few", p1)
+  }
+  /// updated %d minutes ago
+  internal static func updatedMinutesAgoMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.MinutesAgo_many", p1)
+  }
+  /// updated %d minute ago
+  internal static func updatedMinutesAgoOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.MinutesAgo_one", p1)
+  }
+  /// updated %d minutes ago
+  internal static func updatedMinutesAgoTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.MinutesAgo_two", p1)
+  }
+  /// updated %d minutes ago
+  internal static func updatedMinutesAgoZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Updated.MinutesAgo_zero", p1)
+  }
+  /// updated today at %@
+  internal static func updatedTodayAt(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Updated.TodayAt", p1)
+  }
+  /// updated yesterday at %@
+  internal static func updatedYesterdayAt(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Updated.YesterdayAt", p1)
+  }
   /// %@ is available
   internal static func usernameSettingsAvailable(_ p1: String) -> String {
     return L10n.tr("Localizable", "UsernameSettings.available", p1)
@@ -5863,6 +5939,268 @@ internal final class L10n {
   internal static var vdrFpXzOTitle: String  { return L10n.tr("Localizable", "Vdr-fp-XzO.title") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
+  /// Receive
+  internal static var walletBalanceInfoReceive: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Receive") }
+  /// The wallet state can not be retrived at this time.
+  internal static var walletBalanceInfoRetrieveError: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.RetrieveError") }
+  /// Send
+  internal static var walletBalanceInfoSend: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Send") }
+  /// Wallet
+  internal static var walletBalanceInfoTitle: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Title") }
+  /// updating.
+  internal static var walletBalanceInfoUpdating1: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Updating1") }
+  /// updating..
+  internal static var walletBalanceInfoUpdating2: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Updating2") }
+  /// updating...
+  internal static var walletBalanceInfoUpdating3: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Updating3") }
+  /// your balance
+  internal static var walletBalanceInfoYouBalance: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.YouBalance") }
+  /// -%@ blockchain fees
+  internal static func walletBalanceInfoTransactionFees(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallet.BalanceInfo.Transaction.Fees", p1)
+  }
+  /// Wallet Created
+  internal static var walletInfoWalletCreatedHeader: String  { return L10n.tr("Localizable", "Wallet.Info.WalletCreated.Header") }
+  /// your wallet address
+  internal static var walletInfoWalletCreatedText: String  { return L10n.tr("Localizable", "Wallet.Info.WalletCreated.Text") }
+  /// Enter your passcode
+  internal static var walletProcessTransactionPasscodePlaceholder: String  { return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.Placeholder") }
+  /// Enter your passcode for transfer Grams.
+  internal static var walletProcessTransactionPasscodeText: String  { return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.Text") }
+  /// Passcode
+  internal static var walletProcessTransactionPasscodeTitle: String  { return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.Title") }
+  /// Copy Wallet Address
+  internal static var walletReceiveCopyWalletAddress: String  { return L10n.tr("Localizable", "Wallet.Receive.CopyWalletAddress") }
+  /// Share Wallet Address
+  internal static var walletReceiveShareWalletAddress: String  { return L10n.tr("Localizable", "Wallet.Receive.ShareWalletAddress") }
+  /// Share this link with other Gram wallet owners to receive Grams from them.
+  internal static var walletReceiveShareWalletDesc: String  { return L10n.tr("Localizable", "Wallet.Receive.ShareWalletDesc") }
+  /// Receive Grams
+  internal static var walletReceiveTitle: String  { return L10n.tr("Localizable", "Wallet.Receive.Title") }
+  /// YOUR WALLET ADDRESS
+  internal static var walletReceiveYourWalletAddress: String  { return L10n.tr("Localizable", "Wallet.Receive.YourWalletAddress") }
+  /// BALANCE:     %@
+  internal static func walletSendAmountBalance(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallet.Send.AmountBalance", p1)
+  }
+  /// AMOUNT
+  internal static var walletSendAmountHeader: String  { return L10n.tr("Localizable", "Wallet.Send.AmountHeader") }
+  /// Grams to send
+  internal static var walletSendAmountPlaceholder: String  { return L10n.tr("Localizable", "Wallet.Send.AmountPlaceholder") }
+  /// Optional description of the payment
+  internal static var walletSendCommentPlaceholder: String  { return L10n.tr("Localizable", "Wallet.Send.CommentPlaceholder") }
+  /// Encryption error. Please check device passcode settings and try again.
+  internal static var walletSendErrorDecryptionFailed: String  { return L10n.tr("Localizable", "Wallet.Send.ErrorDecryptionFailed") }
+  /// Invalid wallet address. Please correct and try again.
+  internal static var walletSendErrorInvalidAddress: String  { return L10n.tr("Localizable", "Wallet.Send.ErrorInvalidAddress") }
+  /// Copy the 48-letter address of the recipient here or ask them to send you a ton:// link.
+  internal static var walletSendRecipientDesc: String  { return L10n.tr("Localizable", "Wallet.Send.RecipientDesc") }
+  /// RECIPIENT WALLET ADDRESS
+  internal static var walletSendRecipientHeader: String  { return L10n.tr("Localizable", "Wallet.Send.RecipientHeader") }
+  /// Enter wallet address...
+  internal static var walletSendRecipientPlaceholder: String  { return L10n.tr("Localizable", "Wallet.Send.RecipientPlaceholder") }
+  /// Send Anyway
+  internal static var walletSendSendAnyway: String  { return L10n.tr("Localizable", "Wallet.Send.SendAnyway") }
+  /// Please wait few seconds for your transaction to be processed...
+  internal static var walletSendSendingText: String  { return L10n.tr("Localizable", "Wallet.Send.SendingText") }
+  /// Sending Grams
+  internal static var walletSendSendingTitle: String  { return L10n.tr("Localizable", "Wallet.Send.SendingTitle") }
+  /// **%@** Grams have been sent.
+  internal static func walletSendSentText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallet.Send.SentText", p1)
+  }
+  /// Done
+  internal static var walletSendSentTitle: String  { return L10n.tr("Localizable", "Wallet.Send.SentTitle") }
+  /// View My Wallet
+  internal static var walletSendSentViewMyWallet: String  { return L10n.tr("Localizable", "Wallet.Send.SentViewMyWallet") }
+  /// Send Grams
+  internal static var walletSendTitle: String  { return L10n.tr("Localizable", "Wallet.Send.Title") }
+  /// Send Grams
+  internal static var walletSendConfirmTitle: String  { return L10n.tr("Localizable", "Wallet.Send.Confirm.Title") }
+  /// Confirmation
+  internal static var walletSendConfirmationHeader: String  { return L10n.tr("Localizable", "Wallet.Send.Confirmation.Header") }
+  /// Send Grams
+  internal static var walletSendConfirmationOK: String  { return L10n.tr("Localizable", "Wallet.Send.Confirmation.OK") }
+  /// Do you want to send %@ Grams to %@?
+  internal static func walletSendConfirmationText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Wallet.Send.Confirmation.Text", p1, p2)
+  }
+  /// This address belongs to an empty wallet. Are you sure you want to transfer grams to it?
+  internal static var walletSendErrorDestinationIsNotInitialized: String  { return L10n.tr("Localizable", "Wallet.Send.Error.DestinationIsNotInitialized") }
+  /// Transfer
+  internal static var walletSendProcessTranfer: String  { return L10n.tr("Localizable", "Wallet.Send.Process.Tranfer") }
+  /// Send Anyway
+  internal static var walletSendSelfConfirmOK: String  { return L10n.tr("Localizable", "Wallet.Send.SelfConfirm.OK") }
+  /// Sending Grams from a wallet to the same wallet doesn't make sense, you will simply waste a portion of the value on blockchain fees.
+  internal static var walletSendSelfConfirmText: String  { return L10n.tr("Localizable", "Wallet.Send.SelfConfirm.Text") }
+  /// Delete Wallet
+  internal static var walletSettingsDeleteWallet: String  { return L10n.tr("Localizable", "Wallet.Settings.DeleteWallet") }
+  /// Wallet Settings
+  internal static var walletSettingsTitle: String  { return L10n.tr("Localizable", "Wallet.Settings.Title") }
+  /// Delete Wallet
+  internal static var walletSettingsDeleteConfirmHeader: String  { return L10n.tr("Localizable", "Wallet.Settings.Delete.Confirm.Header") }
+  /// Delete
+  internal static var walletSettingsDeleteConfirmOK: String  { return L10n.tr("Localizable", "Wallet.Settings.Delete.Confirm.OK") }
+  /// Are you sure you want to delete the wallet?\n\nNote: This will disconnect the wallet from this app. You will be able to restore your wallet using 24 secret words – or import another wallet.
+  internal static var walletSettingsDeleteConfirmText: String  { return L10n.tr("Localizable", "Wallet.Settings.Delete.Confirm.Text") }
+  /// This will disconnect the wallet from this app. You will be able to restore your wallet using 24 secret words – or import another wallet.\n\nWallets are located in the TON Blockchain, which is not controlled by Telegram. If you want a wallet to be deleted, simply transfer all the grams from it and leave it empty.
+  internal static var walletSettingsDeleteWalletDesc: String  { return L10n.tr("Localizable", "Wallet.Settings.DeleteWallet.Desc") }
+  /// Gram Wallet
+  internal static var walletSplashCloseConfirmHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.CloseConfirm.Header") }
+  /// OK
+  internal static var walletSplashCloseConfirmOK: String  { return L10n.tr("Localizable", "Wallet.Splash.CloseConfirm.OK") }
+  /// Please sure you have written secret words before do this action. Otherwise you will not be able to restore you wallet.
+  internal static var walletSplashCloseConfirmText: String  { return L10n.tr("Localizable", "Wallet.Splash.CloseConfirm.Text") }
+  /// Close Anyway
+  internal static var walletSplashCloseConfirmThrid: String  { return L10n.tr("Localizable", "Wallet.Splash.CloseConfirm.Thrid") }
+  /// Continue
+  internal static var walletSplashCreatePasscodeButton: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Button") }
+  /// Now set up a passcode to secure your transactions.
+  internal static var walletSplashCreatePasscodeDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Desc") }
+  /// Passcodes do not match
+  internal static var walletSplashCreatePasscodeError: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Error") }
+  /// Perfect!
+  internal static var walletSplashCreatePasscodeHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Header") }
+  /// Enter your passcode
+  internal static var walletSplashCreatePasscodePlaceholder1: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Placeholder1") }
+  /// Re-Enter your passcode
+  internal static var walletSplashCreatePasscodePlaceholder2: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Placeholder2") }
+  /// Perfect!
+  internal static var walletSplashCreatePasscodeTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Title") }
+  /// Continue
+  internal static var walletSplashCreatedButton: String  { return L10n.tr("Localizable", "Wallet.Splash.Created.Button") }
+  /// Your Gram wallet has just been created. Only you control it.\nTo be able to always have access to it, please write down secret words and setup a secure passcode.
+  internal static var walletSplashCreatedDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.Created.Desc") }
+  /// Congratulations!
+  internal static var walletSplashCreatedHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Created.Header") }
+  /// Congratulations!
+  internal static var walletSplashCreatedTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.Created.Title") }
+  /// Import Wallet
+  internal static var walletSplashImportButton: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.Button") }
+  /// Please restore access to your wallet by entering the 24 secret words you wrote down when creating the wallet.
+  internal static var walletSplashImportDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.Desc") }
+  /// Import From Clipboard
+  internal static var walletSplashImportFromClipboard: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.FromClipboard") }
+  /// 24 Secret Words
+  internal static var walletSplashImportHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.Header") }
+  /// 24 Secret Words
+  internal static var walletSplashImportTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.Title") }
+  /// [I don't have those.](HaventWords)
+  internal static var walletSplashImportButtonSub: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.Button.Sub") }
+  /// Sorry, you have entered incorrect secret words. Please double check and try again.
+  internal static var walletSplashImportErrorText: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.Error.Text") }
+  /// Incorrect Words
+  internal static var walletSplashImportErrorTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.Import.Error.Title") }
+  /// New Wallet
+  internal static var walletSplashIntroButton: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Button") }
+  /// Gram wallet allows you to make fast and secure blockchain-based payments without intermediaries.
+  internal static var walletSplashIntroDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Desc") }
+  /// Gram Wallet
+  internal static var walletSplashIntroHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Header") }
+  /// Import Exists
+  internal static var walletSplashIntroImportExists: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.ImportExists") }
+  /// By creating the wallet you accept\nTerms of Conditions.
+  internal static var walletSplashIntroTerms: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Terms") }
+  /// Gram Wallet
+  internal static var walletSplashIntroTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Title") }
+  /// New Wallet
+  internal static var walletSplashRestoreFailedButton: String  { return L10n.tr("Localizable", "Wallet.Splash.RestoreFailed.Button") }
+  /// Without the secret words, you can't restore access to the wallet.\n\n[Enter 24 Words](EnterWords)
+  internal static var walletSplashRestoreFailedDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.RestoreFailed.Desc") }
+  /// Too Bad
+  internal static var walletSplashRestoreFailedHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.RestoreFailed.Header") }
+  /// Too Bad
+  internal static var walletSplashRestoreFailedTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.RestoreFailed.Title") }
+  /// Done
+  internal static var walletSplashSave24WordsButton: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Button") }
+  /// Copy Secret Words
+  internal static var walletSplashSave24WordsCopy: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Copy") }
+  /// 24 Secret Words
+  internal static var walletSplashSave24WordsCopyHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.CopyHeader") }
+  /// Are you sure you want to copy Secret Words? Please keep it in safe place.
+  internal static var walletSplashSave24WordsCopyText: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.CopyText") }
+  /// Write down these 24 words in the correct order and store them in a secret place.\n\nUse these secret words to restore access to your wallet if you lose your passcode or Telegram account.
+  internal static var walletSplashSave24WordsDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Desc") }
+  /// 24 Secret Words
+  internal static var walletSplashSave24WordsHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Header") }
+  /// 24 Secret Words
+  internal static var walletSplashSave24WordsTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Title") }
+  /// Apologies Accepted.
+  internal static var walletSplashSave24WordsConfirmApoligies: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.Apoligies") }
+  /// Sure Done?
+  internal static var walletSplashSave24WordsConfirmHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.Header") }
+  /// OK, Sorry
+  internal static var walletSplashSave24WordsConfirmOK: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.OK") }
+  /// You didn't have enough time to write those words down.
+  internal static var walletSplashSave24WordsConfirmText: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.Text") }
+  /// I'm Sure.
+  internal static var walletSplashSave24WordsConfirmThrid: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.Thrid") }
+  /// My Wallet
+  internal static var walletSplashSuccessButton: String  { return L10n.tr("Localizable", "Wallet.Splash.Success.Button") }
+  /// You’re all set. Now you have a wallet that only you control - directly, without middlemen or bankers.
+  internal static var walletSplashSuccessDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.Success.Desc") }
+  /// Ready to go!
+  internal static var walletSplashSuccessHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Success.Header") }
+  /// Ready to go!
+  internal static var walletSplashSuccessTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.Success.Title") }
+  /// Continue
+  internal static var walletSplashTestWordsButton: String  { return L10n.tr("Localizable", "Wallet.Splash.TestWords.Button") }
+  /// Let's check that you wrote them down correctly. Please enter words %d, %d and %d below.
+  internal static func walletSplashTestWordsDesc(_ p1: Int, _ p2: Int, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Wallet.Splash.TestWords.Desc", p1, p2, p3)
+  }
+  /// Test Time!
+  internal static var walletSplashTestWordsHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.TestWords.Header") }
+  /// Incorrect words!
+  internal static var walletSplashTestWordsIncorrectHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.TestWords.IncorrectHeader") }
+  /// The secret words you have entered do not match the ones in the list.
+  internal static var walletSplashTestWordsIncorrectText: String  { return L10n.tr("Localizable", "Wallet.Splash.TestWords.IncorrectText") }
+  /// Test Time!
+  internal static var walletSplashTestWordsTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.TestWords.Title") }
+  /// Try Again
+  internal static var walletSplashTestWordsIncorrectOK: String  { return L10n.tr("Localizable", "Wallet.Splash.TestWords.Incorrect.OK") }
+  /// View Words
+  internal static var walletSplashTestWordsIncorrectThrid: String  { return L10n.tr("Localizable", "Wallet.Splash.TestWords.Incorrect.Thrid") }
+  /// NO
+  internal static var walletTerminateAppCancel: String  { return L10n.tr("Localizable", "Wallet.TerminateApp.Cancel") }
+  /// YES
+  internal static var walletTerminateAppOK: String  { return L10n.tr("Localizable", "Wallet.TerminateApp.OK") }
+  /// You are on the way of creation new Wallet. Are you sure you have finished with it and want to terminate Telegram?
+  internal static var walletTerminateAppText: String  { return L10n.tr("Localizable", "Wallet.TerminateApp.Text") }
+  /// Gram Wallet
+  internal static var walletTerminateAppTitle: String  { return L10n.tr("Localizable", "Wallet.TerminateApp.Title") }
+  /// This link can be used to send money on the TON Blockchain. To do this, you need to set up a Gram wallet first.
+  internal static var walletTonLinkEmptyText: String  { return L10n.tr("Localizable", "Wallet.TonLink.Empty.Text") }
+  /// Set up Gram Wallet
+  internal static var walletTonLinkEmptyThrid: String  { return L10n.tr("Localizable", "Wallet.TonLink.Empty.Thrid") }
+  /// Gram Wallet
+  internal static var walletTonLinkEmptyTitle: String  { return L10n.tr("Localizable", "Wallet.TonLink.Empty.Title") }
+  /// Empty Transaction
+  internal static var walletTransactionEmptyTransaction: String  { return L10n.tr("Localizable", "Wallet.Transaction.EmptyTransaction") }
+  /// from:
+  internal static var walletTransactionFrom: String  { return L10n.tr("Localizable", "Wallet.Transaction.From") }
+  /// to:
+  internal static var walletTransactionTo: String  { return L10n.tr("Localizable", "Wallet.Transaction.To") }
+  /// COMMENT
+  internal static var walletTransactionPreviewCommentHeader: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.CommentHeader") }
+  /// Copy Address
+  internal static var walletTransactionPreviewCopyAddress: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.CopyAddress") }
+  /// RECIPIENT
+  internal static var walletTransactionPreviewRecipient: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.Recipient") }
+  /// SENDER
+  internal static var walletTransactionPreviewSender: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.Sender") }
+  /// Send Grams
+  internal static var walletTransactionPreviewSendGrams: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.SendGrams") }
+  /// STORAGE FEE
+  internal static var walletTransactionPreviewStorageFee: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.StorageFee") }
+  /// Transaction
+  internal static var walletTransactionPreviewTitle: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.Title") }
+  /// TRANSACTION FEE
+  internal static var walletTransactionPreviewTransactionFee: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.TransactionFee") }
+  /// Blockchain validators collect a tiny fee for storing information about your decentralized wallet.\n[More info]()
+  internal static var walletTransactionPreviewStorageFeeDesc: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.StorageFee.Desc") }
+  /// Blockchain validators collect a tiny fee for processing your decentralized transactions.\n[More info]()
+  internal static var walletTransactionPreviewTransactionFeeDesc: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.TransactionFee.Desc") }
   /// Apply
   internal static var wallpaperPreviewApply: String  { return L10n.tr("Localizable", "WallpaperPreview.Apply") }
   /// Blurred

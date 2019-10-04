@@ -15,7 +15,7 @@ import TGUIKit
 
 @available(OSX 10.12.2, *)
 class TouchBarStickerItemView: NSScrubberItemView {
-    private var animatedSticker:ChatMediaAnimatedStickerView?
+    private var animatedSticker:MediaAnimatedStickerView?
     private var imageView: TransformImageView?
     private let fetchDisposable = MetaDisposable()
     private(set) var file: TelegramMediaFile?
@@ -47,7 +47,7 @@ class TouchBarStickerItemView: NSScrubberItemView {
             self.imageView = nil
 
             if self.animatedSticker == nil {
-                self.animatedSticker = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+                self.animatedSticker = MediaAnimatedStickerView(frame: NSZeroRect)
                 addSubview(self.animatedSticker!)
             }
             guard let animatedSticker = self.animatedSticker else {

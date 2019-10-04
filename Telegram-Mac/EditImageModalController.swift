@@ -247,7 +247,10 @@ class EditImageModalController: ModalViewController {
     }
     
     override var background: NSColor {
-        return NSColor(0x464646).withAlphaComponent(0.97)
+        return .clear
+    }
+    override var isVisualEffectBackground: Bool {
+        return true
     }
     
     

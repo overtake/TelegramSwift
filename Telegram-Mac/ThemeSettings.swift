@@ -306,7 +306,9 @@ extension ColorPalette : PostboxCoding {
                                     revealAction_inactive_background: parseColor(decoder, "revealAction_inactive_background") ?? palette.revealAction_inactive_background,
                                     revealAction_inactive_foreground: parseColor(decoder, "revealAction_inactive_foreground") ?? palette.revealAction_inactive_foreground,
                                     chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground,
-                                    listBackground: parseColor(decoder, "listBackground") ?? palette.listBackground
+                                    listBackground: parseColor(decoder, "listBackground") ?? palette.listBackground,
+                                    listGrayText: parseColor(decoder, "listGrayText") ?? palette.listBackground,
+                                    grayHighlight: parseColor(decoder, "grayHighlight") ?? palette.grayHighlight
         )
     }
 }

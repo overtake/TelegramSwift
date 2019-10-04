@@ -47,6 +47,23 @@ public extension NSFont {
         }
     }
     
+    static func light(_ size:FontSize) ->NSFont {
+        
+        if #available(OSX 10.11, *) {
+            return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.light)
+        } else {
+            return NSFont(name: "HelveticaNeue", size: size)!
+        }
+    }
+    static func ultraLight(_ size:FontSize) ->NSFont {
+        
+        if #available(OSX 10.11, *) {
+            return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.ultraLight)
+        } else {
+            return NSFont(name: "HelveticaNeue", size: size)!
+        }
+    }
+    
     static func italic(_ size: FontSize) -> NSFont {
         return NSFontManager.shared.convert(.normal(size), toHaveTrait: .italicFontMask)
     }
@@ -84,7 +101,10 @@ public extension NSFont {
     }
     
     static func code(_ size:FontSize) ->NSFont {
-        return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: 17.0)
+        return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: size)
+    }
+    static func blockchain(_ size: FontSize)->NSFont {
+        return NSFont(name: "PT Mono", size: size) ?? NSFont.systemFont(ofSize: size)
     }
 }
 

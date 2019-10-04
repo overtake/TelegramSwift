@@ -21,6 +21,50 @@ struct TemporaryPasswordContainer {
     }
 }
 
+private final class TonInstanceData {
+    var config: String?
+    var instance: TonInstance?
+}
+
+
+public final class StoredTonContext {
+    private let basePath: String
+    private let postbox: Postbox
+    private let network: Network
+    public let keychain: TonKeychain
+    private let currentInstance = Atomic<TonInstanceData>(value: TonInstanceData())
+    
+    public init(basePath: String, postbox: Postbox, network: Network, keychain: TonKeychain) {
+        self.basePath = basePath
+        self.postbox = postbox
+        self.network = network
+        self.keychain = keychain
+    }
+    
+    public func context(config: String) -> TonContext {
+        return self.currentInstance.with { data -> TonContext in
+            if let instance = data.instance, data.config == config {
+                return TonContext(instance: instance, keychain: self.keychain)
+            } else {
+                data.config = config
+                let instance = TonInstance(basePath: self.basePath, config: config, blockchainName: "testnet", network: self.network)
+                data.instance = instance
+                return TonContext(instance: instance, keychain: self.keychain)
+            }
+        }
+    }
+}
+
+public struct TonContext {
+    public let instance: TonInstance
+    public let keychain: TonKeychain
+    
+    public init(instance: TonInstance, keychain: TonKeychain) {
+        self.instance = instance
+        self.keychain = keychain
+    }
+}
+
 
 enum ApplyThemeUpdate {
     case local(ColorPalette)
@@ -117,12 +161,15 @@ final class AccountContext {
         return _limitConfiguration.with { $0 }
     }
     
+    public let tonContext: StoredTonContext!
+    
     public var closeFolderFirst: Bool = false
     
-    init(sharedContext: SharedAccountContext, window: Window, account: Account) {
+    init(sharedContext: SharedAccountContext, window: Window, tonContext: StoredTonContext?, account: Account) {
         self.sharedContext = sharedContext
         self.account = account
         self.window = window
+        self.tonContext = tonContext
         #if !SHARE
         self.fetchManager = FetchManager(postbox: account.postbox)
         self.blockedPeersContext = BlockedPeersContext(account: account)
@@ -170,6 +217,7 @@ final class AccountContext {
         
         
     }
+    
     
     private func updateTheme(_ update: ApplyThemeUpdate) {
         switch update {

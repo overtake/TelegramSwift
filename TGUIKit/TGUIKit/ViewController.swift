@@ -50,7 +50,7 @@ open class BackgroundView: ImageView {
 
 
 
-class ControllerToasterView : View {
+class ControllerToasterView : Control {
     
     private weak var toaster:ControllerToaster?
     private let textView:TextView = TextView()
@@ -58,6 +58,7 @@ class ControllerToasterView : View {
         super.init(frame: frameRect)
         addSubview(textView)
         textView.isSelectable = false
+        textView.userInteractionEnabled = false
         self.autoresizingMask = [.width]
         self.border = [.Bottom]
         updateLocalizationAndTheme(theme: presentation)
@@ -92,14 +93,17 @@ public class ControllerToaster {
     let text:TextViewLayout
     var view:ControllerToasterView?
     let disposable:MetaDisposable = MetaDisposable()
+    private let action:(()->Void)?
     private var height:CGFloat {
         return max(30, self.text.layoutSize.height + 10)
     }
-    public init(text:NSAttributedString) {
+    public init(text:NSAttributedString, action:(()->Void)? = nil) {
+        self.action = action
         self.text = TextViewLayout(text, maximumNumberOfLines: 3, truncationType: .middle, alignment: .center)
     }
     
-    public init(text:String) {
+    public init(text:String, action:(()->Void)? = nil) {
+        self.action = action
         self.text = TextViewLayout(NSAttributedString.initialize(string: text, color: presentation.colors.text, font: .medium(.text)), maximumNumberOfLines: 3, truncationType: .middle, alignment: .center)
     }
     
@@ -108,6 +112,14 @@ public class ControllerToaster {
         text.measure(width: controller.frame.width - 40)
         view = ControllerToasterView(frame: NSMakeRect(0, 0, controller.frame.width, height))
         view?.update(with: self)
+        
+        if let action = self.action {
+            view?.set(handler: { [weak self] _ in
+                action()
+                self?.hide(true)
+            }, for: .Click)
+        }
+        
         controller.addSubview(view!)
         
         if animated {
@@ -171,6 +183,10 @@ open class ViewController : NSObject {
     public var popover:Popover?
     open  var modal:Modal?
     
+    
+    public var ableToNextController:(ViewController, @escaping(ViewController, Bool)->Void)->Void = { controller, f in
+        f(controller, true)
+    }
     
     private let _ready = Promise<Bool>()
     open var ready: Promise<Bool> {
@@ -733,6 +749,10 @@ open class ModalViewController : ViewController {
     
     open func didResizeView(_ size: NSSize, animated: Bool) -> Void {
         
+    }
+    
+    open var isVisualEffectBackground: Bool {
+        return false
     }
     
     open var isFullScreen:Bool {

@@ -813,9 +813,14 @@ class GalleryViewer: NSResponder {
     
     func showControlsPopover(_ control:Control) {
         var items:[SPopoverItem] = []
-        items.append(SPopoverItem(L10n.galleryContextSaveAs, {[weak self] in
-            self?.saveAs()
-        }))
+        
+        if pager.selectedItem?.entry.message?.containsSecretMedia == true {
+        } else {
+            items.append(SPopoverItem(L10n.galleryContextSaveAs, {[weak self] in
+                self?.saveAs()
+            }))
+        }
+        
         
         let context = self.context
         
@@ -851,9 +856,14 @@ class GalleryViewer: NSResponder {
                 }
             }
         }
-        items.append(SPopoverItem(L10n.galleryContextCopyToClipboard, {[weak self] in
-            self?.copy(nil)
-        }))
+        
+        if pager.selectedItem?.entry.message?.containsSecretMedia == true {
+        } else {
+            items.append(SPopoverItem(L10n.galleryContextCopyToClipboard, {[weak self] in
+                self?.copy(nil)
+            }))
+        }
+        
         
         switch type {
         case .profile(let peerId):
@@ -1154,7 +1164,7 @@ class GalleryViewer: NSResponder {
     
     @objc func copy(_ sender:Any? = nil) -> Void {
         if let item = self.pager.selectedItem {
-            if !(item is MGalleryExternalVideoItem) {
+            if !(item is MGalleryExternalVideoItem), item.entry.message?.containsSecretMedia != true {
                 operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { path in
                     let pb = NSPasteboard.general
                     pb.clearContents()

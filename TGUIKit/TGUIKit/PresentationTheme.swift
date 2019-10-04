@@ -209,7 +209,8 @@ public struct ColorPalette : Equatable {
     
     public let chatBackground: NSColor
     public let listBackground: NSColor
-    
+    public let listGrayText: NSColor
+    public let grayHighlight: NSColor
     public var underSelectedColor: NSColor {
         if basicAccent != accent {
             return accent.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
@@ -381,7 +382,9 @@ public struct ColorPalette : Equatable {
                 revealAction_inactive_background: NSColor,
                 revealAction_inactive_foreground: NSColor,
                 chatBackground: NSColor,
-                listBackground: NSColor) {
+                listBackground: NSColor,
+                listGrayText: NSColor,
+                grayHighlight: NSColor) {
         
         let background: NSColor = background.withAlphaComponent(1.0)
         let grayBackground: NSColor = grayBackground.withAlphaComponent(1.0)
@@ -583,6 +586,8 @@ public struct ColorPalette : Equatable {
         self.chatBackground = chatBackground.withAlphaComponent(max(0.6, chatBackground.alpha))
         self.wallpaper = wallpaper
         self.listBackground = listBackground
+        self.listGrayText = listGrayText
+        self.grayHighlight = grayHighlight
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -744,7 +749,9 @@ public struct ColorPalette : Equatable {
                             revealAction_inactive_background: revealAction_inactive_background,
                             revealAction_inactive_foreground: revealAction_inactive_foreground,
                             chatBackground: chatBackground,
-                            listBackground: listBackground)
+                            listBackground: listBackground,
+                            listGrayText: listGrayText,
+                            grayHighlight: grayHighlight)
     }
     
     public func withUpdatedWallpaper(_ wallpaper: PaletteWallpaper) -> ColorPalette {
@@ -871,7 +878,9 @@ public struct ColorPalette : Equatable {
                             revealAction_inactive_background: revealAction_inactive_background,
                             revealAction_inactive_foreground: revealAction_inactive_foreground,
                             chatBackground: chatBackground,
-                            listBackground: listBackground)
+                            listBackground: listBackground,
+                            listGrayText: listGrayText,
+                            grayHighlight: grayHighlight)
     }
     
     public func withAccentColor(_ color: NSColor, disableTint: Bool = false) -> ColorPalette {
@@ -891,6 +900,7 @@ public struct ColorPalette : Equatable {
         var chatBackground = self.chatBackground
         var listBackground = self.listBackground
         var selectMessage = self.selectMessage
+        var grayHighlight = self.grayHighlight
         if tinted && !disableTint {
             background = accentColor.withMultiplied(hue: 1.024, saturation: 0.585, brightness: 0.25)
             border = accentColor.withMultiplied(hue: 1.024, saturation: 0.585, brightness: 0.3)
@@ -902,6 +912,7 @@ public struct ColorPalette : Equatable {
             chatBackground = accentColor.withMultiplied(hue: 1.024, saturation: 0.570, brightness: 0.14)
             selectMessage = accentColor.withMultiplied(hue: 1.024, saturation: 0.570, brightness: 0.3)
             listBackground = accentColor.withMultiplied(hue: 1.024, saturation: 0.572, brightness: 0.16)
+            grayHighlight = background.darker(amount: 0.08)
         }
         
         
@@ -1055,7 +1066,9 @@ public struct ColorPalette : Equatable {
                             revealAction_inactive_background: revealAction_inactive_background,
                             revealAction_inactive_foreground: revealAction_inactive_foreground,
                             chatBackground: chatBackground,
-                            listBackground: listBackground)
+                            listBackground: listBackground,
+                            listGrayText: listGrayText,
+                            grayHighlight: grayHighlight)
     }
 }
 
@@ -1274,7 +1287,9 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
     revealAction_inactive_background: NSColor(0xbcbcc3),
     revealAction_inactive_foreground: NSColor(0xffffff),
     chatBackground: NSColor(0xffffff),
-    listBackground: NSColor(0xf4f4f4)
+    listBackground: NSColor(0xf4f4f4),
+    listGrayText: NSColor(0x6D6D71),
+    grayHighlight: NSColor(0xF8F8F8)
 )
 
 
@@ -1419,7 +1434,9 @@ public let tintedNightPalette = ColorPalette(isNative: true, isDark: true,
                                            revealAction_inactive_background: NSColor(0x26384c),
                                            revealAction_inactive_foreground: NSColor(0xffffff),
                                            chatBackground: NSColor(0x18222d),
-                                           listBackground: NSColor(0x213040)
+                                           listBackground: NSColor(0x131415),
+                                           listGrayText: NSColor(0xb1c3d5),
+                                           grayHighlight: NSColor(0x18222d).darker(amount: 0.08)
 )
 
 public let dayClassicPalette = ColorPalette(isNative: true,
@@ -1546,7 +1563,9 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             revealAction_inactive_background: NSColor(0xbcbcc3),
                                             revealAction_inactive_foreground: NSColor(0xffffff),
                                             chatBackground: NSColor(0xffffff),
-                                            listBackground: NSColor(0xf4f4f4)
+                                            listBackground: NSColor(0xf4f4f4),
+                                            listGrayText: NSColor(0x6D6D71),
+                                            grayHighlight: NSColor(0xF8F8F8)
 )
 
 public let darkPalette = ColorPalette(isNative: true, isDark:true,
@@ -1679,7 +1698,9 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       revealAction_inactive_background: NSColor(0x666666),
                                       revealAction_inactive_foreground: NSColor(0xffffff),
                                       chatBackground: NSColor(0x292b36),
-                                      listBackground: NSColor(0x3d414d)
+                                      listBackground: NSColor(0x131415),
+                                      listGrayText: NSColor(0x8699a3),
+                                      grayHighlight: NSColor(0x292b36).darker(amount: 0.08)
 )
 
 
@@ -1813,7 +1834,9 @@ public let mojavePalette = ColorPalette(isNative: true, isDark: true,
                                         revealAction_inactive_background: NSColor(0x666666),
                                         revealAction_inactive_foreground: NSColor(0xffffff),
                                         chatBackground: NSColor(0x292a2f),
-                                        listBackground: NSColor(0x3e464c)
+                                        listBackground: NSColor(0x131415),
+                                        listGrayText: NSColor(0xb1c3d5),
+                                        grayHighlight: NSColor(0x292a2f).darker(amount: 0.08)
 )
 
 

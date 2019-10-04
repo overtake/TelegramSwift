@@ -1033,7 +1033,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
 
-        context.globalPeerHandler.set(.single(chatLocation))
+//        context.globalPeerHandler.set(.single(chatLocation))
         
 
         let layout:Atomic<SplitViewState> = Atomic(value:context.sharedContext.layout)
@@ -1553,7 +1553,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.mainPeer {
                 let options: [ModalOptionSet] = [ModalOptionSet(title: L10n.blockContactOptionsReport, selected: true, editable: true), ModalOptionSet(title: L10n.blockContactOptionsDeleteChat, selected: true, editable: true)]
                 
-                showModal(with: ModalOptionSetController(context: chatInteraction.context, options: options, actionText: (L10n.blockContactOptionsAction(peer.compactDisplayTitle), theme.colors.redUI), title: L10n.blockContactTitle(peer.compactDisplayTitle), result: { result in
+                showModal(with: ModalOptionSetController(context: chatInteraction.context, options: options, actionText: (L10n.blockContactOptionsAction(peer.compactDisplayTitle), theme.colors.redUI), desc: L10n.blockContactTitle(peer.compactDisplayTitle), title: L10n.blockContactOptionsTitle, result: { result in
                     
                     var signals:[Signal<Never, NoError>] = []
                     
@@ -1661,7 +1661,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                                 ModalOptionSet(title: L10n.supergroupDeleteRestrictionReportSpam, selected: false, editable: true),
                                                                 ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true)]
                                 
-                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (L10n.modalOK, theme.colors.accent), result: { [weak strongSelf] result in
+                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (L10n.modalOK, theme.colors.accent), title: L10n.supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
                                     
                                     var signals:[Signal<Void, NoError>] = []
                                     
@@ -1965,6 +1965,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         strongSelf.messageIndexDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak strongSelf] message in
                             self?.chatInteraction.loadingMessage.set(.single(false))
                             if let strongSelf = strongSelf, let message = message {
+                                let message = message
                                 let toIndex = MessageIndex(message)
                                 strongSelf.setLocation(.Scroll(index: MessageHistoryAnchorIndex.message(toIndex), anchorIndex: MessageHistoryAnchorIndex.message(toIndex), sourceIndex: MessageHistoryAnchorIndex.message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: strongSelf.requestCount, animated: state.animated))
                             }
