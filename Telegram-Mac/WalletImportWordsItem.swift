@@ -164,12 +164,6 @@ private final class WalletImportWordsView : TableRowView {
         guard let item = item as? WalletImportWordsItem else {
             return
         }
-        for view in leftViews {
-            view.updateColors()
-        }
-        for view in rightViews {
-            view.updateColors()
-        }
         
         for view in leftSeparatorViews {
             view.backgroundColor = theme.colors.border

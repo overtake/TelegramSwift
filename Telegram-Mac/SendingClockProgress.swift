@@ -45,9 +45,16 @@ class SendingClockProgress: View {
     
     
     func set(item: ChatRowItem) {
-        clockFrame.contents = theme.chat.sendingFrameIcon(item)
-        clockHour.contents = theme.chat.sendingHourIcon(item)
-        clockMin.contents = theme.chat.sendingMinIcon(item)
+        clockFrame.contents = item.presentation.chat.sendingFrameIcon(item)
+        clockHour.contents = item.presentation.chat.sendingHourIcon(item)
+        clockMin.contents = item.presentation.chat.sendingMinIcon(item)
+        viewDidMoveToWindow()
+    }
+    
+    func applyGray() {
+        clockFrame.contents = theme.icons.chatSendingOutFrame
+        clockHour.contents = theme.icons.chatSendingOutHour
+        clockMin.contents = theme.icons.chatSendingOutMin
         viewDidMoveToWindow()
     }
     

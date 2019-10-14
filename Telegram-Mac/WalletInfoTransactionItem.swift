@@ -12,64 +12,91 @@ import TGUIKit
 
 
 class WalletInfoTransactionItem: GeneralRowItem {
-    fileprivate let transaction: WalletTransaction
+    fileprivate let transaction: WalletInfoTransaction
     fileprivate let titleLayout: TextViewLayout
     fileprivate let dateLayout: TextViewLayout
     fileprivate let addressLayout: TextViewLayout
     fileprivate let commentLayout: TextViewLayout?
     fileprivate let feeLayout: TextViewLayout?
     fileprivate let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: WalletTransaction, viewType: GeneralViewType, action: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: WalletInfoTransaction, viewType: GeneralViewType, action: @escaping()->Void) {
         self.transaction = transaction
         self.context = context
         let title: String
         let directionText: String
         let titleColor: NSColor
-        let transferredValue = transaction.transferredValueWithoutFees
-        var comment: String = ""
+        
+        let transferredValue: Int64
+        switch transaction {
+        case let .completed(transaction):
+            transferredValue = transaction.transferredValueWithoutFees
+        case let .pending(transaction):
+            transferredValue = -transaction.value
+        }
+        let address = stringForAddress(address: extractAddress(transaction))
+        var singleAddress: String?
+        let comment = extractDescription(transaction)
+        
+
 
         var text: String = ""
         if transferredValue <= 0 {
-            title = "-    \(formatBalanceText(abs(transferredValue)))"
+            
+            title = "\(formatBalanceText(abs(transferredValue)))"
             titleColor = theme.colors.redUI
-            if transaction.outMessages.isEmpty {
-                directionText = ""
-                text = L10n.walletTransactionEmptyTransaction
-            } else {
-                directionText = L10n.walletTransactionTo
-                for message in transaction.outMessages {
-                    if !comment.isEmpty {
-                        comment.append("\n")
+            
+            switch transaction {
+            case let .completed(transaction):
+                if transaction.outMessages.isEmpty {
+                    directionText = ""
+                    text = L10n.walletTransactionEmptyTransaction
+                } else {
+                    directionText = L10n.walletTransactionTo
+                    for message in transaction.outMessages {
+                        if !text.isEmpty {
+                            text.append("\n")
+                        }
+                        text.append(formatAddress(message.destination))
                     }
-                    comment.append(message.textMessage)
-                    
-                    if !text.isEmpty {
-                        text.append("\n")
-                    }
-                    text.append(message.destination)
                 }
+            case let .pending(transaction):
+                directionText = L10n.walletTransactionTo
+                if !text.isEmpty {
+                    text.append("\n")
+                }
+                text.append(formatAddress(transaction.address))
             }
         } else {
-            title = "+    \(formatBalanceText(transferredValue))"
+            title = "\(formatBalanceText(transferredValue))"
             titleColor = theme.colors.greenUI
             directionText = L10n.walletTransactionFrom
-            if let inMessage = transaction.inMessage {
-                text = inMessage.source
-                comment = inMessage.textMessage
-            } else {
+            switch transaction {
+            case let .completed(transaction):
+                if let inMessage = transaction.inMessage {
+                    text = formatAddress(inMessage.source)
+                } else {
+                    text = "<unknown>"
+                }
+            case .pending:
                 text = "<unknown>"
             }
+
         }
         
-        
-        let fees = transaction.otherFee + transaction.storageFee
-        if fees > 0 {
-            self.feeLayout = TextViewLayout(.initialize(string: L10n.walletBalanceInfoTransactionFees(formatBalanceText(fees)), color: theme.colors.grayText, font: .normal(.text)))
-        } else {
+        switch transaction {
+        case let .completed(transaction):
+            let fees = transaction.otherFee + transaction.storageFee
+            if fees > 0 {
+                self.feeLayout = TextViewLayout(.initialize(string: L10n.walletBalanceInfoTransactionFees(formatBalanceText(fees)), color: theme.colors.grayText, font: .normal(.text)))
+            } else {
+                self.feeLayout = nil
+            }
+        default:
             self.feeLayout = nil
         }
         
-        let date = Date(timeIntervalSince1970: TimeInterval(transaction.timestamp))
+        
+        let date = Date(timeIntervalSince1970: TimeInterval(transaction.timestamp) - context.timeDifference)
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         
@@ -146,6 +173,7 @@ class WalletInfoTransactionItem: GeneralRowItem {
 
 private final class WalletInfoTransactionView: TableRowView {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
+    private var pendingView: SendingClockProgress?
     private let crystalView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
     private let borderView: View = View()
     private let titleView = TextView()
@@ -227,15 +255,15 @@ private final class WalletInfoTransactionView: TableRowView {
         self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
         self.containerView.setCorners(item.viewType.corners)
         
-        titleView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top))
-        
-        crystalView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left + (item.transaction.transferredValueWithoutFees < 0 ? 6 : 8), item.viewType.innerInset.top - 1))
-        
+        titleView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left + crystalView.frame.width, item.viewType.innerInset.top))
+        crystalView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top - 1))
         dateView.setFrameOrigin(NSMakePoint(item.blockWidth - dateView.frame.width - item.viewType.innerInset.right, item.viewType.innerInset.top))
-
         addressView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, titleView.frame.maxY + 4))
-        
         commentsView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, addressView.frame.maxY + 4))
+        
+        if let pendingView = pendingView {
+            pendingView.setFrameOrigin(NSMakePoint(item.blockWidth - pendingView.frame.width - item.viewType.innerInset.right - dateView.frame.width - 3, item.viewType.innerInset.top))
+        }
 
         let feeUpperView: NSView = commentsView.layout != nil ? commentsView : addressView
         feeView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, feeUpperView.frame.maxY + 4))
@@ -257,7 +285,29 @@ private final class WalletInfoTransactionView: TableRowView {
         self.feeView.update(item.feeLayout)
         borderView.isHidden = !item.viewType.hasBorder
         
-        crystalView.update(with: WalletAnimatedSticker.brilliant_static.file, size: NSMakeSize(16, 16), context: item.context, parent: nil, table: nil, parameters: WalletAnimatedSticker.brilliant_static.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
+        switch item.transaction {
+        case .pending:
+            if pendingView == nil {
+                pendingView = SendingClockProgress()
+                containerView.addSubview(pendingView!)
+            }
+            self.pendingView?.applyGray()
+        case .completed:
+            if let pendingView = self.pendingView {
+                self.pendingView = nil
+                if animated {
+                    pendingView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pendingView] _ in
+                        pendingView?.removeFromSuperview()
+                    })
+                } else {
+                    pendingView.removeFromSuperview()
+                }
+            }
+        }
+        
+        let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .once, media: WalletAnimatedSticker.brilliant_static.file)
+        
+        crystalView.update(with: WalletAnimatedSticker.brilliant_static.file, size: NSMakeSize(16, 16), context: item.context, parent: nil, table: nil, parameters: parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
 
         
         needsLayout = true

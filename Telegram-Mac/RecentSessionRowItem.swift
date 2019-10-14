@@ -34,7 +34,7 @@ class RecentSessionRowItem: GeneralRowItem {
         
         descLayout = TextViewLayout(attr, lineSpacing: 2)
     
-        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? tr(L10n.peerStatusOnline) : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.blueText : theme.colors.grayText, font: .normal(.text)))
+        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? tr(L10n.peerStatusOnline) : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
         

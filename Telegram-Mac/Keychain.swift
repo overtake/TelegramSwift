@@ -12,6 +12,8 @@ import MtProtoKitMac
 import TelegramCoreMac
 import SwiftSignalKitMac
 
+private let salt = "string with no sense".data(using: .utf8)!
+
 @available(OSX 10.12, *)
 enum TKKeychainName : String {
     case `public`
@@ -49,11 +51,17 @@ struct TKPublicKey : Codable, Equatable {
     
     
     
-    static var get:TKPublicKey? {
-        if let publicTonKey = SSKeychain.passwordData(forService: "TON", account: TKKeychainName.public.rawValue) {
+    static func get(for account: Account) -> TKPublicKey? {
+        if let publicTonKey = SSKeychain.passwordData(forService: serviceName(for: account), account: TKKeychainName.public.rawValue) {
             return TKPublicKey(key: publicTonKey)
         }
         return nil
+    }
+    func set(for account: Account) -> Bool {
+        return SSKeychain.setPasswordData(self.key, forService: serviceName(for: account), account: TKKeychainName.public.rawValue)
+    }
+    static func delete(for account: Account) -> Void {
+        SSKeychain.deletePassword(forService: serviceName(for: account), account: TKKeychainName.public.rawValue)
     }
 }
 
@@ -61,13 +69,18 @@ struct TKPublicKey : Codable, Equatable {
 struct TKPrivateKey : Codable {
     let key: Data
     
-    static var get:TKPrivateKey? {
-        if let privateTonKey = SSKeychain.passwordData(forService: "TON", account: TKKeychainName.private.rawValue) {
+    static func get(for account: Account) -> TKPrivateKey? {
+        if let privateTonKey = SSKeychain.passwordData(forService: serviceName(for: account), account: TKKeychainName.private.rawValue) {
             return TKPrivateKey(key: privateTonKey)
         }
         return nil
     }
-    
+    func set(for account: Account) -> Bool {
+        return SSKeychain.setPasswordData(self.key, forService: serviceName(for: account), account: TKKeychainName.private.rawValue)
+    }
+    static func delete(for account: Account) -> Void {
+        SSKeychain.deletePassword(forService: serviceName(for: account), account: TKKeychainName.private.rawValue)
+    }
     func decrypt(data: Data) -> Data? {
         let options: [String: Any] = [kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
                                       kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
@@ -80,6 +93,10 @@ struct TKPrivateKey : Codable {
         }
         return SecKeyCreateDecryptedData(privateKey, SecKeyAlgorithm.eciesEncryptionCofactorX963SHA256AESGCM, data as CFData, nil) as Data?
     }
+}
+
+private func serviceName(for account: Account) -> String {
+    return "TON-\(account.id.int64)"
 }
 
 @available(OSX 10.12, *)
@@ -111,10 +128,10 @@ final class TONKeychain {
         return TKKey(publicKey: TKPublicKey(key: publicKeyData), privateKey: TKPrivateKey(key: privateKeyData))
     }
     
-    static func initializePairAndSavePublic() -> Signal<TKKey?, NoError> {
+    static func initializePairAndSavePublic(for account: Account) -> Signal<TKKey?, NoError> {
         return Signal { subscriber in
             if let keys = createLocalPrivateKey() {
-                let success = SSKeychain.setPasswordData(keys.publicKey.key, forService: "TON", account: TKKeychainName.public.rawValue)
+                let success = keys.publicKey.set(for: account)
                 if success {
                     subscriber.putNext(keys)
                     subscriber.putCompletion()
@@ -130,12 +147,13 @@ final class TONKeychain {
         } |> runOn(queue)
     }
     
-    static func applyKeys(_ keys: TKKey, tonInstance: TonInstance, password: String) -> Signal<Bool, NoError> {
+    static func applyKeys(_ keys: TKKey, account: Account, tonInstance: TonInstance, password: String) -> Signal<Bool, NoError> {
         return Signal { subscriber in
-            let pbkdf = MTPBKDF2(password.data(using: .utf8)!, Data(), 100000)!
+            let pbkdf = MTPBKDF2(password.data(using: .utf8)!, salt, 100000)!
+            
             return tonlibEncrypt(tonInstance: tonInstance, decryptedData: keys.privateKey.key, secret: pbkdf).start(next: { data in
-                let success1 = SSKeychain.setPasswordData(keys.publicKey.key, forService: "TON", account: TKKeychainName.public.rawValue)
-                let success2 = SSKeychain.setPasswordData(data, forService: "TON", account: TKKeychainName.private.rawValue)
+                let success1 = keys.publicKey.set(for: account)
+                let success2 = TKPrivateKey(key: data).set(for: account)
                 subscriber.putNext(success1 && success2)
                 subscriber.putCompletion()
             }, completed: {
@@ -144,20 +162,36 @@ final class TONKeychain {
         } |> runOn(queue)
     }
     
-    
-    static func decryptedSecretKey(_ encryptedKey: TonKeychainEncryptedData, tonInstance: TonInstance, by password: String) -> Signal<Data?, NoError> {
+    static func hasKeys(for account: Account) -> Signal<Bool, NoError> {
         return Signal { subscriber in
-            let privateKey = SSKeychain.passwordData(forService: "TON", account: TKKeychainName.private.rawValue)
-            let publicKey = SSKeychain.passwordData(forService: "TON", account: TKKeychainName.public.rawValue)
+            subscriber.putNext(TKPrivateKey.get(for: account) != nil && TKPublicKey.get(for: account) != nil)
+            subscriber.putCompletion()
+            return EmptyDisposable
+        } |> runOn(queue)
+    }
+    
+    static func delete(account: Account) -> Signal<Void, NoError> {
+        return Signal { subscriber in
+            TKPrivateKey.delete(for: account)
+            TKPublicKey.delete(for: account)
+            subscriber.putNext(Void())
+            subscriber.putCompletion()
+            return EmptyDisposable
+        }
+    }
+    
+    static func decryptedSecretKey(_ encryptedKey: TonKeychainEncryptedData, account: Account, tonInstance: TonInstance, by password: String) -> Signal<Data?, NoError> {
+        return Signal { subscriber in
+            let privateKey = TKPrivateKey.get(for: account)?.key
+            
             var disposable: Disposable?
-            if let privateEncrypted = privateKey, let publicKey = publicKey {
-                let pbkdf = MTPBKDF2(password.data(using: .utf8)!, Data(), 100000)!
+            if let privateEncrypted = privateKey, let publicKey = TKPublicKey.get(for: account) {
+                let pbkdf = MTPBKDF2(password.data(using: .utf8)!, salt, 100000)!
 
                 disposable = tonlibDecrypt(tonInstance: tonInstance, encryptedData: privateEncrypted, secret: pbkdf).start(next: { data in
                     if let privateKey = data {
                         let priv = TKPrivateKey(key: privateKey)
-                        let pub = TKPrivateKey(key: publicKey)
-                        if pub.key == encryptedKey.publicKey {
+                        if publicKey.key == encryptedKey.publicKey {
                             subscriber.putNext(priv.decrypt(data: encryptedKey.data))
                             subscriber.putCompletion()
                         } else {

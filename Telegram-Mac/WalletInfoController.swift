@@ -11,14 +11,37 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import TGUIKit
 
+enum WalletInfoTransaction: Equatable {
+    case completed(WalletTransaction)
+    case pending(PendingWalletTransaction)
+    
+    var timestamp: Int64 {
+        switch self {
+        case let .completed(transaction):
+            return transaction.timestamp
+        case let .pending(transaction):
+            return transaction.timestamp
+        }
+    }
+    
+    var transactionId: Int64 {
+        switch self {
+        case let .completed(transaction):
+            return transaction.transactionId.lt
+        case let .pending(transaction):
+            return transaction.timestamp
+        }
+    }
+}
+
 
 private final class WalletInfoArguments {
     let context: AccountContext
     let openReceive:()->Void
     let openSend:()->Void
-    let openTransaction:(WalletTransaction)->Void
+    let openTransaction:(WalletInfoTransaction)->Void
     let update:()->Void
-    init(context: AccountContext, openReceive: @escaping()->Void, openSend: @escaping()->Void, openTransaction: @escaping(WalletTransaction)->Void, update:@escaping()->Void) {
+    init(context: AccountContext, openReceive: @escaping()->Void, openSend: @escaping()->Void, openTransaction: @escaping(WalletInfoTransaction)->Void, update:@escaping()->Void) {
         self.context = context
         self.openReceive = openReceive
         self.openSend = openSend
@@ -32,8 +55,8 @@ private struct WalletInfoState : Equatable {
     let updatedTimestamp: Int64?
     let previousTimestamp: Int64?
     let address: String
-    let transactions:[WalletTransaction]
-    init(walletState: WalletState?, updatedTimestamp: Int64?, previousTimestamp: Int64?, address: String, transactions:[WalletTransaction]) {
+    let transactions:[WalletInfoTransaction]
+    init(walletState: WalletState?, updatedTimestamp: Int64?, previousTimestamp: Int64?, address: String, transactions:[WalletInfoTransaction]) {
         self.walletState = walletState
         self.address = address
         self.updatedTimestamp = updatedTimestamp
@@ -54,24 +77,39 @@ private struct WalletInfoState : Equatable {
     func withUpdatedPreviousTimestamp(_ previousTimestamp: Int64?) -> WalletInfoState {
         return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: previousTimestamp, address: self.address, transactions: self.transactions)
     }
-    func withUpdatedTransactions(_ transactions: [WalletTransaction]) -> WalletInfoState {
+    func withUpdatedTransactions(_ transactions: [WalletInfoTransaction]) -> WalletInfoState {
         return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, transactions: transactions)
     }
     
-    func withAddedTransactions(_ list: [WalletTransaction]) -> WalletInfoState {
-        var transactions = self.transactions
-        transactions.append(contentsOf: list.filter { transaction in
-            return !transactions.contains(where: { $0.transactionId == transaction.transactionId })
-        })
-        
-        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, transactions: transactions)
+    func withAddedTransactions(_ transactions: [WalletInfoTransaction]) -> WalletInfoState {
+        var updated = self.transactions
+        var exists:Set<WalletTransactionId> = Set()
+        for transaction in updated {
+            switch transaction {
+            case let .completed(transaction):
+                exists.insert(transaction.transactionId)
+            case .pending:
+                break
+            }
+        }
+        for transaction in transactions {
+            switch transaction {
+            case let .completed(transaction):
+                if !exists.contains(transaction.transactionId) {
+                    updated.append(.completed(transaction))
+                }
+            case .pending:
+                break
+            }
+        }
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, transactions: updated)
     }
 }
 
 private let _id_balance = InputDataIdentifier("_id_balance")
 private let _id_created_address = InputDataIdentifier("_id_created_address")
-private func _id_transaction(_ id: WalletTransactionId) -> InputDataIdentifier {
-    return InputDataIdentifier("_id_transaction_\(id.lt)")
+private func _id_transaction(_ id: Int64) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_transaction_\(id)")
 }
 private func _id_date(_ id:Int32) -> InputDataIdentifier {
     return InputDataIdentifier("_id_data_\(id)")
@@ -94,18 +132,20 @@ private func walletInfoEntries(_ state: WalletInfoState, arguments: WalletInfoAr
         
         if state.transactions.isEmpty  {
             
-            
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_created_address, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-                return WalletInfoCreatedItem(initialSize, stableId: stableId, context: arguments.context, address: state.address, viewType: .singleItem)
-            }))
-            index += 1
+            if state.walletState?.balance == -1 {
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_created_address, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+                    return WalletInfoCreatedItem(initialSize, stableId: stableId, context: arguments.context, address: state.address, viewType: .singleItem)
+                }))
+                index += 1
+            }
+           
         } else {
             
             enum TransactionItem : Equatable {
-                case transaction(WalletTransaction)
+                case transaction(WalletInfoTransaction)
                 case date(Int32)
             }
             
@@ -113,8 +153,8 @@ private func walletInfoEntries(_ state: WalletInfoState, arguments: WalletInfoAr
             
             
             for (i, transaction) in state.transactions.enumerated() {
-                let prev: WalletTransaction? = i == 0 ? nil : state.transactions[i - 1]
-                let next: WalletTransaction? = i == state.transactions.count - 1 ? nil : state.transactions[i + 1]
+                let prev: WalletInfoTransaction? = i == 0 ? nil : state.transactions[i - 1]
+                let next: WalletInfoTransaction? = i == state.transactions.count - 1 ? nil : state.transactions[i + 1]
                 if prev == nil {
                     let dateId = chatDateId(for: Int32(transaction.timestamp))
                     items.append(.date(Int32(dateId)))
@@ -160,7 +200,7 @@ private func walletInfoEntries(_ state: WalletInfoState, arguments: WalletInfoAr
                         switch item {
                         case let .transaction(transaction):
                             struct E : Equatable {
-                                let transaction: WalletTransaction
+                                let transaction: WalletInfoTransaction
                                 let viewType: GeneralViewType
                             }
                             
@@ -207,33 +247,62 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
 
     let updateBalanceDisposable = MetaDisposable()
     let updateBalance:()->Void = {
-        let signal = combineLatest(queue: .mainQueue(), getCombinedWalletState(postbox: context.account.postbox, subject: .wallet(walletInfo), tonInstance: tonContext.instance), walletAddress(publicKey: walletInfo.publicKey, tonInstance: tonContext.instance) |> mapError { _ in return .generic })
+        let signal = combineLatest(queue: .mainQueue(), getCombinedWalletState(postbox: context.account.postbox, subject: .wallet(walletInfo), tonInstance: tonContext.instance), walletAddress(publicKey: walletInfo.publicKey, tonInstance: tonContext.instance) |> mapError { _ in return .generic }, TONKeychain.hasKeys(for: context.account) |> castError(GetCombinedWalletStateError.self))
         
-        updateBalanceDisposable.set(signal.start(next: { state, address in
+        let short = signal |> then(signal |> delay(3.3, queue: .mainQueue()) |> restart)
+        
+        updateBalanceDisposable.set(short.start(next: { state, address, hasKeys in
+            var combinedState: CombinedWalletState?
             switch state {
-            case let .cached(combinedState):
-                if let combinedState = combinedState {
-                    updateState {
-                        $0.withUpdatedTimestamp($0.walletState == nil ? combinedState.timestamp : $0.updatedTimestamp)
-                            .withUpdatedPreviousTimestamp(combinedState.timestamp)
-                            .withUpdatedWalletState(combinedState.walletState)
-                            .withAddedTransactions(combinedState.topTransactions)
-                            .withUpdatedAddress(address)
-                    }
-                } else {
-                    updateState {
-                        $0.withUpdatedAddress(address)
+            case let .cached(state):
+                combinedState = state
+            case let .updated(state):
+                combinedState = state
+            }
+            
+            if let combinedState = combinedState {
+                var transactions:[WalletInfoTransaction] = []
+                transactions.append(contentsOf: combinedState.topTransactions.map { .completed($0) })
+                transactions.append(contentsOf: combinedState.pendingTransactions.map { .pending($0) })
+                
+                var updatedTransactions: [WalletTransaction] = combinedState.topTransactions
+                
+                var existingIds = Set<WalletTransactionId>()
+                for transaction in updatedTransactions {
+                    existingIds.insert(transaction.transactionId)
+                }
+                let current = stateValue.with { $0.transactions }
+                
+                for transaction in current {
+                    switch transaction {
+                    case let .completed(transaction):
+                        if !existingIds.contains(transaction.transactionId) {
+                            existingIds.insert(transaction.transactionId)
+                            updatedTransactions.append(transaction)
+                        }
+                    case .pending:
+                        break
                     }
                 }
-            case let .updated(combinedState):
+                let list:[WalletInfoTransaction] = combinedState.pendingTransactions.map { .pending($0) } + updatedTransactions.map { .completed($0) }
+                
+                
                 updateState {
                     $0.withUpdatedTimestamp(combinedState.timestamp)
                         .withUpdatedPreviousTimestamp(combinedState.timestamp)
                         .withUpdatedWalletState(combinedState.walletState)
-                        .withAddedTransactions(combinedState.topTransactions)
+                        .withUpdatedTransactions(list)
                         .withUpdatedAddress(address)
                 }
+            } else {
+                updateState {
+                    $0.withUpdatedAddress(address)
+                }
             }
+            if !hasKeys {
+                 context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable))
+            }
+            
         }, error: { error in
             if stateValue.with({$0.updatedTimestamp == nil}) {
                 getController?()?.show(toaster: ControllerToaster(text: L10n.walletBalanceInfoRetrieveError))
@@ -246,11 +315,18 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
     
     let transactionListDisposable = MetaDisposable()
     
+    var loadMoreTransactions: Bool = true
+    
     let loadTransactions:(WalletTransactionId?)->Void = { transactionId in
+        if !loadMoreTransactions {
+            return
+        }
+        loadMoreTransactions = false
         let signal = getWalletTransactions(address: stateValue.with { $0.address }, previousId: transactionId, tonInstance: tonContext.instance) |> deliverOnMainQueue
         transactionListDisposable.set(signal.start(next: { list in
+            loadMoreTransactions = true
             updateState {
-                $0.withAddedTransactions(list)
+                $0.withAddedTransactions(list.map { .completed($0) })
             }
         }, error: { error in
           
@@ -283,7 +359,7 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
     }
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.walletBalanceInfoTitle, hasDone: false, identifier: "wallet-info")
     
-    controller.afterDisappear = {
+    controller.onDeinit = {
         transactionListDisposable.dispose()
         updateBalanceDisposable.dispose()
     }
@@ -294,12 +370,24 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
         controller?.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
-                loadTransactions(stateValue.with { $0.transactions.last?.transactionId })
+                let lastTransactionId: WalletTransactionId? = stateValue.with { state in
+                    if let last = state.transactions.last {
+                        switch last {
+                        case let .completed(transaction):
+                            return transaction.transactionId
+
+                        case .pending:
+                            break
+                        }
+                    }
+                    return nil
+                }
+                
+                loadTransactions(lastTransactionId)
             default:
                 break
             }
         }
-        loadTransactions(nil)
         controller?.tableView.set(stickClass: WalletTransactionDateStickItem.self, handler: { item in
 
         })

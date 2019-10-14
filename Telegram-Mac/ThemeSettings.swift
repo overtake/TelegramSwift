@@ -148,11 +148,13 @@ struct ThemeWallpaper : PostboxCoding, Equatable {
     
 }
 
-extension ColorPalette : PostboxCoding {
-    public func encode(_ encoder: PostboxEncoder) {
+extension ColorPalette  {
+    func encode(_ encoder: PostboxEncoder) {
         for child in Mirror(reflecting: self).children {
             if let label = child.label {
                 if let value = child.value as? NSColor {
+                    var label = label
+                    _ = label.removeFirst()
                     encoder.encodeInt32(Int32(bitPattern: value.argb), forKey: label)
                 }
             }
@@ -167,7 +169,7 @@ extension ColorPalette : PostboxCoding {
         encoder.encodeString(self.accentList.map { $0.hexString }.joined(separator: ","), forKey: "accentList")
     }
     
-    public init(decoder: PostboxDecoder) {
+    static func initWith(decoder: PostboxDecoder) -> ColorPalette {
         let dark = decoder.decodeBoolForKey("dark", orElse: false)
         let tinted = decoder.decodeBoolForKey("tinted", orElse: false)
         
@@ -182,7 +184,7 @@ extension ColorPalette : PostboxCoding {
         
         let accentList = decoder.decodeStringForKey("accentList", orElse: "").components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
         
-        self = ColorPalette(isNative: isNative,
+        return ColorPalette(isNative: isNative,
                                     isDark: dark,
                                     tinted: tinted,
                                     name: name,
@@ -202,10 +204,8 @@ extension ColorPalette : PostboxCoding {
                                     grayTransparent: parseColor(decoder, "grayTransparent") ?? palette.grayTransparent,
                                     grayUI: parseColor(decoder, "grayUI") ?? palette.grayUI,
                                     darkGrayText: parseColor(decoder, "darkGrayText") ?? palette.darkGrayText,
-                                    blueText: parseColor(decoder, "blueText") ?? palette.blueText,
-                                    blueSelect: parseColor(decoder, "blueSelect") ?? palette.blueSelect,
+                                    accentSelect: parseColor(decoder, "accentSelect") ?? palette.accentSelect,
                                     selectText: parseColor(decoder, "selectText") ?? palette.selectText,
-                                    blueFill: parseColor(decoder, "blueFill") ?? palette.blueFill,
                                     border: parseColor(decoder, "border") ?? palette.border,
                                     grayBackground: parseColor(decoder, "grayBackground") ?? palette.grayBackground,
                                     grayForeground: parseColor(decoder, "grayForeground") ?? palette.grayForeground,
@@ -307,7 +307,7 @@ extension ColorPalette : PostboxCoding {
                                     revealAction_inactive_foreground: parseColor(decoder, "revealAction_inactive_foreground") ?? palette.revealAction_inactive_foreground,
                                     chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground,
                                     listBackground: parseColor(decoder, "listBackground") ?? palette.listBackground,
-                                    listGrayText: parseColor(decoder, "listGrayText") ?? palette.listBackground,
+                                    listGrayText: parseColor(decoder, "listGrayText") ?? palette.listGrayText,
                                     grayHighlight: parseColor(decoder, "grayHighlight") ?? palette.grayHighlight
         )
     }
@@ -326,13 +326,13 @@ struct DefaultCloudTheme : Equatable, PostboxCoding {
     
     init(decoder: PostboxDecoder) {
         self.cloud = decoder.decodeObjectForKey("c", decoder: { TelegramTheme(decoder: $0) }) as! TelegramTheme
-        self.palette = decoder.decodeObjectForKey("p", decoder: { ColorPalette(decoder: $0) }) as! ColorPalette
+        self.palette = decoder.decodeAnyObjectForKey("p", decoder: { ColorPalette.initWith(decoder: $0) }) as! ColorPalette
         self.wallpaper = decoder.decodeObjectForKey("w", decoder: { AssociatedWallpaper(decoder: $0) }) as! AssociatedWallpaper
     }
     
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeObject(self.cloud, forKey: "c")
-        encoder.encodeObject(self.palette, forKey: "p")
+        encoder.encodeObjectWithEncoder(self.palette, encoder: { self.palette.encode($0) }, forKey: "p")
         encoder.encodeObject(self.wallpaper, forKey: "w")
     }
 }
@@ -462,7 +462,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     }
     init(decoder: PostboxDecoder) {
         self.wallpaper = (decoder.decodeObjectForKey("wallpaper", decoder: { ThemeWallpaper(decoder: $0) }) as? ThemeWallpaper) ?? ThemeWallpaper()
-        self.palette = ColorPalette(decoder: decoder)
+        self.palette = ColorPalette.initWith(decoder: decoder)
         
         self.bubbled = decoder.decodeBoolForKey("bubbled", orElse: false)
         self.fontSize = CGFloat(decoder.decodeDoubleForKey("fontSize", orElse: 13))

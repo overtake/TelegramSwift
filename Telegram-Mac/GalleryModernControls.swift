@@ -157,7 +157,11 @@ class GalleryModernControlsView: View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         if let nameNode = nameNode {
-            nameNode.1.draw(NSMakeRect(photoView.frame.maxX + 10, photoView.frame.midY - nameNode.0.size.height - 2, nameNode.0.size.width, nameNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+            var point = NSMakePoint(photoView.frame.maxX + 10, photoView.frame.midY - nameNode.0.size.height - 2)
+            if dateNode == nil {
+                point.y = photoView.frame.midY - floorToScreenPixels(backingScaleFactor, (nameNode.0.size.height / 2))
+            }
+            nameNode.1.draw(NSMakeRect(point.x, point.y, nameNode.0.size.width, nameNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
         }
         if let dateNode = dateNode {
             dateNode.1.draw(NSMakeRect(photoView.frame.maxX + 10, photoView.frame.midY + 2, dateNode.0.size.width, dateNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
@@ -256,7 +260,7 @@ class GalleryModernControlsView: View {
             formatter.doesRelativeDateFormatting = true
             formatter.timeZone = NSTimeZone.local
             nameNode = TextNode.layoutText(.initialize(string: currentState.peer?.displayTitle.prefixWithDots(30) ?? L10n.peerDeletedUser, color: NSPointInRect(point, nameRect) ? .white : .grayText, font: .medium(14)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
-            dateNode = TextNode.layoutText(.initialize(string: currentState.timestamp == 0 ? "" : formatter.string(from: Date(timeIntervalSince1970: currentState.timestamp)), color: NSPointInRect(point, dateRect) ? .white : .grayText, font: .normal(13)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
+            dateNode = currentState.timestamp == 0 ? nil : TextNode.layoutText(.initialize(string: formatter.string(from: Date(timeIntervalSince1970: currentState.timestamp)), color: NSPointInRect(point, dateRect) ? .white : .grayText, font: .normal(13)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
         }
         
         photoView._change(opacity: NSPointInRect(point, photoView.frame) ? 1 : 0.7, animated: false)

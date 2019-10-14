@@ -33,21 +33,15 @@ private struct WalletSendingDest : Equatable {
     }
 }
 
-private enum WalletSendingState : Equatable {
-    case none
-    case passcode(dest:WalletSendingDest, serverSalt: Data)
-    case send(dest:WalletSendingDest, serverSalt: Data, decryptedKey: Data, force: Bool)
-    case sent
-}
 
 private struct WalletSendState : Equatable {
     let walletState: WalletState?
     let recipient: String
     let comment: String
     let amount: String
-    let sendingState: WalletSendingState
+    let sendingState: WalletTransactionMode
     let address: String
-    init(walletState: WalletState?, sendingState: WalletSendingState, address: String, recipient: String, comment: String, amount: String) {
+    init(walletState: WalletState?, sendingState: WalletTransactionMode, address: String, recipient: String, comment: String, amount: String) {
         self.sendingState = sendingState
         self.walletState = walletState
         self.recipient = recipient
@@ -70,7 +64,7 @@ private struct WalletSendState : Equatable {
     func withUpdatedAddress(_ address: String) -> WalletSendState {
         return WalletSendState(walletState: self.walletState, sendingState: self.sendingState, address: address, recipient: self.recipient, comment: self.comment, amount: self.amount)
     }
-    func withUpdatedSendingState(_ sendingState: WalletSendingState) -> WalletSendState {
+    func withUpdatedSendingState(_ sendingState: WalletTransactionMode) -> WalletSendState {
         return WalletSendState(walletState: self.walletState, sendingState: sendingState, address: self.address, recipient: self.recipient, comment: self.comment, amount: self.amount)
     }
 }
@@ -160,7 +154,14 @@ private func WalletSendEntries(state: WalletSendState, arguments: WalletSendArgu
     index += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.comment), error: nil, identifier: _id_comment, mode: .plain, data: InputDataRowData(viewType: .lastItem), placeholder: nil, inputPlaceholder: L10n.walletSendCommentPlaceholder, filter: { $0 }, limit: 128))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.comment), error: nil, identifier: _id_comment, mode: .plain, data: InputDataRowData(viewType: .lastItem), placeholder: nil, inputPlaceholder: L10n.walletSendCommentPlaceholder, filter: { current in
+        if let data = current.data(using: .utf8) {
+            let ncut = data.suffix(500)
+            return String(data: ncut, encoding: .utf8)!
+        } else {
+            return current
+        }
+    }, limit: 500))
     index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
@@ -172,7 +173,7 @@ private func WalletSendEntries(state: WalletSendState, arguments: WalletSendArgu
 }
 @available(OSX 10.12, *)
 func WalletSendController(context: AccountContext, tonContext: TonContext, walletInfo: WalletInfo, walletState: WalletState? = nil, recipient: String = "", comment: String = "", amount: String = "", updateWallet:(()->Void)? = nil) -> InputDataModalController {
-    let initialState = WalletSendState(walletState: walletState, sendingState: .none, address: "", recipient: recipient, comment: comment, amount: amount)
+    let initialState = WalletSendState(walletState: walletState, sendingState: .passcode, address: "", recipient: recipient, comment: comment, amount: formatAmountText(amount))
     let state: ValuePromise<WalletSendState> = ValuePromise()
     let stateValue: Atomic<WalletSendState> = Atomic(value: initialState)
     
@@ -239,61 +240,6 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
     }
     
     
-    func processSendState(state: WalletSendingState) -> InputDataValidation {
-        
-        updateState {
-            $0.withUpdatedSendingState(state)
-        }
-        
-        return .fail(.doSomething(next: { f in
-            
-            switch state {
-            case let .passcode(dest, serverSalt):
-                
-                break
-                
-            case let .send(dest, serverSalt, decryptedKey, force):
-                break
-            default:
-                break
-            }
-        }))
-        
-    }
-    
-    /*
-     let signal = sendGramsFromWallet(network: context.account.network, tonInstance: tonContext.instance, keychain: tonContext.keychain, walletInfo: walletInfo, toAddress: state.recipient, amount: amount, textMessage: state.comment, forceIfDestinationNotInitialized: forceIfDestinationNotInitialized, timeout: 0, randomId: randomId) |> deliverOnMainQueue
-     
-     transferDisposable.set(signal.start(error: { error in
-     let text: String
-     switch error {
-     case .secretDecryptionFailed:
-     text = L10n.walletSendErrorDecryptionFailed
-     case .invalidAddress:
-     text = L10n.walletSendErrorInvalidAddress
-     f(.fail(.fields([_id_recipient : .shake])))
-     case .destinationIsNotInitialized:
-     if !forceIfDestinationNotInitialized {
-     confirm(for: context.window, header: L10n.walletSendConfirmTitle, information: L10n.walletSendErrorDestinationIsNotInitialized, okTitle: L10n.walletSendSendAnyway, successHandler: { _ in
-     f(sendGrams(state: state, forceIfDestinationNotInitialized: true, randomId: randomId))
-     })
-     return
-     } else {
-     text = L10n.unknownError
-     }
-     case .generic:
-     text = L10n.unknownError
-     }
-     alert(for: context.window, info: text)
-     updateState {
-     $0.withUpdatedSendingState(.none)
-     }
-     }, completed: {
-     updateState {
-     $0.withUpdatedSendingState(.sent)
-     }
-     }))
- */
     
     
     let serverSaltValue = Promise<Data?>()
@@ -324,20 +270,24 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
                 
                 let invoke:()->Void = {
                     
-                    let controller = WalletProcessTransactionController(context: context, tonContext: tonContext, walletInfo: walletInfo, amount: amountValue(state.amount), to: state.recipient, comment: state.comment, updateWallet: {
-                        
-                        getModalController?()?.close()
+                    let controller = WalletProcessTransactionController(context: context, tonContext: tonContext, walletInfo: walletInfo, amount: amountValue(state.amount), to: state.recipient, comment: state.comment, updateMode: { mode in
+                        updateState { $0.withUpdatedSendingState(mode) }
+                    }, updateWallet: { close in
+                        if close {
+                            getModalController?()?.close()
+                        }
                         if let updateWallet = updateWallet {
                             updateWallet()
-                        } else {
+                        } else if close {
                             context.sharedContext.bindings.rootNavigation().push(WalletInfoController(context: context, tonContext: tonContext, walletInfo: walletInfo))
                         }
                         
                     })
                     
+                    
                     if let parentModal = getModalController?()?.modal {
                         let modal = Modal(controller: controller, for: context.window, isOverlay: false, animationType: .scaleCenter, parentView: parentModal.containerView)
-                        modal.show()
+                         modal.show()
                     }
                 }
                 
@@ -368,7 +318,7 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
         }
     }
     
-    controller.afterDisappear = {
+    controller.onDeinit = {
         transferDisposable.dispose()
         updateBalanceDisposable.dispose()
     }
@@ -379,8 +329,19 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
     
     let modalController = InputDataModalController(controller, modalInteractions: interactions, closeHandler: { f in
         f()
+        closeAllModals()
     }, size: NSMakeSize(350, 350))
     
+    
+    modalController.closableImpl = {
+        let value = stateValue.with { $0.sendingState }
+        switch value {
+        case .passcode, .sent:
+            return true
+        default:
+            return false
+        }
+    }
     
     getModalController = { [weak modalController] in
         return modalController

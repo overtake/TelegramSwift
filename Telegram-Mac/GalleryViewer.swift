@@ -1188,7 +1188,7 @@ class GalleryViewer: NSResponder {
         //window.makeFirstResponder(self)
         //closePipVideo()
         backgroundView.alphaValue = 0
-        //backgroundView.change(opacity: 0, animated: false)
+        backgroundView._change(opacity: 0, animated: false)
         self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
             if let strongSelf = self {
                 
@@ -1198,7 +1198,7 @@ class GalleryViewer: NSResponder {
                     }
                 }
                 
-               // strongSelf.backgroundView.change(opacity: 1, animated: animated)
+                strongSelf.backgroundView._change(opacity: 1, animated: animated)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
                         if let ignore = ignoreStableId?.base as? Int, ignore == innerIndex {
@@ -1234,7 +1234,7 @@ class GalleryViewer: NSResponder {
         didSetReady = false
         NotificationCenter.default.removeObserver(self)
         if animated {
-            backgroundView.alphaValue = 0
+            backgroundView._change(opacity: 0, animated: animated)
             controls.animateOut()
             self.pager.animateOut(to: { [weak self] stableId in
                 if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {

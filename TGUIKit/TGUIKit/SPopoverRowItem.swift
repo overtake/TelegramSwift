@@ -21,7 +21,7 @@ class SPopoverRowItem: TableRowItem {
         return unique
     }
     
-    let iStyle:ControlStyle = ControlStyle(backgroundColor: presentation.colors.blueSelect, highlightColor: presentation.colors.underSelectedColor)
+    let iStyle:ControlStyle = ControlStyle(backgroundColor: presentation.colors.accentSelect, highlightColor: presentation.colors.underSelectedColor)
     
     
     // data
@@ -70,12 +70,12 @@ private class SPopoverRowView: TableRowView {
         text.userInteractionEnabled = false
         
         overlay.set(handler: {[weak self] (state) in
-            self?.overlay.backgroundColor = presentation.colors.blueSelect
+            self?.overlay.backgroundColor = presentation.colors.accentSelect
             if let item = self?.item as? SPopoverRowItem {
                 if let image = item.image {
                     self?.image.image = item.iStyle.highlight(image: image)
                 }
-                self?.text.backgroundColor = presentation.colors.blueSelect
+                self?.text.backgroundColor = presentation.colors.accentSelect
                 self?.text.update(item.activeTitle)
             }
             }, for: .Hover)

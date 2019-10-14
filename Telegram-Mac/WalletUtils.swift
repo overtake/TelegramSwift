@@ -12,7 +12,7 @@ let walletAddressLength: Int = 48
 
 func formatAddress(_ address: String) -> String {
     var address = address
-    address.insert("\n", at: address.index(address.startIndex, offsetBy: address.count / 2))
+  //  address.insert("\n", at: address.index(address.startIndex, offsetBy: address.count / 2))
     return address
 }
 

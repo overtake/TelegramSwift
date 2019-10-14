@@ -17,7 +17,7 @@ class WalletSplashButtonRowItem: GeneralRowItem {
     fileprivate let subTextLayout: TextViewLayout?
     private var h: CGFloat = 0
     fileprivate let buttonText: String
-    init(_ initialSize: NSSize, stableId: AnyHashable, buttonText: String, subButtonText: String?, viewType: GeneralViewType, subTextAction:@escaping(String)->Void, action: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, buttonText: String, subButtonText: String?, enabled: Bool = true, viewType: GeneralViewType, subTextAction:@escaping(String)->Void, action: @escaping()->Void) {
         self.buttonText = buttonText
         if let subText = subButtonText {
             let attributedText: NSMutableAttributedString = parseMarkdownIntoAttributedString(subText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(12.5), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(12.5), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(12.5), textColor: theme.colors.link), linkAttribute: { contents in
@@ -29,7 +29,7 @@ class WalletSplashButtonRowItem: GeneralRowItem {
         } else {
             self.subTextLayout = nil
         }
-        super.init(initialSize, stableId: stableId, viewType: viewType, action: action)
+        super.init(initialSize, stableId: stableId, viewType: viewType, action: action, enabled: enabled)
     }
     
     override var height: CGFloat {
@@ -110,8 +110,8 @@ private final class WalletSplashButtonRowView : TableRowView {
         
         descView.update(item.subTextLayout)
         button.set(font: .medium(.header), for: .Normal)
-        button.set(color: .white, for: .Normal)
-        button.set(background: theme.colors.accent, for: .Normal)
+        button.set(color: theme.colors.underSelectedColor, for: .Normal)
+        button.set(background: !item.enabled ? theme.colors.accent.withAlphaComponent(0.8) : theme.colors.accent, for: .Normal)
         button.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
         button.set(text: item.buttonText, for: .Normal)
         _ = button.sizeToFit(NSZeroSize, NSMakeSize(280, 40), thatFit: true)

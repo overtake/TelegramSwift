@@ -31,6 +31,8 @@ extension WalletSplashMode {
             return L10n.walletSplashImportButton
         case .createPasscode:
             return L10n.walletSplashCreatePasscodeButton
+        case .unavailable:
+            return L10n.walletSplashSecurityChangedButton
         }
     }
     
@@ -51,6 +53,8 @@ extension WalletSplashMode {
         case .importExist:
             return L10n.walletSplashImportButtonSub
         case .createPasscode:
+            return nil
+        case .unavailable:
             return nil
         }
     }
@@ -73,6 +77,8 @@ extension WalletSplashMode {
             return nil
         case .createPasscode:
             return WalletAnimatedSticker.keychain.file
+        case .unavailable:
+            return WalletAnimatedSticker.sad.file
         }
     }
     
@@ -94,6 +100,8 @@ extension WalletSplashMode {
             return nil
         case .createPasscode:
             return WalletAnimatedSticker.keychain
+        case .unavailable:
+            return WalletAnimatedSticker.sad
         }
     }
     
@@ -119,6 +127,8 @@ extension WalletSplashMode {
             return L10n.walletSplashImportTitle
         case .createPasscode:
             return L10n.walletSplashCreatePasscodeTitle
+        case .unavailable:
+            return L10n.walletSplashSecurityChangedTitle
         }
     }
     var desc: String {
@@ -139,6 +149,8 @@ extension WalletSplashMode {
             return L10n.walletSplashImportDesc
         case .createPasscode:
             return L10n.walletSplashCreatePasscodeDesc
+        case .unavailable:
+            return L10n.walletSplashSecurityChangedDesc
         }
     }
     
@@ -171,6 +183,8 @@ extension WalletSplashMode {
              return L10n.walletSplashImportHeader
         case .createPasscode:
             return L10n.walletSplashCreatePasscodeHeader
+        case .unavailable:
+            return L10n.walletSplashSecurityChangedHeader
         }
     }
     
@@ -191,6 +205,8 @@ extension WalletSplashMode {
         case .importExist:
             return true
         case .createPasscode:
+            return true
+        case .unavailable:
             return true
         }
     }
@@ -344,7 +360,7 @@ enum WalletAnimatedSticker {
         case .brilliant_static:
             playPolicy = .loop
         case .brilliant_loading:
-            playPolicy = .once
+            playPolicy = .loop
         case .smart_guy:
             playPolicy = .once
         case .fly_dollar:

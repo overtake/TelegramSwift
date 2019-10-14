@@ -101,6 +101,7 @@ open class Popover: NSObject {
                 rect = frameValue.contentRect
             }
             
+            
             point.x = min(max(5, point.x), (parentView.frame.width - rect.width - 12) - 5)
             point.y = min(max(5, point.y), (parentView.frame.height - rect.height - 12) - 5)
                         

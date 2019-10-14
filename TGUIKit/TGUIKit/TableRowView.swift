@@ -34,7 +34,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         autoresizesSubviews = false
      //   canDrawSubviewsIntoLayer = true
         pressureConfiguration = NSPressureConfiguration(pressureBehavior: .primaryDeepClick)
-        
+        appearance = presentation.appearance
         self.canDrawSubviewsIntoLayer = true
     }
     

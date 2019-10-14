@@ -839,7 +839,7 @@ class ChannelAdminController: ModalViewController {
             }
             self?.modal?.interactions?.updateCancel { button in
                 button.set(text: values.canDismiss ? L10n.channelAdminDismiss : "", for: .Normal)
-                button.set(color: values.canDismiss ? theme.colors.redUI : theme.colors.blueText, for: .Normal)
+                button.set(color: values.canDismiss ? theme.colors.redUI : theme.colors.accent, for: .Normal)
             }
             
             self?.okClick = {

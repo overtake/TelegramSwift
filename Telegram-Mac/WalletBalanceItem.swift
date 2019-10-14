@@ -98,15 +98,15 @@ class WalletBalanceItem: GeneralRowItem {
             if let range = value.range(of: Formatter.withSeparator.decimalSeparator) {
                 let integralPart = String(value[..<range.lowerBound])
                 let fractionalPart = String(value[range.lowerBound...])
-                _ = attributed.append(string: integralPart, color: .white, font: .medium(35))
-                _ = attributed.append(string: fractionalPart, color: .white, font: .medium(20))
+                _ = attributed.append(string: integralPart, color: theme.colors.text, font: .medium(35))
+                _ = attributed.append(string: fractionalPart, color: theme.colors.text, font: .medium(20))
             } else {
-                _ = attributed.append(string: value, color: .white, font: .medium(20))
+                _ = attributed.append(string: value, color: theme.colors.text, font: .medium(35))
             }
             
             balanceLayout = TextViewLayout(attributed)
         } else {
-            balanceLayout = TextViewLayout(.initialize(string: "0", color: .white, font: .bold(35)))
+            balanceLayout = TextViewLayout(.initialize(string: "0", color: theme.colors.text, font: .bold(35)))
         }
         balanceLayout?.measure(width: .greatestFiniteMagnitude)
         
@@ -149,6 +149,9 @@ private final class WalletBalanceView : TableRowView {
         updatedTimestampView.userInteractionEnabled = false
         updatedTimestampView.isSelectable = false
         
+        receiveButton.disableActions()
+        sendButton.disableActions()
+        
         updateImpl = { [weak self] in
             self?.updateAnimation()
         }
@@ -160,7 +163,7 @@ private final class WalletBalanceView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return .black//NSColor(0x38383A)
+        return theme.colors.background
     }
     
     override func updateColors() {
@@ -173,21 +176,24 @@ private final class WalletBalanceView : TableRowView {
         updatedTimestampView.backgroundColor = backdorColor
         
         receiveButton.set(text: L10n.walletBalanceInfoReceive, for: .Normal)
-        receiveButton.set(background: .white, for: .Normal)
-        receiveButton.set(background: NSColor.grayText, for: .Highlight)
-        receiveButton.set(color: .black, for: .Normal)
+        receiveButton.set(background: theme.colors.accent, for: .Normal)
+        receiveButton.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+        receiveButton.set(color: theme.colors.underSelectedColor, for: .Normal)
         receiveButton.set(font: .medium(.text), for: .Normal)
         receiveButton.set(image: theme.icons.wallet_receive, for: .Normal)
         receiveButton.set(image: theme.icons.wallet_receive, for: .Highlight)
 
+        _ = receiveButton.sizeToFit()
+        
         sendButton.set(text: L10n.walletBalanceInfoSend, for: .Normal)
-        sendButton.set(background: .white, for: .Normal)
-        sendButton.set(background: NSColor.grayText, for: .Highlight)
-        sendButton.set(color: .black, for: .Normal)
+        sendButton.set(background: theme.colors.accent, for: .Normal)
+        sendButton.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+        sendButton.set(color: theme.colors.underSelectedColor, for: .Normal)
         sendButton.set(font: .medium(.text), for: .Normal)
         sendButton.set(image: theme.icons.wallet_send, for: .Normal)
         sendButton.set(image: theme.icons.wallet_send, for: .Highlight)
 
+        _ = sendButton.sizeToFit()
         
         reloadButton.set(image: theme.icons.wallet_update, for: .Normal)
     }

@@ -105,7 +105,7 @@ import SwiftSignalKitMac
  compose.background = .clear
  compose.set(background: .clear, for: .Normal)
  compose.set(background: .clear, for: .Hover)
- compose.set(background: theme.colors.blueFill, for: .Highlight)
+ compose.set(background: theme.colors.accent, for: .Highlight)
  compose.set(image: theme.icons.composeNewChat, for: .Normal)
  compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
  compose.layer?.cornerRadius = .cornerRadius
@@ -248,7 +248,7 @@ class PeerListContainerView : View {
         compose.background = .clear
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
-        compose.set(background: theme.colors.blueFill, for: .Highlight)
+        compose.set(background: theme.colors.accent, for: .Highlight)
         compose.set(image: theme.icons.composeNewChat, for: .Normal)
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
@@ -272,7 +272,7 @@ class PeerListContainerView : View {
         case .tiled:
             offset = 50
         default:
-            offset = 49
+            offset = 50
         }
         
         if frame.width < 200 {

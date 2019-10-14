@@ -52,9 +52,9 @@ private final class HorizontalThemeItem : GeneralRowItem {
         let attr: NSAttributedString
         switch themeType {
         case let .local(palette):
-            attr = .initialize(string: palette.name, color: selected ? theme.colors.blueText : theme.colors.text, font: selected ? .medium(12) : .normal(12))
+            attr = .initialize(string: palette.name, color: selected ? theme.colors.accent : theme.colors.text, font: selected ? .medium(12) : .normal(12))
         case let .cloud(cloud):
-            attr = .initialize(string: cloud.title, color: selected ? theme.colors.blueText : theme.colors.text, font: selected ? .medium(12) : .normal(12))
+            attr = .initialize(string: cloud.title, color: selected ? theme.colors.accent : theme.colors.text, font: selected ? .medium(12) : .normal(12))
         }
         self.titleLayout = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end, alignment: .center, alwaysStaticItems: true)
         self.titleLayout.measure(width: 80)
@@ -177,7 +177,7 @@ private final class HorizontalThemeView : HorizontalRowView {
             return
         }
         backgroundColor = backdorColor
-        selectionView.layer?.borderColor = item.selected ? item.theme.colors.blueSelect.cgColor : item.theme.colors.border.cgColor
+        selectionView.layer?.borderColor = item.selected ? item.theme.colors.accentSelect.cgColor : item.theme.colors.border.cgColor
         containerView.backgroundColor = backdorColor
         switch item.themeType {
         case .local:

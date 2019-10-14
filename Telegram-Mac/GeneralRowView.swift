@@ -130,20 +130,21 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
 
             
             if let errorLayout = item.errorLayout {
+                let alphaAnimated = animated && errorTextView == nil
+                let posAnimated = animated && errorTextView != nil
                 if errorTextView == nil {
                     errorTextView = TextView()
                     errorTextView?.isSelectable = false
-                    errorTextView?.setFrameOrigin(item.inset.left, frame.height - 6 - errorLayout.layoutSize.height)
                     addSubview(errorTextView!)
                 }
                 errorTextView!.update(errorLayout)
                 switch item.viewType {
                 case .legacy:
-                    errorTextView!.change(pos: NSMakePoint(item.inset.left, frame.height - 6 - errorLayout.layoutSize.height), animated: animated)
+                    errorTextView!.change(pos: NSMakePoint(item.inset.left, frame.height - 6 - errorLayout.layoutSize.height), animated: posAnimated)
                 case let .modern(_, insets):
-                    errorTextView!.change(pos: NSMakePoint(minX + insets.left, frame.height - 6 - errorLayout.layoutSize.height), animated: animated)
+                    errorTextView!.change(pos: NSMakePoint(minX + insets.left, frame.height - 2 - errorLayout.layoutSize.height), animated: posAnimated)
                 }
-                if animated {
+                if alphaAnimated {
                     errorTextView!.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             } else {

@@ -51,10 +51,11 @@ func WalletSettingsController(context: AccountContext, tonContext: TonContext, w
 
     let arguments = WalletSettingsArguments(context: context, deleteWallet: {
         confirm(for: context.window, header: L10n.walletSettingsDeleteConfirmHeader, information: L10n.walletSettingsDeleteConfirmText, okTitle: L10n.walletSettingsDeleteConfirmOK, successHandler: { _ in
-            let signal = showModalProgress(signal: (deleteAllLocalWalletsData(postbox: context.account.postbox, network: context.account.network, tonInstance: tonContext.instance)
-                |> deliverOnMainQueue), for: context.window)
             
-            let _ = signal.start(error: { error in
+            let signals = combineLatest(TONKeychain.delete(account: context.account) |> castError(DeleteAllLocalWalletsDataError.self) |> ignoreValues, deleteAllLocalWalletsData(postbox: context.account.postbox, network: context.account.network, tonInstance: tonContext.instance))
+            
+            let _ = showModalProgress(signal: signals
+                |> deliverOnMainQueue, for: context.window).start(error: { error in
                     let text: String
                     switch error {
                     case .generic:

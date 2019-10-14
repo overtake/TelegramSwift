@@ -24,8 +24,8 @@ private final class WalletTransactionPreviewArguments {
 }
 
 private struct WalletTransactionPreviewState : Equatable {
-    let transaction: WalletTransaction
-    init(transaction: WalletTransaction) {
+    let transaction: WalletInfoTransaction
+    init(transaction: WalletInfoTransaction) {
         self.transaction = transaction
     }
 }
@@ -56,6 +56,77 @@ private func formatDay(_ date: Date) -> String {
      return dayFormatterRelative.string(from: date)
 }
 
+enum WalletTransactionAddress {
+    case list([String])
+    case none
+    case unknown
+}
+
+
+func stringForAddress(address: WalletTransactionAddress) -> String {
+    switch address {
+    case let .list(addresses):
+        return addresses.map { formatAddress($0) }.joined(separator: "\n\n")
+    case .none:
+        return L10n.walletTransactionEmptyAddress
+    case .unknown:
+        return "<unknown>"
+    }
+}
+
+func extractAddress(_ walletTransaction: WalletInfoTransaction) -> WalletTransactionAddress {
+    switch walletTransaction {
+    case let .completed(walletTransaction):
+        let transferredValue = walletTransaction.transferredValueWithoutFees
+        if transferredValue <= 0 {
+            if walletTransaction.outMessages.isEmpty {
+                return .none
+            } else {
+                var addresses: [String] = []
+                for message in walletTransaction.outMessages {
+                    addresses.append(message.destination)
+                }
+                return .list(addresses)
+            }
+        } else {
+            if let inMessage = walletTransaction.inMessage {
+                return .list([inMessage.source])
+            } else {
+                return .unknown
+            }
+        }
+        return .none
+    case let .pending(pending):
+        return .list([pending.address])
+    }
+}
+
+func extractDescription(_ walletTransaction: WalletInfoTransaction) -> String {
+    switch walletTransaction {
+    case let .completed(walletTransaction):
+        let transferredValue = walletTransaction.transferredValueWithoutFees
+        var text = ""
+        if transferredValue <= 0 {
+            for message in walletTransaction.outMessages {
+                if !text.isEmpty {
+                    text.append("\n\n")
+                }
+                text.append(message.textMessage)
+            }
+        } else {
+            if let inMessage = walletTransaction.inMessage {
+                text = inMessage.textMessage
+            }
+        }
+        return text
+    case let .pending(pending):
+        return String(data: pending.comment, encoding: .utf8) ?? ""
+    }
+}
+
+
+
+
 private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewState, arguments: WalletTransactionPreviewArguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -64,49 +135,41 @@ private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewStat
     
     
     let title: String
-    var address: String = ""
-    var comment: String = ""
-    let transferredValue = state.transaction.transferredValueWithoutFees
+    let transferredValue: Int64
+    switch state.transaction {
+    case let .completed(transaction):
+        transferredValue = transaction.transferredValueWithoutFees
+    case let .pending(transaction):
+        transferredValue = -transaction.value
+    }
+    let address = stringForAddress(address: extractAddress(state.transaction))
+    let comment = extractDescription(state.transaction)
     
-    var color: NSColor = theme.colors.redUI
+    
+    var color: NSColor
     let headerText: String
     if transferredValue <= 0 {
-        title = "-    \(formatBalanceText(abs(transferredValue)))"
+        title = "\(formatBalanceText(abs(transferredValue)))"
         headerText = L10n.walletTransactionPreviewRecipient
-        if state.transaction.outMessages.isEmpty {
-            comment = ""
-            address = ""
-        } else {
-            for message in state.transaction.outMessages {
-                if !comment.isEmpty {
-                    comment.append("\n")
-                }
-                comment.append(message.textMessage)
-                
-                if !address.isEmpty {
-                    address.append("\n")
-                }
-                address.append(message.destination)
-            }
-        }
-        
+        color = theme.colors.redUI
     } else {
         headerText = L10n.walletTransactionPreviewSender
         color = theme.colors.greenUI
-        title = "+    \(formatBalanceText(transferredValue))"
-        if let inMessage = state.transaction.inMessage {
-            comment = inMessage.textMessage
-            address = inMessage.source
-        }
+        title = "\(formatBalanceText(transferredValue))"
     }
     
-    if address.count % 2 == 0 {
-        address = String(address.prefix(address.count / 2) + "\n" + address.suffix(address.count / 2))
-    }
     
+    let timestamp: Int64
+    switch state.transaction {
+    case let .completed(transaction):
+        timestamp = transaction.timestamp
+    case let .pending(transaction):
+        timestamp = transaction.timestamp
+    }
+
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_value, equatable: InputDataEquatable(state.transaction), item: { initialSize, stableId in
-        let date = formatDay(Date(timeIntervalSince1970: TimeInterval(state.transaction.timestamp)))
+        let date = formatDay(Date(timeIntervalSince1970: TimeInterval(timestamp) - arguments.context.timeDifference))
         return WalletTransactionTextItem(initialSize, stableId: stableId, context: arguments.context, value: title, subText: date, color: color, viewType: .modern(position: .single, insets: NSEdgeInsets(left: 12, right: 12, top: 30, bottom: 20)))
     }))
     index += 1
@@ -128,10 +191,8 @@ private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewStat
     index += 1
     
     
-
-    
-    if state.transaction.otherFee != 0 || state.transaction.storageFee != 0 {
-        if state.transaction.otherFee != 0 {
+    if case let .completed(transaction) = state.transaction {
+        if transaction.otherFee != 0 {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
@@ -140,11 +201,16 @@ private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewStat
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(text), data: InputDataGeneralTextData(viewType: .textTopItem)))
             index += 1
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_fee_other, equatable: InputDataEquatable(state.transaction), item: { initialSize, stableId in
-                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "-\(formatBalanceText(state.transaction.otherFee))", font: .normal(.text))
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "-\(formatBalanceText(transaction.otherFee))", font: .normal(.text))
             }))
             index += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.walletTransactionPreviewTransactionFeeDesc, linkHandler: { link in
+                openFaq(context: arguments.context, dest: .ton)
+            }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            index += 1
         }
-        if state.transaction.storageFee != 0 {
+        if transaction.storageFee != 0 {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
@@ -153,14 +219,16 @@ private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewStat
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(text), data: InputDataGeneralTextData(viewType: .textTopItem)))
             index += 1
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_fee_storage, equatable: InputDataEquatable(state.transaction), item: { initialSize, stableId in
-                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "-\(formatBalanceText(state.transaction.storageFee))", font: .normal(.text))
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "-\(formatBalanceText(transaction.storageFee))", font: .normal(.text))
             }))
             index += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.walletTransactionPreviewStorageFeeDesc, linkHandler: { link in
+                openFaq(context: arguments.context, dest: .ton)
+            }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            index += 1
+            
         }
-        
-//        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(descText, linkHandler: { link in
-//            openFaq(context: arguments.context, dest: .ton)
-//        }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     }
     
     
@@ -184,7 +252,7 @@ private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewStat
     return entries
 }
 @available(OSX 10.12, *)
-func WalletTransactionPreviewController(context: AccountContext, tonContext: TonContext, walletInfo: WalletInfo, transaction: WalletTransaction, walletState: WalletState? = nil, updateWallet:(()->Void)? = nil) -> InputDataModalController {
+func WalletTransactionPreviewController(context: AccountContext, tonContext: TonContext, walletInfo: WalletInfo, transaction: WalletInfoTransaction, walletState: WalletState? = nil, updateWallet:(()->Void)? = nil) -> InputDataModalController {
     let initialState = WalletTransactionPreviewState(transaction: transaction)
     let state: ValuePromise<WalletTransactionPreviewState> = ValuePromise(initialState)
     let stateValue: Atomic<WalletTransactionPreviewState> = Atomic(value: initialState)

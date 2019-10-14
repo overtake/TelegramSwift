@@ -128,7 +128,7 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
         selectFileDesc = L10n.editThemeSelectUpdatedFileDesc
     }
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_uploadFile, data: .init(name: selectFileText, color: theme.colors.blueText, type: .context(state.path ?? ""), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_uploadFile, data: .init(name: selectFileText, color: theme.colors.accent, type: .context(state.path ?? ""), action: {
         filePanel(with: ["palette"], allowMultiple: false, for: arguments.context.window, completion: { paths in
             if let first = paths?.first {
                 arguments.updateFile(first)

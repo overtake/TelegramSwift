@@ -100,8 +100,7 @@ private final class WalletTransactionTextView : TableRowView {
                 
         textView.centerX(y: item.viewType.innerInset.top)
         
-        let hasMinus = item.textLayout.attributedString.string.hasPrefix("-")
-        crystalView.setFrameOrigin(NSMakePoint(textView.frame.minX + (hasMinus ? 14 : 20), textView.frame.minY + 1))
+        crystalView.setFrameOrigin(NSMakePoint(textView.frame.minX - crystalView.frame.width, textView.frame.minY + 1))
         
         subTextView.centerX(y: textView.frame.maxY - 8)
         

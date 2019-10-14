@@ -27,10 +27,10 @@ fileprivate class ShareButton : Control {
         shareText.update(layout)
         setFrameSize(NSMakeSize(22 + shareText.frame.width + 47, 41))
         layer?.cornerRadius = 20
-        set(background: theme.colors.blueFill, for: .Hover)
-        set(background: theme.colors.blueFill, for: .Normal)
-        set(background: theme.colors.blueFill, for: .Highlight)
-        shareText.backgroundColor = theme.colors.blueFill
+        set(background: theme.colors.accent, for: .Hover)
+        set(background: theme.colors.accent, for: .Normal)
+        set(background: theme.colors.accent, for: .Highlight)
+        shareText.backgroundColor = theme.colors.accent
         needsLayout = true
         updateCount(0)
         shareText.userInteractionEnabled = false
@@ -47,7 +47,7 @@ fileprivate class ShareButton : Control {
     }
     
     func updateCount(_ count:Int) -> Void {
-        badge = BadgeNode(.initialize(string: "\(max(count, 1))", color: theme.colors.blueFill, font: .medium(.small)), .white)
+        badge = BadgeNode(.initialize(string: "\(max(count, 1))", color: theme.colors.accent, font: .medium(.small)), .white)
         badgeView.setFrameSize(badge!.size)
         badge?.view = badgeView
         badge?.setNeedDisplay()

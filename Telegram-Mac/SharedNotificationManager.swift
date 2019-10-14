@@ -92,6 +92,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     return self.logout()
                 })
                 closeAllModals()
+                closeGalleryViewer(false)
                 showModal(with: controller, for: window, isOverlay: true)
                 return .single(show) |> then( controller.doneValue |> map {_ in return false} |> take(1) )
             }

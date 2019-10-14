@@ -22,6 +22,7 @@ enum WalletSplashMode : Equatable {
     case testWords(TKKey, WalletInfo, [String], [Int])
     case restoreFailed
     case importExist
+    case unavailable
 }
 
 private final class WalletSplashArguments {
@@ -32,7 +33,9 @@ private final class WalletSplashArguments {
     let openImport:()->Void
     let togglePasscodeMode:()->Void
     let updateImportWords:(InputDataIdentifier, InputDataValue)->Void
-    init(context: AccountContext, action: @escaping()->Void, copyWords: @escaping(String)->Void, openRestoreFailed: @escaping()->Void, openImport:@escaping()->Void, updateImportWords: @escaping(InputDataIdentifier, InputDataValue)->Void, togglePasscodeMode:@escaping()->Void) {
+    let openTerms:()->Void
+    let createNew:()->Void
+    init(context: AccountContext, action: @escaping()->Void, copyWords: @escaping(String)->Void, openRestoreFailed: @escaping()->Void, openImport:@escaping()->Void, updateImportWords: @escaping(InputDataIdentifier, InputDataValue)->Void, togglePasscodeMode:@escaping()->Void, openTerms:@escaping()->Void, createNew:@escaping()->Void) {
         self.context = context
         self.action = action
         self.copyWords = copyWords
@@ -40,6 +43,8 @@ private final class WalletSplashArguments {
         self.openImport = openImport
         self.updateImportWords = updateImportWords
         self.togglePasscodeMode = togglePasscodeMode
+        self.openTerms = openTerms
+        self.createNew = createNew
     }
 }
 
@@ -103,9 +108,9 @@ private func splashEntries(state: WalletSplashState, arguments: WalletSplashArgu
     case .createPasscode:
         switch state.passcodeState {
         case .secure:
-            animation = WalletAnimatedSticker.monkey_unsee
+            animation = WalletAnimatedSticker.keychain
         case .plain:
-            animation = WalletAnimatedSticker.monkey_see
+            animation = WalletAnimatedSticker.keychain
         }
     default:
         animation = state.mode.animation
@@ -129,6 +134,8 @@ private func splashEntries(state: WalletSplashState, arguments: WalletSplashArgu
                 arguments.openRestoreFailed()
             case "EnterWords":
                 arguments.openImport()
+            case "CreateNew":
+                arguments.createNew()
             default:
                 break
             }
@@ -203,6 +210,8 @@ private func splashEntries(state: WalletSplashState, arguments: WalletSplashArgu
                 arguments.openRestoreFailed()
             case "EnterWords":
                 arguments.openImport()
+            case "Terms":
+                arguments.openTerms()
             default:
                 break
             }
@@ -237,7 +246,7 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
     let validateAction:(WalletSplashMode)->InputDataValidation = { mode in
         switch mode {
         case .intro, .restoreFailed:
-             let signal = TONKeychain.initializePairAndSavePublic()
+            let signal = TONKeychain.initializePairAndSavePublic(for: context.account)
              let create = signal
                 |> filter { $0 != nil }
                 |> map { $0! }
@@ -281,7 +290,7 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
             }
             
             if fails.isEmpty {
-                _ = showModalProgress(signal: TONKeychain.applyKeys(keys, tonInstance: tonContext.instance, password: passcode1), for: context.window).start(next: { success in
+                _ = showModalProgress(signal: TONKeychain.applyKeys(keys, account: context.account, tonInstance: tonContext.instance, password: passcode1), for: context.window).start(next: { success in
                     context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .success(info)))
                 })
             } else {
@@ -355,7 +364,7 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
                     }
                 }
                 if fails.isEmpty {
-                    let signal = TONKeychain.initializePairAndSavePublic()
+                    let signal = TONKeychain.initializePairAndSavePublic(for: context.account)
                     let create = signal
                         |> filter { $0 != nil }
                         |> map { $0! }
@@ -405,6 +414,8 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
             }, error: { error in
                 alert(for: context.window, info: L10n.unknownError)
             })
+        case .unavailable:
+            context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .importExist))
         }
         return .none
     }
@@ -428,6 +439,10 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
         updateState {
             return $0.withUpdatedPasscodeState(passcodeState: $0.passcodeState == .secure ? .plain : .secure)
         }
+    }, openTerms: {
+        openFaq(context: context, dest: .walletTOS)
+    }, createNew: {
+        getController?()?.proccessValidation(validateAction(.intro))
     })
     
     let dataSignal = state.get() |> deliverOnPrepareQueue |> map { state in
@@ -510,6 +525,7 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
                             }
                             return current
                         }
+                        controller.tableView.scroll(to: .down(true))
                     }), for: 15, animated: true)
                 }
             }

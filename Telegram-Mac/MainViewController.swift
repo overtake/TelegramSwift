@@ -445,7 +445,8 @@ class MainViewController: TelegramViewController {
         self.quickController = controller
     }
     private var previousTheme:TelegramPresentationTheme?
-    
+    private var previousIconColor:NSColor?
+
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         tabController.updateLocalizationAndTheme(theme: theme)
@@ -454,7 +455,7 @@ class MainViewController: TelegramViewController {
         updateController.updateLocalizationAndTheme(theme: theme)
         #endif
         
-        if !tabController.isEmpty && previousTheme?.colors != theme.colors  {
+        if !tabController.isEmpty && (previousTheme?.colors != theme.colors ||  previousIconColor != theme.colors.blueIcon)  {
             var index: Int = 0
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts"), selected: false), theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts_Highlighted"), selected: true)), at: index)
             index += 1
@@ -468,6 +469,7 @@ class MainViewController: TelegramViewController {
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true)), at: index)
         }
         self.previousTheme = theme
+        self.previousIconColor = theme.colors.blueIcon
     }
     
     private var previousIndex: Int? = nil

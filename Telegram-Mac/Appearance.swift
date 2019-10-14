@@ -804,11 +804,6 @@ final class TelegramChatListTheme {
 }
 
 
-extension TelegramPresentationTheme {
-    var appearance: NSAppearance? {
-        return colors.isDark ? NSAppearance(named: NSAppearance.Name.vibrantDark) : NSAppearance(named: NSAppearance.Name.vibrantLight)
-    }
-}
 
 extension WallpaperSettings {
     func withUpdatedBlur(_ blur: Bool) -> WallpaperSettings {
@@ -1522,9 +1517,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                modalClose: { #imageLiteral(resourceName: "Icon_WalletClose").precomposed(palette.grayIcon) },
                                                ivChannelJoined: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
                                                chatListMention: { generateBadgeMention(backgroundColor: palette.accent, foregroundColor: palette.background) },
-                                               chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.blueSelect) },
+                                               chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.accentSelect) },
                                                chatListMentionArchived: { generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
-                                               chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: palette.underSelectedColor, foregroundColor: palette.blueSelect) },
+                                               chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
                                                chatMention: { generateChatMention(backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon) },
                                                chatMentionActive: { generateChatMention(backgroundColor: palette.background, border: palette.blueIcon, foregroundColor: palette.blueIcon) },
                                                sliderControl: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
@@ -1553,19 +1548,19 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsPassport: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
                                                settingsWallet: { generateSettingsIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(NSColor(0x59a7d8), flipVertical: true)) },
                                                settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
-                                               settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsLanguageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsNotificationsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsSecurityActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsStickersActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsStorageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsProxyActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsAppearanceActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsWalletActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
-                                               settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.blueSelect) },
+                                               settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsLanguageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsNotificationsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsSecurityActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsStickersActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsStorageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsProxyActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsAppearanceActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsWalletActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.blueIcon) },
                                                settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.blueIcon) },
                                                settingsLogout: { #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI) },
@@ -1640,7 +1635,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                searchSaved: { #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white) },
                                                archivedChats: { #imageLiteral(resourceName: "Icon_ArchiveAvatar").precomposed(.white) },
                                                hintPeerActive: { generateHitActiveIcon(activeColor: palette.accent, backgroundColor: palette.background) },
-                                               hintPeerActiveSelected: { generateHitActiveIcon(activeColor: palette.underSelectedColor, backgroundColor: palette.blueSelect) },
+                                               hintPeerActiveSelected: { generateHitActiveIcon(activeColor: palette.underSelectedColor, backgroundColor: palette.accentSelect) },
                                                chatSwiping_delete: { #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white) },
                                                chatSwiping_mute: { #imageLiteral(resourceName: "Icon_ChatSwipingMute").precomposed(.white) },
                                                chatSwiping_unmute: { #imageLiteral(resourceName: "Icon_ChatSwipingUnmute").precomposed(.white) },
@@ -1729,10 +1724,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                appearanceAddPlatformTheme: { NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.blueIcon) },
                                                wallet_close: { NSImage(named: "Icon_WalletClose")!.precomposed(palette.grayIcon) },
                                                wallet_qr: { NSImage(named: "Icon_WalletQR")!.precomposed(palette.blueIcon) },
-                                               wallet_receive: { NSImage(named: "Icon_WalletReceive")!.precomposed(.black) },
-                                               wallet_send: { NSImage(named: "Icon_WalletSend")!.precomposed(.black) },
+                                               wallet_receive: { NSImage(named: "Icon_WalletReceive")!.precomposed(palette.underSelectedColor) },
+                                               wallet_send: { NSImage(named: "Icon_WalletSend")!.precomposed(palette.underSelectedColor) },
                                                wallet_settings: { NSImage(named: "Icon_WalletSettings")!.precomposed(palette.blueIcon) },
-                                               wallet_update: { NSImage(named: "Icon_WalletUpdate")!.precomposed(.white) },
+                                               wallet_update: { NSImage(named: "Icon_WalletUpdate")!.precomposed(palette.grayIcon) },
                                                wallet_passcode_visible: { NSImage(named: "Icon_WalletPasscodeVisible")!.precomposed(palette.grayIcon) },
                                                wallet_passcode_hidden: { NSImage(named: "Icon_WalletPasscodeHidden")!.precomposed(palette.grayIcon) }
                                                
@@ -1741,7 +1736,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
 }
 private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
     
-    let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.blueSelect,
+    let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,
                                          activeDraggingBackgroundColor: palette.border,
                                          pinnedBackgroundColor: palette.background,
@@ -1756,7 +1751,7 @@ private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bu
                                          activityPinnedColor: palette.accent,
                                          badgeTextColor: palette.background,
                                          badgeBackgroundColor: palette.badge,
-                                         badgeSelectedTextColor: palette.blueSelect,
+                                         badgeSelectedTextColor: palette.accentSelect,
                                          badgeSelectedBackgroundColor: palette.underSelectedColor,
                                          badgeMutedTextColor: .white,
                                          badgeMutedBackgroundColor: palette.badgeMuted)
@@ -1770,38 +1765,36 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
     let palette: ColorPalette
     switch settings.palette.name {
     case whitePalette.name:
-        if settings.palette.blueFill.hexString == whitePalette.blueFill.hexString {
+        if settings.palette.accent == whitePalette.accent {
             palette = whitePalette
         } else {
             palette = settings.palette
         }
     case darkPalette.name:
-        if settings.palette.blueFill.hexString == darkPalette.blueFill.hexString {
+        if settings.palette.accent == darkPalette.accent {
             palette = darkPalette
         } else {
             palette = settings.palette
         }
     case dayClassicPalette.name:
-        if settings.palette.blueFill.hexString == dayClassicPalette.blueFill.hexString {
+        if settings.palette.accent == dayClassicPalette.accent {
             palette = dayClassicPalette
         } else {
             palette = settings.palette
         }
     case tintedNightPalette.name:
-        if settings.palette.blueFill.hexString == tintedNightPalette.blueFill.hexString {
+        if settings.palette.accent == tintedNightPalette.accent {
             palette = tintedNightPalette
         } else {
             palette = settings.palette
         }
-    case mojavePalette.name:
-        if settings.palette.blueFill.hexString == mojavePalette.blueFill.hexString {
-            palette = mojavePalette
-        } else {
-            palette = settings.palette
-        }
+    case systemPalette.name:
+        palette = systemPalette
     default:
         palette = settings.palette
     }
+    NSAppearance.current = palette.appearance
+
     telegramUpdateTheme(generateTheme(palette: palette, cloudTheme: settings.cloudTheme, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.wallpaper), window: window, animated: animated)
 }
 
@@ -1817,7 +1810,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
             let image = window.windowImageShot()
             let imageView = ImageView()
             imageView.image = image
-            imageView.frame = contentView.superview!.bounds
+            imageView.frame = window.bounds
             contentView.addSubview(imageView)
 
             

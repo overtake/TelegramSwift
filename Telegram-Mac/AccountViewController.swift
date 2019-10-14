@@ -348,11 +348,11 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 })]
             }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }), compactText: true)
         case .addAccount:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, icon: theme.icons.peerInfoAddMember, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueIcon), type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueIcon), type: .none, action: {
                 let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
                 arguments.context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
                 
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 33, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left:21))
         case .general:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
@@ -409,13 +409,18 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsWallet, icon: theme.icons.settingsWallet, activeIcon: theme.icons.settingsWalletActive, type: .next, action: {
                 let context = arguments.context
                 if #available(OSX 10.12, *) {
-                    let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox)).start(next: { config, wallets in
-                        if let config = config.config {
-                            let tonContext = context.tonContext.context(config: config)
+                    
+                    let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, wallets, hasKeys in
+                        if let config = configuration.config, let blockchainName = configuration.blockchainName {
+                            let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
                             if wallets.wallets.isEmpty {
                                 arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .intro), true)
                             } else {
-                                arguments.presentController(WalletInfoController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info), true)
+                                if hasKeys {
+                                    arguments.presentController(WalletInfoController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info), true)
+                                } else {
+                                    arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable), true)
+                                }
                             }
                         }
                     })
@@ -622,9 +627,9 @@ class LayoutAccountController : TableViewController {
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.border = [.Right]
+       // genericView.border = [.Right]
         genericView.delegate = self
-        self.rightBarView.border = [.Right]
+       // self.rightBarView.border = [.Right]
         let context = self.context
         genericView.getBackgroundColor = {
             theme.colors.background

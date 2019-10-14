@@ -180,7 +180,9 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
     alert.messageText = header ?? appName
     alert.informativeText = information ?? ""
     alert.addButton(withTitle: okTitle ?? L10n.alertOK)
-    alert.addButton(withTitle: cancelTitle)
+    if !cancelTitle.isEmpty {
+        alert.addButton(withTitle: cancelTitle)
+    }
     
 
     
@@ -198,6 +200,8 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
             if response.rawValue == 1000 {
                 successHandler(.basic)
             } else if response.rawValue == 1002 {
+                successHandler(.thrid)
+            } else if response.rawValue == 1001, cancelTitle == "" {
                 successHandler(.thrid)
             }
         }

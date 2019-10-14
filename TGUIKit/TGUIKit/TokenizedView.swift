@@ -101,7 +101,7 @@ private class TokenView : Control {
         redSelected.getRed(&r, green: &g, blue: &b, alpha: &a)
         redSelected =  NSColor(red: min(r + 0.1, 1.0), green: min(g + 0.1, 1.0), blue: min(b + 0.1, 1.0), alpha: a)
         
-        return isSelected ? (isFailed ? redSelected : presentation.colors.blueSelect) : (isFailed ? presentation.colors.redUI : presentation.colors.blueFill)
+        return isSelected ? (isFailed ? redSelected : presentation.colors.accentSelect) : (isFailed ? presentation.colors.redUI : presentation.colors.accent)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
