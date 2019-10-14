@@ -121,7 +121,7 @@ public extension NSColor {
         }
     }
     
-    static var blueSelect:NSColor  {
+    static var accentSelect:NSColor  {
         get {
             return colorFromRGB(rgbValue: 0x4c91c7)
         }

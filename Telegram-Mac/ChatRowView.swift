@@ -393,7 +393,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             //draw separator
             if let fwdType = item.forwardType, !item.isBubbled, layer == rowView.layer {
-                ctx.setFillColor(item.presentation.colors.blueFill.cgColor)
+                ctx.setFillColor(item.presentation.colors.accent.cgColor)
                 switch fwdType {
                 case .ShortHeader:
                     let height = frame.height - item.forwardNameInset.y - item.defaultContentTopOffset

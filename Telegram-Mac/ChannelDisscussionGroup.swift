@@ -31,7 +31,7 @@ private final class DiscussionArguments {
 private func generateDiscussIcon() -> CGImage {
     let image: CGImage
     switch theme.colors.name {
-    case mojavePalette.name:
+    case systemPalette.name:
         image = NSImage(named: "DiscussDarkPreview")!.precomposed()
     case tintedNightPalette.name:
         image = NSImage(named: "DiscussDarkBluePreview")!.precomposed()

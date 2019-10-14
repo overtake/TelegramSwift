@@ -59,7 +59,14 @@ class ChatDateStickItem : TableStickItem {
         
         var text: String
         if timeinfo.tm_year == timeinfoNow.tm_year && timeinfo.tm_yday == timeinfoNow.tm_yday {
-            text = L10n.dateToday
+            
+            switch interaction.mode {
+            case .scheduled:
+                text = L10n.chatDateScheduledForToday
+            default:
+                text = L10n.dateToday
+            }
+            
         } else {
             let dateFormatter = DateFormatter()
             dateFormatter.calendar = Calendar.autoupdatingCurrent
@@ -70,14 +77,13 @@ class ChatDateStickItem : TableStickItem {
             } else if timeinfoNow.tm_year < timeinfo.tm_year {
                 dateFormatter.dateFormat = "dd MMMM yyyy";
             }
-            text = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
-
-        }
-        switch interaction.mode {
-        case .scheduled:
-            text = L10n.chatDateScheduledFor(text)
-        default:
-            break
+            let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
+            switch interaction.mode {
+            case .scheduled:
+                text = L10n.chatDateScheduledFor(dateString)
+            default:
+                text = dateString
+            }
         }
         
         

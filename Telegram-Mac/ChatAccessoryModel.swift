@@ -47,7 +47,7 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
             view?.needsDisplay = true
         }
         get {
-            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.accent, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.blueFill)
+            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.accent, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.accent)
         }
     }
     

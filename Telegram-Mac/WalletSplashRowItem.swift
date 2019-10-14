@@ -52,7 +52,7 @@ class WalletSplashRowItem: GeneralRowItem {
         var height: CGFloat = self.descLayout.layoutSize.height + self.titleLayout.layoutSize.height + self.viewType.innerInset.top
         
         if let _ = self.animation {
-            height += (self.viewType.innerInset.top + 140)
+            height += (20 + 140)
         }
         self.h = height
         
@@ -104,7 +104,11 @@ private final class WalletIntroRowView : TableRowView {
         self.containerView.setCorners(item.viewType.corners)
         
         animationView.centerX(y: 0)
-        titleView.centerX(y: animationView.frame.maxY + item.viewType.innerInset.top)
+        if item.animation != nil {
+            titleView.centerX(y: animationView.frame.maxY + 20)
+        } else {
+            titleView.centerX(y: 0)
+        }
         descView.centerX(y: titleView.frame.maxY + item.viewType.innerInset.top)
 
     }

@@ -95,7 +95,7 @@ class AccountInfoView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return isSelect ? theme.colors.blueSelect : theme.colors.background
+        return isSelect ? theme.colors.accentSelect : theme.colors.background
     }
     
 

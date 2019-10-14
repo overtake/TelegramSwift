@@ -121,7 +121,7 @@ class CalendarMonthView : View {
                     
                     if let selectedDay = month.selectedDay, current == selectedDay {
                         day.isSelected = true
-                        day.set(background: theme.colors.blueSelect, for: .Highlight)
+                        day.set(background: theme.colors.accentSelect, for: .Highlight)
                         day.apply(state: .Highlight)
                     } else {
                         day.set(background: theme.colors.accent, for: .Highlight)

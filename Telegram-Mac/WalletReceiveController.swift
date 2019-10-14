@@ -16,10 +16,12 @@ private final class WalletReceiveArguments {
     let context: AccountContext
     let copy:()->Void
     let share:()->Void
-    init(context: AccountContext, copy: @escaping()->Void, share: @escaping()->Void) {
+    let createInvoice: ()->Void
+    init(context: AccountContext, copy: @escaping()->Void, share: @escaping()->Void, createInvoice: @escaping()->Void) {
         self.context = context
         self.copy = copy
         self.share = share
+        self.createInvoice = createInvoice
     }
 }
 
@@ -32,7 +34,7 @@ private struct WalletReceiveState : Equatable {
 private let _id_address = InputDataIdentifier("_id_address")
 private let _id_copy = InputDataIdentifier("_id_copy")
 private let _id_share = InputDataIdentifier("_id_share")
-
+private let _id_create_invoice = InputDataIdentifier("_id_create_invoice")
 private func walletReceiveEntries(state: WalletReceiveState, arguments: WalletReceiveArguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -70,6 +72,15 @@ private func walletReceiveEntries(state: WalletReceiveState, arguments: WalletRe
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_create_invoice, data: InputDataGeneralData(name: L10n.walletReceiveCreateInvoice, color: theme.colors.accent, type: .none, viewType: .singleItem, action: arguments.createInvoice)))
+    index += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.walletReceiveCreateInvoiceDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
     return entries
 }
 
@@ -89,6 +100,8 @@ func WalletReceiveController(context: AccountContext, tonContext: TonContext, ad
         getController?()?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
     }, share: {
         showModal(with: ShareModalController(ShareLinkObject(context, link: "ton://transfer/\(escape(with: address, addPercent: true))")), for: context.window)
+    }, createInvoice: {
+        showModal(with: WalletInvoiceController(context: context, tonContext: tonContext, address: address), for: context.window)
     })
     
     let dataSignal = state.get() |> deliverOnPrepareQueue |> map { state in

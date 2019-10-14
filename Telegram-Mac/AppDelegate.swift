@@ -146,10 +146,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         self.containerUrl = containerUrl.path
 
+        let v = View()
+        v.flip = false
+        window.contentView = v
+        window.contentView?.autoresizingMask = [.width, .height]
+        window.contentView?.autoresizesSubviews = true
         
-      
-        
-                
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
         
@@ -358,7 +360,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let autoNightSignal = viewDidChangedAppearance.get() |> mapToSignal { _ in
                 return combineLatest(autoNightSettings(accountManager: accountManager), Signal<Void, NoError>.single(Void()) |> then( Signal<Void, NoError>.single(Void()) |> delay(60, queue: Queue.mainQueue()) |> restart))
-            } |> deliverOnPrepareQueue
+            } |> deliverOnMainQueue
             
             var previousIsEnabled: Bool? = nil
             
@@ -511,10 +513,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             }, encrypt: { data in
                 return Signal { subscriber in
                     if #available(OSX 10.12, *) {
-                        if let publicKey = TKPublicKey.get, let result = publicKey.encrypt(data: data) {
-                            subscriber.putNext(TonKeychainEncryptedData(publicKey: publicKey.key, data: result))
-                            subscriber.putCompletion()
-                            return EmptyDisposable
+                        if let context = self.contextValue?.context, let publicKey = TKPublicKey.get(for: context.account) {
+                            if let result = publicKey.encrypt(data: data) {
+                                subscriber.putNext(TonKeychainEncryptedData(publicKey: publicKey.key, data: result))
+                                subscriber.putCompletion()
+                                return EmptyDisposable
+                            }
                         }
                     }
                     subscriber.putError(.generic)
@@ -773,6 +777,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         viewDidChangedAppearance.set(true)
                     })
                 })
+                
+                (window.contentView as? View)?.viewDidChangedEffectiveAppearance = {
+                    viewDidChangedAppearance.set(true)
+                }
             }
             
             NotificationCenter.default.addObserver(self, selector: #selector(self.windiwDidChangeBackingProperties), name: NSWindow.didChangeBackingPropertiesNotification, object: window)

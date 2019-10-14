@@ -33,7 +33,7 @@ class TextAndLabelItem: GeneralRowItem {
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text.trimmed.fullTrimmed, color: theme.colors.text, font: .normal(.title))
         if detectLinks {
-            attr.detectLinks(type: [.Links, .Hashtags, .Mentions], context: context, openInfo: openInfo, hashtag: hashtag, applyProxy: { settings in
+            attr.detectLinks(type: [.Links, .Hashtags, .Mentions], context: context, color: theme.colors.link, openInfo: openInfo, hashtag: hashtag, applyProxy: { settings in
                 applyExternalProxy(settings, accountManager: context.sharedContext.accountManager)
             })
         }

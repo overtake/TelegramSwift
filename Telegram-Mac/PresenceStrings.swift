@@ -88,7 +88,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
         let statusTimestampInt: Int = Int(statusTimestamp)
         let statusTimestamp = Int32(min(statusTimestampInt - Int(timeDifference), Int(INT32_MAX)))
         if statusTimestamp >= timestamp {
-            return (L10n.peerStatusOnline, true, theme.colors.blueText)
+            return (L10n.peerStatusOnline, true, theme.colors.accent)
         } else {
             let difference = timestamp - statusTimestamp
             if difference < 59 {
@@ -133,7 +133,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
     case .recently:
         let activeUntil = presence.lastActivity - Int32(timeDifference) + 30
         if activeUntil >= timestamp {
-            return (L10n.peerStatusOnline, true, theme.colors.blueText)
+            return (L10n.peerStatusOnline, true, theme.colors.accent)
         } else {
             return (L10n.peerStatusRecently, false, theme.colors.grayText)
         }

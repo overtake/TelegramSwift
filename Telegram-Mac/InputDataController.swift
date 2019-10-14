@@ -30,6 +30,11 @@ public class InputDataModalController : ModalViewController {
     public override var isFullScreen: Bool {
         return self.isFullScreenImpl?() ?? super.isFullScreen
     }
+    var closableImpl: (()->Bool)? = nil
+
+    public override var closable: Bool {
+        return closableImpl?() ?? super.closable
+    }
     
     public override func close() {
         closeHandler({ [weak self] in
@@ -260,7 +265,7 @@ class InputDataController: GenericViewController<InputDataView> {
     private let searchKeyInvocation:() -> InputDataDeleteResult
     var getBackgroundColor: ()->NSColor
     let identifier: String
-    
+    var onDeinit:(()->Void)?
     var ignoreRightBarHandler: Bool = false
     
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping([InputDataIdentifier : InputDataValue]) -> Void = {_ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
@@ -360,7 +365,7 @@ class InputDataController: GenericViewController<InputDataView> {
         }
     }
     
-    private func proccessValidation(_ validation: InputDataValidation) {
+    func proccessValidation(_ validation: InputDataValidation) {
         var scrollFirstItem: TableRowItem? = nil
         switch validation {
         case let .fail(fail):
@@ -420,7 +425,6 @@ class InputDataController: GenericViewController<InputDataView> {
         super.viewDidLoad()
         
         genericView.tableView.getBackgroundColor = self.getBackgroundColor
-        
         
         appearanceDisposablet.set(appearanceSignal.start(next: { [weak self] _ in
             self?.updateLocalizationAndTheme(theme: theme)
@@ -515,15 +519,29 @@ class InputDataController: GenericViewController<InputDataView> {
         super.didRemovedFromStack()
         afterDisappear()
     }
+    private var firstTake: Bool = true
     
     override func firstResponder() -> NSResponder? {
         if self.window?.firstResponder == self.window || self.window?.firstResponder == tableView.documentView {
             var first: NSResponder? = nil
-            
             tableView.enumerateViews { view -> Bool in
                 first = view.firstResponder
+                if first != nil, self.firstTake {
+                    if let item = view.item as? InputDataRowDataValue {
+                        switch item.value {
+                        case let .string(value):
+                            let value = value ?? ""
+                            if !value.isEmpty {
+                                return true
+                            }
+                        default:
+                            break
+                        }
+                    }
+                }
                 return first == nil
             }
+            self.firstTake = false
             return first
         }
         return window?.firstResponder
@@ -701,6 +719,7 @@ class InputDataController: GenericViewController<InputDataView> {
     deinit {
         disposable.dispose()
         appearanceDisposablet.dispose()
+        onDeinit?()
     }
     
 }

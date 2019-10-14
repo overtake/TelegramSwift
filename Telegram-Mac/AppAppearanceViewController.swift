@@ -95,7 +95,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
             selected = .local(appearance.presentation.colors)
         }
         
-        var locals = [dayClassicPalette, whitePalette, tintedNightPalette, mojavePalette]
+        var locals = [dayClassicPalette, whitePalette, tintedNightPalette, systemPalette]
         
         for (i, local) in locals.enumerated() {
             if let accent = settings.accents.first(where: { $0.name == local.parent }) {

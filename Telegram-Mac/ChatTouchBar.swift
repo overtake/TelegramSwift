@@ -583,9 +583,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 //            return item
         case .chatForwardMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesForward"))!.precomposed(theme.colors.underSelectedColor)
-            let image = NSImage.init(cgImage: icon, size: icon.backingSize)
-            let button = NSButton(title: L10n.messageActionsPanelForward, image: image, target: self, action: #selector(forwardMessages))
+            let button = NSButton(title: L10n.messageActionsPanelForward, target: self, action: #selector(forwardMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.accent
             button.imageHugsTitle = true
@@ -595,8 +593,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             return item
         case .chatDeleteMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesDelete"))!
-            let button = NSButton(title: L10n.messageActionsPanelDelete, image: icon, target: self, action: #selector(deleteMessages))
+            let button = NSButton(title: L10n.messageActionsPanelDelete, target: self, action: #selector(deleteMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.redUI
             button.imageHugsTitle = true

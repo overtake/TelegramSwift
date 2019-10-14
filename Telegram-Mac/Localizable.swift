@@ -1187,6 +1187,8 @@ internal final class L10n {
   internal static func chatDateScheduledFor(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Date.ScheduledFor", p1)
   }
+  /// Scheduled for Today
+  internal static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
@@ -5959,6 +5961,24 @@ internal final class L10n {
   internal static func walletBalanceInfoTransactionFees(_ p1: String) -> String {
     return L10n.tr("Localizable", "Wallet.BalanceInfo.Transaction.Fees", p1)
   }
+  /// Grams to receive
+  internal static var walletCreateInvoiceAmoutPlaceholder: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.AmoutPlaceholder") }
+  /// AMOUNT
+  internal static var walletCreateInvoiceAmoutTitle: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.AmoutTitle") }
+  /// Description of the payment
+  internal static var walletCreateInvoiceCommentPlaceholder: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.CommentPlaceholder") }
+  /// COMMENT (OPTIONAL)
+  internal static var walletCreateInvoiceCommentTitle: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.CommentTitle") }
+  /// Copy Invoice URL
+  internal static var walletCreateInvoiceCopyURL: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.CopyURL") }
+  /// INVOICE URL
+  internal static var walletCreateInvoiceInvoiceTitle: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.InvoiceTitle") }
+  /// Share this link with other Gram wallet owners to receive Grams from them.
+  internal static var walletCreateInvoiceShareDesc: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.ShareDesc") }
+  /// Share Invoice URL
+  internal static var walletCreateInvoiceShareURL: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.ShareURL") }
+  /// Create Invoice
+  internal static var walletCreateInvoiceTitle: String  { return L10n.tr("Localizable", "Wallet.CreateInvoice.Title") }
   /// Wallet Created
   internal static var walletInfoWalletCreatedHeader: String  { return L10n.tr("Localizable", "Wallet.Info.WalletCreated.Header") }
   /// your wallet address
@@ -5967,10 +5987,20 @@ internal final class L10n {
   internal static var walletProcessTransactionPasscodePlaceholder: String  { return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.Placeholder") }
   /// Enter your passcode for transfer Grams.
   internal static var walletProcessTransactionPasscodeText: String  { return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.Text") }
+  /// Try again in: %@
+  internal static func walletProcessTransactionPasscodeTextError(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.TextError", p1)
+  }
   /// Passcode
   internal static var walletProcessTransactionPasscodeTitle: String  { return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.Title") }
+  /// Passcode Disabled
+  internal static var walletProcessTransactionPasscodeTitleError: String  { return L10n.tr("Localizable", "Wallet.ProcessTransaction.Passcode.TitleError") }
   /// Copy Wallet Address
   internal static var walletReceiveCopyWalletAddress: String  { return L10n.tr("Localizable", "Wallet.Receive.CopyWalletAddress") }
+  /// Create Invoice
+  internal static var walletReceiveCreateInvoice: String  { return L10n.tr("Localizable", "Wallet.Receive.CreateInvoice") }
+  /// You can specify amount and purpose of the payment to save the sender some time.
+  internal static var walletReceiveCreateInvoiceDesc: String  { return L10n.tr("Localizable", "Wallet.Receive.CreateInvoiceDesc") }
   /// Share Wallet Address
   internal static var walletReceiveShareWalletAddress: String  { return L10n.tr("Localizable", "Wallet.Receive.ShareWalletAddress") }
   /// Share this link with other Gram wallet owners to receive Grams from them.
@@ -5989,10 +6019,16 @@ internal final class L10n {
   internal static var walletSendAmountPlaceholder: String  { return L10n.tr("Localizable", "Wallet.Send.AmountPlaceholder") }
   /// Optional description of the payment
   internal static var walletSendCommentPlaceholder: String  { return L10n.tr("Localizable", "Wallet.Send.CommentPlaceholder") }
-  /// Encryption error. Please check device passcode settings and try again.
+  /// Encryption error. If you will see this error again, please delete wallet and import your secret words again.
   internal static var walletSendErrorDecryptionFailed: String  { return L10n.tr("Localizable", "Wallet.Send.ErrorDecryptionFailed") }
   /// Invalid wallet address. Please correct and try again.
   internal static var walletSendErrorInvalidAddress: String  { return L10n.tr("Localizable", "Wallet.Send.ErrorInvalidAddress") }
+  /// Couldn't send grams. Please make sure your internet connection is working and try again.
+  internal static var walletSendErrorNetwork: String  { return L10n.tr("Localizable", "Wallet.Send.ErrorNetwork") }
+  /// Unfortunately, your transfer couldn't be completed. You don't have enough grams.
+  internal static var walletSendErrorNotEnoughFundsText: String  { return L10n.tr("Localizable", "Wallet.Send.ErrorNotEnoughFundsText") }
+  /// Wallet
+  internal static var walletSendErrorTitle: String  { return L10n.tr("Localizable", "Wallet.Send.ErrorTitle") }
   /// Copy the 48-letter address of the recipient here or ask them to send you a ton:// link.
   internal static var walletSendRecipientDesc: String  { return L10n.tr("Localizable", "Wallet.Send.RecipientDesc") }
   /// RECIPIENT WALLET ADDRESS
@@ -6069,7 +6105,7 @@ internal final class L10n {
   internal static var walletSplashCreatePasscodeTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.CreatePasscode.Title") }
   /// Continue
   internal static var walletSplashCreatedButton: String  { return L10n.tr("Localizable", "Wallet.Splash.Created.Button") }
-  /// Your Gram wallet has just been created. Only you control it.\nTo be able to always have access to it, please write down secret words and setup a secure passcode.
+  /// Your Gram wallet has just been created. Only you control it.\n\nTo be able to always have access to it, please write down secret words and setup a secure passcode.
   internal static var walletSplashCreatedDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.Created.Desc") }
   /// Congratulations!
   internal static var walletSplashCreatedHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Created.Header") }
@@ -6099,7 +6135,7 @@ internal final class L10n {
   internal static var walletSplashIntroHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Header") }
   /// Import Exists
   internal static var walletSplashIntroImportExists: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.ImportExists") }
-  /// By creating the wallet you accept\nTerms of Conditions.
+  /// By creating the wallet you accept\n[Terms of Conditions](Terms).
   internal static var walletSplashIntroTerms: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Terms") }
   /// Gram Wallet
   internal static var walletSplashIntroTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.Intro.Title") }
@@ -6135,6 +6171,14 @@ internal final class L10n {
   internal static var walletSplashSave24WordsConfirmText: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.Text") }
   /// I'm Sure.
   internal static var walletSplashSave24WordsConfirmThrid: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.Thrid") }
+  /// Import Existing Wallet
+  internal static var walletSplashSecurityChangedButton: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Button") }
+  /// Unfortunately, your wallet is no longer available. To restore your wallet, click "Import Existing Wallet".\n\n[Create New Wallet](CreateNew)
+  internal static var walletSplashSecurityChangedDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Desc") }
+  /// Unavailable
+  internal static var walletSplashSecurityChangedHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Header") }
+  /// Wallet is Unavailable
+  internal static var walletSplashSecurityChangedTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Title") }
   /// My Wallet
   internal static var walletSplashSuccessButton: String  { return L10n.tr("Localizable", "Wallet.Splash.Success.Button") }
   /// You’re all set. Now you have a wallet that only you control - directly, without middlemen or bankers.
@@ -6175,6 +6219,8 @@ internal final class L10n {
   internal static var walletTonLinkEmptyThrid: String  { return L10n.tr("Localizable", "Wallet.TonLink.Empty.Thrid") }
   /// Gram Wallet
   internal static var walletTonLinkEmptyTitle: String  { return L10n.tr("Localizable", "Wallet.TonLink.Empty.Title") }
+  /// No Address
+  internal static var walletTransactionEmptyAddress: String  { return L10n.tr("Localizable", "Wallet.Transaction.EmptyAddress") }
   /// Empty Transaction
   internal static var walletTransactionEmptyTransaction: String  { return L10n.tr("Localizable", "Wallet.Transaction.EmptyTransaction") }
   /// from:

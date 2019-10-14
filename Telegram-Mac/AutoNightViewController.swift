@@ -164,7 +164,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
         }
         
          entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_list, equatable: InputDataEquatable(settings), item: { initialSize, stableId in
-            return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  [tintedNightPalette, mojavePalette], cloudThemes: cloudThemes, viewType: .singleItem, togglePalette: arguments.selectTheme, menuItems: { source in
+            return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  [tintedNightPalette, systemPalette], cloudThemes: cloudThemes, viewType: .singleItem, togglePalette: arguments.selectTheme, menuItems: { source in
                 return []
             })
         }))

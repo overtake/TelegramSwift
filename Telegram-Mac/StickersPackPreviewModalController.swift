@@ -66,9 +66,9 @@ private class StickersModalView : View {
         
         add.set(color: .white, for: .Normal)
         add.set(font: .medium(.title), for: .Normal)
-        add.set(background: theme.colors.blueFill, for: .Normal)
-        add.set(background: theme.colors.blueFill, for: .Hover)
-        add.set(background: theme.colors.blueFill, for: .Highlight)
+        add.set(background: theme.colors.accent, for: .Normal)
+        add.set(background: theme.colors.accent, for: .Hover)
+        add.set(background: theme.colors.accent, for: .Highlight)
         add.set(text: tr(L10n.stickerPackAdd1Countable(0)), for: .Normal)
 
         addSubview(add)

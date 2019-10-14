@@ -135,7 +135,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             
             let per = floorToScreenPixels(backingScaleFactor, width / (count - 1))
             
-            ctx.setFillColor(theme.colors.blueFill.cgColor)
+            ctx.setFillColor(theme.colors.accent.cgColor)
             let lineSize = NSMakeSize(width, 2)
             let lc = _focus(lineSize)
             let minX = item.inset.left + minF.width + insetBetweenFont
@@ -162,7 +162,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 ctx.setFillColor(theme.colors.background.cgColor)
                 ctx.fill(NSMakeRect(point.x, point.y, perSize.width, perSize.height))
                 
-                ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.blueFill.cgColor : theme.colors.grayText.cgColor)
+                ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
                 ctx.fillEllipse(in: NSMakeRect(point.x + perSize.width/2 - 2, point.y + 3, 4, 4))
                 
                 if let titles = item.titles, titles.count == item.sizes.count {
@@ -220,7 +220,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             
             let per = floorToScreenPixels(backingScaleFactor, width / (count - 1))
             
-            ctx.setFillColor(theme.colors.blueFill.cgColor)
+            ctx.setFillColor(theme.colors.accent.cgColor)
             let lineSize = NSMakeSize(width, 2)
             let lc = _focus(lineSize)
             let minX = insets.left + minF.width + insetBetweenFont
@@ -247,7 +247,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 ctx.setFillColor(theme.colors.background.cgColor)
                 ctx.fill(NSMakeRect(point.x, point.y, perSize.width, perSize.height))
                 
-                ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.blueFill.cgColor : theme.colors.grayText.cgColor)
+                ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
                 ctx.fillEllipse(in: NSMakeRect(point.x + perSize.width/2 - 2, point.y + 3, 4, 4))
                 
                 if let titles = item.titles, titles.count == item.sizes.count {

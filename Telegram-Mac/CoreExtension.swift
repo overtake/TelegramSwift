@@ -2505,12 +2505,15 @@ struct SecureIdDocumentValue {
 enum FaqDestination {
     case telegram
     case ton
+    case walletTOS
     var url:String {
         switch self {
         case .telegram:
             return "https://telegram.org/faq/"
         case .ton:
-            return "https://telegram.org/faq/gram_wallet";
+            return "https://telegram.org/faq/gram_wallet/"
+        case .walletTOS:
+            return "https://telegram.org/tos/wallet/"
         }
     }
 }

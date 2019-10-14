@@ -70,7 +70,7 @@ class ChatVoiceContentView: ChatAudioContentView {
         if let parameters = parameters {
             return parameters.presentation.waveformForeground
         }
-        return theme.colors.blueFill
+        return theme.colors.accent
     }
     
     override func checkState() {

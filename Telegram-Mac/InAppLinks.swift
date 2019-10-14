@@ -440,13 +440,13 @@ func execute(inapp:inAppLink) {
             }
         })
     case let .tonTransfer(_, context, data: data):
-        let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox)).start(next: { config, wallets in
+        let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox)).start(next: { configuration, wallets in
             if #available(OSX 10.12, *) {
-                if let config = config.config {
-                    let tonContext = context.tonContext.context(config: config)
+                if let config = configuration.config, let blockchainName = configuration.blockchainName {
+                    let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
                     if !wallets.wallets.isEmpty {
                         let amount = data.amount ?? 0
-                        let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: amount > 0 ? formatAmountText("\(amount / 1000000000)") : "")
+                        let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: amount > 0 ? formatAmountText("\(Float(amount) / 1000000000.0)") : "")
                         showModal(with: controller, for: context.window)
                     } else {
                         confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in

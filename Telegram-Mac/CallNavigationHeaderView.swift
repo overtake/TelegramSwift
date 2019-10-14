@@ -144,7 +144,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
     }
     
     private var blueColor:NSColor {
-        return theme.colors.blueSelect
+        return theme.colors.accentSelect
     }
     private var grayColor:NSColor {
         return theme.colors.grayText
