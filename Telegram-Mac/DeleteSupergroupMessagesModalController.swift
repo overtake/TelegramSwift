@@ -68,7 +68,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
         self.peerId = peerId
         self.memberId = memberId
         self.onComplete = onComplete
-        super.init(frame: NSMakeRect(0, 0, 280, 260))
+        super.init(frame: NSMakeRect(0, 0, 350, 260))
         bar = .init(height: 0)
     }
     

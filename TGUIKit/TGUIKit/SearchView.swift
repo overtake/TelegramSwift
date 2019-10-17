@@ -144,7 +144,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
-        self.layer?.cornerRadius = .cornerRadius
+        self.layer?.cornerRadius = 10
         if #available(OSX 10.12.2, *) {
             input.allowsCharacterPickerTouchBarItem = false
         } 
@@ -228,7 +228,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open func cancelSearch() {
-        change(state: .None, true)
+        if self.query.isEmpty {
+            self.change(state: .None, true)
+        } else {
+            self.setString("")
+        }
     }
     
     open func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {

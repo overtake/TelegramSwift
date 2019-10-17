@@ -142,9 +142,7 @@ class ChatWallpaperModalController: ModalViewController {
                     }
                 }
             })
-        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
-            self?.close()
-        }, drawBorder: true, height: 50, alignCancelLeft: true)
+        }, drawBorder: true, height: 50, singleButton: true)
        
         return interactions
     }
@@ -153,7 +151,9 @@ class ChatWallpaperModalController: ModalViewController {
         return true
     }
     public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: L10n.chatWPBackgroundTitle), right: nil)
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: L10n.chatWPBackgroundTitle), right: nil)
     }
     
     override func measure(size: NSSize) {

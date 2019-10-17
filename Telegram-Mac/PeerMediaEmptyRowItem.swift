@@ -63,23 +63,31 @@ class PeerMediaEmptyRowView : TableRowView {
         addSubview(imageView)
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        textView.backgroundColor = backdorColor
+    }
+    
     override func layout() {
         super.layout()
         if let item = item as? PeerMediaEmptyRowItem {
-            
-            item.textLayout.measure(width: frame.width - 40)
-            let f = focus(item.textLayout.layoutSize)
-            textView.update(item.textLayout, origin:f.origin)
-            imageView.centerX(y:f.minY - imageView.frame.height - 20)
+            imageView.centerX(y: bounds.midY - imageView.frame.height - 40)
+            item.textLayout.measure(width: frame.width - 60)
+            textView.update(item.textLayout)
+            textView.centerX(y: imageView.frame.maxY + 16)
         }
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         if let item = item as? PeerMediaEmptyRowItem {
-            textView.backgroundColor = theme.colors.background
             imageView.image = item.image
             imageView.sizeToFit()
+            needsLayout = true
         }
     }
     

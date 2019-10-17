@@ -144,9 +144,13 @@ func NewContactController(context: AccountContext, peerId: PeerId) -> InputDataM
     
     let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: L10n.navigationDone, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
+    }, drawBorder: true, height: 50, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     dismiss = { [weak modalController] in
         modalController?.close()

@@ -377,7 +377,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
         let arguments = ChannelAdminsControllerArguments(context: context, addAdmin: {
             let behavior = peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1) : SelectChannelMembersBehavior(peerId: peerId, limit: 1)
             
-            _ = (selectModalPeers(context: context, title: "", limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(context: context, title: L10n.adminsAddAdmin, limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let _ = behavior.participants[peerId] {
                      return .single(true)
                 } else {

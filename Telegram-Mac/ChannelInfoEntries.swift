@@ -305,7 +305,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         
-        let report = reportReasonSelector() |> mapToSignal { reason -> Signal<Void, NoError> in
+        let report = reportReasonSelector(context: context) |> mapToSignal { reason -> Signal<Void, NoError> in
             return showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: reason), for: context.window)
         } |> deliverOnMainQueue
         

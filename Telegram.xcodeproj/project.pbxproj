@@ -230,7 +230,6 @@
 		C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */ = {isa = PBXBuildFile; fileRef = C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */; };
 		C210742C1E780CC1006EE5EF /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
 		C210959A1E9FE04700E10BDB /* ChatVideoMessageContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21095991E9FE04700E10BDB /* ChatVideoMessageContentView.swift */; };
-		C21656D41EE4A83E0041A6BA /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D098C71C1D7E175A007784E4 /* MainMenu.xib */; };
 		C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E4E1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift */; };
 		C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E501DC220E900F98E03 /* PeerMediaMusicRowContent.swift */; };
 		C2167E531DC220F600F98E03 /* PeerMediaFileRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E521DC220F600F98E03 /* PeerMediaFileRowContent.swift */; };
@@ -4696,7 +4695,6 @@
 			files = (
 				C299B2001F1E11AF00922882 /* Localizable.strings in Resources */,
 				C232EA9B1E1D07E700C4D38C /* ShareViewController.xib in Resources */,
-				C21656D41EE4A83E0041A6BA /* MainMenu.xib in Resources */,
 				C23D0D7A1F1A609300AF5151 /* SFCompactRounded-Semibold.otf in Resources */,
 				C232EAC21E1D448C00C4D38C /* Assets.xcassets in Resources */,
 				C232EA951E1D07E700C4D38C /* icon.icns in Resources */,

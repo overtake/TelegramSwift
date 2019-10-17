@@ -12,12 +12,53 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 import PostboxMac
 
+ 
+
+ private class PeerMediaTitleBarView : TitledBarView {
+     private var search:ImageButton = ImageButton()
+     init(controller: ViewController, title:NSAttributedString, handler:@escaping() ->Void) {
+         super.init(controller: controller, title)
+         search.set(handler: { _ in
+             handler()
+         }, for: .Click)
+         addSubview(search)
+         updateLocalizationAndTheme(theme: theme)
+     }
+     
+     func updateSearchVisibility(_ visible: Bool) {
+         search.isHidden = !visible
+     }
+     
+     override func updateLocalizationAndTheme(theme: PresentationTheme) {
+         super.updateLocalizationAndTheme(theme: theme)
+         let theme = (theme as! TelegramPresentationTheme)
+         search.set(image: theme.icons.chatSearch, for: .Normal)
+         _ = search.sizeToFit()
+         backgroundColor = theme.colors.background
+         needsLayout = true
+     }
+     
+     override func layout() {
+         super.layout()
+         search.centerY(x: frame.width - search.frame.width)
+     }
+     
+     
+     required init(frame frameRect: NSRect) {
+         fatalError("init(frame:) has not been implemented")
+     }
+     
+     required init?(coder: NSCoder) {
+         fatalError("init(coder:) has not been implemented")
+     }
+ }
+
 
 class PeerMediaControllerView : View {
     
     private let actionsPanelView:MessageActionsPanelView = MessageActionsPanelView(frame: NSMakeRect(0,0,0, 50))
-    fileprivate let segmentContainerView: View = View()
-    fileprivate let segmentControl = SegmentController(frame: NSMakeRect(0, 0, 200, 28))
+    fileprivate let topPanelView: View = View()
+    fileprivate let segmentControl = SegmentController(frame: NSMakeRect(0, 0, 200, 30))
     private weak var mainView:NSView?
     private let separator:View = View()
     private var isSelectionState:Bool = false
@@ -28,15 +69,16 @@ class PeerMediaControllerView : View {
         super.init(frame: frameRect)
         addSubview(actionsPanelView)
         addSubview(separator)
-        segmentContainerView.addSubview(segmentControl.view)
-        addSubview(segmentContainerView)
+        topPanelView.addSubview(segmentControl.view)
+        addSubview(topPanelView)
         updateLocalizationAndTheme(theme: theme)
+        topPanelView.border = [.Bottom]
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         separator.backgroundColor = theme.colors.border
-        mainView?.background = theme.colors.background
+//        mainView?.background = theme.colors.background
         segmentControl.theme = SegmentTheme(backgroundColor: theme.colors.background, foregroundColor: theme.colors.accent, textColor: theme.colors.accent)
     }
     
@@ -48,7 +90,7 @@ class PeerMediaControllerView : View {
     
     func updateMainView(with view:NSView, animated:Bool) {
         mainView?.removeFromSuperview()
-        mainView?.background = theme.colors.background
+//        mainView?.background = theme.colors.background
         self.mainView = view
         addSubview(view, positioned: .below, relativeTo: actionsPanelView)
         needsLayout = true
@@ -59,19 +101,24 @@ class PeerMediaControllerView : View {
         switch state.state.state {
         case .Focus:
             if searchView == nil {
-                searchView = state.view ?? SearchView(frame: NSZeroRect)
-                addSubview(searchView!)
+                searchView = SearchView(frame: NSMakeRect(10, -30, frame.width - 20, 30))
+                topPanelView.addSubview(searchView!)
+                searchView!.change(state: .Focus, false)
+
+                searchView?.searchInteractions = SearchInteractions({ value, _ in
+                    
+                }, { value in
+                   state.controller.searchState.set(value)
+                })
             }
             searchView?.isLoading = state.isLoading
-            searchView!.frame = NSMakeRect(10, segmentContainerView.frame.maxY + 10, frame.width - 20, 30)
             searchView?._change(pos: NSMakePoint(10, 10), animated: state.animated)
-            segmentContainerView._change(pos: NSMakePoint(segmentContainerView.frame.minX, -segmentContainerView.frame.height), animated: state.animated)
-            
+            segmentControl.view._change(pos: NSMakePoint(segmentControl.view.frame.minX, topPanelView.frame.height), animated: state.animated)
         case .None:
-            segmentContainerView._change(pos: NSMakePoint(segmentContainerView.frame.minX, 0), animated: state.animated)
+            segmentControl.view._change(pos: NSMakePoint(segmentControl.view.frame.minX, 10), animated: state.animated)
             if let searchView = self.searchView {
                 self.searchView = nil
-                searchView._change(pos: NSMakePoint(10, segmentContainerView.frame.maxY + 10), animated: state.animated, completion: { [weak searchView] completed in
+                searchView._change(pos: NSMakePoint(10, -searchView.frame.height), animated: state.animated, completion: { [weak searchView] completed in
                     searchView?.removeFromSuperview()
                 })
             }
@@ -94,13 +141,13 @@ class PeerMediaControllerView : View {
     override func layout() {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
-        segmentContainerView.frame = NSMakeRect(0, searchView != nil ? -segmentContainerView.frame.height : 0, frame.width, 50)
+        topPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
         
-        searchView?.frame = NSMakeRect(10, segmentContainerView.frame.maxY + 10, frame.width - 20, 30)
+        searchView?.frame = NSMakeRect(10, 10, frame.width - 20, 30)
         
-        segmentControl.view.setFrameSize(frame.width - 20, 28)
-        segmentControl.view.center()
-        mainView?.frame = NSMakeRect(0, segmentContainerView.frame.maxY + (searchView != nil ? 50 : 0), frame.width, frame.height - inset - segmentContainerView.frame.maxY)
+        segmentControl.view.setFrameSize(frame.width - 20, 30)
+        segmentControl.view.centerX(y: searchView == nil ? 10 : topPanelView.frame.height)
+        mainView?.frame = NSMakeRect(0, topPanelView.frame.height, frame.width, frame.height - inset - topPanelView.frame.maxY)
         actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
         separator.frame = NSMakeRect(0, frame.height - inset, frame.width, .borderSize)
     }
@@ -169,6 +216,14 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         } else {
             self.listControllers[currentTagListIndex].viewDidAppear(animated)
         }
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self, self.mode != .photoOrVideo else {
+                return .rejected
+            }
+            self.listControllers[self.currentTagListIndex].toggleSearch()
+            return .invoked
+        }, with: self, for: .F, modifierFlags: [.command])
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -192,6 +247,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
         if self.mode == .photoOrVideo {
             self.mediaGrid.viewWillDisappear(animated)
         } else {
@@ -317,9 +373,31 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                         if canDelete {
                             let isAdmin = admins?.filter({$0.peerId == messages[0].author?.id}).first != nil
                             if mustManageDeleteMessages(messages, for: peer, account: strongSelf.context.account), let memberId = messages[0].author?.id, !isAdmin {
-                                showModal(with: DeleteSupergroupMessagesModalController(context: strongSelf.context, messageIds: messages.map {$0.id}, peerId: peer.id, memberId: memberId, onComplete: { [weak strongSelf] in
-                                    strongSelf?.interactions.update({$0.withoutSelectionState()})
-                                }), for: mainWindow)
+                                
+                                 let options:[ModalOptionSet] = [ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true),
+                                                                                               ModalOptionSet(title: L10n.supergroupDeleteRestrictionBanUser, selected: false, editable: true),
+                                                                                               ModalOptionSet(title: L10n.supergroupDeleteRestrictionReportSpam, selected: false, editable: true),
+                                                                                               ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true)]
+                                 showModal(with: ModalOptionSetController(context: context, options: options, actionText: (L10n.modalOK, theme.colors.accent), title: L10n.supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
+
+                                       var signals:[Signal<Void, NoError>] = []
+                                       if result[0] == .selected {
+                                           signals.append(deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messages.map {$0.id}, type: .forEveryone))
+                                       }
+                                       if result[1] == .selected {
+                                        signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peer.id, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
+                                       }
+                                       if result[2] == .selected {
+                                           signals.append(reportSupergroupPeer(account: context.account, peerId: memberId, memberId: memberId, messageIds: messageIds))
+                                       }
+                                       if result[3] == .selected {
+                                        signals.append(clearAuthorHistory(account: context.account, peerId: peer.id, memberId: memberId))
+                                       }
+                                       
+                                       _ = showModalProgress(signal: combineLatest(signals), for: context.window).start()
+                                       strongSelf?.interactions.update({$0.withoutSelectionState()})
+                                    
+                                }), for: context.window)
                             } else {
                                 let thrid:String? = canDeleteForEveryone ? peer.isUser ? tr(L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle)) : tr(L10n.chatConfirmDeleteMessagesForEveryone) : nil
                                 
@@ -372,6 +450,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         
         mediaGrid.viewWillAppear(false)
         genericView.updateMainView(with: mediaGrid.view, animated: false)
+        centerBar.updateSearchVisibility(false)
         mediaGrid.viewDidAppear(false)
         
         requestUpdateCenterBar()
@@ -392,6 +471,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 self.listControllers[currentTagListIndex].viewDidDisappear(animated)
                 currentTagListIndex = -1
                 searchValueDisposable.set(nil)
+                centerBar.updateSearchVisibility(false)
             } else {
                 let previous: ViewController
                 if currentTagListIndex != -1 {
@@ -407,16 +487,10 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 self.listControllers[currentTagListIndex].viewDidAppear(animated)
                 previous.removeFromSuperview()
                 previous.viewDidDisappear(animated)
-                
+                centerBar.updateSearchVisibility(true)
                 
                 searchValueDisposable.set(self.listControllers[currentTagListIndex].mediaSearchValue.start(next: { [weak self] state in
                     self?.genericView.updateSearchState(state)
-                    switch state.state.state {
-                    case .Focus:
-                        self?.currentTable?.autohide = nil
-                    case .None:
-                        self?.currentTable?.autohide = TableAutohide(item: self?.currentTable?.firstItem)
-                    }
                 }))
             }
             
@@ -459,14 +533,41 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         super.update(with:state)
         interactions.update({state == .Normal ? $0.withoutSelectionState() : $0.withSelectionState()})
     }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if genericView.searchView != nil {
+            self.listControllers[self.currentTagListIndex].toggleSearch()
+            return .invoked
+        } else {
+            return super.escapeKeyAction()
+        }
+    }
+    
+    private var centerBar: PeerMediaTitleBarView {
+        return centerBarView as! PeerMediaTitleBarView
+    }
+    
+    override func getCenterBarViewOnce() -> TitledBarView {
+        return PeerMediaTitleBarView(controller: self, title: .initialize(string: self.defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            self.listControllers[self.currentTagListIndex].toggleSearch()
+        })
+    }
+    
+    override func becomeFirstResponder() -> Bool? {
+        return true
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        return genericView.searchView?.input
+    }
   
     override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
         for mediaList in listControllers {
             if mediaList.view.superview != nil {
-                if current == 0 {
-                    genericView.segmentContainerView.setFrameOrigin(genericView.segmentContainerView.frame.minX, genericView.searchView != nil ? 0 : 50)
-                }
-                genericView.segmentContainerView._change(pos: NSMakePoint(genericView.segmentContainerView.frame.minX, current), animated: animated)
+                genericView.topPanelView._change(pos: NSMakePoint(genericView.topPanelView.frame.minX, current), animated: animated)
                 return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
             }
         }

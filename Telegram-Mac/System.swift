@@ -36,7 +36,21 @@ var mainWindow:Window {
     fatalError("window not found")
 }
 
-
+var systemAppearance: NSAppearance {
+    let appearance = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light"
+    switch appearance {
+    case "Dark":
+         if #available(macOS 10.14, *) {
+           return NSAppearance(named: NSAppearance.Name.darkAqua)!
+         } else {
+           return NSAppearance(named: NSAppearance.Name.vibrantDark)!
+         }
+    case "Light":
+         return NSAppearance(named: NSAppearance.Name.aqua)!
+    default:
+        return NSAppearance.current
+    }
+}
 
 
 public func deliverOnPrepareQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {

@@ -1193,12 +1193,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
                         if !firstTime {
                             let rows:[Int] = [tableView.row(at: NSMakePoint(0, scrollInset - stickView.frame.height)), tableView.row(at: NSMakePoint(0, scrollInset))]
+                            var applied: Bool = false
                             for row in rows {
                                 let row = min(max(0, row), list.count - 1)
                                 if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
                                     view.updateIsVisible(yTopOffset < 0, animated: false)
+                                    applied = true
                                 }
                             }
+                            if !applied {
+                                self.enumerateViews(with: { view in
+                                   (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                                   return true
+                                })
+                            }
+                            
                         }
                         
                         
@@ -1236,6 +1245,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                     stickView?.setFrameOrigin(0, 0)
                     stickView?.header = true
+                    
+                     self.enumerateViews(with: { view in
+                        (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                        return true
+                     })
                 }
 
             }

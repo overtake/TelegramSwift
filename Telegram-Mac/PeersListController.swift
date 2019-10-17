@@ -212,6 +212,10 @@ class PeerListContainerView : View {
         proxyButton.disableActions()
         addSubview(backgroundView)
         backgroundView.isHidden = true
+        
+        tableView.getBackgroundColor = {
+            .clear
+        }
     }
     
     fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {
@@ -554,7 +558,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func showSearchController(animated: Bool) {
-        
         if searchController == nil {
             let rect = genericView.tableView.frame
             let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
@@ -568,7 +571,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             searchController.pinnedItems = collectPinnedItems
            
             self.searchController = searchController
-            
+            self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
+                 self?.genericView.tableView.isHidden = true
+            })
             searchController.navigationController = self.navigationController
             searchController.viewWillAppear(true)
             if animated {
@@ -584,9 +589,24 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             
             self.addSubview(searchController.view)
         }
-        
-       
     }
+    
+    private func hideSearchController(animated: Bool) {
+           if let searchController = self.searchController {
+               searchController.viewWillDisappear(animated)
+               searchController.view.layer?.opacity = animated ? 1.0 : 0.0
+               
+               searchController.viewDidDisappear(true)
+               self.searchController = nil
+               self.genericView.tableView.isHidden = false
+               self.genericView.tableView.change(opacity: 1, animated: animated)
+               let view = searchController.view
+               
+               searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
+                   view?.removeFromSuperview()
+               })
+           }
+       }
     
     override func focusSearch(animated: Bool) {
         genericView.searchView.change(state: .Focus, animated)
@@ -599,21 +619,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    private func hideSearchController(animated: Bool) {
-        if let searchController = self.searchController {
-            searchController.viewWillDisappear(animated)
-            searchController.view.layer?.opacity = animated ? 1.0 : 0.0
-            
-            searchController.viewDidDisappear(true)
-            self.searchController = nil
-            
-            let view = searchController.view
-            
-            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
-                view?.removeFromSuperview()
-            })
-        }
-    }
+   
    
     
     var collectPinnedItems:[PinnedItemId] {

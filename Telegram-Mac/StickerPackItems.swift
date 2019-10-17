@@ -429,6 +429,8 @@ private final class AnimatedStickerPackRowView : HorizontalRowView {
         overlay.isSelected = item.isSelected
         
         super.set(item: item, animated: animated)
+        
+        needsLayout = true
     }
     
     override func layout() {

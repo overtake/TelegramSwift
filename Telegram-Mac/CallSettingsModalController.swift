@@ -121,7 +121,7 @@ private func outputDevices() -> Signal<[AudioDevice], NoError> {
         }
     }
 }
-func CallSettingsModalController(_ sharedContext: SharedAccountContext) -> InputDataController {
+func CallSettingsModalController(_ sharedContext: SharedAccountContext) -> InputDataModalController {
 
     
     let arguments = CallSettingsArguments(updateInputDevice: { id in
@@ -135,5 +135,14 @@ func CallSettingsModalController(_ sharedContext: SharedAccountContext) -> Input
     let signal = combineLatest(voiceCallSettings(sharedContext.accountManager), inputDevices(), outputDevices()) |> map { value, inputDevices, outputDevices in
         return callSettingsEntries(state: value, arguments: arguments, inputDevices: inputDevices, outputDevices: outputDevices)
     }
-    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.callSettingsTitle)
+    let controller = InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.callSettingsTitle)
+    
+    let modalController = InputDataModalController(controller)
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
+    
+    return modalController
+    
 }

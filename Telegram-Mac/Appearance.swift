@@ -1514,7 +1514,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                stickerPackClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
                                                stickerPackDelete: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.blueIcon) },
                                                modalShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.blueIcon) },
-                                               modalClose: { #imageLiteral(resourceName: "Icon_WalletClose").precomposed(palette.grayIcon) },
+                                               modalClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.blueIcon) },
                                                ivChannelJoined: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
                                                chatListMention: { generateBadgeMention(backgroundColor: palette.accent, foregroundColor: palette.background) },
                                                chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.accentSelect) },
@@ -1628,7 +1628,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                passportSettings: { #imageLiteral(resourceName: "Icon_PassportSettings").precomposed(palette.grayIcon) },
                                                passportInfo: { #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.blueIcon) },
                                                editMessageMedia: { generateEditMessageMediaIcon(#imageLiteral(resourceName: "Icon_ReplaceMessageMedia").precomposed(palette.blueIcon), background: palette.background) },
-                                               playerMusicPlaceholder: { generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.accent), background: palette.grayForeground, radius: .cornerRadius) },
+                                               playerMusicPlaceholder: { generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.listGrayText), background: palette.listBackground, radius: .cornerRadius) },
                                                chatMusicPlaceholder: { generatePlayerListAlbumPlaceholder(#imageLiteral(resourceName: "Icon_MusicPlayerSmallAlbumArtPlaceholder").precomposed(palette.fileActivityForeground), background: palette.fileActivityBackground, radius: 20) },
                                                chatMusicPlaceholderCap: { generatePlayerListAlbumPlaceholder(nil, background: palette.fileActivityBackground, radius: 20) },
                                                searchArticle: { #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white) },
@@ -1793,8 +1793,11 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
     default:
         palette = settings.palette
     }
+    if #available(OSX 10.14, *) {
+        NSApp.appearance = palette.appearance
+    }
     NSAppearance.current = palette.appearance
-
+    window?.appearance = palette.appearance
     telegramUpdateTheme(generateTheme(palette: palette, cloudTheme: settings.cloudTheme, bubbled: settings.bubbled, fontSize: settings.fontSize, wallpaper: settings.wallpaper), window: window, animated: animated)
 }
 

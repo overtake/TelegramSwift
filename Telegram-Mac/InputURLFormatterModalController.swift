@@ -37,7 +37,9 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(state.text), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, item: { initialSize, stableId in
+        return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: state.text, font: .normal(.text))
+    }))
     index += 1
     
     
@@ -127,10 +129,13 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, cancelTitle: L10n.modalCancel)
+    }, drawBorder: true, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     close = { [weak modalController] in
         modalController?.modal?.close()

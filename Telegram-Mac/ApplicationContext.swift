@@ -360,7 +360,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .option])
         
-    
+        #if DEBUG
+//        window.set(handler: { [weak self] () -> KeyHandlerResult in
+//            showModal(with: InputPasswordController(context: context, title: "Passcoword", desc: "desc password", checker: { _ in return .never() }), for: window)
+//            return .invoked
+//        }, with: self, for: .T, priority: .supreme)
+        #endif
         
         
         appUpdateDisposable.set((context.account.stateManager.appUpdateInfo |> deliverOnMainQueue).start(next: { info in

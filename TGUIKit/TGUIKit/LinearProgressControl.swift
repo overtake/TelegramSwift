@@ -62,6 +62,13 @@ public class LinearProgressControl: Control {
         }
     }
     
+    public var cornerRadius: CGFloat = 0 {
+        didSet {
+            self.progressView.layer?.cornerRadius = cornerRadius
+            self.layer?.cornerRadius = cornerRadius
+        }
+    }
+    
     public var scrubberImage: CGImage? {
         didSet {
             if let scrubberImage = scrubberImage {

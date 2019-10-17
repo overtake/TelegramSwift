@@ -190,12 +190,16 @@ class ThemePreviewModalController: ModalViewController {
             
             var countTitle = L10n.themePreviewUsesCountCountable(Int(count))
             countTitle = countTitle.replacingOccurrences(of: "\(count)", with: count.formattedWithSeparator)
-
-            return (left: nil, center: ModalHeaderData(title: theme.title, subtitle: count > 0 ? countTitle : nil), right: ModalHeaderData(image: currentTheme.icons.modalShare, handler: { [weak self] in
+            
+            return (left: ModalHeaderData(image: currentTheme.icons.modalClose, handler: { [weak self] in
+                self?.close()
+            }), center: ModalHeaderData(title: theme.title, subtitle: count > 0 ? countTitle : nil), right: ModalHeaderData(image: currentTheme.icons.modalShare, handler: { [weak self] in
                 self?.share()
             }))
         case let .localTheme(theme):
-            return (left: nil, center: ModalHeaderData(title: theme.colors.name), right: nil)
+            return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+                self?.close()
+            }), center: ModalHeaderData(title: theme.colors.name), right: nil)
         }
         
     }
@@ -240,9 +244,7 @@ class ThemePreviewModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: L10n.modalSet, accept: { [weak self] in
             self?.saveAccent()
-        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
-            self?.close()
-        }, drawBorder: true)
+        }, drawBorder: true, singleButton: true)
     }
     
     override var dynamicSize: Bool {

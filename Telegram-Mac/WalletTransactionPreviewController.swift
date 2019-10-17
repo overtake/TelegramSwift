@@ -290,7 +290,7 @@ func WalletTransactionPreviewController(context: AccountContext, tonContext: Ton
         return .none
     }
     
-    controller.rightModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
         getModalController?()?.close()
     })
     

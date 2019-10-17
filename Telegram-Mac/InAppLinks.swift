@@ -292,7 +292,7 @@ func execute(inapp:inAppLink) {
         
         let _ = (showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: mainWindow) |> mapToSignal { memberId -> Signal<PeerId, NoError> in
             
-            return selectModalPeers(context: context, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            return selectModalPeers(context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
                     return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                         return confirmSignal(for: mainWindow, information: L10n.confirmAddBotToGroup(peer.displayTitle))
@@ -303,7 +303,7 @@ func execute(inapp:inAppLink) {
                 if peerId.namespace == Namespaces.Peer.CloudGroup {
                     return showModalProgress(signal: addGroupMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map {peerId} |> `catch` {_ in return .complete()}
                 } else {
-                    return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId} |> `catch` {_ in return .complete()}
+                    return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId }
                 }
             }
             

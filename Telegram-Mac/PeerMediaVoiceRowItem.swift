@@ -17,8 +17,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
     fileprivate let file:TelegramMediaFile
     fileprivate let titleLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
-    fileprivate let inset: NSEdgeInsets = NSEdgeInsetsMake(0, 60, 0, 20)
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry) {
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
         let message = object.message!
         file = message.media[0] as! TelegramMediaFile
         
@@ -28,7 +27,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         let date = Date(timeIntervalSince1970: TimeInterval(object.message!.timestamp) - interface.context.timeDifference)
         
         
-        titleLayout = TextViewLayout(.initialize(string: formatter.string(from: date), color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        titleLayout = TextViewLayout(.initialize(string: formatter.string(from: date), color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         
         var peer:Peer? = message.chatPeer(interface.context.peerId)
         
@@ -38,16 +37,16 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
             peer = _peer
         }
         
-        nameLayout = TextViewLayout(.initialize(string: title, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        nameLayout = TextViewLayout(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
 
-        super.init(initialSize, interface, object)
+        super.init(initialSize, interface, object, viewType: viewType)
         
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        nameLayout.measure(width: width - 100)
-        titleLayout.measure(width: width - 100)
+        nameLayout.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        titleLayout.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
         return success
     }
     
@@ -84,6 +83,11 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         progressView.fetchControls = FetchControls(fetch: { [weak self] in
             self?.executeInteraction(true)
         })
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
     }
     
     func removeNotificationListeners() {
@@ -221,6 +225,11 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         }
     }
     
+    override func updateSelectingMode(with selectingMode: Bool, animated: Bool = false) {
+        super.updateSelectingMode(with: selectingMode, animated: animated)
+        progressView.userInteractionEnabled = !selectingMode
+    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -238,13 +247,13 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         
-        let center = floorToScreenPixels(backingScaleFactor, frame.height / 2)
+        let center = floorToScreenPixels(backingScaleFactor, contentView.frame.height / 2)
         
-        titleView.setFrameOrigin(item.inset.left, center - titleView.frame.height - 1)
-        nameView.setFrameOrigin(item.inset.left, center + 1)
+        titleView.setFrameOrigin(item.contentInset.left, center - titleView.frame.height - 1)
+        nameView.setFrameOrigin(item.contentInset.left, center + 1)
         
-        progressView.centerY(x: 10)
-        player.centerY(x: 10)
+        progressView.centerY(x: 0)
+        player.centerY(x: 0)
         
         unreadDot.setFrameOrigin(titleView.frame.maxX + 5, center - titleView.frame.height / 2 - unreadDot.frame.height / 2)
     }
