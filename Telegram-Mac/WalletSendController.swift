@@ -323,7 +323,7 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
         updateBalanceDisposable.dispose()
     }
     
-    controller.rightModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
         getModalController?()?.close()
     })
     

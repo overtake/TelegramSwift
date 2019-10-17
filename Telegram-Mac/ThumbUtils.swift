@@ -36,57 +36,52 @@ func generateExtensionImage(colors: (UInt32, UInt32), ext:String) -> CGImage? {
     return generateImage(CGSize(width: 42.0, height: 42.0), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         
-    
-//        
-//        let radius: CGFloat = 2.0
-//        let cornerSize: CGFloat = 10.0
-        
-       // context.beginPath()
-        context.round(size, .cornerRadius)
-        
-        context.setFillColor(NSColor(colors.0).cgColor)
-        context.fill(NSMakeRect(0, 0, size.width, size.height))
+        context.round(CGRect(origin: CGPoint(), size: size), flags: [.left, .bottom, .right])
         
         context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
         context.scaleBy(x: 1.0, y: -1.0)
         context.translateBy(x: -size.width / 2.0 + 1.0, y: -size.height / 2.0 + 1.0)
         
+        let radius: CGFloat = .cornerRadius
+        let cornerSize: CGFloat = 10.0
         
-//        context.move(to: CGPoint(x: 0.0, y: radius))
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: radius, y: 0.0), radius: radius)
-//        }
-//        context.addLine(to: CGPoint(x: size.width - cornerSize, y: 0.0))
-//        context.addLine(to: CGPoint(x: size.width - cornerSize + cornerSize / 4.0, y: cornerSize - cornerSize / 4.0))
-//        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
-//        context.addLine(to: CGPoint(x: size.width, y: size.height - radius))
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: size.width, y: size.height), tangent2End: CGPoint(x: size.width - radius, y: size.height), radius: radius)
-//        }
-//        context.addLine(to: CGPoint(x: radius, y: size.height))
-//        
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: 0.0, y: size.height), tangent2End: CGPoint(x: 0.0, y: size.height - radius), radius: radius)
-//        }
-//        context.closePath()
-//        context.fillPath()
-//        
-//        context.setFillColor(NSColor(colors.1).cgColor)
-//        context.beginPath()
-//        context.move(to: CGPoint(x: size.width - cornerSize, y: 0.0))
-//        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
-//        context.addLine(to: CGPoint(x: size.width - cornerSize + radius, y: cornerSize))
-//        
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: size.width - cornerSize, y: cornerSize), tangent2End: CGPoint(x: size.width - cornerSize, y: cornerSize - radius), radius: radius)
-//        }
-//        
-      //  context.closePath()
-      //  context.fillPath()
+        context.setFillColor(NSColor(rgb: colors.0).cgColor)
+        context.beginPath()
+        context.move(to: CGPoint(x: 0.0, y: radius))
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: radius, y: 0.0), radius: radius)
+        }
+        context.addLine(to: CGPoint(x: size.width - cornerSize, y: 0.0))
+        context.addLine(to: CGPoint(x: size.width - cornerSize + cornerSize / 4.0, y: cornerSize - cornerSize / 4.0))
+        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
+        context.addLine(to: CGPoint(x: size.width, y: size.height - radius))
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: size.width, y: size.height), tangent2End: CGPoint(x: size.width - radius, y: size.height), radius: radius)
+        }
+        context.addLine(to: CGPoint(x: radius, y: size.height))
+        
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: 0.0, y: size.height), tangent2End: CGPoint(x: 0.0, y: size.height - 5), radius: 5)
+        }
+        context.closePath()
+        context.fillPath()
+        
+        context.setFillColor(NSColor(rgb: colors.1).cgColor)
+        context.beginPath()
+        context.move(to: CGPoint(x: size.width - cornerSize, y: 0.0))
+        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
+        context.addLine(to: CGPoint(x: size.width - cornerSize + radius, y: cornerSize))
+        
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: size.width - cornerSize, y: cornerSize), tangent2End: CGPoint(x: size.width - cornerSize, y: cornerSize - radius), radius: radius)
+        }
+        
+        context.closePath()
+        context.fillPath()
+
         
         
-        
-        let layout = TextViewLayout(.initialize(string: ext, color: .white, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+        let layout = TextViewLayout(.initialize(string: ext, color: .white, font: .medium(.short)), maximumNumberOfLines: 1, truncationType: .middle)
         layout.measure(width: size.width - 4)
         if !layout.lines.isEmpty {
             let line = layout.lines[0]
@@ -99,15 +94,15 @@ func generateExtensionImage(colors: (UInt32, UInt32), ext:String) -> CGImage? {
 }
 
 
-func generateMediaEmptyLinkThumb(color: NSColor, host:String) -> CGImage? {
-    return generateImage(CGSize(width: 50, height: 50), contextGenerator: { size, context in
+func generateMediaEmptyLinkThumb(color: NSColor, textColor: NSColor, host:String) -> CGImage? {
+    return generateImage(CGSize(width: 40, height: 40), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         let host = host.isEmpty ? "L" : host
         context.round(size, .cornerRadius)
         context.setFillColor(color.cgColor)
         context.fill(CGRect(origin: CGPoint(), size: size))
         if !host.isEmpty {
-            let layout = TextViewLayout(.initialize(string: host, color: .white, font: .normal(16.0)), maximumNumberOfLines: 1, truncationType: .middle)
+            let layout = TextViewLayout(.initialize(string: host, color: textColor, font: .bold(.huge)), maximumNumberOfLines: 1, truncationType: .middle)
             layout.measure(width: size.width - 4)
             let line = layout.lines[0]
             

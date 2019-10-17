@@ -79,7 +79,7 @@ func WalletSettingsController(context: AccountContext, tonContext: TonContext, w
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.walletSettingsTitle, hasDone: false)
     
     
-    controller.rightModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
         getModalController?()?.close()
     })
     

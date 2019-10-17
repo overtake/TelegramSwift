@@ -413,7 +413,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     }
     
     override func executeReturn() {
-        showModal(with: InputDataModalController(CallSettingsModalController(context.sharedContext), modalInteractions: ModalInteractions(acceptTitle: L10n.modalOK, drawBorder: true)), for: mainWindow)
+        showModal(with: CallSettingsModalController(context.sharedContext), for: context.window)
     }
     
     override func viewWillDisappear(_ animated: Bool) {

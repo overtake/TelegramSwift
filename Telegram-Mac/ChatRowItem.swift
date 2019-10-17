@@ -1898,7 +1898,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         var items = items
         if canReportMessage(message, account) {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
-                _ = reportReasonSelector().start(next: { reason in
+                _ = reportReasonSelector(context: context).start(next: { reason in
                     _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start()
                 })
             }))

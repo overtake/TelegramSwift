@@ -17,9 +17,9 @@ import SwiftSignalKitMac
 
 class PeerMediaFileRowItem: PeerMediaRowItem {
     
-    private(set) var nameLayout:TextViewLayout!
-    private(set) var actionLayout:TextViewLayout!
-    private(set) var actionLayoutLocal:TextViewLayout!
+    private(set) var nameLayout:TextViewLayout
+    private(set) var actionLayout:TextViewLayout
+    private(set) var actionLayoutLocal:TextViewLayout
     private(set) var iconArguments:TransformImageArguments?
     private(set) var icon:TelegramMediaImage?
     
@@ -27,51 +27,51 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry) {
-        super.init(initialSize,interface,object)
-        iconSize = NSMakeSize(40, 40)
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
         
-        if let file = message.media.first as? TelegramMediaFile {
+        
+        let message = object.message!
+        let file = message.media.first as! TelegramMediaFile
+        self.file = file
+        
+        nameLayout = TextViewLayout(NSAttributedString.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy 'at' h a"
+        
+        let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
+        
+        actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end)
+        
+        let localAction = NSMutableAttributedString()
+        let range = localAction.append(string: tr(L10n.contextShowInFinder), color: theme.colors.link, font: .normal(.text))
+        localAction.add(link: inAppLink.callback("finder", { _ in
+            showInFinder(file, account: interface.context.account)
+        }), for: range)
+        actionLayoutLocal = TextViewLayout(localAction, maximumNumberOfLines: 1, truncationType: .end)
+        actionLayoutLocal.interactions = globalLinkExecutor
+        
+        let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
+        
+        if let iconImageRepresentation = iconImageRepresentation {
+            iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
+            icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+        } else {
+            let fileName: String = file.fileName ?? ""
             
-            self.file = file
-            
-            nameLayout = TextViewLayout(NSAttributedString.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
-            
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "MMM d, yyyy 'at' h a"
-            
-            let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
-            
-            actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(FontSize.text)), maximumNumberOfLines: 1, truncationType: .end)
-            
-            let localAction = NSMutableAttributedString()
-            let range = localAction.append(string: tr(L10n.contextShowInFinder), color: theme.colors.link, font: .normal(.text))
-            localAction.add(link: inAppLink.callback("finder", { _ in
-                showInFinder(file, account: interface.context.account)
-            }), for: range)
-            actionLayoutLocal = TextViewLayout(localAction, maximumNumberOfLines: 1, truncationType: .end)
-            actionLayoutLocal.interactions = globalLinkExecutor
-            
-            let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
-            
-            if let iconImageRepresentation = iconImageRepresentation {
-                iconArguments = TransformImageArguments(corners: ImageCorners( radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
-                icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
-            } else {
-                let fileName: String = file.fileName ?? ""
-                
-                var fileExtension: String?
-                if let range = fileName.range(of: ".", options: [.backwards]) {
-                    fileExtension = fileName.substring(from: range.upperBound).lowercased()
-                }
-                docIcon = extensionImage(fileExtension: fileExtension ?? "file")
-                
-                
-                if let fileExtension = fileExtension {
-                    docTitle = NSAttributedString.initialize(string: fileExtension, color: theme.colors.text, font: .medium(.text))
-                }
+            var fileExtension: String = "file"
+            if let range = fileName.range(of: ".", options: [.backwards]) {
+                fileExtension = fileName[range.upperBound...].lowercased()
             }
+            if fileExtension.length > 5 {
+                fileExtension = "file"
+            }
+            docIcon = extensionImage(fileExtension: fileExtension)
+            
+            docTitle = NSAttributedString.initialize(string: fileExtension, color: theme.colors.text, font: .medium(.text))
+
         }
+        super.init(initialSize,interface,object, viewType: viewType)
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -99,11 +99,9 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        nameLayout.measure(width: width - contentInset.left - contentInset.right)
-        actionLayout.measure(width: width - contentInset.left - contentInset.right)
-        actionLayoutLocal.measure(width: width - contentInset.left - contentInset.right)
-        contentSize = NSMakeSize(width, 50)
-        
+        nameLayout.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        actionLayout.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        actionLayoutLocal.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
         return success
     }
     
@@ -116,7 +114,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     var nameView:TextView = TextView()
     var actionView:TextView = TextView()
-    var imageView:TransformImageView = TransformImageView(frame:NSMakeRect(10, 5, 40, 40))
+    var imageView:TransformImageView = TransformImageView(frame:NSMakeRect(0, 0, 40, 40))
     
     private var downloadStatusControl:ImageView?
     private var downloadProgressView:LinearProgressControl?
@@ -221,13 +219,14 @@ class PeerMediaFileRowView : PeerMediaRowView {
     override func layout() {
         super.layout()
         if let item = item as? PeerMediaRowItem {
-            
-            downloadProgressView?.frame = NSMakeRect(item.contentInset.left,frame.height - 4,frame.width - item.contentInset.left - item.contentInset.right,4)
-
+            if let downloadProgressView = downloadProgressView {
+                downloadProgressView.frame = NSMakeRect(item.separatorOffset, containerView.frame.height - 4, containerView.frame.width - item.separatorOffset - item.viewType.innerInset.right, 4)
+            }
             if let downloadStatusControl = downloadStatusControl {
+                downloadStatusControl.setFrameOrigin(NSMakePoint(item.contentInset.left, contentView.frame.height - 4 - downloadStatusControl.frame.height))
                 actionView.setFrameOrigin(item.contentInset.left + downloadStatusControl.frame.width + 2.0,actionView.frame.minY)
             } else {
-                actionView.setFrameOrigin(item.contentInset.left,actionView.frame.minY)
+                actionView.setFrameOrigin(item.contentInset.left, actionView.frame.minY)
             }
         }
         
@@ -244,7 +243,19 @@ class PeerMediaFileRowView : PeerMediaRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func updateSelectingMode(with selectingMode: Bool, animated: Bool = false) {
+        super.updateSelectingMode(with: selectingMode, animated: animated)
+        if let status = fetchStatus {
+            if case .Local = status {
+               self.actionView.userInteractionEnabled = !selectingMode
+            } else {
+               self.actionView.userInteractionEnabled = false
+            }
+        }
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
+        let previous = self.item as? PeerMediaFileRowItem
         super.set(item: item, animated: animated)
         
         statusDisposable.set(nil)
@@ -274,7 +285,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
             
             let context = item.interface.context
             if let file = item.file {
-                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file)
+                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: animated || previous?.file == item.file || previous == nil)
                 updatedFetchControls = FetchControls(fetch: { [weak self] in
                     self?.executeInteraction(true)
                 })
@@ -287,31 +298,56 @@ class PeerMediaFileRowView : PeerMediaRowView {
                     if let strongSelf = self {
                         strongSelf.fetchStatus = status
                         if case .Local = status {
-                            strongSelf.actionView.userInteractionEnabled = true
+                            strongSelf.actionView.userInteractionEnabled = (strongSelf.item as? PeerMediaRowItem)?.interface.presentation.state != .selecting
                         } else {
                             strongSelf.actionView.userInteractionEnabled = false
                         }
+                        
+                        let initStatusControlIfNeeded = { [weak strongSelf] in
+                           if let strongSelf = strongSelf, strongSelf.downloadStatusControl == nil {
+                               strongSelf.downloadStatusControl = ImageView(frame:NSMakeRect(0, 0, theme.icons.peerMediaDownloadFileStart.backingSize.width, theme.icons.peerMediaDownloadFileStart.backingSize.height))
+                               strongSelf.downloadStatusControl?.animates = true
+                               strongSelf.addSubview(strongSelf.downloadStatusControl!)
+                               strongSelf.needsLayout = true
+                           }
+                       }
+                        
                         let initDownloadControlIfNeeded = { [weak strongSelf] in
-                            if let strongSelf = strongSelf, strongSelf.downloadStatusControl == nil {
-                                strongSelf.downloadStatusControl = ImageView(frame:NSMakeRect(item.contentInset.left, strongSelf.frame.height - theme.icons.peerMediaDownloadFileStart.backingSize.height - item.contentInset.bottom - 4.0, theme.icons.peerMediaDownloadFileStart.backingSize.width, theme.icons.peerMediaDownloadFileStart.backingSize.height))
-                                strongSelf.addSubview(strongSelf.downloadStatusControl!)
-                                
+                            if let strongSelf = strongSelf {
+                                if strongSelf.downloadStatusControl == nil {
+                                    strongSelf.downloadStatusControl = ImageView(frame:NSMakeRect(0, 0, theme.icons.peerMediaDownloadFileStart.backingSize.width, theme.icons.peerMediaDownloadFileStart.backingSize.height))
+                                    strongSelf.downloadStatusControl?.animates = true
+                                    strongSelf.addSubview(strongSelf.downloadStatusControl!)
+                                }
                                 if strongSelf.downloadProgressView == nil {
                                     strongSelf.downloadProgressView = LinearProgressControl()
-                                    strongSelf.addSubview(strongSelf.downloadProgressView!)
+                                    strongSelf.downloadProgressView?.cornerRadius = 2.0
+                                    strongSelf.containerView.addSubview(strongSelf.downloadProgressView!)
                                 }
                                 strongSelf.downloadProgressView?.style = ControlStyle(foregroundColor:theme.colors.accent)
                                 strongSelf.needsLayout = true
                             }
-                            
                         }
                         
-                        let deinitDownloadControls = {[weak strongSelf] in
+                        let deinitDownloadControls = { [weak strongSelf] in
+                            if let strongSelf = strongSelf {
+                                if let downloadProgressView = strongSelf.downloadProgressView {
+                                    strongSelf.downloadProgressView = nil
+                                    downloadProgressView.set(progress: 1.0)
+                                    downloadProgressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak downloadProgressView] _ in
+                                        downloadProgressView?.removeFromSuperview()
+                                    })
+                                }
+                                strongSelf.downloadStatusControl?.removeFromSuperview()
+                                strongSelf.downloadStatusControl = nil
+                            }
+                            strongSelf?.needsLayout = true
+                        }
+                        
+                        let deinitProgressControl = { [weak strongSelf] in
                             if let strongSelf = strongSelf {
                                 strongSelf.downloadProgressView?.removeFromSuperview()
                                 strongSelf.downloadProgressView = nil
-                                strongSelf.downloadStatusControl?.removeFromSuperview()
-                                strongSelf.downloadStatusControl = nil
                             }
                             strongSelf?.needsLayout = true
                         }
@@ -322,7 +358,8 @@ class PeerMediaFileRowView : PeerMediaRowView {
                             deinitDownloadControls()
                             strongSelf.actionView.update(item.actionLayoutLocal)
                         case .Remote:
-                            initDownloadControlIfNeeded()
+                            deinitProgressControl()
+                            initStatusControlIfNeeded()
                             strongSelf.downloadStatusControl?.image = theme.icons.peerMediaDownloadFileStart
                             strongSelf.actionView.update(item.actionLayout)
                             break

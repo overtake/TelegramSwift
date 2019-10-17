@@ -45,14 +45,14 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     var sectionId:Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .custom(20)))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(detectBold: false)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -120,13 +120,17 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
         
         controller?.validateInputValues()
         
-    }, cancelTitle: L10n.modalCancel, height: 50)
+    }, drawBorder: true, height: 50, singleButton: true)
     
     controller.getBackgroundColor = {
-        theme.colors.background
+        theme.colors.listBackground
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: interactions, size: NSMakeSize(300, 300))
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     dismiss = { [weak modalController] in
         modalController?.close()

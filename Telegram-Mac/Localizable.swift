@@ -1187,7 +1187,7 @@ internal final class L10n {
   internal static func chatDateScheduledFor(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Date.ScheduledFor", p1)
   }
-  /// Scheduled for Today
+  /// Scheduled for today
   internal static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
@@ -3055,6 +3055,8 @@ internal final class L10n {
   internal static var messagesReplyLoadingHeader: String  { return L10n.tr("Localizable", "Messages.ReplyLoading.Header") }
   /// Loading...
   internal static var messagesReplyLoadingLoading: String  { return L10n.tr("Localizable", "Messages.ReplyLoading.Loading") }
+  /// Apply
+  internal static var modalApply: String  { return L10n.tr("Localizable", "Modal.Apply") }
   /// Cancel
   internal static var modalCancel: String  { return L10n.tr("Localizable", "Modal.Cancel") }
   /// Copy Link
@@ -4463,12 +4465,18 @@ internal final class L10n {
   internal static var reportReasonChildAbuse: String  { return L10n.tr("Localizable", "ReportReason.ChildAbuse") }
   /// Copyright
   internal static var reportReasonCopyright: String  { return L10n.tr("Localizable", "ReportReason.Copyright") }
+  /// Other
+  internal static var reportReasonOther: String  { return L10n.tr("Localizable", "ReportReason.Other") }
   /// Pornography
   internal static var reportReasonPorno: String  { return L10n.tr("Localizable", "ReportReason.Porno") }
+  /// Report
+  internal static var reportReasonReport: String  { return L10n.tr("Localizable", "ReportReason.Report") }
   /// Spam
   internal static var reportReasonSpam: String  { return L10n.tr("Localizable", "ReportReason.Spam") }
   /// Violence
   internal static var reportReasonViolence: String  { return L10n.tr("Localizable", "ReportReason.Violence") }
+  /// Description
+  internal static var reportReasonOtherPlaceholder: String  { return L10n.tr("Localizable", "ReportReason.Other.Placeholder") }
   /// Settings
   internal static var requestAccesErrorConirmSettings: String  { return L10n.tr("Localizable", "RequestAcces.Error.Conirm.Settings") }
   /// Telegram needs access to your microphone to make calls
@@ -5021,6 +5029,10 @@ internal final class L10n {
   internal static var selectAreaControlDimensionOriginal: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Original") }
   /// Square
   internal static var selectAreaControlDimensionSquare: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Square") }
+  /// Search Members
+  internal static var selectPeersTitleSearchMembers: String  { return L10n.tr("Localizable", "SelectPeers.Title.SearchMembers") }
+  /// Select Chat
+  internal static var selectPeersTitleSelectChat: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectChat") }
   /// clear
   internal static var separatorClear: String  { return L10n.tr("Localizable", "Separator.Clear") }
   /// show less
@@ -6173,9 +6185,9 @@ internal final class L10n {
   internal static var walletSplashSave24WordsConfirmThrid: String  { return L10n.tr("Localizable", "Wallet.Splash.Save24Words.Confirm.Thrid") }
   /// Import Existing Wallet
   internal static var walletSplashSecurityChangedButton: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Button") }
-  /// Unfortunately, your wallet is no longer available. To restore your wallet, click "Import Existing Wallet".\n\n[Create New Wallet](CreateNew)
+  /// Unfortunately, the wallet you connected to this app couldn't be accessed. To restore your wallet, click "Import Existing Wallet.".\n\n[Create New Wallet](CreateNew)
   internal static var walletSplashSecurityChangedDesc: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Desc") }
-  /// Unavailable
+  /// Wallet
   internal static var walletSplashSecurityChangedHeader: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Header") }
   /// Wallet is Unavailable
   internal static var walletSplashSecurityChangedTitle: String  { return L10n.tr("Localizable", "Wallet.Splash.SecurityChanged.Title") }

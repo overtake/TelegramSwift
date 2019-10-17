@@ -191,7 +191,7 @@ class UserInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         
-        let result = selectModalPeers(context: context, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+        let result = selectModalPeers(context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
             if let peerId = peerIds.first {
                 return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                     return confirmSignal(for: context.window, information: L10n.confirmAddBotToGroup(peer.displayTitle))

@@ -285,7 +285,7 @@ class PeerInfoController: EditableViewController<TableView> {
     }
     
     func searchSupergroupUsers() {
-        _ = (selectModalPeers(context: context, title: "", behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId {
                 self?._channelArguments.peerInfo(peerId)
             }

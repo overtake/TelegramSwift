@@ -98,7 +98,12 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             }
             return .never()
             } |> deliverOnMainQueue).start(next: { [weak self] lock in
-                
+                for subview in window.contentView!.subviews {
+                    if let subview = subview as? SplitView {
+                        subview.isHidden = lock
+                        break
+                    }
+                }
                 self?.updateLocked { previous -> LockNotificationsData in
                     return previous.withUpdatedPasscodeLock(lock)
                 }

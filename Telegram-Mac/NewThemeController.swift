@@ -150,9 +150,13 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.newThemeCreate, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
+    }, drawBorder: true, height: 50, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     close = { [weak modalController] in
         modalController?.modal?.close()

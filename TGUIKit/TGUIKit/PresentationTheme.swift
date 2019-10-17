@@ -632,6 +632,8 @@ public class ColorPalette : Equatable {
 //        string += "accentList = \(self.accentList.map{$0.hexString}.joined(separator: ","))\n"
         for prop in self.listProperties() {
             if let color = self.colorFromStringVariable(prop) {
+                var prop = prop
+                _ = prop.removeFirst()
                 if prop == "chatBackground" {
                     string += "//Parameter is usually using for minimalistic chat mode, but also works as fallback for bubbles if wallpaper doesn't installed\n"
                 }
@@ -2119,7 +2121,7 @@ private final class MojavePalette : ColorPalette {
         return NSColor.controlBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var chatBackground: NSColor {
-        return NSColor.underPageBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!.lighter(amount: 0.1)
+        return NSColor.controlBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var border: NSColor {
        return NSColor(0x3d3d3d) //NSColor.separatorColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
@@ -2198,6 +2200,10 @@ private final class MojavePalette : ColorPalette {
     
     override var linkBubble_incoming: NSColor {
         return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+    }
+    
+    override var waveformForegroundBubble_outgoing: NSColor {
+        return grayIconBubble_outgoing
     }
     
     override var fileActivityForegroundBubble_incoming: NSColor {

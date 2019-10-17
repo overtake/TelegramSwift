@@ -22,14 +22,39 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     var icon:TelegramMediaImage?
     var iconArguments:TransformImageArguments?
     var thumb:CGImage? = nil
-    let readPercent: Int32?
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, saveToRecent: Bool = true, readPercent: Int32? = nil) {
-        self.readPercent = readPercent
-        super.init(initialSize,interface,object)
-        iconSize = NSMakeSize(50, 50)
-        self.contentInset = NSEdgeInsets(left: 70, right: 10, top: 5, bottom: 5)
-        let isFullRead = readPercent == 100
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
+        super.init(initialSize,interface,object, viewType: viewType)
 
+        
+        let attributed = NSMutableAttributedString()
+        loop: for attr in message.attributes {
+           if let attr = attr as? TextEntitiesMessageAttribute {
+               for entity in attr.entities {
+                   inner: switch entity.type {
+                   case .Email:
+                       let link = message.text.nsstring.substring(with: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                       let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
+                       attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
+                       break loop
+                   case .Url:
+                       let link = message.text.nsstring.substring(with: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                       let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
+                       attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
+                       break loop
+                   case let .TextUrl(url):
+                       let range = attributed.append(string: url, color: theme.colors.link, font: .normal(.text))
+                       attributed.addAttribute(.link, value: inApp(for: url as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
+                       break loop
+                   default:
+                       break inner
+                   }
+               }
+               break
+           }
+       }
+       linkLayout = TextViewLayout(attributed, maximumNumberOfLines: 1, truncationType: .end)
+       linkLayout?.interactions = globalLinkExecutor
+        
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 
@@ -52,51 +77,29 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                     icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
                     
                     let imageCorners = ImageCorners(radius: .cornerRadius)
-                    iconArguments = TransformImageArguments(corners: imageCorners, imageSize: iconImageRepresentation.dimensions.aspectFilled(iconSize), boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
+                    iconArguments = TransformImageArguments(corners: imageCorners, imageSize: iconImageRepresentation.dimensions.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
                 }
                 
                
                 let attributedText = NSMutableAttributedString()
 
-                let _ = attributedText.append(string: content.title ?? content.websiteName ?? hostName, color: isFullRead ? theme.colors.grayText : theme.colors.text, font: .medium(.text))
+                let _ = attributedText.append(string: content.title ?? content.websiteName ?? hostName, color: theme.colors.text, font: .medium(.text))
                 
                 if let text = content.text {
                     let _ = attributedText.append(string: "\n")
-                    let _ = attributedText.append(string: text, color: isFullRead ? theme.colors.grayText : theme.colors.text, font: NSFont.normal(FontSize.text))
+                    let _ = attributedText.append(string: text, color: theme.colors.text, font: .normal(.short))
                     attributedText.detectLinks(type: [.Links], context: interface.context, openInfo: interface.openInfo)
                 }
                 
                 textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
-                
-                
-                let linkAttributed: NSMutableAttributedString = parseMarkdownIntoAttributedString("[\(content.displayUrl)](\(content.displayUrl))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
-                })).mutableCopy() as! NSMutableAttributedString
-                
-                
-                linkLayout = TextViewLayout(linkAttributed, maximumNumberOfLines: 1, truncationType: .end)
             }
         } else {
-            
-            var link:String = ""
-            let links = ObjcUtils.textCheckingResults(forText: message.text, highlightMentionsAndTags: false, highlightCommands: false, dotInMention: false)
-            if let links = links, !links.isEmpty {
-                let range = (links[0] as! NSValue).rangeValue
-                link = message.text.nsstring.substring(with: range)
-                
-                let attr = NSMutableAttributedString()
-                _ = attr.append(string: link, color: theme.colors.link, font: .normal(.text))
-                 attr.detectLinks(type: [.Links])
-                
-                linkLayout = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end)
-            }
-            
-            var hostName: String = link
-            if let url = URL(string: link), let host = url.host, !host.isEmpty {
+            var hostName: String = attributed.string
+            if let url = URL(string: attributed.string), let host = url.host, !host.isEmpty {
                 hostName = host
                 firstCharacter = host.prefix(1)
             } else {
-                firstCharacter = link.prefix(1)
+                firstCharacter = "L"
             }
             
             let attributedText = NSMutableAttributedString()
@@ -105,14 +108,15 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
             if !hostName.isEmpty {
                 let _ = attributedText.append(string: "\n")
             }
-            let _ = attributedText.append(string: message.text, color: theme.colors.text, font: NSFont.normal(.text))
-
+            if message.text != linkLayout?.attributedString.string {
+                let _ = attributedText.append(string: message.text, color: theme.colors.text, font: .normal(.short))
+            }
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
            
         }
         
         if icon == nil {
-            thumb = generateMediaEmptyLinkThumb(color: theme.colors.border, host: firstCharacter?.uppercased() ?? "H")
+            thumb = generateMediaEmptyLinkThumb(color: theme.colors.listBackground, textColor: theme.colors.listGrayText, host: firstCharacter?.uppercased() ?? "H")
         }
         
         textLayout?.interactions = globalLinkExecutor
@@ -137,7 +141,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         linkLayout?.interactions = TextViewInteractions(processURL: { [weak self] url in
             if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
                 if self.hasInstantPage {
-                    showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: saveToRecent))
+                    showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
                     return
                 }
             }
@@ -178,8 +182,8 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         
         let result = super.makeSize(width, oldWidth: oldWidth)
-        textLayout?.measure(width: width - contentInset.left - contentInset.right)
-        linkLayout?.measure(width: width - contentInset.left - contentInset.right - (hasInstantPage ? 10 : 0))
+        textLayout?.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        linkLayout?.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right - (hasInstantPage ? 10 : 0))
         
         var textSizes:CGFloat = 0
         if let tLayout = textLayout {
@@ -188,7 +192,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         if let lLayout = linkLayout {
             textSizes += lLayout.layoutSize.height
         }
-        contentSize = NSMakeSize(width, max(textSizes + contentInset.top + contentInset.bottom + 2.0,60))
+        contentSize = NSMakeSize(width, max(textSizes + contentInset.top + contentInset.bottom + 2.0, 40))
         
         return result
     }
@@ -205,10 +209,8 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     private var textView:TextView
     private var linkView:TextView
     private var ivImage: ImageView? = nil
-    private var progressTextView: TextView?
-    private var readProgressView: RadialProgressView?
     required init(frame frameRect: NSRect) {
-        imageView = TransformImageView(frame:NSMakeRect(10, 5, 50.0, 50.0))
+        imageView = TransformImageView(frame:NSMakeRect(0, 0, PeerMediaIconSize.width, PeerMediaIconSize.height))
         textView = TextView()
         linkView = TextView()
         super.init(frame: frameRect)
@@ -228,8 +230,6 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             linkView.isHidden = item.linkLayout == nil
             linkView.update(item.linkLayout, origin: NSMakePoint(item.contentInset.left + (item.hasInstantPage ? 10 : 0),textView.frame.maxY + 2.0))
             ivImage?.setFrameOrigin(item.contentInset.left, textView.frame.maxY + 6.0)
-            readProgressView?.center()
-            progressTextView?.center()
         }
     }
     
@@ -278,34 +278,6 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             
             if item.icon == nil {
                 imageView.layer?.contents = item.thumb
-            }
-            
-            if let readProgress = item.readPercent {
-                if readProgressView == nil {
-                    readProgressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: theme.colors.accent, icon: nil, lineWidth: 3), twist: false, size: NSMakeSize(item.iconSize.width, item.iconSize.height))
-                    imageView.addSubview(readProgressView!)
-                    readProgressView?.isEventLess = true
-                    readProgressView?.userInteractionEnabled = false
-                }
-                readProgressView?.state = .ImpossibleFetching(progress: readProgress == 100 ? 0 : Float(readProgress) / 100.0, force: true)
-                
-                
-                if progressTextView == nil {
-                    progressTextView = TextView()
-                    imageView.addSubview(progressTextView!)
-                }
-                let layout = TextViewLayout(.initialize(string: readProgress == 100 ? L10n.articleRead : "\(readProgress)%", color: .white, font: .bold(11)))
-                layout.measure(width: .greatestFiniteMagnitude)
-                progressTextView?.backgroundColor = .clear
-                progressTextView?.update(layout)
-                progressTextView?.isEventLess = true
-                progressTextView?.userInteractionEnabled = false
-                
-            } else {
-                readProgressView?.removeFromSuperview()
-                readProgressView = nil
-                progressTextView?.removeFromSuperview()
-                progressTextView = nil
             }
             
             needsLayout = true

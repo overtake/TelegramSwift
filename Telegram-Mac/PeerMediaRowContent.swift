@@ -12,19 +12,17 @@ import TelegramCoreMac
 import PostboxMac
 import SwiftSignalKitMac
 
-class PeerMediaRowItem: TableRowItem {
+let PeerMediaIconSize:NSSize = NSMakeSize(40, 40)
+
+class PeerMediaRowItem: GeneralRowItem {
     
-    var iconSize:NSSize = NSZeroSize
-    var contentInset:NSEdgeInsets = NSEdgeInsets(left: 60.0, right: 10, top: 5, bottom: 5)
     
-    var contentSize:NSSize = NSMakeSize(0, 50)
+    var contentInset:NSEdgeInsets = NSEdgeInsets(left: 50.0, right: 0, top: 0, bottom: 0)
     
-    override var stableId: AnyHashable {
-        return entry.stableId
-    }
+    var contentSize:NSSize = NSMakeSize(0, 40)
     
     override var height: CGFloat {
-        return contentSize.height
+        return contentSize.height + viewType.innerInset.top + viewType.innerInset.bottom
     }
     
     private var entry:PeerMediaSharedEntry
@@ -32,24 +30,24 @@ class PeerMediaRowItem: TableRowItem {
     let interface:ChatInteraction
     let automaticDownload: AutomaticMediaDownloadSettings
     
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry) {
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
         self.entry = object
         self.interface = interface
-        if case let .messageEntry(message, automaticDownload) = object {
+        if case let .messageEntry(message, automaticDownload, _) = object {
             self.message = message
             self.automaticDownload = automaticDownload
         } else {
             fatalError("entry haven't message")
         }
         
-        super.init(initialSize)
+        super.init(initialSize, stableId: object.stableId, viewType: viewType)
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
 
         var items:[ContextMenuItem] = []
         if canForwardMessage(message, account: interface.context.account) {
-            items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [weak self] in
+            items.append(ContextMenuItem(L10n.messageContextForward, handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.forwardMessages([strongSelf.message.id])
                 }
@@ -57,14 +55,14 @@ class PeerMediaRowItem: TableRowItem {
         }
         
         if canDeleteMessage(message, account: interface.context.account) {
-            items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [weak self] in
+            items.append(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.deleteMessages([strongSelf.message.id])
                 }
             }))
         }
         
-        items.append(ContextMenuItem(tr(L10n.messageContextGoto), handler: { [weak self] in
+        items.append(ContextMenuItem(L10n.messageContextGoto, handler: { [weak self] in
             if let strongSelf = self {
                 strongSelf.interface.focusMessageId(nil, strongSelf.message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
             }
@@ -74,26 +72,68 @@ class PeerMediaRowItem: TableRowItem {
         return .single(items)
     }
     
+    
     override func viewClass() -> AnyClass {
         return PeerMediaRowView.self
     }
+    
+    var separatorOffset: CGFloat {
+        return 10 + 40 + viewType.innerInset.left
+    }
 }
 
-private let selectedImage = #imageLiteral(resourceName: "Icon_SelectionChecked").precomposed()
-private let unselectedImage = #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed()
-
 class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
-    
+    let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     var contentView:View = View()
-    private var selectingControl:SelectingControl = SelectingControl(unselectedImage:unselectedImage, selectedImage:selectedImage)
+    private let separatorView = View()
+    private var selectingControl:SelectingControl = SelectingControl(unselectedImage:theme.icons.chatToggleUnselected, selectedImage:theme.icons.chatToggleSelected)
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        super.addSubview(selectingControl)
-        super.addSubview(contentView)
+        containerView.addSubview(selectingControl)
+        containerView.addSubview(contentView)
+        containerView.addSubview(separatorView)
+        super.addSubview(containerView)
         contentView.displayDelegate = self
         selectingControl.centerY(x:-selectingControl.frame.width)
+        
+        containerView.set(handler: { [weak self] _ in
+            if let item = self?.item as? PeerMediaRowItem {
+               if item.interface.presentation.state == .selecting {
+                   item.interface.update({$0.withToggledSelectedMessage(item.message.id)})
+               }
+           }
+        }, for: .Click)
 
+    }
+    
+    override func updateColors() {
+        guard let item = item as? PeerMediaRowItem else {
+            return
+        }
+        self.backgroundColor = item.viewType.rowBackground
+        self.containerView.backgroundColor = backdorColor
+        self.separatorView.backgroundColor = theme.colors.border
+    }
+    
+    override func layout() {
+        guard let item = item as? PeerMediaRowItem else {
+            return
+        }
+        
+        let contentX = item.interface.presentation.state == .selecting ? item.viewType.innerInset.left + selectingControl.frame.width + item.viewType.innerInset.left : item.viewType.innerInset.left
+        
+        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
+        self.containerView.setCorners(item.viewType.corners)
+        
+        self.contentView.setFrameSize(NSMakeSize(self.containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, self.containerView.frame.height - item.viewType.innerInset.bottom - item.viewType.innerInset.top))
+        self.contentView.centerY(x: contentX)
+        
+        self.separatorView.frame = NSMakeRect(item.separatorOffset + (item.interface.presentation.state == .selecting ? selectingControl.frame.width + item.viewType.innerInset.left : 0), self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.separatorOffset - item.viewType.innerInset.right, .borderSize)
+        
+        selectingControl.centerY(x: item.interface.presentation.state == .selecting ? item.viewType.innerInset.left : -selectingControl.frame.width)
+
+        super.layout()
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {
@@ -115,21 +155,9 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
         
-        if layer == contentView.layer {
-            
-            if let item = self.item as? PeerMediaRowItem {
-                ctx.setFillColor(theme.colors.border.cgColor)
-                ctx.fill(NSMakeRect(item.contentInset.left, layer.frame.height - .borderSize, layer.frame.width - item.contentInset.left - item.contentInset.right, .borderSize))
-            }
-        }
     }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        contentView.setFrameSize(newSize)
-    }
+
     
 
     override func set(item: TableRowItem, animated: Bool) {
@@ -140,8 +168,11 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
        
         if let item = self.item as? PeerMediaRowItem {
             item.interface.add(observer: self)
-            updateSelectingMode(with: item.interface.presentation.state == .selecting)
+            updateSelectingMode(with: item.interface.presentation.state == .selecting, animated: animated)
+            
+            separatorView.isHidden = !item.viewType.hasBorder
         }
+        needsLayout = true
     }
     
     override func viewDidMoveToSuperview() {
@@ -151,34 +182,30 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
                 item.interface.remove(observer: self)
             } else {
                 item.interface.add(observer: self)
+                updateSelectingMode(with: item.interface.presentation.state == .selecting, animated: !NSIsEmptyRect(visibleRect))
             }
         }
     }
-    
-    override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with: event)
-        if let item = item as? PeerMediaRowItem {
-            if item.interface.presentation.state == .selecting {
-                item.interface.update({$0.withToggledSelectedMessage(item.message.id)})
-            }
-        }
-    }
-    
-   
     
     func updateSelectingMode(with selectingMode:Bool, animated:Bool = false) {
         
         if let item = item as? PeerMediaRowItem {
+            
+            containerView.userInteractionEnabled = selectingMode
+
             let to:NSPoint
             if selectingMode {
-                to = NSMakePoint(35,0)
+                to = NSMakePoint(item.viewType.innerInset.left + selectingControl.frame.width + item.viewType.innerInset.left, self.contentView.frame.minY)
             } else {
-                to = NSMakePoint(0,0)
+                to = NSMakePoint(item.viewType.innerInset.left, self.contentView.frame.minY)
             }
             
             contentView.change(pos: to, animated: animated)
             let selectingFrom = NSMakePoint(-selectingControl.frame.width,selectingControl.frame.minY)
-            let selectingTo = NSMakePoint(20.0 - floorToScreenPixels(backingScaleFactor, selectingControl.frame.width/2.0),selectingControl.frame.minY)
+            let selectingTo = NSMakePoint(item.viewType.innerInset.left, selectingControl.frame.minY)
+            
+            
+            self.separatorView.change(pos: NSMakePoint(item.separatorOffset + (selectingMode ? selectingControl.frame.width + item.viewType.innerInset.left : 0), self.containerView.frame.height - .borderSize), animated: animated)
             selectingControl.change(pos: selectingMode ? selectingTo : selectingFrom, animated: animated)
             selectingControl.set(selected: item.interface.presentation.isSelectedMessageId(item.message.id), animated: animated)
         }

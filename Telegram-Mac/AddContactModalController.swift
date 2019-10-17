@@ -164,9 +164,13 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, cancelTitle: L10n.modalCancel, drawBorder: true)
+    }, drawBorder: true, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     close = { [weak modalController] in
         modalController?.close()

@@ -296,7 +296,7 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
         })
         
     }, logout: {
-        showModal(with: InputDataModalController(LogoutViewController(context: context, f: f), modalInteractions: ModalInteractions(acceptTitle: L10n.modalCancel, drawBorder: true)), for: mainWindow)
+        showModal(with: LogoutViewController(context: context, f: f), for: context.window)
     }, username: {
         f(UsernameSettingsViewController(context))
     }, changeNumber: {

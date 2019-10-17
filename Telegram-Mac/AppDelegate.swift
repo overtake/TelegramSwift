@@ -395,8 +395,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     }
                     
                 } else if preference.systemBased {
+                    
+
+                    
                     if #available(OSX 10.14, *) {
-                        switch NSApp.effectiveAppearance.name {
+                        switch systemAppearance.name {
                         case NSAppearance.Name.aqua:
                             isEnabled = false
                         case NSAppearance.Name.darkAqua:

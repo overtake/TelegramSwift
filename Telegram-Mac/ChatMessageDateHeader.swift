@@ -27,7 +27,9 @@ func chatDateId(for timestamp:Int32) -> Int64 {
     return Int64(Calendar.autoupdatingCurrent.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
 }
 func mediaDateId(for timestamp:Int32) -> Int64 {
-    return Int64(Calendar.autoupdatingCurrent.component(.month, from: Date(timeIntervalSince1970: TimeInterval(timestamp))))
+    let startMonth = Calendar.autoupdatingCurrent.date(from: Calendar.current.dateComponents([.year, .month], from: Date(timeIntervalSince1970: TimeInterval(timestamp))))!
+    let endMonth = Calendar.autoupdatingCurrent.date(byAdding: DateComponents(month: 1, day: -1), to: startMonth)!
+    return Int64(endMonth.timeIntervalSince1970)
 }
 
 class ChatDateStickItem : TableStickItem {

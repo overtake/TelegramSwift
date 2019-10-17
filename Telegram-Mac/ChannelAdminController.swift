@@ -38,6 +38,7 @@ private enum ChannelAdminEntryStableId: Hashable {
     case roleHeader
     case role
     case roleDesc
+    case dismiss
     var hashValue: Int {
         return 0
     }
@@ -52,6 +53,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
     case role(Int32, String, String, GeneralViewType)
     case description(Int32, Int32, String, GeneralViewType)
     case changeOwnership(Int32, Int32, String, GeneralViewType)
+    case dismiss(Int32, Int32, String, GeneralViewType)
     case section(Int32)
     
     
@@ -65,6 +67,8 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             return .description(index)
         case .changeOwnership:
             return .changeOwnership
+        case .dismiss:
+            return .dismiss
         case .roleHeader:
             return .roleHeader
         case .roleDesc:
@@ -105,6 +109,12 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
+            case let .dismiss(sectionId, index, text, viewType):
+            if case .dismiss(sectionId, index, text, viewType) = rhs{
+                return true
+            } else {
+                return false
+            }
         case let .roleHeader(section, viewType):
             if case .roleHeader(section, viewType) = rhs {
                 return true
@@ -139,6 +149,8 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case .description(let sectionId, let index, _, _):
             return (sectionId * 1000) + index
         case let .changeOwnership(sectionId, index, _, _):
+            return (sectionId * 1000) + index
+            case let .dismiss(sectionId, index, _, _):
             return (sectionId * 1000) + index
         case .rightItem(let sectionId, let index, _, _, _, _, _, _):
             return (sectionId * 1000) + Int32(index) + 10
@@ -178,9 +190,9 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
                 arguments.cantEditError()
             })
         case let .changeOwnership(_, _, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, viewType: viewType, action: {
-                arguments.transferOwnership()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, type: .next, viewType: viewType, action: arguments.transferOwnership)
+        case let .dismiss(_, _, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: redActionButton, type: .next, viewType: viewType, action: arguments.dismissAdmin)
         case let .roleHeader(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.channelAdminRoleHeader, viewType: viewType)
         case let .role(_, text, placeholder, viewType):
@@ -193,7 +205,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case let .roleDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: "", viewType: viewType)
         case let .description(_, _, name, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: name, viewType: viewType)//GeneralInteractedRowItem(initialSize, stableId: stableId, name: name)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: name, viewType: viewType)
         }
         //return TableRowItem(initialSize)
     }
@@ -421,8 +433,6 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                         entries.append(.section(sectionId))
                         sectionId += 1
                         entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup, .singleItem))
-                        entries.append(.section(sectionId))
-                        sectionId += 1
                     }
                 }
             }
@@ -467,6 +477,8 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights, .textBottomItem))
             descId += 1
         }
+        
+        
         
     } else if let group = channelView.peers[channelView.peerId] as? TelegramGroup, let admin = adminView.peers[adminView.peerId] {
         entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence, .singleItem))
@@ -537,11 +549,39 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     entries.append(.section(sectionId))
                     sectionId += 1
                     entries.append(.changeOwnership(sectionId, descId, L10n.channelAdminTransferOwnershipGroup, .singleItem))
-                    entries.append(.section(sectionId))
-                    sectionId += 1
+                    descId += 1
                 }
             }
         }
+    }
+    
+    var canDismiss: Bool = false
+    if let channel = peerViewMainPeer(channelView) as? TelegramChannel {
+        
+        if let initialParticipant = initialParticipant {
+            if channel.flags.contains(.isCreator) {
+                canDismiss = initialParticipant.adminInfo != nil
+            } else {
+                switch initialParticipant {
+                case .creator:
+                    break
+                case let .member(_, _, adminInfo, _, _):
+                    if let adminInfo = adminInfo {
+                        if adminInfo.promotedBy == accountPeerId || adminInfo.canBeEditedByAccountPeer {
+                            canDismiss = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if canDismiss {
+        entries.append(.section(sectionId))
+        sectionId += 1
+        
+        entries.append(.dismiss(sectionId, descId, L10n.channelAdminDismiss, .singleItem))
+        descId += 1
     }
     
     entries.append(.section(sectionId))
@@ -560,7 +600,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminEntr
 }
 
 
-class ChannelAdminController: ModalViewController {
+class ChannelAdminController: TableModalViewController {
     private var arguments: ChannelAdminControllerArguments?
     private let context:AccountContext
     private let peerId:PeerId
@@ -582,21 +622,6 @@ class ChannelAdminController: ModalViewController {
         bar = .init(height : 0)
     }
     
-    override var dynamicSize: Bool {
-        return true
-    }
-    
-    override func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.listHeight)), animated: false)
-    }
-    
-    override func viewClass() -> AnyClass {
-        return TableView.self
-    }
-    
-    private var genericView:TableView {
-        return self.view as! TableView
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -614,8 +639,6 @@ class ChannelAdminController: ModalViewController {
         let updated = self.updated
         let upgradedToSupergroup = self.upgradedToSupergroup
 
-        
-        
 
         let initialValue = ChannelAdminControllerState(rank: initialParticipant?.rank, initialRank: initialParticipant?.rank)
         let stateValue = Atomic(value: initialValue)
@@ -837,10 +860,6 @@ class ChannelAdminController: ModalViewController {
                 button.isEnabled = values.canEdit
                 button.set(text: L10n.navigationDone, for: .Normal)
             }
-            self?.modal?.interactions?.updateCancel { button in
-                button.set(text: values.canDismiss ? L10n.channelAdminDismiss : "", for: .Normal)
-                button.set(color: values.canDismiss ? theme.colors.redUI : theme.colors.accent, for: .Normal)
-            }
             
             self?.okClick = {
                 if let channel = values.channelView.peers[values.channelView.peerId] as? TelegramChannel {
@@ -1016,11 +1035,6 @@ class ChannelAdminController: ModalViewController {
         
     }
     
-    private func updateSize(_ animated: Bool) {
-        if let contentSize = self.window?.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, genericView.listHeight)), animated: animated)
-        }
-    }
     
     deinit {
         disposable.dispose()
@@ -1051,9 +1065,7 @@ class ChannelAdminController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
              self?.okClick?()
-        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
-            self?.arguments?.dismissAdmin()
-        }, drawBorder: true, height: 50)
+        }, drawBorder: true, height: 50, singleButton: true)
     }
 }
 

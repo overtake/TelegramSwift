@@ -1443,15 +1443,21 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         return .invoked
     }
     
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: {  [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: self.defaultTitle), right: nil)
+    }
+    
     override var modalInteractions: ModalInteractions? {
         if behavior.limit == 1 {
-            return ModalInteractions(acceptTitle: L10n.modalCancel, drawBorder: true, height: 40)
+            return nil
         } else {
             return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }
-            }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 40)
+            }, drawBorder: true, height: 50, singleButton: true)
         }
     }
     

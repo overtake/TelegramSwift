@@ -103,10 +103,10 @@ private class ModalInteractionsContainer : View {
         backgroundColor = theme.colors.background
         
         if interactions.singleButton {
-            acceptView.set(background: presentation.colors.background, for: .Normal)
-            acceptView.set(background: presentation.colors.grayForeground.withAlphaComponent(0.25), for: .Highlight)
+            acceptView.set(background: theme.colors.background, for: .Normal)
+            acceptView.set(background: theme.colors.grayForeground.withAlphaComponent(0.25), for: .Highlight)
         } else {
-            acceptView.set(background: presentation.colors.background, for: .Normal)
+            acceptView.set(background: theme.colors.background, for: .Normal)
         }
     }
     
@@ -278,6 +278,19 @@ private final class ModalHeaderView: View {
             addSubview(rightButton!)
         }
         
+        if let left = data.left {
+            leftButton = ImageButton()
+            if let image = left.image {
+                leftButton?.set(image: image, for: .Normal)
+            }
+            leftButton?.set(handler: { _ in
+                left.handler?()
+            }, for: .Click)
+            
+            _ = leftButton?.sizeToFit()
+            addSubview(leftButton!)
+        }
+        
         addSubview(titleView)
     }
     
@@ -287,6 +300,11 @@ private final class ModalHeaderView: View {
         if let rightButton = rightButton {
             additionalSize += rightButton.frame.width * 2
             rightButton.centerY(x: frame.width - rightButton.frame.width - 20)
+        }
+        
+        if let leftButton = leftButton {
+            additionalSize += leftButton.frame.width * 2
+            leftButton.centerY(x: 20)
         }
         
         titleView.layout?.measure(width: frame.width - 40 - additionalSize)
@@ -322,6 +340,9 @@ private final class ModalHeaderView: View {
 
             if let image = header.right?.image {
                 rightButton?.set(image: image, for: .Normal)
+            }
+            if let image = header.left?.image {
+                leftButton?.set(image: image, for: .Normal)
             }
         }
         needsLayout = true

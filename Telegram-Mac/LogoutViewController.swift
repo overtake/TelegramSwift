@@ -76,11 +76,11 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_log_out, data: InputDataGeneralData(name: L10n.logoutOptionsLogOut, color: theme.colors.redUI, viewType: .singleItem, action: arguments.logout)))
-    index += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsLogOutInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-    index += 1
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_log_out, data: InputDataGeneralData(name: L10n.logoutOptionsLogOut, color: theme.colors.redUI, viewType: .singleItem, action: arguments.logout)))
+//    index += 1
+//
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsLogOutInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+//    index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -89,7 +89,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     return entries
 }
 
-func LogoutViewController(context: AccountContext, f: @escaping((ViewController)) -> Void) -> InputDataController {
+func LogoutViewController(context: AccountContext, f: @escaping((ViewController)) -> Void) -> InputDataModalController {
     
     let state: ValuePromise<LogoutControllerState> = ValuePromise(LogoutControllerState())
     let stateValue: Atomic<LogoutControllerState> = Atomic(value: LogoutControllerState())
@@ -97,6 +97,8 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
     let updateState:((LogoutControllerState)->LogoutControllerState) -> Void = { f in
         state.set(stateValue.modify(f))
     }
+    
+    
     
     let arguments = LogoutControllerArguments(addAccount: {
         let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
@@ -135,6 +137,22 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         return logoutEntries(state: state, activeAccounts: activeAccounts, arguments: arguments)
     }
     
+    let controller = InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.logoutOptionsTitle, hasDone: false)
     
-    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.logoutOptionsTitle, hasDone: false)
+    
+    let modalController = InputDataModalController(controller, modalInteractions: ModalInteractions(acceptTitle: L10n.logoutOptionsLogOut, accept: {
+        arguments.logout()
+    }, drawBorder: true, height: 50, singleButton: true))
+    
+    controller.afterTransaction = { [weak modalController] controller in
+        modalController?.modalInteractions?.updateDone { button in
+            button.set(color: theme.colors.redUI, for: .Normal)
+        }
+    }
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+           modalController?.closePopover()
+    })
+    
+    return modalController
 }

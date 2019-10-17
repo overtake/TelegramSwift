@@ -160,7 +160,7 @@ func InlineLoginController(context: AccountContext, url: String, originalURL: St
             authorize(state.options.contains(.allowMessages))
         }
         close?()
-    }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
+    }, drawBorder: true, height: 50, singleButton: true)
     
     let controller = InputDataController(dataSignal: signal, title: L10n.botInlineAuthHeader)
     
@@ -169,6 +169,10 @@ func InlineLoginController(context: AccountContext, url: String, originalURL: St
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: interactions)
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     close = { [weak modalController] in
         modalController?.close()

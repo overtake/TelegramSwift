@@ -379,9 +379,9 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         input.font = .normal(.text)
         container.addSubview(input)
         container.addSubview(placeholder)
-        container.layer?.cornerRadius = .cornerRadius
+        container.layer?.cornerRadius = 10
         wantsLayer = true
-        self.layer?.cornerRadius = .cornerRadius
+        self.layer?.cornerRadius = 10
         self.layer?.backgroundColor = presentation.colors.grayBackground.cgColor
         updateLocalizationAndTheme(theme: presentation)
     }

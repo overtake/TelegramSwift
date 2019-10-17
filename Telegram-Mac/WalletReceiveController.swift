@@ -115,7 +115,7 @@ func WalletReceiveController(context: AccountContext, tonContext: TonContext, ad
     
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.walletReceiveTitle)
     
-    controller.rightModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
         getModalController?()?.close()
     })
     

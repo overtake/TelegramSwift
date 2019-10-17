@@ -452,6 +452,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         genericView.needUpdateVisibleAfterScroll = true
         genericView.border = [.Right]
         
+        genericView.getBackgroundColor = {
+            .clear
+        }
+        
         let context = self.context
         let options = self.options
 
@@ -733,8 +737,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     override func initializer() -> TableView {
-        let vz = TableView.self
-        //controller.bar.height
         return TableView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), drawBorder: true);
     }
     

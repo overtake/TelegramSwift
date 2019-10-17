@@ -406,6 +406,9 @@ class PasscodeLockController: ModalViewController {
         
     }
     
+    override var containerBackground: NSColor {
+        return theme.colors.background.withAlphaComponent(1.0)
+    }
     override var handleEvents: Bool {
         return true
     }

@@ -152,7 +152,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
         modalController?.close()
     }
     
-    controller.rightModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: dismiss)
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: dismiss)
     
     Queue.mainQueue().justDispatch {
         modalInteractions.updateDone { title in
