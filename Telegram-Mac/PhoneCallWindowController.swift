@@ -131,7 +131,7 @@ private class PhoneCallWindowView : View {
         declineControl.setFrameOrigin(80, 30)
         acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80, 30)
         
-        layer?.cornerRadius = 6
+        layer?.cornerRadius = 10
         
         closeMissedControl.isHidden = true
         closeMissedControl.layer?.opacity = 0

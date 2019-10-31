@@ -75,6 +75,8 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     
+    var withToggledSelectedMessage:((ChatPresentationInterfaceState)->ChatPresentationInterfaceState)->Void = { _ in }
+    
 
     var setupReplyMessage: (MessageId?) -> Void = {_ in}
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
@@ -104,7 +106,7 @@ final class ChatInteraction : InterfaceObserver  {
     var switchInlinePeer:(PeerId, ChatInitialAction)->Void = {_,_  in}
     var showPreviewSender:([URL], Bool, NSAttributedString?)->Void = {_,_,_  in}
     var setSecretChatMessageAutoremoveTimeout:(Int32?)->Void = {_ in}
-    var toggleNotifications:()->Void = {}
+    var toggleNotifications:(Bool?)->Void = { _ in }
     var removeAndCloseChat:()->Void = {}
     var joinChannel:()->Void = {}
     var returnGroup:()->Void = {}
@@ -139,7 +141,6 @@ final class ChatInteraction : InterfaceObserver  {
     var openScheduledMessages: ()->Void = {}
     
     var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
-
     
     let loadingMessage: Promise<Bool> = Promise()
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()

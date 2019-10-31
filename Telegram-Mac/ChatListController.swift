@@ -85,18 +85,43 @@ enum UIChatListEntryId : Hashable {
     case groupId(PeerGroupId)
 }
 
+struct ChatListInputActivity : Equatable {
+    let peer: PeerEquatable
+    let activity: PeerInputActivity
+    init(_ peer: Peer, _ activity: PeerInputActivity) {
+        self.peer = PeerEquatable(peer)
+        self.activity = activity
+    }
+}
 
+struct ChatListPeerInputActivities : Equatable {
+    let activities: [PeerId: [ChatListInputActivity]]
+    
+    init(activities: [PeerId: [ChatListInputActivity]]) {
+        self.activities = activities
+    }
+    func withUpdatedActivities(_ activities: [PeerId: [ChatListInputActivity]]) -> ChatListPeerInputActivities {
+        return ChatListPeerInputActivities(activities: activities)
+    }
+}
 
+struct ChatListState: Equatable {
+    let activities: ChatListPeerInputActivities
+    
+    func updateActivities(_ f:(ChatListPeerInputActivities)->ChatListPeerInputActivities) -> ChatListState {
+        return ChatListState(activities: f(self.activities))
+    }
+}
 
 enum UIChatListEntry : Identifiable, Comparable {
-    case chat(ChatListEntry, isSponsored: Bool)
+    case chat(ChatListEntry, [ChatListInputActivity], isSponsored: Bool)
     case group(Int, PeerGroupId, [ChatListGroupReferencePeer], Message?, PeerGroupUnreadCountersCombinedSummary, TotalUnreadCountDisplayCategory, Bool, HiddenArchiveStatus)
     
     
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
-        case let .chat(entry, isSponsored):
-            if case .chat(entry, isSponsored) = rhs {
+        case let .chat(entry, activity, isSponsored):
+            if case .chat(entry, activity, isSponsored) = rhs {
                 return true
             } else {
                 return false
@@ -119,8 +144,8 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     static func < (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
-        case let .chat(lhsEntry, _):
-            if case let .chat(rhsEntry, _) = rhs {
+        case let .chat(lhsEntry, _, _):
+            if case let .chat(rhsEntry, _, _) = rhs {
                 return lhsEntry < rhsEntry
             } else {
                 return true
@@ -136,7 +161,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var stableId: UIChatListEntryId {
         switch self {
-        case let .chat(entry, _):
+        case let .chat(entry, _, _):
             return .chatId(entry.index.messageIndex.id.peerId)
         case let .group(_, groupId, _, _, _, _, _, _):
             return .groupId(groupId)
@@ -147,7 +172,7 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, state: ChatListRowState, groupId: PeerGroupId) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
         
@@ -155,7 +180,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
         
         func makeItem(_ entry: AppearanceWrapperEntry<UIChatListEntry>) -> TableRowItem {
             switch entry.entry {
-            case let .chat(inner, isSponsored):
+            case let .chat(inner, activities, isSponsored):
                 switch inner {
                 case let .HoleEntry(hole):
                     return ChatListHoleRowItem(initialSize, context, hole)
@@ -166,7 +191,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     } else if index.pinningIndex == nil {
                         pinnedType = .none
                     }
-                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, state: state, associatedGroupId: groupId)
+                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: groupId)
                 }
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
                 return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
@@ -234,7 +259,6 @@ class ChatListController : PeersListController {
     private let request = Promise<ChatListIndexRequest>()
     private let previousChatList:Atomic<ChatListView?> = Atomic(value: nil)
     private let first = Atomic(value:true)
-    private let stateValue:ValuePromise<ChatListRowState> = ValuePromise(.plain)
     private let removePeerIdGroupDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
     private let scrollDisposable = MetaDisposable()
@@ -243,7 +267,7 @@ class ChatListController : PeersListController {
     private let archivationTooltipDisposable = MetaDisposable()
     private let tooltipController: ChatListTooltipController
     private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
-    
+    private var activityStatusesDisposable:Disposable?
     private let hiddenArchiveValue: Atomic<HiddenArchiveStatus> = Atomic(value: FastSettings.archiveStatus)
     private let hiddenArchiveState: ValuePromise<HiddenArchiveStatus> = ValuePromise(FastSettings.archiveStatus, ignoreRepeated: true)
     
@@ -257,24 +281,6 @@ class ChatListController : PeersListController {
         super.viewDidLoad()
         
         
-        
-//        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
-//            guard let `self` = self else { return }
-//            let difference = position.rect.minY - self.genericView.tableView.frame.height
-//            updateHiddenStateState { isHidden in
-//                if isHidden && difference < -10 {
-//                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
-//                    return false
-//                } else if !isHidden && difference > 60 {
-//                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
-//                    return true
-//                } else {
-//                    return isHidden
-//                }
-//            }
-//        }))
-        
-        
         genericView.tableView.emptyItem = ChatListEmptyRowItem(frame.size)
         
         let initialSize = self.atomicSize
@@ -284,13 +290,109 @@ class ChatListController : PeersListController {
         let scrollUp:Atomic<Bool> = self.first
         let groupId = self.mode.groupId
         let previousEntries:Atomic<[AppearanceWrapperEntry<UIChatListEntry>]?> = Atomic(value: nil)
-        let stateValue = self.stateValue
         let animated: Atomic<Bool> = Atomic(value: false)
         let animateGroupNextTransition = self.animateGroupNextTransition
-        let previousState:Atomic<ChatListRowState> = Atomic(value: .plain)
-        
         var scroll:TableScrollState? = nil
 
+        let initialState = ChatListState(activities: ChatListPeerInputActivities(activities: [:]))
+        let statePromise:ValuePromise<ChatListState> = ValuePromise(initialState)
+        let stateValue: Atomic<ChatListState> = Atomic(value: initialState)
+        
+        let updateState:((ChatListState)->ChatListState)->Void = { f in
+            statePromise.set(stateValue.modify(f))
+        }
+        
+        
+        let postbox = context.account.postbox
+        let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
+        let previousActivities = Atomic<ChatListPeerInputActivities?>(value: nil)
+        self.activityStatusesDisposable = (context.account.allPeerInputActivities()
+            |> mapToSignal { activitiesByPeerId -> Signal<[PeerId: [ChatListInputActivity]], NoError> in
+                var foundAllPeers = true
+                var cachedResult: [PeerId: [ChatListInputActivity]] = [:]
+                previousPeerCache.with { dict -> Void in
+                    for (chatPeerId, activities) in activitiesByPeerId {
+                        var cachedChatResult: [ChatListInputActivity] = []
+                        for (peerId, activity) in activities {
+                            if let peer = dict[peerId] {
+                                cachedChatResult.append(ChatListInputActivity(peer, activity))
+                            } else {
+                                foundAllPeers = false
+                                break
+                            }
+                            cachedResult[chatPeerId] = cachedChatResult
+                        }
+                    }
+                }
+                if foundAllPeers {
+                    return .single(cachedResult)
+                } else {
+                    return postbox.transaction { transaction -> [PeerId: [ChatListInputActivity]] in
+                        var result: [PeerId: [ChatListInputActivity]] = [:]
+                        var peerCache: [PeerId: Peer] = [:]
+                        for (chatPeerId, activities) in activitiesByPeerId {
+                            var chatResult: [ChatListInputActivity] = []
+                            
+                            for (peerId, activity) in activities {
+                                if let peer = transaction.getPeer(peerId) {
+                                    chatResult.append(ChatListInputActivity(peer, activity))
+                                    peerCache[peerId] = peer
+                                }
+                            }
+                            
+                            result[chatPeerId] = chatResult
+                        }
+                        let _ = previousPeerCache.swap(peerCache)
+                        return result
+                    }
+                }
+            }
+            |> map { activities -> ChatListPeerInputActivities? in
+                return previousActivities.modify { current in
+                    var updated = false
+                    let currentList: [PeerId: [ChatListInputActivity]] = current?.activities ?? [:]
+                    if currentList.count != activities.count {
+                        updated = true
+                    } else {
+                        outer: for (peerId, currentValue) in currentList {
+                            if let value = activities[peerId] {
+                                if currentValue.count != value.count {
+                                    updated = true
+                                    break outer
+                                } else {
+                                    for i in 0 ..< currentValue.count {
+                                        if currentValue[i] != value[i] {
+                                            updated = true
+                                            break outer
+                                        }
+                                    }
+                                }
+                            } else {
+                                updated = true
+                                break outer
+                            }
+                        }
+                    }
+                    if updated {
+                        if activities.isEmpty {
+                            return nil
+                        } else {
+                            return ChatListPeerInputActivities(activities: activities)
+                        }
+                    } else {
+                        return current
+                    }
+                }
+            }
+            |> deliverOnMainQueue).start(next: { activities in
+                updateState {
+                    $0.updateActivities { _ in
+                        activities ?? ChatListPeerInputActivities(activities: [:])
+                    }
+                }
+            })
+
+        
         
         let chatHistoryView: Signal<(ChatListView, ViewUpdateType, Bool), NoError> = request.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(ChatListView, ViewUpdateType, Bool), NoError> in
             
@@ -310,15 +412,13 @@ class ChatListController : PeersListController {
         
         let queue = self.queue
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: queue, chatHistoryView, appearanceSignal, stateValue.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: queue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings -> Signal<TableUpdateTransition, NoError> in
                     
             var removeNextAnimation = value.2
             
             let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
             
             let ignoreFlags = scrollUp.swap(false)
-            
-            
             
             if !ignoreFlags || (!ignoreFlags && (previous.0 != value.0.earlierIndex || previous.1 != value.0.laterIndex) && !removeNextAnimation) {
                 scroll = nil
@@ -328,11 +428,9 @@ class ChatListController : PeersListController {
                 removeNextAnimation = false
             }
             
-            
             _ = previousChatList.swap(value.0)
             
                     
-            let stateWasUpdated = previousState.swap(state) != state
             var prepare:[(ChatListEntry, Bool)] = []
             for value in  value.0.entries {
                 prepare.append((value, false))
@@ -343,7 +441,7 @@ class ChatListController : PeersListController {
                 }
             }
             var mapped: [UIChatListEntry] = prepare.map {
-                return .chat($0, isSponsored: $1)
+                return .chat($0, state.activities.activities[$0.index.messageIndex.id.peerId] ?? [], isSponsored: $1)
             }
             if value.0.laterIndex == nil {
                 for (i, group) in value.0.groupEntries.reversed().enumerated() {
@@ -354,7 +452,7 @@ class ChatListController : PeersListController {
             
             let entries = mapped.compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
                 switch entry {
-                case let .chat(inner, isSponsored):
+                case let .chat(inner, activities, isSponsored):
                     switch inner {
                     case .HoleEntry:
                         return nil
@@ -363,19 +461,19 @@ class ChatListController : PeersListController {
                             return nil
                         } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.clearHistory]) {
                             let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6, values.7)
-                            return AppearanceWrapperEntry(entry: .chat(entry, isSponsored: isSponsored), appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                            return AppearanceWrapperEntry(entry: .chat(entry, activities, isSponsored: isSponsored), appearance: appearance)
                         } else {
-                            return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                            return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                         }
                     }
                 case .group:
-                    return AppearanceWrapperEntry(entry: entry, appearance: stateWasUpdated ? appearance.newAllocation : appearance)
+                    return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                 }
             }
             
             let prev = previousEntries.swap(entries)
             
-            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, state: state, groupId: groupId)
+            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, groupId: groupId)
         }
         
         
@@ -415,7 +513,7 @@ class ChatListController : PeersListController {
 //            #else
             context.sharedContext.bindings.mainController().isUpChatList = false
             //#endif
-           
+            self?.removeRevealStateIfNeeded(nil)
         }))
         
         
@@ -440,7 +538,10 @@ class ChatListController : PeersListController {
                     strongSelf.request.set(.single(.Index(messageIndex, nil)))
                 }
             }
+            
         })
+        
+        
         
         let previousLocation: Atomic<ChatLocation?> = Atomic(value: nil)
         globalPeerDisposable.set(context.globalPeerHandler.get().start(next: { [weak self] location in
@@ -845,6 +946,8 @@ class ChatListController : PeersListController {
             return .nothing
         }, with: self.genericView.tableView, identifier: "chat-list", priority: .high)
         
+      
+        
         if context.sharedContext.bindings.rootNavigation().stackCount == 1 {
             setHighlightEvents()
         }
@@ -925,6 +1028,7 @@ class ChatListController : PeersListController {
         reorderDisposable.dispose()
         globalPeerDisposable.dispose()
         archivationTooltipDisposable.dispose()
+        activityStatusesDisposable?.dispose()
     }
     
     

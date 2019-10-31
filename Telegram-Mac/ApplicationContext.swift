@@ -155,6 +155,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }
         
         
+        
         context.account.importableContacts.set(.single([:]))
         
         self.splitView = SplitView(frame: window.contentView!.bounds)
@@ -194,7 +195,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         context.sharedContext.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
-                fatalError("Cannot use bindings. Application context is not exists")
+                return MajorNavigationController(ViewController.self, ViewController(), window)
             }
             return self.rightController
         }, mainController: { [weak self] () -> MainViewController in
@@ -483,8 +484,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }
         
         
+        
        // _ready.set(.single(true))
     }
+    
+
     
     func runLaunchAction() {
         if let launchAction = launchAction {
@@ -592,6 +596,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         chatUndoManagerDisposable.dispose()
         appUpdateDisposable.dispose()
         context.cleanup()
+        NotificationCenter.default.removeObserver(self)
     }
     
 }

@@ -110,7 +110,7 @@ import SwiftSignalKitMac
  compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
  compose.layer?.cornerRadius = .cornerRadius
  compose.setFrameSize(NSMakeSize(40, 30))
- proxyConnecting.progressColor = theme.colors.blueIcon
+ proxyConnecting.progressColor = theme.colors.accentIcon
  proxyConnecting.lineWidth = 1.0
  
  separatorView.backgroundColor = theme.colors.border
@@ -257,8 +257,8 @@ class PeerListContainerView : View {
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
         compose.setFrameSize(NSMakeSize(40, 30))
-        proxyConnecting.progressColor = theme.colors.blueIcon
-        proxyConnecting.lineWidth = 1.0
+        proxyConnecting.progressColor = theme.colors.accentIcon
+//        proxyConnecting.lineWidth = 1.0
         super.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -479,17 +479,18 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.proxyButton.set(handler: {  _ in
             if let settings = settings {
-                if settings.0.enabled {
-                    openProxySettings()
-                } else {
-                    actionsDisposable.add(updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> ProxySettings in
-                        if let first = current.servers.first {
-                            return current.withUpdatedActiveServer(first).withUpdatedEnabled(true)
-                        } else {
-                            return current
-                        }
-                    }).start())
-                }
+                 openProxySettings()
+//                if settings.0.enabled {
+//
+//                } else {
+//                    actionsDisposable.add(updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> ProxySettings in
+//                        if let first = current.servers.first {
+//                            return current.withUpdatedActiveServer(first).withUpdatedEnabled(true)
+//                        } else {
+//                            return current
+//                        }
+//                    }).start())
+//                }
             }
         }, for: .Click)
         

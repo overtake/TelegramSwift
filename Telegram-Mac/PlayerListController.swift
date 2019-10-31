@@ -112,6 +112,10 @@ class PlayerListController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        genericView.getBackgroundColor = {
+            return theme.colors.background
+        }
+        
         let location = ValuePromise<ChatHistoryLocation>(ignoreRepeated: true)
         
         let historyViewUpdate = location.get() |> deliverOnMainQueue

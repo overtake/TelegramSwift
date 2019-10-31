@@ -97,6 +97,9 @@ class GeneralInteractedRowView: GeneralRowView {
             if case .nextContext = item.type {
                 needNextImage = true
             }
+            if case .contextSelector = item.type {
+                needNextImage = true
+            }
             if needNextImage {
                 nextView.isHidden = false
                 nextView.image = item.isSelected ? nil : theme.icons.generalNext

@@ -565,7 +565,7 @@ class SVideoView: NSView {
         addSubview(mediaPlayer)
         addSubview(bufferingIndicator)
         addSubview(controls)
-        
+        bufferingIndicator.innerInset = 8.0
         backgroundView.wantsLayer = true
         backgroundView.background = .black
         

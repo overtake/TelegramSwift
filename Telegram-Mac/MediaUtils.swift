@@ -1722,7 +1722,7 @@ private func addCorners(_ context: DrawingContext, arguments: TransformImageArgu
 
 
 func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: CGSize(width: 127.0, height: 127.0), autoFetchFullSize: true)
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: CGSize(width: 240, height: 240), autoFetchFullSize: true)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
@@ -1781,7 +1781,7 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             
-            context.withContext(isHighQuality: fullSizeComplete, { c in
+            context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 c.setFillColor(theme.colors.grayBackground.cgColor)
                 if arguments.boundingSize != arguments.imageSize {
@@ -1969,7 +1969,7 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             
-            context.withFlippedContext(isHighQuality: fullSizeComplete, { c in
+            context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
                     switch arguments.resizeMode {

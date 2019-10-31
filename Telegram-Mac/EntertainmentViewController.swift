@@ -713,11 +713,21 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         section.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         section.viewDidAppear(animated)
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {
+                return .rejected
+            }
+            self.genericView.toggleSearch(self.searchState)
+            return .invoked
+        }, with: self, for: .F, priority: .modal, modifierFlags: .command)
+
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -767,16 +777,37 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
+        
+        
         self.genericView.emoji.set(handler: { [weak self] _ in
-            self?.section.select(0, true, notifyApper: true)
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.emoji.isSelected {
+                self.emoji.scrollup()
+            }
+            self.section.select(0, true, notifyApper: true)
+            
         }, for: .Click)
         
         self.genericView.stickers.set(handler: { [weak self] _ in
-            self?.section.select(1, true, notifyApper: true)
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.stickers.isSelected {
+                self.stickers.scrollup()
+            }
+            self.section.select(1, true, notifyApper: true)
         }, for: .Click)
         
         self.genericView.gifs.set(handler: { [weak self] _ in
-            self?.section.select(2, true, notifyApper: true)
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.gifs.isSelected {
+                self.gifs.scrollup()
+            }
+            self.section.select(2, true, notifyApper: true)
         }, for: .Click)
         
         self.genericView.search.set(handler: { [weak self] _ in

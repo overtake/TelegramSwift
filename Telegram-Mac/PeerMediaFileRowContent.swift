@@ -285,7 +285,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
             
             let context = item.interface.context
             if let file = item.file {
-                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: animated || previous?.file == item.file || previous == nil)
+                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: false)
                 updatedFetchControls = FetchControls(fetch: { [weak self] in
                     self?.executeInteraction(true)
                 })

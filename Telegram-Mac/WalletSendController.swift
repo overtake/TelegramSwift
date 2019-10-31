@@ -111,7 +111,7 @@ private func WalletSendEntries(state: WalletSendState, arguments: WalletSendArgu
     if let balance = state.walletState?.balance {
         let color = balance > amountValue(state.amount) ? theme.colors.listGrayText : theme.colors.redUI
         var attr: String = ""
-        let value = formatBalanceText(balance)
+        let value = formatBalanceText(max(balance, 0))
         if let range = value.range(of: Formatter.withSeparator.decimalSeparator) {
             let integralPart = String(value[..<range.lowerBound])
             let fractionalPart = String(value[range.lowerBound...])

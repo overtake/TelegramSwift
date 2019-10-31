@@ -48,7 +48,7 @@ class ETabRowView: HorizontalRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
         if let item = item as? ETabRowItem {
-            overlay.style = ControlStyle(highlightColor: theme.colors.blueIcon)
+            overlay.style = ControlStyle(highlightColor: theme.colors.accentIcon)
             overlay.set(image: item.icon, for: .Normal)
             overlay.disableActions()
             _ = overlay.sizeToFit()

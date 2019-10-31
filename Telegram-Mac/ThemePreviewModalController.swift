@@ -15,7 +15,7 @@ import PostboxMac
 import SwiftSignalKitMac
 
 private final class ThemePreviewView : BackgroundView {
-    fileprivate let segmentControl = SegmentController(frame: NSMakeRect(0, 0, 200, 28))
+    fileprivate let segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 290, 30))
     private let segmentContainer = View()
     private let tableView: TableView = TableView(frame: NSZeroRect, isFlipped: false)
     weak var controller: ModalViewController?
@@ -56,7 +56,7 @@ private final class ThemePreviewView : BackgroundView {
         segmentContainer.backgroundColor = theme.colors.background
         segmentContainer.borderColor = theme.colors.border
         segmentContainer.border = [.Bottom]
-        segmentControl.theme = SegmentTheme(backgroundColor: theme.colors.background, foregroundColor: theme.colors.accent, textColor: theme.colors.accent)
+        segmentControl.theme = CatalinaSegmentTheme(backgroundColor: theme.colors.listBackground, foregroundColor: theme.colors.background, activeTextColor: theme.colors.text, inactiveTextColor: theme.colors.listGrayText)
         
         tableView.removeAll()
         tableView.updateLocalizationAndTheme(theme: theme)
@@ -75,11 +75,11 @@ private final class ThemePreviewView : BackgroundView {
         
         let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
         
-        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
         
         let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
-        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
         
         
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
@@ -138,11 +138,11 @@ class ThemePreviewModalController: ModalViewController {
             self.genericView.backgroundMode = newTheme.controllerBackgroundMode
         }
         
-        self.genericView.segmentControl.add(segment: SegmentedItem(title: L10n.appearanceSettingsChatViewBubbles, handler: {
+        self.genericView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.appearanceSettingsChatViewBubbles, handler: {
             updateChatMode(true)
         }))
         
-        self.genericView.segmentControl.add(segment: SegmentedItem(title: L10n.appearanceSettingsChatViewClassic, handler: {
+        self.genericView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.appearanceSettingsChatViewClassic, handler: {
             updateChatMode(false)
         }))
         
@@ -227,13 +227,30 @@ class ThemePreviewModalController: ModalViewController {
             cloudTheme = nil
         }
         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-           return settings
+           var settings = settings
             .withUpdatedPalette(colors)
             .updateWallpaper { _ in
                 return currentTheme.wallpaper
             }
             .withUpdatedCloudTheme(cloudTheme)
             .withUpdatedBubbled(currentTheme.bubbled)
+            
+            
+            let defaultTheme: DefaultTheme
+            
+            if let cloudTheme = cloudTheme {
+                defaultTheme = DefaultTheme(local: colors.parent, cloud: DefaultCloudTheme(cloud: cloudTheme, palette: colors, wallpaper: currentTheme.wallpaper.associated ?? AssociatedWallpaper(cloud: nil, wallpaper: currentTheme.wallpaper.wallpaper)))
+            } else {
+                defaultTheme = DefaultTheme(local: colors.parent, cloud: nil)
+            }
+            
+            if colors.isDark {
+                settings = settings.withUpdatedDefaultDark(defaultTheme)
+            } else {
+                settings = settings.withUpdatedDefaultDay(defaultTheme)
+            }
+            settings = settings.withUpdatedDefaultIsDark(colors.isDark)
+            return settings
         }).start()
         
         delay(0.1, closure: { [weak self] in
@@ -298,7 +315,7 @@ func loadCloudPaletteAndWallpaper(context: AccountContext, file: TelegramMediaFi
                                 |> mapToSignal { cloud in
                                     return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(cloud).withUpdatedSettings(settings)) |> map { wallpaper in
                                         return (palette, wallpaper, cloud)
-                                        } |> mapError { _ in return GetWallpaperError.generic }
+                                    } |> castError(GetWallpaperError.self)
                                 }
                                 |> `catch` { _ in
                                     return .single((palette, .none, nil))

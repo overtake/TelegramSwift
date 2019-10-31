@@ -34,8 +34,18 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
         }
         thumbResource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
 
-        super.init(initialSize,interface,object, viewType: viewType)
         
+        
+        super.init(initialSize, interface, object, viewType: viewType)
+        
+    }
+    
+    override var inset: NSEdgeInsets {
+        if isCompactPlayer {
+            return NSEdgeInsetsMake(5, 10, 5, 10)
+        } else {
+            return NSEdgeInsetsMake(0, 30, 0, 30)
+        }
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {

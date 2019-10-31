@@ -1393,7 +1393,7 @@ public extension Int {
 }
 
 
-public extension ProgressIndicator {
+public extension NSProgressIndicator {
     func set(color:NSColor) {
         let color = color.usingColorSpace(NSColorSpace.sRGB)
 

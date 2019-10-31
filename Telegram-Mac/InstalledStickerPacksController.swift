@@ -314,7 +314,7 @@ class InstalledStickerPacksController: TableViewController {
         actionsDisposable.add(resolveDisposable)
         
         let arguments = InstalledStickerPacksControllerArguments(context: context, openStickerPack: { info in
-            showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: context.window)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: context.window)
         }, removePack: { id in
             
             confirm(for: context.window, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in

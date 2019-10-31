@@ -1735,6 +1735,18 @@ internal final class L10n {
   internal static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
   internal static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
+  /// For 1 Day
+  internal static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }
+  /// For 1 Hour
+  internal static var chatListMute1Hour: String  { return L10n.tr("Localizable", "ChatList.Mute.1Hour") }
+  /// For 3 Days
+  internal static var chatListMute3Days: String  { return L10n.tr("Localizable", "ChatList.Mute.3Days") }
+  /// For 4 Hours
+  internal static var chatListMute4Hours: String  { return L10n.tr("Localizable", "ChatList.Mute.4Hours") }
+  /// For 8 Hours
+  internal static var chatListMute8Hours: String  { return L10n.tr("Localizable", "ChatList.Mute.8Hours") }
+  /// Forever
+  internal static var chatListMuteForever: String  { return L10n.tr("Localizable", "ChatList.Mute.Forever") }
   /// Are you sure you want to read all chats?
   internal static var chatListPopoverConfirm: String  { return L10n.tr("Localizable", "ChatList.Popover.Confirm") }
   /// Read All
@@ -1949,7 +1961,7 @@ internal final class L10n {
   internal static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
   /// Disable
   internal static var darkModeConfirmNightModeOK: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.OK") }
-  /// You have enabled night mode. If you want to change dark mode you have to disable it.
+  /// You have enabled auto night mode. If you want to change dark mode you have to disable it.
   internal static var darkModeConfirmNightModeText: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Text") }
   /// Auto-Download Media
   internal static var dataAndStorageAutomaticDownload: String  { return L10n.tr("Localizable", "DataAndStorage.AutomaticDownload") }

@@ -22,7 +22,7 @@ class PeerMediaRowItem: GeneralRowItem {
     var contentSize:NSSize = NSMakeSize(0, 40)
     
     override var height: CGFloat {
-        return contentSize.height + viewType.innerInset.top + viewType.innerInset.bottom
+        return contentSize.height + viewType.innerInset.top + viewType.innerInset.bottom + inset.top + inset.bottom
     }
     
     private var entry:PeerMediaSharedEntry
@@ -72,6 +72,9 @@ class PeerMediaRowItem: GeneralRowItem {
         return .single(items)
     }
     
+    override var instantlyResize: Bool {
+        return true
+    }
     
     override func viewClass() -> AnyClass {
         return PeerMediaRowView.self
@@ -86,16 +89,14 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
     let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     var contentView:View = View()
     private let separatorView = View()
-    private var selectingControl:SelectingControl = SelectingControl(unselectedImage:theme.icons.chatToggleUnselected, selectedImage:theme.icons.chatToggleSelected)
+    private var selectingControl:SelectingControl?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        containerView.addSubview(selectingControl)
         containerView.addSubview(contentView)
         containerView.addSubview(separatorView)
         super.addSubview(containerView)
         contentView.displayDelegate = self
-        selectingControl.centerY(x:-selectingControl.frame.width)
         
         containerView.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerMediaRowItem {
@@ -121,7 +122,7 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
             return
         }
         
-        let contentX = item.interface.presentation.state == .selecting ? item.viewType.innerInset.left + selectingControl.frame.width + item.viewType.innerInset.left : item.viewType.innerInset.left
+        let contentX = item.interface.presentation.state == .selecting ? item.viewType.innerInset.left + 22 + item.viewType.innerInset.left : item.viewType.innerInset.left
         
         self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
         self.containerView.setCorners(item.viewType.corners)
@@ -129,9 +130,9 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
         self.contentView.setFrameSize(NSMakeSize(self.containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, self.containerView.frame.height - item.viewType.innerInset.bottom - item.viewType.innerInset.top))
         self.contentView.centerY(x: contentX)
         
-        self.separatorView.frame = NSMakeRect(item.separatorOffset + (item.interface.presentation.state == .selecting ? selectingControl.frame.width + item.viewType.innerInset.left : 0), self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.separatorOffset - item.viewType.innerInset.right, .borderSize)
+        self.separatorView.frame = NSMakeRect(item.separatorOffset + (item.interface.presentation.state == .selecting ? 22 + item.viewType.innerInset.left : 0), self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.separatorOffset - item.viewType.innerInset.right, .borderSize)
         
-        selectingControl.centerY(x: item.interface.presentation.state == .selecting ? item.viewType.innerInset.left : -selectingControl.frame.width)
+        selectingControl?.centerY(x: item.interface.presentation.state == .selecting ? item.viewType.innerInset.left : -22)
 
         super.layout()
     }
@@ -195,19 +196,34 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
 
             let to:NSPoint
             if selectingMode {
-                to = NSMakePoint(item.viewType.innerInset.left + selectingControl.frame.width + item.viewType.innerInset.left, self.contentView.frame.minY)
+                to = NSMakePoint(item.viewType.innerInset.left + 22 + item.viewType.innerInset.left, self.contentView.frame.minY)
             } else {
                 to = NSMakePoint(item.viewType.innerInset.left, self.contentView.frame.minY)
             }
             
+            self.separatorView.change(pos: NSMakePoint(item.separatorOffset + (selectingMode ? 22 + item.viewType.innerInset.left : 0), self.containerView.frame.height - .borderSize), animated: animated)
             contentView.change(pos: to, animated: animated)
-            let selectingFrom = NSMakePoint(-selectingControl.frame.width,selectingControl.frame.minY)
-            let selectingTo = NSMakePoint(item.viewType.innerInset.left, selectingControl.frame.minY)
+
+            if selectingMode {
+                if selectingControl == nil {
+                    selectingControl = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                    containerView.addSubview(selectingControl!)
+                    selectingControl!.centerY(x: -22)
+                    selectingControl?.change(pos: NSMakePoint(item.viewType.innerInset.left, selectingControl!.frame.minY), animated: animated)
+                }
+            } else {
+                if let selectingControl = selectingControl {
+                    let point = NSMakePoint(-22, selectingControl.frame.minY)
+                    self.selectingControl = nil
+                    selectingControl.change(pos: point, animated: animated, completion: { [weak selectingControl] _ in
+                         selectingControl?.removeFromSuperview()
+                    })
+                }
+            }
+            selectingControl?.set(selected: item.interface.presentation.isSelectedMessageId(item.message.id), animated: animated)
+
             
-            
-            self.separatorView.change(pos: NSMakePoint(item.separatorOffset + (selectingMode ? selectingControl.frame.width + item.viewType.innerInset.left : 0), self.containerView.frame.height - .borderSize), animated: animated)
-            selectingControl.change(pos: selectingMode ? selectingTo : selectingFrom, animated: animated)
-            selectingControl.set(selected: item.interface.presentation.isSelectedMessageId(item.message.id), animated: animated)
+//            selectingControl.change(pos: selectingMode ? selectingTo : selectingFrom, animated: animated)
         }
     }
 

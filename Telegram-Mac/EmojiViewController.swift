@@ -406,6 +406,8 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         genericView.tabs.changeSelection(stableId: stableId)
         genericView.tableView.scroll(to: .top(id: stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset:NSEdgeInsets(top:3))
     }
-    
+    override func scrollup() {
+        self.genericView.tableView.scroll(to: .up(true))
+    }
 
 }

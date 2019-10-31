@@ -328,10 +328,19 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
         case let .testWords(keys, info, words, indexes):
             let values = stateValue.with { $0.wordsValues }
             var fails:[InputDataIdentifier: InputDataValidationFailAction] = [:]
+            var instantFail:[InputDataIdentifier: InputDataValidationFailAction] = [:]
             for index in indexes {
-                if values[_id_word(index)]?.stringValue != words[index - 1] {
+                let value = values[_id_word(index)]?.stringValue ?? ""
+                if value != words[index - 1] {
                     fails[_id_word(index)] = .shake
                 }
+                if value.isEmpty || !walletPossibleWordList.contains(value) {
+                    instantFail[_id_word(index)] = .shake
+                }
+            }
+            
+            if !instantFail.isEmpty {
+                return .fail(.fields([_id_words: .shakeWithData(instantFail)]))
             }
             
             if fails.isEmpty {

@@ -231,7 +231,7 @@ class ArchivedStickerPacksController: TableViewController {
         installedStickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
         
         let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
-          showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+          showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { info in
             confirm(for: mainWindow, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
                 var remove = false

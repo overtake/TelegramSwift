@@ -125,10 +125,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         clear.set(image: presentation.search.clearImage, for: .Normal)
        _ =  clear.sizeToFit()
         
-        placeholder.centerY(x: placeholderTextInset + 2)
+        placeholder.centerY(x: placeholderTextInset + 2, addition: -1)
         search.centerY()
         input.insertionPointColor = presentation.search.textColor
-        
+        progressIndicator.progressColor = presentation.colors.text
         needsLayout = true
 
     }
@@ -358,6 +358,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
         self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
+                strongSelf.setString("")
                 return strongSelf.changeResponder() ? .invoked : .rejected
             }
             return .rejected

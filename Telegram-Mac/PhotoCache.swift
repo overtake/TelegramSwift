@@ -70,9 +70,9 @@ enum PhotoCacheKeyEntry : Hashable {
                 }
                 #endif
             }
-            return "media-\(String(describing: media.id?.id))-\(transform.imageSize.width)-\(transform.imageSize.height)-\(transform.boundingSize.width)-\(transform.boundingSize.height)-\(scale)-\(String(describing: layout?.rawValue))-\(addition)".nsstring
+            return "media-\(String(describing: media.id?.id))-\(transform)-\(scale)-\(String(describing: layout?.rawValue))-\(addition)".nsstring
         case let .messageId(stableId, transform, scale, layout):
-            return "messageId-\(stableId)-\(transform.imageSize.width)-\(transform.imageSize.height)-\(transform.boundingSize.width)-\(transform.boundingSize.height)-\(scale)-\(layout.rawValue)".nsstring
+            return "messageId-\(stableId)-\(transform)-\(scale)-\(layout.rawValue)".nsstring
         case let .theme(source, bubbled):
             switch source {
             case let .local(palette):
@@ -183,7 +183,7 @@ private class PhotoCache {
 }
 
 
-private let peerPhotoCache = PhotoCache()
+private let peerPhotoCache = PhotoCache(100)
 private let photosCache = PhotoCache(50)
 private let photoThumbsCache = PhotoCache(50)
 private let themeThums = PhotoCache(50)

@@ -350,7 +350,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     func forceSelectItem(_ item: ChatRowItem, onRightClick: Bool) {
         if let message = item.message {
-            item.chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
+            item.chatInteraction.withToggledSelectedMessage({$0.withToggledSelectedMessage(message.id)})
         }
     }
     
@@ -975,7 +975,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             self.animatedView = ChatRowAnimateView(frame:bounds)
             self.animatedView?.isEventLess = true
             rowView.addSubview(animatedView!)
-            animatedView?.backgroundColor = NSColor(0x68A8E2)
+            animatedView?.backgroundColor = theme.colors.focusAnimationColor
             animatedView?.layer?.opacity = 0
             
         }
@@ -1098,7 +1098,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func toggleSelected(_ select: Bool, in point: NSPoint) {
         guard let item = item as? ChatRowItem else { return }
         
-        item.chatInteraction.update({ current in
+        item.chatInteraction.withToggledSelectedMessage({ current in
             if let message = item.message {
                 if (select && !current.isSelectedMessageId(message.id)) || (!select && current.isSelectedMessageId(message.id)) {
                     return current.withToggledSelectedMessage(message.id)

@@ -344,18 +344,28 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             updateTheme(with: themeSettings, for: window)
             
-//            actualizedTheme(account: <#T##Account#>, accountManager: <#T##AccountManager#>, theme: <#T##TelegramTheme#>)
             
+
             
             let basicTheme = Atomic<ThemePaletteSettings?>(value: themeSettings)
             let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
-            _ = (themeSettingsView(accountManager: accountManager) |> deliverOnMainQueue).start(next: { settings in
+            let backingProperties:ValuePromise<CGFloat> = ValuePromise(System.backingScale, ignoreRepeated: true)
+            
+            
+            var previousBackingScale = System.backingScale
+            _ = combineLatest(queue: .mainQueue(), themeSettingsView(accountManager: accountManager), backingProperties.get()).start(next: { settings, backingScale in
                 let previous = basicTheme.swap(settings)
-                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize  {
+                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize || previousBackingScale != backingScale  {
                     updateTheme(with: settings, for: window, animated: window.isKeyWindow && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled))
                     self.contextValue?.applyNewTheme()
                 }
+                previousBackingScale = backingScale
             })
+            
+            NotificationCenter.default.addObserver(forName: NSWindow.didChangeBackingPropertiesNotification, object: window, queue: nil, using: { notification in
+                backingProperties.set(System.backingScale)
+            })
+            
             
             
             let autoNightSignal = viewDidChangedAppearance.get() |> mapToSignal { _ in

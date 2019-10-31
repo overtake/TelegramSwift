@@ -33,12 +33,16 @@ private class TabBarViewController : View {
     
     override func layout() {
         super.layout()
-        tabView.frame = NSMakeRect(0, frame.height - 50, frame.width, 50)
-        if let subview = subviews.first {
-            if tabView.isHidden {
-                subview.frame = bounds
+        
+        for subview in subviews {
+            if let subview = subview as? TabBarView {
+                subview.frame = NSMakeRect(0, frame.height - 50, frame.width, 50)
             } else {
-                subview.frame = NSMakeRect(0, 0, frame.width, frame.height - tabView.frame.height)
+                if tabView.isHidden {
+                    subview.frame = bounds
+                } else {
+                    subview.frame = NSMakeRect(0, 0, frame.width, frame.height - tabView.frame.height)
+                }
             }
         }
     }

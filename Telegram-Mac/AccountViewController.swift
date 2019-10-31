@@ -42,6 +42,11 @@ class AccountViewController: NavigationViewController {
         
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        (self.view as? View)?.border = [.Right]
+    }
+    
     deinit {
         disposable.dispose()
     }
@@ -279,7 +284,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 return false
             }
         case let .wallet(index):
-            if case let .wallet(index) = rhs {
+            if case .wallet(index) = rhs {
                 return true
             } else {
                 return false
@@ -348,7 +353,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 })]
             }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }), compactText: true)
         case .addAccount:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.blueIcon), type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, action: {
                 let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
                 arguments.context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
                 
@@ -569,6 +574,9 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
     entries.append(.ask(index: index))
     index += 1
     
+    entries.append(.whiteSpace(index: index, height: 20))
+    index += 1
+    
     return entries
 }
 
@@ -627,12 +635,12 @@ class LayoutAccountController : TableViewController {
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
-       // genericView.border = [.Right]
+        genericView.border = [.Right]
         genericView.delegate = self
        // self.rightBarView.border = [.Right]
         let context = self.context
         genericView.getBackgroundColor = {
-            theme.colors.background
+            return .clear//            theme.colors.background
         }
         
         self.hasWallet.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])

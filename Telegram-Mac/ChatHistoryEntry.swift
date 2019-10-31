@@ -113,15 +113,29 @@ struct HighlightFoundText : Equatable {
     }
 }
 
+final class ChatHistoryEntryData : Equatable {
+    let location: MessageHistoryEntryLocation?
+    let additionData: MessageEntryAdditionalData?
+    let autoPlay: AutoplayMediaPreferences?
+    init(_ location: MessageHistoryEntryLocation?, _ additionData: MessageEntryAdditionalData?, _ autoPlay: AutoplayMediaPreferences?) {
+        self.location = location
+        self.additionData = additionData
+        self.autoPlay = autoPlay
+    }
+    static func ==(lhs: ChatHistoryEntryData, rhs: ChatHistoryEntryData) -> Bool {
+        return lhs.location == rhs.location && lhs.additionData == rhs.additionData && lhs.autoPlay == rhs.autoPlay
+    }
+}
+
 enum ChatHistoryEntry: Identifiable, Comparable {
-    case MessageEntry(Message, MessageIndex, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, MessageHistoryEntryLocation?, MessageEntryAdditionalData?, AutoplayMediaPreferences?)
+    case MessageEntry(Message, MessageIndex, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, ChatHistoryEntryData)
     case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
     case UnreadEntry(MessageIndex, ChatItemRenderType)
     case DateEntry(MessageIndex, ChatItemRenderType)
     case bottom
     var message:Message? {
         switch self {
-        case let .MessageEntry(message,_, _,_,_,_,_, _, _):
+        case let .MessageEntry(message,_, _,_,_,_,_):
             return message
         default:
           return nil
@@ -130,8 +144,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var autoplayMedia: AutoplayMediaPreferences {
         switch self {
-        case let .MessageEntry(_,_,_,_,_,_,_, _, autoplayMedia):
-            return autoplayMedia ?? AutoplayMediaPreferences.defaultSettings
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.autoPlay ?? AutoplayMediaPreferences.defaultSettings
         case let .groupedPhotos(entries, _):
             return entries.first?.autoplayMedia ?? AutoplayMediaPreferences.defaultSettings
         default:
@@ -141,7 +155,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var renderType: ChatItemRenderType {
         switch self {
-        case let .MessageEntry(_,_,_, renderType,_,_,_, _, _):
+        case let .MessageEntry(_,_,_, renderType,_,_,_):
             return renderType
         case .groupedPhotos(let entries, _):
             return entries.first!.renderType
@@ -156,8 +170,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var location:MessageHistoryEntryLocation? {
         switch self {
-        case let .MessageEntry(_,_,_,_,_,_,location, _, _):
-            return location
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.location
         default:
             return nil
         }
@@ -166,8 +180,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var additionalData: MessageEntryAdditionalData? {
         switch self {
-        case let .MessageEntry(_,_,_,_,_,_,_, additionalData, _):
-           return additionalData
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.additionData
         default:
             return nil
         }
@@ -175,7 +189,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var stableId: ChatHistoryEntryId {
         switch self {
-        case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return .message(message)
         case .groupedPhotos(_, let info):
             return .groupedPhotos(groupInfo: info)
@@ -190,7 +204,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var index: MessageIndex {
         switch self {
-        case let .MessageEntry(_,index, _, _, _, _,_, _, _):
+        case let .MessageEntry(_,index, _, _, _, _,_):
             return index
         case let .groupedPhotos(entries, _):
             return entries.last!.index
@@ -206,7 +220,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     
     var scrollIndex: MessageIndex {
         switch self {
-        case let .MessageEntry(message, _, _, _, _, _,_, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return MessageIndex(message)
         case let .groupedPhotos(entries, _):
             return entries.last!.index
@@ -283,31 +297,10 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
 
 func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
     switch lhs {
-    case let .MessageEntry(lhsMessage, lhsIndex, lhsRead, lhsRenderType, lhsType, lhsFwdType, _, lhsAdditionalData, lhsAutoplayMedia):
+    case let .MessageEntry(message, index, read, renderType, type, fwdType, data):
         switch rhs {
-        case let .MessageEntry(rhsMessage, rhsIndex, rhsRead, rhsRenderType, rhsType, rhsFwdType, _, rhsAdditionalData, rhsAutoplayMedia):
-            if lhsRead != rhsRead {
-                return false
-            }
-            if lhsType != rhsType {
-                return false
-            }
-            if lhsFwdType != rhsFwdType {
-                return false
-            }
-            if lhsIndex != rhsIndex {
-                return false
-            }
-            if lhsRenderType != rhsRenderType {
-                return false
-            }
-            if lhsAdditionalData != rhsAdditionalData {
-                return false
-            }
-            if lhsAutoplayMedia != rhsAutoplayMedia {
-                return false
-            }
-            return isEqualMessages(lhsMessage, rhsMessage)
+        case .MessageEntry(message, index, read, renderType, type, fwdType, data):
+            return true
         default:
             return false
         }
@@ -602,9 +595,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         } else {
             additionalData = MessageEntryAdditionalData(opaqueIdentifier: nil, highlightFoundText: highlightFoundText)
         }
-        
-        
-        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, entry.location, additionalData, autoplayMedia)
+        let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
+        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, data)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
             

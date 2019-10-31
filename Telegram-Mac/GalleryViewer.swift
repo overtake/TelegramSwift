@@ -97,7 +97,7 @@ private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
 
 fileprivate func itemFor(entry: ChatHistoryEntry, context: AccountContext, pagerSize: NSSize) -> MGalleryItem {
     switch entry {
-    case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+    case let .MessageEntry(message, _, _, _, _, _, _):
         if let media = mediaForMessage(message: message, postbox: context.account.postbox) {
             if let _ = media as? TelegramMediaImage {
                 return MGalleryPhotoItem(context, .message(entry), pagerSize)
@@ -649,7 +649,7 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)]
+                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))]
                     let previous = previous.swap(entries)
                     
                     var inserted: [(Int, MGalleryItem)] = []
@@ -683,7 +683,7 @@ class GalleryViewer: NSResponder {
                     return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
                             switch entry {
-                            case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+                            case let .MessageEntry(message, _, _, _, _, _, _):
                                 return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
                             default:
                                 return true
@@ -699,7 +699,7 @@ class GalleryViewer: NSResponder {
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
-                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings))
+                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings)))
                         }
                         let previous = previous.with {$0}
                         return prepareEntries(from: previous, to: entries, context: context, pagerSize: pagerSize) |> map { transition in
@@ -722,7 +722,7 @@ class GalleryViewer: NSResponder {
                     
                     var id:MessageId = message.id
                     let index = currentIndex.modify({$0})
-                    if let index = index {
+                    if let index = index, prev.count > index {
                         id = prev[index].message!.id
                     }
 

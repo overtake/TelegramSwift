@@ -193,46 +193,71 @@ func AppAppearanceViewController(context: AccountContext) -> InputDataController
     let updateDisposable = MetaDisposable()
     
     let arguments = AppAppearanceViewArguments(context: context, togglePalette: { source in
-        switch source {
-        case let .local(palette):
-            updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                var settings = settings
-                settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
-                
-                let defaultTheme = DefaultTheme(local: palette.parent, cloud: nil)
-                if palette.isDark {
-                    settings = settings.withUpdatedDefaultDark(defaultTheme)
-                } else {
-                    settings = settings.withUpdatedDefaultDay(defaultTheme)
-                }
-                
-                return settings.installDefaultWallpaper().installDefaultAccent().withUpdatedDefaultIsDark(palette.isDark)
-            }).start())
-        case let .cloud(cloud, cached):
-            if let cached = cached {
+        
+        let nightSettings = autoNightSettings(accountManager: context.sharedContext.accountManager) |> take(1) |> deliverOnMainQueue
+        
+        let applyTheme:()->Void = {
+            switch source {
+            case let .local(palette):
                 updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                     var settings = settings
-                    settings = settings.withUpdatedPalette(cached.palette)
-                    settings = settings.withUpdatedCloudTheme(cloud)
-                    settings = settings.updateWallpaper { _ in
-                        return ThemeWallpaper(wallpaper: cached.wallpaper, associated: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper))
-                    }
-                    let defaultTheme = DefaultTheme(local: settings.defaultDark.local, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
-                    if cached.palette.isDark {
+                    settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
+                    
+                    let defaultTheme = DefaultTheme(local: palette.parent, cloud: nil)
+                    if palette.isDark {
                         settings = settings.withUpdatedDefaultDark(defaultTheme)
                     } else {
                         settings = settings.withUpdatedDefaultDay(defaultTheme)
                     }
-                    return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark)
+                    
+                    return settings.installDefaultWallpaper().installDefaultAccent().withUpdatedDefaultIsDark(palette.isDark)
                 }).start())
-                
-                applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start())
-            } else if let _ = cloud.file {
-                applyCloudThemeDisposable.set(showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start())
-            } else {
-                showEditThemeModalController(context: context, theme: cloud)
+            case let .cloud(cloud, cached):
+                if let cached = cached {
+                    updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                        var settings = settings
+                        settings = settings.withUpdatedPalette(cached.palette)
+                        settings = settings.withUpdatedCloudTheme(cloud)
+                        settings = settings.updateWallpaper { _ in
+                            return ThemeWallpaper(wallpaper: cached.wallpaper, associated: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper))
+                        }
+                        let defaultTheme = DefaultTheme(local: settings.defaultDark.local, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
+                        if cached.palette.isDark {
+                            settings = settings.withUpdatedDefaultDark(defaultTheme)
+                        } else {
+                            settings = settings.withUpdatedDefaultDay(defaultTheme)
+                        }
+                        return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark)
+                    }).start())
+                    
+                    applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start())
+                } else if let _ = cloud.file {
+                    applyCloudThemeDisposable.set(showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start())
+                } else {
+                    showEditThemeModalController(context: context, theme: cloud)
+                }
             }
         }
+        
+        _ = nightSettings.start(next: { settings in
+            if settings.systemBased || settings.schedule != nil {
+                confirm(for: context.window, header: L10n.darkModeConfirmNightModeHeader, information: L10n.darkModeConfirmNightModeText, okTitle: L10n.darkModeConfirmNightModeOK, successHandler: { _ in
+                    let disableNightMode = context.sharedContext.accountManager.transaction { transaction -> Void in
+                        transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
+                            let settings: AutoNightThemePreferences = entry as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings
+                            return settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil)
+                        })
+                    } |> deliverOnMainQueue
+                    _ = disableNightMode.start(next: {
+                        applyTheme()
+                    })
+                })
+            } else {
+                applyTheme()
+            }
+        })
+        
+       
     }, toggleBubbles: { value in
         updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
             return settings.withUpdatedBubbled(value)
@@ -297,20 +322,20 @@ func AppAppearanceViewController(context: AccountContext) -> InputDataController
         
         view.button.set(handler: { control in
             var items:[SPopoverItem] = []
-            
-            items.append(SPopoverItem(L10n.appearanceNewTheme, {
-                showModal(with: NewThemeController(context: context, palette: theme.colors.withUpdatedWallpaper(theme.wallpaper.paletteWallpaper)), for: context.window)
-            }))
-            items.append(SPopoverItem(L10n.appearanceExportTheme, {
-                exportPalette(palette: theme.colors.withUpdatedName(theme.cloudTheme?.title ?? theme.colors.name).withUpdatedWallpaper(theme.wallpaper.paletteWallpaper))
-            }))
-            if let cloudTheme = theme.cloudTheme {
-                items.append(SPopoverItem(L10n.appearanceThemeShare, {
-                    showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(cloudTheme.slug)")), for: context.window)
+            if theme.colors.parent != .system {
+                items.append(SPopoverItem(L10n.appearanceNewTheme, {
+                    showModal(with: NewThemeController(context: context, palette: theme.colors.withUpdatedWallpaper(theme.wallpaper.paletteWallpaper)), for: context.window)
                 }))
+                items.append(SPopoverItem(L10n.appearanceExportTheme, {
+                    exportPalette(palette: theme.colors.withUpdatedName(theme.cloudTheme?.title ?? theme.colors.name).withUpdatedWallpaper(theme.wallpaper.paletteWallpaper))
+                }))
+                if let cloudTheme = theme.cloudTheme {
+                    items.append(SPopoverItem(L10n.appearanceThemeShare, {
+                        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(cloudTheme.slug)")), for: context.window)
+                    }))
+                }
+                showPopover(for: control, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-50))
             }
-            showPopover(for: control, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-50))
-            
         }, for: .Click)
         view.set(image: theme.icons.chatActions, highlightImage: nil)
         return view

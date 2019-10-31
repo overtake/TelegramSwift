@@ -90,22 +90,22 @@ class MediaPreviewRowItem: TableRowItem {
 
 fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let contentNode = contentNode {
             if contentNode is ChatGIFContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                    return .file(reference, GifPreviewModalView.self)
+                    return (.file(reference, GifPreviewModalView.self), contentNode)
                 }
             } else if contentNode is ChatInteractiveContentView {
                 if let image = contentNode.media as? TelegramMediaImage {
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
-                    return .image(reference, ImagePreviewModalView.self)
+                    return (.image(reference, ImagePreviewModalView.self), contentNode)
                 }
             } else if contentNode is MediaAnimatedStickerView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                    return .file(reference, AnimatedStickerPreviewModalView.self)
+                    return (.file(reference, AnimatedStickerPreviewModalView.self), contentNode)
                 }
             } else if contentNode is ChatFileContentView {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
@@ -114,7 +114,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
                     representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
-                    return .image(reference, ImagePreviewModalView.self)
+                    return (.image(reference, ImagePreviewModalView.self), contentNode)
                 }
             }
         }

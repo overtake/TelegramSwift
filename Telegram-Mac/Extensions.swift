@@ -2119,6 +2119,7 @@ public extension NSAttributedString {
         
         let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
         
+        
         var index: Int = 1
         while true {
             let range = modified.string.nsstring.range(of: "\t0")

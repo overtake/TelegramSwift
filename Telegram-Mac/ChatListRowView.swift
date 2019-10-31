@@ -176,6 +176,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             if let inputActivities = inputActivities, let item = item as? ChatListRowItem {
+                let oldValue = oldValue?.1.map {
+                    ChatListInputActivity($0, $1)
+                }
                 
                 if inputActivities.1.isEmpty {
                     activitiesModel?.clean()
@@ -187,6 +190,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activitiesModel = ChatActivitiesModel()
                     containerView.addSubview(activitiesModel!.view!)
                 }
+                
                 
                 let activity:ActivitiesTheme
                 if item.isSelected && item.context.sharedContext.layout != .single {
@@ -200,14 +204,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 } else {
                     activity = theme.activity(key: 14 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
                 }
-                
-                activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
-                    if let item = self?.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
-                        self?.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
-                    }
-                    self?.hiddemMessage = show
-                    self?.containerView.needsDisplay = true
-                })
+                if oldValue != item.activities || activity != activitiesModel?.theme {
+                    activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
+                        if let item = self?.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
+                            self?.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
+                        }
+                        self?.hiddemMessage = show
+                        self?.containerView.needsDisplay = true
+                    })
+                }
+              
                 
                 activitiesModel?.view?.isHidden = item.context.sharedContext.layout == .minimisize
             } else {
@@ -237,7 +243,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             self.animatedView = ChatRowAnimateView(frame:bounds)
             self.animatedView?.isEventLess = true
             containerView.addSubview(animatedView!)
-            animatedView?.backgroundColor = NSColor(0x68A8E2)
+            animatedView?.backgroundColor = theme.colors.focusAnimationColor
             animatedView?.layer?.opacity = 0
             
         }
@@ -289,16 +295,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
-       // ctx.setFillColor(theme.colors.background.cgColor)
-       // ctx.fill(bounds)
+
         super.draw(layer, in: ctx)
         
 //
          if let item = self.item as? ChatListRowItem {
-            
-           
-            
             if !item.isSelected {
                 
                 if layer != containerView.layer {
@@ -374,7 +375,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         ctx.draw(icon, in: NSMakeRect(frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin, frame.height - icon.backingSize.height - (item.margin + 1), icon.backingSize.width, icon.backingSize.height)) 
                     }
                     
-                    if let dateLayout = item.ctxDateLayout, !item.hasDraft, item.state == .plain {
+                    if let dateLayout = item.ctxDateLayout, !item.hasDraft {
                         let dateX = frame.width - dateLayout.0.size.width - item.margin
                         dateLayout.1.draw(NSMakeRect(dateX, item.margin, dateLayout.0.size.width, dateLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         
@@ -452,6 +453,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
     override func updateColors() {
         super.updateColors()
+        self.containerView.background = backdorColor
         expandView?.backgroundColor = theme.colors.grayBackground
     }
 
@@ -582,97 +584,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 additionalBadgeView?.removeFromSuperview()
                 additionalBadgeView = nil
             }
-
-            switch item.state {
-            case .plain:
-                if let removeControl = removeControl {
-                    removeControl.change(pos: NSMakePoint(frame.width, removeControl.frame.minY), animated: animated, completion: { [weak self] completed in
-                        if completed {
-                            self?.removeControl?.removeFromSuperview()
-                            self?.removeControl = nil
-                        }
-                    })
-                    removeControl.change(opacity: 0, animated: animated)
-                }
-                
-            case let .deletable(onRemove, _):
-                var isNew: Bool = false
-                if removeControl == nil {
-                    removeControl = ImageButton()
-                    removeControl?.autohighlight = false
-                    removeControl?.set(image: theme.icons.deleteItem, for: .Normal)
-                    removeControl?.frame = NSMakeRect(frame.width, 0, 60, frame.height)
-                    removeControl?.layer?.opacity = 0
-                    containerView.addSubview(removeControl!)
-                    isNew = true
-                }
-                guard let removeControl = removeControl else {return}
-                removeControl.removeAllHandlers()
-                removeControl.set(handler: { [weak item] _ in
-                    if let location = item?.chatLocation {
-                        onRemove(location)
-                    }
-                }, for: .Click)
-                let f = focus(removeControl.frame.size)
-                removeControl.change(pos: NSMakePoint(frame.width - removeControl.frame.width, f.minY), animated: isNew && animated)
-                removeControl.change(opacity: 1, animated: isNew && animated)
-                
-            }
             
-            if !(item is ChatListMessageRowItem) {
-                let postbox = item.context.account.postbox
-                let peerId = item.peerId
-                
-                
-                if let peerId = peerId {
-                    let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
-                    self.peerInputActivitiesDisposable.set((item.context.account.peerInputActivities(peerId: peerId)
-                        |> mapToSignal { activities -> Signal<[(Peer, PeerInputActivity)], NoError> in
-                            var foundAllPeers = true
-                            var cachedResult: [(Peer, PeerInputActivity)] = []
-                            previousPeerCache.with { dict -> Void in
-                                for (peerId, activity) in activities {
-                                    if let peer = dict[peerId] {
-                                        cachedResult.append((peer, activity))
-                                    } else {
-                                        foundAllPeers = false
-                                        break
-                                    }
-                                }
-                            }
-                            if foundAllPeers {
-                                return .single(cachedResult)
-                            } else {
-                                return postbox.transaction { transaction -> [(Peer, PeerInputActivity)] in
-                                    var result: [(Peer, PeerInputActivity)] = []
-                                    var peerCache: [PeerId: Peer] = [:]
-                                    for (peerId, activity) in activities {
-                                        if let peer = transaction.getPeer(peerId) {
-                                            result.append((peer, activity))
-                                            peerCache[peerId] = peer
-                                        }
-                                    }
-                                    _ = previousPeerCache.swap(peerCache)
-                                    return result
-                                }
-                            }
-                    }
-                    |> deliverOnMainQueue).start(next: { [weak self, weak item] activities in
-                        if item?.context.peerId != item?.peerId {
-                            self?.inputActivities = (peerId, activities)
-                        } else {
-                            self?.inputActivities = (peerId, [])
-                        }
-                    }))
-                } else {
-                    self.inputActivities = nil
+            if let peerId = item.peerId {
+                let activities = item.activities.map {
+                    ($0.peer.peer, $0.activity)
                 }
-                
-                
-                let inputActivities = self.inputActivities
-                self.inputActivities = inputActivities
-                
-                
+                self.inputActivities = (peerId, activities)
+            } else {
+                self.inputActivities = nil
             }
          }
         
@@ -923,10 +842,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
         }
         
-        
 
-        
-        needsLayout = true
     }
     
     var additionalRevealDelta: CGFloat {

@@ -152,6 +152,19 @@ public class SplitView : View {
             if(notify) {
                 self.delegate?.splitViewDidNeedSwapToLayout(state: state);
             }
+            if state != .none {
+                if state == .dual || state == .minimisize {
+                    if let _ = container.subviews.first {
+                        if minimisizeOverlay.superview == nil {
+                            addSubview(minimisizeOverlay)
+                        }
+                    }
+                } else {
+                    minimisizeOverlay.removeFromSuperview()
+                }
+            } else {
+                minimisizeOverlay.removeFromSuperview()
+            }
         }
     }
     
@@ -212,7 +225,7 @@ public class SplitView : View {
     func removeController(controller:ViewController) -> Void {
         
         controller.viewWillDisappear(false)
-        let idx = _controllers.index(of: controller)!;
+        let idx = _controllers.firstIndex(of: controller)!;
         container.subviews[idx].removeFromSuperview();
         _controllers.remove(at: idx);
         _startSize.removeValue(forKey: controller.internalId);
@@ -350,17 +363,11 @@ public class SplitView : View {
         if state != .none {
             if state == .dual || state == .minimisize {
                 if let first = container.subviews.first {
-                    if minimisizeOverlay.superview == nil {
-                        addSubview(minimisizeOverlay)
-                    }
                     minimisizeOverlay.frame = NSMakeRect(first.frame.maxX - 5, 0, 10, frame.height)
                 }
                 
-            } else {
-                minimisizeOverlay.removeFromSuperview()
             }
         }
-
     }
     
     

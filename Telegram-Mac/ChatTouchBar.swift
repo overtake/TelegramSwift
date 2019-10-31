@@ -262,7 +262,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
                 if let sender = sender as? NSButton {
                     switch sender.title {
                     case leftAction:
-                        chatInteraction.toggleNotifications()
+                        chatInteraction.toggleNotifications(nil)
                     case rightAction:
                         chatInteraction.openDiscussion()
                     default:

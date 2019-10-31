@@ -280,11 +280,12 @@ public enum TableScrollState :Equatable {
     case none(TableAnimationInterface?);
     case down(Bool);
     case up(Bool);
+    case upOffset(Bool, CGFloat);
 }
 
 public extension TableScrollState {
     
-    public func swap(to stableId:AnyHashable, innerId: AnyHashable? = nil) -> TableScrollState {
+    func swap(to stableId:AnyHashable, innerId: AnyHashable? = nil) -> TableScrollState {
         switch self {
         case let .top(_, _, animated, focus, inset):
             return .top(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: inset)
@@ -297,7 +298,7 @@ public extension TableScrollState {
         }
     }
     
-    public var animated: Bool {
+    var animated: Bool {
         switch self {
         case let .top(_, _, animated, _, _):
             return animated
@@ -308,6 +309,8 @@ public extension TableScrollState {
         case .down(let animated):
             return animated
         case .up(let animated):
+            return animated
+        case let .upOffset(animated, _):
             return animated
         default:
             return false
@@ -1412,43 +1415,28 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             
             NSAnimationContext.runAnimationGroup({ ctx in
-                var y: CGFloat = 0
-                for i in 0 ..< controller.resortRange.location {
-                    y += self.list[i].heightValue
-                }
-                for i in controller.resortRange.location ..< controller.resortRange.max  {
-                    if let resortView = controller.resortView {
-                        if i == current {
-                            if current > start {
-                                y -= (resortView.frame.height - item(at: i).heightValue)
+                if controller.resortRange.location != NSNotFound {
+                    var y: CGFloat = 0
+                    for i in 0 ..< controller.resortRange.location {
+                        y += self.list[i].heightValue
+                    }
+                    for i in controller.resortRange.location ..< controller.resortRange.max  {
+                        if let resortView = controller.resortView {
+                            if i == current {
+                                if current > start {
+                                    y -= (resortView.frame.height - item(at: i).heightValue)
+                                }
+                                y -= self.documentOffset.y
+                                let point = NSMakePoint(resortView.frame.minX, y)
+                                //convert(, from: tableView)
+                                resortView.animator().setFrameOrigin(point)
+                                y = 0
+                                break
                             }
-                            y -= self.documentOffset.y
-                            let point = NSMakePoint(resortView.frame.minX, y)
-                            //convert(, from: tableView)
-                            resortView.animator().setFrameOrigin(point)
-                            y = 0
-                            break
+                            y += item(at: i).heightValue
                         }
-                        y += item(at: i).heightValue
                     }
                 }
-                
-//                if controller.resortRow != controller.currentHoleIndex {
-//                    for i in controller.resortRange.location ..< controller.resortRange.max {
-//                        if let view = viewNecessary(at: i) {
-//                            if controller.currentHoleIndex == i {
-//                                y += view.frame.height
-//                            }
-//                            if i != controller.resortRow {
-//                                contentView.addSubview(view)
-//                                view.animator().setFrameOrigin(NSMakePoint(view.frame.minX, y))
-//                                y += view.frame.height
-//                            }
-//
-//                        }
-//                    }
-//                }
-                
             }, completionHandler: {
                 let view = controller.resortView
                 controller.clear()
@@ -1456,7 +1444,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     view.frame = self.tableView.convert(view.frame, from: view.superview)
                     self.tableView.addSubview(view)
                 }
-                controller.complete(start, current)
+                if controller.resortRange.location != NSNotFound {
+                    controller.complete(start, current)
+                }
             })
             
             
@@ -2373,7 +2363,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
-        case .up(_), .down(_):
+        case .up, .down, .upOffset:
             self.scroll(to: transition.state)
         case let .saveVisible(side):
             saveVisible(side)
@@ -2670,6 +2660,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             } else {
                rowRect.origin = NSZeroPoint
             }
+        case let .upOffset(_animate, offset):
+            animate = _animate
+            if !tableView.isFlipped {
+                rowRect.origin = NSMakePoint(0, max(documentSize.height,frame.height))
+            } else {
+                rowRect.origin = NSZeroPoint
+            }
+            relativeInset = offset
         default:
             fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
         }
@@ -2724,7 +2722,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
-        rowRect.origin.y = round(min(max(rowRect.minY + relativeInset,0), documentSize.height - height) + inset.top)
+        rowRect.origin.y = round(min(max(rowRect.minY, 0) + relativeInset, documentSize.height - height) + inset.top)
         if clipView.bounds.minY != rowRect.minY {
             
             var applied = false

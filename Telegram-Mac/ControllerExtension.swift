@@ -277,7 +277,7 @@ var appearanceSignal:Signal<Appearance, NoError> {
     }
 }
 
-struct AppearanceWrapperEntry<E>: Comparable, Identifiable where E: Comparable, E:Identifiable {
+final class AppearanceWrapperEntry<E>: Comparable, Identifiable where E: Comparable, E:Identifiable {
     let entry: E
     let appearance: Appearance
     init(entry: E, appearance: Appearance) {

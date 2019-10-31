@@ -24,32 +24,16 @@ enum PeerMediaSharedEntryStableId : Hashable {
     
 }
 
-/*
- 
- static var firstItem: GeneralViewType {
-        return .modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))
-    }
-    static var innerItem: GeneralViewType {
-        return .modern(position: .inner, insets: NSEdgeInsetsMake(12, 16, 12, 16))
-    }
-    static var lastItem: GeneralViewType {
-        return .modern(position: .last, insets: NSEdgeInsetsMake(12, 16, 12, 16))
-    }
-    static var singleItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(12, 16, 12, 16))
-    }
- */
-//top: CGFloat, _ left: CGFloat, _ bottom: CGFloat, _ right: CGFloat
 private func bestGeneralViewType(_ array:[PeerMediaSharedEntry], for item: PeerMediaSharedEntry) -> GeneralViewType {
     for _ in array {
         if item == array.first && item == array.last {
-            return .modern(position: .single, insets: NSEdgeInsetsMake(6, 6, 6, 12))
+            return .modern(position: .single, insets: NSEdgeInsetsMake(7, 7, 7, 12))
         } else if item == array.first {
-            return .modern(position: .first, insets: NSEdgeInsetsMake(6, 6, 6, 12))
+            return .modern(position: .first, insets: NSEdgeInsetsMake(7, 7, 7, 12))
         } else if item == array.last {
-            return .modern(position: .last, insets: NSEdgeInsetsMake(6, 6, 6, 12))
+            return .modern(position: .last, insets: NSEdgeInsetsMake(7, 7, 7, 12))
         } else {
-            return .modern(position: .inner, insets: NSEdgeInsetsMake(6, 6, 6, 12))
+            return .modern(position: .inner, insets: NSEdgeInsetsMake(7, 7, 7, 12))
         }
     }
     return .modern(position: .single, insets: NSEdgeInsetsMake(6, 6, 6, 12))
@@ -57,22 +41,32 @@ private func bestGeneralViewType(_ array:[PeerMediaSharedEntry], for item: PeerM
 
 enum PeerMediaSharedEntry : Comparable, Identifiable {
     case messageEntry(Message, AutomaticMediaDownloadSettings, GeneralViewType)
-    case searchEntry(Bool)
     case emptySearchEntry(Bool)
     case date(MessageIndex)
     case sectionId(MessageIndex)
     var stableId: AnyHashable {
         switch self {
         case let .messageEntry(message, _, _):
-            return ChatHistoryEntryId.message(message)
+            return PeerMediaSharedEntryStableId.messageId(message.id)
         case let .date(index):
             return PeerMediaSharedEntryStableId.date(index)
         case let .sectionId(index):
             return PeerMediaSharedEntryStableId.sectionId(index)
-        case .searchEntry:
-            return PeerMediaSharedEntryStableId.search
         case .emptySearchEntry:
             return PeerMediaSharedEntryStableId.emptySearch
+        }
+    }
+    
+    var index: MessageIndex {
+        switch self {
+        case let .date(index):
+            return index
+        case let .sectionId(index):
+            return index
+        case let .messageEntry(message, _, _):
+            return MessageIndex(message).predecessor()
+        case .emptySearchEntry:
+            return MessageIndex.absoluteLowerBound()
         }
     }
     
@@ -87,100 +81,7 @@ enum PeerMediaSharedEntry : Comparable, Identifiable {
 }
 
 func <(lhs:PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
-    switch lhs {
-    case .searchEntry:
-        if case .searchEntry = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .emptySearchEntry:
-        switch rhs {
-        case .searchEntry:
-            return true
-        default:
-            return false
-        }
-    case .date(let lhsIndex):
-        switch rhs {
-        case .date(let rhsIndex):
-            return lhsIndex < rhsIndex
-        case let .messageEntry(rhsMessage, _, _):
-            return lhsIndex < MessageIndex(rhsMessage)
-        case .sectionId(let rhsIndex):
-            return lhsIndex < rhsIndex
-        default:
-            return true
-        }
-    case .sectionId(let lhsIndex):
-       switch rhs {
-        case .date(let rhsIndex):
-            return lhsIndex < rhsIndex
-        case let .messageEntry(rhsMessage, _, _):
-            return lhsIndex < MessageIndex(rhsMessage)
-        case .sectionId(let rhsIndex):
-            return lhsIndex < rhsIndex
-        default:
-            return true
-      }
-    case let .messageEntry(lhsMessage, _, _):
-        switch rhs {
-        case let .messageEntry(rhsMessage, _, _):
-            return MessageIndex(lhsMessage) < MessageIndex(rhsMessage)
-        default:
-            if case .date(let rhsIndex) = rhs {
-                return MessageIndex(lhsMessage) < rhsIndex
-            }
-            if case .sectionId(let rhsIndex) = rhs {
-                return MessageIndex(lhsMessage) < rhsIndex
-            }
-            return true
-        }
-    }
-}
-
-func ==(lhs: PeerMediaSharedEntry, rhs: PeerMediaSharedEntry) -> Bool {
-    switch lhs {
-    case let .messageEntry(lhsMessage, _, lhsViewType):
-        if case let .messageEntry(rhsMessage, _, rhsViewType) = rhs {
-            if lhsMessage.id != rhsMessage.id {
-                return false
-            }
-            if lhsViewType != rhsViewType {
-                return false
-            }
-            if lhsMessage.stableVersion != rhsMessage.stableVersion {
-                return false
-            }
-            return true
-        } else {
-            return false
-        }
-    case let .date(index):
-        if case .date(index) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .sectionId(index):
-       if case .sectionId(index) = rhs {
-           return true
-       } else {
-           return false
-       }
-    case let .emptySearchEntry(loading):
-        if case .emptySearchEntry(loading) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .searchEntry(lhsProgress):
-        if case let .searchEntry(rhsProgress) = rhs {
-            return lhsProgress == rhsProgress
-        } else {
-            return false
-        }
-    }
+    return lhs.index < rhs.index
 }
 
 
@@ -246,8 +147,6 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
     
     
     for group in groupItems.reversed() {
-//       entries.append(.sectionId(sectionId, type: .normal))
-//       sectionId += 1
         converted.append(group.section)
         converted.append(group.date)
         
@@ -258,39 +157,28 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
             default:
                 fatalError()
             }
-       }
-   }
+        }
+    }
+    
+   
     
     if !tempItems.isEmpty {
         converted.append(.sectionId(MessageIndex.absoluteLowerBound()))
     }
-    
 
     if update.updateType == .search {
-//        if update.searchState.state == .None {
-//            converted.append(.searchEntry(false))
-//        }
         if converted.isEmpty {
             converted.append(.emptySearchEntry(false))
         }
     } else if update.updateType == .loading {
-        if update.searchState.state == .None {
-//            if !tags.contains(.voiceOrInstantVideo) {
-//                converted.append(.searchEntry(true))
-//            }
-        }
         if converted.isEmpty {
             converted.append(.emptySearchEntry(true))
         }
-    } else if update.searchState.state == .None {
-//        if !update.messages.isEmpty && !tags.contains(.voiceOrInstantVideo) {
-//            converted.append(.searchEntry(false))
-//        }
     }
-    
-    
     converted = converted.sorted(by: <)
 
+  
+    
     return converted
 }
 
@@ -314,8 +202,6 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
             return PeerMediaDateItem(initialSize, index: index, stableId: entry.stableId)
         case .sectionId:
             return GeneralRowItem(initialSize, height: 20, stableId: entry.stableId, viewType: .separator)
-        case let .searchEntry(isLoading):
-            return SearchRowItem(initialSize, stableId: entry.stableId, searchInteractions: searchInteractions, isLoading: isLoading, inset: NSEdgeInsets(left: 10, right: 10, top: 10, bottom: 10))
         case .emptySearchEntry:
             return SearchEmptyRowItem(initialSize, stableId: entry.stableId, isLoading: false, viewType: .separator)
         }
@@ -364,12 +250,10 @@ struct MediaSearchState : Equatable {
     let state: SearchState
     let animated: Bool
     let isLoading: Bool
-    let controller: PeerMediaListController
 }
 
-class PeerMediaListController: GenericViewController<TableView> {
+class PeerMediaListController: TableViewController {
     
-    private var context: AccountContext
     private var chatLocation:ChatLocation
     private var chatInteraction:ChatInteraction
     private let disposable: MetaDisposable = MetaDisposable()
@@ -397,10 +281,9 @@ class PeerMediaListController: GenericViewController<TableView> {
 
     
     public init(context: AccountContext, chatLocation: ChatLocation, chatInteraction: ChatInteraction) {
-        self.context = context
         self.chatLocation = chatLocation
         self.chatInteraction = chatInteraction
-        super.init()
+        super.init(context)
     }
     
     
@@ -410,12 +293,30 @@ class PeerMediaListController: GenericViewController<TableView> {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-       
+    }
+    
+    override func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        if let stableId = stableId.base as? ChatHistoryEntryId {
+            switch stableId {
+            case let .message(message):
+                return PeerMediaSharedEntryStableId.messageId(message.id)
+            default:
+                break
+            }
+        }
+        return nil
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        
+        genericView.getBackgroundColor = {
+            theme.colors.listBackground
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -529,7 +430,7 @@ class PeerMediaListController: GenericViewController<TableView> {
         disposable.set(historyViewTransition.start(next: { [weak self] values in
             guard let `self` = self else {return}
             
-            let state = MediaSearchState(state: values.currentUpdate.searchState, animated: values.currentUpdate.searchState != values.previousUpdate?.searchState, isLoading: values.currentUpdate.updateType == .loading, controller: self)
+            let state = MediaSearchState(state: values.currentUpdate.searchState, animated: values.currentUpdate.searchState != values.previousUpdate?.searchState, isLoading: values.currentUpdate.updateType == .loading)
             self.genericView.merge(with: values.transition)
             self.mediaSearchState.set(state)
             
@@ -571,7 +472,6 @@ class PeerMediaListController: GenericViewController<TableView> {
             
         }
     }
-    
     
 }
 

@@ -295,7 +295,7 @@ class ChatListRowItem: TableRowItem {
     let hasDraft:Bool
     
     let pinnedType:ChatListPinnedType
-    let state: ChatListRowState
+    let activities: [ChatListInputActivity]
     
     var toolTip: String? {
         return messageText?.string
@@ -308,12 +308,12 @@ class ChatListRowItem: TableRowItem {
     
     private var groupLatestPeers:[ChatListGroupReferencePeer] = []
     
-    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], message: Message?, unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, state: ChatListRowState = .plain, animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal) {
+    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], message: Message?, unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal) {
         self.groupId = groupId
         self.peer = nil
         self.message = message
         self.chatListIndex = nil
-        self.state = state
+        self.activities = activities
         self.context = context
         self.mentionsCount = nil
         self.pinnedType = pinnedType
@@ -393,7 +393,7 @@ class ChatListRowItem: TableRowItem {
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
 
-    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), state: ChatListRowState = .plain, highlightText: String? = nil, associatedGroupId: PeerGroupId = .root) {
+    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root) {
         
         
         var embeddedState = embeddedState
@@ -428,7 +428,7 @@ class ChatListRowItem: TableRowItem {
         self.renderedPeer = renderedPeer
         self.context = context
         self.message = message
-        self.state = state
+        self.activities = activities
         self.pinnedType = pinnedType
         self.archiveStatus = nil
         self.hasDraft = embeddedState != nil
@@ -539,7 +539,7 @@ class ChatListRowItem: TableRowItem {
             return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
         }
         
-        return (max(300, size.width) - 50 - margin * 4) - (pinnedType != .none ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (state == .plain ? 0 : 40)
+        return (max(300, size.width) - 50 - margin * 4) - (pinnedType != .none ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
     }
     
     let leftInset:CGFloat = 50 + (10 * 2.0);
@@ -580,8 +580,38 @@ class ChatListRowItem: TableRowItem {
         }
     }
     func toggleMuted() {
+        let context = self.context
         if let peerId = peerId {
-            _ = togglePeerMuted(account: context.account, peerId: peerId).start()
+            if isMuted {
+                _ = togglePeerMuted(account: context.account, peerId: peerId).start()
+            } else {
+                var options:[ModalOptionSet] = []
+                
+                options.append(ModalOptionSet(title: L10n.chatListMute1Hour, selected: false, editable: true))
+                options.append(ModalOptionSet(title: L10n.chatListMute4Hours, selected: false, editable: true))
+                options.append(ModalOptionSet(title: L10n.chatListMute8Hours, selected: false, editable: true))
+                options.append(ModalOptionSet(title: L10n.chatListMute1Day, selected: false, editable: true))
+                options.append(ModalOptionSet(title: L10n.chatListMute3Days, selected: false, editable: true))
+                options.append(ModalOptionSet(title: L10n.chatListMuteForever, selected: true, editable: true))
+                
+                var intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
+                
+                showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (L10n.chatInputMute, theme.colors.accent), title: L10n.peerInfoNotifications, result: { result in
+                    
+                    for (i, option) in result.enumerated() {
+                        inner: switch option {
+                        case .selected:
+                            _ = updatePeerMuteSetting(account: context.account, peerId: peerId, muteInterval: intervals[i]).start()
+                            break
+                        default:
+                            break inner
+                        }
+                    }
+                    
+                }), for: context.window)
+            }
+            
+            
         }
     }
     

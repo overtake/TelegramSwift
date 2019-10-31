@@ -195,7 +195,7 @@ class ChatWallpaperModalController: ModalViewController {
                 showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: context.window)
             default:
                 _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                    return settings.updateWallpaper{ $0.withUpdatedWallpaper(settings.palette.wallpaper.wallpaper) }.saveDefaultWallpaper()
+                    return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
                 }).start()
                 delay(0.15, closure: {
                     close()

@@ -236,7 +236,7 @@ private final class ProxyListRowView : GeneralRowView {
         connected.image = item.waiting ? theme.icons.proxyNextWaitingListItem : theme.icons.proxyConnectedListItem
         connected.sizeToFit()
         
-        connectingView.progressColor = theme.colors.accent
+        connectingView.progressColor = theme.colors.indicatorColor
         
         delete.set(image: theme.icons.proxyDeleteListItem, for: .Normal)
         _ = delete.sizeToFit()

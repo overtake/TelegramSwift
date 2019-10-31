@@ -200,8 +200,8 @@ class EditImageModalController: ModalViewController {
         editValue.set(defaultData ?? EditedImageData(originalUrl: path))
     }
     
-    override func close() {
-        super.close()
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        super.close(animationType: animationType)
         
         onClose()
     }

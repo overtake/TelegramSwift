@@ -37,17 +37,9 @@ var mainWindow:Window {
 }
 
 var systemAppearance: NSAppearance {
-    let appearance = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light"
-    switch appearance {
-    case "Dark":
-         if #available(macOS 10.14, *) {
-           return NSAppearance(named: NSAppearance.Name.darkAqua)!
-         } else {
-           return NSAppearance(named: NSAppearance.Name.vibrantDark)!
-         }
-    case "Light":
-         return NSAppearance(named: NSAppearance.Name.aqua)!
-    default:
+    if #available(OSX 10.14, *) {
+        return NSApp.effectiveAppearance
+    } else {
         return NSAppearance.current
     }
 }

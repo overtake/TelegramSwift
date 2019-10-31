@@ -59,9 +59,9 @@ enum QuickPreviewMedia : Equatable {
 }
 
 extension GridNode : ModalPreviewProtocol {
-    func fileAtLocationInWindow(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtLocationInWindow(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         let point = self.documentView!.convert(point, from: nil)
-        var reference: QuickPreviewMedia? = nil
+        var reference: (QuickPreviewMedia, NSView?)? = nil
         self.forEachItemNode { node in
             if NSPointInRect(point, node.frame) {
                 if let c = node as? ModalPreviewRowViewProtocol {
@@ -74,7 +74,7 @@ extension GridNode : ModalPreviewProtocol {
 }
 
 extension TableView : ModalPreviewProtocol {
-    func fileAtLocationInWindow(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtLocationInWindow(_ point: NSPoint) ->(QuickPreviewMedia, NSView?)? {
         let index = self.row(at: documentView!.convert(point, from: nil))
         if index != -1 {
             let item = self.item(at: index)
@@ -88,11 +88,11 @@ extension TableView : ModalPreviewProtocol {
 }
 
 protocol ModalPreviewRowViewProtocol {
-    func fileAtPoint(_ point:NSPoint) -> QuickPreviewMedia?
+    func fileAtPoint(_ point:NSPoint) -> (QuickPreviewMedia, NSView?)?
 }
 
 protocol ModalPreviewProtocol {
-    func fileAtLocationInWindow(_ point:NSPoint) -> QuickPreviewMedia?
+    func fileAtLocationInWindow(_ point:NSPoint) -> (QuickPreviewMedia, NSView?)?
     
 }
 
@@ -123,31 +123,49 @@ class ModalPreviewHandler : NSObject {
     }
     
     func startHandler() {
-        
-        modal.update(with: global.fileAtLocationInWindow(window.mouseLocationOutsideOfEventStream))
-        showModal(with: modal, for: window)
-        
-        window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
-            if let strongSelf = self, let reference = strongSelf.global.fileAtLocationInWindow(strongSelf.window.mouseLocationOutsideOfEventStream) {
-                strongSelf.modal.update(with: reference)
+        let initial = global.fileAtLocationInWindow(window.mouseLocationOutsideOfEventStream)
+        if let initial = initial {
+            modal.update(with: initial.0)
+            let animation:ModalAnimationType
+            if let view = initial.1 {
+                var rect = view.convert(view.bounds, to: nil)
+                rect.origin.y = window.contentView!.frame.maxY - rect.maxY
+                animation = .scaleFrom(rect)
+            } else {
+                animation = .bottomToCenter
             }
-            return .invoked
-        }, with: self, for: .leftMouseDragged, priority: .modal)
-        
-        window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
-            self?.stopHandler()
-            return .invoked
-        }, with: self, for: .leftMouseUp, priority: .modal)
+            showModal(with: modal, for: window, animationType: animation)
+            
+            window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
+                if let strongSelf = self, let reference = strongSelf.global.fileAtLocationInWindow(strongSelf.window.mouseLocationOutsideOfEventStream) {
+                    strongSelf.modal.update(with: reference.0)
+                }
+                return .invoked
+                }, with: self, for: .leftMouseDragged, priority: .modal)
+            
+            window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
+                self?.stopHandler()
+                return .invoked
+            }, with: self, for: .leftMouseUp, priority: .modal)
+        }
+       
     }
     
     func stopHandler() {
         window.removeAllHandlers(for: self)
-        modal.close()
+        if let view = self.global.fileAtLocationInWindow(self.window.mouseLocationOutsideOfEventStream)?.1 {
+            var rect = view.convert(view.bounds, to: nil)
+            rect.origin.y = window.contentView!.frame.maxY - rect.maxY
+            modal.close(animationType: .scaleToRect(rect))
+        } else {
+            modal.close()
+        }
+       
         handler = nil
     }
     
     deinit {
-        stopHandler()
+        
     }
 }
 
@@ -207,7 +225,7 @@ class PreviewModalController: ModalViewController {
     init(_ context: AccountContext) {
         self.context = context
         
-        super.init(frame: NSMakeRect(0, 0, min(context.window.frame.width - 60, 450), min(450, context.window.frame.height - 60)))
+        super.init(frame: NSMakeRect(0, 0, min(context.window.frame.width - 50, 500), min(500, context.window.frame.height - 50)))
         bar = .init(height: 0)
     }
     

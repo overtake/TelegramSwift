@@ -620,7 +620,7 @@ open class ViewController : NSObject {
     
     
     open func backSettings() -> (String,CGImage?) {
-        return (localizedString("Navigation.back"),#imageLiteral(resourceName: "Icon_NavigationBack").precomposed(presentation.colors.blueIcon))
+        return (localizedString("Navigation.back"),#imageLiteral(resourceName: "Icon_NavigationBack").precomposed(presentation.colors.accentIcon))
     }
     
     open var popoverClass:AnyClass {
@@ -723,6 +723,11 @@ open class ModalViewController : ViewController {
         return true
     }
     
+    // use this only for modal progress. This is made specially for nsvisualeffect support.
+    open var contentBelowBackground: Bool {
+        return false
+    }
+    
     private var temporaryTouchBar: Any?
     
     @available(OSX 10.12.2, *)
@@ -797,8 +802,8 @@ open class ModalViewController : ViewController {
         return self.view
     }
     
-    open func close() {
-        modal?.close()
+    open func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        modal?.close(animationType: animationType)
     }
     
     open var handleEvents:Bool {

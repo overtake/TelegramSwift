@@ -435,7 +435,7 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 grayBackground: colors["grayBackground"] ?? parent.palette.grayBackground,
                                 grayForeground: colors["grayForeground"] ?? parent.palette.grayForeground,
                                 grayIcon: colors["grayIcon"] ?? parent.palette.grayIcon,
-                                blueIcon: colors["blueIcon"] ?? parent.palette.blueIcon,
+                                accentIcon: colors["accentIcon"] ?? colors["blueIcon"] ?? parent.palette.accentIcon,
                                 badgeMuted: colors["badgeMuted"] ?? parent.palette.badgeMuted,
                                 badge: colors["badge"] ?? parent.palette.badge,
                                 indicatorColor: colors["indicatorColor"] ?? parent.palette.indicatorColor,
@@ -456,8 +456,8 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 grayTextBubble_outgoing: colors["grayTextBubble_outgoing"] ?? parent.palette.grayTextBubble_outgoing,
                                 grayIconBubble_incoming: colors["grayIconBubble_incoming"] ?? parent.palette.grayIconBubble_incoming,
                                 grayIconBubble_outgoing: colors["grayIconBubble_outgoing"] ?? parent.palette.grayIconBubble_outgoing,
-                                blueIconBubble_incoming: colors["blueIconBubble_incoming"] ?? parent.palette.blueIconBubble_incoming,
-                                blueIconBubble_outgoing: colors["blueIconBubble_outgoing"] ?? parent.palette.blueIconBubble_outgoing,
+                                accentIconBubble_incoming: colors["accentIconBubble_incoming"] ?? colors["blueIconBubble_incoming"] ?? parent.palette.accentIconBubble_incoming,
+                                accentIconBubble_outgoing: colors["accentIconBubble_outgoing"] ?? colors["blueIconBubble_outgoing"] ?? parent.palette.accentIconBubble_outgoing,
                                 linkBubble_incoming: colors["linkBubble_incoming"] ?? parent.palette.linkBubble_incoming,
                                 linkBubble_outgoing: colors["linkBubble_outgoing"] ?? parent.palette.linkBubble_outgoing,
                                 textBubble_incoming: colors["textBubble_incoming"] ?? parent.palette.textBubble_incoming,
@@ -533,7 +533,8 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 chatBackground: colors["chatBackground"] ?? parent.palette.chatBackground,
                                 listBackground: colors["listBackground"] ?? parent.palette.listBackground,
                                 listGrayText: colors["listGrayText"] ?? parent.palette.listGrayText,
-                                grayHighlight: colors["grayHighlight"] ?? parent.palette.grayHighlight)
+                                grayHighlight: colors["grayHighlight"] ?? parent.palette.grayHighlight,
+                                focusAnimationColor: colors["focusAnimationColor"] ?? parent.palette.focusAnimationColor)
         }
         
     }
