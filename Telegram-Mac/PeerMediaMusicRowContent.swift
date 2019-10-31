@@ -13,28 +13,45 @@ import PostboxMac
 import SwiftSignalKitMac
 
 class PeerMediaMusicRowItem: PeerMediaRowItem {
-    fileprivate private(set) var textLayout:TextViewLayout?
-    fileprivate private(set) var file:TelegramMediaFile!
-    fileprivate private(set) var thumbResource: ExternalMusicAlbumArtResource!
+    fileprivate let textLayout:TextViewLayout
+    fileprivate let descLayout:TextViewLayout?
+    fileprivate let file:TelegramMediaFile
+    fileprivate let thumbResource: ExternalMusicAlbumArtResource
     fileprivate let isCompactPlayer: Bool
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false) {
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, viewType: GeneralViewType = .legacy) {
         self.isCompactPlayer = isCompactPlayer
-        super.init(initialSize,interface,object)
         
-        file = message.media[0] as? TelegramMediaFile
-        let attr = NSMutableAttributedString()
+        file = object.message!.media[0] as! TelegramMediaFile
         let music = file.musicText
-        _ = attr.append(string: music.0, color: theme.colors.text, font: .medium(.header))
-        _ = attr.append(string: "\n")
-        _ = attr.append(string: music.1, color: theme.colors.grayText, font: .normal(.text))
-        textLayout = TextViewLayout(attr, maximumNumberOfLines: 2, truncationType: .middle)
-        
+        self.textLayout = TextViewLayout(.initialize(string: music.0, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+
+        if !music.1.isEmpty {
+            self.descLayout = TextViewLayout(.initialize(string: music.1, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
+        } else if let size = file.size {
+            self.descLayout = TextViewLayout(.initialize(string: String.prettySized(with: size), color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
+        } else {
+            descLayout = nil
+        }
         thumbResource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
+
+        
+        
+        super.init(initialSize, interface, object, viewType: viewType)
+        
+    }
+    
+    override var inset: NSEdgeInsets {
+        if isCompactPlayer {
+            return NSEdgeInsetsMake(5, 10, 5, 10)
+        } else {
+            return NSEdgeInsetsMake(0, 30, 0, 30)
+        }
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        textLayout?.measure(width: width - 70)
+        textLayout.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        descLayout?.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
         return success
     }
     
@@ -54,6 +71,8 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
 
 class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     private let textView:TextView = TextView()
+    private let descView:TextView = TextView()
+
     let thumbView:TransformImageView = TransformImageView(frame: NSMakeRect(0, 0, 40, 40))
     
     var fetchStatus: MediaResourceStatus?
@@ -66,7 +85,11 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
         textView.isSelectable = false
         textView.userInteractionEnabled = false
         
+        descView.isSelectable = false
+        descView.userInteractionEnabled = false
+        
         addSubview(textView)
+        addSubview(descView)
         addSubview(thumbView)
 //        fetchControls = FetchControls(fetch: { [weak self] in
 //            self?.executeInteraction(true)
@@ -89,11 +112,18 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     override func layout() {
         super.layout()
-        if let item = item as? PeerMediaMusicRowItem, let layout = item.textLayout {
-            let f = focus(layout.layoutSize)
-            textView.update(layout, origin: NSMakePoint(60, f.minY))
-            thumbView.centerY(x: 10)
-            playAnimationView?.centerY(x: 10)
+        if let item = item as? PeerMediaMusicRowItem {
+            textView.update(item.textLayout, origin: NSMakePoint(item.contentInset.left, item.contentInset.top + 2))
+            
+            if let descLayout = item.descLayout {
+                descView.update(descLayout, origin: NSMakePoint(item.contentInset.left, item.contentSize.height - descLayout.layoutSize.height - item.contentInset.bottom - 2))
+            } else {
+                descView.update(nil)
+                textView.centerY()
+            }
+            
+            thumbView.centerY(x: 0)
+            playAnimationView?.centerY(x: 0)
         }
     }
     
@@ -141,7 +171,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                     if playAnimationView == nil {
                         playAnimationView = PeerMediaPlayerAnimationView()
                         addSubview(playAnimationView!)
-                        playAnimationView?.centerY(x: 10)
+                        playAnimationView?.centerY(x: 0)
                     }
                     if case .playing = song.state {
                         playAnimationView?.isPlaying = true
@@ -169,19 +199,18 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
         if let item = item as? PeerMediaMusicRowItem {
             var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
             textView.update(item.textLayout)
-            textView.centerY(x: 60)
+            textView.centerY(x: item.contentInset.left)
             textView.backgroundColor = backdorColor
             globalAudio?.add(listener: self)
             
             
-            let iconSize = CGSize(width: 40, height: 40)
             let imageCorners = ImageCorners(topLeft: .Corner(4.0), topRight: .Corner(4.0), bottomLeft: .Corner(4.0), bottomRight: .Corner(4.0))
-            let arguments = TransformImageArguments(corners: imageCorners, imageSize: iconSize, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: imageCorners, imageSize: PeerMediaIconSize, boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
             
             thumbView.layer?.contents = theme.icons.playerMusicPlaceholder
             thumbView.layer?.cornerRadius = .cornerRadius
             
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: iconSize, resource: item.thumbResource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PeerMediaIconSize, resource: item.thumbResource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
             
             thumbView.setSignal(chatMessagePhotoThumbnail(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
             

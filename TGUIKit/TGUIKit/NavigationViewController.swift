@@ -559,7 +559,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             if let strongSelf = self {
                 controller.navigationController = strongSelf
                 
-                if let index = strongSelf.stack.index(of: controller) {
+                if let index = strongSelf.stack.firstIndex(of: controller) {
                     strongSelf.stack.remove(at: index)
                 }
                 
@@ -760,7 +760,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
         
         
-        if previous.removeAfterDisapper, let index = stack.index(of: previous) {
+        if previous.removeAfterDisapper, let index = stack.firstIndex(of: previous) {
             self.stack.remove(at: index)
         }
         
@@ -788,9 +788,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
 
         
-         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: previous.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak prevBackgroundView] completed in
+         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: previous.animationStyle.duration, removeOnCompletion: false, additive: false, completion: { [weak prevBackgroundView] completed in
             if completed {
                 previous.view.removeFromSuperview()
+                previous.view.layer?.removeAnimation(forKey: "position.x")
                 previous.viewDidDisappear(true);
                 prevBackgroundView?.removeFromSuperview()
             }
@@ -915,7 +916,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     }
     
     public func removeUntil(_ controllerType: ViewController.Type) {
-        let index = stack.index(where: { current in
+        let index = stack.firstIndex(where: { current in
             return current.className == NSStringFromClass(controllerType)
         })
         if let index = index {

@@ -161,7 +161,7 @@ func layoutDetailsItem(theme: InstantPageTheme, title: NSAttributedString, bound
     let titleHeight = max(44.0, titleSize.height + 26.0)
     var offset: CGFloat?
     for var item in titleItems {
-        var itemOffset = floorToScreenPixels(scaleFactor: System.backingScale, (titleHeight - item.frame.height) / 2.0)
+        var itemOffset = floorToScreenPixels(System.backingScale, (titleHeight - item.frame.height) / 2.0)
         if item is InstantPageTextItem {
             offset = itemOffset
         } else if let offset = offset {
@@ -295,7 +295,7 @@ final class InstantPageDetailsView: Control, InstantPageView {
         self.titleTileView.frame = self.titleTile.frame
         self.highlightedBackgroundView.frame = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: CGSize(width: size.width, height: self.item.titleHeight + .borderSize))
         self.buttonView.frame = CGRect(origin: CGPoint(), size: CGSize(width: size.width, height: self.item.titleHeight))
-        self.arrowView.frame = CGRect(x: inset, y: floorToScreenPixels(scaleFactor: backingScaleFactor, (self.item.titleHeight - 8.0) / 2.0) + 1.0, width: 13.0, height: 8.0)
+        self.arrowView.frame = CGRect(x: inset, y: floorToScreenPixels(backingScaleFactor, (self.item.titleHeight - 8.0) / 2.0) + 1.0, width: 13.0, height: 8.0)
         self.contentView.frame = CGRect(x: 0.0, y: self.item.titleHeight, width: size.width, height: self.item.frame.height - self.item.titleHeight)
         
         let lineSize = CGSize(width: self.frame.width - inset, height: .borderSize)

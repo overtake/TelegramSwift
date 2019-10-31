@@ -31,12 +31,12 @@ private enum StorageUsageSection: Int32 {
 }
 
 private enum StorageUsageEntry: TableItemListNodeEntry {
-    case keepMedia(Int32, String, String)
-    case keepMediaInfo(Int32, String)
-    case clearAll(Int32, Bool)
-    case collecting(Int32, String)
-    case peersHeader(Int32, String)
-    case peer(Int32, Int32, Peer, String)
+    case keepMedia(Int32, String, String, GeneralViewType)
+    case keepMediaInfo(Int32, String, GeneralViewType)
+    case clearAll(Int32, Bool, GeneralViewType)
+    case collecting(Int32, String, GeneralViewType)
+    case peersHeader(Int32, String, GeneralViewType)
+    case peer(Int32, Int32, Peer, String, GeneralViewType)
     case section(Int32)
 
     var stableId: Int32 {
@@ -51,7 +51,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 3
         case .peersHeader:
             return 4
-        case let .peer(_, _, peer, _):
+        case let .peer(_, _, peer, _, _):
             return Int32(peer.id.hashValue)
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -70,7 +70,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 3
         case .peersHeader:
             return 4
-        case let .peer(_, index, _, _):
+        case let .peer(_, index, _, _, _):
             return 5 + index
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -79,17 +79,17 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case .keepMedia(let sectionId, _, _):
+        case .keepMedia(let sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
-        case .keepMediaInfo(let sectionId, _):
+        case .keepMediaInfo(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case .clearAll(let sectionId, _):
+        case .clearAll(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case .collecting(let sectionId, _):
+        case .collecting(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case .peersHeader(let sectionId, _):
+        case .peersHeader(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .peer(sectionId, _, _, _):
+        case let .peer(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -98,32 +98,32 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
     
     static func ==(lhs: StorageUsageEntry, rhs: StorageUsageEntry) -> Bool {
         switch lhs {
-        case let .keepMedia(sectionId, text, value):
-            if case .keepMedia(sectionId, text, value) = rhs {
+        case let .keepMedia(sectionId, text, value, viewType):
+            if case .keepMedia(sectionId, text, value, viewType) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .keepMediaInfo(sectionId, text):
-            if case .keepMediaInfo(sectionId, text) = rhs {
+        case let .keepMediaInfo(sectionId, text, viewType):
+            if case .keepMediaInfo(sectionId, text, viewType) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .clearAll(sectionId, enabled):
-            if case .clearAll(sectionId, enabled) = rhs {
+        case let .clearAll(sectionId, enabled, viewType):
+            if case .clearAll(sectionId, enabled, viewType) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .collecting(sectionId, text):
-            if case .collecting(sectionId, text) = rhs {
+        case let .collecting(sectionId, text, viewType):
+            if case .collecting(sectionId, text, viewType) = rhs {
                 return true
             } else {
                 return false
             }
-        case let .peersHeader(sectionId, text):
-            if case .peersHeader(sectionId, text) = rhs {
+        case let .peersHeader(sectionId, text, viewType):
+            if case .peersHeader(sectionId, text, viewType) = rhs {
                 return true
             } else {
                 return false
@@ -134,8 +134,8 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .peer(lhsSectionId, lhsIndex, lhsPeer, lhsValue):
-            if case let .peer(rhsSectionId, rhsIndex, rhsPeer, rhsValue) = rhs {
+        case let .peer(lhsSectionId, lhsIndex, lhsPeer, lhsValue, lhsViewType):
+            if case let .peer(rhsSectionId, rhsIndex, rhsPeer, rhsValue, rhsViewType) = rhs {
                 if lhsIndex != rhsIndex {
                     return false
                 }
@@ -143,6 +143,9 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
                     return false
                 }
                 if !arePeersEqual(lhsPeer, rhsPeer) {
+                    return false
+                }
+                if lhsViewType != rhsViewType {
                     return false
                 }
                 if lhsValue != rhsValue {
@@ -162,29 +165,27 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
     func item(_ arguments: StorageUsageControllerArguments, initialSize: NSSize) -> TableRowItem {
         
         switch self {
-        case let .keepMedia(_, text, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .context(value), action: {
+        case let .keepMedia(_, text, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .context(value), viewType: viewType, action: {
                 arguments.updateKeepMedia()
             })
 
-        case let .keepMediaInfo(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .collecting(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, alignment: .center, additionLoading: true)
-        case .clearAll(_, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.storageClearAll), type: .next, action: {
-                confirm(for: mainWindow, information: tr(L10n.storageClearAllConfirmDescription), successHandler: { _ in
-                    arguments.clearAll()
-                })
+        case let .keepMediaInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .collecting(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, alignment: .center, additionLoading: true, viewType: viewType)
+        case let .clearAll(_, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.storageClearAll), type: .next, viewType: viewType, action: {
+                arguments.clearAll()
             }, enabled: enabled)
-        case let .peersHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .peer(_, _, peer, value):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: true, isLookSavedMessage: true, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), action: {
+        case let .peersHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .peer(_, _, peer, value, viewType):
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), viewType: viewType, action: {
                 arguments.openPeerMedia(peer.id)
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -207,10 +208,8 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.keepMedia(sectionId, tr(L10n.storageUsageKeepMedia), stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout)))
-    entries.append(.keepMediaInfo(sectionId, tr(L10n.storageUsageKeepMediaDescription)))
-    
-    var addedHeader = false
+    entries.append(.keepMedia(sectionId, L10n.storageUsageKeepMedia, stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout), .singleItem))
+    entries.append(.keepMediaInfo(sectionId, L10n.storageUsageKeepMediaDescription, .textBottomItem))
     
     entries.append(.section(sectionId))
     sectionId += 1
@@ -218,7 +217,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     var exists:[PeerId:PeerId] = [:]
     if let cacheStats = cacheStats, case let .result(stats) = cacheStats {
         
-        entries.append(.clearAll(sectionId, !stats.peers.isEmpty))
+        entries.append(.clearAll(sectionId, !stats.peers.isEmpty, .singleItem))
 
         entries.append(.section(sectionId))
         sectionId += 1
@@ -238,21 +237,26 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
             
         }
         var index: Int32 = 0
-        for (peerId, size) in statsByPeerId.sorted(by: { $0.1 > $1.1 }) {
-            if size >= 32 * 1024 {
-                if let peer = stats.peers[peerId], !peer.isSecretChat {
-                    if !addedHeader {
-                        addedHeader = true
-                        entries.append(.peersHeader(sectionId, tr(L10n.storageUsageChatsHeader)))
-                    }
-                    entries.append(.peer(sectionId, index, peer, dataSizeString(Int(size))))
-                    index += 1
-                }
-            }
+        
+        let filtered = statsByPeerId.sorted(by: { $0.1 > $1.1 }).filter { peerId, size -> Bool in
+            return size >= 32 * 1024 && stats.peers[peerId] != nil && !stats.peers[peerId]!.isSecretChat
+        }
+        
+        if !filtered.isEmpty {
+            entries.append(.peersHeader(sectionId, L10n.storageUsageChatsHeader, .textTopItem))
+        }
+        
+        for (i, value) in filtered.enumerated() {
+            let peer = stats.peers[value.0]!
+            entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1)), bestGeneralViewType(filtered, for: i)))
+            index += 1
         }
     } else {
-        entries.append(.collecting(sectionId, tr(L10n.storageUsageCalculating)))
+        entries.append(.collecting(sectionId, L10n.storageUsageCalculating, .singleItem))
     }
+    
+    entries.append(.section(sectionId))
+    sectionId += 1
     
     return entries
 }
@@ -298,7 +302,7 @@ class StorageUsageController: TableViewController {
                     }).start()
                 }
                 
-                if let item = strongSelf.genericView.item(stableId: StorageUsageEntry.keepMedia(0, "", "").stableId), let view = (strongSelf.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
+                if let item = strongSelf.genericView.item(stableId: StorageUsageEntry.keepMedia(0, "", "", .singleItem).stableId), let view = (strongSelf.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
                     
                     showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(tr(L10n.timerWeeksCountable(1)), {
                         timeoutAction(7 * 24 * 60 * 60)
@@ -353,9 +357,11 @@ class StorageUsageController: TableViewController {
                 }
             })
         }, clearAll: {
-            let path = context.account.postbox.mediaBox.basePath
-            _ = showModalProgress(signal: combineLatest(clearImageCache(), context.account.postbox.mediaBox.fileConxtets() |> mapToSignal { clearCache(path, excludes: $0) }), for: mainWindow).start()
-            statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))))
+            confirm(for: context.window, information: tr(L10n.storageClearAllConfirmDescription), successHandler: { _ in
+                let path = context.account.postbox.mediaBox.basePath
+                _ = showModalProgress(signal: combineLatest(clearImageCache(), context.account.postbox.mediaBox.fileConxtets() |> mapToSignal { clearCache(path, excludes: $0) }), for: mainWindow).start()
+                statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))))
+            })
         })
         
         let previous:Atomic<[AppearanceWrapperEntry<StorageUsageEntry>]> = Atomic(value: [])

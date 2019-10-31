@@ -40,9 +40,9 @@ private func newThemeEntries(state: NewThemeState) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, placeholder: nil, inputPlaceholder: L10n.newThemePlaceholder, filter: { $0 }, limit: 100))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.newThemePlaceholder, filter: { $0 }, limit: 100))
     index += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newThemeDesc), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newThemeDesc), data: InputDataGeneralTextData()))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -144,13 +144,19 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
         return .none
     }, afterDisappear: {
         disposable.dispose()
+    }, getBackgroundColor: {
+        theme.colors.background
     })
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.newThemeCreate, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
+    }, drawBorder: true, height: 50, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     close = { [weak modalController] in
         modalController?.modal?.close()

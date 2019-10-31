@@ -23,9 +23,9 @@ private final class AvatarTabContainer : View {
         circle.setFrameSize(frameRect.size)
         circle.layer?.cornerRadius = frameRect.height / 2
         circle.layer?.borderWidth = .borderSize
-        circle.layer?.borderColor = theme.colors.blueIcon.cgColor
-        addSubview(avatar)
+        circle.layer?.borderColor = theme.colors.accentIcon.cgColor
         addSubview(circle)
+        addSubview(avatar)
     }
     
     required init?(coder: NSCoder) {
@@ -37,7 +37,7 @@ private final class AvatarTabContainer : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        circle.layer?.borderColor = theme.colors.blueIcon.cgColor
+        circle.layer?.borderColor = theme.colors.accentIcon.cgColor
     }
     
     
@@ -56,9 +56,14 @@ private final class AvatarTabContainer : View {
         if animated {
             let from: CGFloat = selected ? 1 : 24 / frame.height
             let to: CGFloat = selected ? 24 / frame.height : 1
-            avatar.layer?.animateScaleSpring(from: from, to: to, duration: 0.25, removeOnCompletion: false, bounce: false, completion: { completed in
+            avatar.layer?.animateScaleSpring(from: from, to: to, duration: 0.3, removeOnCompletion: false, bounce: false, completion: { completed in
                 
             })
+            if selected {
+                circle.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.3, bounce: false)
+            } else {
+                circle.layer?.animateScaleSpring(from: 1.0, to: 0.5, duration: 0.3, removeOnCompletion: false, bounce: false)
+            }
         } else {
             if selected {
                 avatar.setFrameSize(NSMakeSize(24, 24))

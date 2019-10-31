@@ -173,7 +173,7 @@ final class EditImageControlsView : View {
         cancel.set(font: .medium(.title), for: .Normal)
         success.set(font: .medium(.title), for: .Normal)
         
-        success.set(color: nightBluePalette.accent, for: .Normal)
+        success.set(color: tintedNightPalette.accent, for: .Normal)
         cancel.set(color: .white, for: .Normal)
         
         cancel.set(text: L10n.modalCancel, for: .Normal)

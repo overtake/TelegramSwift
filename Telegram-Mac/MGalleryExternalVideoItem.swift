@@ -36,6 +36,8 @@ enum AVPlayerState : Equatable {
             self = .paused(duration: duration)
         case .waitingToPlayAtSpecifiedRate:
             self = .waiting
+        @unknown default:
+            self = .waiting
         }
     }
 }

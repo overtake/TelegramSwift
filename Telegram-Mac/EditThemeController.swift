@@ -74,28 +74,17 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     var index:Int32 = 0
     
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.errors[_id_input_title], identifier: _id_input_title, mode: .plain, placeholder: nil, inputPlaceholder: L10n.editThemeNamePlaceholder, filter: { $0 }, limit: 128))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.errors[_id_input_title], identifier: _id_input_title, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.editThemeNamePlaceholder, filter: { $0 }, limit: 128))
     index += 1
 
-//    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.slug), error: state.errors[_id_input_slug], identifier: _id_input_slug, mode: .plain, placeholder: InputDataInputPlaceholder("t.me/addtheme/", hasLimitationText: true), inputPlaceholder: L10n.editThemeSlugPlaceholder, filter: { $0 }, limit: 64))
-//    index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(state.slug), identifier: _id_input_slug, equatable: InputDataEquatable(state.slug), item: { size, id in
-        return UsernameInputRowItem(size, stableId: id, placeholder: "t.me/addtheme/", limit: 64, status: nil, text: state.slug ?? "", changeHandler: { updated in
-            arguments.updateSlug(updated)
-        }, holdText: true)
-    }))
-    index += 1
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.slug), error: state.errors[_id_input_slug], identifier: _id_input_slug, mode: .plain, data: InputDataRowData(viewType: .legacy, defaultText: "https://t.me/addtheme/"), placeholder: nil, inputPlaceholder: "", filter: { $0 }, limit: 64))
+    
     
     let slugDesc = L10n.editThemeSlugDesc
     
-    if let error = state.errors[_id_input_slug] {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.description), color: theme.colors.redUI, detectBold: true))
-        index += 1
-    } else {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(slugDesc), color: theme.colors.grayText, detectBold: true))
-        index += 1
-    }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(slugDesc), data: InputDataGeneralTextData()))
+    index += 1
     
     let previewTheme = state.presentation
     
@@ -104,9 +93,9 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
     let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
-    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
     let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
-    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
     
     entries.append(.sectionId(sectionId, type: .custom(10)))
     sectionId += 1
@@ -139,7 +128,7 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
         selectFileDesc = L10n.editThemeSelectUpdatedFileDesc
     }
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_uploadFile, data: .init(name: selectFileText, color: theme.colors.blueText, type: .context(state.path ?? ""), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_uploadFile, data: .init(name: selectFileText, color: theme.colors.accent, type: .context(state.path ?? ""), action: {
         filePanel(with: ["palette"], allowMultiple: false, for: arguments.context.window, completion: { paths in
             if let first = paths?.first {
                 arguments.updateFile(first)
@@ -148,10 +137,10 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     })))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(selectFileDesc), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(selectFileDesc), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .legacy))
     sectionId += 1
 
     return entries
@@ -215,7 +204,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
                                 |> mapToSignal { cloud in
                                     return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(cloud).withUpdatedSettings(settings)) |> map { wallpaper in
                                         return (wallpaper, cloud)
-                                    } |> mapError { _ in return GetWallpaperError.generic }
+                                    } |> castError(GetWallpaperError.self)
                                 }
                             |> `catch` { _ in
                                 return .single((.none, nil))
@@ -314,19 +303,23 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             
             let updateSignal = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 if settings.cloudTheme?.id == telegramTheme.id {
-                    return settings
-                        .withUpdatedPalette(newTheme.colors)
-                        .updateWallpaper { _ in
-                            return newTheme.wallpaper
-                        }
-                        .withUpdatedFollowSystemAppearance(false)
-                        .withUpdatedCloudTheme(telegramTheme)
+                    let defaultCloud = DefaultCloudTheme(cloud: telegramTheme, palette: newTheme.colors, wallpaper: AssociatedWallpaper(cloud: newTheme.wallpaper.associated?.cloud, wallpaper: newTheme.wallpaper.wallpaper))
+                    
+                    let defaultTheme = DefaultTheme(local: newTheme.colors.parent, cloud: defaultCloud)
+                    var settings = settings.withUpdatedCloudTheme(telegramTheme).withUpdatedPalette(newTheme.colors)
+                    if presentation.colors.isDark {
+                        settings = settings.withUpdatedDefaultDark(defaultTheme)
+                    } else {
+                        settings = settings.withUpdatedDefaultDay(defaultTheme)
+                    }
+                    return settings.withUpdatedDefaultIsDark(presentation.colors.isDark)
                 } else {
                     return settings
                 }
                 
-            }) |> mapError { _ in CreateThemeError.generic } |> mapToSignal { _ in
-                return updateTheme(account: context.account, accountManager: context.sharedContext.accountManager, theme: telegramTheme, title: state.name, slug: state.slug, resource: mediaResource, thumbnailData: thumbnailData)
+            }) |> mapError { _ in CreateThemeError.generic }
+            |> mapToSignal {
+                updateTheme(account: context.account, accountManager: context.sharedContext.accountManager, theme: telegramTheme, title: state.name, slug: state.slug, resource: mediaResource, thumbnailData: thumbnailData)
                     |> filter {
                         switch $0 {
                         case .progress:
@@ -339,7 +332,9 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }
             
             disposable.set(showModalProgress(signal: updateSignal, for: context.window).start(next: { _ in
-                close?()
+                delay(0.2, closure: {
+                    close?()
+                })
             }, error: { error in
                 switch error {
                 case .generic:
@@ -364,6 +359,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
         return save()
         
     }, updateDatas: { data in
+        var checkNext: Bool = false
         updateState { value in
             let oldSlug = value.slug
             var value = value
@@ -372,9 +368,12 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
                     .withUpdatedError(nil, for: _id_input_title)
             if oldSlug != value.slug {
                 value = value.withUpdatedError(nil, for: _id_input_slug)
-                checkSlug(value.slug ?? "")
+                checkNext = true
             }
             return value
+        }
+        if checkNext {
+            checkSlug(stateValue.with { $0.slug } ?? "")
         }
         return .none
     }, afterDisappear: {
@@ -392,14 +391,20 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
         }
         controller.genericView.tableView.updateLocalizationAndTheme(theme: theme)
         controller.genericView.backgroundMode = theme.controllerBackgroundMode
+    }, getBackgroundColor: {
+        theme.colors.background
     })
     
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.editThemeEdit, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
+    }, drawBorder: true, height: 50, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
     
     close = { [weak modalController] in
         modalController?.modal?.close()

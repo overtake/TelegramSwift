@@ -21,7 +21,7 @@ private func progressInteractiveThumb(backgroundColor: NSColor, foregroundColor:
         let image = #imageLiteral(resourceName: "Icon_MessageFile").precomposed(foregroundColor)
         
         ctx.fill(NSMakeRect(0, 0, context.size.width, context.size.height))
-        ctx.draw(image, in: NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (context.size.width - image.backingSize.width) / 2.0), floorToScreenPixels(scaleFactor: System.backingScale, (context.size.height - image.backingSize.height) / 2.0), image.backingSize.width, image.backingSize.height))
+        ctx.draw(image, in: NSMakeRect(floorToScreenPixels(System.backingScale, (context.size.width - image.backingSize.width) / 2.0), floorToScreenPixels(System.backingScale, (context.size.height - image.backingSize.height) / 2.0), image.backingSize.width, image.backingSize.height))
         
     }
     
@@ -218,7 +218,7 @@ private class RadialProgressOverlayLayer: CALayer {
         let endAngle = -(CGFloat.pi / 2)
         
         let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
-        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(scaleFactor: System.backingScale, parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.clockwise)
+        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(System.backingScale, parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.clockwise)
         
         ctx.setLineWidth(parameters.theme.lineWidth);
         ctx.setLineCap(.round);

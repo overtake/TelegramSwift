@@ -91,7 +91,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         self.messageLayout = TextViewLayout(messageTitle, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
         
         if let selectRange = rangeOfSearch(searchText, in: messageTitle.string) {
-            self.messageLayout.additionalSelections = [TextSelectedRange.init(range: selectRange, color: theme.colors.blueIcon.withAlphaComponent(0.5), def: false)]
+            self.messageLayout.additionalSelections = [TextSelectedRange.init(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
         }
         
         
@@ -205,7 +205,7 @@ private class ContextSearchMessageView : GeneralRowView {
     override var backdorColor: NSColor {
         if let item = item {
             if item.isHighlighted && !item.isSelected {
-                return theme.colors.grayForeground
+                return theme.colors.grayHighlight
             } else if item.isSelected {
                 return theme.chatList.selectedBackgroundColor
             }

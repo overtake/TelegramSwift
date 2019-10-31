@@ -8,6 +8,36 @@
 
 import Cocoa
 import SwiftSignalKitMac
+
+
+private final class ProgressModalView : NSVisualEffectView {
+    private let progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 32, 32))
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.wantsLayer = true
+        self.layer?.cornerRadius = 10.0
+        self.autoresizingMask = []
+        self.autoresizesSubviews = false
+        self.addSubview(self.progressView)
+        self.material = presentation.colors.isDark ? .dark : .light
+        self.blendingMode = .withinWindow
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(NSMakeSize(80, 80))
+    }
+    
+    required init?(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        self.progressView.center()
+        self.center()
+    }
+}
+
 class ProgressModalController: ModalViewController {
 
     private var progressView:ProgressIndicator?
@@ -15,8 +45,12 @@ class ProgressModalController: ModalViewController {
         return .clear
     }
     
-    override func close() {
-        super.close()
+    override var contentBelowBackground: Bool {
+        return true
+    }
+    
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        super.close(animationType: animationType)
         disposable.dispose()
     }
     
@@ -25,16 +59,8 @@ class ProgressModalController: ModalViewController {
         return .clear
     }
     
-    override func loadView() {
-        super.loadView()
-   
-        progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
-        
-        view.background = presentation.colors.grayBackground.withAlphaComponent(0.8)
-        view.addSubview(progressView!)
-        progressView!.center()
-        
-        viewDidLoad()
+    override func viewClass() -> AnyClass {
+        return ProgressModalView.self
     }
     
     override func viewDidResized(_ size: NSSize) {
@@ -74,24 +100,19 @@ class ProgressModalController: ModalViewController {
 }
 
 
-private final class SuccessModalView : View {
+private final class SuccessModalView : NSVisualEffectView {
     private let imageView:ImageView = ImageView()
     private let textView: TextView = TextView()
-    private let visualView:NSVisualEffectView
-    required init(frame frameRect: NSRect) {
-        visualView = NSVisualEffectView(frame: frameRect)
+    required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(visualView)
         addSubview(textView)
-        visualView.material = .menu
-        visualView.blendingMode = .withinWindow
-        visualView.state = .active
-        
-      //  wantsLayer = true
-      //  background = presentation.colors.grayBackground.withAlphaComponent(0.86)
         addSubview(imageView)
-       
-        
+        self.wantsLayer = true
+        self.layer?.cornerRadius = 10.0
+        self.autoresizingMask = []
+        self.autoresizesSubviews = false
+        self.material = presentation.colors.isDark ? .dark : .light
+        self.blendingMode = .withinWindow
     }
     
 
@@ -126,6 +147,10 @@ class SuccessModalController : ModalViewController {
         return .clear
     }
     
+    override var contentBelowBackground: Bool {
+        return true
+    }
+    
     override var containerBackground: NSColor {
         return .clear
     }
@@ -148,7 +173,6 @@ class SuccessModalController : ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.updateIcon(icon: icon, text: text)
-        genericView.background = _backgroundColor
         readyOnce()
     }
     

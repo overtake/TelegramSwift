@@ -133,7 +133,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             
             let signal = combineLatest(updateTitle, updateDescription)
             
-            updatePeerNameDisposable.set(showModalProgress(signal: (signal |> deliverOnMainQueue), for: mainWindow).start(error: { _ in
+            updatePeerNameDisposable.set(showModalProgress(signal: (signal |> deliverOnMainQueue), for: context.window).start(error: { _ in
                 updateState { state in
                     return state.withUpdatedSavingData(false)
                 }
@@ -594,28 +594,53 @@ private struct GroupPeerEntryStableId: PeerInfoEntryStableId {
 
 
 enum GroupInfoEntry: PeerInfoEntry {
-    case info(section:Int, view: PeerView, editingState: GroupInfoEditingState?, updatingPhotoState:PeerInfoUpdatingPhotoState?)
-    case setGroupPhoto(section:Int)
-    case scam(section:Int, text: String)
-    case about(section:Int, text: String)
-    case addressName(section:Int, name:String)
-    case sharedMedia(section:Int)
-    case notifications(section:Int, settings: PeerNotificationSettings?)
-    case usersHeader(section:Int, count:Int)
-    case addMember(section:Int, inviteViaLink: Bool)
-    case groupTypeSetup(section:Int, isPublic: Bool)
-    case linkedChannel(section:Int, channel: Peer, subscribers: Int32?)
-    case groupDescriptionSetup(section:Int, text: String)
-    case groupAboutDescription(section:Int)
-    case groupStickerset(section:Int, packName: String)
-    case preHistory(section:Int, enabled: Bool)
-    case groupManagementInfoLabel(section:Int, text: String)
-    case administrators(section:Int, count: String)
-    case permissions(section:Int, count: String)
-    
-    case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, enabled:Bool)
-    case leave(section:Int, text: String)
+    case info(section:Int, view: PeerView, editingState: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, viewType: GeneralViewType)
+    case setGroupPhoto(section:Int, viewType: GeneralViewType)
+    case scam(section:Int, text: String, viewType: GeneralViewType)
+    case about(section:Int, text: String, viewType: GeneralViewType)
+    case addressName(section:Int, name:String, viewType: GeneralViewType)
+    case sharedMedia(section:Int, viewType: GeneralViewType)
+    case notifications(section:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
+    case usersHeader(section:Int, count:Int, viewType: GeneralViewType)
+    case addMember(section:Int, inviteViaLink: Bool, viewType: GeneralViewType)
+    case groupTypeSetup(section:Int, isPublic: Bool, viewType: GeneralViewType)
+    case linkedChannel(section:Int, channel: Peer, subscribers: Int32?, viewType: GeneralViewType)
+    case groupDescriptionSetup(section:Int, text: String, viewType: GeneralViewType)
+    case groupAboutDescription(section:Int, viewType: GeneralViewType)
+    case groupStickerset(section:Int, packName: String, viewType: GeneralViewType)
+    case preHistory(section:Int, enabled: Bool, viewType: GeneralViewType)
+    case groupManagementInfoLabel(section:Int, text: String, viewType: GeneralViewType)
+    case administrators(section:Int, count: String, viewType: GeneralViewType)
+    case permissions(section:Int, count: String, viewType: GeneralViewType)
+    case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, enabled:Bool, viewType: GeneralViewType)
+    case leave(section:Int, text: String, viewType: GeneralViewType)
     case section(Int)
+    
+    func withUpdatedViewType(_ viewType: GeneralViewType) -> GroupInfoEntry {
+        switch self {
+        case let .info(section, view, editingState, updatingPhotoState, _): return .info(section: section, view: view, editingState: editingState, updatingPhotoState: updatingPhotoState, viewType: viewType)
+        case let .setGroupPhoto(section, _): return .setGroupPhoto(section: section, viewType: viewType)
+        case let .scam(section, text, _): return .scam(section: section, text: text, viewType: viewType)
+        case let .about(section, text, _): return .about(section: section, text: text, viewType: viewType)
+        case let .addressName(section, name, _): return .addressName(section: section, name: name, viewType: viewType)
+        case let .sharedMedia(section, _): return .sharedMedia(section: section, viewType: viewType)
+        case let .notifications(section, settings, _): return .notifications(section: section, settings: settings, viewType: viewType)
+        case let .usersHeader(section, count, _): return .usersHeader(section: section, count: count, viewType: viewType)
+        case let .addMember(section, inviteViaLink, _): return .addMember(section: section, inviteViaLink: inviteViaLink, viewType: viewType)
+        case let .groupTypeSetup(section, isPublic, _): return .groupTypeSetup(section: section, isPublic: isPublic, viewType: viewType)
+        case let .linkedChannel(section, channel, subscriber, _): return .linkedChannel(section: section, channel: channel, subscribers: subscriber, viewType: viewType)
+        case let .groupDescriptionSetup(section, text, _): return .groupDescriptionSetup(section: section, text: text, viewType: viewType)
+        case let .groupAboutDescription(section, _): return .groupAboutDescription(section: section, viewType: viewType)
+        case let .groupStickerset(section, packName, _): return .groupStickerset(section: section, packName: packName, viewType: viewType)
+        case let .preHistory(section, enabled, _): return .preHistory(section: section, enabled: enabled, viewType: viewType)
+        case let .groupManagementInfoLabel(section, text, _): return .groupManagementInfoLabel(section: section, text: text, viewType: viewType)
+        case let .administrators(section, count, _): return .administrators(section: section, count: count, viewType: viewType)
+        case let .permissions(section, count, _): return .permissions(section: section, count: count, viewType: viewType)
+        case let .member(section, index, peerId, peer, presence, activity, memberStatus, editing, enabled, _): return .member(section: section, index: index, peerId: peerId, peer: peer, presence: presence, activity: activity, memberStatus: memberStatus, editing: editing, enabled: enabled, viewType: viewType)
+        case let .leave(section, text, _): return  .leave(section: section, text: text, viewType: viewType)
+        case .section: return self
+        }
+    }
     
     func isEqual(to: PeerInfoEntry) -> Bool {
         guard let entry = to as? GroupInfoEntry else {
@@ -623,11 +648,17 @@ enum GroupInfoEntry: PeerInfoEntry {
         }
         
         switch self {
-        case let .info(_, lhsPeerView, lhsEditingState, lhsUpdatingPhotoState):
+        case let .info(lhsSection, lhsPeerView, lhsEditingState, lhsUpdatingPhotoState, lhsViewType):
             switch entry {
-            case let .info(_, rhsPeerView, rhsEditingState, rhsUpdatingPhotoState):
+            case let .info(rhsSection, rhsPeerView, rhsEditingState, rhsUpdatingPhotoState, rhsViewType):
                 
                 if lhsUpdatingPhotoState != rhsUpdatingPhotoState {
+                    return false
+                }
+                if lhsSection != rhsSection {
+                    return false
+                }
+                if lhsViewType != rhsViewType {
                     return false
                 }
                 
@@ -659,63 +690,63 @@ enum GroupInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case .setGroupPhoto:
-            if case .setGroupPhoto = entry {
+        case let .setGroupPhoto(section, viewType):
+            if case .setGroupPhoto(section, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .addressName(_, addressName):
-            if case .addressName(_, addressName) = entry {
+        case let .addressName(section, addressName, viewType):
+            if case .addressName(section, addressName, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .scam(_, text):
-            if case .scam(_, text) = entry {
+        case let .scam(section, text, viewType):
+            if case .scam(section, text, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .about(_, text):
-            if case .about(_, text) = entry {
+        case let .about(section, text, viewType):
+            if case .about(section, text, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case .sharedMedia:
-            if case .sharedMedia = entry {
+        case let .sharedMedia(sectionId, viewType):
+            if case .sharedMedia(sectionId, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .preHistory(sectionId, enabled):
-            if case .preHistory(sectionId, enabled) = entry {
+        case let .preHistory(sectionId, enabled, viewType):
+            if case .preHistory(sectionId, enabled, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .administrators(section, count):
-            if case .administrators(section, count) = entry {
+        case let .administrators(section, count, viewType):
+            if case .administrators(section, count, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .permissions(section, count):
-            if case .permissions(section, count) = entry {
+        case let .permissions(section, count, viewType):
+            if case .permissions(section, count, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .groupStickerset(sectionId, packName):
-            if case .groupStickerset(sectionId, packName) = entry {
+        case let .groupStickerset(sectionId, packName, viewType):
+            if case .groupStickerset(sectionId, packName, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .notifications(_, lhsSettings):
+        case let .notifications(section, lhsSettings, viewType):
             switch entry {
-            case let .notifications(_, rhsSettings):
+            case .notifications(section, let rhsSettings, viewType):
                 
                 if let lhsSettings = lhsSettings, let rhsSettings = rhsSettings {
                     return lhsSettings.isEqual(to: rhsSettings)
@@ -726,51 +757,54 @@ enum GroupInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .groupTypeSetup(_, isPublic):
-            if case .groupTypeSetup(_, isPublic) = entry {
+        case let .groupTypeSetup(sectionId, isPublic, viewType):
+            if case .groupTypeSetup(sectionId, isPublic, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .linkedChannel(sectionId, lhsChannel, subscribers):
-            if case .linkedChannel(sectionId, let rhsChannel, subscribers) = entry {
+        case let .linkedChannel(sectionId, lhsChannel, subscribers, viewType):
+            if case .linkedChannel(sectionId, let rhsChannel, subscribers, viewType) = entry {
                 return lhsChannel.isEqual(rhsChannel)
             } else {
                 return false
             }
-        case .groupDescriptionSetup:
-            if case .groupDescriptionSetup = entry {
+        case let .groupDescriptionSetup(section, text, viewType):
+            if case .groupDescriptionSetup(section, text, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case .groupAboutDescription:
-            if case .groupAboutDescription = entry {
+        case let .groupAboutDescription(section, viewType):
+            if case .groupAboutDescription(section, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .groupManagementInfoLabel(_, text):
-            if case .groupManagementInfoLabel(_, text) = entry {
+        case let .groupManagementInfoLabel(section, text, viewType):
+            if case .groupManagementInfoLabel(section, text, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .usersHeader(_, count):
-            if case .usersHeader(_, count) = entry {
+        case let .usersHeader(section, count, viewType):
+            if case .usersHeader(section, count, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case .addMember:
-            if case .addMember = entry {
+        case let .addMember(section, inviteViaLink, viewType):
+            if case .addMember(section, inviteViaLink, viewType) = entry {
                 return true
             } else {
                 return false
             }
-        case let .member(_, lhsIndex, lhsPeerId, lhsPeer, lhsPresence, lhsActivity, lhsMemberStatus, lhsEditing, lhsEnabled):
-            if case let .member(_, rhsIndex, rhsPeerId, rhsPeer, rhsPresence, rhsActivity, rhsMemberStatus, rhsEditing, rhsEnabled) = entry {
+        case let .member(lhsSection, lhsIndex, lhsPeerId, lhsPeer, lhsPresence, lhsActivity, lhsMemberStatus, lhsEditing, lhsEnabled, lhsViewType):
+            if case let .member(rhsSection, rhsIndex, rhsPeerId, rhsPeer, rhsPresence, rhsActivity, rhsMemberStatus, rhsEditing, rhsEnabled, rhsViewType) = entry {
                 if lhsIndex != rhsIndex {
+                    return false
+                }
+                if lhsSection != rhsSection {
                     return false
                 }
                 if lhsMemberStatus != rhsMemberStatus {
@@ -780,6 +814,9 @@ enum GroupInfoEntry: PeerInfoEntry {
                     return false
                 }
                 if lhsEnabled != rhsEnabled {
+                    return false
+                }
+                if lhsViewType != rhsViewType {
                     return false
                 }
                 if let lhsPeer = lhsPeer, let rhsPeer = rhsPeer {
@@ -807,8 +844,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .leave(sectionId, text):
-            if case .leave(sectionId, text) = entry {
+        case let .leave(sectionId, text, viewType):
+            if case .leave(sectionId, text, viewType) = entry {
                 return true
             } else {
                 return false
@@ -825,7 +862,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     
     var stableId: PeerInfoEntryStableId {
         switch self {
-        case let .member(_, _, peerId, _, _, _, _, _, _):
+        case let .member(_, _, peerId, _, _, _, _, _, _, _):
             return GroupPeerEntryStableId(peerId: peerId)
         default:
             return IntPeerInfoEntryStableId(value: stableIndex)
@@ -836,13 +873,13 @@ enum GroupInfoEntry: PeerInfoEntry {
         switch self {
         case .info:
             return 0
-        case .scam:
-            return 1
-        case .about:
-            return 2
-        case .addressName:
-            return 3
         case .setGroupPhoto:
+            return 1
+        case .scam:
+            return 2
+        case .about:
+            return 3
+        case .addressName:
             return 4
         case .groupDescriptionSetup:
             return 5
@@ -875,56 +912,101 @@ enum GroupInfoEntry: PeerInfoEntry {
         case .leave:
             return 19
         case let .section(id):
-            return (id + 1) * 1000 - id
+            return (id + 1) * 100000 - id
         }
     }
     
-    
+    var sectionId: Int {
+        switch self {
+        case let .info(sectionId, _, _, _, _):
+            return sectionId
+        case let .scam(sectionId, _, _):
+            return sectionId
+        case let .about(sectionId, _, _):
+            return sectionId
+        case let .addressName(sectionId, _, _):
+            return sectionId
+        case let .setGroupPhoto(sectionId, _):
+            return sectionId
+        case let .addMember(sectionId, _, _):
+            return sectionId
+        case let .notifications(sectionId, _, _):
+            return sectionId
+        case let .sharedMedia(sectionId, _):
+            return sectionId
+        case let .groupTypeSetup(sectionId, _, _):
+            return sectionId
+        case let .linkedChannel(sectionId, _, _, _):
+            return sectionId
+        case let .preHistory(sectionId, _, _):
+            return sectionId
+        case let .groupStickerset(sectionId, _, _):
+            return sectionId
+        case let .administrators(sectionId, _, _):
+            return sectionId
+        case let .permissions(sectionId, _, _):
+            return sectionId
+        case let .groupDescriptionSetup(sectionId, _, _):
+            return sectionId
+        case let .groupAboutDescription(sectionId, _):
+            return sectionId
+        case let .groupManagementInfoLabel(sectionId, _, _):
+            return sectionId
+        case let .usersHeader(sectionId, _, _):
+            return sectionId
+        case let .member(sectionId, _, _, _, _, _, _, _, _, _):
+            return sectionId
+        case let .leave(sectionId, _, _):
+            return sectionId
+        case let .section(sectionId):
+            return sectionId
+        }
+    }
     
     var sortIndex: Int {
         switch self {
-        case let .info(sectionId, _, _, _):
-            return (sectionId * 1000) + stableIndex
-        case let .scam(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .about(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .addressName(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .setGroupPhoto(sectionId):
-            return (sectionId * 1000) + stableIndex
-        case let .addMember(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .notifications(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .sharedMedia(sectionId):
-            return (sectionId * 1000) + stableIndex
-        case let .groupTypeSetup(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .linkedChannel(sectionId, _, _):
-            return (sectionId * 1000) + stableIndex
-        case let .preHistory(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .groupStickerset(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .administrators(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .permissions(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .groupDescriptionSetup(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .groupAboutDescription(sectionId):
-            return (sectionId * 1000) + stableIndex
-        case let .groupManagementInfoLabel(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .usersHeader(sectionId, _):
-            return (sectionId * 1000) + stableIndex
-        case let .member(sectionId, index, _, _, _, _, _, _, _):
-            return (sectionId * 1000) + index + 200
-        case let .leave(sectionId, _):
-            return (sectionId * 1000) + stableIndex
+        case let .info(sectionId, _, _, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .scam(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .about(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .addressName(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .setGroupPhoto(sectionId, _):
+            return (sectionId * 100000) + stableIndex
+        case let .addMember(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .notifications(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .sharedMedia(sectionId, _):
+            return (sectionId * 100000) + stableIndex
+        case let .groupTypeSetup(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .linkedChannel(sectionId, _, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .preHistory(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .groupStickerset(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .administrators(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .permissions(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .groupDescriptionSetup(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .groupAboutDescription(sectionId, _):
+            return (sectionId * 100000) + stableIndex
+        case let .groupManagementInfoLabel(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .usersHeader(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .member(sectionId, index, _, _, _, _, _, _, _, _):
+            return (sectionId * 100000) + index + 200
+        case let .leave(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
         case let .section(sectionId):
-            return (sectionId + 1) * 1000 - sectionId
+            return (sectionId + 1) * 100000 - sectionId
         }
     }
     
@@ -938,29 +1020,29 @@ enum GroupInfoEntry: PeerInfoEntry {
     
     func item(initialSize:NSSize, arguments:PeerInfoArguments) -> TableRowItem {
         let arguments = arguments as! GroupInfoArguments
-        
+        let state = arguments.state as! GroupInfoState
         switch self {
-        case let .info(_, peerView, editingState, updatingPhotoState):
-            return PeerInfoHeaderItem(initialSize, stableId:stableId.hashValue, context: arguments.context, peerView:peerView, editable: editingState != nil, updatingPhotoState: updatingPhotoState, firstNameEditableText: editingState?.editingName, textChangeHandler: { name, _ in
+        case let .info(_, peerView, editable, updatingPhotoState, viewType):
+            return PeerInfoHeaderItem(initialSize, stableId:stableId.hashValue, context: arguments.context, peerView:peerView, viewType: viewType, editable: editable, updatingPhotoState: updatingPhotoState, firstNameEditableText: state.editingState?.editingName, textChangeHandler: { name, _ in
                 arguments.updateEditingName(name)
             })
-        case let .scam(_, text):
-            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, detectLinks:false)
-        case let .about(_, text):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, text: text, context: arguments.context, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
+        case let .scam(_, text, viewType):
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+        case let .about(_, text, viewType):
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, text: text, context: arguments.context, viewType: viewType, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
         }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
-        case let .addressName(_, value):
+        case let .addressName(_, value, viewType):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, isTextSelectable:false, callback:{
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: mainWindow)
             }, selectFullWord: true)
-        case .setGroupPhoto:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupPhoto, nameStyle: blueActionButton, type: .none, action: {
+        case let .setGroupPhoto(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupPhoto, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 
                 filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
@@ -987,61 +1069,59 @@ enum GroupInfoEntry: PeerInfoEntry {
 //                })
                 
             })
-        case let .notifications(_, settings):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), action: {
+        case let .notifications(_, settings, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: {
                 arguments.toggleNotifications()
             })
             
-        case .sharedMedia:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .none, action: { () in
+        case let .sharedMedia(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: { () in
                 arguments.sharedMedia()
             })
-        case let .groupDescriptionSetup(section: _, text: text):
-            return GeneralInputRowItem(initialSize, stableId: stableId.hashValue, placeholder: L10n.peerInfoAboutPlaceholder, text: text, limit: 255, insets: NSEdgeInsets(left:25,right:25,top:8,bottom:3), textChangeHandler: { updatedText in
-                arguments.updateEditingDescriptionText(updatedText)
-            }, font: .normal(.title))
-        case let .preHistory(_, enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPreHistory, type: .context(enabled ? L10n.peerInfoPreHistoryVisible : L10n.peerInfoPreHistoryHidden), action: {
+        case let .groupDescriptionSetup(section: _, text, viewType):
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
+        case let .preHistory(_, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPreHistory, type: .context(enabled ? L10n.peerInfoPreHistoryVisible : L10n.peerInfoPreHistoryHidden), viewType: viewType, action: {
                 arguments.preHistorySetup()
             })
-        case .groupAboutDescription:
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSetAboutDescription)
+        case let .groupAboutDescription(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSetAboutDescription, viewType: viewType)
             
-        case let .groupTypeSetup(section: _, isPublic: isPublic):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupType, type: .context(isPublic ? L10n.peerInfoGroupTypePublic : L10n.peerInfoGroupTypePrivate), action: { () in
+        case let .groupTypeSetup(section: _, isPublic: isPublic, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupType, type: .nextContext(isPublic ? L10n.peerInfoGroupTypePublic : L10n.peerInfoGroupTypePrivate), viewType: viewType, action: { () in
                 arguments.visibilitySetup()
             })
-        case let .linkedChannel(_, channel, _):
+        case let .linkedChannel(_, channel, _, viewType):
             let title: String
             if let address = channel.addressName {
                 title = "@\(address)"
             } else {
                 title = channel.displayTitle
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .nextContext(title), action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .nextContext(title), viewType: viewType, action: { () in
                 arguments.setupDiscussion()
             })
-        case .groupStickerset(_, let name):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupStickersSet, type: .context(name), action: { () in
+        case let .groupStickerset(_, name, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupStickersSet, type: .nextContext(name), viewType: viewType, action: { () in
                 arguments.setGroupStickerset()
             })
-        case let .permissions(section: _, count: count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPermissions, icon: theme.icons.peerInfoPermissions, type: .context(count), action: { () in
+        case let .permissions(section: _, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPermissions, icon: theme.icons.peerInfoPermissions, type: .nextContext(count), viewType: viewType, action: { () in
                 arguments.blacklist()
             })
-        case let .administrators(section: _, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .context(count), action: { () in
+        case let .administrators(section: _, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count), viewType: viewType, action: { () in
                 arguments.admins()
             })
-        case let .usersHeader(section: _, count: count):
+        case let .usersHeader(section: _, count, viewType):
             var countValue = L10n.peerInfoMembersHeaderCountable(count)
             countValue = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: countValue)
-        case .addMember(_, let inviteViaLink):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddMember, nameStyle: blueActionButton, type: .none, action: { () in
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: countValue, viewType: viewType)
+        case let .addMember(_, inviteViaLink, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddMember, nameStyle: blueActionButton, type: .none, viewType: viewType, action: { () in
                 arguments.addMember(inviteViaLink)
-            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 36), inset:NSEdgeInsets(left: 40, right: 30))
-        case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, enabled):
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 9))
+        case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, enabled, viewType):
             let label: String
             switch memberStatus {
             case let .admin(rank):
@@ -1070,56 +1150,72 @@ enum GroupInfoEntry: PeerInfoEntry {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId.hashValue, enabled: enabled, height: 46, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset:NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), action:{
+            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
                 arguments.peerInfo(peer!.id)
             }, inputActivity: inputActivity)
             
-        case .leave(_, let text):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, action: {
+        case let .leave(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.delete()
             })
-        case .section(_):
-            return GeneralRowItem(initialSize, height:20, stableId: stableId.hashValue)
+        case .section:
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
         default:
             preconditionFailure()
         }
     }
 }
 
-
+enum GroupInfoSection : Int {
+    case header = 1
+    case info = 2
+    case desc = 3
+    case action = 4
+    case addition = 5
+    case type = 6
+    case admin = 7
+    case members = 8
+    case destruct = 9
+}
 
 
 func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = []) -> [PeerInfoEntry] {
-    var entries: [PeerInfoEntry] = []
+    var entries: [GroupInfoEntry] = []
     if let group = peerViewMainPeer(view), let arguments = arguments as? GroupInfoArguments, let state = arguments.state as? GroupInfoState {
         
-        var sectionId:Int = 0
         let access = group.groupAccess
         
         
-        entries.append(GroupInfoEntry.info(section: sectionId, view: view, editingState: access.canEditGroupInfo ? state.editingState : nil, updatingPhotoState: state.updatingPhotoState))
+        var infoBlock: [GroupInfoEntry] = []
+        func applyBlock(_ block:[GroupInfoEntry]) {
+            var block = block
+            for (i, item) in block.enumerated() {
+                block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
+            }
+            entries.append(contentsOf: block)
+        }
+        
+        infoBlock.append(.info(section: GroupInfoSection.header.rawValue, view: view, editingState: access.canEditGroupInfo ? state.editingState != nil : false, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
         
         
         if let editingState = state.editingState {
-                        
-            
             if access.canEditGroupInfo {
-                entries.append(GroupInfoEntry.setGroupPhoto(section: sectionId))
-                entries.append(GroupInfoEntry.groupDescriptionSetup(section: sectionId, text: editingState.editingDescriptionText))
-                entries.append(GroupInfoEntry.groupAboutDescription(section: sectionId))
+                infoBlock.append(GroupInfoEntry.setGroupPhoto(section: GroupInfoSection.header.rawValue, viewType: .singleItem))
                 
-                entries.append(GroupInfoEntry.section(sectionId))
-                sectionId += 1
+                applyBlock(infoBlock)
+                
+                entries.append(GroupInfoEntry.groupDescriptionSetup(section: GroupInfoSection.desc.rawValue, text: editingState.editingDescriptionText, viewType: .singleItem))
+                entries.append(GroupInfoEntry.groupAboutDescription(section:  GroupInfoSection.desc.rawValue, viewType: .textBottomItem))
+            } else {
+                applyBlock(infoBlock)
             }
-            entries.append(GroupInfoEntry.notifications(section: sectionId, settings: view.notificationSettings))
-
- 
+            
+            
             if let group = view.peers[view.peerId] as? TelegramGroup, let cachedGroupData = view.cachedData as? CachedGroupData {
                 if case .creator = group.role {
                     if cachedGroupData.flags.contains(.canChangeUsername) {
-                        entries.append(GroupInfoEntry.groupTypeSetup(section: sectionId, isPublic: group.addressName != nil))
-                        
-                       entries.append(GroupInfoEntry.preHistory(section: sectionId, enabled: false))
+                        entries.append(GroupInfoEntry.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
+                        entries.append(GroupInfoEntry.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
                     }
                     
                     var activePermissionCount: Int?
@@ -1133,28 +1229,29 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         activePermissionCount = count
                     }
                     
-                    entries.append(GroupInfoEntry.section(sectionId))
-                    sectionId += 1
-                    
-                    entries.append(GroupInfoEntry.permissions(section: sectionId, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? ""))
-                    entries.append(GroupInfoEntry.administrators(section: sectionId, count: ""))
+                    entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .firstItem))
+                    entries.append(GroupInfoEntry.administrators(section: GroupInfoSection.admin.rawValue, count: "", viewType: .lastItem))
                 }
             } else if let channel = view.peers[view.peerId] as? TelegramChannel, let cachedChannelData = view.cachedData as? CachedChannelData {
                 
+                var actionBlock:[GroupInfoEntry] = []
+                
                 if access.isCreator {
-                    entries.append(GroupInfoEntry.groupTypeSetup(section: sectionId, isPublic: group.addressName != nil))
+                    actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
                 }
                 if (channel.adminRights != nil || channel.flags.contains(.isCreator)), let linkedDiscussionPeerId = cachedChannelData.linkedDiscussionPeerId, let peer = view.peers[linkedDiscussionPeerId] {
-                    entries.append(GroupInfoEntry.linkedChannel(section: sectionId, channel: peer, subscribers: cachedChannelData.participantsSummary.memberCount))
+                    actionBlock.append(.linkedChannel(section: GroupInfoSection.type.rawValue, channel: peer, subscribers: cachedChannelData.participantsSummary.memberCount, viewType: .singleItem))
                 } else if channel.hasPermission(.banMembers) {
                     if !access.isPublic {
-                        entries.append(GroupInfoEntry.preHistory(section: sectionId, enabled: cachedChannelData.flags.contains(.preHistoryEnabled)))
+                        actionBlock.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: cachedChannelData.flags.contains(.preHistoryEnabled), viewType: .singleItem))
                     }
                 }
                 
                 if cachedChannelData.flags.contains(.canSetStickerSet) && access.canEditGroupInfo {
-                    entries.append(GroupInfoEntry.groupStickerset(section: sectionId, packName: cachedChannelData.stickerPack?.title ?? ""))
+                    actionBlock.append(.groupStickerset(section: GroupInfoSection.type.rawValue, packName: cachedChannelData.stickerPack?.title ?? "", viewType: .singleItem))
                 }
+                
+                applyBlock(actionBlock)
                 
                 var canViewAdminsAndBanned = false
                 if let channel = view.peers[view.peerId] as? TelegramChannel {
@@ -1177,60 +1274,60 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         activePermissionCount = count
                     }
                     
-                    entries.append(GroupInfoEntry.section(sectionId))
-                    sectionId += 1
+
+                    entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .firstItem))
+                    entries.append(GroupInfoEntry.administrators(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.adminCount.flatMap { "\($0)" } ?? "", viewType: .lastItem))
                     
-                    entries.append(GroupInfoEntry.permissions(section: sectionId, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? ""))
-                    entries.append(GroupInfoEntry.administrators(section: sectionId, count: cachedChannelData.participantsSummary.adminCount.flatMap { "\($0)" } ?? ""))
                 }
             }
 
         } else {
             
+            applyBlock(infoBlock)
+            
+            
+            
+            var aboutBlock:[GroupInfoEntry] = []
+            
             if group.isScam {
-                entries.append(GroupInfoEntry.scam(section: sectionId, text: L10n.groupInfoScamWarning))
+                aboutBlock.append(GroupInfoEntry.scam(section: GroupInfoSection.desc.rawValue, text: L10n.groupInfoScamWarning, viewType: .singleItem))
             }
             
             if let cachedChannelData = view.cachedData as? CachedChannelData {
                 if let about = cachedChannelData.about, !about.isEmpty, !group.isScam {
-                    entries.append(GroupInfoEntry.about(section: sectionId, text: about))
+                    aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
             
             if let cachedGroupData = view.cachedData as? CachedGroupData {
                 if let about = cachedGroupData.about, !about.isEmpty, !group.isScam {
-                    entries.append(GroupInfoEntry.about(section: sectionId, text: about))
+                    aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
             
-            
-            
             if let addressName = group.addressName {
-                entries.append(GroupInfoEntry.addressName(section: sectionId, name: addressName))
+                aboutBlock.append(GroupInfoEntry.addressName(section: GroupInfoSection.desc.rawValue, name: addressName, viewType: .singleItem))
             }
             
-            if entries.count > 1 {
-                entries.append(GroupInfoEntry.section(sectionId))
-                sectionId += 1
-            }
-            entries.append(GroupInfoEntry.notifications(section: sectionId, settings: view.notificationSettings))
-            entries.append(GroupInfoEntry.sharedMedia(section: sectionId))
+            applyBlock(aboutBlock)
+            
+            
+            entries.append(GroupInfoEntry.notifications(section: GroupInfoSection.addition.rawValue, settings: view.notificationSettings, viewType: .firstItem))
+            entries.append(GroupInfoEntry.sharedMedia(section: GroupInfoSection.addition.rawValue, viewType: .lastItem))
+            
+
         }
         
         
         
         if let cachedGroupData = view.cachedData as? CachedGroupData, let participants = cachedGroupData.participants {
             
-            entries.append(GroupInfoEntry.section(sectionId))
-            sectionId = 10
+            entries.append(GroupInfoEntry.usersHeader(section: GroupInfoSection.members.rawValue, count: participants.participants.count, viewType: .textTopItem))
             
-            entries.append(GroupInfoEntry.usersHeader(section: sectionId, count: participants.participants.count))
-            
-            
-           
+            var usersBlock:[GroupInfoEntry] = []
             
             if access.canAddMembers {
-                entries.append(GroupInfoEntry.addMember(section: sectionId, inviteViaLink: access.canCreateInviteLink))
+                usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
             }
             
             
@@ -1306,9 +1403,10 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         editing = nil
                     }
                     
-                    entries.append(GroupInfoEntry.member(section: sectionId, index: i, peerId: peer.id, peer: peer, presence: view.peerPresences[peer.id], activity: inputActivities[peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(peer.id)))
+                    usersBlock.append(.member(section: GroupInfoSection.members.rawValue, index: i, peerId: peer.id, peer: peer, presence: view.peerPresences[peer.id], activity: inputActivities[peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(peer.id), viewType: .singleItem))
                 }
             }
+            applyBlock(usersBlock)
         }
         
         if let cachedGroupData = view.cachedData as? CachedChannelData {
@@ -1337,15 +1435,14 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
             }
             
-            entries.append(GroupInfoEntry.section(sectionId))
-            sectionId = 10
-            
             if let membersCount = cachedGroupData.participantsSummary.memberCount {
-                entries.append(GroupInfoEntry.usersHeader(section: sectionId, count: Int(membersCount)))
+                entries.append(GroupInfoEntry.usersHeader(section: GroupInfoSection.members.rawValue, count: Int(membersCount), viewType: .textTopItem))
             }
             
+            var usersBlock:[GroupInfoEntry] = []
+            
             if access.canAddMembers  {
-                entries.append(GroupInfoEntry.addMember(section: sectionId, inviteViaLink: access.canCreateInviteLink))
+                usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
             }
             
             let sortedParticipants = participants.filter({$0.peer.displayTitle != L10n.peerDeletedUser}).sorted(by: { lhs, rhs in
@@ -1394,26 +1491,43 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     editing = nil
                 }
                 
-                entries.append(GroupInfoEntry.member(section: sectionId, index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id)))
+                usersBlock.append(GroupInfoEntry.member(section: GroupInfoSection.members.rawValue, index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
             }
+            applyBlock(usersBlock)
         }
         
-        entries.append(GroupInfoEntry.section(sectionId))
-        sectionId += 1
+        
+        var destructBlock:[GroupInfoEntry] = []
         
         if let group = peerViewMainPeer(view) as? TelegramGroup {
             if case .Member = group.membership {
-                entries.append(GroupInfoEntry.leave(section: sectionId, text: L10n.peerInfoDeleteAndExit))
+                destructBlock.append(GroupInfoEntry.leave(section: GroupInfoSection.destruct.rawValue, text: L10n.peerInfoDeleteAndExit, viewType: .singleItem))
             }
         } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
             if case .member = channel.participationStatus {
                 if state.editingState != nil, access.isCreator {
-                    entries.append(GroupInfoEntry.leave(section: sectionId, text: L10n.peerInfoDeleteGroup))
+                    destructBlock.append(GroupInfoEntry.leave(section: GroupInfoSection.destruct.rawValue, text: L10n.peerInfoDeleteGroup, viewType: .singleItem))
                 } else {
-                    entries.append(GroupInfoEntry.leave(section: sectionId, text: L10n.peerInfoLeaveGroup))
+                    destructBlock.append(GroupInfoEntry.leave(section: GroupInfoSection.destruct.rawValue, text: L10n.peerInfoLeaveGroup, viewType: .singleItem))
                 }
             }
         }
+        
+        applyBlock(destructBlock)
+        
+        var items:[GroupInfoEntry] = []
+        var sectionId:Int = 0
+        for entry in entries {
+            if entry.sectionId != sectionId {
+                items.append(.section(sectionId))
+                sectionId = entry.sectionId
+            }
+            items.append(entry)
+        }
+        sectionId += 1
+        items.append(.section(sectionId))
+        
+        entries = items
         
     }
     

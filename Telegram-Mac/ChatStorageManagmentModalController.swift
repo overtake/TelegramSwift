@@ -13,114 +13,6 @@ import TelegramCoreMac
 import SwiftSignalKitMac
 
 
-/*let controller = ActionSheetController()
- let dismissAction: () -> Void = { [weak controller] in
- controller?.dismissAnimated()
- }
- 
- var sizeIndex: [PeerCacheUsageCategory: (Bool, Int64)] = [:]
- 
- var itemIndex = 0
- 
- let updateTotalSize: () -> Void = { [weak controller] in
- controller?.updateItem(groupIndex: 0, itemIndex: itemIndex, { item in
- let title: String
- let filteredSize = sizeIndex.values.reduce(0, { $0 + ($1.0 ? $1.1 : 0) })
- 
- if filteredSize == 0 {
- title = "Clear"
- } else {
- title = "Clear (\(dataSizeString(Int(filteredSize))))"
- }
- 
- if let item = item as? ActionSheetButtonItem {
- return ActionSheetButtonItem(title: title, color: filteredSize != 0 ? .accent : .disabled, enabled: filteredSize != 0, action: item.action)
- }
- return item
- })
- }
- 
- let toggleCheck: (PeerCacheUsageCategory, Int) -> Void = { [weak controller] category, itemIndex in
- if let (value, size) = sizeIndex[category] {
- sizeIndex[category] = (!value, size)
- }
- controller?.updateItem(groupIndex: 0, itemIndex: itemIndex, { item in
- if let item = item as? ActionSheetCheckboxItem {
- return ActionSheetCheckboxItem(title: item.title, label: item.label, value: !item.value, action: item.action)
- }
- return item
- })
- updateTotalSize()
- }
- var items: [ActionSheetItem] = []
- 
- let validCategories: [PeerCacheUsageCategory] = [.image, .video, .audio, .file]
- 
- var totalSize: Int64 = 0
- 
- for categoryId in validCategories {
- if let media = categories[categoryId] {
- var categorySize: Int64 = 0
- for (_, size) in media {
- categorySize += size
- }
- sizeIndex[categoryId] = (true, categorySize)
- totalSize += categorySize
- let index = itemIndex
- items.append(ActionSheetCheckboxItem(title: stringForCategory(categoryId), label: dataSizeString(Int(categorySize)), value: true, action: { value in
- toggleCheck(categoryId, index)
- }))
- itemIndex += 1
- }
- }
- 
- if !items.isEmpty {
- items.append(ActionSheetButtonItem(title: "Clear (\(dataSizeString(Int(totalSize))))", action: {
- if let statsPromise = statsPromise {
- var clearCategories = sizeIndex.keys.filter({ sizeIndex[$0]!.0 })
- //var clearSize: Int64 = 0
- 
- var clearMediaIds = Set<MediaId>()
- 
- var media = stats.media
- if var categories = media[peerId] {
- for category in clearCategories {
- if let contents = categories[category] {
- for (mediaId, size) in contents {
- clearMediaIds.insert(mediaId)
- //clearSize += size
- }
- }
- categories.removeValue(forKey: category)
- }
- 
- media[peerId] = categories
- }
- 
- var clearResourceIds = Set<WrappedMediaResourceId>()
- for id in clearMediaIds {
- if let ids = stats.mediaResourceIds[id] {
- for resourceId in ids {
- clearResourceIds.insert(WrappedMediaResourceId(resourceId))
- }
- }
- }
- 
- statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers))))
- 
- clearDisposable.set(clearCachedMediaResources(account: account, mediaResourceIds: clearResourceIds).start())
- }
- 
- dismissAction()
- }))
- 
- controller.setItemGroups([
- ActionSheetItemGroup(items: items),
- ActionSheetItemGroup(items: [ActionSheetButtonItem(title: "Cancel", action: { dismissAction() })])
- ])
- presentControllerImpl?(controller)
- } */
-
 
 
 class ChatStorageManagmentModalController: ModalViewController {
@@ -131,11 +23,22 @@ class ChatStorageManagmentModalController: ModalViewController {
         self.categories = categories
         self.clear = clear
         super.init(frame: NSMakeRect(0, 0, 300, CGFloat(categories.count) * 40 + 40 + 50))
+        bar = .init(height: 0)
+    }
+    
+    override var dynamicSize: Bool {
+        return true
+    }
+    
+    override func measure(size: NSSize) {
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.listHeight)), animated: false)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        genericView.getBackgroundColor = {
+            theme.colors.listBackground
+        }
         reloadData()
         
         readyOnce()
@@ -146,17 +49,18 @@ class ChatStorageManagmentModalController: ModalViewController {
         
         genericView.removeAll()
         
-        _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: arc4random()))
+        _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 30, stableId: arc4random(), viewType: .separator))
         
         
-        let validCategories: [PeerCacheUsageCategory] = [.image, .video, .audio, .file]
+        let validCategories: [PeerCacheUsageCategory] = [.image, .video, .audio, .file].filter {
+            categories[$0] != nil
+        }
         
         var totalSize: Int64 = 0
         
         
         var itemIndex = 0
-        
-        for categoryId in validCategories {
+        for (i, categoryId) in validCategories.enumerated() {
             if let media = categories[categoryId] {
                 var categorySize: Int64 = 0
                 for (_, size) in media {
@@ -186,8 +90,7 @@ class ChatStorageManagmentModalController: ModalViewController {
                     }
                     
                 }
-                
-                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize))))" , type: .selectable(sizeIndex[categoryId]?.0 ?? false), action: {
+                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize))))" , type: .selectable(sizeIndex[categoryId]?.0 ?? false), viewType: bestGeneralViewType(validCategories, for: i), action: {
                     toggleCheck(categoryId, index)
                 }))
                 
@@ -196,21 +99,25 @@ class ChatStorageManagmentModalController: ModalViewController {
         }
         
         
-        _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: arc4random()))
+        _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 30, stableId: arc4random(), viewType: .separator))
     }
     
     
     private func stringForCategory(_ category: PeerCacheUsageCategory) -> String {
         switch category {
         case .image:
-            return tr(L10n.storageClearPhotos)
+            return L10n.storageClearPhotos
         case .video:
-            return tr(L10n.storageClearVideos)
+            return L10n.storageClearVideos
         case .audio:
-            return tr(L10n.storageClearAudio)
+            return L10n.storageClearAudio
         case .file:
-            return tr(L10n.storageClearDocuments)
+            return L10n.storageClearDocuments
         }
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: nil, center: ModalHeaderData.init(title: L10n.telegramStorageUsageController), right: nil)
     }
     
     override var modalInteractions: ModalInteractions? {
@@ -225,14 +132,12 @@ class ChatStorageManagmentModalController: ModalViewController {
             totalSize += categorySize
         }
 
-        
         return ModalInteractions(acceptTitle: tr(L10n.storageClear(dataSizeString(Int(totalSize)))), accept: { [weak self] in
             if let strongSelf = self {
                 self?.clear(strongSelf.sizeIndex)
             }
-            
             self?.close()
-        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
     }
     
     private var genericView:TableView {

@@ -201,7 +201,7 @@ class ChatMessageAccessoryView: Control {
         bufferingIndicator.background = .clear
         bufferingIndicator.progressColor = .white
         bufferingIndicator.layer?.cornerRadius = bufferingIndicator.frame.height / 2
-        bufferingIndicator.lineWidth = 1.0
+//        bufferingIndicator.lineWidth = 1.0
         bufferingIndicator.isHidden = true
         progress.isHidden = true
         download.isHidden = true

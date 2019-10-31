@@ -92,12 +92,18 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     return self.logout()
                 })
                 closeAllModals()
+                closeGalleryViewer(false)
                 showModal(with: controller, for: window, isOverlay: true)
                 return .single(show) |> then( controller.doneValue |> map {_ in return false} |> take(1) )
             }
             return .never()
             } |> deliverOnMainQueue).start(next: { [weak self] lock in
-                
+                for subview in window.contentView!.subviews {
+                    if let subview = subview as? SplitView {
+                        subview.isHidden = lock
+                        break
+                    }
+                }
                 self?.updateLocked { previous -> LockNotificationsData in
                     return previous.withUpdatedPasscodeLock(lock)
                 }

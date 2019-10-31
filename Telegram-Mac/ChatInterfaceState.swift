@@ -24,29 +24,19 @@ struct ChatTextFontAttributes: OptionSet {
 
 
 
-struct ChatInterfaceSelectionState: PostboxCoding, Equatable {
+struct ChatInterfaceSelectionState: Equatable {
     let selectedIds: Set<MessageId>
+    let lastSelectedId: MessageId?
     
-    static func ==(lhs: ChatInterfaceSelectionState, rhs: ChatInterfaceSelectionState) -> Bool {
-        return lhs.selectedIds == rhs.selectedIds
-    }
-    
-    init(selectedIds: Set<MessageId>) {
+    init(selectedIds: Set<MessageId>, lastSelectedId: MessageId?) {
         self.selectedIds = selectedIds
+        self.lastSelectedId = lastSelectedId
     }
-    
-    init(decoder: PostboxDecoder) {
-        if let data = decoder.decodeBytesForKeyNoCopy("i") {
-            self.selectedIds = Set(MessageId.decodeArrayFromBuffer(data))
-        } else {
-            self.selectedIds = Set()
-        }
+    func withUpdatedSelectedIds(_ ids: Set<MessageId>) -> ChatInterfaceSelectionState {
+        return ChatInterfaceSelectionState(selectedIds: ids, lastSelectedId: self.lastSelectedId)
     }
-    
-    func encode(_ encoder: PostboxEncoder) {
-        let buffer = WriteBuffer()
-        MessageId.encodeArrayToBuffer(Array(selectedIds), buffer: buffer)
-        encoder.encodeBytes(buffer, forKey: "i")
+    func withUpdatedLastSelected(_ lastSelectedId: MessageId?) -> ChatInterfaceSelectionState {
+        return ChatInterfaceSelectionState(selectedIds: self.selectedIds, lastSelectedId: lastSelectedId)
     }
 }
 

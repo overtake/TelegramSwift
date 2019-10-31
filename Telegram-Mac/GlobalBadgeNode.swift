@@ -21,6 +21,7 @@ class GlobalBadgeNode: Node {
     private let excludePeerId:PeerId?
     private let disposable:MetaDisposable = MetaDisposable()
     private var textLayout:(TextNodeLayout, TextNode)?
+    var customLayout: Bool = false
     var xInset:CGFloat = 0
     private var attributedString:NSAttributedString? {
         didSet {
@@ -35,13 +36,13 @@ class GlobalBadgeNode: Node {
                 size = NSZeroSize
             }
             setNeedDisplay()
-            if let superview = view?.superview as? View {
+            if let superview = view?.superview as? View, !self.customLayout {
                 superview.customHandler.layout = { [weak self] view in
                     if let strongSelf = self {
                         if strongSelf.layoutChanged == nil {
                             var origin:NSPoint = NSZeroPoint
                             let center = view.focus(strongSelf.size)
-                            origin = NSMakePoint(floorToScreenPixels(scaleFactor: System.backingScale, center.midX) + strongSelf.xInset, 4)
+                            origin = NSMakePoint(floorToScreenPixels(System.backingScale, center.midX) + strongSelf.xInset, 4)
                             origin.x = min(view.frame.width - strongSelf.size.width - 4, origin.x)
                             strongSelf.frame = NSMakeRect(origin.x,origin.y,strongSelf.size.width,strongSelf.size.height)
                         } else {
@@ -186,7 +187,7 @@ func forceUpdateStatusBarIconByDockTile(sharedContext: SharedAccountContext) {
     if let count = Int(NSApplication.shared.dockTile.badgeLabel ?? "0") {
         var color: NSColor = .black
         if #available(OSX 10.14, *) {
-            if NSApp.effectiveAppearance.name != .aqua {
+            if systemAppearance.name != .aqua {
                 color = .white
             }
         }

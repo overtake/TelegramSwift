@@ -26,10 +26,10 @@ public class ContextSeparatorItem : ContextMenuItem {
 public class ContextMenuItem : NSMenuItem {
     
     let handler:()->Void
-    
-    public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil) {
+    private let dynamicTitle:(()->String)?
+    public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil) {
         self.handler = handler
-        
+        self.dynamicTitle = dynamicTitle
         super.init(title: title, action: nil, keyEquivalent: "")
         
         self.title = title
@@ -37,6 +37,18 @@ public class ContextMenuItem : NSMenuItem {
         self.target = self
         self.isEnabled = true
         self.image = image
+        if let state = state {
+            self.state = state
+        }
+    }
+    
+    public override var title: String {
+        get {
+            return self.dynamicTitle?() ?? super.title
+        }
+        set {
+            super.title = newValue
+        }
     }
     
     required public init(coder decoder: NSCoder) {

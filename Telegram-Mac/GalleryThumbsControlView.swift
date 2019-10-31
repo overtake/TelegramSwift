@@ -40,11 +40,11 @@ class GalleryThumbContainer : Control {
 
         if let signal = signal, let size = size {
             imageView.setSignal(signal)
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(50, 50)), boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(80, 80)), boundingSize: NSMakeSize(80, 80), intrinsicInsets: NSEdgeInsets())
             imageView.set(arguments: arguments)
         }
-        overlay.setFrameSize(50, 50)
-        imageView.setFrameSize(50, 50)
+        overlay.setFrameSize(80, 80)
+        imageView.setFrameSize(80, 80)
         addSubview(imageView)
         addSubview(overlay)
         overlay.backgroundColor = .black
@@ -70,9 +70,37 @@ class GalleryThumbContainer : Control {
     
 }
 
+private final class HorizontalScrollView : ScrollView {
+    override func scrollWheel(with event: NSEvent) {
+        
+        var scrollPoint = contentView.bounds.origin
+        let isInverted: Bool = System.isScrollInverted
+        if event.scrollingDeltaY != 0 {
+            if isInverted {
+                scrollPoint.x += -event.scrollingDeltaY
+            } else {
+                scrollPoint.x -= event.scrollingDeltaY
+            }
+        }
+        if event.scrollingDeltaX != 0 {
+            if !isInverted {
+                scrollPoint.x += -event.scrollingDeltaX
+            } else {
+                scrollPoint.x -= event.scrollingDeltaX
+            }
+        }
+        if documentView!.frame.width > frame.width {
+            scrollPoint.x = min(max(0, scrollPoint.x), documentView!.frame.width - frame.width)
+            clipView.scroll(to: scrollPoint)
+        } else {
+            superview?.scrollWheel(with: event)
+        }
+    }
+}
+
 class GalleryThumbsControlView: View {
 
-    private let scrollView: ScrollView = ScrollView()
+    private let scrollView: HorizontalScrollView = HorizontalScrollView()
     private let documentView: View = View()
     private var selectedView: View?
     required init(frame frameRect: NSRect) {

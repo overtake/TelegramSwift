@@ -154,7 +154,7 @@ class ContextListRowItem: TableRowItem {
 class ContextListRowView : TableRowView {
 
     override var backdorColor: NSColor {
-        return item?.isSelected ?? false ? theme.colors.blueSelect : theme.colors.background
+        return item?.isSelected ?? false ? theme.colors.accentSelect : theme.colors.background
     }
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
@@ -200,7 +200,7 @@ class ContextListImageView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return item?.isSelected ?? false ? theme.colors.blueSelect : theme.colors.background
+        return item?.isSelected ?? false ? theme.colors.accentSelect : theme.colors.background
     }
     
     override func layout() {
@@ -344,12 +344,12 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     func checkState() {
         if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = globalAudio, let song = controller.currentSong {
             if song.entry.isEqual(to: wrapper), case .playing = song.state {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
+                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
             } else {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
             }
         } else {
-            progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+            progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
         }
     }
     

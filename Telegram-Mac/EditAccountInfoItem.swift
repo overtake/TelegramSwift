@@ -19,13 +19,22 @@ class EditAccountInfoItem: GeneralRowItem {
     fileprivate let photo: AvatarNodeState
     fileprivate let updateText: (String, String)->Void
     fileprivate let uploadNewPhoto: (()->Void)?
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, updateText:@escaping(String, String)->Void, uploadNewPhoto: (()->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, viewType: GeneralViewType = .legacy, updateText:@escaping(String, String)->Void, uploadNewPhoto: (()->Void)? = nil) {
         self.account = account
         self.updateText = updateText
         self.state = state
         self.uploadNewPhoto = uploadNewPhoto
         self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil) : .Empty
-        super.init(initialSize, height: 90, stableId: stableId)
+        
+        let height: CGFloat
+        switch viewType {
+        case .legacy:
+            height = 90
+        case let .modern(_, insets):
+            height = 60 + insets.top + insets.bottom
+        }
+        
+        super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
     }
     
     override func viewClass() -> AnyClass {
@@ -34,6 +43,7 @@ class EditAccountInfoItem: GeneralRowItem {
 }
 
 private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDelegate {
+    private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let firstNameTextView: TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     private let lastNameTextView: TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     private let avatar: AvatarControl = AvatarControl(font: .avatar(22))
@@ -54,18 +64,19 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         firstNameTextView.textFont = .normal(.text)
         lastNameTextView.textFont = .normal(.text)
         
-        addSubview(firstNameTextView)
-        addSubview(lastNameTextView)
-        addSubview(nameSeparator)
-        addSubview(secondSeparator)
-        addSubview(avatar)
+        containerView.addSubview(firstNameTextView)
+        containerView.addSubview(lastNameTextView)
+        containerView.addSubview(nameSeparator)
+        containerView.addSubview(secondSeparator)
+        containerView.addSubview(avatar)
 
+        addSubview(containerView)
         
         updoadPhotoCap.backgroundColor = NSColor.black.withAlphaComponent(0.4)
         updoadPhotoCap.setFrameSize(avatar.frame.size)
         updoadPhotoCap.layer?.cornerRadius = updoadPhotoCap.frame.width / 2
         updoadPhotoCap.set(image: ControlStyle(highlightColor: .white).highlight(image: theme.icons.chatAttachCamera), for: .Normal)
-        updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.blueIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
+        updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.accentIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
         
         
         updoadPhotoCap.set(handler: { [weak self] _ in
@@ -86,14 +97,14 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     }
     
     override func hitTest(_ point: NSPoint) -> NSView? {
-        switch true {
-        case NSPointInRect(point, firstNameTextView.frame):
-            return firstNameTextView.inputView
-        case NSPointInRect(point, lastNameTextView.frame):
-            return lastNameTextView.inputView
-        default:
+//        switch true {
+//        case NSPointInRect(point, firstNameTextView.frame):
+//            return firstNameTextView.inputView
+//        case NSPointInRect(point, lastNameTextView.frame):
+//            return lastNameTextView.inputView
+//        default:
             return super.hitTest(point)
-        }
+//        }
     }
     
     override func hasFirstResponder() -> Bool {
@@ -127,6 +138,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         return nil
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         
         guard let item = item as? EditAccountInfoItem else {return}
@@ -141,10 +156,6 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         
         firstNameTextView.setString(item.state.firstName)
         lastNameTextView.setString(item.state.lastName)
-        
-        
-//        firstNameTextView.animates = true
-//        lastNameTextView.animates = true
         
         if let uploadState = item.state.updatingPhotoState {
             if progressView.superview == nil {
@@ -179,11 +190,13 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     }
     
     override func updateColors() {
-        super.updateColors()
         firstNameTextView.textColor = theme.colors.text
         lastNameTextView.textColor = theme.colors.text
         nameSeparator.backgroundColor = theme.colors.border
         secondSeparator.backgroundColor = theme.colors.border
+        containerView.background = backdorColor
+        guard let item = item as? EditAccountInfoItem else {return}
+        self.background = item.viewType.rowBackground
     }
     
     override func layout() {
@@ -191,15 +204,34 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         
         guard let item = item as? EditAccountInfoItem else {return}
         
-        firstNameTextView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, firstNameTextView.frame.height))
-        lastNameTextView.setFrameSize(NSMakeSize(frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, lastNameTextView.frame.height))
-
-
-        avatar.setFrameOrigin(item.inset.left, 16)
-        firstNameTextView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY - 6))
-        nameSeparator.frame = NSMakeRect(avatar.frame.maxX + 14, firstNameTextView.frame.maxY + 2, frame.width - avatar.frame.maxX - item.inset.right - 14, .borderSize)
-        lastNameTextView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, firstNameTextView.frame.maxY + 4))
-        secondSeparator.frame = NSMakeRect(item.inset.left, frame.height - .borderSize, frame.width - item.inset.right - item.inset.left, .borderSize)
+        switch item.viewType {
+        case .legacy:
+            self.containerView.frame = bounds
+            self.containerView.setCorners([])
+            firstNameTextView.setFrameSize(NSMakeSize(self.containerView.frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, firstNameTextView.frame.height))
+            lastNameTextView.setFrameSize(NSMakeSize(self.containerView.frame.width - item.inset.left - item.inset.right - avatar.frame.width - 10, lastNameTextView.frame.height))
+            avatar.setFrameOrigin(item.inset.left, 16)
+            firstNameTextView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY - 6))
+            nameSeparator.frame = NSMakeRect(avatar.frame.maxX + 14, firstNameTextView.frame.maxY + 2, self.containerView.frame.width - avatar.frame.maxX - item.inset.right - 14, .borderSize)
+            lastNameTextView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, firstNameTextView.frame.maxY + 4))
+            secondSeparator.frame = NSMakeRect(item.inset.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.right - item.inset.left, .borderSize)
+            secondSeparator.isHidden = false
+        case let .modern(position, innerInsets):
+            self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
+            self.containerView.setCorners(position.corners)
+            firstNameTextView.setFrameSize(NSMakeSize(self.containerView.frame.width - innerInsets.left - innerInsets.right - avatar.frame.width - 10, firstNameTextView.frame.height))
+            lastNameTextView.setFrameSize(NSMakeSize(self.containerView.frame.width - innerInsets.left - innerInsets.right - avatar.frame.width - 10, lastNameTextView.frame.height))
+            avatar.setFrameOrigin(innerInsets.left, innerInsets.top)
+            firstNameTextView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY - 6))
+            nameSeparator.frame = NSMakeRect(avatar.frame.maxX + 14, firstNameTextView.frame.maxY + 2, self.containerView.frame.width - avatar.frame.maxX - item.inset.right - 14, .borderSize)
+            lastNameTextView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, firstNameTextView.frame.maxY + 4))
+            secondSeparator.frame = NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.right - item.inset.left, .borderSize)
+            
+            secondSeparator.isHidden = !position.border
+            
+        }
+        
+        
     }
     
     required init?(coder: NSCoder) {

@@ -243,7 +243,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
                 let line = CTLineCreateWithAttributedString(attributedString)
                 let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
                 
-                let lineOrigin = CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
+                let lineOrigin = CGPoint(x: floorToScreenPixels(System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
                 
                 ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
                 ctx.scaleBy(x: 1.0, y: 1.0)
@@ -290,7 +290,7 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
             let line = CTLineCreateWithAttributedString(attributedString)
             let lineBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
             
-            let lineOrigin = CGPoint(x: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(scaleFactor: System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
+            let lineOrigin = CGPoint(x: floorToScreenPixels(System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
             
             ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
             ctx.scaleBy(x: 1.0, y: 1.0)

@@ -33,9 +33,9 @@ class WPArticleContentView: WPContentView {
         }
     }
     
-    override func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    override func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let _ = imageView, let content = content as? WPArticleLayout, content.isFullImageSize, let image = content.content.image {
-            return .image(ImageMediaReference.webPage(webPage: WebpageReference(content.webPage), media: image), ImagePreviewModalView.self)
+            return (.image(ImageMediaReference.webPage(webPage: WebpageReference(content.webPage), media: image), ImagePreviewModalView.self), imageView)
         }
         return nil
     }

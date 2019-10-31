@@ -151,9 +151,9 @@ private class QuickSwitcherView : View {
     
     override func layout() {
         super.layout()
-        searchView.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - 30)/2))
+        searchView.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - 30)/2))
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 100)
-        textView.centerX(y: frame.height - floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - textView.frame.height)/2) - textView.frame.height)
+        textView.centerX(y: frame.height - floorToScreenPixels(backingScaleFactor, (50 - textView.frame.height)/2) - textView.frame.height)
         separator.frame = NSMakeRect(0, frame.height - 50, frame.width, .borderSize)
     }
     
@@ -226,7 +226,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), NoError> in
             
             if search.request.isEmpty {
-                return combineLatest(recentPeers(account: context.account), context.account.postbox.multiplePeersView(recentlyUsed) |> take(1))
+                return combineLatest(recentPeers(account: context.account) |> take(1), context.account.postbox.multiplePeersView(recentlyUsed) |> take(1))
                     |> deliverOn(prepareQueue)
                     |> mapToSignal { recentPeers, view -> Signal<([QuickSwitcherEntry], Bool), NoError> in
                         

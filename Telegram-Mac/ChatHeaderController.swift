@@ -361,7 +361,7 @@ class ChatReportView : Control {
         let theme = (theme as! TelegramPresentationTheme)
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
-        report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         _ = report.sizeToFit()
         self.backgroundColor = theme.colors.background
         needsLayout = true
@@ -429,7 +429,7 @@ class ShareInfoView : Control {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        share.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        share.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         
         share.set(text: L10n.peerInfoShareMyInfo, for: .Normal)
 
@@ -501,7 +501,7 @@ class AddContactView : Control {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        add.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueSelect)
+        add.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         blockButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.redUI)
         
         if blockButton.superview == nil, let peer = chatInteraction.peer {

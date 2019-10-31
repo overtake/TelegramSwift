@@ -31,11 +31,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.layerContentsRedrawPolicy = .never
         autoresizingMask = []
       //  self.layer?.delegate = self
-        self.layer?.backgroundColor = backdorColor.cgColor
         autoresizesSubviews = false
      //   canDrawSubviewsIntoLayer = true
         pressureConfiguration = NSPressureConfiguration(pressureBehavior: .primaryDeepClick)
-        
+        appearance = presentation.appearance
         self.canDrawSubviewsIntoLayer = true
     }
     
@@ -126,7 +125,18 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         return self
     }
     
-    
+    open override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        updateMouse()
+    }
+    open override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        updateMouse()
+    }
+    open override func mouseExited(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        updateMouse()
+    }
     
     open override func mouseDown(with event: NSEvent) {
         if event.modifierFlags.contains(.control) && event.clickCount == 1 {
@@ -363,6 +373,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open func shakeView() {
+        
+    }
+    
+    open func shakeViewWithData(_ data: Any) {
         
     }
     

@@ -200,8 +200,8 @@ class EditImageModalController: ModalViewController {
         editValue.set(defaultData ?? EditedImageData(originalUrl: path))
     }
     
-    override func close() {
-        super.close()
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        super.close(animationType: animationType)
         
         onClose()
     }
@@ -247,7 +247,10 @@ class EditImageModalController: ModalViewController {
     }
     
     override var background: NSColor {
-        return NSColor(0x464646).withAlphaComponent(0.97)
+        return .clear
+    }
+    override var isVisualEffectBackground: Bool {
+        return true
     }
     
     

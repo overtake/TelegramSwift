@@ -44,12 +44,12 @@ private enum FeaturedStickerPacksEntryId: Hashable {
 
 private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
     case section(sectionId:Int32)
-    case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, Bool, StickerPackItem?, Int32, Bool)
+    case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, Bool, StickerPackItem?, Int32, Bool, GeneralViewType)
     
     
     var stableId: FeaturedStickerPacksEntryId {
         switch self {
-        case let .pack(_, _, info, _, _, _, _):
+        case let .pack(_, _, info, _, _, _, _, _):
             return .pack(info.id)
         case let .section(id):
             return .section(id)
@@ -58,7 +58,7 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
     
     var stableIndex:Int32 {
         switch self {
-        case let .pack(sectionId: sectionId, index, _, _, _, _, _):
+        case let .pack(sectionId: sectionId, index, _, _, _, _, _, _):
             fatalError()
         case let .section(sectionId: sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -67,7 +67,7 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case let .pack(sectionId: sectionId, index, _, _, _, _, _):
+        case let .pack(sectionId: sectionId, index, _, _, _, _, _, _):
             return (sectionId * 1000) + 100 + index
         case let .section(sectionId: sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -80,25 +80,16 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
     
     func item(_ arguments: FeaturedStickerPacksControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .pack(_, _, info, unread, topItem, count, installed):
-            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .installation(installed: installed), action: {
+        case let .pack(_, _, info, unread, topItem, count, installed, viewType):
+            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .installation(installed: installed), viewType: viewType, action: {
                 arguments.openStickerPack(info)
             }, addPack: {
                 arguments.addPack(info)
             }, removePack: {
                 
             })
-
-           /*
-             return ItemListStickerPackItem(account: arguments.account, packInfo: info, itemCount: count, topItem: topItem, unread: unread, control: .installation(installed: installed), editing: ItemListStickerPackItemEditing(editable: false, editing: false, revealed: false), enabled: true, sectionId: self.section, action: { _ in
-             arguments.openStickerPack(info)
-             }, addPack: {
-             arguments.addPack(info)
-             }, removePack: { _ in
-             })
- */
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -131,11 +122,13 @@ private func featuredStickerPacksControllerEntries(state: FeaturedStickerPacksCo
                 if let value = unreadPacks[item.info.id] {
                     unread = value
                 }
-                entries.append(.pack(sectionId: sectionId, index, item.info, unread, item.topItems.first, item.info.count, installedPacks.contains(item.info.id)))
+                entries.append(.pack(sectionId: sectionId, index, item.info, unread, item.topItems.first, item.info.count, installedPacks.contains(item.info.id), bestGeneralViewType(featured, for: item)))
                 index += 1
             }
         }
     }
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
     
     return entries
 }
@@ -149,7 +142,12 @@ private func prepareTransition(left:[AppearanceWrapperEntry<FeaturedStickerPacks
 
 
 class FeaturedStickerPacksController: TableViewController {
-
+    private let disposable = MetaDisposable()
+    
+    deinit {
+        disposable.dispose()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -167,9 +165,9 @@ class FeaturedStickerPacksController: TableViewController {
         actionsDisposable.add(resolveDisposable)
         
         let arguments = FeaturedStickerPacksControllerArguments(context: context, openStickerPack: { info in
-           showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+           showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, addPack: { info in
-            showModal(with: StickersPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         })
         
         let stickerPacks = Promise<CombinedView>()
@@ -183,9 +181,9 @@ class FeaturedStickerPacksController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<FeaturedStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        genericView.merge(with: combineLatest(statePromise.get(), stickerPacks.get(), featured.get(), appearanceSignal) |> deliverOnMainQueue
+        
+        let signal = combineLatest(queue: self.queue,statePromise.get(), stickerPacks.get(), featured.get(), appearanceSignal)
             |> map { state, view, featured, appearance -> TableUpdateTransition in
-                
                 for item in featured {
                     if initialUnreadPacks[item.info.id] == nil {
                         initialUnreadPacks[item.info.id] = item.unread
@@ -194,9 +192,15 @@ class FeaturedStickerPacksController: TableViewController {
                 let entries = featuredStickerPacksControllerEntries(state: state, view: view, featured: featured, unreadPacks: initialUnreadPacks).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
-            } |> afterDisposed {
+        } |> afterDisposed {
                 actionsDisposable.dispose()
-        } )
+        } |> deliverOnMainQueue
+        
+        self.disposable.set(signal.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+            self?.readyOnce()
+        }))
+       
         
         
         var alreadyReadIds = Set<ItemCollectionId>()
@@ -205,6 +209,5 @@ class FeaturedStickerPacksController: TableViewController {
            
         }))
         
-        readyOnce()
     }
 }

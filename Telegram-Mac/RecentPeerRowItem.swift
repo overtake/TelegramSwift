@@ -142,7 +142,7 @@ class RecentPeerRowView : ShortPeerRowView {
     
     override var backdorColor: NSColor {
         if let item = item {
-            return item.isHighlighted && !item.isSelected ? presentation.colors.grayForeground : super.backdorColor
+            return item.isHighlighted && !item.isSelected ? theme.colors.grayForeground : super.backdorColor
         } else {
             return super.backdorColor
         }

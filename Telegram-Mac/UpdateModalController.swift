@@ -58,7 +58,7 @@ private final class UpdateTableView : TableRowView {
     override func layout() {
         super.layout()
         logoView.setFrameOrigin(25, 10)
-        titleView.setFrameOrigin(logoView.frame.maxX + 10, floorToScreenPixels(scaleFactor: backingScaleFactor, logoView.frame.minY + (logoView.frame.height - titleView.frame.height)/2))
+        titleView.setFrameOrigin(logoView.frame.maxX + 10, floorToScreenPixels(backingScaleFactor, logoView.frame.minY + (logoView.frame.height - titleView.frame.height)/2))
         descView.setFrameOrigin(logoView.frame.minX, logoView.frame.maxY + 20)
     }
     

@@ -117,13 +117,13 @@ public extension String {
             if removeToken {
                 return String(format: "%.\(afterDot)f", converted)
             } else {
-                return String(format: "%.\(afterDot)f %@", converted, tokens[factor])
+                return String(format: "%.\(afterDot)f%@", converted, tokens[factor])
             }
         } else {
             if removeToken {
                 return String(format: "%.0f", converted)
             } else {
-                return String(format: "%.0f %@", converted, tokens[factor])
+                return String(format: "%.0f%@", converted, tokens[factor])
             }
         }
         
@@ -1393,7 +1393,7 @@ public extension Int {
 }
 
 
-public extension ProgressIndicator {
+public extension NSProgressIndicator {
     func set(color:NSColor) {
         let color = color.usingColorSpace(NSColorSpace.sRGB)
 

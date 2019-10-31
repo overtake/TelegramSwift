@@ -32,7 +32,7 @@ class PassportWindowController  {
         
         let screen = NSScreen.main!
         let size = NSMakeSize(390, 600)
-        let center = NSMakeRect(floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.width - size.width)/2), floorToScreenPixels(scaleFactor: System.backingScale, (screen.frame.height - size.height)/2), size.width, size.height)
+        let center = NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width)/2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height)/2), size.width, size.height)
 
         
         
@@ -96,7 +96,7 @@ class PassportWindowController  {
                 for i in 0 ..< min(controls.count, xs.count) {
                     let view = controls[i]
                     view.isHidden = true
-                    view.setFrameOrigin(xs[i], floorToScreenPixels(scaleFactor: System.backingScale, (barHeight - view.frame.height)/2))
+                    view.setFrameOrigin(xs[i], floorToScreenPixels(System.backingScale, (barHeight - view.frame.height)/2))
                 }
             }
         }

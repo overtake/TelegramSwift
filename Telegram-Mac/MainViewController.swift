@@ -402,13 +402,30 @@ class MainViewController: TelegramViewController {
                 context.window.sendKeyEvent(KeyboardKey.L, modifierFlags: [.command])
             }, theme.icons.fastSettingsLock))
         }
-        items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, { [weak self] in
-            if let strongSelf = self {
-                _ = updateThemeInteractivetly(accountManager: strongSelf.context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
-                    return settings.withUpdatedPaletteToDefault(to: !theme.colors.isDark).withUpdatedFollowSystemAppearance(false)
-                }).start()
-                _ = updateAutoNightSettingsInteractively(accountManager: strongSelf.context.sharedContext.accountManager, { $0.withUpdatedSchedule(nil)}).start()
-            }
+        items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, {
+            let nightSettings = autoNightSettings(accountManager: context.sharedContext.accountManager) |> take(1) |> deliverOnMainQueue
+            
+            _ = nightSettings.start(next: { settings in
+                if settings.systemBased || settings.schedule != nil {
+                    confirm(for: context.window, header: L10n.darkModeConfirmNightModeHeader, information: L10n.darkModeConfirmNightModeText, okTitle: L10n.darkModeConfirmNightModeOK, successHandler: { _ in
+                        
+                        _ = context.sharedContext.accountManager.transaction { transaction -> Void in
+                            transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
+                                let settings: AutoNightThemePreferences = entry as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings
+                                return settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil)
+                            })
+                            transaction.updateSharedData(ApplicationSharedPreferencesKeys.themeSettings, { entry in
+                                let settings = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
+                                return settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark)
+                            })
+                            }.start()
+                    })
+                } else {
+                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
+                        return settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark)
+                    }).start()
+                }
+            })
         }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
        
         
@@ -428,7 +445,8 @@ class MainViewController: TelegramViewController {
         self.quickController = controller
     }
     private var previousTheme:TelegramPresentationTheme?
-    
+    private var previousIconColor:NSColor?
+
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         tabController.updateLocalizationAndTheme(theme: theme)
@@ -437,7 +455,7 @@ class MainViewController: TelegramViewController {
         updateController.updateLocalizationAndTheme(theme: theme)
         #endif
         
-        if !tabController.isEmpty && previousTheme?.colors != theme.colors  {
+        if !tabController.isEmpty && (previousTheme?.colors != theme.colors ||  previousIconColor != theme.colors.accentIcon)  {
             var index: Int = 0
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts"), selected: false), theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts_Highlighted"), selected: true)), at: index)
             index += 1
@@ -450,29 +468,38 @@ class MainViewController: TelegramViewController {
             index += 1
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true)), at: index)
         }
+        self.tabController.view.needsLayout = true
         self.previousTheme = theme
+        self.previousIconColor = theme.colors.accentIcon
     }
     
     private var previousIndex: Int? = nil
     
     func checkSettings(_ index:Int) {
         let isSettings = tabController.tab(at: index).controller is AccountViewController
-
-        if previousIndex == tabController.count - 1 || isSettings {
-            if isSettings && context.sharedContext.layout != .single {
-                context.sharedContext.bindings.rootNavigation().push(GeneralSettingsViewController(context), false)
-            } else {
-                context.sharedContext.bindings.rootNavigation().enumerateControllers( { controller, index in
-                    if (controller is ChatController) || (controller is PeerInfoController) || (controller is ChannelAdminsViewController) || (controller is ChannelAdminsViewController) || (controller is EmptyChatViewController) {
-                        self.backFromSettings(index)
-                        return true
-                    }
-                    return false
-                })
+        
+        let navigation = context.sharedContext.bindings.rootNavigation()
+        
+        if let controller = navigation.controller as? InputDataController, controller.identifier == "wallet-create" {
+            self.previousIndex = index
+            quickController?.popover?.hide()
+        } else {
+            if previousIndex == tabController.count - 1 || isSettings {
+                if isSettings && context.sharedContext.layout != .single {
+                    navigation.push(GeneralSettingsViewController(context), false)
+                } else {
+                    navigation.enumerateControllers( { controller, index in
+                        if (controller is ChatController) || (controller is PeerInfoController) || (controller is ChannelAdminsViewController) || (controller is ChannelAdminsViewController) || (controller is EmptyChatViewController) {
+                            self.backFromSettings(index)
+                            return true
+                        }
+                        return false
+                    })
+                }
             }
+            self.previousIndex = index
+            quickController?.popover?.hide()
         }
-        self.previousIndex = index
-        quickController?.popover?.hide()
     }
     
     private func backFromSettings(_ index:Int) {

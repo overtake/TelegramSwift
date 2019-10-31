@@ -50,7 +50,7 @@ private final class LocationPinView : View {
         let theme = (theme as! TelegramPresentationTheme)
         locationPin.image = theme.icons.locationMapPin
         locationPin.sizeToFit()
-        dotView.backgroundColor = theme.colors.blueIcon
+        dotView.backgroundColor = theme.colors.accentIcon
     }
     
     override func layout() {

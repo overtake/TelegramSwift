@@ -138,6 +138,8 @@ class ChatEmptyPeerView : TableRowView {
         //containerView.addSubview(textView)
         textView.isSelectable = false
         textView.userInteractionEnabled = true
+        textView.disableBackgroundDrawing = true
+
     }
     
     override func updateColors() {

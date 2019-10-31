@@ -384,7 +384,7 @@ class ChatMediaItem: ChatRowItem {
                 if let highlightFoundText = entry.additionalData?.highlightFoundText {
                     if highlightFoundText.isMessage {
                         if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
-                            textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.blueIcon.withAlphaComponent(0.5), def: false)]
+                            textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
                         }
                     } else {
                         var additionalSelections:[TextSelectedRange] = []
@@ -493,6 +493,9 @@ class ChatMediaItem: ChatRowItem {
     }
    
     public func contentNode() -> ChatMediaContentView.Type {
+        if let file = media as? TelegramMediaFile, message?.id.peerId.namespace == Namespaces.Peer.SecretChat, file.isAnimatedSticker, file.stickerReference == nil {
+            return ChatFileContentView.self
+        }
         return ChatLayoutUtils.contentNode(for: media)
     }
     
@@ -508,22 +511,22 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     
     
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let contentNode = contentNode {
             if contentNode is ChatStickerContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                    return .file(reference, StickerPreviewModalView.self)
+                    return (.file(reference, StickerPreviewModalView.self), contentNode)
                 }
             } else if contentNode is ChatGIFContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                    return .file(reference, GifPreviewModalView.self)
+                    return (.file(reference, GifPreviewModalView.self), contentNode)
                 }
             } else if contentNode is ChatInteractiveContentView {
                 if let image = contentNode.media as? TelegramMediaImage {
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
-                    return .image(reference, ImagePreviewModalView.self)
+                    return (.image(reference, ImagePreviewModalView.self), contentNode)
                 }
             } else if contentNode is ChatFileContentView {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
@@ -532,12 +535,12 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                     representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
-                    return .image(reference, ImagePreviewModalView.self)
+                    return (.image(reference, ImagePreviewModalView.self), contentNode)
                 }
-            } else if contentNode is ChatMediaAnimatedStickerView {
+            } else if contentNode is MediaAnimatedStickerView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                    return .file(reference, AnimatedStickerPreviewModalView.self)
+                    return (.file(reference, AnimatedStickerPreviewModalView.self), contentNode)
                 }
             }
         }

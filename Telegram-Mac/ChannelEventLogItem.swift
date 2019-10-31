@@ -91,7 +91,7 @@ private class ServiceEventLogMessagePanelView : View {
     }
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        ctx.setFillColor(theme.colors.blueFill.cgColor)
+        ctx.setFillColor(theme.colors.accent.cgColor)
         let radius:CGFloat = 1.0
         ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
         ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))

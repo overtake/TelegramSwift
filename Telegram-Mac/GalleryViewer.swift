@@ -97,7 +97,7 @@ private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
 
 fileprivate func itemFor(entry: ChatHistoryEntry, context: AccountContext, pagerSize: NSSize) -> MGalleryItem {
     switch entry {
-    case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+    case let .MessageEntry(message, _, _, _, _, _, _):
         if let media = mediaForMessage(message: message, postbox: context.account.postbox) {
             if let _ = media as? TelegramMediaImage {
                 return MGalleryPhotoItem(context, .message(entry), pagerSize)
@@ -649,7 +649,7 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)]
+                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))]
                     let previous = previous.swap(entries)
                     
                     var inserted: [(Int, MGalleryItem)] = []
@@ -683,7 +683,7 @@ class GalleryViewer: NSResponder {
                     return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
                             switch entry {
-                            case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+                            case let .MessageEntry(message, _, _, _, _, _, _):
                                 return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
                             default:
                                 return true
@@ -699,7 +699,7 @@ class GalleryViewer: NSResponder {
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
-                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings))
+                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings)))
                         }
                         let previous = previous.with {$0}
                         return prepareEntries(from: previous, to: entries, context: context, pagerSize: pagerSize) |> map { transition in
@@ -722,7 +722,7 @@ class GalleryViewer: NSResponder {
                     
                     var id:MessageId = message.id
                     let index = currentIndex.modify({$0})
-                    if let index = index {
+                    if let index = index, prev.count > index {
                         id = prev[index].message!.id
                     }
 
@@ -813,9 +813,14 @@ class GalleryViewer: NSResponder {
     
     func showControlsPopover(_ control:Control) {
         var items:[SPopoverItem] = []
-        items.append(SPopoverItem(L10n.galleryContextSaveAs, {[weak self] in
-            self?.saveAs()
-        }))
+        
+        if pager.selectedItem?.entry.message?.containsSecretMedia == true {
+        } else {
+            items.append(SPopoverItem(L10n.galleryContextSaveAs, {[weak self] in
+                self?.saveAs()
+            }))
+        }
+        
         
         let context = self.context
         
@@ -851,9 +856,14 @@ class GalleryViewer: NSResponder {
                 }
             }
         }
-        items.append(SPopoverItem(L10n.galleryContextCopyToClipboard, {[weak self] in
-            self?.copy(nil)
-        }))
+        
+        if pager.selectedItem?.entry.message?.containsSecretMedia == true {
+        } else {
+            items.append(SPopoverItem(L10n.galleryContextCopyToClipboard, {[weak self] in
+                self?.copy(nil)
+            }))
+        }
+        
         
         switch type {
         case .profile(let peerId):
@@ -1154,7 +1164,7 @@ class GalleryViewer: NSResponder {
     
     @objc func copy(_ sender:Any? = nil) -> Void {
         if let item = self.pager.selectedItem {
-            if !(item is MGalleryExternalVideoItem) {
+            if !(item is MGalleryExternalVideoItem), item.entry.message?.containsSecretMedia != true {
                 operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { path in
                     let pb = NSPasteboard.general
                     pb.clearContents()
@@ -1178,7 +1188,7 @@ class GalleryViewer: NSResponder {
         //window.makeFirstResponder(self)
         //closePipVideo()
         backgroundView.alphaValue = 0
-        //backgroundView.change(opacity: 0, animated: false)
+        backgroundView._change(opacity: 0, animated: false)
         self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
             if let strongSelf = self {
                 
@@ -1188,7 +1198,7 @@ class GalleryViewer: NSResponder {
                     }
                 }
                 
-               // strongSelf.backgroundView.change(opacity: 1, animated: animated)
+                strongSelf.backgroundView._change(opacity: 1, animated: animated)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
                         if let ignore = ignoreStableId?.base as? Int, ignore == innerIndex {
@@ -1224,7 +1234,7 @@ class GalleryViewer: NSResponder {
         didSetReady = false
         NotificationCenter.default.removeObserver(self)
         if animated {
-            backgroundView.alphaValue = 0
+            backgroundView._change(opacity: 0, animated: animated)
             controls.animateOut()
             self.pager.animateOut(to: { [weak self] stableId in
                 if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {

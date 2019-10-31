@@ -9,20 +9,14 @@
 import Cocoa
 import TGUIKit
 
-class SearchEmptyRowItem: TableRowItem {
+class SearchEmptyRowItem: GeneralRowItem {
     
-    private let _stableId:AnyHashable
     let isLoading:Bool
     let icon:CGImage
-    let border:BorderType
     let text:TextViewLayout?
-    override var stableId: AnyHashable {
-        return _stableId
-    }
+
     
-    init(_ initialSize: NSSize, stableId:AnyHashable, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = []) {
-        _stableId = stableId
-        self.border = border
+    init(_ initialSize: NSSize, stableId:AnyHashable, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy) {
         self.isLoading = isLoading
         self.icon = icon
         if let text = text {
@@ -31,7 +25,7 @@ class SearchEmptyRowItem: TableRowItem {
         } else {
             self.text = nil
         }
-        super.init(initialSize)
+        super.init(initialSize, stableId: stableId, viewType: viewType, border: border)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
@@ -77,6 +71,13 @@ class SearchEmptyRowView : TableRowView {
     }
     
 
+    override var backdorColor: NSColor {
+        if let item = item as? SearchEmptyRowItem {
+            return item.viewType.rowBackground
+        } else {
+            return super.backdorColor
+        }
+    }
     
     override func layout() {
         super.layout()

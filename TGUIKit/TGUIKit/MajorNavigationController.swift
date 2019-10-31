@@ -143,8 +143,6 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         controller.navigationController = self
         
         
-        
-        
         if genericView.state == .dual {
             controller.loadViewIfNeeded(NSMakeRect(0, 0, genericView.frame.width - 350, genericView.frame.height))
         } else {
@@ -153,45 +151,46 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         
         genericView.update()
         
-
-        pushDisposable.set((controller.ready.get() |> deliverOnMainQueue |> take(1)).start(next: {[weak self] _ in
-            if let strongSelf = self {
-                let isMajorController = controller.className == NSStringFromClass(strongSelf.majorClass)
-                let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController && !strongSelf.alwaysAnimate
-                
-                if isMajorController {
-                    for controller in strongSelf.stack {
-                        controller.didRemovedFromStack()
+        self.controller.ableToNextController(controller, { [weak self] controller, result in
+            if result {
+                self?.pushDisposable.set((controller.ready.get() |> deliverOnMainQueue |> take(1)).start(next: {[weak self] _ in
+                    if let strongSelf = self {
+                        let isMajorController = controller.className == NSStringFromClass(strongSelf.majorClass)
+                        let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController && !strongSelf.alwaysAnimate
+                        
+                        if isMajorController {
+                            for controller in strongSelf.stack {
+                                controller.didRemovedFromStack()
+                            }
+                            strongSelf.stack.removeAll()
+                            
+                            strongSelf.stack.append(strongSelf.empty)
+                        }
+                        
+                        if let index = strongSelf.stack.firstIndex(of: controller) {
+                            strongSelf.stack.remove(at: index)
+                        }
+                        
+                        strongSelf.stack.append(controller)
+                        
+                        let anim = animated && (!isMajorController || strongSelf.controller != strongSelf.defaultEmpty) && !removeAnimateFlag
+                        
+                        let newStyle:ViewControllerStyle
+                        if let style = style {
+                            newStyle = style
+                        } else {
+                            newStyle = anim ? .push : .none
+                        }
+                        
+                        CATransaction.begin()
+                        strongSelf.show(controller, newStyle)
+                        CATransaction.commit()
                     }
-                    strongSelf.stack.removeAll()
-                    
-                    strongSelf.stack.append(strongSelf.empty)
-                }
-                
-                if let index = strongSelf.stack.firstIndex(of: controller) {
-                    strongSelf.stack.remove(at: index)
-                }
-                
-                 strongSelf.stack.append(controller)
-                
-                let anim = animated && (!isMajorController || strongSelf.controller != strongSelf.defaultEmpty) && !removeAnimateFlag
-                
-                let newStyle:ViewControllerStyle
-                if let style = style {
-                    newStyle = style
-                } else {
-                    newStyle = anim ? .push : .none
-                }
-
-                CATransaction.begin()
-                strongSelf.show(controller, newStyle)
-                CATransaction.commit()
-                
-                
-
-
+                }))
             }
-        }))
+        })
+
+        
     }
     
     

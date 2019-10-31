@@ -15,7 +15,7 @@ class DiscussionHeaderItem: GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, icon: CGImage, text: NSAttributedString) {
         self.icon = icon
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
-        super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 10, bottom: 10))
+        super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
@@ -42,6 +42,14 @@ private final class DiscussionHeaderView : TableRowView {
         addSubview(textView)
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.grayBackground
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        textView.backgroundColor = backdorColor
+    }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
@@ -61,7 +69,7 @@ private final class DiscussionHeaderView : TableRowView {
         guard let item = item as? DiscussionHeaderItem else { return }
 
         self.imageView.centerX(y: item.inset.top)
-        self.textView.centerX(y: self.imageView.frame.maxY + item.inset.top)
+        self.textView.centerX(y: self.imageView.frame.maxY + item.inset.bottom)
     }
     
     required init?(coder: NSCoder) {

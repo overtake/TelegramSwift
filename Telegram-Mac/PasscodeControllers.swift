@@ -63,49 +63,53 @@ private func passcodeEntries(_ state: PasscodeState) -> [InputDataEntry] {
     switch state.mode {
     case .install:
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderNew), color: theme.colors.text, detectBold: false))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderNew), data: InputDataGeneralTextData(viewType: .textTopItem)))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_new_passcode]?.stringValue), error: state.errors[_id_input_new_passcode], identifier: _id_input_new_passcode, mode: .secure, placeholder: nil, inputPlaceholder: L10n.passcodeControllerEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
+        
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_new_passcode]?.stringValue), error: state.errors[_id_input_new_passcode], identifier: _id_input_new_passcode, mode: .secure, data: InputDataRowData(viewType: .firstItem), placeholder: nil, inputPlaceholder: L10n.passcodeControllerEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_re_new_passcode]?.stringValue), error: state.errors[_id_input_re_new_passcode], identifier: _id_input_re_new_passcode, mode: .secure, placeholder: nil, inputPlaceholder: L10n.passcodeControllerReEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_re_new_passcode]?.stringValue), error: state.errors[_id_input_re_new_passcode], identifier: _id_input_re_new_passcode, mode: .secure, data: InputDataRowData(viewType: .lastItem), placeholder: nil, inputPlaceholder: L10n.passcodeControllerReEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
         index += 1
         
         
     case .change:
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderCurrent), color: theme.colors.text, detectBold: false))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderCurrent), data: InputDataGeneralTextData(viewType: .textTopItem)))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_current]?.stringValue), error: state.errors[_id_input_current], identifier: _id_input_current, mode: .secure, placeholder: nil, inputPlaceholder: L10n.passcodeControllerCurrentPlaceholder, filter: { $0 }, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_current]?.stringValue), error: state.errors[_id_input_current], identifier: _id_input_current, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.passcodeControllerCurrentPlaceholder, filter: { $0 }, limit: 255))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
 
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderNew), color: theme.colors.text, detectBold: false))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderNew), data: InputDataGeneralTextData(viewType: .textTopItem)))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_new_passcode]?.stringValue), error: state.errors[_id_input_new_passcode], identifier: _id_input_new_passcode, mode: .secure, placeholder: nil, inputPlaceholder: L10n.passcodeControllerEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_new_passcode]?.stringValue), error: state.errors[_id_input_new_passcode], identifier: _id_input_new_passcode, mode: .secure, data: InputDataRowData(viewType: .firstItem), placeholder: nil, inputPlaceholder: L10n.passcodeControllerEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_re_new_passcode]?.stringValue), error: state.errors[_id_input_re_new_passcode], identifier: _id_input_re_new_passcode, mode: .secure, placeholder: nil, inputPlaceholder: L10n.passcodeControllerReEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_re_new_passcode]?.stringValue), error: state.errors[_id_input_re_new_passcode], identifier: _id_input_re_new_passcode, mode: .secure, data: InputDataRowData(viewType: .lastItem), placeholder: nil, inputPlaceholder: L10n.passcodeControllerReEnterPasscodePlaceholder, filter: { $0 }, limit: 255))
         index += 1
         
         
         
     case .disable:
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderCurrent), color: theme.colors.text, detectBold: false))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerHeaderCurrent), data: InputDataGeneralTextData(viewType: .textTopItem)))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_current]?.stringValue), error: state.errors[_id_input_current], identifier: _id_input_current, mode: .secure, placeholder: nil, inputPlaceholder: L10n.passcodeControllerCurrentPlaceholder, filter: { $0 }, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.data[_id_input_current]?.stringValue), error: state.errors[_id_input_current], identifier: _id_input_current, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.passcodeControllerCurrentPlaceholder, filter: { $0 }, limit: 255))
         index += 1
     }
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerText), color: theme.colors.grayText, detectBold: false))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.passcodeControllerText), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
     return entries
 }

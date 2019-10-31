@@ -75,15 +75,17 @@ public class DatePicker<T>: Control where T: Equatable {
         self.borderView.layer?.cornerRadius = .cornerRadius
         
         self.activeBorderView.layer?.borderWidth = .borderSize
-        self.activeBorderView.layer?.borderColor = presentation.colors.blueIcon.cgColor
+        self.activeBorderView.layer?.borderColor = presentation.colors.accentIcon.cgColor
         self.activeBorderView.layer?.cornerRadius = .cornerRadius
         self.updateSelected(animated: false)
+        needsLayout = true
     }
     
     
     public override func updateState() {
         super.updateState()
         self.updateSelected(animated: true)
+        needsLayout = true
     }
     
     private func updateSelected(animated: Bool) {
@@ -97,7 +99,6 @@ public class DatePicker<T>: Control where T: Equatable {
             self.borderView.change(opacity: 1, animated: animated)
             self.activeBorderView.change(opacity: 0, animated: animated)
         }
-        needsLayout = true
     }
     
     

@@ -48,9 +48,9 @@ private enum WebSessionEntryStableId : Hashable {
 }
 
 private enum WebSessionEntry : TableItemListNodeEntry {
-    case logout(sectionId: Int32, index: Int32)
-    case description(sectionId: Int32, index: Int32, text: String)
-    case session(sectionId: Int32, index: Int32, authorization: WebAuthorization, peer: Peer)
+    case logout(sectionId: Int32, index: Int32, viewType: GeneralViewType)
+    case description(sectionId: Int32, index: Int32, text: String, viewType: GeneralViewType)
+    case session(sectionId: Int32, index: Int32, authorization: WebAuthorization, peer: Peer, viewType: GeneralViewType)
     case sectionId(Int32)
     case loading
     
@@ -62,22 +62,22 @@ private enum WebSessionEntry : TableItemListNodeEntry {
             return .logoutId
         case .loading:
             return .loadingId
-        case .description(_, let index, _):
+        case .description(_, let index, _, _):
             return .descriptionId(index)
-        case .session(_, _, let authorization, _):
+        case .session(_, _, let authorization, _, _):
             return .sessionId(authorization.hash)
         }
     }
     
     var index: Int32 {
         switch self {
-        case let .logout(sectionId, index):
+        case let .logout(sectionId, index, _):
             return (sectionId * 1000) + index
         case .loading:
             return 0
-        case let .description(sectionId, index, _):
+        case let .description(sectionId, index, _, _):
             return (sectionId * 1000) + index
-        case let .session(sectionId, index, _, _):
+        case let .session(sectionId, index, _, _, _):
             return (sectionId * 1000) + index
         case let .sectionId(sectionId):
             return (sectionId * 1000) + sectionId
@@ -88,17 +88,17 @@ private enum WebSessionEntry : TableItemListNodeEntry {
     func item(_ arguments: WebSessionArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .sectionId:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .description(_, _, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case .logout:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.webAuthorizationsLogoutAll, nameStyle: ControlStyle.init(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, action: {
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+        case let .description(_, _, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .logout(_, _, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.webAuthorizationsLogoutAll, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, viewType: viewType, action: {
                 arguments.logoutAll()
             })
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
-        case let .session(_, _, authorization, peer):
-            return WebAuthorizationRowItem(initialSize, stableId: stableId, account: arguments.context.account, authorization: authorization, peer: peer, logout: {
+        case let .session(_, _, authorization, peer, viewType):
+            return WebAuthorizationRowItem(initialSize, stableId: stableId, account: arguments.context.account, authorization: authorization, peer: peer, viewType: viewType, logout: {
                 arguments.logoutSession(authorization)
             })
         }
@@ -113,14 +113,14 @@ private func ==(lhs: WebSessionEntry, rhs: WebSessionEntry) -> Bool {
         } else {
             return false
         }
-    case let .description(sectionId, index, text):
-        if case .description(sectionId, index, text) = rhs {
+    case let .description(sectionId, index, text, viewType):
+        if case .description(sectionId, index, text, viewType) = rhs {
             return true
         } else {
             return false
         }
-    case let .logout(sectionId, index):
-        if case .logout(sectionId, index) = rhs {
+    case let .logout(sectionId, index, viewType):
+        if case .logout(sectionId, index, viewType) = rhs {
             return true
         } else {
             return false
@@ -131,9 +131,9 @@ private func ==(lhs: WebSessionEntry, rhs: WebSessionEntry) -> Bool {
         } else {
             return false
         }
-    case let .session(lhsSectionId, lhsIndex, lhsAuthorization, lhsPeer):
-        if case let .session(rhsSectionId, rhsIndex, rhsAuthorization, rhsPeer) = rhs {
-            return lhsSectionId == rhsSectionId && lhsIndex == rhsIndex && lhsAuthorization == rhsAuthorization && lhsPeer.isEqual(rhsPeer)
+    case let .session(lhsSectionId, lhsIndex, lhsAuthorization, lhsPeer, lhsViewType):
+        if case let .session(rhsSectionId, rhsIndex, rhsAuthorization, rhsPeer, rhsViewType) = rhs {
+            return lhsSectionId == rhsSectionId && lhsIndex == rhsIndex && lhsAuthorization == rhsAuthorization && lhsPeer.isEqual(rhsPeer) && lhsViewType == rhsViewType
         } else {
             return false
         }
@@ -210,10 +210,10 @@ private func webAuthorizationEntries(authorizations: [WebAuthorization]?, peers:
         var index: Int32 = 1
         
         
-        entries.append(.logout(sectionId: sectionId, index: index))
+        entries.append(.logout(sectionId: sectionId, index: index, viewType: .singleItem))
         index += 1
         
-        entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLogoutAllDescription))
+        entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLogoutAllDescription, viewType: .textBottomItem))
         index += 1
         
         entries.append(.sectionId(sectionId))
@@ -223,16 +223,20 @@ private func webAuthorizationEntries(authorizations: [WebAuthorization]?, peers:
         let authorizations = authorizations.filter {!state.removedSessions.contains($0.hash)}
         
         if authorizations.count > 0 {
-            entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLoggedInDescrpiption))
+            entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLoggedInDescrpiption, viewType: .textTopItem))
             index += 1
         }
         
         for auth in authorizations {
             if let peer = peers[auth.botId] {
-                entries.append(.session(sectionId: sectionId, index: index, authorization: auth, peer: peer))
+                entries.append(.session(sectionId: sectionId, index: index, authorization: auth, peer: peer, viewType: bestGeneralViewType(authorizations, for: auth)))
                 index += 1
             }
         }
+        
+        entries.append(.sectionId(sectionId))
+        sectionId += 1
+        
     } else {
         entries.append(.loading)
     }

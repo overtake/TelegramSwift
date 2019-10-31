@@ -63,15 +63,15 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     sectionId += 1
     
     if accounts.count > 1 {
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsShowNotificationsFrom), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsShowNotificationsFrom), data: InputDataGeneralTextData(viewType: .textTopItem)))
         index += 1
         
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_all_accounts, data: InputDataGeneralData(name: L10n.notificationSettingsAllAccounts, color: theme.colors.text, type: .switchable(settings.notifyAllAccounts), action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_all_accounts, data: InputDataGeneralData(name: L10n.notificationSettingsAllAccounts, color: theme.colors.text, type: .switchable(settings.notifyAllAccounts), viewType: .singleItem, action: {
             arguments.allAcounts()
         })))
         index += 1
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(settings.notifyAllAccounts ? L10n.notificationSettingsShowNotificationsFromOn : L10n.notificationSettingsShowNotificationsFromOff), color: theme.colors.grayText, detectBold: true))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(settings.notifyAllAccounts ? L10n.notificationSettingsShowNotificationsFromOn : L10n.notificationSettingsShowNotificationsFromOff), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -79,15 +79,15 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
         
     }
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsToggleNotificationsHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsToggleNotificationsHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_notifications, data: InputDataGeneralData(name: L10n.notificationSettingsToggleNotifications, color: theme.colors.text, type: .switchable(settings.enabled), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_notifications, data: InputDataGeneralData(name: L10n.notificationSettingsToggleNotifications, color: theme.colors.text, type: .switchable(settings.enabled), viewType: .firstItem, action: {
         arguments.toggleNotifications()
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_preview, data: InputDataGeneralData(name: L10n.notificationSettingsMessagesPreview, color: theme.colors.text, type: .switchable(settings.displayPreviews), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_preview, data: InputDataGeneralData(name: L10n.notificationSettingsMessagesPreview, color: theme.colors.text, type: .switchable(settings.displayPreviews), viewType: .innerItem, action: {
         arguments.toggleMessagesPreview()
     })))
     index += 1
@@ -101,71 +101,71 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
         }))
     }
  
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(settings.tone.isEmpty ? L10n.notificationSettingsToneDefault : localizedString(settings.tone), tonesItems))))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(settings.tone.isEmpty ? L10n.notificationSettingsToneDefault : localizedString(settings.tone), tonesItems), viewType: .innerItem)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset, data: InputDataGeneralData(name: L10n.notificationSettingsResetNotifications, color: theme.colors.text, type: .none, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset, data: InputDataGeneralData(name: L10n.notificationSettingsResetNotifications, color: theme.colors.text, type: .none, viewType: .lastItem, action: {
         arguments.resetAllNotifications()
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsResetNotificationsText), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsResetNotificationsText), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsBadgeHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsBadgeHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_muted_chats, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeMutedChats, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayStyle == .raw), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_muted_chats, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeMutedChats, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayStyle == .raw), viewType: .firstItem, action: {
         arguments.toggleIncludeUnreadChats(settings.totalUnreadCountDisplayStyle != .raw)
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludePublicGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.publicGroups)), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludePublicGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.publicGroups)), viewType: .innerItem, action: {
         arguments.toggleIncludePublicGroups(!settings.totalUnreadCountIncludeTags.contains(.publicGroups))
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_channels, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeChannels, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.channels)), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_channels, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeChannels, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.channels)), viewType: .innerItem, action: {
         arguments.toggleIncludeChannels(!settings.totalUnreadCountIncludeTags.contains(.channels))
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_unred_messages, data: InputDataGeneralData(name: L10n.notificationSettingsCountUnreadMessages, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayCategory == .messages), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_unred_messages, data: InputDataGeneralData(name: L10n.notificationSettingsCountUnreadMessages, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayCategory == .messages), viewType: .lastItem, action: {
         arguments.toggleCountUnreadMessages(settings.totalUnreadCountDisplayCategory != .messages)
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsBadgeDesc), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsBadgeDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
 
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_new_contacts, data: InputDataGeneralData(name: L10n.notificationSettingsContactJoined, color: theme.colors.text, type: .switchable(globalSettings.contactsJoined), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_new_contacts, data: InputDataGeneralData(name: L10n.notificationSettingsContactJoined, color: theme.colors.text, type: .switchable(globalSettings.contactsJoined), viewType: .singleItem, action: {
         arguments.updateJoinedNotifications(!globalSettings.contactsJoined)
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsContactJoinedInfo), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsContactJoinedInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsSnoofHeader), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsSnoofHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_snoof, data: InputDataGeneralData(name: L10n.notificationSettingsSnoof, color: theme.colors.text, type: .switchable(!settings.showNotificationsOutOfFocus), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_snoof, data: InputDataGeneralData(name: L10n.notificationSettingsSnoof, color: theme.colors.text, type: .switchable(!settings.showNotificationsOutOfFocus), viewType: .singleItem, action: {
         arguments.snoof()
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(!settings.showNotificationsOutOfFocus ? L10n.notificationSettingsSnoofOn : L10n.notificationSettingsSnoofOff), color: theme.colors.grayText, detectBold: true))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(!settings.showNotificationsOutOfFocus ? L10n.notificationSettingsSnoofOn : L10n.notificationSettingsSnoofOff), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     
@@ -179,7 +179,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
 func NotificationPreferencesController(_ context: AccountContext) -> ViewController {
 
     
-    let arguments = NotificationArguments.init(resetAllNotifications: {
+    let arguments = NotificationArguments(resetAllNotifications: {
         confirm(for: context.window, header: L10n.notificationSettingsConfirmReset, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
             _ = resetPeerNotificationSettings(network: context.account.network).start()
         })

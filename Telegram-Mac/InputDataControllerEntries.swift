@@ -37,7 +37,7 @@ enum InputDataEntryId : Hashable {
 }
 
 
-enum InputDataInputMode {
+enum InputDataInputMode : Equatable {
     case plain
     case secure
 }
@@ -187,12 +187,10 @@ struct InputDataInputPlaceholder : Equatable {
     let icon: CGImage?
     let action: (()-> Void)?
     let hasLimitationText: Bool
-    let rightResoringImage: CGImage?
-    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, rightResoringImage: CGImage? = nil, action: (()-> Void)? = nil) {
+    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, action: (()-> Void)? = nil) {
         self.drawBorderAfterPlaceholder = drawBorderAfterPlaceholder
         self.hasLimitationText = hasLimitationText
         self.placeholder = placeholder
-        self.rightResoringImage = rightResoringImage
         self.icon = icon
         self.action = action
     }
@@ -208,38 +206,104 @@ final class InputDataGeneralData : Equatable {
     let color: NSColor
     let icon: CGImage?
     let type: GeneralInteractedType
+    let viewType: GeneralViewType
     let description: String?
     let action: (()->Void)?
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, description: String? = nil, action: (()->Void)? = nil) {
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, description: String? = nil, action: (()->Void)? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
         self.type = type
+        self.viewType = viewType
         self.description = description
         self.action = action
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
-        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description
+        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType
+    }
+}
+
+final class InputDataTextInsertAnimatedViewData : NSObject {
+    let context: AccountContext
+    let file: TelegramMediaFile
+    init(context: AccountContext, file: TelegramMediaFile) {
+        self.context = context
+        self.file = file
+    }
+    static func == (lhs: InputDataTextInsertAnimatedViewData, rhs: InputDataTextInsertAnimatedViewData) -> Bool {
+        return lhs.file == rhs.file
+    }
+    static var attributeKey: NSAttributedString.Key {
+        return NSAttributedString.Key("InputDataTextInsertAnimatedDataKey")
+    }
+}
+
+struct InputDataGeneralTextRightData : Equatable {
+    let isLoading: Bool
+    let text: NSAttributedString?
+    init(isLoading: Bool, text: NSAttributedString?) {
+        self.isLoading = isLoading
+        self.text = text
+    }
+}
+
+final class InputDataGeneralTextData : Equatable {
+    let color: NSColor
+    let detectBold: Bool
+    let viewType: GeneralViewType
+    let rightItem: InputDataGeneralTextRightData
+    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil)) {
+        self.color = color
+        self.detectBold = detectBold
+        self.viewType = viewType
+        self.rightItem = rightItem
+    }
+    static func ==(lhs: InputDataGeneralTextData, rhs: InputDataGeneralTextData) -> Bool {
+        return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem
+    }
+}
+
+final class InputDataRowData : Equatable {
+    let viewType: GeneralViewType
+    let rightItem: InputDataRightItem?
+    let defaultText: String?
+    let pasteFilter:((String)->(Bool, String))?
+    let maxBlockWidth: CGFloat?
+    init(viewType: GeneralViewType = .legacy, rightItem: InputDataRightItem? = nil, defaultText: String? = nil, maxBlockWidth: CGFloat? = nil, pasteFilter:((String)->(Bool, String))? = nil) {
+        self.viewType = viewType
+        self.rightItem = rightItem
+        self.defaultText = defaultText
+        self.pasteFilter = pasteFilter
+        self.maxBlockWidth = maxBlockWidth
+    }
+    static func ==(lhs: InputDataRowData, rhs: InputDataRowData) -> Bool {
+        return lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.defaultText == rhs.defaultText && lhs.maxBlockWidth == rhs.maxBlockWidth
     }
 }
 
 enum InputDataSectionType : Equatable {
     case normal
+    case legacy
     case custom(CGFloat)
+    case customModern(CGFloat)
     var height: CGFloat {
         switch self {
         case .normal:
+            return 30
+        case .legacy:
             return 20
         case let .custom(height):
+            return height
+        case let .customModern(height):
             return height
         }
     }
 }
 
 enum InputDataEntry : Identifiable, Comparable {
-    case desc(sectionId: Int32, index: Int32, text: GeneralRowTextType, color: NSColor, detectBold: Bool)
-    case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, filter:(String)->String, limit: Int32)
+    case desc(sectionId: Int32, index: Int32, text: GeneralRowTextType, data: InputDataGeneralTextData)
+    case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, data: InputDataRowData, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, filter:(String)->String, limit: Int32)
     case general(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, data: InputDataGeneralData)
     case dateSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String)
     case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, values:[ValuesSelectorValue<InputDataValue>])
@@ -251,9 +315,9 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var stableId: InputDataEntryId {
         switch self {
-        case let .desc(_, index, _, _, _):
+        case let .desc(_, index, _, _):
             return .desc(index)
-        case let .input(_, _, _, _, identifier, _, _, _, _, _):
+        case let .input(_, _, _, _, identifier, _, _, _, _, _, _):
             return .input(identifier)
         case let .general(_, _, _, _, identifier, _):
             return .general(identifier)
@@ -276,9 +340,9 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var stableIndex: Int32 {
         switch self {
-        case let .desc(_, index, _, _, _):
+        case let .desc(_, index, _, _):
             return index
-        case let .input(_, index, _, _, _, _, _, _, _, _):
+        case let .input(_, index, _, _, _, _, _, _, _, _, _):
             return index
         case let .general(_, index, _, _, _, _):
             return index
@@ -301,9 +365,9 @@ enum InputDataEntry : Identifiable, Comparable {
     
     var sectionIndex: Int32 {
         switch self {
-        case let .desc(index, _, _, _, _):
+        case let .desc(index, _, _, _):
             return index
-        case let .input(index, _, _, _, _, _, _, _, _, _):
+        case let .input(index, _, _, _, _, _, _, _, _, _, _):
             return index
         case let .selector(index, _, _, _, _, _, _):
             return index
@@ -336,16 +400,16 @@ enum InputDataEntry : Identifiable, Comparable {
     func item(arguments: InputDataArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .sectionId(_, type):
-            var height: CGFloat = 20
+            let viewType: GeneralViewType
             switch type {
-            case let .custom(h):
-                height = h
+            case .legacy, .custom:
+                viewType = .legacy
             default:
-                break
+                viewType = .separator
             }
-            return GeneralRowItem(initialSize, height: height, stableId: stableId, backgroundColor: theme.colors.background)
-        case let .desc(_, _, text, color, detectBold):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: detectBold, textColor: color)
+            return GeneralRowItem(initialSize, height: type.height, stableId: stableId, viewType: viewType)
+        case let .desc(_, _, text, data):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType, rightItem: data.rightItem)
         case let .custom(_, _, _, _, _, item):
             return item(initialSize, stableId)
         case let .selector(_, _, value, error, _, placeholder, values):
@@ -353,15 +417,17 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dataSelector(_, _, _, error, _, placeholder, description, icon, action):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, icon: icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), description: description, type: .none, action: action, error: error)
         case let .general(_, _, value, error, identifier, data):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
             }, error: error)
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
-        case let .input(_, _, value, error, _, mode, placeholder, inputPlaceholder, filter, limit: limit):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, filter: filter, updated: arguments.dataUpdated, limit: limit)
+        case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):
+            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, defaultText: data.defaultText, rightItem: data.rightItem, maxBlockWidth: data.maxBlockWidth, filter: filter, updated: { _ in
+                arguments.dataUpdated()
+            }, pasteFilter: data.pasteFilter, limit: limit)
         case .loading:
-            return SearchEmptyRowItem.init(initialSize, stableId: stableId, isLoading: true)
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case let .search(_, _, value, _, update):
             return SearchRowItem(initialSize, stableId: stableId, searchInteractions: SearchInteractions({ state, _ in
                 update(state)
@@ -378,14 +444,14 @@ func <(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
 
 func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
     switch lhs {
-    case let .desc(sectionId, index, text, lhsColor, detectBold):
-        if case .desc(sectionId, index, text, let rhsColor, detectBold) = rhs {
-            return lhsColor == rhsColor
+    case let .desc(sectionId, index, text, data):
+        if case .desc(sectionId, index, text, data) = rhs {
+            return true
         } else {
             return false
         }
-    case let .input(sectionId, index, lhsValue, lhsError, identifier, mode, placeholder, inputPlaceholder, _, limit):
-        if case .input(sectionId, index, let rhsValue, let rhsError, identifier, mode, placeholder, inputPlaceholder, _, limit) = rhs {
+    case let .input(sectionId, index, lhsValue, lhsError, identifier, mode, data, placeholder, inputPlaceholder, _, limit):
+        if case .input(sectionId, index, let rhsValue, let rhsError, identifier, mode, data, placeholder, inputPlaceholder, _, limit) = rhs {
             return lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false
@@ -528,6 +594,7 @@ func ==(lhs: InputDataValue, rhs: InputDataValue) -> Bool {
 
 enum InputDataValidationFailAction {
     case shake
+    case shakeWithData(Any)
 }
 
 enum InputDataValidationBehaviour {

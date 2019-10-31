@@ -112,7 +112,7 @@ final class InstantPageTextLine {
         
         switch alignment {
         case .center:
-            let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
+            let additional = floorToScreenPixels(System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
         case .right:
@@ -191,7 +191,7 @@ final class InstantPageTextLine {
 
         switch alignment {
         case .center:
-            let additional = floorToScreenPixels(scaleFactor: System.backingScale, (boundingWidth - frame.width) / 2)
+            let additional = floorToScreenPixels(System.backingScale, (boundingWidth - frame.width) / 2)
             startOffset += additional
             endOffset += additional
         case .right:
@@ -275,7 +275,7 @@ final class InstantPageTextItem: InstantPageItem {
             var point = NSMakePoint(point.x, point.y)
             switch alignment {
             case .center:
-                point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
+                point.x -= floorToScreenPixels(System.backingScale, (frame.width - line.frame.width) / 2)
             case .right:
                 point.x = frame.width - point.x
             default:
@@ -672,7 +672,7 @@ func layoutTextItemWithString(_ string: NSAttributedString, boundingWidth: CGFlo
                             var imageFrame = CGRect(origin: CGPoint(), size: dimensions)
                             
                             let xOffset = CTLineGetOffsetForStringIndex(line, CTRunGetStringRange(run).location, nil)
-                            let yOffset = fontLineHeight.isZero ? 0.0 : floorToScreenPixels(scaleFactor: System.backingScale, (fontLineHeight - imageFrame.size.height) / 2.0)
+                            let yOffset = fontLineHeight.isZero ? 0.0 : floorToScreenPixels(System.backingScale, (fontLineHeight - imageFrame.size.height) / 2.0)
                             imageFrame.origin = imageFrame.origin.offsetBy(dx: workingLineOrigin.x + xOffset, dy: workingLineOrigin.y + yOffset)
                             
                             let minSpacing = fontLineSpacing - 4.0
@@ -717,7 +717,7 @@ func layoutTextItemWithString(_ string: NSAttributedString, boundingWidth: CGFlo
                     var delta: CGFloat = 0.0
                     
                     if let offset = attributes[.baselineOffset] as? CGFloat {
-                        lineHeight = floorToScreenPixels(scaleFactor: System.backingScale, lineHeight * 0.85)
+                        lineHeight = floorToScreenPixels(System.backingScale, lineHeight * 0.85)
                         delta = offset * 0.6
                     }
                     let lowerX = floor(CTLineGetOffsetForStringIndex(line, range.location, nil))

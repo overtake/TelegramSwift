@@ -522,11 +522,11 @@ private final class WallpaperPreviewView: View {
     private func addTableItems(_ context: AccountContext) {
         switch wallpaper {
         case .color:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
         case .file(_, _, _, _):
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
         default:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
         }
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
@@ -557,11 +557,11 @@ private final class WallpaperPreviewView: View {
 
         let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
-        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, .bubble, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, .bubble, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
 
         let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: secondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
-        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, .bubble, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, .bubble, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
         
         
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
@@ -1021,7 +1021,7 @@ class WallpaperPreviewController: ModalViewController {
             if !options.isEmpty {
                 optionsString = "?\(options.joined(separator: "&"))"
             }
-            showModal(with: ShareModalController.init(ShareLinkObject(context, link: "https://t.me/bg/\(slug)\(optionsString)")), for: mainWindow)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/bg/\(slug)\(optionsString)")), for: mainWindow)
         case let .color(color):
             var color = NSColor(rgb: UInt32(bitPattern: color)).hexString.lowercased()
             color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
@@ -1063,13 +1063,13 @@ class WallpaperPreviewController: ModalViewController {
         closeAllModals()
         
         let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect, magnify: genericView.magnifyView.magnify) |> mapToSignal { wallpaper in
-            return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper) |> delay(0.2, queue: Queue.mainQueue())
+            return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
         }
         
-        _ = showModalProgress(signal: signal, for: mainWindow).start(next: { wallpaper in
+        _ = showModalProgress(signal: signal, for: context.window).start(next: { wallpaper in
             _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.withUpdatedBubbled(true).updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }
-            }) |> delay(0.1, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(completed: {
+                return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
+            }) |> deliverOnMainQueue).start(completed: {
                     var stats:[Signal<Void, NoError>] = []
                     switch self.source {
                     case let .gallery(wallpaper):
@@ -1080,10 +1080,6 @@ class WallpaperPreviewController: ModalViewController {
                         break
                     }
                     let _ = combineLatest(stats).start()
-                    
-                    delay(0.3, closure: {
-                        _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
-                    })
                 })
         })
         

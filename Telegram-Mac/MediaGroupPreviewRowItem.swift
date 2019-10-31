@@ -61,7 +61,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
     private(set) var draggingIndex: Int? = nil
     
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         
         guard let item = item as? MediaGroupPreviewRowItem else { return nil }
         
@@ -71,12 +71,12 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
                 if contentNode is ChatGIFContentView {
                     if let file = contentNode.media as? TelegramMediaFile {
                         let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                        return .file(reference, GifPreviewModalView.self)
+                        return (.file(reference, GifPreviewModalView.self), contentNode)
                     }
                 } else if contentNode is ChatInteractiveContentView {
                     if let image = contentNode.media as? TelegramMediaImage {
                         let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
-                        return .image(reference, ImagePreviewModalView.self)
+                        return (.image(reference, ImagePreviewModalView.self), contentNode)
                     }
                 }
             }

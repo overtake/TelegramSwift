@@ -147,8 +147,11 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_info, equatable: InputDataEquatable(state), item: { size, stableId -> TableRowItem in
-        return EditAccountInfoItem(size, stableId: stableId, account: arguments.context.account, state: state, updateText: { firstName, lastName in
+        return EditAccountInfoItem(size, stableId: stableId, account: arguments.context.account, state: state, viewType: .singleItem, updateText: { firstName, lastName in
             updateState { current in
                 return current.withUpdatedFirstName(firstName).withUpdatedLastName(lastName).withUpdatedInited(true)
             }
@@ -158,41 +161,48 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editAccountNameDesc), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editAccountNameDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
 
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, placeholder: InputDataInputPlaceholder(L10n.telegramBioViewController), inputPlaceholder: L10n.bioPlaceholder, filter: {$0}, limit: 70))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    index += 1
+
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.bioPlaceholder, filter: {$0}, limit: 70))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioDescription), color: theme.colors.grayText, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), viewType: .firstItem, action: nil)))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .lastItem, action: nil)))
     index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     if activeAccounts.count < 3 {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.editAccountAddAccount, color: theme.colors.accent, icon: nil, type: .none, action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.editAccountAddAccount, color: theme.colors.accent, icon: nil, type: .none, viewType: .firstItem, action: {
             arguments.addAccount()
         })))
         index += 1
     }
    
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: L10n.editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: L10n.editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, viewType: activeAccounts.count < 3 ? .lastItem : .singleItem, action: nil)))
     index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
     return entries
 }
@@ -286,7 +296,7 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
         })
         
     }, logout: {
-        showModal(with: InputDataModalController(LogoutViewController(context: context, f: f), modalInteractions: ModalInteractions(acceptTitle: L10n.modalCancel)), for: mainWindow)
+        showModal(with: LogoutViewController(context: context, f: f), for: context.window)
     }, username: {
         f(UsernameSettingsViewController(context))
     }, changeNumber: {

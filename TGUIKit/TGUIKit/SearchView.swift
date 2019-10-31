@@ -125,10 +125,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         clear.set(image: presentation.search.clearImage, for: .Normal)
        _ =  clear.sizeToFit()
         
-        placeholder.centerY(x: placeholderTextInset + 2)
+        placeholder.centerY(x: placeholderTextInset + 2, addition: -1)
         search.centerY()
         input.insertionPointColor = presentation.search.textColor
-        
+        progressIndicator.progressColor = presentation.colors.text
         needsLayout = true
 
     }
@@ -144,7 +144,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
-        self.layer?.cornerRadius = .cornerRadius
+        self.layer?.cornerRadius = 10
         if #available(OSX 10.12.2, *) {
             input.allowsCharacterPickerTouchBarItem = false
         } 
@@ -228,7 +228,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open func cancelSearch() {
-        change(state: .None, true)
+        if self.query.isEmpty {
+            self.change(state: .None, true)
+        } else {
+            self.setString("")
+        }
     }
     
     open func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
@@ -307,7 +311,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 }
                 
                 if defWidth < size.width && point.x > defWidth {
-                    input.setFrameOrigin(floorToScreenPixels(scaleFactor: backingScaleFactor, defWidth - point.x - additionalInset), input.frame.minY)
+                    input.setFrameOrigin(floorToScreenPixels(backingScaleFactor, defWidth - point.x - additionalInset), input.frame.minY)
                     if input.frame.maxX < inputContainer.frame.width {
                         input.setFrameOrigin(inputContainer.frame.width - input.frame.width + 4, input.frame.minY)
                     }
@@ -354,6 +358,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
         self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
+                strongSelf.setString("")
                 return strongSelf.changeResponder() ? .invoked : .rejected
             }
             return .rejected

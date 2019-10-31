@@ -50,6 +50,10 @@ final class ChatMediaPresentation : Equatable {
                                      waveformForeground: theme.chat.waveformForeground(isIncoming, renderType == .bubble))
     }
     
+    static var empty: ChatMediaPresentation {
+        return .init(isIncoming: true, isBubble: true, activityBackground: .clear, activityForeground: .clear, text: .clear, grayText: .clear, link: .clear, waveformBackground: .clear, waveformForeground: .clear)
+    }
+    
     var fileThumb: CGImage {
         if isBubble {
             return isIncoming ? theme.icons.chatFileThumbBubble_incoming : theme.icons.chatFileThumbBubble_outgoing
@@ -75,7 +79,7 @@ final class ChatMediaPresentation : Equatable {
     }
     
     static var Empty: ChatMediaPresentation {
-        return ChatMediaPresentation(isIncoming: false, isBubble: false, activityBackground: theme.colors.blueFill, activityForeground: .white, text: theme.colors.text, grayText: theme.colors.grayText, link: theme.colors.link, waveformBackground: theme.colors.waveformBackground, waveformForeground: theme.colors.waveformForeground)
+        return ChatMediaPresentation(isIncoming: false, isBubble: false, activityBackground: theme.colors.accent, activityForeground: theme.colors.underSelectedColor, text: theme.colors.text, grayText: theme.colors.grayText, link: theme.colors.link, waveformBackground: theme.colors.waveformBackground, waveformForeground: theme.colors.waveformForeground)
     }
     
     static func ==(lhs: ChatMediaPresentation, rhs: ChatMediaPresentation) -> Bool {

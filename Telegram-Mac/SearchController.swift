@@ -311,7 +311,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             })
         case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: true, removeAction: {
-                arguments.removeRecentPeerId(peer.id)
+                if let secretChat = secretChat {
+                    arguments.removeRecentPeerId(secretChat.peerId)
+                } else {
+                    arguments.removeRecentPeerId(peer.id)
+                }
             }, contextMenuItems: {
                 var items:[ContextMenuItem] = []
                 
@@ -447,6 +451,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         genericView.delegate = self
         genericView.needUpdateVisibleAfterScroll = true
         genericView.border = [.Right]
+        
+        genericView.getBackgroundColor = {
+            .clear
+        }
         
         let context = self.context
         let options = self.options
@@ -694,7 +702,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             guard let `self` = self else {return}
             self.genericView.merge(with: transition)
             self.isLoading.set(.single(loading))
-            
+            if self.scrollupOnNextTransition {
+                self.scrollup()
+            }
+            self.scrollupOnNextTransition = false
             _ = searchMessagesStateValue.swap(searchMessagesState)
             
             if let location = location {
@@ -705,8 +716,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         if let item = item {
                             _ = self.genericView.select(item: item, notify: false, byClick: false)
                         }
-                    default:
-                        self.genericView.cancelSelection()
                     }
                 }
             } else {
@@ -729,8 +738,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     override func initializer() -> TableView {
-        let vz = TableView.self
-        //controller.bar.height
         return TableView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), drawBorder: true);
     }
     
@@ -884,14 +891,21 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }))
     }
     
+    private var scrollupOnNextTransition: Bool = false
+    
     func request(with query:String?) -> Void {
         setHighlightEvents()
         self.query = query
+        self.scrollupOnNextTransition = true
         if let query = query, !query.isEmpty {
             searchQuery.set(.single(query))
         } else {
             searchQuery.set(.single(nil))
         }
+    }
+    
+    override func scrollup() {
+        genericView.clipView.scroll(to: NSMakePoint(0, 50), animated: false)
     }
     
     private var closeNext: Bool = false

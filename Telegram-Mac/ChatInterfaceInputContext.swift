@@ -82,7 +82,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         }
         
         
-        let maxUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: inputState.selectionRange.lowerBound)
+        let maxUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: min(inputState.selectionRange.lowerBound, inputText.utf16.count))
         guard let maxIndex = maxUtfIndex.samePosition(in: inputText) else {
             return nil
         }
@@ -221,8 +221,10 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         if chatPresentationInterfaceState.state == .editing && (possibleTypes != [.contextRequest] && possibleTypes != [.mention] && possibleTypes != [.emoji]) {
             return .none
         }
-        
-        
+        var possibleQueryRange = possibleQueryRange
+        if possibleQueryRange.upperBound >= inputState.inputText.endIndex {
+            possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.endIndex
+        }
         
         let value = inputState.inputText[possibleQueryRange]
         let query = String(value) //.substring(with: possibleQueryRange)

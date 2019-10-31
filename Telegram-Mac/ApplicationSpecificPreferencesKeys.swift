@@ -26,6 +26,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case voiceCallSettings = 34
     case downloadedPaths = 35
     case recentEmoji = 36
+    case walletPasscodeTimeout = 37
 
 }
 
@@ -39,6 +40,7 @@ struct ApplicationSpecificPreferencesKeys {
     static let launchSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.launchSettings.rawValue)
     static let autoplayMedia = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.autoplayMedia.rawValue)
     static let downloadedPaths = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.downloadedPaths.rawValue)
+    static let walletPasscodeTimeout = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.walletPasscodeTimeout.rawValue)
 
 }
 

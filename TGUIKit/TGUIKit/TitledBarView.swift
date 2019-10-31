@@ -76,20 +76,20 @@ private class TitledContainerView : View {
                 
                 let sY = tY + textLayout.size.height + 2.0
                 if !hiddenStatus {
-                    let point = convert( NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, (superview.frame.width - statusLayout.size.width)/2.0), tY), from: superview)
+                    let point = convert( NSMakePoint(floorToScreenPixels(backingScaleFactor, (superview.frame.width - statusLayout.size.width)/2.0), tY), from: superview)
                     
                     statusApply.draw(NSMakeRect(textInset == nil ? point.x : textInset!, sY, statusLayout.size.width, statusLayout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
             
-            let point = convert( NSMakePoint(floorToScreenPixels(scaleFactor: backingScaleFactor, (superview.frame.width - textLayout.size.width)/2.0), tY), from: superview)
+            let point = convert( NSMakePoint(floorToScreenPixels(backingScaleFactor, (superview.frame.width - textLayout.size.width)/2.0), tY), from: superview)
             var textRect = NSMakeRect(min(max(textInset == nil ? point.x : textInset!, 0), frame.width - textLayout.size.width), point.y, textLayout.size.width, textLayout.size.height)
             
             if let (titleImage, side) = titleImage {
                 switch side {
                 case .left:
                     ctx.draw(titleImage, in: NSMakeRect(textInset == nil ? textRect.minX - titleImage.backingSize.width : textInset!, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))
-                    textRect.origin.x += floorToScreenPixels(scaleFactor: backingScaleFactor, titleImage.backingSize.width) + 4
+                    textRect.origin.x += floorToScreenPixels(backingScaleFactor, titleImage.backingSize.width) + 4
                 case .right:
                     ctx.draw(titleImage, in: NSMakeRect(textRect.maxX + 3, tY + 1, titleImage.backingSize.width, titleImage.backingSize.height))
                 }

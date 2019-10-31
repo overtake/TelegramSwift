@@ -45,7 +45,7 @@ class ContextStickerRowItem: TableRowItem {
 class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
 
     
-    func fileAtPoint(_ point:NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point:NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let item = item as? ContextStickerRowItem {
             var i:Int = 0
             for subview in subviews {
@@ -53,9 +53,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     let file = item.result.results[i].file
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
                     if file.isAnimatedSticker {
-                        return .file(reference, AnimatedStickerPreviewModalView.self)
+                        return (.file(reference, AnimatedStickerPreviewModalView.self), subview)
                     } else {
-                        return .file(reference, StickerPreviewModalView.self)
+                        return (.file(reference, StickerPreviewModalView.self), subview)
                     }
                 }
                 i += 1
@@ -70,9 +70,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             let reference = fileAtPoint(convert(event.locationInWindow, from: nil))
             
-            if let reference = reference?.fileReference?.media.stickerReference {
+            if let reference = reference?.0.fileReference?.media.stickerReference {
                 menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: {
-                    showModal(with: StickersPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
+                    showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
                 }))
             }
         }
@@ -119,7 +119,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     
                    
                     if data.file.isAnimatedSticker {
-                        let view = ChatMediaAnimatedStickerView(frame: NSZeroRect)
+                        let view = MediaAnimatedStickerView(frame: NSZeroRect)
                         let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
                         view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
                         view.userInteractionEnabled = false
@@ -163,7 +163,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
         if let item = item as? ContextStickerRowItem  {
             let defSize = NSMakeSize( item.result.sizes[0].width - 4,  item.result.sizes[0].height - 4)
             
-            let defInset = floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.width - defSize.width * CGFloat(item.result.maxCount)) / CGFloat(item.result.maxCount + 1))
+            let defInset = floorToScreenPixels(backingScaleFactor, (frame.width - defSize.width * CGFloat(item.result.maxCount)) / CGFloat(item.result.maxCount + 1))
             var inset = defInset
             
             for i in 0 ..< item.result.entries.count {

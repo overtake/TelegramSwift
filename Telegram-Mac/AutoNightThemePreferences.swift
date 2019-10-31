@@ -14,7 +14,7 @@ import TGUIKit
 
 
 enum AutoNightSchedule : Equatable {
-    case sunrise(latitude: Double, longitude: Double)
+    case sunrise(latitude: Double, longitude: Double, localizedGeo: String?)
     case timeSensitive(from: Int32, to: Int32)
     
     fileprivate var typeValue: Int32 {
@@ -27,26 +27,43 @@ enum AutoNightSchedule : Equatable {
     }
 }
 
-class AutoNightThemePreferences: PreferencesEntry, Equatable {
+struct AutoNightThemePreferences: PreferencesEntry, Equatable {
     let schedule: AutoNightSchedule?
-    let themeName: String
+    let systemBased: Bool
+    let theme: DefaultTheme
     static var defaultSettings: AutoNightThemePreferences {
         return AutoNightThemePreferences()
     }
     
-    init(schedule: AutoNightSchedule? = nil, themeName: String = nightBluePalette.name) {
-        self.schedule = schedule
-        self.themeName = themeName
+    init() {
+        self.schedule = nil
+        self.theme = DefaultTheme(local: .tintedNight, cloud: nil)
+        if #available(OSX 10.14, *) {
+            self.systemBased = true
+        } else {
+            self.systemBased = false
+        }
     }
     
-    required init(decoder: PostboxDecoder) {
+    init(schedule: AutoNightSchedule?, theme: DefaultTheme, systemBased: Bool) {
+        self.schedule = schedule
+        self.theme = theme
+        self.systemBased = systemBased
+    }
+    
+    init(decoder: PostboxDecoder) {
         let type = decoder.decodeInt32ForKey("t", orElse: 0)
-        self.themeName = decoder.decodeStringForKey("tn", orElse: nightBluePalette.name)
+        
+        let defaultTheme = DefaultTheme(local: .tintedNight, cloud: nil)
+        
+        self.theme = decoder.decodeObjectForKey("defTheme", decoder: { DefaultTheme(decoder: $0) }) as? DefaultTheme ?? defaultTheme
+        self.systemBased = decoder.decodeBoolForKey("sb", orElse: false)
         switch type {
         case 1:
             let latitude = decoder.decodeDoubleForKey("la", orElse: 0)
             let longitude = decoder.decodeDoubleForKey("lo", orElse: 0)
-            self.schedule = .sunrise(latitude: latitude, longitude: longitude)
+            let localizedGeo = decoder.decodeOptionalStringForKey("lg")
+            self.schedule = .sunrise(latitude: latitude, longitude: longitude, localizedGeo: localizedGeo)
         case 2:
             let from = decoder.decodeInt32ForKey("from", orElse: 22)
             let to = decoder.decodeInt32ForKey("to", orElse: 9)
@@ -57,13 +74,19 @@ class AutoNightThemePreferences: PreferencesEntry, Equatable {
     }
     
     func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeString(themeName, forKey: "tn")
+        encoder.encodeObject(self.theme, forKey: "defTheme")
+        encoder.encodeBool(self.systemBased, forKey: "sb")
         if let schedule = schedule {
             encoder.encodeInt32(schedule.typeValue, forKey: "t")
             switch schedule {
             case let .sunrise(location):
                 encoder.encodeDouble(location.latitude, forKey: "la")
                 encoder.encodeDouble(location.longitude, forKey: "lo")
+                if let localizedGeo = location.localizedGeo {
+                    encoder.encodeString(localizedGeo, forKey: "lg")
+                } else {
+                    encoder.encodeNil(forKey: "lg")
+                }
             case let .timeSensitive(from, to):
                 encoder.encodeInt32(from, forKey: "from")
                 encoder.encodeInt32(to, forKey: "to")
@@ -75,11 +98,14 @@ class AutoNightThemePreferences: PreferencesEntry, Equatable {
     
 
     func withUpdatedSchedule(_ schedule: AutoNightSchedule?) -> AutoNightThemePreferences {
-        return AutoNightThemePreferences(schedule: schedule, themeName: self.themeName)
+        return AutoNightThemePreferences(schedule: schedule, theme: self.theme, systemBased: self.systemBased)
     }
     
-    func withUpdatedName(_ themeName: String) -> AutoNightThemePreferences {
-        return AutoNightThemePreferences(schedule: self.schedule, themeName: themeName)
+    func withUpdatedTheme(_ theme: DefaultTheme) -> AutoNightThemePreferences {
+        return AutoNightThemePreferences(schedule: self.schedule, theme: theme, systemBased: self.systemBased)
+    }
+    func withUpdatedSystemBased(_ systemBased: Bool) -> AutoNightThemePreferences {
+        return AutoNightThemePreferences(schedule: self.schedule, theme: self.theme, systemBased: systemBased)
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -90,16 +116,6 @@ class AutoNightThemePreferences: PreferencesEntry, Equatable {
         }
     }
     
-    static func ==(lhs: AutoNightThemePreferences, rhs: AutoNightThemePreferences) -> Bool {
-        if lhs.schedule != rhs.schedule {
-            return false
-        }
-        if lhs.themeName != rhs.themeName {
-            return false
-        }
-        return true
-    }
-    
 }
 
 
@@ -107,7 +123,7 @@ func autoNightSettings(accountManager: AccountManager) -> Signal<AutoNightThemeP
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.autoNight]) |> map { $0.entries[ApplicationSharedPreferencesKeys.autoNight] as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings }
 }
 
-func updateAutoNightSettingsInteractively(accountManager: AccountManager, _ f: @escaping (AutoNightThemePreferences) -> AutoNightThemePreferences) -> Signal<AutoNightThemePreferences, NoError> {
+func updateAutoNightSettingsInteractively(accountManager: AccountManager, _ f: @escaping (AutoNightThemePreferences) -> AutoNightThemePreferences) -> Signal<Void, NoError> {
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
             let currentSettings: AutoNightThemePreferences
@@ -118,7 +134,5 @@ func updateAutoNightSettingsInteractively(accountManager: AccountManager, _ f: @
             }
             return f(currentSettings)
         })
-    } |> mapToSignal {
-        return autoNightSettings(accountManager: accountManager)
     }
 }

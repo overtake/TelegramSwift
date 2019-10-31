@@ -18,29 +18,48 @@ private final class ValuesSelectorArguments <T> where T : Equatable {
 }
 
 private enum ValuesSelectorEntry<T> : TableItemListNodeEntry where T : Equatable {
-    
-    case value(index: Int32, value: ValuesSelectorValue<T>, selected: Bool)
+    case sectionId(sectionId: Int32)
+    case value(sectionId: Int32, index: Int32, value: ValuesSelectorValue<T>, selected: Bool, viewType: GeneralViewType)
     var stableId: Int32 {
         switch self {
-        case let .value(index, _, _):
+        case let .value(_, index, _, _, _):
             return index
+        case let .sectionId(sectionId):
+            return 1000 + sectionId
+        }
+    }
+    
+    var index: Int32 {
+        switch self {
+        case let .sectionId(sectionId):
+            return (sectionId + 1) * 1000 - sectionId
+        case let .value(sectionId, index, _, _, _):
+            return (sectionId * 1000) + index
         }
     }
     
     func item(_ arguments: ValuesSelectorArguments<T>, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .value(_, value, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: value.localized, type: .none, action: {
+        case let .value(_, _, value, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: value.localized, type: .none, viewType: viewType, action: {
                 arguments.selectItem(value)
             })
+        case .sectionId:
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
 
 private func ==<T>(lhs: ValuesSelectorEntry<T>, rhs: ValuesSelectorEntry<T>) -> Bool {
     switch lhs {
-    case let .value(index, value, selected):
-        if case .value(index, value, selected) = rhs {
+    case let .value(section, index, value, selected, viewType):
+        if case .value(section, index, value, selected, viewType) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .sectionId(sectionId):
+        if case .sectionId(sectionId) = rhs {
             return true
         } else {
             return false
@@ -49,7 +68,7 @@ private func ==<T>(lhs: ValuesSelectorEntry<T>, rhs: ValuesSelectorEntry<T>) -> 
 }
 
 private func <<T>(lhs: ValuesSelectorEntry<T>, rhs: ValuesSelectorEntry<T>) -> Bool {
-    return lhs.stableId < rhs.stableId
+    return lhs.index < rhs.index
 }
 
 private final class ValuesSelectorModalView : View {
@@ -63,6 +82,9 @@ private final class ValuesSelectorModalView : View {
         addSubview(tableView)
         addSubview(separator)
         addSubview(searchView)
+        tableView.getBackgroundColor = {
+            return theme.colors.grayBackground
+        }
         separator.backgroundColor = theme.colors.border
     }
     
@@ -85,9 +107,9 @@ private final class ValuesSelectorModalView : View {
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
         title.layout?.measure(width: frame.width - 60)
         title.update(title.layout)
-        title.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - title.frame.height) / 2))
+        title.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - title.frame.height) / 2))
         searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
-        searchView.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (50 - searchView.frame.height) / 2))
+        searchView.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - searchView.frame.height) / 2))
         separator.frame = NSMakeRect(0, 49, frame.width, .borderSize)
     }
 }
@@ -137,7 +159,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: L10n.modalCancel, accept: { [weak self] in
             self?.close()
-        }, drawBorder: false, height: 50)
+        }, drawBorder: true, height: 50)
     }
     
     private func complete() {
@@ -160,7 +182,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
         self.stateValue = Atomic(value: ValuesSelectorState(selected: nil, values: values))
         self.onComplete = onComplete
         self.title = title
-        super.init(frame: NSMakeRect(0, 0, 250, 100))
+        super.init(frame: NSMakeRect(0, 0, 300, 100))
         self.bar = .init(height: 0)
     }
     
@@ -207,13 +229,21 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
             
             var entries:[ValuesSelectorEntry<T>] = []
             var index: Int32 = 0
-            for value in state.values {
+            var sectionId: Int32 = 0
+            
+            entries.append(.sectionId(sectionId: sectionId))
+            sectionId += 1
+            
+            let values = state.values.filter { value in
                 let result = value.localized.split(separator: " ").filter({$0.lowercased().hasPrefix(search.request.lowercased())})
-                if search.request.isEmpty || !result.isEmpty {
-                    entries.append(ValuesSelectorEntry.value(index: index, value: value, selected: state.selected == value))
-                    index += 1
-                }
+                return search.request.isEmpty || !result.isEmpty
             }
+            for value in values {
+                entries.append(ValuesSelectorEntry.value(sectionId: sectionId, index: index, value: value, selected: state.selected == value, viewType: bestGeneralViewType(state.values, for: value)))
+                index += 1
+            }
+            entries.append(.sectionId(sectionId: sectionId))
+            sectionId += 1
             
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> deliverOnMainQueue

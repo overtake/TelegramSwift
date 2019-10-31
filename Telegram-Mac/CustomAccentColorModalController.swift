@@ -76,6 +76,10 @@ private final class CustomAccentColorView : View {
         
         tableView.removeAll()
         
+        self.tableView.getBackgroundColor = {
+            theme.colors.chatBackground
+        }
+        
         _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random(), backgroundColor: theme.chatBackground))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
@@ -90,11 +94,11 @@ private final class CustomAccentColorView : View {
         
         let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
         
-        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
         
         let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
-        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, nil, nil, AutoplayMediaPreferences.defaultSettings)
+        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
         
         
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
@@ -119,8 +123,10 @@ private final class CustomAccentColorView : View {
 class CustomAccentColorModalController: ModalViewController {
 
     private let context: AccountContext
-    init(context: AccountContext) {
+    private let updateColor: (NSColor)->Void
+    init(context: AccountContext, updateColor: @escaping(NSColor)->Void) {
         self.context = context
+        self.updateColor = updateColor
         super.init(frame: NSMakeRect(0, 0, 350, 370))
         self.bar = .init(height: 0)
     }
@@ -149,18 +155,8 @@ class CustomAccentColorModalController: ModalViewController {
     }
     
     private func saveAccent() {
-        
-        
         let color = genericView.colorPicker.colorPicker.color
-        let context = self.context
-        let disableTint = self.genericView.disableTint
-        _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-            if color == theme.colors.basicAccent {
-                return settings.withUpdatedPalette(theme.colors.withoutAccentColor())
-            } else {
-                return settings.withUpdatedPalette(theme.colors.withoutAccentColor().withAccentColor(color, disableTint: disableTint))
-            }
-        }).start()
+        self.updateColor(color)
         
         delay(0.1, closure: { [weak self] in
            self?.close()

@@ -480,7 +480,7 @@ private enum PreviewEntry : Comparable, Identifiable {
     var index: Int {
         switch self {
         case let .section(sectionId):
-            return (sectionId * 1000) + sectionId
+            return (sectionId + 1) * 1000 - sectionId
         case let .media(index, sectionId, _, _):
             return (sectionId * 1000) + index
         case let .mediaGroup(index, sectionId, _, _):
@@ -1542,7 +1542,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
-        return NSMakeSize(frame.width - 40, textView.frame.height)
+        return NSMakeSize(textView.frame.width, textView.frame.height)
     }
     
     func textViewIsTypingEnabled() -> Bool {

@@ -87,11 +87,7 @@ class ChatFileContentView: ChatMediaContentView {
                 if let _ = Animation.filepath(context.account.postbox.mediaBox.resourcePath(media.resource)) {
                     showChatGallery(context: context, message: parent, self.table, self.parameters as? ChatMediaGalleryParameters, type: .alone)
                 } else {
-                    if let palette = paletteFromFile(context: context, file: media) {
-                        showModal(with: ThemePreviewModalController(context: context, source: .localTheme(theme.withUpdatedColors(palette))), for: context.window)
-                    } else {
-                        QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
-                    }
+                    QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
                 }
                 
             }
@@ -410,7 +406,7 @@ class ChatFileContentView: ChatMediaContentView {
     override func layout() {
         super.layout()
         if let parameters = parameters as? ChatFileLayoutParameters {
-            let center = floorToScreenPixels(scaleFactor: backingScaleFactor, (parameters.hasThumb ? 70 : 40) / 2)
+            let center = floorToScreenPixels(backingScaleFactor, (parameters.hasThumb ? 70 : 40) / 2)
             actionText.setFrameOrigin(leftInset, parameters.hasThumb ? center + 2 : 20)
             
             if parameters.hasThumb {
@@ -448,7 +444,7 @@ class ChatFileContentView: ChatMediaContentView {
         let parameters = self.parameters as? ChatFileLayoutParameters
 
         if let name = parameters?.name {
-            let center = floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height/2)
+            let center = floorToScreenPixels(backingScaleFactor, frame.height/2)
             name.1.draw(NSMakeRect(leftInset, isHasThumb ? center - name.0.size.height - 2 : 1, name.0.size.width, name.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }

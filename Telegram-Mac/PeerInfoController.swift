@@ -226,7 +226,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
             let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { (peerInfoSortableEntry) -> TableRowItem in
                 return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
             })
-            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated:animated, state: animated ? .none(nil) : .saveVisible(.lower), animateVisibleOnly: false))
+            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower), grouping: true, animateVisibleOnly: false))
             subscriber.putCompletion()
         }
         
@@ -285,7 +285,7 @@ class PeerInfoController: EditableViewController<TableView> {
     }
     
     func searchSupergroupUsers() {
-        _ = (selectModalPeers(context: context, title: "", behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId {
                 self?._channelArguments.peerInfo(peerId)
             }
@@ -357,6 +357,10 @@ class PeerInfoController: EditableViewController<TableView> {
     
     override func viewDidLoad() -> Void {
         super.viewDidLoad()
+        
+        self.genericView.getBackgroundColor = {
+            theme.colors.listBackground
+        }
         
         let previousEntries = Atomic<[AppearanceWrapperEntry<PeerInfoSortableEntry>]?>(value: nil)
         let context = self.context
@@ -451,9 +455,9 @@ class PeerInfoController: EditableViewController<TableView> {
             }
             self?.set(editable: editable)
             
-            self?.readyOnce()
             self?.genericView.merge(with:transition)
-            
+            self?.readyOnce()
+
         }))
         
        

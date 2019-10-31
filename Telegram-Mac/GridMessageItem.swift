@@ -150,13 +150,13 @@ final class GridMessageItem: GridItem {
 }
 
 final class GridMessageItemNode: GridItemNode {
-    private var videoAccessory: ChatMessageAccessoryView?
     private var currentState: (AccountContext, Media, CGSize)?
     private let imageView: TransformImageView
     private(set) var message: Message?
     private var chatInteraction: ChatInteraction?
     private var selectionView:SelectingControl?
     private var progressView:RadialProgressView?
+    private var videoAccessory: ChatMessageAccessoryView?
     private var _status:MediaResourceStatus?
     private let statusDisposable = MetaDisposable()
     private let fetchingDisposable = MetaDisposable()
@@ -232,7 +232,7 @@ final class GridMessageItemNode: GridItemNode {
                             } else if file.isStreamable {
                                 showChatGallery(context: currentState.0, message: message, grid, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { [weak interactions] message in
                                     interactions?.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
-                            }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
+                                }, isWebpage: false, media: message.media.first!, automaticDownload: true), reversed: true)
                             }
                         case .Remote:
                             fetch()

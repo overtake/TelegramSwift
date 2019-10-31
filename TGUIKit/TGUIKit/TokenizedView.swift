@@ -38,7 +38,7 @@ private class TokenView : Control {
     init(_ token: SearchToken, maxSize: NSSize, onDismiss:@escaping()->Void, onSelect: @escaping()->Void) {
         self.token = token
         super.init()
-        self.layer?.cornerRadius = .cornerRadius
+        self.layer?.cornerRadius = 6
         let layout = TextViewLayout(.initialize(string: token.name, color: .white, font: .normal(.title)), maximumNumberOfLines: 1)
         layout.measure(width: maxSize.width - 30)
         self.nameView.update(layout)
@@ -101,7 +101,7 @@ private class TokenView : Control {
         redSelected.getRed(&r, green: &g, blue: &b, alpha: &a)
         redSelected =  NSColor(red: min(r + 0.1, 1.0), green: min(g + 0.1, 1.0), blue: min(b + 0.1, 1.0), alpha: a)
         
-        return isSelected ? (isFailed ? redSelected : presentation.colors.blueSelect) : (isFailed ? presentation.colors.redUI : presentation.colors.blueFill)
+        return isSelected ? (isFailed ? redSelected : presentation.colors.accentSelect) : (isFailed ? presentation.colors.redUI : presentation.colors.accent)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -379,9 +379,9 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         input.font = .normal(.text)
         container.addSubview(input)
         container.addSubview(placeholder)
-        container.layer?.cornerRadius = .cornerRadius
+        container.layer?.cornerRadius = 10
         wantsLayer = true
-        self.layer?.cornerRadius = .cornerRadius
+        self.layer?.cornerRadius = 10
         self.layer?.backgroundColor = presentation.colors.grayBackground.cgColor
         updateLocalizationAndTheme(theme: presentation)
     }

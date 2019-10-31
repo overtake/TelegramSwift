@@ -10,6 +10,8 @@ import SwiftSignalKitMac
 
 class PopoverBackground: Control {
     fileprivate weak var popover:Popover?
+    
+
 }
 
 private struct PopoverFrameValue {
@@ -43,13 +45,21 @@ open class Popover: NSObject {
     private let `static`: Bool
     required public init(controller:ViewController, static: Bool) {
         self.controller = controller
-        self.background.layer?.shadowOpacity = 0.4
+//        self.background.layer?.shadowOpacity = 0.4
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
         self.background.layer?.isOpaque = false
-        self.background.layer?.shadowOffset = NSMakeSize(0, 0)
-        self.background.layer?.cornerRadius = 4
-        self.background.toolTip = ""
+//        self.background.layer?.shadowOffset = NSMakeSize(0, 0)
+        self.background.layer?.cornerRadius = 10
+//        self.background.layer?.shadowColor = NSColor.black.cgColor
+//        self.background.toolTip = ""
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 4
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.shadowOffset = NSMakeSize(0, 0)
+        self.background.shadow = shadow
+        
         self.static = `static`
         super.init()
         
@@ -100,6 +110,7 @@ open class Popover: NSObject {
             if !NSIsEmptyRect(frameValue.contentRect) {
                 rect = frameValue.contentRect
             }
+            
             
             point.x = min(max(5, point.x), (parentView.frame.width - rect.width - 12) - 5)
             point.y = min(max(5, point.y), (parentView.frame.height - rect.height - 12) - 5)
@@ -169,16 +180,16 @@ open class Popover: NSObject {
                     
                     strongSelf.updatePopoverFrame()
                     strongSelf.background.backgroundColor = .clear
-                    strongSelf.background.layer?.cornerRadius = .cornerRadius
+                    strongSelf.background.layer?.cornerRadius = 10
                     
                     strongSelf.overlay = OverlayControl(frame: NSMakeRect(contentRect.minX, contentRect.minY, controller.frame.width , controller.frame.height ))
                     strongSelf.overlay.backgroundColor = presentation.colors.background
-                    strongSelf.overlay.layer?.cornerRadius = .cornerRadius
+                    strongSelf.overlay.layer?.cornerRadius = 10
                     strongSelf.overlay.layer?.opacity = 0.99
                     
                     
                     let bg = View(frame: NSMakeRect(strongSelf.overlay.frame.minX + 2, strongSelf.overlay.frame.minY + 2, strongSelf.overlay.frame.width - 4, strongSelf.overlay.frame.height - 4))
-                    bg.layer?.cornerRadius = .cornerRadius
+                    bg.layer?.cornerRadius = 10
                     bg.backgroundColor = presentation.colors.background
                     
                     strongSelf.background.addSubview(bg)

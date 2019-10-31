@@ -64,12 +64,12 @@ private class StickersModalView : View {
         add.setFrameSize(170, 40)
         add.layer?.cornerRadius = 20
         
-        add.set(color: .white, for: .Normal)
+        add.set(color: theme.colors.underSelectedColor, for: .Normal)
         add.set(font: .medium(.title), for: .Normal)
-        add.set(background: theme.colors.blueFill, for: .Normal)
-        add.set(background: theme.colors.blueFill, for: .Hover)
-        add.set(background: theme.colors.blueFill, for: .Highlight)
-        add.set(text: tr(L10n.stickerPackAdd1Countable(0)), for: .Normal)
+        add.set(background: theme.colors.accent, for: .Normal)
+        add.set(background: theme.colors.accent, for: .Hover)
+        add.set(background: theme.colors.accent, for: .Highlight)
+        add.set(text: L10n.stickerPackAdd1Countable(0), for: .Normal)
 
         addSubview(add)
         headerTitle.backgroundColor = theme.colors.background
@@ -185,12 +185,12 @@ private class StickersModalView : View {
         
         grid.frame = NSMakeRect(0, headerHeight, frame.width, frame.height - headerHeight)
         
-        headerTitle.centerX(y : floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - headerTitle.frame.height)/2) + 1)
+        headerTitle.centerX(y : floorToScreenPixels(backingScaleFactor, (headerHeight - headerTitle.frame.height)/2) + 1)
         headerSeparatorView.frame = NSMakeRect(0, headerHeight - .borderSize, frame.width, .borderSize)
-        shareView.setFrameOrigin(frame.width - close.frame.width - 12, floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - shareView.frame.height)/2))
-        close.setFrameOrigin(12, floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - shareView.frame.height)/2))
+        shareView.setFrameOrigin(frame.width - close.frame.width - 12, floorToScreenPixels(backingScaleFactor, (headerHeight - shareView.frame.height)/2))
+        close.setFrameOrigin(12, floorToScreenPixels(backingScaleFactor, (headerHeight - shareView.frame.height)/2))
         add.centerX(y: frame.height - add.frame.height - 15)
-        dismiss.setFrameOrigin(NSMakePoint(shareView.frame.minX - dismiss.frame.width - 15, floorToScreenPixels(scaleFactor: backingScaleFactor, (headerHeight - shareView.frame.height)/2)))
+        dismiss.setFrameOrigin(NSMakePoint(shareView.frame.minX - dismiss.frame.width - 15, floorToScreenPixels(backingScaleFactor, (headerHeight - shareView.frame.height)/2)))
         
         shadowView.setFrameOrigin(0, frame.height - shadowView.frame.height)
     }
@@ -198,7 +198,7 @@ private class StickersModalView : View {
 
 
 
-class StickersPackPreviewModalController: ModalViewController {
+class StickerPackPreviewModalController: ModalViewController {
     private let context:AccountContext
     private let peerId:PeerId?
     private let reference:StickerPackReference
@@ -214,7 +214,7 @@ class StickersPackPreviewModalController: ModalViewController {
         arguments = StickerPackArguments(context: context, send: { [weak self] media, view in
             let interactions = (context.sharedContext.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
             
-            if let interactions = interactions, let media = media as? TelegramMediaFile {
+            if let interactions = interactions, let media = media as? TelegramMediaFile, media.maskData == nil {
                 if let slowMode = interactions.presentation.slowMode, slowMode.hasLocked {
                     showSlowModeTimeoutTooltip(slowMode, for: view)
                 } else {
