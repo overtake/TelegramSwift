@@ -709,7 +709,6 @@
 		D007AB9D2347F06F0022C27F /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D007AB9F234C8DCB0022C27F /* WalletPasscodeTimeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D007AB9E234C8DCB0022C27F /* WalletPasscodeTimeout.swift */; };
 		D007ABA1234CACE40022C27F /* WalletCreateInvoiceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D007ABA0234CACE40022C27F /* WalletCreateInvoiceController.swift */; };
-		D007ABA3234E30300022C27F /* Mojave.swift in Sources */ = {isa = PBXBuildFile; fileRef = D007ABA2234E30300022C27F /* Mojave.swift */; };
 		D00C73B62302C196004B1E2B /* ChatScheduleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00C73B52302C196004B1E2B /* ChatScheduleController.swift */; };
 		D00C73B82305504D004B1E2B /* InternalVersionLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00C73B72305504D004B1E2B /* InternalVersionLoader.swift */; };
 		D00CE4F72284D530008C1B4F /* BuildConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F291C9F2264E57F00C66267 /* BuildConfig.m */; };
@@ -1789,7 +1788,6 @@
 		D004D6FD22B7B92C00926F46 /* RLottieMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottieMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D007AB9E234C8DCB0022C27F /* WalletPasscodeTimeout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletPasscodeTimeout.swift; sourceTree = "<group>"; };
 		D007ABA0234CACE40022C27F /* WalletCreateInvoiceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletCreateInvoiceController.swift; sourceTree = "<group>"; };
-		D007ABA2234E30300022C27F /* Mojave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mojave.swift; sourceTree = "<group>"; };
 		D00C73B52302C196004B1E2B /* ChatScheduleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScheduleController.swift; sourceTree = "<group>"; };
 		D00C73B72305504D004B1E2B /* InternalVersionLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternalVersionLoader.swift; sourceTree = "<group>"; };
 		D00CA6502281BB0900FFACAD /* Telegram-Sandbox.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = "Telegram-Sandbox.entitlements"; sourceTree = "<group>"; };
@@ -3047,7 +3045,6 @@
 			children = (
 				C2B9BE881EFC5E7000D6B96F /* Appearance.swift */,
 				D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */,
-				D007ABA2234E30300022C27F /* Mojave.swift */,
 			);
 			name = appearance;
 			sourceTree = "<group>";
@@ -4940,7 +4937,6 @@
 				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
 				9F4EC948218B459A002B3C56 /* RenderedTotalUnreadCount.swift in Sources */,
 				C23044831F98F8B400977C51 /* MediaPreviewRowItem.swift in Sources */,
-				D007ABA3234E30300022C27F /* Mojave.swift in Sources */,
 				D014193C22AE939F008667CB /* ModalOptionSetController.swift in Sources */,
 				C2DF47D31DE824FD003AA6C0 /* OpusObjcBridge.mm in Sources */,
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,
