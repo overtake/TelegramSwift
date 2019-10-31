@@ -13,7 +13,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
     
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let webpageContent = webpageContent {
             return webpageContent.fileAtPoint(convert(point, from: self))
         }

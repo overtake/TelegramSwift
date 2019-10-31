@@ -83,7 +83,7 @@ open class TransformImageView: NSView {
             }
             if !hasImage && animate {
                 self?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            } else {
+            } else if animate {
                 self?.layer?.animateContents()
             }
             self?.isFullyLoaded = result.highQuality

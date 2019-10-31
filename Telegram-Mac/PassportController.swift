@@ -2504,7 +2504,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
     }
     
     override func backSettings() -> (String, CGImage?) {
-        return (form == nil ? L10n.navigationBack : "", form == nil ? #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(theme.colors.blueIcon) : theme.icons.dismissPinned)
+        return (form == nil ? L10n.navigationBack : "", form == nil ? #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(theme.colors.accentIcon) : theme.icons.dismissPinned)
     }
     
     override func viewDidAppear(_ animated: Bool) {

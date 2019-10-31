@@ -109,8 +109,8 @@ class AboutModalController: ModalViewController {
         bar = .init(height: 0)
     }
     
-    override func close() {
-        super.close()
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        super.close(animationType: animationType)
     }
     
     

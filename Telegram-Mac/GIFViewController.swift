@@ -314,7 +314,9 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     }
     
     
-    
+    override func scrollup() {
+        self.genericView.tableView?.scroll(to: .up(true))
+    }
     
     deinit {
         disposable.dispose()

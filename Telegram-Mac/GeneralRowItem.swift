@@ -314,7 +314,7 @@ class GeneralRowItem: TableRowItem {
     var blockWidth: CGFloat {
         switch self.viewType {
         case .legacy:
-            return self.width
+            return self.width - self.inset.left - self.inset.right
         case .modern:
             return min(600, self.width - self.inset.left - self.inset.right)
         }

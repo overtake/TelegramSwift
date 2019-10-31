@@ -201,6 +201,8 @@
 		9FFAE50D205AA1FB000C028E /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F8FDF3A205A7AE7001A7A77 /* libswresample.a */; };
 		9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE50E205AB4A3000C028E /* libiconv.tbd */; };
 		9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE513205AB50C000C028E /* libz.tbd */; };
+		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
+		A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */; };
 		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
 		C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
@@ -251,7 +253,6 @@
 		C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */; };
 		C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */ = {isa = PBXBuildFile; fileRef = C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */; };
 		C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */ = {isa = PBXBuildFile; fileRef = C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */; };
-		C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE331DB0F6BC007638C5 /* MediaTitleBarView.swift */; };
 		C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21AAE351DB22CA5007638C5 /* AvatarLayer.swift */; };
 		C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21B24601ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift */; };
 		C21B24631EDADC8600FC6CDA /* MMMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21B24621EDADC8600FC6CDA /* MMMenuItem.swift */; };
@@ -624,7 +625,7 @@
 		C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187ED1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift */; };
 		C2D187F01E28C58C0038961D /* ContextSwitchPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */; };
 		C2D187F21E28D0840038961D /* ChatSwitchInlineController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */; };
-		C2D2CAED1E64579700939968 /* StickersPackPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D2CAEC1E64579700939968 /* StickersPackPreviewModalController.swift */; };
+		C2D2CAED1E64579700939968 /* StickerPackPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D2CAEC1E64579700939968 /* StickerPackPreviewModalController.swift */; };
 		C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */; };
 		C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = C2DDA04D1EC0C024003531BB /* opening.mp3 */; };
 		C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C2DDA04F1EC0C19A003531BB /* opening.m4a */; };
@@ -739,11 +740,6 @@
 		D02F0A0022E8875800553411 /* SoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F09FF22E8875800553411 /* SoftwareVideoSource.swift */; };
 		D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */; };
 		D02F0A0422E88C9900553411 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */; };
-		D031637B2324F0CC004AFCCF /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
-		D031637C2324F0CC004AFCCF /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */; };
-		D031637D2324F0CF004AFCCF /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D031637E2324F0CF004AFCCF /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D031637F2324F0CF004AFCCF /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D0439A2023410D5400C1E6F9 /* WalletUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0439A1F23410D5400C1E6F9 /* WalletUtils.swift */; };
 		D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */; };
 		D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
@@ -843,9 +839,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D031637D2324F0CF004AFCCF /* HockeySDK.framework in Copy Files */,
-				D031637E2324F0CF004AFCCF /* Sparkle.framework in Copy Files */,
-				D031637F2324F0CF004AFCCF /* Sparkle.framework in Copy Files */,
 				D004D70B22B7BCD400926F46 /* RLottieMac.framework in Copy Files */,
 				9F0367E522707A4D00456348 /* Lottie.framework in Copy Files */,
 				D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */,
@@ -1215,6 +1208,8 @@
 		9FFAE50E205AB4A3000C028E /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		9FFAE510205AB4AB000C028E /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
 		9FFAE513205AB50C000C028E /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaPhotosController.swift; sourceTree = "<group>"; };
+		A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotosMonthItem.swift; sourceTree = "<group>"; };
 		C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentPeerRowItem.swift; sourceTree = "<group>"; };
 		C2016F431EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/ShareViewController.strings"; sourceTree = "<group>"; };
 		C2016F451EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
@@ -1282,7 +1277,6 @@
 		C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = VideoMessage.fsh; sourceTree = "<group>"; };
 		C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = VideoMessage.vsh; sourceTree = "<group>"; };
-		C21AAE331DB0F6BC007638C5 /* MediaTitleBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaTitleBarView.swift; sourceTree = "<group>"; };
 		C21AAE351DB22CA5007638C5 /* AvatarLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AvatarLayer.swift; sourceTree = "<group>"; };
 		C21B24601ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SuggestionLocalizationViewController.swift; sourceTree = "<group>"; };
 		C21B24621EDADC8600FC6CDA /* MMMenuItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MMMenuItem.swift; sourceTree = "<group>"; };
@@ -1690,7 +1684,7 @@
 		C2D187ED1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareInlineResultNavigationAction.swift; sourceTree = "<group>"; };
 		C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextSwitchPeerRowItem.swift; sourceTree = "<group>"; };
 		C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatSwitchInlineController.swift; sourceTree = "<group>"; };
-		C2D2CAEC1E64579700939968 /* StickersPackPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickersPackPreviewModalController.swift; sourceTree = "<group>"; };
+		C2D2CAEC1E64579700939968 /* StickerPackPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPackPreviewModalController.swift; sourceTree = "<group>"; };
 		C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPackGridItem.swift; sourceTree = "<group>"; };
 		C2D70AF11F2BFB3700AE768E /* Telegram.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Telegram.xcodeproj; sourceTree = "<group>"; };
 		C2DDA04D1EC0C024003531BB /* opening.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = opening.mp3; sourceTree = "<group>"; };
@@ -1935,8 +1929,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D031637B2324F0CC004AFCCF /* HockeySDK.framework in Frameworks */,
-				D031637C2324F0CC004AFCCF /* Sparkle.framework in Frameworks */,
 				D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */,
 				D004D6FE22B7B92C00926F46 /* RLottieMac.framework in Frameworks */,
 				9F354EA4227077BD006F1D42 /* Lottie.framework in Frameworks */,
@@ -2421,6 +2413,15 @@
 			name = modern;
 			sourceTree = "<group>";
 		};
+		A7C41DAF2358622F00CF9402 /* modern */ = {
+			isa = PBXGroup;
+			children = (
+				A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */,
+				A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */,
+			);
+			name = modern;
+			sourceTree = "<group>";
+		};
 		C2016F661EAE0A49003AF981 /* calls */ = {
 			isa = PBXGroup;
 			children = (
@@ -2652,6 +2653,7 @@
 		C22674421DC2037C000BA9ED /* grid */ = {
 			isa = PBXGroup;
 			children = (
+				A7C41DAF2358622F00CF9402 /* modern */,
 				C2167E551DC2210600F98E03 /* content */,
 				C22674391DC1273E000BA9ED /* PeerMediaGridController.swift */,
 			);
@@ -2750,7 +2752,6 @@
 			children = (
 				C226743B1DC12742000BA9ED /* controllers */,
 				C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */,
-				C21AAE331DB0F6BC007638C5 /* MediaTitleBarView.swift */,
 				C22674371DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift */,
 			);
 			name = "shared media";
@@ -3969,7 +3970,7 @@
 		C2D2CAEE1E6486CE00939968 /* stickers */ = {
 			isa = PBXGroup;
 			children = (
-				C2D2CAEC1E64579700939968 /* StickersPackPreviewModalController.swift */,
+				C2D2CAEC1E64579700939968 /* StickerPackPreviewModalController.swift */,
 				C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */,
 			);
 			name = stickers;
@@ -4873,6 +4874,7 @@
 				C2DE5D2C1F3CA6E80081EC1E /* InstantPageMediaItem.swift in Sources */,
 				C252532A1DF03F9600ADBC98 /* TGAudioWaveform.m in Sources */,
 				C218FF981F41FF2300DD7D35 /* InstantPageAnchorItem.swift in Sources */,
+				A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */,
 				9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */,
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,
 				D0186731223807D200A77C45 /* ChatListEmptyRowItem.swift in Sources */,
@@ -4961,6 +4963,7 @@
 				9F17E5BB212F191F00C25A65 /* AutoNightThemePreferences.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				D07450DA233BB92F00769D7F /* WalletSendSuccessController.swift in Sources */,
+				A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */,
 				9F0F8E82226DCD1C00A97F6A /* OpmizeDatabaseView.swift in Sources */,
 				D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */,
 				9F0367F72273260A00456348 /* ArchiveTooltipController.swift in Sources */,
@@ -5025,7 +5028,7 @@
 				C225524D1F7BE8E40007944D /* VideoRecorderModalView.swift in Sources */,
 				C2D1839D1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift in Sources */,
 				9F63152921D26892009FD379 /* CancelResetAccountController.swift in Sources */,
-				C2D2CAED1E64579700939968 /* StickersPackPreviewModalController.swift in Sources */,
+				C2D2CAED1E64579700939968 /* StickerPackPreviewModalController.swift in Sources */,
 				C22B63581D967F4500085C19 /* TGInputTextTag.m in Sources */,
 				C2DE5D341F3CA94A0081EC1E /* InstantPageMediaView.swift in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
@@ -5293,7 +5296,6 @@
 				C21B24631EDADC8600FC6CDA /* MMMenuItem.swift in Sources */,
 				C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */,
 				C2E064641ECCB24000387BB8 /* NativeCallSettingsViewController.swift in Sources */,
-				C21AAE341DB0F6BC007638C5 /* MediaTitleBarView.swift in Sources */,
 				9F3EAB4620A5ED2F003FE7E3 /* genann.c in Sources */,
 				D00CE50F2289CE87008C1B4F /* ChatAnimatedStickerItem.swift in Sources */,
 				D07C6D7923464C8000468B1A /* WalletKeychainController.swift in Sources */,
@@ -5709,6 +5711,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -6127,7 +6130,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
@@ -6265,6 +6268,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -6300,6 +6304,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
@@ -6330,7 +6335,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
@@ -6615,6 +6620,7 @@
 					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
 					"$(PROJECT_DIR)",
 				);
+				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",

@@ -39,14 +39,23 @@ enum ModalOptionSetResult {
 
 private struct ModalOptionsState: Equatable {
     let options: [ModalOptionSet]
-    init(options:[ModalOptionSet]) {
+    let selectOne: Bool
+    init(options:[ModalOptionSet], selectOne: Bool) {
         self.options = options
+        self.selectOne = selectOne
     }
     
     func withToggledOptionAt(_ index: Int) -> ModalOptionsState {
         var options = self.options
         options[index] = options[index].withUpdatedSelected(!options[index].selected)
-        return ModalOptionsState(options: options)
+        if selectOne {
+            for i in 0 ..< options.count {
+                options[i] = options[i].withUpdatedSelected(false)
+            }
+            options[index] = options[index].withUpdatedSelected(true)
+        }
+        
+        return ModalOptionsState(options: options, selectOne: self.selectOne)
     }
 }
 
@@ -93,9 +102,9 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
     return entries
 }
 
-func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet], actionText: (String, NSColor), desc: String? = nil, title: String, result: @escaping ([ModalOptionSetResult])->Void) -> InputDataModalController {
+func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet], selectOne: Bool = false, actionText: (String, NSColor), desc: String? = nil, title: String, result: @escaping ([ModalOptionSetResult])->Void) -> InputDataModalController {
     
-    let initialState: ModalOptionsState = ModalOptionsState(options: options)
+    let initialState: ModalOptionsState = ModalOptionsState(options: options, selectOne: selectOne)
     let stateValue: Atomic<ModalOptionsState> = Atomic(value: initialState)
     let statePromise: ValuePromise<ModalOptionsState> = ValuePromise(initialState, ignoreRepeated: true)
     

@@ -362,7 +362,7 @@ class LanguageViewController: TableViewController {
         
         let arguments = LanguageControllerArguments(context: context, change: { [weak self] value in
             if value.languageCode != appCurrentLanguage.primaryLanguage.languageCode {
-                self?.applyDisposable.set(showModalProgress(signal: downloadAndApplyLocalization(accountManager:context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: value.languageCode), for: mainWindow).start())
+                self?.applyDisposable.set(showModalProgress(signal: downloadAndApplyLocalization(accountManager:context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: value.languageCode), for: context.window).start())
             }
         }, delete: { info in
             confirm(for: context.window, information: L10n.languageRemovePack, successHandler: { _ in

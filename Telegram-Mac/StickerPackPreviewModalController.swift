@@ -1,5 +1,5 @@
 //
-//  StickersPackPreviewModalController.swift
+//  StickerPackPreviewModalController.swift
 //  Telegram
 //
 //  Created by keepcoder on 27/02/2017.
@@ -40,7 +40,7 @@ private class StickersModalView : View {
     private let headerTitle:TextView = TextView()
     private let headerSeparatorView:View = View()
     private let dismiss:ImageButton = ImageButton()
-    private let indicatorView:ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
+    private var indicatorView:ProgressIndicator?
     private let shadowView: ShadowView = ShadowView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -64,12 +64,12 @@ private class StickersModalView : View {
         add.setFrameSize(170, 40)
         add.layer?.cornerRadius = 20
         
-        add.set(color: .white, for: .Normal)
+        add.set(color: theme.colors.underSelectedColor, for: .Normal)
         add.set(font: .medium(.title), for: .Normal)
         add.set(background: theme.colors.accent, for: .Normal)
         add.set(background: theme.colors.accent, for: .Hover)
         add.set(background: theme.colors.accent, for: .Highlight)
-        add.set(text: tr(L10n.stickerPackAdd1Countable(0)), for: .Normal)
+        add.set(text: L10n.stickerPackAdd1Countable(0), for: .Normal)
 
         addSubview(add)
         headerTitle.backgroundColor = theme.colors.background
@@ -93,15 +93,20 @@ private class StickersModalView : View {
         case .fetching:
             dismiss.isHidden = true
             shareView.isHidden = true
-            addSubview(indicatorView)
-            indicatorView.isHidden = false
-            indicatorView.center()
+            if self.indicatorView == nil {
+                self.indicatorView = ProgressIndicator(frame: NSMakeRect(0, 0, 30, 30))
+                addSubview(self.indicatorView!)
+            }
+            self.indicatorView?.center()
             add.isHidden = true
             shadowView.isHidden = true
-            indicatorView.animates = true
         case let .result(info: info, items: collectionItems, installed: installed):
-            indicatorView.isHidden = true
-            indicatorView.removeFromSuperview()
+            if let indicatorView = self.indicatorView {
+                self.indicatorView = nil
+                indicatorView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak indicatorView] _ in
+                    indicatorView?.removeFromSuperview()
+                })
+            }
             dismiss.isHidden = !installed
             shareView.isHidden = false
             add.set(text: tr(L10n.stickerPackAdd1Countable(collectionItems .count)).uppercased(), for: .Normal)
@@ -198,7 +203,7 @@ private class StickersModalView : View {
 
 
 
-class StickersPackPreviewModalController: ModalViewController {
+class StickerPackPreviewModalController: ModalViewController {
     private let context:AccountContext
     private let peerId:PeerId?
     private let reference:StickerPackReference

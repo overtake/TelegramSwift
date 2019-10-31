@@ -34,7 +34,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
         undoButton.set(font: .medium(.title), for: .Normal)
         undoButton.direction = .right
         undoButton.autohighlight = false
-        
+        border = [.Bottom]
         progress.state = .ImpossibleFetching(progress: 0, force: true)
         
         updateDuration(value: 5, animated: false)
@@ -62,7 +62,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
             self.self.secondsUntilFinish = value
             
             let textView = TextView()
-            let layout = TextViewLayout.init(.initialize(string: "\(value)", color: NSColor.white, font: .medium(12)))
+            let layout = TextViewLayout.init(.initialize(string: "\(value)", color: theme.colors.text, font: .medium(12)))
             layout.measure(width: .greatestFiniteMagnitude)
             
             
@@ -119,7 +119,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
                 timer?.start()
             }
             
-            let layout = TextViewLayout(.initialize(string: statuses.activeDescription, color: .white, font: .medium(.text)), maximumNumberOfLines: 10)
+            let layout = TextViewLayout(.initialize(string: statuses.activeDescription, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 10)
             textView.update(layout)
             
             progressValue = min(max(newValue, 0), 1.0)
@@ -163,12 +163,23 @@ class UndoOverlayHeaderView: NavigationHeaderView {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
+        
+        self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.text, lineWidth: 2, clockwise: false)
+        
+        let attributed = textView.layout?.attributedString.mutableCopy() as? NSMutableAttributedString
+        if let attributed = attributed {
+            attributed.addAttribute(.foregroundColor, value: theme.colors.text, range: attributed.range)
+            self.textView.update(TextViewLayout(attributed, maximumNumberOfLines: 10))
+        }
+        
+        self.borderColor = theme.colors.border
+        
         undoButton.set(text: L10n.chatUndoManagerUndo, for: .Normal)
         undoButton.set(image: theme.icons.chatUndoAction, for: .Normal)
-        undoButton.set(color: NSColor(0x29ACFF), for: .Normal)
+        undoButton.set(color: theme.colors.accent, for: .Normal)
         
         _ = undoButton.sizeToFit()
-        backgroundColor = NSColor(0x0B131B)
+        backgroundColor = theme.colors.background
 
         needsLayout = true
     }

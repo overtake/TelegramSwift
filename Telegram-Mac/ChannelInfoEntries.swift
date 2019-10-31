@@ -582,9 +582,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 3
         case .userName:
             return 4
-        case .sharedMedia:
-            return 5
         case .notifications:
+            return 5
+        case .sharedMedia:
             return 6
         case .admins:
             return 7
@@ -894,13 +894,13 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
             
              applyBlock(infoBlock)
             
-            if channel.isScam {
-                entries.append(.scam(sectionId: .desc, text: L10n.channelInfoScamWarning, viewType: .singleItem))
-            }
+            
             
             
             var aboutBlock:[ChannelInfoEntry] = []
-            
+            if channel.isScam {
+                aboutBlock.append(.scam(sectionId: .desc, text: L10n.channelInfoScamWarning, viewType: .singleItem))
+            }
             if let cachedData = view.cachedData as? CachedChannelData {
                 if let about = cachedData.about, !about.isEmpty, !channel.isScam {
                     aboutBlock.append(.about(sectionId: .desc, text: about, viewType: .singleItem))
@@ -935,10 +935,10 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
      
             var additionBlock:[ChannelInfoEntry] = []
             
-            additionBlock.append(.sharedMedia(sectionId: .addition, viewType: .singleItem))
             if !arguments.isAd {
                 additionBlock.append(.notifications(sectionId: .addition, settings: view.notificationSettings, viewType: .singleItem))
             }
+            additionBlock.append(.sharedMedia(sectionId: .addition, viewType: .singleItem))
             
             applyBlock(additionBlock)
             

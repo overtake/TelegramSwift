@@ -236,8 +236,10 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
 
 class ShareObject {
     let context: AccountContext
-    init(_ context:AccountContext) {
+    let emptyPerformOnClose: Bool
+    init(_ context:AccountContext, emptyPerformOnClose: Bool = false) {
         self.context = context
+        self.emptyPerformOnClose = emptyPerformOnClose
     }
     
     var multipleSelection: Bool {
@@ -393,9 +395,9 @@ class ShareMessageObject : ShareObject {
 final class ForwardMessagesObject : ShareObject {
     fileprivate let messageIds: [MessageId]
     private let disposable = MetaDisposable()
-    init(_ context: AccountContext, messageIds: [MessageId]) {
+    init(_ context: AccountContext, messageIds: [MessageId], emptyPerformOnClose: Bool = false) {
         self.messageIds = messageIds
-        super.init(context)
+        super.init(context, emptyPerformOnClose: emptyPerformOnClose)
     }
     
     deinit {
@@ -408,31 +410,46 @@ final class ForwardMessagesObject : ShareObject {
     
     override func perform(to peerIds: [PeerId], comment: String?) -> Signal<Never, NoError> {
         let comment = comment != nil && !comment!.isEmpty ? comment : nil
+        let context = self.context
         return context.account.postbox.messagesAtIds(messageIds)
             |> map { $0.map { $0.id } }
             |> deliverOnMainQueue
-            |> mapToSignal { [weak self] messageIds in
-                guard let `self` = self else {
-                    return .complete()
-                }
+            |> mapToSignal {  messageIds in
+                let navigation = self.context.sharedContext.bindings.rootNavigation()
                 if let peerId = peerIds.first {
-                    if peerId == self.context.peerId {
-                        _ = Sender.forwardMessages(messageIds: messageIds, context: self.context, peerId: self.context.account.peerId).start()
-                        if let controller = self.context.sharedContext.bindings.rootNavigation().controller as? ChatController {
+                    if peerId == context.peerId {
+                        _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId).start()
+                        if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
                             controller.chatInteraction.update({$0.withoutSelectionState()})
                         }
                         delay(0.2, closure: {
-                            _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                            _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                         })
                     } else {
-                        if let controller = self.context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == peerId {
+                        if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == peerId {
                             controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds)})})
                         } else {
-                            let controller = ChatController(context: self.context, chatLocation: .peer(peerId), initialAction: .forward(messageIds: messageIds, text: comment, behavior: .automatic))
-                            self.context.sharedContext.bindings.rootNavigation().push(controller)
+                            var existed: Bool = false
+                            navigation.enumerateControllers { controller, _ in
+                                if let controller = controller as? ChatController, controller.chatInteraction.peerId == peerId {
+                                    existed = true
+                                }
+                                return existed
+                            }
+                            let newone: ChatController
+                            if existed {
+                                newone = ChatController(context: context, chatLocation: .peer(peerId), initialAction: .forward(messageIds: messageIds, text: comment, behavior: .automatic))
+                            } else {
+                                newone = ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: .forward(messageIds: messageIds, text: comment, behavior: .automatic))
+                            }
+                            navigation.push(newone)
                             
-                            return controller.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+                            return newone.ready.get() |> filter {$0} |> take(1) |> ignoreValues
                         }
+                    }
+                } else {
+                    if let controller = navigation.controller as? ChatController {
+                        controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds)})})
                     }
                 }
                 return .complete()
@@ -1320,6 +1337,13 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+    }
+    
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        if self.share.emptyPerformOnClose {
+            _ = self.share.perform(to: []).start()
+        }
+        super.close(animationType: animationType)
     }
     
     deinit {

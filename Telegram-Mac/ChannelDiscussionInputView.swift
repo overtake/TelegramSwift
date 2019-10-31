@@ -39,7 +39,7 @@ class ChannelDiscussionInputView: View {
         
         leftButton.removeAllHandlers()
         leftButton.set(handler: { [weak chatInteraction] _ in
-            chatInteraction?.toggleNotifications()
+            chatInteraction?.toggleNotifications(nil)
         }, for: .Click)
         
         rightButton.removeAllHandlers()

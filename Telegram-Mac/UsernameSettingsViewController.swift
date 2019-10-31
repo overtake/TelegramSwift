@@ -106,7 +106,7 @@ class UsernameSettingsViewController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(L10n.usernameSettingsDone))
+        let button = TextButtonBarView(controller: self, text: L10n.usernameSettingsDone)
         
         button.set(handler: { [weak self] _ in
             self?.saveUsername()
@@ -118,8 +118,8 @@ class UsernameSettingsViewController: TableViewController {
  
     
     func saveUsername() {
-        if let item = genericView.item(stableId: Int64(1000)) as? UsernameInputRowItem, let window = window {
-            updateDisposable.set(showModalProgress(signal: updateAddressName(account: context.account, domain: .account, name: item.text), for: window).start(error: { error in
+        if let item = genericView.item(stableId: AnyHashable(UsernameEntryId.inputEntry)) as? InputDataRowItem, let window = window {
+            updateDisposable.set(showModalProgress(signal: updateAddressName(account: context.account, domain: .account, name: item.currentText), for: window).start(error: { error in
                 switch error {
                 case .generic:
                     alert(for: mainWindow, info: L10n.unknownError)

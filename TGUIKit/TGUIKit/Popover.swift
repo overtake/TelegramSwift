@@ -10,6 +10,8 @@ import SwiftSignalKitMac
 
 class PopoverBackground: Control {
     fileprivate weak var popover:Popover?
+    
+
 }
 
 private struct PopoverFrameValue {
@@ -43,13 +45,21 @@ open class Popover: NSObject {
     private let `static`: Bool
     required public init(controller:ViewController, static: Bool) {
         self.controller = controller
-        self.background.layer?.shadowOpacity = 0.4
+//        self.background.layer?.shadowOpacity = 0.4
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
         self.background.layer?.isOpaque = false
-        self.background.layer?.shadowOffset = NSMakeSize(0, 0)
+//        self.background.layer?.shadowOffset = NSMakeSize(0, 0)
         self.background.layer?.cornerRadius = 10
-        self.background.toolTip = ""
+//        self.background.layer?.shadowColor = NSColor.black.cgColor
+//        self.background.toolTip = ""
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 4
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.shadowOffset = NSMakeSize(0, 0)
+        self.background.shadow = shadow
+        
         self.static = `static`
         super.init()
         

@@ -238,7 +238,6 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         self.autoresizesSubviews = false
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
-        self.appearance = presentation.appearance
        // self.layer?.delegate = self
       //  self.layer?.isOpaque = false
        // self.autoresizesSubviews = false
@@ -250,7 +249,6 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         super.init(frame: frameRect)
         assertOnMainThread()
         acceptsTouchEvents = true
-        self.appearance = presentation.appearance
         self.wantsLayer = true
        // self.autoresizesSubviews = false
         layer?.disableActions()

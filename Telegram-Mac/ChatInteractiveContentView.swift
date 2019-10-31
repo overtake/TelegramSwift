@@ -18,7 +18,6 @@ final class ChatVideoAutoplayView {
     
     fileprivate var playTimer: SwiftSignalKitMac.Timer?
     
-    let bufferingIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
     private var timer: SwiftSignalKitMac.Timer? = nil
     var status: MediaPlayerStatus?
     
@@ -28,9 +27,6 @@ final class ChatVideoAutoplayView {
         mediaPlayer.actionAtEnd = .loop(nil)
         
 
-        self.bufferingIndicator.backgroundColor = .blackTransparent
-        self.bufferingIndicator.progressColor = .white
-        self.bufferingIndicator.alwaysAnimate = true
     }
     
     func toggleVolume(_ enabled: Bool, animated: Bool) {
@@ -69,7 +65,6 @@ final class ChatVideoAutoplayView {
     
     deinit {
         view.removeFromSuperview()
-        bufferingIndicator.removeFromSuperview()
         timer?.invalidate()
         playTimer?.invalidate()
     }
@@ -241,7 +236,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
         progressView?.center()
         timableProgressView?.center()
         videoAccessory?.setFrameOrigin(8, 8)
-        autoplayVideoView?.bufferingIndicator.center()
         self.image.setFrameSize(frame.size)
         self.autoplayVideoView?.view.setFrameSize(frame.size)
     }

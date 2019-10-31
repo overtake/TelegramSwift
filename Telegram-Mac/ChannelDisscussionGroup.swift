@@ -50,7 +50,7 @@ private func generateDiscussIcon() -> CGImage {
         
         let palette = theme.colors
         
-        let attributeString: NSAttributedString = .initialize(string: L10n.discussionControllerIconText, color: palette.blueIcon, font: .normal(12))
+        let attributeString: NSAttributedString = .initialize(string: L10n.discussionControllerIconText, color: palette.accentIcon, font: .normal(12))
         
         let node = TextNode.layoutText(maybeNode: nil, attributeString, palette.background, 1, .end, NSMakeSize(size.width - 10, size.height), nil, false, .center)
 

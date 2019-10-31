@@ -45,7 +45,7 @@ class GalleryModernControlsView: View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
        // backgroundColor = .blackTransparent
-        photoView.setFrameSize(40, 40)
+        photoView.setFrameSize(60, 60)
         addSubview(photoView)
         addSubview(shareControl)
         addSubview(moreControl)
@@ -259,8 +259,8 @@ class GalleryModernControlsView: View {
             formatter.timeStyle = .short
             formatter.doesRelativeDateFormatting = true
             formatter.timeZone = NSTimeZone.local
-            nameNode = TextNode.layoutText(.initialize(string: currentState.peer?.displayTitle.prefixWithDots(30) ?? L10n.peerDeletedUser, color: NSPointInRect(point, nameRect) ? .white : .grayText, font: .medium(14)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
-            dateNode = currentState.timestamp == 0 ? nil : TextNode.layoutText(.initialize(string: formatter.string(from: Date(timeIntervalSince1970: currentState.timestamp)), color: NSPointInRect(point, dateRect) ? .white : .grayText, font: .normal(13)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
+            nameNode = TextNode.layoutText(.initialize(string: currentState.peer?.displayTitle.prefixWithDots(30) ?? L10n.peerDeletedUser, color: NSPointInRect(point, nameRect) ? .white : .grayText, font: .medium(.huge)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
+            dateNode = currentState.timestamp == 0 ? nil : TextNode.layoutText(.initialize(string: formatter.string(from: Date(timeIntervalSince1970: currentState.timestamp)), color: NSPointInRect(point, dateRect) ? .white : .grayText, font: .normal(.title)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
         }
         
         photoView._change(opacity: NSPointInRect(point, photoView.frame) ? 1 : 0.7, animated: false)

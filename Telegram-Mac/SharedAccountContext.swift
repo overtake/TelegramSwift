@@ -75,11 +75,13 @@ class SharedAccountContext {
     var activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account, Int32)], currentAuth: UnauthorizedAccount?), NoError> {
         return self.activeAccountsPromise.get()
     }
+    private var activeAccountsInfoValue:(primary: AccountRecordId?, accounts: [AccountWithInfo])?
     private let activeAccountsWithInfoPromise = Promise<(primary: AccountRecordId?, accounts: [AccountWithInfo])>()
     var activeAccountsWithInfo: Signal<(primary: AccountRecordId?, accounts: [AccountWithInfo]), NoError> {
         return self.activeAccountsWithInfoPromise.get()
     }
 
+    private var accountPhotos: [PeerId : CGImage] = [:]
     private var cleaningUpAccounts = false
     
     private(set) var layout:SplitViewState = .none
@@ -87,33 +89,6 @@ class SharedAccountContext {
 
     private var statusItem: NSStatusItem?
 
-    @objc private func didStatusItemClicked(_ sender: Any?) {
-        if let sender = sender as? NSStatusBarButton {
-            
-            let menu = NSMenu()
-            if !mainWindow.isKeyWindow {
-                menu.addItem(ContextMenuItem(L10n.statusBarActivate, handler: {
-                    NSApp.activate(ignoringOtherApps: true)
-                    mainWindow.deminiaturize(nil)
-                }))
-            } else {
-                menu.addItem(ContextMenuItem(L10n.statusBarHide, handler: {
-                    NSApp.hide(nil)
-                }))
-            }
-            
-            menu.addItem(ContextSeparatorItem())
-            
-            menu.addItem(ContextMenuItem(L10n.statusBarQuit, handler: {
-                NSApp.terminate(nil)
-            }))
-            
-            if let event = NSApp.currentEvent {
-                NSMenu.popUpContextMenu(menu, with: event, for: sender)
-
-            }
-        }
-    }
     
     func updateStatusBarImage(_ image: NSImage?) -> Void {
         let icon = image ?? NSImage(named: "StatusIcon")
@@ -121,15 +96,67 @@ class SharedAccountContext {
         statusItem?.image = icon
     }
     
+    private func updateStatusBarMenuItem() {
+        let menu = NSMenu()
+        
+        if let activeAccountsInfoValue = activeAccountsInfoValue, activeAccountsInfoValue.accounts.count > 1 {
+            var activeAccountsInfoValue = activeAccountsInfoValue
+            for (i, value) in activeAccountsInfoValue.accounts.enumerated() {
+                if value.account.id == activeAccountsInfoValue.primary {
+                    activeAccountsInfoValue.accounts.swapAt(i, 0)
+                    break
+                }
+            }
+            for account in activeAccountsInfoValue.accounts {
+                let state: NSControl.StateValue?
+                if account.account.id == activeAccountsInfoValue.primary {
+                    state = .on
+                } else {
+                    state = nil
+                }
+                let image: NSImage?
+                if let cgImage = self.accountPhotos[account.account.peerId] {
+                    image = NSImage(cgImage: cgImage, size: NSMakeSize(16, 16))
+                } else {
+                    image = nil
+                }
+                
+                menu.addItem(ContextMenuItem(account.peer.displayTitle, handler: {
+                    self.switchToAccount(id: account.account.id, action: nil)
+                }, image: image, state: state))
+                
+                if account.account.id == activeAccountsInfoValue.primary {
+                    menu.addItem(ContextSeparatorItem())
+                }
+            }
+            
+            
+            menu.addItem(ContextSeparatorItem())
+        }
+        
+        menu.addItem(ContextMenuItem(L10n.statusBarActivate, handler: {
+            if !mainWindow.isKeyWindow  {
+                NSApp.activate(ignoringOtherApps: true)
+                mainWindow.deminiaturize(nil)
+            } else {
+                NSApp.hide(nil)
+            }
+            
+        }, dynamicTitle: {
+            return !mainWindow.isKeyWindow ? L10n.statusBarActivate : L10n.statusBarHide
+        }))
+                
+        menu.addItem(ContextMenuItem(L10n.statusBarQuit, handler: {
+            NSApp.terminate(nil)
+        }))
+        
+        statusItem?.menu = menu
+    }
+    
     private func updateStatusBar(_ show: Bool) {
         if show {
             if statusItem == nil {
                 statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-                
-
-                
-                statusItem?.target = self
-                statusItem?.action = #selector(didStatusItemClicked(_:))
             }
         } else {
             if let statusItem = statusItem {
@@ -424,6 +451,32 @@ class SharedAccountContext {
                         return (primary?.id, accountsWithInfoResult)
                 }
             })
+        
+        let signal = self.activeAccountsWithInfoPromise.get() |> mapToSignal { (primary, accounts) -> Signal<(primary: AccountRecordId?, accounts: [AccountWithInfo], [PeerId : CGImage]), NoError> in
+            let photos:[Signal<(PeerId, CGImage?), NoError>] = accounts.map { info in
+                return peerAvatarImage(account: info.account, photo: .peer(info.peer, info.peer.smallProfileImage, info.peer.displayLetters, nil), displayDimensions: NSMakeSize(32, 32)) |> map {
+                    (info.account.peerId, $0.0)
+                }
+            }
+            return combineLatest(photos) |> map { photos in
+                let photos = photos.compactMap {
+                    return $0.1 == nil ? nil : ($0.0, $0.1!)
+                }
+                let dict:[PeerId: CGImage] = photos.reduce([:], { result, current in
+                    var result = result
+                    result[current.0] = current.1
+                    return result
+                })
+                return (primary, accounts, dict)
+            }
+            
+        } |> deliverOnMainQueue
+        
+        _ = signal.start(next: { (primary, accounts, photos) in
+            self.activeAccountsInfoValue = (primary, accounts)
+            self.accountPhotos = photos
+            self.updateStatusBarMenuItem()
+        })
     }
     
     public func beginNewAuth(testingEnvironment: Bool) {
@@ -485,22 +538,13 @@ class SharedAccountContext {
             self.activeAccountsValue = activeAccountsValue
         }
         return
-        #endif
-        
-        
-        
-        _ = self.accountManager.transaction({ transaction -> Bool in
+        #else
+         _ = self.accountManager.transaction({ transaction in
             if transaction.getCurrent()?.0 != id {
                 transaction.setCurrentId(id)
-                return true
-            } else {
-                return false
             }
-        }).start(next: { value in
-            if value {
-                
-            }
-        })
+        }).start()
+        #endif
         
     }
     #if !SHARE

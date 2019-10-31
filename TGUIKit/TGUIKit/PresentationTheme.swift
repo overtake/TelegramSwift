@@ -196,9 +196,9 @@ public class ColorPalette : Equatable {
     public var grayIcon: NSColor {
         return self._grayIcon
     }
-    private let _blueIcon:NSColor
-    public var blueIcon: NSColor {
-        return self._blueIcon
+    private let _accentIcon:NSColor
+    public var accentIcon: NSColor {
+        return self._accentIcon
     }
     private let _badgeMuted:NSColor
     public var badgeMuted: NSColor {
@@ -280,13 +280,13 @@ public class ColorPalette : Equatable {
     public var grayIconBubble_outgoing: NSColor {
         return self._grayIconBubble_outgoing
     }
-    private let _blueIconBubble_incoming: NSColor
-    public var blueIconBubble_incoming: NSColor {
-        return self._blueIconBubble_incoming
+    private let _accentIconBubble_incoming: NSColor
+    public var accentIconBubble_incoming: NSColor {
+        return self._accentIconBubble_incoming
     }
-    private let _blueIconBubble_outgoing: NSColor
-    public var blueIconBubble_outgoing: NSColor {
-        return self._blueIconBubble_outgoing
+    private let _accentIconBubble_outgoing: NSColor
+    public var accentIconBubble_outgoing: NSColor {
+        return self._accentIconBubble_outgoing
     }
     private let _linkBubble_incoming: NSColor
     public var linkBubble_incoming: NSColor {
@@ -593,6 +593,11 @@ public class ColorPalette : Equatable {
         return self._grayHighlight
     }
     
+    private let _focusAnimationColor: NSColor
+    public var focusAnimationColor: NSColor {
+        return self._focusAnimationColor
+    }
+    
     
     
     public var underSelectedColor: NSColor {
@@ -670,7 +675,7 @@ public class ColorPalette : Equatable {
                 grayBackground:NSColor,
                 grayForeground:NSColor,
                 grayIcon:NSColor,
-                blueIcon:NSColor,
+                accentIcon:NSColor,
                 badgeMuted:NSColor,
                 badge:NSColor,
                 indicatorColor: NSColor,
@@ -691,8 +696,8 @@ public class ColorPalette : Equatable {
                 grayTextBubble_outgoing: NSColor,
                 grayIconBubble_incoming: NSColor,
                 grayIconBubble_outgoing: NSColor,
-                blueIconBubble_incoming: NSColor,
-                blueIconBubble_outgoing: NSColor,
+                accentIconBubble_incoming: NSColor,
+                accentIconBubble_outgoing: NSColor,
                 linkBubble_incoming: NSColor,
                 linkBubble_outgoing: NSColor,
                 textBubble_incoming: NSColor,
@@ -768,7 +773,8 @@ public class ColorPalette : Equatable {
                 chatBackground: NSColor,
                 listBackground: NSColor,
                 listGrayText: NSColor,
-                grayHighlight: NSColor) {
+                grayHighlight: NSColor,
+                focusAnimationColor: NSColor) {
         
         let background: NSColor = background.withAlphaComponent(1.0)
         let grayBackground: NSColor = grayBackground.withAlphaComponent(1.0)
@@ -777,7 +783,7 @@ public class ColorPalette : Equatable {
         var link: NSColor = link.withAlphaComponent(1.0)
         var grayText: NSColor = grayText.withAlphaComponent(1.0)
         var accent: NSColor = accent.withAlphaComponent(1)
-        var blueIcon: NSColor = blueIcon
+        var accentIcon: NSColor = accentIcon
         var grayIcon: NSColor = grayIcon
         var accentSelect: NSColor = accentSelect
         var textBubble_incoming: NSColor = textBubble_incoming.withAlphaComponent(1.0)
@@ -786,8 +792,8 @@ public class ColorPalette : Equatable {
         var grayTextBubble_outgoing: NSColor = grayTextBubble_outgoing.withAlphaComponent(1.0)
         var grayIconBubble_incoming: NSColor = grayIconBubble_incoming
         var grayIconBubble_outgoing: NSColor = grayIconBubble_outgoing
-        var blueIconBubble_incoming: NSColor = blueIconBubble_incoming
-        var blueIconBubble_outgoing: NSColor = blueIconBubble_outgoing
+        var accentIconBubble_incoming: NSColor = accentIconBubble_incoming
+        var accentIconBubble_outgoing: NSColor = accentIconBubble_outgoing
         
         let bubbleBackground_incoming = bubbleBackground_incoming.withAlphaComponent(1.0)
         let bubbleBackground_outgoing = bubbleBackground_outgoing.withAlphaComponent(1.0)
@@ -805,8 +811,8 @@ public class ColorPalette : Equatable {
         if accent.isTooCloseHSV(to: background) {
             accent = background.brightnessAdjustedColor
         }
-        if blueIcon.isTooCloseHSV(to: background) {
-            blueIcon = background.brightnessAdjustedColor
+        if accentIcon.isTooCloseHSV(to: background) {
+            accentIcon = background.brightnessAdjustedColor
         }
         if grayIcon.isTooCloseHSV(to: background) {
             grayIcon = background.brightnessAdjustedColor
@@ -835,11 +841,11 @@ public class ColorPalette : Equatable {
         if grayIconBubble_outgoing.isTooCloseHSV(to: bubbleBackground_outgoing) {
             grayIconBubble_outgoing = bubbleBackground_outgoing.brightnessAdjustedColor
         }
-        if blueIconBubble_incoming.isTooCloseHSV(to: bubbleBackground_incoming) {
-            blueIconBubble_incoming = bubbleBackground_incoming.brightnessAdjustedColor
+        if accentIconBubble_incoming.isTooCloseHSV(to: bubbleBackground_incoming) {
+            accentIconBubble_incoming = bubbleBackground_incoming.brightnessAdjustedColor
         }
-        if blueIconBubble_outgoing.isTooCloseHSV(to: bubbleBackground_outgoing) {
-            blueIconBubble_outgoing = bubbleBackground_outgoing.brightnessAdjustedColor
+        if accentIconBubble_outgoing.isTooCloseHSV(to: bubbleBackground_outgoing) {
+            accentIconBubble_outgoing = bubbleBackground_outgoing.brightnessAdjustedColor
         }
         self.isNative = isNative
         self.parent = parent
@@ -866,7 +872,7 @@ public class ColorPalette : Equatable {
         self._grayBackground = grayBackground.withAlphaComponent(max(0.6, grayBackground.alpha))
         self._grayForeground = grayForeground.withAlphaComponent(max(0.6, grayForeground.alpha))
         self._grayIcon = grayIcon.withAlphaComponent(max(0.6, grayIcon.alpha))
-        self._blueIcon = blueIcon.withAlphaComponent(max(0.6, blueIcon.alpha))
+        self._accentIcon = accentIcon.withAlphaComponent(max(0.6, accentIcon.alpha))
         self._badgeMuted = badgeMuted.withAlphaComponent(max(0.6, badgeMuted.alpha))
         self._badge = badge.withAlphaComponent(max(0.6, badge.alpha))
         self._indicatorColor = indicatorColor.withAlphaComponent(max(0.6, indicatorColor.alpha))
@@ -888,8 +894,8 @@ public class ColorPalette : Equatable {
         self._grayTextBubble_outgoing = grayTextBubble_outgoing.withAlphaComponent(max(0.6, grayTextBubble_outgoing.alpha))
         self._grayIconBubble_incoming = grayIconBubble_incoming.withAlphaComponent(max(0.6, grayIconBubble_incoming.alpha))
         self._grayIconBubble_outgoing = grayIconBubble_outgoing.withAlphaComponent(max(0.6, grayIconBubble_outgoing.alpha))
-        self._blueIconBubble_incoming = blueIconBubble_incoming.withAlphaComponent(max(0.6, blueIconBubble_incoming.alpha))
-        self._blueIconBubble_outgoing = blueIconBubble_outgoing.withAlphaComponent(max(0.6, blueIconBubble_outgoing.alpha))
+        self._accentIconBubble_incoming = accentIconBubble_incoming.withAlphaComponent(max(0.6, accentIconBubble_incoming.alpha))
+        self._accentIconBubble_outgoing = accentIconBubble_outgoing.withAlphaComponent(max(0.6, accentIconBubble_outgoing.alpha))
         self._linkBubble_incoming = linkBubble_incoming.withAlphaComponent(max(0.6, linkBubble_incoming.alpha))
         self._linkBubble_outgoing = linkBubble_outgoing.withAlphaComponent(max(0.6, linkBubble_outgoing.alpha))
         self._textBubble_incoming = textBubble_incoming.withAlphaComponent(max(0.6, textBubble_incoming.alpha))
@@ -970,6 +976,7 @@ public class ColorPalette : Equatable {
         self._listBackground = listBackground
         self._listGrayText = listGrayText
         self._grayHighlight = grayHighlight
+        self._focusAnimationColor = focusAnimationColor
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -1035,7 +1042,7 @@ public class ColorPalette : Equatable {
                             grayBackground: grayBackground,
                             grayForeground: grayForeground,
                             grayIcon: grayIcon,
-                            blueIcon: blueIcon,
+                            accentIcon: accentIcon,
                             badgeMuted: badgeMuted,
                             badge: badge,
                             indicatorColor: indicatorColor,
@@ -1056,8 +1063,8 @@ public class ColorPalette : Equatable {
                             grayTextBubble_outgoing: grayTextBubble_outgoing,
                             grayIconBubble_incoming: grayIconBubble_incoming,
                             grayIconBubble_outgoing: grayIconBubble_outgoing,
-                            blueIconBubble_incoming: blueIconBubble_incoming,
-                            blueIconBubble_outgoing: blueIconBubble_outgoing,
+                            accentIconBubble_incoming: accentIconBubble_incoming,
+                            accentIconBubble_outgoing: accentIconBubble_outgoing,
                             linkBubble_incoming: linkBubble_incoming,
                             linkBubble_outgoing: linkBubble_outgoing,
                             textBubble_incoming: textBubble_incoming,
@@ -1133,7 +1140,8 @@ public class ColorPalette : Equatable {
                             chatBackground: chatBackground,
                             listBackground: listBackground,
                             listGrayText: listGrayText,
-                            grayHighlight: grayHighlight)
+                            grayHighlight: grayHighlight,
+                            focusAnimationColor: focusAnimationColor)
     }
     
     public func withUpdatedWallpaper(_ wallpaper: PaletteWallpaper) -> ColorPalette {
@@ -1162,7 +1170,7 @@ public class ColorPalette : Equatable {
                             grayBackground: grayBackground,
                             grayForeground: grayForeground,
                             grayIcon: grayIcon,
-                            blueIcon: blueIcon,
+                            accentIcon: accentIcon,
                             badgeMuted: badgeMuted,
                             badge: badge,
                             indicatorColor: indicatorColor,
@@ -1183,8 +1191,8 @@ public class ColorPalette : Equatable {
                             grayTextBubble_outgoing: grayTextBubble_outgoing,
                             grayIconBubble_incoming: grayIconBubble_incoming,
                             grayIconBubble_outgoing: grayIconBubble_outgoing,
-                            blueIconBubble_incoming: blueIconBubble_incoming,
-                            blueIconBubble_outgoing: blueIconBubble_outgoing,
+                            accentIconBubble_incoming: accentIconBubble_incoming,
+                            accentIconBubble_outgoing: accentIconBubble_outgoing,
                             linkBubble_incoming: linkBubble_incoming,
                             linkBubble_outgoing: linkBubble_outgoing,
                             textBubble_incoming: textBubble_incoming,
@@ -1260,7 +1268,8 @@ public class ColorPalette : Equatable {
                             chatBackground: chatBackground,
                             listBackground: listBackground,
                             listGrayText: listGrayText,
-                            grayHighlight: grayHighlight)
+                            grayHighlight: grayHighlight,
+                            focusAnimationColor: focusAnimationColor)
     }
     
     public func withAccentColor(_ color: NSColor, disableTint: Bool = false) -> ColorPalette {
@@ -1310,7 +1319,7 @@ public class ColorPalette : Equatable {
         
         let grayTextBubble_outgoing = textBubble_outgoing.withMultiplied(hue: 0.956, saturation: 0.17, brightness: 1.0)
         let grayIconBubble_outgoing = textBubble_outgoing.withMultiplied(hue: 0.956, saturation: 0.17, brightness: 1.0)
-        let blueIconBubble_outgoing = textBubble_outgoing
+        let accentIconBubble_outgoing = textBubble_outgoing
         
         let fileActivityForegroundBubble_outgoing = color
         let fileActivityBackgroundBubble_outgoing = textBubble_outgoing
@@ -1348,7 +1357,7 @@ public class ColorPalette : Equatable {
                             grayBackground: grayBackground,
                             grayForeground: grayForeground,
                             grayIcon: grayIcon,
-                            blueIcon: color,
+                            accentIcon: color,
                             badgeMuted: badgeMuted,
                             badge: color,
                             indicatorColor: indicatorColor,
@@ -1369,8 +1378,8 @@ public class ColorPalette : Equatable {
                             grayTextBubble_outgoing: grayTextBubble_outgoing,
                             grayIconBubble_incoming: grayIconBubble_incoming,
                             grayIconBubble_outgoing: grayIconBubble_outgoing,
-                            blueIconBubble_incoming: blueIconBubble_incoming,
-                            blueIconBubble_outgoing: blueIconBubble_outgoing,
+                            accentIconBubble_incoming: accentIconBubble_incoming,
+                            accentIconBubble_outgoing: accentIconBubble_outgoing,
                             linkBubble_incoming: linkBubble_incoming,
                             linkBubble_outgoing: linkBubble_outgoing,
                             textBubble_incoming: textBubble_incoming,
@@ -1446,7 +1455,8 @@ public class ColorPalette : Equatable {
                             chatBackground: chatBackground,
                             listBackground: listBackground,
                             listGrayText: listGrayText,
-                            grayHighlight: grayHighlight)
+                            grayHighlight: grayHighlight,
+                            focusAnimationColor: focusAnimationColor)
     }
 }
 
@@ -1567,7 +1577,7 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
                                        grayBackground:NSColor(0xf4f4f4),
                                        grayForeground:NSColor(0xe4e4e4),
                                        grayIcon:NSColor(0x9e9e9e),
-                                       blueIcon:NSColor(0x0f8fe4),
+                                       accentIcon:NSColor(0x2481cc),
                                        badgeMuted:NSColor(0xd7d7d7),
                                        badge:NSColor(0x4ba3e2),
                                        indicatorColor: NSColor(0x464a57),
@@ -1588,8 +1598,8 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
     grayTextBubble_outgoing: NSColor(0xEFFAFF, 0.8),
     grayIconBubble_incoming: NSColor(0x999999),
     grayIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
-    blueIconBubble_incoming: NSColor(0x999999),
-    blueIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
+    accentIconBubble_incoming: NSColor(0x999999),
+    accentIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
     linkBubble_incoming: NSColor(0x2481cc),
     linkBubble_outgoing: NSColor(0xffffff),
     textBubble_incoming: NSColor(0x000000),
@@ -1663,9 +1673,10 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
     revealAction_inactive_background: NSColor(0xbcbcc3),
     revealAction_inactive_foreground: NSColor(0xffffff),
     chatBackground: NSColor(0xffffff),
-    listBackground: NSColor(0xf4f4f4),
+    listBackground: NSColor(0xefeff3),
     listGrayText: NSColor(0x6D6D71),
-    grayHighlight: NSColor(0xF8F8F8)
+    grayHighlight: NSColor(0xF8F8F8),
+    focusAnimationColor: NSColor(0x68A8E2)
 )
 
 
@@ -1712,7 +1723,7 @@ public let tintedNightPalette = ColorPalette(isNative: true, isDark: true,
                                            grayBackground: NSColor(0x213040),
                                            grayForeground: NSColor(0x213040),
                                            grayIcon: NSColor(0xb1c3d5),
-                                           blueIcon: NSColor(0x2ea6ff),
+                                           accentIcon: NSColor(0x2ea6ff),
                                            badgeMuted: NSColor(0xb1c3d5),
                                            badge: NSColor(0x2ea6ff),
                                            indicatorColor: NSColor(0xffffff),
@@ -1733,8 +1744,8 @@ public let tintedNightPalette = ColorPalette(isNative: true, isDark: true,
                                            grayTextBubble_outgoing: NSColor(0xEFFAFF, 0.8),
                                            grayIconBubble_incoming: NSColor(0xb1c3d5),
                                            grayIconBubble_outgoing: NSColor(0xb1c3d5),
-                                           blueIconBubble_incoming: NSColor(0xb1c3d5),
-                                           blueIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
+                                           accentIconBubble_incoming: NSColor(0xb1c3d5),
+                                           accentIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
                                            linkBubble_incoming: NSColor(0x62bcf9),
                                            linkBubble_outgoing: NSColor(0x62bcf9),
                                            textBubble_incoming: NSColor(0xffffff),
@@ -1810,7 +1821,8 @@ public let tintedNightPalette = ColorPalette(isNative: true, isDark: true,
                                            chatBackground: NSColor(0x18222d),
                                            listBackground: NSColor(0x131415),
                                            listGrayText: NSColor(0xb1c3d5),
-                                           grayHighlight: NSColor(0x18222d).darker(amount: 0.08)
+                                           grayHighlight: NSColor(0x18222d).darker(amount: 0.08),
+                                           focusAnimationColor: NSColor(0x68A8E2)
 )
 
 public let dayClassicPalette = ColorPalette(isNative: true,
@@ -1839,7 +1851,7 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             grayBackground: NSColor(0xf4f4f4),
                                             grayForeground: NSColor(0xe4e4e4),
                                             grayIcon: NSColor(0x9e9e9e),
-                                            blueIcon: NSColor(0x0f8fe4),
+                                            accentIcon: NSColor(0x2481cc),
                                             badgeMuted: NSColor(0xd7d7d7),
                                             badge: NSColor(0x4ba3e2),
                                             indicatorColor: NSColor(0x464a57),
@@ -1860,8 +1872,8 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             grayTextBubble_outgoing: NSColor(0x008c09,0.8),
                                             grayIconBubble_incoming: NSColor(0x999999),
                                             grayIconBubble_outgoing: NSColor(0x008c09,0.8),
-                                            blueIconBubble_incoming: NSColor(0x999999),
-                                            blueIconBubble_outgoing: NSColor(0x008c09,0.8),
+                                            accentIconBubble_incoming: NSColor(0x999999),
+                                            accentIconBubble_outgoing: NSColor(0x008c09,0.8),
                                             linkBubble_incoming: NSColor(0x2481cc),
                                             linkBubble_outgoing: NSColor(0x004bad),
                                             textBubble_incoming: NSColor(0x000000),
@@ -1935,9 +1947,10 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             revealAction_inactive_background: NSColor(0xbcbcc3),
                                             revealAction_inactive_foreground: NSColor(0xffffff),
                                             chatBackground: NSColor(0xffffff),
-                                            listBackground: NSColor(0xf4f4f4),
+                                            listBackground: NSColor(0xefeff3),
                                             listGrayText: NSColor(0x6D6D71),
-                                            grayHighlight: NSColor(0xF8F8F8)
+                                            grayHighlight: NSColor(0xF8F8F8),
+                                            focusAnimationColor: NSColor(0x68A8E2)
 )
 
 public let darkPalette = ColorPalette(isNative: true, isDark:true,
@@ -1972,7 +1985,7 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       grayBackground : NSColor(0x464a57),
                                       grayForeground : NSColor(0x3d414d),
                                       grayIcon: NSColor(0x8699a3),
-                                      blueIcon: NSColor(0x04afc8),
+                                      accentIcon: NSColor(0x04afc8),
                                       badgeMuted: NSColor(0x8699a3),
                                       badge: NSColor(0x04afc8),
                                       indicatorColor: NSColor(0xffffff),
@@ -1993,8 +2006,8 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       grayTextBubble_outgoing: NSColor(0xa0d5dd),
                                       grayIconBubble_incoming: NSColor(0x8699a3),
                                       grayIconBubble_outgoing: NSColor(0xa0d5dd),
-                                      blueIconBubble_incoming: NSColor(0x8699a3),
-                                      blueIconBubble_outgoing: NSColor(0xa0d5dd),
+                                      accentIconBubble_incoming: NSColor(0x8699a3),
+                                      accentIconBubble_outgoing: NSColor(0xa0d5dd),
                                       linkBubble_incoming: NSColor(0x04afc8),
                                       linkBubble_outgoing: NSColor(0xffffff),
                                       textBubble_incoming: NSColor(0xe9e9e9),
@@ -2070,94 +2083,122 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       chatBackground: NSColor(0x292b36),
                                       listBackground: NSColor(0x131415),
                                       listGrayText: NSColor(0x8699a3),
-                                      grayHighlight: NSColor(0x292b36).darker(amount: 0.08)
+                                      grayHighlight: NSColor(0x292b36).darker(amount: 0.08),
+                                      focusAnimationColor: NSColor(0x68A8E2)
 )
 
 @available(macOS 10.14, *)
 private final class MojavePalette : ColorPalette {
-    override var background: NSColor {
-        return NSColor.underPageBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+    
+    private var underPageBackgroundColor: NSColor {
+        return NSColor(0x282828)
+    }
+    private var windowBackgroundColor: NSColor {
+        return NSColor(0x323232)
+    }
+    private var controlAccentColor: NSColor {
+        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+    }
+    private var selectedTextBackgroundColor: NSColor {
+        return controlAccentColor.darker()
+    }
+    private var secondaryLabelColor: NSColor {
+        return NSColor(0xffffff, 0.55)
+    }
+    private var systemRed: NSColor {
+        return NSColor(0xFF453A)
+    }
+    private var systemGreen: NSColor {
+        return NSColor(0x32D74B)
+    }
+    private var controlBackgroundColor: NSColor {
+        return NSColor(0x1E1E1E)
+    }
+    private var separatorColor: NSColor {
+        return NSColor(0x3d3d3d)
+    }
+    private var textColor: NSColor {
+        return NSColor(0xffffff, 0.85)
+    }
+    private var disabledControlTextColor: NSColor {
+        return NSColor(0xffffff, 0.25)
+    }
+    private var unemphasizedSelectedTextBackgroundColor: NSColor {
+        return NSColor(0x464646)
     }
     
+    override var background: NSColor {
+        return underPageBackgroundColor
+    }
     override var grayBackground: NSColor {
-        return NSColor.windowBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return windowBackgroundColor
     }
     override var link: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
     override var selectText: NSColor {
-        return NSColor.selectedTextBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return selectedTextBackgroundColor
     }
-    
-    
-    
     override var accent: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
-    override var blueIcon: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+    override var accentIcon: NSColor {
+        return controlAccentColor
     }
     override var grayIcon: NSColor {
-        return NSColor.secondaryLabelColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return secondaryLabelColor
     }
-    
     override var redUI: NSColor {
-        return NSColor.systemRed.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return systemRed
     }
     override var greenUI: NSColor {
-        return NSColor.systemGreen.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return systemGreen
     }
-    
     override var text: NSColor {
-        return NSColor.controlTextColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return textColor
     }
     override var grayText: NSColor {
-        return NSColor.secondaryLabelColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return secondaryLabelColor
     }
     override var listGrayText: NSColor {
-        return NSColor.secondaryLabelColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!.darker(amount: 0.1)
+        return secondaryLabelColor.darker(amount: 0.1)
     }
     override var listBackground: NSColor {
-        return NSColor.controlBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlBackgroundColor.darker(amount: 0.05)
     }
     override var chatBackground: NSColor {
-        return NSColor.controlBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlBackgroundColor
     }
     override var border: NSColor {
-       return NSColor(0x3d3d3d) //NSColor.separatorColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+       return separatorColor
     }
-    
     override var accentSelect: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!.darker(amount: 0.2)
+        return controlAccentColor.darker(amount: 0.2)
     }
-    
     override var webPreviewActivity: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
     override var fileActivityBackground: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
     override var fileActivityForeground: NSColor {
         return underSelectedColor
     }
     override var waveformForeground: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
-    
     override var chatReplyTitle: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
     override var chatReplyTextEnabled: NSColor {
-        return NSColor.textColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return textColor
     }
     override var chatReplyTextDisabled: NSColor {
-        return NSColor.disabledControlTextColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return disabledControlTextColor
     }
-    
     override var chatReplyTextDisabledBubble_outgoing: NSColor {
         return NSColor.white.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
-    
     override var groupPeerNameRed: NSColor {
         return NSColor.systemRed.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
@@ -2170,47 +2211,41 @@ private final class MojavePalette : ColorPalette {
     override var groupPeerNameOrange: NSColor {
         return NSColor.systemOrange.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
-    
     override var bubbleBackground_outgoing: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!.darker(amount: 0.2)
+        return controlAccentColor.darker(amount: 0.2)
     }
     override var bubbleBorder_outgoing: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!.darker(amount: 0.2)
+        return controlAccentColor.darker(amount: 0.2)
     }
     override var bubbleBackground_incoming: NSColor {
-        return NSColor.windowBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return windowBackgroundColor
     }
-    
     override var bubbleBackgroundHighlight_incoming: NSColor {
-        return NSColor.windowBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!.lighter(amount: 0.2)
+        return windowBackgroundColor.lighter(amount: 0.2)
     }
     override var bubbleBackgroundHighlight_outgoing: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
-    
     override var linkBubble_outgoing: NSColor {
         return NSColor.white.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var selectTextBubble_incoming: NSColor {
-        return NSColor.selectedTextBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return selectedTextBackgroundColor
     }
     override var selectTextBubble_outgoing: NSColor {
-        return NSColor.unemphasizedSelectedTextBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return unemphasizedSelectedTextBackgroundColor
     }
-    
     override var linkBubble_incoming: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return controlAccentColor
     }
-    
     override var waveformForegroundBubble_outgoing: NSColor {
         return grayIconBubble_outgoing
     }
-    
     override var fileActivityForegroundBubble_incoming: NSColor {
-        return NSColor.windowBackgroundColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return windowBackgroundColor
     }
     override var fileActivityForegroundBubble_outgoing: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!.darker(amount: 0.2)
+        return controlAccentColor
     }
 }
 
@@ -2222,7 +2257,7 @@ public let systemPalette: ColorPalette = {
     } else {
         initializer = ColorPalette.self
     }
-    return initializer.init(isNative: true, isDark: true,
+    let palette = initializer.init(isNative: true, isDark: true,
                             tinted: false,
                             name: "System",
                             parent: .system,
@@ -2247,7 +2282,7 @@ public let systemPalette: ColorPalette = {
                             grayBackground: NSColor(0x3e464c),
                             grayForeground: NSColor(0x3e464c),
                             grayIcon: NSColor(0xb1c3d5),
-                            blueIcon: NSColor(0x2ea6ff),
+                            accentIcon: NSColor(0x2ea6ff),
                             badgeMuted: NSColor(0xb1c3d5),
                             badge: NSColor(0x2ea6ff),
                             indicatorColor: NSColor(0xffffff),
@@ -2268,8 +2303,8 @@ public let systemPalette: ColorPalette = {
                             grayTextBubble_outgoing: NSColor(0xEFFAFF, 0.8),
                             grayIconBubble_incoming: NSColor(0xb1c3d5),
                             grayIconBubble_outgoing: NSColor(0xb1c3d5),
-                            blueIconBubble_incoming: NSColor(0xb1c3d5),
-                            blueIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
+                            accentIconBubble_incoming: NSColor(0xb1c3d5),
+                            accentIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
                             linkBubble_incoming: NSColor(0x2ea6ff),
                             linkBubble_outgoing: NSColor(0x2ea6ff),
                             textBubble_incoming: NSColor(0xffffff),
@@ -2345,13 +2380,18 @@ public let systemPalette: ColorPalette = {
                             chatBackground: NSColor(0x292a2f),
                             listBackground: NSColor(0x131415),
                             listGrayText: NSColor(0xb1c3d5),
-                            grayHighlight: NSColor(0x292a2f).darker(amount: 0.08)
+                            grayHighlight: NSColor(0x292a2f).darker(amount: 0.08),
+                            focusAnimationColor: NSColor(0x68A8E2)
     )
+    
+   
+
+    return palette
 }()
 
 
 /*
- public let darkPalette = ColorPalette(background: NSColor(0x282e33), text: NSColor(0xe9e9e9), grayText: NSColor(0x999999), link: NSColor(0x20eeda), accent: NSColor(0x20eeda), redUI: NSColor(0xec6657), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0xf4f4f4, 0.4), grayUI: NSColor(0xFaFaFa), darkGrayText:NSColor(0x333333), blueText:NSColor(0x009687), accentSelect:NSColor(0x009687), selectText:NSColor(0xeaeaea), blueFill: NSColor(0x20eeda), border: NSColor(0x3d444b), grayBackground:NSColor(0x3d444b), grayForeground:NSColor(0xe4e4e4), grayIcon:NSColor(0x757676), blueIcon: NSColor(0x20eeda), badgeMuted:NSColor(0xd7d7d7), badge:NSColor(0x4ba3e2), indicatorColor: NSColor(0xffffff))
+ public let darkPalette = ColorPalette(background: NSColor(0x282e33), text: NSColor(0xe9e9e9), grayText: NSColor(0x999999), link: NSColor(0x20eeda), accent: NSColor(0x20eeda), redUI: NSColor(0xec6657), greenUI:NSColor(0x63DA6E), blackTransparent: NSColor(0x000000, 0.6), grayTransparent: NSColor(0xf4f4f4, 0.4), grayUI: NSColor(0xFaFaFa), darkGrayText:NSColor(0x333333), blueText:NSColor(0x009687), accentSelect:NSColor(0x009687), selectText:NSColor(0xeaeaea), blueFill: NSColor(0x20eeda), border: NSColor(0x3d444b), grayBackground:NSColor(0x3d444b), grayForeground:NSColor(0xe4e4e4), grayIcon:NSColor(0x757676), accentIcon: NSColor(0x20eeda), badgeMuted:NSColor(0xd7d7d7), badge:NSColor(0x4ba3e2), indicatorColor: NSColor(0xffffff))
  */
 
 

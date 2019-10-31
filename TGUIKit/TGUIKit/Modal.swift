@@ -412,7 +412,7 @@ public class Modal: NSObject {
         self.interactions = controller.modalInteractions
         if controller.isVisualEffectBackground {
             self.visualEffectView = NSVisualEffectView(frame: NSZeroRect)
-            self.visualEffectView!.material = .ultraDark
+            self.visualEffectView!.material = presentation.colors.isDark ? .dark : .light
             self.visualEffectView!.blendingMode = .withinWindow
             self.visualEffectView?.wantsLayer = true
         } else {
@@ -442,7 +442,11 @@ public class Modal: NSObject {
         container.layer?.rasterizationScale = CGFloat(System.backingScale)
         container.backgroundColor = controller.containerBackground
         
-        container.addSubview(controller.view)
+        if !controller.contentBelowBackground {
+            container.addSubview(controller.view)
+        } else {
+            controller.loadViewIfNeeded()
+        }
         
         if let headerView = headerView {
             container.addSubview(headerView)
@@ -595,7 +599,7 @@ public class Modal: NSObject {
        return NSZeroRect
     }
     
-    public func close(_ callAcceptInteraction:Bool = false) ->Void {
+    public func close(_ callAcceptInteraction:Bool = false, animationType: ModalAnimationCloseBehaviour = .common) ->Void {
         window.removeAllHandlers(for: self)
         controller?.viewWillDisappear(true)
         
@@ -615,6 +619,12 @@ public class Modal: NSObject {
         } else {
             background = self.background
         }
+        if let controller = controller, controller.contentBelowBackground {
+            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { [weak self] _ in
+                self?.controller?.view.removeFromSuperview()
+            })
+        }
+        
         
         background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self, weak background] (complete) in
             if let stongSelf = self {
@@ -626,6 +636,16 @@ public class Modal: NSObject {
             }
         })
        
+        switch animationType {
+        case .common:
+            break
+        case let .scaleToRect(newRect):
+            let view = self.container!
+            let oldRect = self.container.frame
+            view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+            view.layer?.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+            view.layer?.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+        }
     }
     
     private var subview: NSView?
@@ -689,6 +709,13 @@ public class Modal: NSObject {
             disposable.set((controller.ready.get() |> take(1)).start(next: { [weak self, weak controller] ready in
                 if let strongSelf = self, let controller = controller {
                     let view = strongSelf.topView
+                    if controller.contentBelowBackground {
+                        view.addSubview(controller.view)
+                        controller.view.center()
+                        if strongSelf.animated {
+                            controller.view.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.4, timingFunction: .spring)
+                        }
+                    }
                     strongSelf.controller?.viewWillAppear(true)
                     strongSelf.visualEffectView?.frame = view.bounds
                     strongSelf.background.frame = view.bounds
@@ -707,6 +734,14 @@ public class Modal: NSObject {
                                 strongSelf.container.layer?.animatePosition(from: NSMakePoint(origin.x, origin.y + 100), to: origin, timingFunction: .spring)
                             case .scaleCenter:
                                 strongSelf.container.layer?.animateScaleSpring(from: 0.7, to: 1.0, duration: 0.2, bounce: false)
+                            case let .scaleFrom(oldRect):
+                                let view = strongSelf.container!
+                                let newRect = view.frame
+                                view.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                                view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.3, timingFunction: .spring)
+                                view.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: 0.3, timingFunction: .spring)
+                                view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
+
                             }
                         }
                     }
@@ -799,6 +834,11 @@ public func closeAllModals() {
 public enum ModalAnimationType {
     case bottomToCenter
     case scaleCenter
+    case scaleFrom(NSRect)
+}
+public enum ModalAnimationCloseBehaviour {
+    case common
+    case scaleToRect(NSRect)
 }
 
 public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {

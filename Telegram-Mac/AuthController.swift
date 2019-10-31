@@ -207,8 +207,8 @@ class AuthHeaderView : View {
         
         nextButton.set(text: L10n.loginNext, for: .Normal)
         nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: .white, backgroundColor: theme.colors.accent)
-        proxyConnecting.progressColor = theme.colors.blueIcon
-        proxyConnecting.lineWidth = 1.0
+        proxyConnecting.progressColor = theme.colors.accentIcon
+//        proxyConnecting.lineWidth = 1.0
         
         
         backButton.set(font: .medium(.header), for: .Normal)

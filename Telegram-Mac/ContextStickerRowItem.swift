@@ -45,7 +45,7 @@ class ContextStickerRowItem: TableRowItem {
 class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
 
     
-    func fileAtPoint(_ point:NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point:NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let item = item as? ContextStickerRowItem {
             var i:Int = 0
             for subview in subviews {
@@ -53,9 +53,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     let file = item.result.results[i].file
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
                     if file.isAnimatedSticker {
-                        return .file(reference, AnimatedStickerPreviewModalView.self)
+                        return (.file(reference, AnimatedStickerPreviewModalView.self), subview)
                     } else {
-                        return .file(reference, StickerPreviewModalView.self)
+                        return (.file(reference, StickerPreviewModalView.self), subview)
                     }
                 }
                 i += 1
@@ -70,9 +70,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             let reference = fileAtPoint(convert(event.locationInWindow, from: nil))
             
-            if let reference = reference?.fileReference?.media.stickerReference {
+            if let reference = reference?.0.fileReference?.media.stickerReference {
                 menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: {
-                    showModal(with: StickersPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
+                    showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
                 }))
             }
         }

@@ -76,7 +76,7 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         updoadPhotoCap.setFrameSize(avatar.frame.size)
         updoadPhotoCap.layer?.cornerRadius = updoadPhotoCap.frame.width / 2
         updoadPhotoCap.set(image: ControlStyle(highlightColor: .white).highlight(image: theme.icons.chatAttachCamera), for: .Normal)
-        updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.blueIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
+        updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.accentIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
         
         
         updoadPhotoCap.set(handler: { [weak self] _ in

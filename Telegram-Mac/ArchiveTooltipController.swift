@@ -104,7 +104,7 @@ final class ArchiveTooltipView : View {
             if type == .justArchive {
                 let undo = self.undo ?? TitleButton()
                 undo.set(font: .medium(.title), for: .Normal)
-                undo.set(color: .blueIcon, for: .Normal)
+                undo.set(color: .accentIcon, for: .Normal)
                 undo.set(text: L10n.chatUndoManagerUndo, for: .Normal)
                 
                 undo.removeAllHandlers()
@@ -128,7 +128,6 @@ final class ArchiveTooltipView : View {
     
     override func layout() {
         super.layout()
-        update()
         if let textView = self.textView {
             self.titleView.setFrameOrigin(NSMakePoint(10, 5))
             textView.setFrameOrigin(NSMakePoint(10, frame.height - textView.frame.height - 5))

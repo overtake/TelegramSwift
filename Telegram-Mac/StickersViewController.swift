@@ -677,7 +677,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             }
         }, showPack: { [weak self] reference in
             if let peerId = self?.chatInteraction?.peerId {
-                showModal(with: StickersPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
+                showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
             }
         }, addPack: { [weak self] reference in
             _ = showModalProgress(signal: loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: reference, forceActualized: false)
@@ -980,6 +980,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         
         self.position.set(.initial)
         
+    }
+    override func scrollup() {
+        self.genericView.tableView.scroll(to: .up(true))
     }
     
     override var supportSwipes: Bool {

@@ -36,7 +36,7 @@ public class InputDataModalController : ModalViewController {
         return closableImpl?() ?? super.closable
     }
     
-    public override func close() {
+    public override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         closeHandler({ [weak self] in
             self?.closeModal()
         })

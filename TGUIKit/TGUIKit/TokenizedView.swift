@@ -38,7 +38,7 @@ private class TokenView : Control {
     init(_ token: SearchToken, maxSize: NSSize, onDismiss:@escaping()->Void, onSelect: @escaping()->Void) {
         self.token = token
         super.init()
-        self.layer?.cornerRadius = .cornerRadius
+        self.layer?.cornerRadius = 6
         let layout = TextViewLayout(.initialize(string: token.name, color: .white, font: .normal(.title)), maximumNumberOfLines: 1)
         layout.measure(width: maxSize.width - 30)
         self.nameView.update(layout)

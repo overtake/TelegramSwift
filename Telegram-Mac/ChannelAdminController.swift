@@ -440,6 +440,9 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             
         } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminInfo, _, _) = initialParticipant, let adminInfo = maybeAdminInfo {
             
+            entries.append(.section(sectionId))
+            sectionId += 1
+            
             if let rank = state.rank {
                 entries.append(.section(sectionId))
                 sectionId += 1
@@ -458,6 +461,9 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights, .textBottomItem))
             descId += 1
         } else if let initialParticipant = initialParticipant, case .creator = initialParticipant {
+            
+            entries.append(.section(sectionId))
+            sectionId += 1
             
             if let rank = state.rank {
                 entries.append(.section(sectionId))
@@ -1042,9 +1048,9 @@ class ChannelAdminController: TableModalViewController {
     
     
     
-    override func close() {
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         disposable.set(nil)
-        super.close()
+        super.close(animationType: animationType)
     }
     
     override func firstResponder() -> NSResponder? {

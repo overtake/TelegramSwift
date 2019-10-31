@@ -702,7 +702,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             guard let `self` = self else {return}
             self.genericView.merge(with: transition)
             self.isLoading.set(.single(loading))
-            
+            if self.scrollupOnNextTransition {
+                self.scrollup()
+            }
+            self.scrollupOnNextTransition = false
             _ = searchMessagesStateValue.swap(searchMessagesState)
             
             if let location = location {
@@ -713,8 +716,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         if let item = item {
                             _ = self.genericView.select(item: item, notify: false, byClick: false)
                         }
-                    default:
-                        self.genericView.cancelSelection()
                     }
                 }
             } else {
@@ -890,14 +891,21 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }))
     }
     
+    private var scrollupOnNextTransition: Bool = false
+    
     func request(with query:String?) -> Void {
         setHighlightEvents()
         self.query = query
+        self.scrollupOnNextTransition = true
         if let query = query, !query.isEmpty {
             searchQuery.set(.single(query))
         } else {
             searchQuery.set(.single(nil))
         }
+    }
+    
+    override func scrollup() {
+        genericView.clipView.scroll(to: NSMakePoint(0, 50), animated: false)
     }
     
     private var closeNext: Bool = false

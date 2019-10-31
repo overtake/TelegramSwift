@@ -68,7 +68,7 @@ class PeerMediaDateItem: TableStickItem {
     }
     
     override var height: CGFloat {
-        return textLayout.layoutSize.height + viewType.innerInset.top + viewType.innerInset.bottom
+        return textLayout.layoutSize.height + viewType.innerInset.top + viewType.innerInset.bottom + 9
     }
     
     override func viewClass() -> AnyClass {

@@ -108,19 +108,19 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         
     }
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         guard let item = item as? ContextMediaRowItem else {return nil}
         for i in 0 ..< self.subviews.count {
             if NSPointInRect(point, self.subviews[i].frame) {
                 switch item.result.entries[i] {
                 case let .gif(data):
-                    return .file(data.file, GifPreviewModalView.self)
+                    return (.file(data.file, GifPreviewModalView.self), self.subviews[i])
                 case let .sticker(_, file):
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
                     if file.isAnimatedSticker {
-                        return .file(reference, AnimatedStickerPreviewModalView.self)
+                        return (.file(reference, AnimatedStickerPreviewModalView.self), self.subviews[i])
                     } else {
-                        return .file(reference, StickerPreviewModalView.self)
+                        return (.file(reference, StickerPreviewModalView.self), self.subviews[i])
                     }
                 default:
                     break

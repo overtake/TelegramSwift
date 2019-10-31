@@ -32,19 +32,19 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                for entity in attr.entities {
                    inner: switch entity.type {
                    case .Email:
-                       let link = message.text.nsstring.substring(with: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
-                       let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
-                       attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
-                       break loop
+                        let link = message.text.nsstring.substring(with: NSMakeRange(min(entity.range.lowerBound, message.text.length), max(min(entity.range.upperBound - entity.range.lowerBound, message.text.length - entity.range.lowerBound), 0)))
+                        let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
+                        attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
+                        break loop
                    case .Url:
-                       let link = message.text.nsstring.substring(with: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
-                       let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
-                       attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
-                       break loop
+                        let link = message.text.nsstring.substring(with: NSMakeRange(min(entity.range.lowerBound, message.text.length), max(min(entity.range.upperBound - entity.range.lowerBound, message.text.length - entity.range.lowerBound), 0)))
+                        let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
+                        attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
+                        break loop
                    case let .TextUrl(url):
-                       let range = attributed.append(string: url, color: theme.colors.link, font: .normal(.text))
-                       attributed.addAttribute(.link, value: inApp(for: url as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
-                       break loop
+                        let range = attributed.append(string: url, color: theme.colors.link, font: .normal(.text))
+                        attributed.addAttribute(.link, value: inApp(for: url as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
+                        break loop
                    default:
                        break inner
                    }

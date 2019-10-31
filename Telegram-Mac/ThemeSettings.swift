@@ -210,7 +210,7 @@ extension ColorPalette  {
                                     grayBackground: parseColor(decoder, "grayBackground") ?? palette.grayBackground,
                                     grayForeground: parseColor(decoder, "grayForeground") ?? palette.grayForeground,
                                     grayIcon: parseColor(decoder, "grayIcon") ?? palette.grayIcon,
-                                    blueIcon: parseColor(decoder, "blueIcon") ?? palette.blueIcon,
+                                    accentIcon: parseColor(decoder, "accentIcon") ?? parseColor(decoder, "blueIcon") ?? palette.accentIcon,
                                     badgeMuted: parseColor(decoder, "badgeMuted") ?? palette.badgeMuted,
                                     badge: parseColor(decoder, "badge") ?? palette.badge,
                                     indicatorColor: parseColor(decoder, "indicatorColor") ?? palette.indicatorColor,
@@ -231,8 +231,8 @@ extension ColorPalette  {
                                     grayTextBubble_outgoing: parseColor(decoder, "grayTextBubble_outgoing") ?? palette.grayTextBubble_outgoing,
                                     grayIconBubble_incoming: parseColor(decoder, "grayIconBubble_incoming") ?? palette.grayIconBubble_incoming,
                                     grayIconBubble_outgoing: parseColor(decoder, "grayIconBubble_outgoing") ?? palette.grayIconBubble_outgoing,
-                                    blueIconBubble_incoming: parseColor(decoder, "blueIconBubble_incoming") ?? palette.blueIconBubble_incoming,
-                                    blueIconBubble_outgoing: parseColor(decoder, "blueIconBubble_outgoing") ?? palette.blueIconBubble_outgoing,
+                                    accentIconBubble_incoming: parseColor(decoder, "accentIconBubble_incoming") ?? parseColor(decoder, "blueIconBubble_incoming") ?? palette.accentIconBubble_incoming,
+                                    accentIconBubble_outgoing: parseColor(decoder, "accentIconBubble_outgoing") ?? parseColor(decoder, "blueIconBubble_outgoing") ?? palette.accentIconBubble_outgoing,
                                     linkBubble_incoming: parseColor(decoder, "linkBubble_incoming") ?? palette.linkBubble_incoming,
                                     linkBubble_outgoing: parseColor(decoder, "linkBubble_outgoing") ?? palette.linkBubble_outgoing,
                                     textBubble_incoming: parseColor(decoder, "textBubble_incoming") ?? palette.textBubble_incoming,
@@ -308,7 +308,8 @@ extension ColorPalette  {
                                     chatBackground: parseColor(decoder, "chatBackground") ?? palette.chatBackground,
                                     listBackground: parseColor(decoder, "listBackground") ?? palette.listBackground,
                                     listGrayText: parseColor(decoder, "listGrayText") ?? palette.listGrayText,
-                                    grayHighlight: parseColor(decoder, "grayHighlight") ?? palette.grayHighlight
+                                    grayHighlight: parseColor(decoder, "grayHighlight") ?? palette.grayHighlight,
+                                    focusAnimationColor: parseColor(decoder, "focusAnimationColor") ?? palette.focusAnimationColor
         )
     }
 }

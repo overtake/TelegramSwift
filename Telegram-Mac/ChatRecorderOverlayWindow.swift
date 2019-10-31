@@ -74,19 +74,20 @@ private class ChatRecorderOverlayView : Control {
     private let outerContainer: Control = Control()
     private let stateView: ImageView = ImageView()
     private var currentLevel: Double = 1.0
+    private var previousTime: Date = Date()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         layer?.cornerRadius = frameRect.width / 2
         backgroundColor = .clear
        
-        outerContainer.setFrameSize(NSMakeSize(frameRect.width - 20, frameRect.height - 20))
+        outerContainer.setFrameSize(NSMakeSize(frameRect.width - 30, frameRect.height - 30))
         outerContainer.backgroundColor = theme.colors.accent.withAlphaComponent(0.5)
         outerContainer.layer?.cornerRadius = outerContainer.frame.width / 2
         addSubview(outerContainer)
         outerContainer.center()
       //  self.outerContainer.animates = true
         
-        innerContainer.setFrameSize(NSMakeSize(frameRect.width - 20, frameRect.height - 20))
+        innerContainer.setFrameSize(NSMakeSize(frameRect.width - 30, frameRect.height - 30))
         innerContainer.backgroundColor = theme.colors.accent
         innerContainer.layer?.cornerRadius = innerContainer.frame.width / 2
         addSubview(innerContainer)
@@ -110,10 +111,14 @@ private class ChatRecorderOverlayView : Control {
     }
     
     func updatePeakLevel(_ peakLevel: Float) {
-        let power = min(mappingRange(Double(peakLevel), 0, 1, 1, 1.5),1.5);
-        
-        outerContainer.layer?.animateScaleCenter(from: CGFloat(currentLevel), to: CGFloat(power), duration: 0.1, removeOnCompletion:false)
-        self.currentLevel = power
+        let power = mappingRange(Double(peakLevel), 0.3, 3, 1.05, 1.5);
+        if abs(self.currentLevel - power) > 0.1 || (Date().timeIntervalSinceNow - previousTime.timeIntervalSinceNow) > 0.2  {
+            
+            let previous = outerContainer.layer?.presentation()?.value(forKeyPath: "transform.scale") as? CGFloat ?? CGFloat(currentLevel)
+            outerContainer.layer?.animateScaleCenter(from: previous, to: CGFloat(power), duration: 0.2, removeOnCompletion:false, timingFunction: .linear)
+            self.currentLevel = Double(power)
+            self.previousTime = Date()
+        }
     }
     
     func updateInside() {

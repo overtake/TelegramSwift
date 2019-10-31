@@ -71,10 +71,10 @@ final class AnimatedStickerGridItemView: GridItemNode, ModalPreviewRowViewProtoc
     
     private let view: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
 
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let currentState = currentState {
             let reference = currentState.1.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1) : FileMediaReference.standalone(media: currentState.1)
-            return .file(reference, AnimatedStickerPreviewModalView.self)
+            return (.file(reference, AnimatedStickerPreviewModalView.self), view)
         }
         return nil
     }
@@ -149,10 +149,10 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
     
     private let imageView: TransformImageView = TransformImageView()
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let currentState = currentState {
             let reference = currentState.1.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: currentState.1.stickerReference!, media: currentState.1) : FileMediaReference.standalone(media: currentState.1)
-            return .file(reference, StickerPreviewModalView.self)
+            return (.file(reference, StickerPreviewModalView.self), imageView)
         }
         return nil
     }

@@ -83,6 +83,10 @@ private final class WalletAddressRowView : TableRowView {
         needsLayout = true
     }
     
+    override var firstResponder: NSResponder? {
+        return nil
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

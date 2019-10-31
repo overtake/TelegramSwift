@@ -189,7 +189,7 @@ func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDat
     
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.peerInfoReport)
     
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
         getModalController?()?.close()
     })
     

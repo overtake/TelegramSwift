@@ -36,12 +36,20 @@ extension ChatHistoryLocation {
 private var temporaryTouchBar: Any?
 
 
-struct ChatWrapperEntry : Comparable, Identifiable {
+final class ChatWrapperEntry : Comparable, Identifiable {
     let appearance: AppearanceWrapperEntry<ChatHistoryEntry>
     let automaticDownload: AutomaticMediaDownloadSettings
-    
+    init(appearance: AppearanceWrapperEntry<ChatHistoryEntry>, automaticDownload: AutomaticMediaDownloadSettings) {
+        self.appearance = appearance
+        self.automaticDownload = automaticDownload
+    }
     var stableId: AnyHashable {
         return appearance.entry.stableId
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     var entry: ChatHistoryEntry {
@@ -334,7 +342,7 @@ class ChatControllerView : View, ChatInputDelegate {
             case .progress:
                 if progressView == nil {
                     self.progressView = ProgressIndicator(frame: NSMakeRect(0,0,30,30))
-                    
+                    self.progressView?.innerInset = 6
                     progressView!.animates = true
                     addSubview(progressView!)
                     progressView!.center()
@@ -440,7 +448,7 @@ class ChatControllerView : View, ChatInputDelegate {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         progressView?.backgroundColor = theme.colors.background
-        (progressView?.subviews.first as? ProgressIndicator)?.set(color: theme.colors.indicatorColor)
+        (progressView?.subviews.first as? NSProgressIndicator)?.set(color: theme.colors.indicatorColor)
         scroller.updateLocalizationAndTheme(theme: theme)
         tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction)
     }
@@ -798,7 +806,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
 private func maxIncomingMessageIndexForEntries(_ entries: [ChatHistoryEntry], indexRange: (Int, Int)) -> MessageIndex? {
     if !entries.isEmpty {
         for i in (indexRange.0 ... indexRange.1).reversed() {
-            if case let .MessageEntry(message, _, _, _, _, _, _, _, _) = entries[i], message.flags.contains(.Incoming) {
+            if case let .MessageEntry(message, _, _, _, _, _, _) = entries[i], message.flags.contains(.Incoming) {
                 return MessageIndex(message)
             }
         }
@@ -856,6 +864,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let slowModeDisposable = MetaDisposable()
     private let slowModeInProgressDisposable = MetaDisposable()
     private let forwardMessagesDisposable = MetaDisposable()
+    private let shiftSelectedDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : Data]> = ValuePromise([:], ignoreRepeated: true)
@@ -1315,7 +1324,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         state.start()
                     case .video:
                         state = ChatRecordingVideoState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
-                        showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: mainWindow)
+                        showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: context.window)
                     }
                     
                     chatInteraction.update({$0.withRecordingState(state)})
@@ -1598,7 +1607,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.forwardMessages = { forwardMessages in
-            showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: forwardMessages)), for: mainWindow)
+            showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: forwardMessages)), for: context.window)
         }
         
         chatInteraction.deleteMessages = { [weak self] messageIds in
@@ -1870,7 +1879,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         
                     }))
-                    showModal(with: controller, for: mainWindow)
+                    showModal(with: controller, for: context.window)
                 })
             }
         }
@@ -1999,7 +2008,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
             
             if opaqueIdentifier == nil {
-                signal = showModalProgress(signal: (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifier: opaqueIdentifier) |> deliverOnMainQueue), for: mainWindow)
+                signal = showModalProgress(signal: (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifier: opaqueIdentifier) |> deliverOnMainQueue), for: context.window)
             } else {
                 signal = (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifier: opaqueIdentifier) |> deliverOnMainQueue)
             }
@@ -2007,7 +2016,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.selectMessagePollOptionDisposables.set(signal.start(error: { error in
                 switch error {
                 case .generic:
-                    alert(for: mainWindow, info: L10n.unknownError)
+                    alert(for: context.window, info: L10n.unknownError)
                 }
             }, completed: { [weak self] in
                  self?.update { data -> [MessageId : Data] in
@@ -2073,7 +2082,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                alert(for: mainWindow, info: L10n.appMaxFileSize)
+                                alert(for: context.window, info: L10n.appMaxFileSize)
                             } else {
                                 self.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, asMedia, nil)
                             }
@@ -2106,7 +2115,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                alert(for: mainWindow, info: L10n.appMaxFileSize)
+                                alert(for: context.window, info: L10n.appMaxFileSize)
                             } else {
                                 self?.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true, nil)
                             }
@@ -2127,7 +2136,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         chatInteraction.attachLocation = { [weak self] in
             guard let `self` = self else {return}
-            showModal(with: LocationModalController(self.chatInteraction), for: mainWindow)
+            showModal(with: LocationModalController(self.chatInteraction), for: context.window)
         }
         
         chatInteraction.sendAppFile = { [weak self] file in
@@ -2189,8 +2198,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.modalSearch = { [weak self] query in
             if let strongSelf = self {
-                let apply = showModalProgress(signal: searchMessages(account: context.account, location: .peer(peerId: strongSelf.chatInteraction.peerId, fromId: nil, tags: nil), query: query, state: nil), for: mainWindow)
-                showModal(with: SearchResultModalController(context, request: apply |> map {$0.0.messages}, query: query, chatInteraction:strongSelf.chatInteraction), for: mainWindow)
+                let apply = showModalProgress(signal: searchMessages(account: context.account, location: .peer(peerId: strongSelf.chatInteraction.peerId, fromId: nil, tags: nil), query: query, state: nil), for: context.window)
+                showModal(with: SearchResultModalController(context, request: apply |> map {$0.0.messages}, query: query, chatInteraction:strongSelf.chatInteraction), for: context.window)
             }
         }
         
@@ -2249,9 +2258,36 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.toggleNotifications = { [weak self] in
+        chatInteraction.toggleNotifications = { [weak self] isMuted in
             if let strongSelf = self {
-                _ = togglePeerMuted(account: context.account, peerId: strongSelf.chatInteraction.peerId).start()
+                if isMuted == nil || isMuted == true {
+                    _ = togglePeerMuted(account: context.account, peerId: strongSelf.chatInteraction.peerId).start()
+                } else {
+                    var options:[ModalOptionSet] = []
+                    
+                    options.append(ModalOptionSet(title: L10n.chatListMute1Hour, selected: false, editable: true))
+                    options.append(ModalOptionSet(title: L10n.chatListMute4Hours, selected: false, editable: true))
+                    options.append(ModalOptionSet(title: L10n.chatListMute8Hours, selected: false, editable: true))
+                    options.append(ModalOptionSet(title: L10n.chatListMute1Day, selected: false, editable: true))
+                    options.append(ModalOptionSet(title: L10n.chatListMute3Days, selected: false, editable: true))
+                    options.append(ModalOptionSet(title: L10n.chatListMuteForever, selected: true, editable: true))
+                    
+                    var intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
+                    
+                    showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (L10n.chatInputMute, theme.colors.accent), title: L10n.peerInfoNotifications, result: { result in
+                        
+                        for (i, option) in result.enumerated() {
+                            inner: switch option {
+                            case .selected:
+                                _ = updatePeerMuteSetting(account: context.account, peerId: strongSelf.chatInteraction.peerId, muteInterval: intervals[i]).start()
+                                break
+                            default:
+                                break inner
+                            }
+                        }
+                        
+                    }), for: context.window)
+                }
             }
         }
         
@@ -2380,7 +2416,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return reportPeer(account: context.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
                         if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
                             if peer.id.namespace == Namespaces.Peer.CloudUser {
-                                return removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: false)
+                                return removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: false) |> deliverOnMainQueue
                                 |> mapToSignal { _ in
                                     return context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() } |> mapToSignal { _ in
                                         return .complete()
@@ -2420,6 +2456,57 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return
             }
             self.updateReqctionsDisposable.set((updateMessageReactionsInteractively(postbox: self.context.account.postbox, messageId: messageId, reaction: reaction) |> deliverOnMainQueue).start(), forKey: messageId)
+        }
+        chatInteraction.withToggledSelectedMessage = { [weak self] f in
+            guard let `self` = self else {
+                return
+            }
+            let previous = self.chatInteraction.presentation.selectionState?.selectedIds
+            self.chatInteraction.update(f)
+            
+            if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
+                if let selectionState = self.chatInteraction.presentation.selectionState, let lastMessageId = selectionState.lastSelectedId, let previous = previous {
+                    if let messageId = selectionState.selectedIds.subtracting(previous).first {
+                        let minId = min(lastMessageId.id, messageId.id)
+                        let maxId = max(lastMessageId.id, messageId.id)
+                        let cloudNamespace = self.mode == .scheduled ? Namespaces.Message.ScheduledCloud : Namespaces.Message.Cloud
+                        let localNamespace = self.mode == .scheduled ? Namespaces.Message.ScheduledLocal : Namespaces.Message.Local
+                        let selectMessages = context.account.postbox.transaction { transaction -> [Message] in
+                            var messages:[Message] = []
+                            for id in minId ..< maxId {
+                                let cloudId = MessageId(peerId: lastMessageId.peerId, namespace: cloudNamespace, id: id)
+                                let localId = MessageId(peerId: lastMessageId.peerId, namespace: localNamespace, id: id)
+                                let message = transaction.getMessage(cloudId) ?? transaction.getMessage(localId)
+                                if let message = message {
+                                    if minId > maxId {
+                                        messages.append(message)
+                                    } else {
+                                        messages.insert(message, at: 0)
+                                    }
+                                }
+                            }
+                            return messages
+                        } |> deliverOnMainQueue
+                        
+                        self.shiftSelectedDisposable.set(selectMessages.start(next: { [weak self] messages in
+                            guard let `self` = self else {
+                                return
+                            }
+                            self.chatInteraction.update({ current in
+                                var current = current
+                                if let selectionState = current.selectionState, selectionState.selectedIds.count >= 100 {
+                                    return current
+                                }
+                                for message in messages {
+                                    current = current.withUpdatedSelectedMessage(message.id)
+                                }
+                                
+                                return current
+                            })
+                        }))
+                    }
+                }
+            }
         }
 
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in
@@ -2699,7 +2786,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let strongSelf = self, let message = message {
                         if !message.isEmpty {
                             if isAlert {
-                                alert(for: mainWindow, info: message)
+                                alert(for: context.window, info: message)
                             } else {
                                 strongSelf.show(toaster: ControllerToaster(text:.initialize(string: message.fixed, color: theme.colors.text, font: .normal(.text))))
                             }
@@ -2951,7 +3038,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             var index = 0
             for entry in historyView.filteredEntries.reversed() {
                 if index >= visibleRange.min && index <= visibleRange.max {
-                    if case let .MessageEntry(message, _, _, _, _, _, _, _, _) = entry.entry {
+                    if case let .MessageEntry(message, _, _, _, _, _, _) = entry.entry {
                         return message
                     }
                 }
@@ -3161,8 +3248,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, !self.isAdChat  {
                                 if self.chatInteraction.peerId != context.peerId {
                                     items.append(SPopoverItem(!notificationSettings.isMuted ? L10n.chatContextEnableNotifications : L10n.chatContextDisableNotifications, { [weak self] in
-                                        self?.chatInteraction.toggleNotifications()
-                                        }, !notificationSettings.isMuted ? theme.icons.chatActionUnmute : theme.icons.chatActionMute))
+                                        self?.chatInteraction.toggleNotifications(notificationSettings.isMuted)
+                                    }, !notificationSettings.isMuted ? theme.icons.chatActionUnmute : theme.icons.chatActionMute))
                                 }
                             }
                             
@@ -3207,7 +3294,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
                                             }
                                             
-                                            modernConfirm(for: mainWindow, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+                                            modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
                                                 context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
                                                     switch status {
                                                     case .success:
@@ -3408,6 +3495,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         slowModeInProgressDisposable.dispose()
         forwardMessagesDisposable.dispose()
         updateReqctionsDisposable.dispose()
+        shiftSelectedDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -3474,7 +3562,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .tooMuchScheduled:
                     text = L10n.chatSendMessageErrorTooMuchScheduled
                 }
-                confirm(for: mainWindow, information: text, cancelTitle: "", thridTitle: L10n.genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
+                confirm(for: context.window, information: text, cancelTitle: "", thridTitle: L10n.genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}
                     
                     switch confirm {
@@ -3492,11 +3580,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         if let peer = chatInteraction.peer {
             if peer.isRestrictedChannel, let reason = peer.restrictionText {
-                alert(for: mainWindow, info: reason, completion: { [weak self] in
+                alert(for: context.window, info: reason, completion: { [weak self] in
                     self?.dismiss()
                 })
             } else if chatInteraction.presentation.isNotAccessible {
-                alert(for: mainWindow, info: peer.isChannel ? L10n.chatChannelUnaccessible : L10n.chatGroupUnaccessible, completion: { [weak self] in
+                alert(for: context.window, info: peer.isChannel ? L10n.chatChannelUnaccessible : L10n.chatGroupUnaccessible, completion: { [weak self] in
                     self?.dismiss()
                 })
             }
