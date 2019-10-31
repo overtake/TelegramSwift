@@ -53,8 +53,8 @@ public class ModalInteractions {
     
     var doneUpdatable:(((TitleButton)->Void)->Void)? = nil
     var cancelUpdatable:(((TitleButton)->Void)->Void)? = nil
-    
-    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50, alignCancelLeft: Bool = false)  {
+    let singleButton: Bool
+    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50, alignCancelLeft: Bool = false, singleButton: Bool = false)  {
         self.drawBorder = drawBorder
         self.accept = accept
         self.cancel = cancel
@@ -62,6 +62,7 @@ public class ModalInteractions {
         self.cancelTitle = cancelTitle
         self.height = height
         self.alignCancelLeft = alignCancelLeft
+        self.singleButton = singleButton
     }
     
     public func updateEnables(_ enable:Bool) -> Void {
@@ -100,6 +101,13 @@ private class ModalInteractionsContainer : View {
         cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
         borderView?.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
+        
+        if interactions.singleButton {
+            acceptView.set(background: theme.colors.background, for: .Normal)
+            acceptView.set(background: theme.colors.grayForeground.withAlphaComponent(0.25), for: .Highlight)
+        } else {
+            acceptView.set(background: theme.colors.background, for: .Normal)
+        }
     }
     
     init(interactions:ModalInteractions, modal:Modal) {
@@ -117,6 +125,12 @@ private class ModalInteractionsContainer : View {
             
         } else {
             cancelView = nil
+        }
+        if interactions.singleButton {
+            acceptView.set(background: presentation.colors.background, for: .Normal)
+            acceptView.set(background: presentation.colors.grayForeground.withAlphaComponent(0.25), for: .Highlight)
+        } else {
+            acceptView.set(background: presentation.colors.background, for: .Normal)
         }
         
         if interactions.drawBorder {
@@ -207,14 +221,20 @@ private class ModalInteractionsContainer : View {
     fileprivate override func layout() {
         super.layout()
         
-        acceptView.centerY(x:frame.width - acceptView.frame.width - 30)
-        if let cancelView = cancelView {
-            if interactions.alignCancelLeft {
-                cancelView.centerY(x: 30)
-            } else {
-                cancelView.centerY(x:acceptView.frame.minX - cancelView.frame.width - 30)
+        if self.interactions.singleButton {
+            acceptView.frame = bounds
+        } else {
+            acceptView.centerY(x:frame.width - acceptView.frame.width - 30)
+            if let cancelView = cancelView {
+                if interactions.alignCancelLeft {
+                    cancelView.centerY(x: 30)
+                } else {
+                    cancelView.centerY(x:acceptView.frame.minX - cancelView.frame.width - 30)
+                }
             }
         }
+        
+        
         borderView?.frame = NSMakeRect(0, 0, frame.width, .borderSize)
     }
     
@@ -258,6 +278,19 @@ private final class ModalHeaderView: View {
             addSubview(rightButton!)
         }
         
+        if let left = data.left {
+            leftButton = ImageButton()
+            if let image = left.image {
+                leftButton?.set(image: image, for: .Normal)
+            }
+            leftButton?.set(handler: { _ in
+                left.handler?()
+            }, for: .Click)
+            
+            _ = leftButton?.sizeToFit()
+            addSubview(leftButton!)
+        }
+        
         addSubview(titleView)
     }
     
@@ -267,6 +300,11 @@ private final class ModalHeaderView: View {
         if let rightButton = rightButton {
             additionalSize += rightButton.frame.width * 2
             rightButton.centerY(x: frame.width - rightButton.frame.width - 20)
+        }
+        
+        if let leftButton = leftButton {
+            additionalSize += leftButton.frame.width * 2
+            leftButton.centerY(x: 20)
         }
         
         titleView.layout?.measure(width: frame.width - 40 - additionalSize)
@@ -302,6 +340,9 @@ private final class ModalHeaderView: View {
 
             if let image = header.right?.image {
                 rightButton?.set(image: image, for: .Normal)
+            }
+            if let image = header.left?.image {
+                leftButton?.set(image: image, for: .Normal)
             }
         }
         needsLayout = true
@@ -343,7 +384,7 @@ extension Modal : ObservableViewDelegate {
 }
 
 public class Modal: NSObject {
-    
+    private let visualEffectView: NSVisualEffectView?
     private var background:ModalBackground
     fileprivate var controller:ModalViewController?
     private var container:ModalContainerView!
@@ -356,7 +397,9 @@ public class Modal: NSObject {
     fileprivate let animated: Bool
     private let isOverlay: Bool
     private let animationType: ModalAnimationType
-    public init(controller:ModalViewController, for window:Window, animated: Bool = true, isOverlay: Bool, animationType: ModalAnimationType) {
+    private let parentView: NSView?
+    public init(controller:ModalViewController, for window:Window, animated: Bool = true, isOverlay: Bool, animationType: ModalAnimationType, parentView: NSView? = nil) {
+        self.parentView = parentView
         self.animationType = animationType
         self.controller = controller
         self.window = window
@@ -367,6 +410,14 @@ public class Modal: NSObject {
         background.backgroundColor = controller.background
         background.layer?.disableActions()
         self.interactions = controller.modalInteractions
+        if controller.isVisualEffectBackground {
+            self.visualEffectView = NSVisualEffectView(frame: NSZeroRect)
+            self.visualEffectView!.material = presentation.colors.isDark ? .dark : .light
+            self.visualEffectView!.blendingMode = .withinWindow
+            self.visualEffectView?.wantsLayer = true
+        } else {
+            self.visualEffectView = nil
+        }
         super.init()
         controller.modal = self
         if let interactions = interactions {
@@ -375,23 +426,27 @@ public class Modal: NSObject {
         }
         if let header = controller.modalHeader {
             headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), data: header)
+            headerView?.backgroundColor = controller.headerBackground
             headerView?.controller = controller
         }
        
         if controller.isFullScreen {
-            controller._frameRect = window.contentView!.bounds
+            controller._frameRect = topView.bounds
         }
         
         container = ModalContainerView(frame: containerRect)
         container.autoresizingMask = []
         container.autoresizesSubviews = true
-        container.layer?.cornerRadius = .cornerRadius
+        container.layer?.cornerRadius = 10
         container.layer?.shouldRasterize = true
         container.layer?.rasterizationScale = CGFloat(System.backingScale)
         container.backgroundColor = controller.containerBackground
         
-        container.addSubview(controller.view)
-        
+        if !controller.contentBelowBackground {
+            container.addSubview(controller.view)
+        } else {
+            controller.loadViewIfNeeded()
+        }
         
         if let headerView = headerView {
             container.addSubview(headerView)
@@ -467,6 +522,18 @@ public class Modal: NSObject {
         activeModals.append(WeakReference(value: self))
     }
     
+    private var topView: NSView {
+        if let parentView = self.parentView {
+            return parentView
+        } else {
+            return self.window.contentView!
+        }
+    }
+    
+    public var containerView: NSView {
+        return self.container
+    }
+    
     func observableView(_ view: NSView, didAddSubview: NSView) {
         if isOverlay {
             var subviews = self.window.contentView!.subviews
@@ -507,9 +574,9 @@ public class Modal: NSObject {
             
             controller?.view._change(size: size, animated: animated)
             controller?.view._change(pos: NSMakePoint(0, headerOffset), animated: animated)
-            controller?.didResizeView(size, animated: animated)
             CATransaction.commit()
         }
+        controller?.didResizeView(size, animated: animated)
        
     }
     
@@ -532,7 +599,7 @@ public class Modal: NSObject {
        return NSZeroRect
     }
     
-    public func close(_ callAcceptInteraction:Bool = false) ->Void {
+    public func close(_ callAcceptInteraction:Bool = false, animationType: ModalAnimationCloseBehaviour = .common) ->Void {
         window.removeAllHandlers(for: self)
         controller?.viewWillDisappear(true)
         
@@ -546,10 +613,22 @@ public class Modal: NSObject {
         if callAcceptInteraction, let interactionsView = interactionsView {
             interactionsView.interactions.accept?()
         }
+        let background: NSView
+        if let visualEffectView = self.visualEffectView {
+            background = visualEffectView
+        } else {
+            background = self.background
+        }
+        if let controller = controller, controller.contentBelowBackground {
+            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { [weak self] _ in
+                self?.controller?.view.removeFromSuperview()
+            })
+        }
         
-        background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self] (complete) in
+        
+        background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self, weak background] (complete) in
             if let stongSelf = self {
-                stongSelf.background.removeFromSuperview()
+                background?.removeFromSuperview()
                 stongSelf.controller?.view.removeFromSuperview()
                 stongSelf.controller?.viewDidDisappear(true)
                 stongSelf.controller?.modal = nil
@@ -557,6 +636,50 @@ public class Modal: NSObject {
             }
         })
        
+        switch animationType {
+        case .common:
+            break
+        case let .scaleToRect(newRect):
+            let view = self.container!
+            let oldRect = self.container.frame
+            view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+            view.layer?.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+            view.layer?.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+        }
+    }
+    
+    private var subview: NSView?
+    
+    public func removeSubview(animated: Bool) {
+        if let subview = self.subview {
+            if animated {
+                subview.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak subview] _ in
+                    subview?.removeFromSuperview()
+                })
+            } else {
+                subview.removeFromSuperview()
+            }
+        }
+        self.subview = nil
+    }
+    
+    public func addSubview(_ view: NSView, animated: Bool) {
+        if let subview = self.subview {
+            if animated {
+                subview.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak subview] _ in
+                    subview?.removeFromSuperview()
+                })
+            } else {
+                subview.removeFromSuperview()
+            }
+        }
+        
+        view.frame = container.bounds
+        self.container.addSubview(view)
+        if animated {
+            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        }
+        self.subview = view
     }
     
     deinit {
@@ -580,14 +703,27 @@ public class Modal: NSObject {
         return nil
     }
     
-    func show() -> Void {
+    public func show() -> Void {
         // if let view
         if let controller = controller {
             disposable.set((controller.ready.get() |> take(1)).start(next: { [weak self, weak controller] ready in
-                if let strongSelf = self, let view = strongSelf.window.contentView, let controller = controller {
+                if let strongSelf = self, let controller = controller {
+                    let view = strongSelf.topView
+                    if controller.contentBelowBackground {
+                        view.addSubview(controller.view)
+                        controller.view.center()
+                        if strongSelf.animated {
+                            controller.view.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.4, timingFunction: .spring)
+                        }
+                    }
                     strongSelf.controller?.viewWillAppear(true)
+                    strongSelf.visualEffectView?.frame = view.bounds
                     strongSelf.background.frame = view.bounds
-                    strongSelf.container.center()
+                    if controller.isFullScreen {
+                        strongSelf.container.frame = view.bounds
+                    } else {
+                        strongSelf.container.center()
+                    }
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
                         strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
@@ -598,10 +734,18 @@ public class Modal: NSObject {
                                 strongSelf.container.layer?.animatePosition(from: NSMakePoint(origin.x, origin.y + 100), to: origin, timingFunction: .spring)
                             case .scaleCenter:
                                 strongSelf.container.layer?.animateScaleSpring(from: 0.7, to: 1.0, duration: 0.2, bounce: false)
+                            case let .scaleFrom(oldRect):
+                                let view = strongSelf.container!
+                                let newRect = view.frame
+                                view.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                                view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.3, timingFunction: .spring)
+                                view.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: 0.3, timingFunction: .spring)
+                                view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
+
                             }
                         }
                     }
-                    
+                    strongSelf.visualEffectView?.autoresizingMask = [.width,.height]
                     strongSelf.background.autoresizingMask = [.width,.height]
                     strongSelf.background.customHandler.layout = { [weak strongSelf] view in
                         strongSelf?.container.center()
@@ -624,10 +768,18 @@ public class Modal: NSObject {
                         }
                     }
                     
-                    if let belowView = belowView {
-                        view.addSubview(strongSelf.background, positioned: .below, relativeTo: belowView)
+                    let background: NSView
+                    if let visualEffectView = strongSelf.visualEffectView {
+                        background = visualEffectView
+                        visualEffectView.addSubview(strongSelf.background)
                     } else {
-                        view.addSubview(strongSelf.background)
+                        background = strongSelf.background
+                    }
+                    
+                    if let belowView = belowView {
+                        view.addSubview(background, positioned: .below, relativeTo: belowView)
+                    } else {
+                        view.addSubview(background)
                     }
                     if let value = strongSelf.controller?.becomeFirstResponder(), value {
                         _ = strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
@@ -682,6 +834,11 @@ public func closeAllModals() {
 public enum ModalAnimationType {
     case bottomToCenter
     case scaleCenter
+    case scaleFrom(NSRect)
+}
+public enum ModalAnimationCloseBehaviour {
+    case common
+    case scaleToRect(NSRect)
 }
 
 public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {

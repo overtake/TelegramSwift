@@ -41,13 +41,28 @@ class SendingClockProgress: View {
         self.layer?.addSublayer(clockFrame)
         self.layer?.addSublayer(clockHour)
         self.layer?.addSublayer(clockMin)
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        clockMin.frame = focus(theme.icons.chatSendingOutMin.backingSize)
+        clockHour.frame = focus(theme.icons.chatSendingOutHour.backingSize)
     }
     
     
     func set(item: ChatRowItem) {
-        clockFrame.contents = theme.chat.sendingFrameIcon(item)
-        clockHour.contents = theme.chat.sendingHourIcon(item)
-        clockMin.contents = theme.chat.sendingMinIcon(item)
+        clockFrame.contents = item.presentation.chat.sendingFrameIcon(item)
+        clockHour.contents = item.presentation.chat.sendingHourIcon(item)
+        clockMin.contents = item.presentation.chat.sendingMinIcon(item)
+        viewDidMoveToWindow()
+    }
+    
+    func applyGray() {
+        clockFrame.contents = theme.icons.chatSendingOutFrame
+        clockHour.contents = theme.icons.chatSendingOutHour
+        clockMin.contents = theme.icons.chatSendingOutMin
         viewDidMoveToWindow()
     }
     
@@ -77,22 +92,26 @@ class SendingClockProgress: View {
     private func animateHour() -> Void {
         let animation = CABasicAnimation(keyPath: "transform.rotation.z")
         animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-        animation.duration = (minute_duration * 4.0) + 0.6
-        animation.repeatCount = .greatestFiniteMagnitude
-        animation.toValue = (Double.pi * 2.0) as NSNumber
-        animation.isRemovedOnCompletion = false
-        clockHour.add(animation, forKey: "rotate")
+        animation.duration = 6
+        animation.repeatCount = .infinity
+        animation.fromValue = 0
+        animation.toValue = (Double.pi * 2.0)
+        animation.beginTime = 1.0
+        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+        clockHour.add(animation, forKey: "clockFrameAnimation")
     }
     
 
     private func animateMin() -> Void {
         let animation = CABasicAnimation(keyPath: "transform.rotation.z")
         animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-        animation.duration = minute_duration
-        animation.repeatCount = .greatestFiniteMagnitude
-        animation.toValue = (Double.pi * 2.0) as NSNumber
-        animation.isRemovedOnCompletion = false
-        clockMin.add(animation, forKey: "rotate")
+        animation.duration = 1
+        animation.repeatCount = .infinity
+        animation.fromValue = 0
+        animation.toValue = (Double.pi * 2.0)
+        animation.beginTime = 1.0
+        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+        clockMin.add(animation, forKey: "clockFrameAnimation")
     }
     
     public func stopAnimating() -> Void {

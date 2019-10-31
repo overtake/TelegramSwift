@@ -192,11 +192,16 @@ class ChatSelectText : NSObject {
     private var lastPressureEventStage = 0
     private var inPressedState = false
     
+    private var lastSelectdMessageId: MessageId?
+    
     init(_ table:TableView) {
         self.table = table
     }
     
-    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     func initializeHandlers(for window:Window, chatInteraction:ChatInteraction) {
         

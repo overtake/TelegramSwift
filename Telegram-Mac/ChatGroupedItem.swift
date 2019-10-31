@@ -279,7 +279,7 @@ class ChatGroupedItem: ChatRowItem {
         items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: { [weak self] in
             guard let `self` = self else {return}
             let messageIds = self.layout.messages.map{$0.id}
-            self.chatInteraction.update({ current in
+            self.chatInteraction.withToggledSelectedMessage({ current in
                 var current = current
                 for id in messageIds {
                     current = current.withToggledSelectedMessage(id)
@@ -441,7 +441,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     private var selectionBackground: CornerView = CornerView()
     
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         guard let item = item as? ChatGroupedItem, let window = window as? Window else { return nil }
         
         let location = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -452,12 +452,12 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 if contentNode is ChatGIFContentView {
                     if let file = contentNode.media as? TelegramMediaFile {
                         let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                        return .file(reference, GifPreviewModalView.self)
+                        return (.file(reference, GifPreviewModalView.self), contentNode)
                     }
                 } else if contentNode is ChatInteractiveContentView {
                     if let image = contentNode.media as? TelegramMediaImage {
                         let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
-                        return .image(reference, ImagePreviewModalView.self)
+                        return (.image(reference, ImagePreviewModalView.self), contentNode)
                     }
                 }
             }
@@ -493,7 +493,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     override func updateColors() {
         super.updateColors()
         selectionBackground.layer?.cornerRadius = .cornerRadius
-        selectionBackground.background = theme.colors.blackTransparent
+        selectionBackground.background = .blackTransparent
     }
     
     override func notify(with value: Any, oldValue: Any, animated: Bool) {
@@ -676,7 +676,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             for i in 0 ..< item.layout.count {
                 if NSPointInRect(location, item.layout.frame(at: i)) {
                     let id = item.layout.messages[i].id
-                    item.chatInteraction.update({ current in
+                    item.chatInteraction.withToggledSelectedMessage({ current in
                         if (select && !current.isSelectedMessageId(id)) || (!select && current.isSelectedMessageId(id)) {
                             return current.withToggledSelectedMessage(id)
                         }
@@ -689,7 +689,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         }
         
         if !applied {
-            item.chatInteraction.update({ current in
+            item.chatInteraction.withToggledSelectedMessage({ current in
                 return item.layout.messages.reduce(current, { current, message -> ChatPresentationInterfaceState in
                     if (select && !current.isSelectedMessageId(message.id)) || (!select && current.isSelectedMessageId(message.id)) {
                         return current.withToggledSelectedMessage(message.id)
@@ -709,7 +709,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         guard let window = window as? Window else {return}
 
         if onRightClick {
-            item.chatInteraction.update({ current in
+            item.chatInteraction.withToggledSelectedMessage({ current in
                 var current: ChatPresentationInterfaceState = current
                 for message in item.layout.messages {
                     current = current.withToggledSelectedMessage(message.id)
@@ -727,7 +727,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         if contentView.mouseInside() {
             for i in 0 ..< item.layout.count {
                 if NSPointInRect(location, item.layout.frame(at: i)) {
-                    item.chatInteraction.update({
+                    item.chatInteraction.withToggledSelectedMessage({
                         $0.withToggledSelectedMessage(item.layout.messages[i].id)
                     })
                     selected = true
@@ -739,7 +739,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
 
         if !selected {
             let select = !isHasSelectedItem
-            item.chatInteraction.update({ current in
+            item.chatInteraction.withToggledSelectedMessage({ current in
                 return item.layout.messages.reduce(current, { current, message -> ChatPresentationInterfaceState in
                     if (select && !current.isSelectedMessageId(message.id)) || (!select && current.isSelectedMessageId(message.id)) {
                         return current.withToggledSelectedMessage(message.id)

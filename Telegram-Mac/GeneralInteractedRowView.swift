@@ -11,7 +11,7 @@ import TGUIKit
 
 
 class GeneralInteractedRowView: GeneralRowView {
-    
+    private let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
     private(set) var textView:TextView?
     private(set) var descriptionView: TextView?
@@ -22,7 +22,6 @@ class GeneralInteractedRowView: GeneralRowView {
         
         nextView.image = theme.icons.generalNext
         
-
         if let item = item as? GeneralInteractedRowItem {
             
             if let descLayout = item.descLayout {
@@ -30,7 +29,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     descriptionView = TextView()
                     descriptionView?.userInteractionEnabled = false
                     descriptionView?.isSelectable = false
-                    addSubview(descriptionView!)
+                    descriptionView?.isEventLess = true
+                    containerView.addSubview(descriptionView!)
                 }
                 descriptionView?.update(descLayout)
             } else {
@@ -42,7 +42,7 @@ class GeneralInteractedRowView: GeneralRowView {
             if case let .switchable(stateback) = item.type {
                 if switchView == nil {
                     switchView = SwitchView(frame: NSMakeRect(0, 0, 32, 20))
-                    addSubview(switchView!)
+                    containerView.addSubview(switchView!)
                 }
                 switchView?.autoswitch = item.autoswitch
                 switchView?.presentation = item.switchAppearance
@@ -68,7 +68,7 @@ class GeneralInteractedRowView: GeneralRowView {
                     textView?.animates = false
                     textView?.userInteractionEnabled = false
                     textView?.isEventLess = true
-                    addSubview(textView!)
+                    containerView.addSubview(textView!)
                 }
                 let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
                 
@@ -79,12 +79,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 textView?.removeFromSuperview()
                 textView = nil
             }
-            
-            
-            textView?.backgroundColor = theme.colors.background
-            
-           
-            
+            textView?.backgroundColor = backdorColor
             
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
@@ -102,74 +97,43 @@ class GeneralInteractedRowView: GeneralRowView {
             if case .nextContext = item.type {
                 needNextImage = true
             }
+            if case .contextSelector = item.type {
+                needNextImage = true
+            }
             if needNextImage {
                 nextView.isHidden = false
                 nextView.image = item.isSelected ? nil : theme.icons.generalNext
                 nextView.sizeToFit()
             }
-            
-            
+        
+            switch item.viewType {
+            case .legacy:
+                containerView.setCorners([], animated: false)
+            case let .modern(position, _):
+                containerView.setCorners(position.corners, animated: animated)
+            }
         }
         super.set(item: item, animated: animated)
-        self.needsLayout = true
-        self.needsDisplay = true
+        
+        
+        containerView.needsLayout = true
+        containerView.needsDisplay = true
     }
     
     override var backdorColor: NSColor {
-        return isSelect ? theme.colors.blueSelect : theme.colors.background
-    }
-    private var mouseIsDown: Bool = false
-    override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with: event)
-        mouseIsDown = true
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-        if mouseInside(), mouseIsDown, event.clickCount == 1, let item = item as? GeneralInteractedRowItem {
-            if item.enabled {
-                if let textView = self.textView {
-                    switch item.type {
-                    case let .contextSelector(_, items):
-                        showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
-                        return
-                    default:
-                        break
-                    }
-                }
-                
-                
-                item.action()
-                switch item.type {
-                case let .switchable(enabled):
-                    if item.autoswitch {
-                        item.type = .switchable(!enabled)
-                        self.switchView?.setIsOn(!enabled)
-                    }
-                    
-                default:
-                    break
-                }
-            } else {
-                item.disabledAction()
-            }
-        }
-        mouseIsDown = false
+        return isSelect ? theme.colors.accentSelect : theme.colors.background
     }
     
     override func updateColors() {
-        super.updateColors()
-        descriptionView?.backgroundColor = backdorColor
-        textView?.backgroundColor = backdorColor
-        
-        if isSelect {
-            // overlay.set(background: .clear, for: .Highlight)
-        } else {
-            //overlay.set(background: theme.colors.grayTransparent, for: .Highlight)
-            
+        if let item = item as? GeneralInteractedRowItem {
+            self.background = item.viewType.rowBackground
+            let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.grayHighlight
+            descriptionView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
+            textView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
+            containerView.set(background: self.backdorColor, for: .Normal)
+            containerView.set(background: highlighted, for: .Highlight)
         }
-        // overlay.set(background: backdorColor, for: .Hover)
-        
+        containerView.needsDisplay = true
     }
     
     override func shakeView() {
@@ -191,42 +155,72 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
-        super.draw(layer, in: ctx)
-        
-        if let item = item as? GeneralInteractedRowItem {
+                
+        if let item = item as? GeneralInteractedRowItem, layer == containerView.layer {
             
-            
-            let t = item.isSelected ? item.activeThumb : item.thumb
-            if let thumb = t {
-                var f = focus(thumb.thumb.backingSize)
-                if item.descLayout != nil {
-                    f.origin.y = 11
-                }
-                let icon = thumb.thumb //isSelect ? ControlStyle(highlightColor: .white).highlight(image: thumb.thumb) : 
-                ctx.draw(icon, in: NSMakeRect(item.inset.left, f.minY, f.width, f.height))
-            }
-            
-            if item.drawCustomSeparator, !isSelect {
-                ctx.setFillColor(theme.colors.border.cgColor)
-                ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, frame.width - (item.inset.left + item.inset.right + textXAdditional), .borderSize))
-            }
-            
-            if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
-                var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
-                textRect.origin.x = item.inset.left + textXAdditional
-                textRect.origin.y -= 1
-                if item.descLayout != nil {
-                    textRect.origin.y = 10
+            switch item.viewType {
+            case .legacy:
+                super.draw(layer, in: ctx)
+                let t = item.isSelected ? item.activeThumb : item.thumb
+                if let thumb = t {
+                    var f = focus(thumb.thumb.backingSize)
+                    if item.descLayout != nil {
+                        f.origin.y = 11
+                    }
+                    let icon = thumb.thumb //isSelect ? ControlStyle(highlightColor: .white).highlight(image: thumb.thumb) :
+                    ctx.draw(icon, in: NSMakeRect(item.inset.left, f.minY, f.width, f.height))
                 }
                 
-                nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                if item.drawCustomSeparator, !isSelect {
+                    ctx.setFillColor(theme.colors.border.cgColor)
+                    ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, frame.width - (item.inset.left + item.inset.right + textXAdditional), .borderSize))
+                }
+                
+                if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
+                    var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
+                    textRect.origin.x = item.inset.left + textXAdditional
+                    textRect.origin.y -= 1
+                    if item.descLayout != nil {
+                        textRect.origin.y = 10
+                    }
+                    nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                }
+                
+                if case let .colorSelector(stateback) = item.type {
+                    ctx.setFillColor(stateback.cgColor)
+                    ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels(backingScaleFactor, (frame.height - 14) / 2), 14, 14))
+                }
+            case let .modern(position, insets):
+                let t = item.isSelected ? item.activeThumb : item.thumb
+                if let thumb = t {
+                    var f = focus(thumb.thumb.backingSize)
+                    if item.descLayout != nil {
+                        f.origin.y = insets.top
+                    }
+                    let icon = thumb.thumb 
+                    ctx.draw(icon, in: NSMakeRect(insets.left + (thumb.thumbInset ?? 0), f.minY, f.width, f.height))
+                }
+                
+                if position.border, !isSelect  {
+                    ctx.setFillColor(theme.colors.border.cgColor)
+                    ctx.fill(NSMakeRect(textXAdditional + insets.left, containerView.frame.height - .borderSize, containerView.frame.width - (insets.left + insets.right + textXAdditional), .borderSize))
+                }
+                
+                if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
+                    var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
+                    textRect.origin.x = insets.left + textXAdditional
+                    textRect.origin.y = insets.top
+                    
+                    nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                }
+                
+                if case let .colorSelector(stateback) = item.type {
+                    ctx.setFillColor(stateback.cgColor)
+                    ctx.fillEllipse(in: NSMakeRect(containerView.frame.width - 14 - insets.right, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - 14) / 2), 14, 14))
+                }
             }
             
-            if case let .colorSelector(stateback) = item.type {
-                ctx.setFillColor(stateback.cgColor)
-                ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - 14) / 2), 14, 14))
-            }
+            
         }
         
     }
@@ -235,8 +229,49 @@ class GeneralInteractedRowView: GeneralRowView {
         super.init(frame: frameRect)
         
         nextView.sizeToFit()
-        addSubview(nextView)
+        containerView.addSubview(nextView)
+        self.containerView.displayDelegate = self
+        self.addSubview(self.containerView)
         
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Hover)
+        
+        containerView.set(handler: { [weak self] _ in
+            if let `self` = self, let item = self.item as? GeneralInteractedRowItem {
+                if item.enabled {
+                    if let textView = self.textView {
+                        switch item.type {
+                        case let .contextSelector(_, items):
+                            showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
+                            return
+                        default:
+                            break
+                        }
+                    }
+                    
+                    switch item.type {
+                    case let .switchable(enabled):
+                        if item.autoswitch {
+                            item.type = .switchable(!enabled)
+                            self.switchView?.send(event: .Click)
+                            return
+                        }
+                    default:
+                        break
+                    }
+                    item.action()
+                } else {
+                    item.disabledAction()
+                }
+            }
+        }, for: .Click)
     }
     
     required init?(coder: NSCoder) {
@@ -249,33 +284,60 @@ class GeneralInteractedRowView: GeneralRowView {
         super.layout()
         
         if let item = item as? GeneralInteractedRowItem {
-            let inset = general?.inset ?? NSEdgeInsetsZero
+            let insets = item.inset
             
-            if let descriptionView = descriptionView {
-                
-                descriptionView.setFrameOrigin(inset.left + textXAdditional, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.height - descriptionView.frame.height - 6))
-            }
-            
-            let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (inset.right == 0 ? 10 : 0)
-            
-            if let switchView = switchView {
-                switchView.centerY(x:frame.width - inset.right - switchView.frame.width - nextInset)
-            }
-            if let textView = textView {
-                var width:CGFloat = 100
-                if let name = item.nameLayout {
-                    width = frame.width - name.0.size.width - nextInset - inset.right - inset.left - 10
+            switch item.viewType {
+            case .legacy:
+                self.containerView.frame = bounds
+                self.containerView.setCorners([])
+                if let descriptionView = descriptionView {
+                    descriptionView.setFrameOrigin(insets.left + textXAdditional, floorToScreenPixels(backingScaleFactor, frame.height - descriptionView.frame.height - 6))
                 }
+                let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (insets.right == 0 ? 10 : 0)
                 
-                
-                textView.layout?.measure(width: width)
-                textView.update(textView.layout)
-                textView.centerY(x:frame.width - inset.right - textView.frame.width - nextInset)
-                if !nextView.isHidden {
-                    textView.setFrameOrigin(textView.frame.minX,textView.frame.minY - 1)
+                if let switchView = switchView {
+                    switchView.centerY(x:frame.width - insets.right - switchView.frame.width - nextInset)
                 }
+                if let textView = textView {
+                    var width:CGFloat = 100
+                    if let name = item.nameLayout {
+                        width = frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
+                    }
+                    textView.layout?.measure(width: width)
+                    textView.update(textView.layout)
+                    textView.centerY(x:frame.width - insets.right - textView.frame.width - nextInset)
+                    if !nextView.isHidden {
+                        textView.setFrameOrigin(textView.frame.minX,textView.frame.minY - 1)
+                    }
+                }
+                nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
+            case let .modern(position, innerInsets):
+                
+                self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), insets.top, item.blockWidth, frame.height - insets.bottom - insets.top)
+                self.containerView.setCorners(position.corners)
+                
+                if let descriptionView = self.descriptionView {
+                    descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
+                }
+                let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6
+                
+                if let switchView = switchView {
+                    switchView.centerY(x: containerView.frame.width - innerInsets.right - switchView.frame.width - nextInset)
+                }
+                if let textView = textView {
+                    var width:CGFloat = 100
+                    if let name = item.nameLayout {
+                        width = containerView.frame.width - name.0.size.width - innerInsets.right - insets.left - 10
+                    }
+                    textView.layout?.measure(width: width)
+                    textView.update(textView.layout)
+                    textView.centerY(x: containerView.frame.width - innerInsets.right - textView.frame.width - nextInset)
+                    if !nextView.isHidden {
+                        textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)
+                    }
+                }
+                nextView.centerY(x: containerView.frame.width - innerInsets.right - nextView.frame.width)
             }
-            nextView.centerY(x: frame.width - (inset.right == 0 ? 10 : inset.right) - nextView.frame.width)
         }
         
         

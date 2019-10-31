@@ -86,7 +86,7 @@ public class TimableProgressView: View {
     
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        ctx.round(frame.size, floorToScreenPixels(scaleFactor: backingScaleFactor, frame.width/2))
+        ctx.round(frame.size, floorToScreenPixels(backingScaleFactor, frame.width/2))
         
         ctx.setFillColor(theme.backgroundColor.cgColor)
         ctx.fill(bounds)

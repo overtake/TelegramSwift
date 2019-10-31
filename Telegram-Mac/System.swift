@@ -36,7 +36,13 @@ var mainWindow:Window {
     fatalError("window not found")
 }
 
-
+var systemAppearance: NSAppearance {
+    if #available(OSX 10.14, *) {
+        return NSApp.effectiveAppearance
+    } else {
+        return NSAppearance.current
+    }
+}
 
 
 public func deliverOnPrepareQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {

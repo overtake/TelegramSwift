@@ -18,7 +18,7 @@ class GalleryThumbsControl: ViewController {
     
     init(interactions: GalleryInteractions) {
         self.interactions = interactions
-        super.init(frame: NSMakeRect(0, 0, 400, 50))
+        super.init(frame: NSMakeRect(0, 0, 400, 80))
     }
     
     private(set) var items:[MGalleryItem] = []

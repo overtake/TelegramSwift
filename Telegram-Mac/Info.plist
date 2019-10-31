@@ -19,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>5.7</string>
+	<string>5.8.1</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -29,11 +29,12 @@
 			<array>
 				<string>tg</string>
 				<string>telegram</string>
+				<string>ton</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>181200</string>
+	<string>185481</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>

@@ -129,9 +129,10 @@ class ChatActivitiesModel: Node {
     private(set) var isActive:Bool = false
     private let activityView:ChatActivitiesView
     private let disposable:MetaDisposable = MetaDisposable()
-    
+    private(set) var theme: ActivitiesTheme?
     func update(with activities:(PeerId, [(Peer, PeerInputActivity)]), for width:CGFloat, theme:ActivitiesTheme, layout:@escaping(Bool)->Void) {
         isActive = !activities.1.isEmpty
+        self.theme = theme
         activityView.updateBackground(theme.backgroundColor)
         disposable.set(renderedActivities(activities, for: width, theme:theme).start(next: { [weak self] data in
             self?.activityView.layout(with: data, width: width, theme: theme)

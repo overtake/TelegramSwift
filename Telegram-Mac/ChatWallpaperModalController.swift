@@ -142,9 +142,7 @@ class ChatWallpaperModalController: ModalViewController {
                     }
                 }
             })
-        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
-            self?.close()
-        }, drawBorder: true, height: 50, alignCancelLeft: true)
+        }, drawBorder: true, height: 50, singleButton: true)
        
         return interactions
     }
@@ -153,7 +151,9 @@ class ChatWallpaperModalController: ModalViewController {
         return true
     }
     public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: L10n.chatWPBackgroundTitle), right: nil)
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: L10n.chatWPBackgroundTitle), right: nil)
     }
     
     override func measure(size: NSSize) {
@@ -195,7 +195,7 @@ class ChatWallpaperModalController: ModalViewController {
                 showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: context.window)
             default:
                 _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                    return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.withUpdatedBubbled(true)
+                    return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
                 }).start()
                 delay(0.15, closure: {
                     close()
@@ -204,8 +204,8 @@ class ChatWallpaperModalController: ModalViewController {
             
         }, deleteWallpaper: { wallpaper, telegramWallpaper in
             if wallpaper.isSemanticallyEqual(to: theme.wallpaper.wallpaper) {
-                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
-                    return $0.updateWallpaper({ $0.withUpdatedWallpaper(.builtin) }).withUpdatedBubbled(true)
+                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    return settings.updateWallpaper({ $0.withUpdatedWallpaper(settings.palette.wallpaper.wallpaper) }).saveDefaultWallpaper()
                 }).start()
             }
             

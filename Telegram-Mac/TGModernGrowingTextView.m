@@ -11,6 +11,13 @@
 #import "DateUtils.h"
 #import "ObjcUtils.h"
 
+@interface TGTextFieldPlaceholder : NSTextField
+
+@end
+
+@interface TGModernGrowingTextView ()
+@property (nonatomic,strong) TGTextFieldPlaceholder *placeholder;
+@end
 
 @implementation MarkdownUndoItem
     -(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be inRange:(NSRange)inRange {
@@ -196,6 +203,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 -(BOOL)becomeFirstResponder {
     return [super becomeFirstResponder];
+}
+
+-(BOOL)resignFirstResponder {
+    return [super resignFirstResponder];
 }
 
 -(void)changeLayoutOrientation:(id)sender {
@@ -590,9 +601,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 
 
--(BOOL)resignFirstResponder {
-   return [super resignFirstResponder];
-}
 
 -(void)setString:(NSString *)string {
     [super setString:string];
@@ -601,9 +609,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
 @end
 
-@interface TGTextFieldPlaceholder : NSTextField
 
-@end
 
 @implementation TGTextFieldPlaceholder
 
@@ -639,7 +645,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 @property (nonatomic,strong) TGGrowingTextView *textView;
 @property (nonatomic,strong) NSScrollView *scrollView;
-@property (nonatomic,strong) TGTextFieldPlaceholder *placeholder;
 @property (nonatomic,assign) BOOL notify_next;
 @property (nonatomic, strong) NSUndoManager *_undo;
 @end
@@ -698,6 +703,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 
         
         _placeholder = [[TGTextFieldPlaceholder alloc] init];
+        _placeholder.layer.opacity = 0.7;
         _placeholder.wantsLayer = YES;
         [_placeholder setBordered:NO];
         [_placeholder setDrawsBackground:NO];
@@ -1008,6 +1014,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [self setNeedsDisplay:YES];
     
     
+    [_textView setNeedsDisplay:YES];
     
     [self refreshAttributes];
     
@@ -1078,12 +1085,15 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             [_placeholder.layer addAnimation:oAnim forKey:@"opacity"];
             
             
+            NSPoint toPoint = self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(self._endXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)));
+            
+            
             CABasicAnimation *pAnim = [CABasicAnimation animationWithKeyPath:@"position"];
             pAnim.removedOnCompletion = YES;
             pAnim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
             pAnim.duration = 0.2;
             pAnim.fromValue = [NSValue valueWithPoint:NSMakePoint(presentX, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
-            pAnim.toValue =  [NSValue valueWithPoint:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(self._endXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
+            pAnim.toValue =  [NSValue valueWithPoint:toPoint];
             
             pAnim.delegate = self;
             [_placeholder.layer removeAnimationForKey:@"position"];
@@ -1142,8 +1152,11 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     if([_placeholderAttributedString isEqualToAttributedString:placeholderAttributedString])
         return;
     
+
+    [_placeholder setAttributedStringValue:placeholderAttributedString];
+    
     _placeholderAttributedString = placeholderAttributedString;
-    [_placeholder setAttributedStringValue:_placeholderAttributedString];
+    [_placeholder setAttributedStringValue:placeholderAttributedString];
     
     [_placeholder sizeToFit];
     

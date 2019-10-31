@@ -96,8 +96,14 @@ class ChatInputAccessory: Node {
             }, for: .Click)
             
             container.set(handler: { [weak self] _ in
-                self?.chatInteraction.forwardMessages(state.interfaceState.forwardMessageIds)
-                self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
+                guard let context = self?.chatInteraction.context else {
+                    return
+                }
+                let fwdMessages = state.interfaceState.forwardMessageIds
+                showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: fwdMessages, emptyPerformOnClose: true)), for: context.window)
+                delay(0.15, closure: {
+                    self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
+                })
             }, for: .Click)
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {

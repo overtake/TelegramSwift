@@ -79,12 +79,14 @@ public class TableResortController {
     fileprivate let start:(Int)->Void
     fileprivate let resort:(Int)->Void
     fileprivate let complete:(Int, Int)->Void
-    public init(resortRange: NSRange, startTimeout: Double = 0.3, start:@escaping(Int)->Void, resort:@escaping(Int)->Void, complete:@escaping(Int, Int)->Void) {
+    fileprivate let updateItems:(TableRowView?, [TableRowItem])->Void
+    public init(resortRange: NSRange, startTimeout: Double = 0.3, start:@escaping(Int)->Void, resort:@escaping(Int)->Void, complete:@escaping(Int, Int)->Void, updateItems:@escaping(TableRowView?, [TableRowItem])->Void = { _, _ in }) {
         self.resortRange = resortRange
         self.startTimeout = startTimeout
         self.start = start
         self.resort = resort
         self.complete = complete
+        self.updateItems = updateItems
     }
     
     func clear() {
@@ -278,11 +280,12 @@ public enum TableScrollState :Equatable {
     case none(TableAnimationInterface?);
     case down(Bool);
     case up(Bool);
+    case upOffset(Bool, CGFloat);
 }
 
 public extension TableScrollState {
     
-    public func swap(to stableId:AnyHashable, innerId: AnyHashable? = nil) -> TableScrollState {
+    func swap(to stableId:AnyHashable, innerId: AnyHashable? = nil) -> TableScrollState {
         switch self {
         case let .top(_, _, animated, focus, inset):
             return .top(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: inset)
@@ -295,7 +298,7 @@ public extension TableScrollState {
         }
     }
     
-    public var animated: Bool {
+    var animated: Bool {
         switch self {
         case let .top(_, _, animated, _, _):
             return animated
@@ -306,6 +309,8 @@ public extension TableScrollState {
         case .down(let animated):
             return animated
         case .up(let animated):
+            return animated
+        case let .upOffset(animated, _):
             return animated
         default:
             return false
@@ -475,6 +480,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func setFrameSize(_ newSize: NSSize) {
         let oldWidth: CGFloat = frame.width
+        let oldHeight: CGFloat = frame.height
+
         if newSize.width > 0 || newSize.height > 0 {
             super.setFrameSize(newSize)
             
@@ -482,6 +489,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                 if let table = table {
                     table.layoutIfNeeded(with: table.visibleRows(), oldWidth: oldWidth)
                 }
+            } else if oldHeight != frame.height {
+                table?.reloadHeightItems()
             }
         }
     }
@@ -566,7 +575,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var separator:TableSeparator = .none
     
-    public var getBackgroundColor:()->NSColor = { presentation.colors.background }
+    public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
+        didSet {
+            if super.layer?.backgroundColor != .clear {
+                super.layer?.backgroundColor = self.getBackgroundColor().cgColor
+            }
+            self.needsDisplay = true
+
+        }
+    }
+    
 
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
@@ -1178,12 +1196,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
                         if !firstTime {
                             let rows:[Int] = [tableView.row(at: NSMakePoint(0, scrollInset - stickView.frame.height)), tableView.row(at: NSMakePoint(0, scrollInset))]
+                            var applied: Bool = false
                             for row in rows {
                                 let row = min(max(0, row), list.count - 1)
                                 if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
                                     view.updateIsVisible(yTopOffset < 0, animated: false)
+                                    applied = true
                                 }
                             }
+                            if !applied {
+                                self.enumerateViews(with: { view in
+                                   (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                                   return true
+                                })
+                            }
+                            
                         }
                         
                         
@@ -1221,6 +1248,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                     stickView?.setFrameOrigin(0, 0)
                     stickView?.header = true
+                    
+                     self.enumerateViews(with: { view in
+                        (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                        return true
+                     })
                 }
 
             }
@@ -1233,12 +1265,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updateScroll()
     }
     
-    public func scrollUp() {
-        self.clipView.scroll(to: NSMakePoint(0, min(clipView.bounds.minY + 30, clipView.bounds.maxY)), animated: true)
+    public func scrollUp(offset: CGFloat = 30.0) {
+        self.clipView.scroll(to: NSMakePoint(0, min(clipView.bounds.minY + offset, clipView.bounds.maxY)), animated: true)
         self.reflectScrolledClipView(clipView)
     }
-    public func scrollDown() {
-        self.clipView.scroll(to: NSMakePoint(0, max(clipView.bounds.minY - 30, 0)), animated: true)
+    
+    
+    public func scrollDown(offset: CGFloat = 30.0) {
+        self.clipView.scroll(to: NSMakePoint(0, max(clipView.bounds.minY - offset, 0)), animated: true)
         self.reflectScrolledClipView(clipView)
     }
     
@@ -1381,43 +1415,28 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             
             NSAnimationContext.runAnimationGroup({ ctx in
-                var y: CGFloat = 0
-                for i in 0 ..< controller.resortRange.location {
-                    y += self.list[i].heightValue
-                }
-                for i in controller.resortRange.location ..< controller.resortRange.max  {
-                    if let resortView = controller.resortView {
-                        if i == current {
-                            if current > start {
-                                y -= (resortView.frame.height - item(at: i).heightValue)
+                if controller.resortRange.location != NSNotFound {
+                    var y: CGFloat = 0
+                    for i in 0 ..< controller.resortRange.location {
+                        y += self.list[i].heightValue
+                    }
+                    for i in controller.resortRange.location ..< controller.resortRange.max  {
+                        if let resortView = controller.resortView {
+                            if i == current {
+                                if current > start {
+                                    y -= (resortView.frame.height - item(at: i).heightValue)
+                                }
+                                y -= self.documentOffset.y
+                                let point = NSMakePoint(resortView.frame.minX, y)
+                                //convert(, from: tableView)
+                                resortView.animator().setFrameOrigin(point)
+                                y = 0
+                                break
                             }
-                            y -= self.documentOffset.y
-                            let point = NSMakePoint(resortView.frame.minX, y)
-                            //convert(, from: tableView)
-                            resortView.animator().setFrameOrigin(point)
-                            y = 0
-                            break
+                            y += item(at: i).heightValue
                         }
-                        y += item(at: i).heightValue
                     }
                 }
-                
-//                if controller.resortRow != controller.currentHoleIndex {
-//                    for i in controller.resortRange.location ..< controller.resortRange.max {
-//                        if let view = viewNecessary(at: i) {
-//                            if controller.currentHoleIndex == i {
-//                                y += view.frame.height
-//                            }
-//                            if i != controller.resortRow {
-//                                contentView.addSubview(view)
-//                                view.animator().setFrameOrigin(NSMakePoint(view.frame.minX, y))
-//                                y += view.frame.height
-//                            }
-//
-//                        }
-//                    }
-//                }
-                
             }, completionHandler: {
                 let view = controller.resortView
                 controller.clear()
@@ -1425,7 +1444,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     view.frame = self.tableView.convert(view.frame, from: view.superview)
                     self.tableView.addSubview(view)
                 }
-                controller.complete(start, current)
+                if controller.resortRange.location != NSNotFound {
+                    controller.complete(start, current)
+                }
             })
             
             
@@ -1451,7 +1472,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         guard let controller = resortController, let resortRow = controller.resortRow, let resortView = controller.resortView else {return}
-        
+        if controller.resortRange.location == NSNotFound {
+            self.stopResorting()
+            return
+        }
         for i in 0 ..< controller.resortRange.location {
             y += self.list[i].heightValue
         }
@@ -1496,6 +1520,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         controller.currentHoleIndex = row
         if controller.prevHoleIndex != controller.currentHoleIndex {
             moveHole(at: controller.prevHoleIndex!, to: controller.currentHoleIndex!, animated: true)
+            controller.updateItems(controller.resortView, self.list.filter { controller.canResort($0.index) })
         }
     }
 
@@ -1572,9 +1597,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
-                view.setFrameSize(NSMakeSize(frame.width, item.heightValue))
+                view.change(size: NSMakeSize(frame.width, item.heightValue), animated: animated)
                 view.set(item: item, animated: animated)
-                view.needsDisplay = true
             } else {
                 self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : options)
                 self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  options)
@@ -1584,6 +1608,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
         //self.moveItem(from: row, to: row)
+    }
+    
+    fileprivate func reloadHeightItems() {
+        self.enumerateItems { item -> Bool in
+            if item.reloadOnTableHeightChanged {
+                self.reloadData(row: item.index)
+            }
+            return true
+        }
     }
     
     public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
@@ -2143,13 +2176,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let oldEmpty = self.isEmpty
         
-        for subview in tableView.subviews.reversed() {
-            if let subview = subview as? NSTableRowView {
-                if tableView.row(for: subview) == -1 {
-                    subview.removeFromSuperview()
-                }
-            }
-        }
+//        for subview in tableView.subviews.reversed() {
+//            if let subview = subview as? NSTableRowView {
+//                if tableView.row(for: subview) == -1 {
+//                    subview.removeFromSuperview()
+//                }
+//            }
+//        }
 
         
         self.beginUpdates()
@@ -2161,7 +2194,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if transition.grouping && !transition.isEmpty {
             self.tableView.beginUpdates()
         }
-        CATransaction.begin()
+        //CATransaction.begin()
         
         
         for (i, item) in list.enumerated() {
@@ -2213,7 +2246,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        CATransaction.commit()
+        //CATransaction.commit()
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }
@@ -2330,7 +2363,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
-        case .up(_), .down(_):
+        case .up, .down, .upOffset:
             self.scroll(to: transition.state)
         case let .saveVisible(side):
             saveVisible(side)
@@ -2361,10 +2394,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             switch searchState {
             case .none:
-                searchView.change(pos: NSMakePoint(0, -searchView.frame.height), animated: transition.animated)
-                searchView.searchView.cancel(false)
+                searchView.change(pos: NSMakePoint(0, -searchView.frame.height), animated: true)
+                searchView.searchView.cancel(true)
             case let .visible(data):
-                searchView.change(pos: NSZeroPoint, animated: transition.animated)
+                searchView.change(pos: NSZeroPoint, animated: true)
                 searchView.applySearchResponder()
                 searchView.updateDatas(data)
             }
@@ -2627,6 +2660,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             } else {
                rowRect.origin = NSZeroPoint
             }
+        case let .upOffset(_animate, offset):
+            animate = _animate
+            if !tableView.isFlipped {
+                rowRect.origin = NSMakePoint(0, max(documentSize.height,frame.height))
+            } else {
+                rowRect.origin = NSZeroPoint
+            }
+            relativeInset = offset
         default:
             fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
         }
@@ -2652,11 +2693,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             case .center:
                 if !tableView.isFlipped {
-                    rowRect.origin.y -= floorToScreenPixels(scaleFactor: backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
+                    rowRect.origin.y -= floorToScreenPixels(backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
                 } else {
                     
                     if rowRect.maxY > height/2.0 {
-                        rowRect.origin.y -= floorToScreenPixels(scaleFactor: backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
+                        rowRect.origin.y -= floorToScreenPixels(backingScaleFactor, (height - rowRect.height) / 2.0) - bottomInset
                     } else {
                         rowRect.origin.y = 0
                     }
@@ -2669,7 +2710,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 fatalError("not implemented")
             }
             
-            if toVisible {
+            if toVisible  {
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.heightValue {
                     if focus.focus {
@@ -2681,7 +2722,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
-        rowRect.origin.y = round(min(max(rowRect.minY + relativeInset,0), documentSize.height - height) + inset.top)
+        rowRect.origin.y = round(min(max(rowRect.minY, 0) + relativeInset, documentSize.height - height) + inset.top)
         if clipView.bounds.minY != rowRect.minY {
             
             var applied = false

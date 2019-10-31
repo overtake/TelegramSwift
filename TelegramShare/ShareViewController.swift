@@ -171,7 +171,7 @@ class ShareViewController: NSViewController {
             })
             |> map { account in
                 if let account = account {
-                    let context = AccountContext(sharedContext: sharedContext, window: Window(contentRect: NSZeroRect, styleMask: [], backing: NSWindow.BackingStoreType.buffered, defer: true), account: account)
+                    let context = AccountContext(sharedContext: sharedContext, window: Window(contentRect: NSZeroRect, styleMask: [], backing: NSWindow.BackingStoreType.buffered, defer: true), tonContext: nil, account: account)
                     return AuthorizedApplicationContext(context: context, shareContext: extensionContext)
                     
                 } else {

@@ -14,7 +14,7 @@ import SwiftSignalKitMac
 import Lottie
 
 
-class ChatMediaAnimatedStickerView: ChatMediaContentView {
+class MediaAnimatedStickerView: ChatMediaContentView {
 
     private let loadResourceDisposable = MetaDisposable()
     private let stateDisposable = MetaDisposable()

@@ -13,10 +13,11 @@
 		9F9B5EAF2255FEDA00728CDC /* TooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */; };
 		9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */; };
 		9FF1DEB7225E285F009512C9 /* SPopoverRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */; };
+		A7C41DB92359E69400CF9402 /* CatalinaStyledSegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB82359E69400CF9402 /* CatalinaStyledSegmentController.swift */; };
+		A7D49478235F226C003E9A25 /* SpinningProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D49477235F226C003E9A25 /* SpinningProgressView.swift */; };
 		C20232B61D845B0B007C9ADE /* TextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B51D845B0B007C9ADE /* TextNode.swift */; };
 		C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232B71D85525C007C9ADE /* ViewUtils.swift */; };
 		C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21178011F17E78E00AC706D /* TimableProgressView.swift */; };
-		C21656C61EE0A7050041A6BA /* SegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21656C51EE0A7050041A6BA /* SegmentedControl.swift */; };
 		C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E5C1DC2534300F98E03 /* SelectingControl.swift */; };
 		C2167E611DC356FD00F98E03 /* LinearProgressControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */; };
 		C219E1D51D87F4A00042F0C8 /* SwiftSignalKitMac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C219E1D41D87F4A00042F0C8 /* SwiftSignalKitMac.framework */; };
@@ -105,6 +106,7 @@
 		C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */; };
 		D04D214C230ED78300609388 /* SPopoverRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D214A230ED78300609388 /* SPopoverRowItem.swift */; };
 		D04D214D230ED78300609388 /* SPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D214B230ED78300609388 /* SPopoverViewController.swift */; };
+		D050518E2342A75D00D93176 /* DisplayLinkAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D050518D2342A75D00D93176 /* DisplayLinkAnimator.swift */; };
 		D0558D8221528DF5006B403D /* ModalTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D8121528DF5006B403D /* ModalTouchBar.swift */; };
 		D05F392022FB37920040F341 /* DatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F391F22FB37920040F341 /* DatePicker.swift */; };
 		D0BEB9922163C1F00055B718 /* SelectionRectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9912163C1F00055B718 /* SelectionRectView.swift */; };
@@ -117,10 +119,11 @@
 		9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TooltipController.swift; sourceTree = "<group>"; };
 		9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentController.swift; sourceTree = "<group>"; };
 		9FF1DEB4225E285F009512C9 /* SPopoverRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SPopoverRowView.swift; path = "../../Telegram-Mac/SPopoverRowView.swift"; sourceTree = "<group>"; };
+		A7C41DB82359E69400CF9402 /* CatalinaStyledSegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalinaStyledSegmentController.swift; sourceTree = "<group>"; };
+		A7D49477235F226C003E9A25 /* SpinningProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpinningProgressView.swift; sourceTree = "<group>"; };
 		C20232B51D845B0B007C9ADE /* TextNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextNode.swift; sourceTree = "<group>"; };
 		C20232B71D85525C007C9ADE /* ViewUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewUtils.swift; sourceTree = "<group>"; };
 		C21178011F17E78E00AC706D /* TimableProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimableProgressView.swift; sourceTree = "<group>"; };
-		C21656C51EE0A7050041A6BA /* SegmentedControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SegmentedControl.swift; sourceTree = "<group>"; };
 		C2167E5C1DC2534300F98E03 /* SelectingControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectingControl.swift; sourceTree = "<group>"; };
 		C2167E601DC356FD00F98E03 /* LinearProgressControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinearProgressControl.swift; sourceTree = "<group>"; };
 		C219E1D41D87F4A00042F0C8 /* SwiftSignalKitMac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSignalKitMac.framework; path = "../../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/SwiftSignalKitMac.framework"; sourceTree = "<group>"; };
@@ -215,6 +218,7 @@
 		C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressContainerView.swift; sourceTree = "<group>"; };
 		D04D214A230ED78300609388 /* SPopoverRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverRowItem.swift; sourceTree = "<group>"; };
 		D04D214B230ED78300609388 /* SPopoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverViewController.swift; sourceTree = "<group>"; };
+		D050518D2342A75D00D93176 /* DisplayLinkAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayLinkAnimator.swift; sourceTree = "<group>"; };
 		D0558D8121528DF5006B403D /* ModalTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalTouchBar.swift; sourceTree = "<group>"; };
 		D05F391F22FB37920040F341 /* DatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePicker.swift; sourceTree = "<group>"; };
 		D0BEB9912163C1F00055B718 /* SelectionRectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionRectView.swift; sourceTree = "<group>"; };
@@ -239,10 +243,18 @@
 		9FC76CAB20DBDD370050CE3B /* segment */ = {
 			isa = PBXGroup;
 			children = (
+				A7C41DB72359E66800CF9402 /* catalina */,
 				9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */,
-				C21656C51EE0A7050041A6BA /* SegmentedControl.swift */,
 			);
 			name = segment;
+			sourceTree = "<group>";
+		};
+		A7C41DB72359E66800CF9402 /* catalina */ = {
+			isa = PBXGroup;
+			children = (
+				A7C41DB82359E69400CF9402 /* CatalinaStyledSegmentController.swift */,
+			);
+			name = catalina;
 			sourceTree = "<group>";
 		};
 		C219E1DE1D8A71680042F0C8 /* layers */ = {
@@ -338,6 +350,7 @@
 				C291ED9A1DB361ED008C6B2A /* KeyboardUtils.swift */,
 				C226741C1DBCDBA8000BA9ED /* ContainableController.swift */,
 				C28BAB0C1DF8550E0027CE3A /* WindowSaver.swift */,
+				D050518D2342A75D00D93176 /* DisplayLinkAnimator.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -513,6 +526,7 @@
 				9F6281282037389200B2D3C9 /* CheckBox.swift */,
 				D0BEB9912163C1F00055B718 /* SelectionRectView.swift */,
 				9F4EEF9921DCD260002C3B33 /* SliderView.swift */,
+				A7D49477235F226C003E9A25 /* SpinningProgressView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -618,6 +632,7 @@
 				C219E1F81D8C14930042F0C8 /* BarView.swift in Sources */,
 				C2303E861D9A6C2A00098E12 /* TabItem.swift in Sources */,
 				C219E1EF1D8AE3310042F0C8 /* AnimationStyle.swift in Sources */,
+				A7D49478235F226C003E9A25 /* SpinningProgressView.swift in Sources */,
 				C2271DA61DAD16B4001792B6 /* BadgeNode.swift in Sources */,
 				C234CA8F1D97DF26003023F7 /* Image.swift in Sources */,
 				C2B1A1181DA1673300ACB1DD /* TableAnimationInterface.swift in Sources */,
@@ -639,7 +654,6 @@
 				C2303E8C1D9A8B3000098E12 /* SearchView.swift in Sources */,
 				C234CA971D981F00003023F7 /* Control.swift in Sources */,
 				C2303E6F1D9950E000098E12 /* Button.swift in Sources */,
-				C21656C61EE0A7050041A6BA /* SegmentedControl.swift in Sources */,
 				D0BEB9922163C1F00055B718 /* SelectionRectView.swift in Sources */,
 				9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */,
 				C21AAE381DB233F7007638C5 /* UIUtils.swift in Sources */,
@@ -666,6 +680,7 @@
 				9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */,
 				C226741D1DBCDBA8000BA9ED /* ContainableController.swift in Sources */,
 				C253A9651D91B24100CDC850 /* TextViewLabel.swift in Sources */,
+				D050518E2342A75D00D93176 /* DisplayLinkAnimator.swift in Sources */,
 				C219E1FA1D8C316C0042F0C8 /* TitledBarView.swift in Sources */,
 				C28BAB0D1DF8550E0027CE3A /* WindowSaver.swift in Sources */,
 				C2303E7C1D99880B00098E12 /* Modal.swift in Sources */,
@@ -688,6 +703,7 @@
 				C20232B81D85525C007C9ADE /* ViewUtils.swift in Sources */,
 				C2271F361DB4CF270045E719 /* HorizontalRowView.swift in Sources */,
 				9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */,
+				A7C41DB92359E69400CF9402 /* CatalinaStyledSegmentController.swift in Sources */,
 				D04D214D230ED78300609388 /* SPopoverViewController.swift in Sources */,
 				C22E06391D804DCD00A11C88 /* ScrollView.swift in Sources */,
 				C219E1F11D8AFD140042F0C8 /* AnimationBlockDelegate.swift in Sources */,

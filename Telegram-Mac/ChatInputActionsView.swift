@@ -211,7 +211,7 @@ class ChatInputActionsView: View, Notifable {
         
         if let scheduled = scheduled {
             if muteChannelMessages.isHidden {
-                scheduled.centerY(x: entertaiments.frame.minX - scheduled.frame.width)
+                scheduled.centerY(x: (keyboard.isHidden ? entertaiments.frame.minX : keyboard.frame.minX) - scheduled.frame.width)
             } else {
                 scheduled.centerY(x: muteChannelMessages.frame.minX - scheduled.frame.width - iconsInset)
             }
@@ -285,14 +285,13 @@ class ChatInputActionsView: View, Notifable {
                 }
                 
                 
-                
                 if let query = value.inputQueryResult, case .contextRequestResult = query, newInlineRequest || first {
                     newInlineRequest = true
                 } else {
                     newInlineRequest = false
                 }
                 
-                
+
                 
                 if let query = oldValue.inputQueryResult, case .contextRequestResult(_, let data) = query {
                     oldInlineLoading = data == nil
@@ -307,6 +306,10 @@ class ChatInputActionsView: View, Notifable {
                 } else {
                     oldInlineRequest = false
                 }
+                
+//                newInlineLoading = newInlineLoading && newInlineRequest
+//                oldInlineLoading = oldInlineLoading && oldInlineRequest
+
                 
                 let sNew = !value.effectiveInput.inputText.isEmpty || !value.interfaceState.forwardMessageIds.isEmpty || value.state == .editing
                 let sOld = !oldValue.effectiveInput.inputText.isEmpty || !oldValue.interfaceState.forwardMessageIds.isEmpty || oldValue.state == .editing
@@ -354,7 +357,7 @@ class ChatInputActionsView: View, Notifable {
                
                 if newInlineLoading {
                     if inlineProgress == nil {
-                        inlineProgress = ProgressIndicator(frame: NSMakeRect(0, 0, 26, 26))
+                        inlineProgress = ProgressIndicator(frame: NSMakeRect(0, 0, 22, 22))
                         inlineProgress?.progressColor = theme.colors.grayIcon
                         addSubview(inlineProgress!, positioned: .below, relativeTo: inlineCancel)
                         inlineProgress?.set(handler: { [weak self] _ in

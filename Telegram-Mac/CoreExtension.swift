@@ -395,6 +395,15 @@ public extension TelegramMediaFile {
         return nil
     }
     
+    var maskData: StickerMaskCoords? {
+        for attr in attributes {
+            if case let .Sticker(_, _, mask) = attr {
+                return mask
+            }
+        }
+        return nil
+    }
+    
     var isEmojiAnimatedSticker: Bool {
         if let fileName = fileName {
             return fileName.hasPrefix("telegram-animoji") && fileName.hasSuffix("tgs") && isSticker
@@ -777,7 +786,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId) -> Bool {
         if message.isScheduledMessage {
             return false
         }
-        if peer.canSendMessage, peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && message.id.namespace != Namespaces.Message.Local {
+        if peer.canSendMessage, peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && (message.id.namespace != Namespaces.Message.Local || message.id.peerId.namespace == Namespaces.Peer.SecretChat) {
             return true
         }
     }
@@ -2224,10 +2233,11 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blu
     } else {
         resourceData = postbox.mediaBox.resourceData(resource)
     }
+    
    
     return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
         if data.complete {
-            return moveWallpaperToCache(postbox: postbox, path: data.path, blurred: blurred)
+            return moveWallpaperToCache(postbox: postbox, path: data.path, resource: resource, blurred: blurred)
         } else {
             return .complete()
         }
@@ -2247,13 +2257,13 @@ func moveWallpaperToCache(postbox: Postbox, wallpaper: Wallpaper) -> Signal<Wall
     }
 }
 
-func moveWallpaperToCache(postbox: Postbox, path: String, blurred: Bool, randomName: Bool = false) -> Signal<String, NoError> {
+func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMediaResource, blurred: Bool) -> Signal<String, NoError> {
     return Signal { subscriber in
         
         let wallpapers = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
-        let out = wallpapers + "/" + (randomName ? "\(arc4random64())" : path.nsstring.lastPathComponent) + ".jpg"
+        let out = wallpapers + "/" + resource.id.uniqueId + "\(blurred ? ":\(CachedBlurredWallpaperRepresentation.uniqueId)" : "")" + ".jpg"
         
         try? FileManager.default.removeItem(atPath: out)
         try? FileManager.default.copyItem(atPath: path, toPath: out)
@@ -2493,14 +2503,30 @@ struct SecureIdDocumentValue {
     }
 }
 
-func openFaq(context: AccountContext) {
+enum FaqDestination {
+    case telegram
+    case ton
+    case walletTOS
+    var url:String {
+        switch self {
+        case .telegram:
+            return "https://telegram.org/faq/"
+        case .ton:
+            return "https://telegram.org/faq/gram_wallet/"
+        case .walletTOS:
+            return "https://telegram.org/tos/wallet/"
+        }
+    }
+}
+
+func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    _ = showModalProgress(signal: webpagePreview(account: context.account, url: "https://telegram.org/faq/" + language) |> deliverOnMainQueue, for: context.window).start(next: { webpage in
+    _ = showModalProgress(signal: webpagePreview(account: context.account, url: dest.url + language) |> deliverOnMainQueue, for: context.window).start(next: { webpage in
         if let webpage = webpage {
             showInstantPage(InstantPageViewController(context, webPage: webpage, message: nil))
         } else {
-            execute(inapp: .external(link: "https://telegram.org/faq/" + language, true))
+            execute(inapp: .external(link: dest.url + language, true))
         }
     })
 }
@@ -2627,8 +2653,11 @@ func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) ->
 
 
 struct PeerEquatable: Equatable {
-    private let peer: Peer
+    let peer: Peer
     init(peer: Peer) {
+        self.peer = peer
+    }
+    init(_ peer: Peer) {
         self.peer = peer
     }
     static func ==(lhs: PeerEquatable, rhs: PeerEquatable) -> Bool {

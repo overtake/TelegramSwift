@@ -105,12 +105,12 @@ import SwiftSignalKitMac
  compose.background = .clear
  compose.set(background: .clear, for: .Normal)
  compose.set(background: .clear, for: .Hover)
- compose.set(background: theme.colors.blueFill, for: .Highlight)
+ compose.set(background: theme.colors.accent, for: .Highlight)
  compose.set(image: theme.icons.composeNewChat, for: .Normal)
  compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
  compose.layer?.cornerRadius = .cornerRadius
  compose.setFrameSize(NSMakeSize(40, 30))
- proxyConnecting.progressColor = theme.colors.blueIcon
+ proxyConnecting.progressColor = theme.colors.accentIcon
  proxyConnecting.lineWidth = 1.0
  
  separatorView.backgroundColor = theme.colors.border
@@ -149,11 +149,11 @@ import SwiftSignalKitMac
  
  //        searchView.isHidden = frame.width < 200
  //        if searchView.isHidden {
- //            compose.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - compose.frame.height)/2.0))
+ //            compose.centerX(y: floorToScreenPixels(backingScaleFactor, (49 - compose.frame.height)/2.0))
  //            proxyButton.setFrameOrigin(-proxyButton.frame.width, 0)
  //        } else {
- //            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - compose.frame.height)/2.0))
- //            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
+ //            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (offset - compose.frame.height)/2.0))
+ //            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
  //        }
  
  proxyConnecting.centerX()
@@ -212,6 +212,10 @@ class PeerListContainerView : View {
         proxyButton.disableActions()
         addSubview(backgroundView)
         backgroundView.isHidden = true
+        
+        tableView.getBackgroundColor = {
+            .clear
+        }
     }
     
     fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {
@@ -248,13 +252,13 @@ class PeerListContainerView : View {
         compose.background = .clear
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
-        compose.set(background: theme.colors.blueFill, for: .Highlight)
+        compose.set(background: theme.colors.accent, for: .Highlight)
         compose.set(image: theme.icons.composeNewChat, for: .Normal)
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
         compose.setFrameSize(NSMakeSize(40, 30))
-        proxyConnecting.progressColor = theme.colors.blueIcon
-        proxyConnecting.lineWidth = 1.0
+        proxyConnecting.progressColor = theme.colors.accentIcon
+//        proxyConnecting.lineWidth = 1.0
         super.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -272,7 +276,7 @@ class PeerListContainerView : View {
         case .tiled:
             offset = 50
         default:
-            offset = 49
+            offset = 50
         }
         
         if frame.width < 200 {
@@ -290,13 +294,13 @@ class PeerListContainerView : View {
         
         searchView.isHidden = frame.width < 200
         if searchView.isHidden {
-            compose.centerX(y: floorToScreenPixels(scaleFactor: backingScaleFactor, (49 - compose.frame.height)/2.0))
+            compose.centerX(y: floorToScreenPixels(backingScaleFactor, (49 - compose.frame.height)/2.0))
             proxyButton.setFrameOrigin(-proxyButton.frame.width, 0)
         } else {
-            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - compose.frame.height)/2.0))
-            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
+            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (offset - compose.frame.height)/2.0))
+            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
         }
-        searchView.setFrameOrigin(10, floorToScreenPixels(scaleFactor: backingScaleFactor, (offset - searchView.frame.height)/2.0))
+        searchView.setFrameOrigin(10, floorToScreenPixels(backingScaleFactor, (offset - searchView.frame.height)/2.0))
         tableView.setFrameOrigin(0, offset)
         
         proxyConnecting.centerX()
@@ -475,17 +479,18 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.proxyButton.set(handler: {  _ in
             if let settings = settings {
-                if settings.0.enabled {
-                    openProxySettings()
-                } else {
-                    actionsDisposable.add(updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> ProxySettings in
-                        if let first = current.servers.first {
-                            return current.withUpdatedActiveServer(first).withUpdatedEnabled(true)
-                        } else {
-                            return current
-                        }
-                    }).start())
-                }
+                 openProxySettings()
+//                if settings.0.enabled {
+//
+//                } else {
+//                    actionsDisposable.add(updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager, { current -> ProxySettings in
+//                        if let first = current.servers.first {
+//                            return current.withUpdatedActiveServer(first).withUpdatedEnabled(true)
+//                        } else {
+//                            return current
+//                        }
+//                    }).start())
+//                }
             }
         }, for: .Click)
         
@@ -554,7 +559,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func showSearchController(animated: Bool) {
-        
         if searchController == nil {
             let rect = genericView.tableView.frame
             let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
@@ -568,7 +572,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             searchController.pinnedItems = collectPinnedItems
            
             self.searchController = searchController
-            
+            self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
+                 self?.genericView.tableView.isHidden = true
+            })
             searchController.navigationController = self.navigationController
             searchController.viewWillAppear(true)
             if animated {
@@ -584,9 +590,24 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             
             self.addSubview(searchController.view)
         }
-        
-       
     }
+    
+    private func hideSearchController(animated: Bool) {
+           if let searchController = self.searchController {
+               searchController.viewWillDisappear(animated)
+               searchController.view.layer?.opacity = animated ? 1.0 : 0.0
+               
+               searchController.viewDidDisappear(true)
+               self.searchController = nil
+               self.genericView.tableView.isHidden = false
+               self.genericView.tableView.change(opacity: 1, animated: animated)
+               let view = searchController.view
+               
+               searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
+                   view?.removeFromSuperview()
+               })
+           }
+       }
     
     override func focusSearch(animated: Bool) {
         genericView.searchView.change(state: .Focus, animated)
@@ -599,21 +620,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    private func hideSearchController(animated: Bool) {
-        if let searchController = self.searchController {
-            searchController.viewWillDisappear(animated)
-            searchController.view.layer?.opacity = animated ? 1.0 : 0.0
-            
-            searchController.viewDidDisappear(true)
-            self.searchController = nil
-            
-            let view = searchController.view
-            
-            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
-                view?.removeFromSuperview()
-            })
-        }
-    }
+   
    
     
     var collectPinnedItems:[PinnedItemId] {

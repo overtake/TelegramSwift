@@ -292,7 +292,7 @@ func execute(inapp:inAppLink) {
         
         let _ = (showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: mainWindow) |> mapToSignal { memberId -> Signal<PeerId, NoError> in
             
-            return selectModalPeers(context: context, title: "", behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            return selectModalPeers(context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
                     return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                         return confirmSignal(for: mainWindow, information: L10n.confirmAddBotToGroup(peer.displayTitle))
@@ -303,7 +303,7 @@ func execute(inapp:inAppLink) {
                 if peerId.namespace == Namespaces.Peer.CloudGroup {
                     return showModalProgress(signal: addGroupMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map {peerId} |> `catch` {_ in return .complete()}
                 } else {
-                    return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId} |> `catch` {_ in return .complete()}
+                    return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId }
                 }
             }
             
@@ -355,7 +355,7 @@ func execute(inapp:inAppLink) {
             })
         }
     case let .stickerPack(_, reference, context, peerId):
-        showModal(with: StickersPackPreviewModalController(context, peerId: peerId, reference: reference), for: mainWindow)
+        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: mainWindow)
     case let .confirmPhone(_, context, phone, hash):
         _ = showModalProgress(signal: requestCancelAccountResetData(network: context.account.network, hash: hash) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
             showModal(with: cancelResetAccountController(account: context.account, phone: phone, data: data), for: mainWindow)
@@ -439,6 +439,34 @@ func execute(inapp:inAppLink) {
                updateAppAsYouWish(text: info.message, updateApp: info.updateApp)
             }
         })
+    case let .tonTransfer(_, context, data: data):
+        if #available(OSX 10.12, *) {
+            let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, wallets, hasKeys in
+                if  let config = configuration.config, let blockchainName = configuration.blockchainName {
+                    let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
+                    if !wallets.wallets.isEmpty, hasKeys {
+                        let amount = data.amount ?? 0
+                        let formattedAmount: String
+                        if amount > 0 {
+                            formattedAmount = formatBalanceText(amount)
+                        } else {
+                            formattedAmount = ""
+                        }
+                        let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: formattedAmount)
+                        showModal(with: controller, for: context.window)
+                        } else {
+                        confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in
+                            switch result {
+                            case .basic:
+                                context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
+                            default:
+                                break
+                            }
+                        })
+                    }
+                }
+            })
+        }
     }
     
 }
@@ -456,7 +484,7 @@ private func updateAppAsYouWish(text: String, updateApp: Bool) {
     })
 }
 
-private func escape(with link:String, addPercent: Bool = true) -> String {
+func escape(with link:String, addPercent: Bool = true) -> String {
     var escaped = addPercent ? link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link : link
     escaped = escaped.replacingOccurrences(of: "%21", with: "!")
     escaped = escaped.replacingOccurrences(of: "%24", with: "$")
@@ -548,6 +576,7 @@ enum inAppLink {
     case applyLocalization(link: String, context: AccountContext, value: String)
     case wallpaper(link: String, context: AccountContext, preview: WallpaperPreview)
     case theme(link: String, context: AccountContext, name: String)
+    case tonTransfer(link: String, context: AccountContext, data: ParsedWalletUrl)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -583,6 +612,8 @@ enum inAppLink {
             return values.link
         case let .theme(values):
             return values.link
+        case let .tonTransfer(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -596,6 +627,8 @@ let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "p
 
 let telegram_scheme:String = "tg://"
 let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme"]
+
+let ton_scheme:String = "ton://"
 
 private let keyURLUsername = "domain";
 private let keyURLPostId = "post";
@@ -758,7 +791,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let post = userAndPost[1].isEmpty ? nil : Int32(userAndPost[1])//.intValue
                         if name.hasPrefix("iv?") {
                             return .external(link: url as String, false)
-                        } else if name.hasPrefix("share") {
+                        } else if name.hasPrefix("share?") {
                             let params = urlVars(with: url as String)
                             if let url = params["url"], let context = context {
                                 return .shareUrl(link: urlString, context, url)
@@ -923,6 +956,26 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
             return .unsupportedScheme(link: urlString, context: context, path: path)
         }
        
+    } else if url.hasPrefix(ton_scheme), let context = context {
+        let action = url.substring(from: ton_scheme.length)
+        if action.hasPrefix("transfer/") {
+            let vars = urlVars(with: url as String)
+            let preAddressLength = ton_scheme.length + "transfer/".length + walletAddressLength
+            let address = urlString.prefix(preAddressLength)
+            if address.length == preAddressLength {
+                let address = String(address.suffix(walletAddressLength))
+                var amount: Int64? = nil
+                var comment: String? = nil
+                if let varAmount = vars["amount"], !varAmount.isEmpty, let intAmount = Int64(varAmount) {
+                    amount = intAmount
+                }
+                if let varComment = vars["text"], !varComment.isEmpty  {
+                    comment = escape(with: varComment, addPercent: false)
+                }
+                return .tonTransfer(link: urlString, context: context, data: ParsedWalletUrl(address: address, amount: amount, comment: comment))
+            }
+        }
+        return .nothing
     }
     
     return .external(link: urlString as String, confirm)
@@ -985,4 +1038,36 @@ func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
         }
     }
     return (nil, false)
+}
+
+public struct ParsedWalletUrl {
+    public let address: String
+    public let amount: Int64?
+    public let comment: String?
+}
+
+
+public func parseWalletUrl(_ url: URL) -> ParsedWalletUrl? {
+    guard url.scheme == "ton" && url.host == "transfer" else {
+        return nil
+    }
+    var address: String?
+    let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    if isValidAddress(path) {
+        address = path
+    }
+    var amount: Int64?
+    var comment: String?
+    if let query = url.query, let components = URLComponents(string: "/?" + query), let queryItems = components.queryItems {
+        for queryItem in queryItems {
+            if let value = queryItem.value {
+                if queryItem.name == "amount", !value.isEmpty, let amountValue = Int64(value) {
+                    amount = amountValue
+                } else if queryItem.name == "text", !value.isEmpty {
+                    comment = value
+                }
+            }
+        }
+    }
+    return address.flatMap { ParsedWalletUrl(address: $0, amount: amount, comment: comment) }
 }

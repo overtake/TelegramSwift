@@ -9,11 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCoreMac
-class LanguageRowItem: TableRowItem {
+class LanguageRowItem: GeneralRowItem {
     fileprivate let selected:Bool
     fileprivate let locale:TextViewLayout
     fileprivate let title:TextViewLayout
-    fileprivate let action:()->Void
     fileprivate let deleteAction: ()->Void
     fileprivate let deletable: Bool
 
@@ -22,15 +21,14 @@ class LanguageRowItem: TableRowItem {
         return _stableId
     }
     
-    init(initialSize: NSSize, stableId: AnyHashable, selected: Bool, deletable: Bool, value:LocalizationInfo, action:@escaping()->Void, deleteAction: @escaping()->Void = {}, reversed: Bool = false) {
+    init(initialSize: NSSize, stableId: AnyHashable, selected: Bool, deletable: Bool, value:LocalizationInfo, viewType: GeneralViewType = .legacy, action:@escaping()->Void, deleteAction: @escaping()->Void = {}, reversed: Bool = false) {
         self._stableId = stableId
         self.selected = selected
         self.title = TextViewLayout(.initialize(string: reversed ? value.localizedTitle : value.title, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
         self.locale = TextViewLayout(.initialize(string: reversed ? value.title : value.localizedTitle, color: reversed ? theme.colors.grayText : theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
-        self.action = action
         self.deletable = deletable
         self.deleteAction = deleteAction
-        super.init(initialSize)
+        super.init(initialSize, viewType: viewType, action: action)
         
         _ = makeSize(initialSize.width, oldWidth: initialSize.width)
     }

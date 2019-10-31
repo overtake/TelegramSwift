@@ -33,7 +33,7 @@ class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView 
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        self.genericView.background = theme.colors.background
+        (self.genericView as? AppearanceViewProtocol)?.updateLocalizationAndTheme(theme: theme)
         requestUpdateBackBar()
         requestUpdateCenterBar()
         requestUpdateRightBar()
@@ -62,7 +62,13 @@ class TableViewController: TelegramGenericViewController<TableView>, TableViewDe
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        genericView.getBackgroundColor = {
+           return theme.colors.listBackground
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
     }
     
     
@@ -271,7 +277,7 @@ var appearanceSignal:Signal<Appearance, NoError> {
     }
 }
 
-struct AppearanceWrapperEntry<E>: Comparable, Identifiable where E: Comparable, E:Identifiable {
+final class AppearanceWrapperEntry<E>: Comparable, Identifiable where E: Comparable, E:Identifiable {
     let entry: E
     let appearance: Appearance
     init(entry: E, appearance: Appearance) {

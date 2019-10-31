@@ -51,10 +51,10 @@ private class TouchIdContainerView : View {
         layout.draw(NSMakeRect(f.minX, 0, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(0, floorToScreenPixels(scaleFactor: backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
+        ctx.fill(NSMakeRect(0, floorToScreenPixels(backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
         
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(f.maxX + 10, floorToScreenPixels(scaleFactor: backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
+        ctx.fill(NSMakeRect(f.maxX + 10, floorToScreenPixels(backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
     }
 }
 
@@ -90,9 +90,9 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.stringValue = ""
         super.init(frame: frameRect)
         autoresizingMask = [.width, .height]
-        self.backgroundColor = .white
+        self.backgroundColor = .clear
         
-        nextButton.set(background: theme.colors.blueIcon, for: .Normal)
+        nextButton.set(background: theme.colors.accentIcon, for: .Normal)
         nextButton.set(image: theme.icons.passcodeLogin, for: .Normal)
         nextButton.setFrameSize(26, 26)
         nextButton.layer?.cornerRadius = nextButton.frame.height / 2
@@ -161,7 +161,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundColor = theme.colors.background
+        backgroundColor = .clear
         logoutTextView.backgroundColor = theme.colors.background
         input.backgroundColor = theme.colors.background
         nameView.backgroundColor = theme.colors.background
@@ -251,7 +251,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         logoutTextView.update(logoutTextView.layout)
         
         nameView.center()
-        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(scaleFactor: backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
+        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
         logoutTextView.centerX(y:frame.height - logoutTextView.frame.height - 20)
         
         inputContainer.centerX(y: nameView.frame.maxY + 30)
@@ -270,6 +270,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
 class PasscodeLockController: ModalViewController {
     let accountManager: AccountManager
     private let useTouchId: Bool
+    private let appearanceDisposable = MetaDisposable()
     private let disposable:MetaDisposable = MetaDisposable()
     private let valueDisposable = MetaDisposable()
     private let logoutDisposable = MetaDisposable()
@@ -279,19 +280,31 @@ class PasscodeLockController: ModalViewController {
         return _doneValue.get()
     }
     
-    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+    }
     
     private let logoutImpl:() -> Signal<Never, NoError>
     init(_ accountManager: AccountManager, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }) {
         self.accountManager = accountManager
         self.logoutImpl = logoutImpl
         self.useTouchId = useTouchId
-        super.init(frame: NSMakeRect(0, 0, 340, 310))
+        super.init(frame: NSMakeRect(0, 0, 350, 350))
         self.bar = .init(height: 0)
+    }
+    
+    override var isVisualEffectBackground: Bool {
+        return false
     }
     
     override var isFullScreen: Bool {
         return true
+    }
+    
+    
+    
+    override var background: NSColor {
+        return self.containerBackground
     }
     
     private var genericView:PasscodeLockView {
@@ -343,7 +356,9 @@ class PasscodeLockController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+        appearanceDisposable.set(appearanceSignal.start(next: { [weak self] appearance in
+            self?.updateLocalizationAndTheme(theme: appearance.presentation)
+        }))
         
         genericView.logoutImpl = { [weak self] in
             guard let window = self?.window else { return }
@@ -406,6 +421,9 @@ class PasscodeLockController: ModalViewController {
         
     }
     
+    override var containerBackground: NSColor {
+        return theme.colors.background.withAlphaComponent(1.0)
+    }
     override var handleEvents: Bool {
         return true
     }
@@ -423,6 +441,7 @@ class PasscodeLockController: ModalViewController {
         disposable.dispose()
         logoutDisposable.dispose()
         valueDisposable.dispose()
+        appearanceDisposable.dispose()
         self.window?.removeAllHandlers(for: self)
     }
     

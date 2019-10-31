@@ -148,13 +148,13 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
         
         let maxInset = max(countryLabel.frame.width,numberLabel.frame.width)
         let contentInset = maxInset + 20 + 5
-        countrySelector.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countrySelector.frame.height/2))
+        countrySelector.setFrameOrigin(contentInset, floorToScreenPixels(backingScaleFactor, 25 - countrySelector.frame.height/2))
         
-        countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countryLabel.frame.height/2))
-        numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - numberLabel.frame.height/2))
+        countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(backingScaleFactor, 25 - countryLabel.frame.height/2))
+        numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(backingScaleFactor, 75 - numberLabel.frame.height/2))
         
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
-        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        codeText.setFrameOrigin(contentInset, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
+        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
         errorLabel.centerX(y: 120)
     }
     

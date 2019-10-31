@@ -277,6 +277,7 @@ public final class TextViewLayout : Equatable {
     
     fileprivate var toolTipRects:[NSRect] = []
     private let disableTooltips: Bool
+    fileprivate var isBigEmoji: Bool = false
     public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
@@ -300,7 +301,7 @@ public final class TextViewLayout : Equatable {
     }
     
     func calculateLayout(isBigEmoji: Bool = false) -> Void {
-        
+        self.isBigEmoji = isBigEmoji
         isPerfectSized = true
         
         let font: CTFont
@@ -319,7 +320,7 @@ public final class TextViewLayout : Equatable {
         let fontAscent = CTFontGetAscent(font)
         let fontDescent = CTFontGetDescent(font)
        
-        let fontLineHeight = floor(fontAscent + (isBigEmoji ? fontDescent / 3 : fontDescent)) + (lineSpacing ?? 0)
+        let fontLineHeight = floor(fontAscent + (isBigEmoji ? fontDescent / 2 : fontDescent)) + (lineSpacing ?? 0)
         
         var monospacedRects:[NSRect] = []
         
@@ -807,7 +808,7 @@ public final class TextViewLayout : Equatable {
         
         var point = point
         
-         //point.x -= floorToScreenPixels(scaleFactor: System.backingScale, (frame.width - line.frame.width) / 2)
+         //point.x -= floorToScreenPixels(System.backingScale, (frame.width - line.frame.width) / 2)
         
         
 //        var penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(frame.width))) + line.frame.minX
@@ -850,6 +851,16 @@ public final class TextViewLayout : Equatable {
             return charIndex == attributedString.length ? charIndex - 1 : charIndex
         }
         return -1
+    }
+    
+    public func offset(for index: Int) -> CGFloat? {
+        let line = self.lines.first(where: {
+            $0.range.indexIn(index)
+        })
+        if let line = line {
+            return CTLineGetOffsetForStringIndex(line.line, index, nil)
+        }
+        return nil
     }
     
     public func selectAll(at point:NSPoint) -> Void {
@@ -1039,8 +1050,10 @@ public class TextView: Control, NSViewToolTipOwner {
 
         if let layout = layout {
             
-            ctx.setAllowsFontSubpixelPositioning(true)
-            ctx.setShouldSubpixelPositionFonts(true)
+            if backingScaleFactor != 1.0 || !disableBackgroundDrawing {
+                ctx.setAllowsFontSubpixelPositioning(true)
+                ctx.setShouldSubpixelPositionFonts(true)
+            }
             
             ctx.setAllowsAntialiasing(true)
             
@@ -1152,7 +1165,12 @@ public class TextView: Control, NSViewToolTipOwner {
                 } else if layout.penFlush == 0.0 {
                     penOffset = startPosition.x
                 }
-                ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY)
+                var additionY: CGFloat = 0
+                if layout.isBigEmoji {
+                    additionY -= 4
+                }
+                
+                ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY + additionY)
                 
                 CTLineDraw(line.line, ctx)
                 

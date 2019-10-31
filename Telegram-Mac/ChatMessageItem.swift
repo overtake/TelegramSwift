@@ -286,7 +286,7 @@ class ChatMessageItem: ChatRowItem {
             if let highlightFoundText = entry.additionalData?.highlightFoundText {
                 if highlightFoundText.isMessage {
                     if let range = rangeOfSearch(highlightFoundText.query, in: copy.string) {
-                        textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.blueIcon.withAlphaComponent(0.5), def: false)]
+                        textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
                     }
                 } else {
                     var additionalSelections:[TextSelectedRange] = []
@@ -539,7 +539,7 @@ class ChatMessageItem: ChatRowItem {
             return rightSize.height
         }
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
-            return rightSize.height
+           // return rightSize.height
         }
        
         if let webpageLayout = webpageLayout {

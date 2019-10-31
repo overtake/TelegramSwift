@@ -23,14 +23,13 @@ private final class DownloadSettingsArguments {
 }
 
 private enum DownloadSettingsEntry : TableItemListNodeEntry {
-    case contacts(sectionId: Int32, enabled: Bool, category: AutomaticMediaDownloadCategoryPeers)
-    case groupChats(sectionId: Int32, enabled: Bool, category: AutomaticMediaDownloadCategoryPeers)
-    case channels(sectionId: Int32, enabled: Bool, category: AutomaticMediaDownloadCategoryPeers)
-    case fileSizeLimitHeader(sectionId: Int32)
-    case fileSizeLimitText(sectionId: Int32, limit: Int32)
-    case fileSizeLimit(sectionId: Int32, limit: Int32, category: AutomaticMediaDownloadCategoryPeers)
-    case preloadLargeVideos(sectionId: Int32, Bool, Bool)
-    case preloadLargeVideosDesc(sectionId: Int32, String)
+    case contacts(sectionId: Int32, enabled: Bool, category: AutomaticMediaDownloadCategoryPeers, viewType: GeneralViewType)
+    case groupChats(sectionId: Int32, enabled: Bool, category: AutomaticMediaDownloadCategoryPeers, viewType: GeneralViewType)
+    case channels(sectionId: Int32, enabled: Bool, category: AutomaticMediaDownloadCategoryPeers, viewType: GeneralViewType)
+    case fileSizeLimitHeader(sectionId: Int32, viewType: GeneralViewType)
+    case fileSizeLimit(sectionId: Int32, limit: Int32, category: AutomaticMediaDownloadCategoryPeers, viewType: GeneralViewType)
+    case preloadLargeVideos(sectionId: Int32, Bool, Bool, viewType: GeneralViewType)
+    case preloadLargeVideosDesc(sectionId: Int32, String, viewType: GeneralViewType)
     case sectionId(Int32)
     
     var stableId: Int32 {
@@ -43,8 +42,6 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
             return 2
         case .fileSizeLimitHeader:
             return 3
-        case .fileSizeLimitText:
-            return 4
         case .fileSizeLimit:
             return 5
         case .preloadLargeVideos:
@@ -59,56 +56,55 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
     
     func item(_ arguments: DownloadSettingsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .contacts(_, enabled, category):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsPrivateChats, type: .switchable(enabled), action: {
+        case let .contacts(_, enabled, category, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsPrivateChats, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCategory(category.withUpdatedPrivateChats(!enabled))
             })
-        case let .groupChats(_, enabled, category):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsGroupChats, type: .switchable(enabled), action: {
+        case let .groupChats(_, enabled, category, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsGroupChats, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCategory(category.withUpdatedGroupChats(!enabled))
             })
-        case let .channels(_, enabled, category):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsChannels, type: .switchable(enabled), action: {
+        case let .channels(_, enabled, category, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsChannels, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCategory(category.withUpdatedChannels(!enabled))
             })
-        case .fileSizeLimitHeader:
-            return GeneralTextRowItem(initialSize, text: L10n.dataAndStorageCateroryFileSizeLimitHeader, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
-        case let .fileSizeLimitText(_, current):
+        case let .fileSizeLimitHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, text: L10n.dataAndStorageCateroryFileSizeLimitHeader, viewType: viewType)
+        case let .fileSizeLimit(_, limit, category, viewType):
+            let list:[Int32] = [Int32(1 * 1024 * 1024), Int32(5 * 1024 * 1024), Int32(10 * 1024 * 1024), Int32(50 * 1024 * 1024), Int32(100 * 1024 * 1024), Int32(300 * 1024 * 1024), Int32(500 * 1024 * 1024), Int32(1500 * 1024 * 1024)]
             
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: NSAttributedString.initialize(string: current == INT32_MAX ? L10n.dataAndStorageCateroryFileSizeUnlimited : String.prettySized(with: Int(current)), color: theme.colors.text, font: .medium(.text)), alignment: .center, centerViewAlignment: true)
-        case let .fileSizeLimit(_, limit, category):
-            let list:[Int32] = [Int32(1 * 1024 * 1024), Int32(5 * 1024 * 1024), Int32(10 * 1024 * 1024), Int32(50 * 1024 * 1024), Int32(100 * 1024 * 1024), Int32(300 * 1024 * 1024), Int32(500 * 1024 * 1024), INT32_MAX]
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: limit, sizes: list, hasMarkers: false, selectAction: { select in
+            var titles:[String] = []
+            titles.append(String.prettySized(with: Int(limit)))
+            
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: limit, sizes: list, hasMarkers: false, titles: titles, viewType: viewType, selectAction: { select in
                 arguments.toggleCategory(category.withUpdatedSizeLimit(list[select]))
             })
-        case let .preloadLargeVideos(_, enabled, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategoryPreloadLargeVideos, type: .switchable(value), action: {
+        case let .preloadLargeVideos(_, enabled, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategoryPreloadLargeVideos, type: .switchable(value), viewType: viewType, action: {
                 arguments.togglePreloadLargeVideos(!value)
             }, enabled: enabled)
-        case let .preloadLargeVideosDesc(_, limit):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.dataAndStorageCategoryPreloadLargeVideosDesc(limit))
+        case let .preloadLargeVideosDesc(_, limit, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.dataAndStorageCategoryPreloadLargeVideosDesc(limit), viewType: viewType)
         case .sectionId:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
     
     var index: Int32 {
         switch self {
-        case let .contacts(sectionId, _, _):
+        case let .contacts(sectionId, _, _, _):
             return (sectionId * 1000) + stableId
-        case let .groupChats(sectionId, _, _):
+        case let .groupChats(sectionId, _, _, _):
             return (sectionId * 1000) + stableId
-        case let .channels(sectionId, _, _):
+        case let .channels(sectionId, _, _, _):
             return (sectionId * 1000) + stableId
-        case let .fileSizeLimitHeader(sectionId):
+        case let .fileSizeLimitHeader(sectionId, _):
             return (sectionId * 1000) + stableId
-        case let .fileSizeLimitText(sectionId, _):
+        case let .fileSizeLimit(sectionId, _, _, _):
             return (sectionId * 1000) + stableId
-        case let .fileSizeLimit(sectionId, _, _):
+        case let .preloadLargeVideos(sectionId, _, _, _):
             return (sectionId * 1000) + stableId
-        case let .preloadLargeVideos(sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case let .preloadLargeVideosDesc(sectionId, _):
+        case let .preloadLargeVideosDesc(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case .sectionId(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -127,32 +123,29 @@ private func downloadSettingsEntries(state: AutomaticMediaDownloadCategoryPeers,
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.contacts(sectionId: sectionId, enabled: state.privateChats, category: state))
-    entries.append(.groupChats(sectionId: sectionId, enabled: state.groupChats, category: state))
-    entries.append(.channels(sectionId: sectionId, enabled: state.channels, category: state))
+    entries.append(.contacts(sectionId: sectionId, enabled: state.privateChats, category: state, viewType: .firstItem))
+    entries.append(.groupChats(sectionId: sectionId, enabled: state.groupChats, category: state, viewType: .innerItem))
+    entries.append(.channels(sectionId: sectionId, enabled: state.channels, category: state, viewType: .lastItem))
     
     if let fileSizeLimit = state.fileSize {
         entries.append(.sectionId(sectionId))
         sectionId += 1
         
-        entries.append(.fileSizeLimitHeader(sectionId: sectionId))
-        entries.append(.sectionId(sectionId))
-        sectionId += 1
+        entries.append(.fileSizeLimitHeader(sectionId: sectionId, viewType: .textTopItem))
 
-        entries.append(.fileSizeLimitText(sectionId: sectionId, limit: fileSizeLimit))
-        entries.append(.fileSizeLimit(sectionId: sectionId, limit: fileSizeLimit, category: state))
-        
+        entries.append(.fileSizeLimit(sectionId: sectionId, limit: fileSizeLimit, category: state, viewType: isVideo ? .firstItem : .singleItem))
         
         if isVideo {
             let preloadEnabled = fileSizeLimit >= 5 * 1024 * 1024
             
-            entries.append(.preloadLargeVideos(sectionId: sectionId, preloadEnabled, autoplayMedia.preloadVideos))
-            entries.append(.preloadLargeVideosDesc(sectionId: sectionId, "\(fileSizeLimit / 1024 / 1024)"))
+            entries.append(.preloadLargeVideos(sectionId: sectionId, preloadEnabled, autoplayMedia.preloadVideos, viewType: .lastItem))
+            entries.append(.preloadLargeVideosDesc(sectionId: sectionId, "\(fileSizeLimit / 1024 / 1024)", viewType: .textBottomItem))
         }
        
     }
     
-   
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
     
     return entries
     

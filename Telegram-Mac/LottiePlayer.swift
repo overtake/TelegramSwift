@@ -324,7 +324,7 @@ private final class PlayerRenderer {
         
         var add_frames_impl:(()->Void)? = nil
         var askedRender: Bool = false
-        
+        var playedCount: Int32 = 0
         let render:()->Void = { [weak self] in
             assert(stateQueue.isCurrent())
             var hungry: Bool = false
@@ -346,6 +346,7 @@ private final class PlayerRenderer {
                         let displayFrame = renderer.displayFrame
                         let updateState = renderer.updateState
                         displayFrame(current)
+                        playedCount += 1
                         if current.frame > 0 {
                             updateState(.playing)
                         }
@@ -354,6 +355,18 @@ private final class PlayerRenderer {
                             break
                         case .once:
                             if current.frame + 1 == currentState(stateValue)?.endFrame {
+                                renderer.finished = true
+                                renderer.timer?.invalidate()
+                                framesTask?.cancel()
+                            }
+                        case .onceEnd:
+                            if current.frame == currentState(stateValue)?.endFrame {
+                                renderer.finished = true
+                                renderer.timer?.invalidate()
+                                framesTask?.cancel()
+                            }
+                        case let .framesCount(limit):
+                            if limit <= playedCount {
                                 renderer.finished = true
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
@@ -503,6 +516,8 @@ enum LottieAnimationKey : Equatable {
 enum LottiePlayPolicy : Equatable {
     case loop
     case once
+    case onceEnd
+    case framesCount(Int32)
 }
 
 final class LottieAnimation : Equatable {

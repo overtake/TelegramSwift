@@ -57,7 +57,7 @@ class StickerPackRowItem: TableRowItem {
     }
     
     func contentNode()->ChatMediaContentView.Type {
-        return ChatMediaAnimatedStickerView.self
+        return MediaAnimatedStickerView.self
     }
     
     override func viewClass() -> AnyClass {
@@ -429,6 +429,8 @@ private final class AnimatedStickerPackRowView : HorizontalRowView {
         overlay.isSelected = item.isSelected
         
         super.set(item: item, animated: animated)
+        
+        needsLayout = true
     }
     
     override func layout() {

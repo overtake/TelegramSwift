@@ -9,7 +9,7 @@
 import Cocoa
 
 
-public func floorToScreenPixels(scaleFactor: CGFloat, _ value: CGFloat) -> CGFloat {
+public func floorToScreenPixels(_ scaleFactor: CGFloat, _ value: CGFloat) -> CGFloat {
     let scale = scaleFactor//NSScreen.main?.backingScaleFactor ?? 1.0
     return floor(value * scale) / scale
 }

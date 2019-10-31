@@ -76,7 +76,7 @@ class StickerPackPanelRowItem: TableRowItem {
             layout.measure(width: 300)
             self.packNameLayout = layout
             
-            self.namePoint = NSMakePoint(10, floorToScreenPixels(scaleFactor: System.backingScale, ((!packInfo.installed ? 50 : 30) - layout.layoutSize.height) / 2))
+            self.namePoint = NSMakePoint(10, floorToScreenPixels(System.backingScale, ((!packInfo.installed ? 50 : 30) - layout.layoutSize.height) / 2))
         } else {
             namePoint = NSZeroPoint
             self.packNameLayout = nil
@@ -156,6 +156,7 @@ class StickerPackPanelRowItem: TableRowItem {
     
     deinit {
         preloadFeaturedDisposable.dispose()
+        NotificationCenter.default.removeObserver(self)
     }
     
     override var height: CGFloat {
@@ -169,16 +170,16 @@ class StickerPackPanelRowItem: TableRowItem {
 
 private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewProtocol {
     
-    func fileAtPoint(_ point: NSPoint) -> QuickPreviewMedia? {
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         for subview in self.subviews {
             if let contentView = subview as? ChatMediaContentView {
                 if NSPointInRect(point, subview.frame) {
                     if let file = contentView.media as? TelegramMediaFile {
                         let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
                         if file.isStaticSticker {
-                            return .file(reference, StickerPreviewModalView.self)
+                            return (.file(reference, StickerPreviewModalView.self), contentView)
                         } else if file.isAnimatedSticker {
-                            return .file(reference, AnimatedStickerPreviewModalView.self)
+                            return (.file(reference, AnimatedStickerPreviewModalView.self), contentView)
                         }
                     }
                 }
@@ -405,8 +406,8 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
         if let reference = item.packReference, !item.packInfo.installed {
             self.addButton = TitleButton()
-            self.addButton!.set(background: theme.colors.accent, for: .Normal)
-            self.addButton!.set(background: theme.colors.blueIcon.withAlphaComponent(0.8), for: .Highlight)
+            self.addButton!.set(background: theme.colors.accentSelect, for: .Normal)
+            self.addButton!.set(background: theme.colors.accentSelect.withAlphaComponent(0.8), for: .Highlight)
             self.addButton!.set(font: .medium(.text), for: .Normal)
             self.addButton!.set(color: .white, for: .Normal)
             self.addButton!.set(text: L10n.navigationAdd, for: .Normal)

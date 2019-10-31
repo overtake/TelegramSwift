@@ -19,7 +19,7 @@ class WebAuthorizationRowItem: GeneralRowItem {
     fileprivate let statusLayout: TextViewLayout
     fileprivate let dateLayout: TextViewLayout
     fileprivate let logoutInteraction:()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, authorization: WebAuthorization, peer: Peer, logout:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, authorization: WebAuthorization, peer: Peer, viewType: GeneralViewType, logout:@escaping()->Void) {
         self.logoutInteraction = logout
         self.account = account
         self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil)
@@ -40,7 +40,7 @@ class WebAuthorizationRowItem: GeneralRowItem {
         
         self.statusLayout = TextViewLayout(statusAttr, maximumNumberOfLines: 2)
         self.dateLayout = TextViewLayout(.initialize(string: DateUtils.string(forMessageListDate: authorization.dateActive), color: theme.colors.grayText, font: .normal(.text)))
-        super.init(initialSize, height: 70, stableId: stableId, inset: NSEdgeInsetsMake(7, 30, 3, 30))
+        super.init(initialSize, height: 80, stableId: stableId, viewType: viewType, inset: NSEdgeInsetsMake(0, 30, 0, 30))
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
@@ -60,7 +60,8 @@ class WebAuthorizationRowItem: GeneralRowItem {
 }
 
 
-private class WebAuthorizationRowView : TableRowView {
+private class WebAuthorizationRowView : TableRowView, ViewDisplayDelegate {
+    private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let botNameView: TextView = TextView()
     private let statusTextView: TextView = TextView()
     private let dateView: TextView = TextView()
@@ -70,13 +71,17 @@ private class WebAuthorizationRowView : TableRowView {
         super.init(frame: frameRect)
         botNameView.isSelectable = false
         botNameView.userInteractionEnabled = false
-        addSubview(botNameView)
-        addSubview(statusTextView)
-        addSubview(dateView)
-        addSubview(photoView)
-        addSubview(logoutButton)
+        containerView.addSubview(botNameView)
+        containerView.addSubview(statusTextView)
+        containerView.addSubview(dateView)
+        containerView.addSubview(photoView)
+        containerView.addSubview(logoutButton)
         photoView.setFrameSize(16, 16)
         
+        
+        addSubview(containerView)
+        
+        containerView.displayDelegate = self
         
         logoutButton.set(handler: { [weak self] _ in
             guard let item = self?.item as? WebAuthorizationRowItem else {return}
@@ -87,29 +92,58 @@ private class WebAuthorizationRowView : TableRowView {
     override func layout() {
         super.layout()
         guard let item = item as? WebAuthorizationRowItem else {return}
-
-        photoView.setFrameOrigin(item.inset.left, item.inset.top + 2)
-        botNameView.setFrameOrigin(photoView.frame.maxX + 4, item.inset.top)
-        statusTextView.setFrameOrigin(item.inset.left, botNameView.frame.maxY + 4)
-        dateView.setFrameOrigin(frame.width - item.inset.right - dateView.frame.width, item.inset.top)
         
-        logoutButton.setFrameOrigin(frame.width - logoutButton.frame.width - 25, frame.height - logoutButton.frame.height - 10)
+        switch item.viewType {
+        case .legacy:
+            self.containerView.frame = bounds
+            self.containerView.setCorners([])
+            photoView.setFrameOrigin(item.inset.left, item.inset.top + 2)
+            botNameView.setFrameOrigin(photoView.frame.maxX + 4, item.inset.top)
+            statusTextView.setFrameOrigin(item.inset.left, botNameView.frame.maxY + 4)
+            dateView.setFrameOrigin(self.containerView.frame.width - item.inset.right - dateView.frame.width, item.inset.top)
+            logoutButton.setFrameOrigin(self.containerView.frame.width - logoutButton.frame.width - 25, self.containerView.frame.height - logoutButton.frame.height - 10)
+        case let .modern(position, innerInsets):
+            self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
+            self.containerView.setCorners(position.corners)
+            photoView.setFrameOrigin(innerInsets.left, innerInsets.top + 2)
+            botNameView.setFrameOrigin(photoView.frame.maxX + 4, innerInsets.top)
+            statusTextView.setFrameOrigin(innerInsets.left, botNameView.frame.maxY + 8)
+            dateView.setFrameOrigin(self.containerView.frame.width - innerInsets.right - dateView.frame.width, innerInsets.top)
+            logoutButton.setFrameOrigin(self.containerView.frame.width - logoutButton.frame.width - innerInsets.right + 4, self.containerView.frame.height - logoutButton.frame.height - 10)
+        }
+
+        
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        guard let item = item as? WebAuthorizationRowItem else {return}
+        guard let item = item as? WebAuthorizationRowItem, layer == containerView.layer else {return}
 
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(item.inset.left, frame.height - .borderSize, frame.width - item.inset.left, .borderSize))
+
+        switch item.viewType {
+        case .legacy:
+            ctx.fill(NSMakeRect(item.inset.left, frame.height - .borderSize, frame.width - item.inset.left, .borderSize))
+        case let .modern(position, insets):
+            if position.border {
+                ctx.fill(NSMakeRect(insets.left, containerView.frame.height - .borderSize, containerView.frame.width - insets.left, .borderSize))
+            }
+        }
         
     }
     
     override func updateColors() {
-        logoutButton.set(background: theme.colors.background, for: .Normal)
-        botNameView.backgroundColor = theme.colors.background
-        statusTextView.backgroundColor = theme.colors.background
-        dateView.backgroundColor = theme.colors.background
+        guard let item = item as? WebAuthorizationRowItem else {return}
+        logoutButton.set(background: backdorColor, for: .Normal)
+        botNameView.backgroundColor = backdorColor
+        statusTextView.backgroundColor = backdorColor
+        dateView.backgroundColor = backdorColor
+        containerView.backgroundColor = backdorColor
+        self.background = item.viewType.rowBackground
+    }
+    
+    override var backdorColor: NSColor {
+        return theme.colors.background
     }
     
     required init?(coder: NSCoder) {
@@ -120,6 +154,13 @@ private class WebAuthorizationRowView : TableRowView {
         super.set(item: item, animated: animated)
         
         guard let item = item as? WebAuthorizationRowItem else {return}
+        
+        switch item.viewType {
+        case .legacy:
+            containerView.setCorners([], animated: animated)
+        case let .modern(position, _):
+            containerView.setCorners(position.corners, animated: animated)
+        }
         
         self.photoView.setState(account: item.account, state: item.photo)
         self.botNameView.update(item.nameLayout)

@@ -7,7 +7,6 @@
 //
 
 import Cocoa
-import TGUIKit
 import SwiftSignalKitMac
 
 
@@ -17,16 +16,27 @@ public struct SPopoverItem : Equatable {
     let textColor: NSColor
     let height: CGFloat
     let handler:()->Void
-    public init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = presentation.colors.text, height: CGFloat = 40.0) {
+    let isSeparator: Bool
+    public init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = presentation.colors.text, height: CGFloat = 40.0, isSeparator: Bool = false) {
         self.title = title
         self.image = image
         self.textColor = textColor
         self.handler = handler
         self.height = height
+        self.isSeparator = false
+    }
+    
+    public init() {
+        self.title = ""
+        self.image = nil
+        self.textColor = presentation.colors.text
+        self.handler = {}
+        self.height = 10
+        self.isSeparator = true
     }
     
     public static func ==(lhs: SPopoverItem, rhs: SPopoverItem) -> Bool {
-        return lhs.title == rhs.title && lhs.textColor.hexString == rhs.textColor.hexString
+        return lhs.title == rhs.title && lhs.textColor == rhs.textColor
     }
 }
 
@@ -48,25 +58,28 @@ public class SPopoverViewController: GenericViewController<TableView> {
     public init(items:[SPopoverItem], visibility:Int = 4, handlerDelay: Double = 0.15, headerItems: [TableRowItem] = []) {
         weak var controller:SPopoverViewController?
         let alignAsImage = !items.filter({$0.image != nil}).isEmpty
-        let items = items.map { item in
-            return SPopoverRowItem(NSZeroSize, height: item.height, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
-                Queue.mainQueue().justDispatch {
-                    controller?.popover?.hide()
-                    
-                    if handlerDelay == 0 {
-                        item.handler()
-                    } else {
-                        _ = (Signal<Void, NoError>.single(Void()) |> delay(handlerDelay, queue: Queue.mainQueue())).start(next: {
+        let items = items.map { item -> TableRowItem in
+            if item.isSeparator {
+                return SPopoverSeparatorItem()
+            } else {
+                return SPopoverRowItem(NSZeroSize, height: item.height, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, clickHandler: {
+                    Queue.mainQueue().justDispatch {
+                        controller?.popover?.hide()
+                        
+                        if handlerDelay == 0 {
                             item.handler()
-                        })
+                        } else {
+                            _ = (Signal<Void, NoError>.single(Void()) |> delay(handlerDelay, queue: Queue.mainQueue())).start(next: {
+                                item.handler()
+                            })
+                        }
                     }
-                    
-                }
-        })}
+                })
+            }
+        }
         
         
-        
-        let width: CGFloat = items.isEmpty ? 200 : items.max(by: {$0.title.layoutSize.width < $1.title.layoutSize.width})!.title.layoutSize.width
+        let width: CGFloat = items.isEmpty ? 200 : items.compactMap({ $0 as? SPopoverRowItem }).max(by: {$0.title.layoutSize.width < $1.title.layoutSize.width})!.title.layoutSize.width
         
         for item in headerItems {
             _ = item.makeSize(width + 48 + 18)

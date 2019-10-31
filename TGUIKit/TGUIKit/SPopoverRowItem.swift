@@ -21,7 +21,7 @@ class SPopoverRowItem: TableRowItem {
         return unique
     }
     
-    let iStyle:ControlStyle = ControlStyle(backgroundColor: presentation.colors.blueSelect, highlightColor: presentation.colors.underSelectedColor)
+    let iStyle:ControlStyle = ControlStyle(backgroundColor: presentation.colors.accentSelect, highlightColor: presentation.colors.underSelectedColor)
     
     
     // data
@@ -70,12 +70,12 @@ private class SPopoverRowView: TableRowView {
         text.userInteractionEnabled = false
         
         overlay.set(handler: {[weak self] (state) in
-            self?.overlay.backgroundColor = presentation.colors.blueSelect
+            self?.overlay.backgroundColor = presentation.colors.accentSelect
             if let item = self?.item as? SPopoverRowItem {
                 if let image = item.image {
                     self?.image.image = item.iStyle.highlight(image: image)
                 }
-                self?.text.backgroundColor = presentation.colors.blueSelect
+                self?.text.backgroundColor = presentation.colors.accentSelect
                 self?.text.update(item.activeTitle)
             }
             }, for: .Hover)
@@ -117,7 +117,7 @@ private class SPopoverRowView: TableRowView {
                 item.clickHandler()
             }, for: .Click)
             image.sizeToFit()
-            image.centerY(self, x: floorToScreenPixels(scaleFactor: backingScaleFactor, (45 - image.frame.width) / 2))
+            image.centerY(self, x: floorToScreenPixels(backingScaleFactor, (45 - image.frame.width) / 2))
             
             text.update(item.title)
             
@@ -133,21 +133,24 @@ private class SPopoverRowView: TableRowView {
 }
 
 
-final class SPopoverSeparatorItem : TableRowItem {
+public final class SPopoverSeparatorItem : TableRowItem {
     
-    override var stableId: AnyHashable {
+    override public var stableId: AnyHashable {
         return arc4random()
     }
     
-    override init(_ initialSize: NSSize) {
+    override public init(_ initialSize: NSSize) {
         super.init(initialSize)
     }
+    public init() {
+        super.init(NSZeroSize)
+    }
     
-    override func viewClass() -> AnyClass {
+    override public func viewClass() -> AnyClass {
         return SPopoverSeparatorView.self
     }
     
-    override var height: CGFloat {
+    override public var height: CGFloat {
         return 10
     }
 }

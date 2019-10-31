@@ -16,7 +16,7 @@ public class ObervableView: NSView {
     }
     
     func remove(listener: NSObject) {
-        let index = listeners.index(where: { (weakValue) -> Bool in
+        let index = listeners.firstIndex(where: { (weakValue) -> Bool in
             return listener == weakValue.value
         })
         if let index = index {
@@ -809,12 +809,13 @@ open class Window: NSWindow {
         
         self.acceptsMouseMovedEvents = true
         
-       
-        
+        isOpaque = true
         
         self.contentView?.acceptsTouchEvents = true
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
+        
+        
         
     }
     

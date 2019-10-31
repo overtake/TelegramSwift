@@ -159,10 +159,10 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
         
         let maxInset: CGFloat = 0
         let contentInset = maxInset
-        countrySelector.setFrameOrigin(contentInset - 2, floorToScreenPixels(scaleFactor: backingScaleFactor, 25 - countrySelector.frame.height/2))
+        countrySelector.setFrameOrigin(contentInset - 2, floorToScreenPixels(backingScaleFactor, 25 - countrySelector.frame.height/2))
 
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
-        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(scaleFactor: backingScaleFactor, 75 - codeText.frame.height/2))
+        codeText.setFrameOrigin(contentInset, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
+        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
         errorLabel.centerX(y: 120)
     }
     

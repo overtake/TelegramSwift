@@ -660,7 +660,7 @@ private final class PollOptionView : Control {
                         progressIndicator?.layer?.animateAlpha(from: 0, to: 1, duration: duration / 2)
                     }
                 }
-                progressIndicator?.lineWidth = 1.0
+//                progressIndicator?.lineWidth = 1.0
                 progressIndicator?.progressColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
                 progressIndicator?.setFrameOrigin(NSMakePoint(defaultInset, 0))
 

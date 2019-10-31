@@ -112,7 +112,7 @@ struct PeerMediaCollectionInterfaceState: Equatable {
             selectedIds.formUnion(selectionState.selectedIds)
         }
         selectedIds.insert(messageId)
-        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), mode: self.mode, selectingMode: self.selectingMode)
+        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds, lastSelectedId: nil), mode: self.mode, selectingMode: self.selectingMode)
     }
     
     func withToggledSelectedMessage(_ messageId: MessageId) -> PeerMediaCollectionInterfaceState {
@@ -125,11 +125,11 @@ struct PeerMediaCollectionInterfaceState: Equatable {
         } else {
             selectedIds.insert(messageId)
         }
-        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), mode: self.mode, selectingMode: self.selectingMode)
+        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds, lastSelectedId: nil), mode: self.mode, selectingMode: self.selectingMode)
     }
     
     func withSelectionState() -> PeerMediaCollectionInterfaceState {
-        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: self.selectionState ?? ChatInterfaceSelectionState(selectedIds: Set()), mode: self.mode, selectingMode: true)
+        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: self.selectionState ?? ChatInterfaceSelectionState(selectedIds: Set(), lastSelectedId: nil), mode: self.mode, selectingMode: true)
     }
     
     func withoutSelectionState() -> PeerMediaCollectionInterfaceState {

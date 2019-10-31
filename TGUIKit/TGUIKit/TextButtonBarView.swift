@@ -151,11 +151,11 @@ open class TextButtonBarView: BarView {
                 progressIndicator.center()
             case .Left:
                 let f = focus(button.frame.size)
-                button.setFrameOrigin(16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY))
+                button.setFrameOrigin(16, floorToScreenPixels(backingScaleFactor, f.minY))
                 progressIndicator.center()
             case .Right:
                 let f = focus(button.frame.size)
-                button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, floorToScreenPixels(scaleFactor: backingScaleFactor, f.minY)))
+                button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, floorToScreenPixels(backingScaleFactor, f.minY)))
                 progressIndicator.center()
             }
         }

@@ -833,7 +833,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if case let .MessageEntry(_message, _, _isRead, _renderType, _itemType, _fwdType, _, _, _) = object {
+        if case let .MessageEntry(_message, _, _isRead, _renderType, _itemType, _fwdType, _) = object {
             message = _message
             isRead = _isRead
             itemType = _itemType
@@ -1747,7 +1747,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     
     items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: {
-        chatInteraction.update({$0.withToggledSelectedMessage(message.id)})
+        chatInteraction.withToggledSelectedMessage({$0.withToggledSelectedMessage(message.id)})
     }))
     
 
@@ -1898,7 +1898,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         var items = items
         if canReportMessage(message, account) {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
-                _ = reportReasonSelector().start(next: { reason in
+                _ = reportReasonSelector(context: context).start(next: { reason in
                     _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start()
                 })
             }))

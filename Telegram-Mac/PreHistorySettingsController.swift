@@ -42,14 +42,14 @@ private enum PreHistoryEntryId : Hashable {
 
 private enum PreHistoryEntry : TableItemListNodeEntry {
     case section(Int32)
-    case type(sectionId:Int32, index: Int32, text: String, enabled: Bool, selected: Bool)
-    case text(sectionId:Int32, index: Int32, text: String)
+    case type(sectionId:Int32, index: Int32, text: String, enabled: Bool, selected: Bool, viewType: GeneralViewType)
+    case text(sectionId:Int32, index: Int32, text: String, viewType: GeneralViewType)
     
     var stableId: PreHistoryEntryId {
         switch self {
-        case .type(_, let index, _, _, _):
+        case .type(_, let index, _, _, _, _):
             return .type(index)
-        case .text(_, let index, _):
+        case .text(_, let index, _, _):
             return .text(index)
         case .section(let index):
             return .section(index)
@@ -58,9 +58,9 @@ private enum PreHistoryEntry : TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case let .type(sectionId, index, _, _, _):
+        case let .type(sectionId, index, _, _, _, _):
             return (sectionId * 1000) + index
-        case let .text(sectionId, index, _):
+        case let .text(sectionId, index, _, _):
             return (sectionId * 1000) + index
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -70,13 +70,13 @@ private enum PreHistoryEntry : TableItemListNodeEntry {
     func item(_ arguments: PreHistoryArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .type(_, _, text, enabled, selected):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .selectable(enabled), action: {
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+        case let .type(_, _, text, enabled, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.preHistory(selected)
             })
-        case let .text(_, _, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
+        case let .text(_, _, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         }
     }
     
@@ -125,17 +125,17 @@ fileprivate func preHistoryEntries(cachedData: CachedChannelData?, isGrpup: Bool
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.text(sectionId: sectionId, index: index, text: L10n.preHistorySettingsHeader))
+    entries.append(.text(sectionId: sectionId, index: index, text: L10n.preHistorySettingsHeader, viewType: .textTopItem))
     index += 1
     
     let enabled =  state.enabled ?? cachedData?.flags.contains(.preHistoryEnabled) ?? false
     
-    entries.append(.type(sectionId: sectionId, index: index, text: L10n.peerInfoPreHistoryVisible, enabled: enabled, selected: true))
+    entries.append(.type(sectionId: sectionId, index: index, text: L10n.peerInfoPreHistoryVisible, enabled: enabled, selected: true, viewType: .firstItem))
     index += 1
-    entries.append(.type(sectionId: sectionId, index: index, text: L10n.peerInfoPreHistoryHidden, enabled: !enabled, selected: false))
+    entries.append(.type(sectionId: sectionId, index: index, text: L10n.peerInfoPreHistoryHidden, enabled: !enabled, selected: false, viewType: .lastItem))
     index += 1
     
-    entries.append(.text(sectionId: sectionId, index: index, text: enabled ? L10n.preHistorySettingsDescriptionVisible : isGrpup ? L10n.preHistorySettingsDescriptionGroupHidden : L10n.preHistorySettingsDescriptionHidden))
+    entries.append(.text(sectionId: sectionId, index: index, text: enabled ? L10n.preHistorySettingsDescriptionVisible : isGrpup ? L10n.preHistorySettingsDescriptionGroupHidden : L10n.preHistorySettingsDescriptionHidden, viewType: .textBottomItem))
     index += 1
     
     return entries
@@ -154,6 +154,10 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.getBackgroundColor = {
+            theme.colors.listBackground
+        }
         
         let context = self.context
         let peerId = self.peerId

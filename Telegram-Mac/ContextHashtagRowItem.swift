@@ -73,7 +73,7 @@ private class ContextHashtagRowView : TableRowView {
     
     override var backdorColor: NSColor {
         if let item = item {
-            return item.isSelected ? theme.colors.blueSelect : theme.colors.background
+            return item.isSelected ? theme.colors.accentSelect : theme.colors.background
         } else {
             return theme.colors.background
         }

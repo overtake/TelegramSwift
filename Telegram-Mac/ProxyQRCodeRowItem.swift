@@ -10,22 +10,18 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKitMac
 
-class ProxyQRCodeRowItem: TableRowItem {
+class ProxyQRCodeRowItem: GeneralRowItem {
 
     let link: String
     
-    private let _stableId: AnyHashable
-    override var stableId: AnyHashable {
-        return _stableId
-    }
+
     fileprivate let textLayout: TextViewLayout
     
     init(_ initialSize: NSSize, stableId: AnyHashable, link: String) {
         self.link = link
-        self._stableId = stableId
         textLayout = TextViewLayout(.initialize(string: L10n.proxySettingsQRText, color: theme.colors.grayText, font: .normal(.text)), alignment: .center, alwaysStaticItems: true)
         textLayout.measure(width: 256)
-        super.init(initialSize)
+        super.init(initialSize, stableId: stableId, viewType: .singleItem)
     }
 
     
@@ -56,6 +52,11 @@ private final class ProxyQRCodeRowView : TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var backdorColor: NSColor {
+        guard let item = item as? ProxyQRCodeRowItem else { return theme.colors.background }
+        return item.viewType.rowBackground
+    }
+    
     override func layout() {
         super.layout()
         textView.centerX(y: 10)
@@ -70,7 +71,7 @@ private final class ProxyQRCodeRowView : TableRowView {
         
         textView.update(item.textLayout)
         
-        disposable.set((qrCode(string: item.link, color: theme.colors.text, backgroundColor: theme.colors.background, scale: 2.0)
+        disposable.set((qrCode(string: item.link, color: theme.colors.text, backgroundColor: theme.colors.grayBackground, scale: 2.0)
             |> map { generator -> CGImage? in
                 let imageSize = CGSize(width: 256, height: 256)
                 let context = generator.execute(TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()), generator.data)

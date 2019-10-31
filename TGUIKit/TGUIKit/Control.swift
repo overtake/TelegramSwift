@@ -64,7 +64,7 @@ open class Control: View {
     private var handlers:[(ControlEvent,(Control) -> Void)] = []
     private var stateHandlers:[(ControlState,(Control) -> Void)] = []
     
-    private var backgroundState:[ControlState:NSColor] = [:]
+    private(set) internal var backgroundState:[ControlState:NSColor] = [:]
     private var mouseMovedInside: Bool = true
     private var longInvoked: Bool = false
     open override var backgroundColor: NSColor {
@@ -113,11 +113,16 @@ open class Control: View {
     
     public func apply(state:ControlState) -> Void {
         let state:ControlState = self.isSelected ? .Highlight : state
-        if let color = backgroundState[state] {
-            self.layer?.backgroundColor = color.cgColor
+        if isEnabled {
+            if let color = backgroundState[state] {
+                self.layer?.backgroundColor = color.cgColor
+            } else {
+                self.layer?.backgroundColor = backgroundState[.Normal]?.cgColor ?? self.backgroundColor.cgColor
+            }
         } else {
             self.layer?.backgroundColor = backgroundState[.Normal]?.cgColor ?? self.backgroundColor.cgColor
         }
+        
         if animates {
             self.layer?.animateBackground()
         }
@@ -393,6 +398,9 @@ open class Control: View {
     func apply(style:ControlStyle) -> Void {
         set(background: style.backgroundColor, for: .Normal)
         self.backgroundColor = style.backgroundColor
+        if self.animates {
+            self.layer?.animateBackground()
+        }
         self.setNeedsDisplayLayer()
     }
     

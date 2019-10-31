@@ -98,7 +98,7 @@ class ChatLayoutUtils: NSObject {
             return ChatInteractiveContentView.self
         } else if let file = media as? TelegramMediaFile {
             if file.isAnimatedSticker {
-                return ChatMediaAnimatedStickerView.self
+                return MediaAnimatedStickerView.self
             } else if file.isStaticSticker {
                 return ChatStickerContentView.self
             } else if file.isInstantVideo {

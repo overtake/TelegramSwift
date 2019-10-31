@@ -44,7 +44,7 @@ struct ChatHistoryViewTransitionUpdateEntry {
 private func mappedInsertEntries(context: AccountContext, peerId: PeerId, controllerInteraction: ChatInteraction, entries: [ChatHistoryViewTransitionInsertEntry]) -> [GridNodeInsertItem] {
     return entries.map { entry -> GridNodeInsertItem in
         switch entry.entry {
-        case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeInsertItem(index: entry.index, item: GridMessageItem(context: context, message: message, chatInteraction: controllerInteraction), previousIndex: entry.previousIndex)
         case .UnreadEntry:
             assertionFailure()
@@ -58,7 +58,7 @@ private func mappedInsertEntries(context: AccountContext, peerId: PeerId, contro
 private func mappedUpdateEntries(context: AccountContext, peerId: PeerId, controllerInteraction: ChatInteraction, entries: [ChatHistoryViewTransitionUpdateEntry]) -> [GridNodeUpdateItem] {
     return entries.map { entry -> GridNodeUpdateItem in
         switch entry.entry {
-        case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeUpdateItem(index: entry.index, previousIndex: entry.previousIndex, item: GridMessageItem(context: context, message: message, chatInteraction: controllerInteraction))
         case .UnreadEntry:
             assertionFailure()
@@ -148,7 +148,7 @@ private func mappedChatHistoryViewListTransition(context: AccountContext, peerId
 private func mappedInsertEntries(context: AccountContext, chatInteraction: ChatInteraction, entries: [(Int,ChatHistoryEntry,Int?)]) -> [GridNodeInsertItem] {
     return entries.map { entry -> GridNodeInsertItem in
         switch entry.1 {
-        case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeInsertItem(index: entry.0, item: GridMessageItem(context: context, message: message, chatInteraction: chatInteraction), previousIndex: entry.2)
         case .UnreadEntry:
             assertionFailure()
@@ -164,7 +164,7 @@ private func mappedInsertEntries(context: AccountContext, chatInteraction: ChatI
 private func mappedUpdateEntries(context: AccountContext, chatInteraction: ChatInteraction, entries: [(Int,ChatHistoryEntry,Int)]) -> [GridNodeUpdateItem] {
     return entries.map { entry -> GridNodeUpdateItem in
         switch entry.1 {
-        case let .MessageEntry(message, _, _, _, _, _, _, _, _):
+        case let .MessageEntry(message, _, _, _, _, _, _):
             return GridNodeUpdateItem(index: entry.0, previousIndex: entry.2, item: GridMessageItem(context: context, message: message, chatInteraction: chatInteraction))
         case .UnreadEntry:
             assertionFailure()
@@ -277,7 +277,7 @@ class PeerMediaGridController: GenericViewController<PeerMediaGridView> {
     
     var itemSize: NSSize {
         let count = ceil(bounds.width / 120)
-        let width = floorToScreenPixels(scaleFactor: view.backingScaleFactor, bounds.width / count)
+        let width = floorToScreenPixels(view.backingScaleFactor, bounds.width / count)
         return NSMakeSize(width - 4, width)
     }
     

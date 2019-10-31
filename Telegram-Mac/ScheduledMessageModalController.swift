@@ -10,28 +10,18 @@ import TGUIKit
 
 
 
-private var timeIntervals:[TimeInterval]  {
-    var intervals:[TimeInterval] = []
+private var timeIntervals:[TimeInterval?]  {
+    var intervals:[TimeInterval?] = []
     for i in 0 ... 23 {
         let current = Double(i) * 60.0 * 60
         intervals.append(current)
-        #if DEBUG
+//        #if DEBUG
         for i in 1 ..< 59 {
             intervals.append(current + Double(i) * 60.0)
         }
-        #else
-        intervals.append(current + 5.0 * 60.0)
-        intervals.append(current + 10.0 * 60.0)
-        intervals.append(current + 15.0 * 60.0)
-        intervals.append(current + 20.0 * 60.0)
-        intervals.append(current + 25.0 * 60.0)
-        intervals.append(current + 30.0 * 60.0)
-        intervals.append(current + 35.0 * 60.0)
-        intervals.append(current + 40.0 * 60.0)
-        intervals.append(current + 45.0 * 60.0)
-        intervals.append(current + 50.0 * 60.0)
-        intervals.append(current + 55.0 * 60.0)
-        #endif
+        if i < 23 {
+            intervals.append(nil)
+        }
 
     }
     return intervals
@@ -178,7 +168,7 @@ class ScheduledMessageModalController: ModalViewController {
         if CalendarUtils.isSameDate(Date(), date: date, checkDay: true) {
             
              if current < Date() {
-                for interval in timeIntervals {
+                for interval in timeIntervals.compactMap ({$0}) {
                     let new = date.startOfDay.addingTimeInterval(interval)
                     if new > Date() {
                         applyTime(new)
@@ -257,15 +247,20 @@ class ScheduledMessageModalController: ModalViewController {
                 let day = self.genericView.dayPicker.selected.value
                 
                 for interval in timeIntervals {
-                    let date = day.startOfDay.addingTimeInterval(interval)
-                    if CalendarUtils.isSameDate(Date(), date: day, checkDay: true) {
-                        if Date() > date {
-                            continue
+                    if let interval = interval {
+                        let date = day.startOfDay.addingTimeInterval(interval)
+                        if CalendarUtils.isSameDate(Date(), date: day, checkDay: true) {
+                            if Date() > date {
+                                continue
+                            }
                         }
+                        items.append(SPopoverItem(formatTime(date), { [weak self] in
+                            self?.applyTime(date)
+                        }, height: 30))
+                    } else if !items.isEmpty {
+                        items.append(SPopoverItem())
                     }
-                    items.append(SPopoverItem(formatTime(date), { [weak self] in
-                        self?.applyTime(date)
-                    }, height: 30))
+                    
                 }
                 
                 showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), edge: .maxY, inset: NSMakePoint(-12, -50))

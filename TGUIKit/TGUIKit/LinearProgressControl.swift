@@ -62,6 +62,13 @@ public class LinearProgressControl: Control {
         }
     }
     
+    public var cornerRadius: CGFloat = 0 {
+        didSet {
+            self.progressView.layer?.cornerRadius = cornerRadius
+            self.layer?.cornerRadius = cornerRadius
+        }
+    }
+    
     public var scrubberImage: CGImage? {
         didSet {
             if let scrubberImage = scrubberImage {
@@ -220,7 +227,7 @@ public class LinearProgressControl: Control {
     public func set(progress:CGFloat, animated:Bool, duration: Double, beginTime: Double?, offset: Double, speed: Float, repeatForever: Bool = false) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
-        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
         
         
         progressView.centerY(x: 0)
@@ -249,7 +256,7 @@ public class LinearProgressControl: Control {
     public func set(progress:CGFloat, animated:Bool = false, duration: Double = 0.2) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
-        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
 
         progressView.change(size: size, animated: animated, duration: duration, timingFunction: .linear)
         if let scrubber = scrubber {
@@ -263,7 +270,7 @@ public class LinearProgressControl: Control {
     public func set(fetchingProgress: CGFloat, animated:Bool = false, duration: Double = 0.2) {
         let fetchingProgress:CGFloat = fetchingProgress.isNaN ? 1 : fetchingProgress
         self.fetchingProgress = fetchingProgress
-        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, containerView.frame.width * fetchingProgress), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(backingScaleFactor, containerView.frame.width * fetchingProgress), progressHeight)
         fetchingView.change(size: size, animated: animated, duration: duration, timingFunction: .linear)
         
         fetchingView.centerY(x: 0)
@@ -297,7 +304,7 @@ public class LinearProgressControl: Control {
             let view = self.fetchingViewRanges[i]
             let width = (range.upperBound - range.lowerBound) * containerView.frame.width
             view.change(size: NSMakeSize(width, progressHeight), animated: animated, duration: 0.2, timingFunction: .linear)
-            view.setFrameOrigin(range.lowerBound * containerView.frame.width, floorToScreenPixels(scaleFactor: backingScaleFactor, (containerView.frame.height - progressHeight) / 2))
+            view.setFrameOrigin(range.lowerBound * containerView.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - progressHeight) / 2))
             view.layer?.cornerRadius = roundCorners ? view.frame.height / 2 : 0
         }
     }
@@ -320,10 +327,10 @@ public class LinearProgressControl: Control {
         case .top:
             containerView.frame = NSMakeRect(insets.left, 0, frame.width - insets.left - insets.right, progressHeight)
         case .center:
-            containerView.frame = NSMakeRect(insets.left, floorToScreenPixels(scaleFactor: backingScaleFactor, (frame.height - progressHeight) / 2), frame.width - insets.left - insets.right, progressHeight)
+            containerView.frame = NSMakeRect(insets.left, floorToScreenPixels(backingScaleFactor, (frame.height - progressHeight) / 2), frame.width - insets.left - insets.right, progressHeight)
         }
         
-        let size = NSMakeSize(floorToScreenPixels(scaleFactor: backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
+        let size = NSMakeSize(floorToScreenPixels(backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
         progressView.setFrameSize(size)
         
         

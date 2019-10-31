@@ -45,10 +45,20 @@ private enum GroupStickersetLoadingStatus : Equatable {
 
 private enum GroupStickersetEntry : TableItemListNodeEntry {
     case section(Int32)
-    case input(Int32, value: String)
-    case status(Int32, status:GroupStickersetLoadingStatus)
-    case description(Int32, Int32, text: String)
-    case pack(Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool)
+    case input(Int32, value: String, viewType: GeneralViewType)
+    case status(Int32, status:GroupStickersetLoadingStatus, viewType: GeneralViewType)
+    case description(Int32, Int32, text: String, viewType: GeneralViewType)
+    case pack(Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, GeneralViewType)
+    
+    func withUpdatedViewType(_ viewType: GeneralViewType) -> GroupStickersetEntry {
+        switch self {
+        case .section: return self
+        case let .input(sectionId, value: value, _): return .input(sectionId, value: value, viewType: viewType)
+        case let .status(sectionId, status: status, _): return .status(sectionId, status: status, viewType: viewType)
+        case let .description(sectionId, index, text: text, _): return .description(sectionId, index, text: text, viewType: viewType)
+        case let .pack(sectionId, index, info, item, count, selected, _): return .pack(sectionId, index, info, item, count, selected, viewType)
+        }
+    }
 
     var stableId: GroupStickersetEntryId {
         switch self {
@@ -58,9 +68,9 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
             return .input
         case .status:
             return .status
-        case .description(_, let id, _):
+        case .description(_, let id, _, _):
             return .description(id)
-        case .pack(_, _, let info, _, _, _):
+        case .pack(_, _, let info, _, _, _, _):
             return .pack(info.id)
         }
     }
@@ -71,7 +81,7 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
             return 0
         case .status:
             return 1
-        case .description(_, let index, _):
+        case .description(_, let index, _, _):
             return 2 + index
         case .pack:
             fatalError("")
@@ -82,13 +92,13 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case let .input(sectionId, _):
+        case let .input(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .status(sectionId, _):
+        case let .status(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .description(sectionId, _, _):
+        case let .description(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .pack( sectionId, index, _, _, _, _):
+        case let .pack( sectionId, index, _, _, _, _, _):
             return (sectionId * 1000) + 100 + index
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -101,39 +111,40 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
     func item(_ arguments: GroupStickersArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .input(_, value):
-            return GeneralInputRowItem(initialSize, stableId: stableId, placeholder: "t.me/addstickers/", text: value, limit: 30, insets: NSEdgeInsets(left: 30, right: 30, top: 2, bottom: 3), textChangeHandler: { updatedText in
-                arguments.textChanged(value, updatedText)
-            }, textFilter: { text -> String in
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+        case let .input(_, value, viewType):
+            return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: value, placeholder: nil, inputPlaceholder: "https://t.me/addstickers/", defaultText: "https://t.me/addstickers/", rightItem: .action(theme.icons.recentDismiss, .clearText), filter: { text in
                 var filter = NSCharacterSet.alphanumerics
                 filter.insert(charactersIn: "_")
                 return text.trimmingCharacters(in: filter.inverted)
-            }, holdText:true, pasteFilter: { value in
+            }, updated: { updatedText in
+                 arguments.textChanged(value, updatedText)
+            }, pasteFilter: { value in
                 if let index = value.range(of: "t.me/addstickers/") {
-                    return (true, value.substring(from: index.upperBound))
+                    return (true, String(value[index.upperBound...]))
                 }
                 return (false, value)
-            }, canFastClean: true)
-        case let .description(_, _, text):
+            }, limit: 30)
+            
+        case let .description(_, _, text, viewType):
             let attr = NSMutableAttributedString()
             _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.text))
             
             attr.detectLinks(type: [.Mentions, .Hashtags], context: arguments.context, color: theme.colors.link, openInfo: { peerId, _, _, _ in
                 arguments.openChat(peerId)
             })
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: attr)
-        case let .status(_, status):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: attr, viewType: viewType)
+        case let .status(_, status, viewType):
             switch status {
             case let .loaded(info, topItem, count):
-                return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .empty, action: {})
+                return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: .empty, viewType: viewType, action: {})
             case .loading:
-                return LoadingTableItem(initialSize, height: 50, stableId: stableId)
+                return LoadingTableItem(initialSize, height: 50, stableId: stableId, viewType: viewType)
             case .failed:
-                return EmptyGroupstickerSearchRowItem(initialSize, height: 50, stableId: stableId)
+                return EmptyGroupstickerSearchRowItem(initialSize, height: 50, stableId: stableId, viewType: viewType)
             }
-        case let .pack(_, _, info, topItem, count, selected):
-            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: selected ? .selected : .empty, action: {
+        case let .pack(_, _, info, topItem, count, selected, viewType):
+            return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: info, topItem: topItem, itemCount: count, unread: false, editing: ItemListStickerPackItemEditing(editable: false, editing: false), enabled: true, control: selected ? .selected : .empty, viewType: viewType, action: {
                 if let topItem = topItem {
                     arguments.installStickerset((info, [topItem], count))
                 }
@@ -164,25 +175,35 @@ private func groupStickersEntries(state: GroupStickerSetControllerState, view: C
         }
     }
     
-    entries.append(.input(sectionId, value: value))
     
+    var inputBlock: [GroupStickersetEntry] = []
+    func applyBlock(_ block:[GroupStickersetEntry]) {
+        var block = block
+        for (i, item) in block.enumerated() {
+            block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
+        }
+        entries.append(contentsOf: block)
+    }
     
+    inputBlock.append(.input(sectionId, value: value, viewType: .singleItem))
     
     if state.loading {
-        entries.append(.status(sectionId, status: .loading))
+        inputBlock.append(.status(sectionId, status: .loading, viewType: .singleItem))
     } else {
         if state.failed {
-            entries.append(.status(sectionId, status: .failed))
+            inputBlock.append(.status(sectionId, status: .failed, viewType: .singleItem))
         } else if let loadedPack = state.loadedPack {
-            entries.append(.status(sectionId, status: .loaded(loadedPack.0, loadedPack.1.first as? StickerPackItem, loadedPack.2)))
+            inputBlock.append(.status(sectionId, status: .loaded(loadedPack.0, loadedPack.1.first as? StickerPackItem, loadedPack.2), viewType: .singleItem))
         } else {
             if let specificPack = specificPack, !value.isEmpty {
-                entries.append(.status(sectionId, status: .loaded(specificPack.0, specificPack.1.first as? StickerPackItem, Int32(specificPack.1.count))))
+                inputBlock.append(.status(sectionId, status: .loaded(specificPack.0, specificPack.1.first as? StickerPackItem, Int32(specificPack.1.count)), viewType: .singleItem))
             }
         }
     }
     
-    entries.append(.description(sectionId, descriptionId, text: tr(L10n.groupStickersCreateDescription)))
+    applyBlock(inputBlock)
+    
+    entries.append(.description(sectionId, descriptionId, text: L10n.groupStickersCreateDescription, viewType: .textBottomItem))
     descriptionId += 1
 
     
@@ -191,12 +212,12 @@ private func groupStickersEntries(state: GroupStickerSetControllerState, view: C
     
     
     
-    entries.append(.description(sectionId, descriptionId, text: tr(L10n.groupStickersChooseHeader)))
+    entries.append(.description(sectionId, descriptionId, text: L10n.groupStickersChooseHeader, viewType: .textTopItem))
     descriptionId += 1
     if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
         if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
             var index: Int32 = 0
-            for entry in packsEntries {
+            for (i, entry) in packsEntries.enumerated() {
                 if let info = entry.info as? StickerPackCollectionInfo {
                     var selected: Bool
                     if let loadedPack = state.loadedPack {
@@ -204,7 +225,7 @@ private func groupStickersEntries(state: GroupStickerSetControllerState, view: C
                     } else {
                         selected = info == specificPack?.0
                     }
-                    entries.append(.pack(sectionId, index, info, entry.firstItem as? StickerPackItem, info.count == 0 ? entry.count : info.count, selected))
+                    entries.append(.pack(sectionId, index, info, entry.firstItem as? StickerPackItem, info.count == 0 ? entry.count : info.count, selected, bestGeneralViewType(packsEntries, for: i)))
                     index += 1
                 }
             }
@@ -256,10 +277,31 @@ private struct GroupStickerSetControllerState: Equatable {
 
 class GroupStickerSetController: TableViewController {
     private let peerId: PeerId
+    private let disposable = MetaDisposable()
     private var saveGroupStickerSet:(()->Void)? = nil
     init(_ context: AccountContext, peerId:PeerId) {
         self.peerId = peerId
         super.init(context)
+    }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+    override func becomeFirstResponder() -> Bool? {
+        return true
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        var responder: NSResponder?
+        genericView.enumerateViews { view -> Bool in
+            if responder == nil, let firstResponder = view.firstResponder {
+                responder = firstResponder
+                return false
+            }
+            return true
+        }
+        return responder
     }
     
     override func viewDidLoad() {
@@ -322,14 +364,21 @@ class GroupStickerSetController: TableViewController {
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<GroupStickersetEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
-        genericView.merge(with: combineLatest(statePromise.get() |> deliverOnMainQueue, stickerPacks.get() |> deliverOnMainQueue, peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: peerId) |> deliverOnMainQueue, appearanceSignal)
+        
+        let signal = combineLatest(queue: prepareQueue,statePromise.get(), stickerPacks.get(), peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: peerId), appearanceSignal)
             |> map { state, view, specificPack, appearance -> TableUpdateTransition in
                 let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack.packInfo).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
             } |> afterDisposed {
                 actionsDisposable.dispose()
-            } )
-        readyOnce()
+        } |> deliverOnMainQueue
+        
+        self.disposable.set(signal.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+            self?.readyOnce()
+        }))
+        
+       
         
         actionsDisposable.add((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
             var enabled = !state.failed

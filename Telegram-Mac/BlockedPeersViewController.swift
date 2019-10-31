@@ -21,14 +21,14 @@ private final class BlockedPeerControllerArguments {
 private enum BlockedPeerEntryStableId: Hashable {
     case peer(PeerId)
     case empty
-    case whiteSpace
+    case sectionId(Int32)
     var hashValue: Int {
         switch self {
         case let .peer(peerId):
             return peerId.hashValue
         case .empty:
             return 0
-        case .whiteSpace:
+        case .sectionId:
             return 1
         }
     }
@@ -36,34 +36,40 @@ private enum BlockedPeerEntryStableId: Hashable {
 }
 
 private enum BlockedPeerEntry: Identifiable, Comparable {
-    case peerItem(Int32, Peer, ShortPeerDeleting?, Bool)
+    case section(Int32)
+    case peerItem(Int32, Int32, Peer, ShortPeerDeleting?, Bool, GeneralViewType)
     case empty(Bool)
-    case whiteSpace(CGFloat)
     var stableId: BlockedPeerEntryStableId {
         switch self {
-        case let .peerItem(_, peer, _, _):
+        case let .peerItem(_, _, peer, _, _, _):
             return .peer(peer.id)
         case .empty:
             return .empty
-        case .whiteSpace:
-            return .whiteSpace
+        case let .section(id):
+            return .sectionId(id)
         }
     }
     
     static func ==(lhs: BlockedPeerEntry, rhs: BlockedPeerEntry) -> Bool {
         switch lhs {
-        case let .peerItem(lhsIndex, lhsPeer, lhsEditing, lhsEnabled):
-            if case let .peerItem(rhsIndex, rhsPeer, rhsEditing, rhsEnabled) = rhs {
+        case let .peerItem(lhsSectionId, lhsIndex, lhsPeer, lhsEditing, lhsEnabled, lhsViewType):
+            if case let .peerItem(rhsSectionId, rhsIndex, rhsPeer, rhsEditing, rhsEnabled, rhsViewType) = rhs {
                 if lhsIndex != rhsIndex {
                     return false
                 }
                 if !lhsPeer.isEqual(rhsPeer) {
                     return false
                 }
+                if lhsSectionId != rhsSectionId {
+                    return false
+                }
                 if lhsEditing != rhsEditing {
                     return false
                 }
                 if lhsEnabled != rhsEnabled {
+                    return false
+                }
+                if rhsViewType != lhsViewType {
                     return false
                 }
                 return true
@@ -76,44 +82,33 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
             } else {
                 return false
             }
-        case let .whiteSpace(height):
-            if case .whiteSpace(height) = rhs {
+        case let .section(id):
+            if case .section(id) = rhs {
                 return true
             } else {
                 return false
             }
+        }
+    }
+    
+    var index: Int32 {
+        switch self {
+        case .empty:
+            return 0
+        case let .peerItem(sectionId, index, _, _, _, _):
+            return (sectionId * 1000) + index
+        case let .section(sectionId):
+            return (sectionId * 1000) + sectionId
         }
     }
     
     static func <(lhs: BlockedPeerEntry, rhs: BlockedPeerEntry) -> Bool {
-        switch lhs {
-        case let .peerItem(index, _, _, _):
-            switch rhs {
-            case let .peerItem(rhsIndex, _, _, _):
-                return index < rhsIndex
-            case .empty:
-                return false
-            case .whiteSpace:
-                return false
-            }
-        case .empty:
-            if case .empty = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .whiteSpace:
-            if case .whiteSpace = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
+        return lhs.index < rhs.index
     }
     
     func item(_ arguments: BlockedPeerControllerArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
-        case let .peerItem(_, peer, editing, enabled):
+        case let .peerItem(_, _, peer, editing, enabled, viewType):
             
             let interactionType:ShortPeerItemInteractionType
             if let editing = editing {
@@ -125,7 +120,7 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height:44, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height:46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openPeer(peer.id)
             }, contextMenuItems: {
                 if case .plain = interactionType {
@@ -138,9 +133,9 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 
             })
         case let .empty(progress):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: tr(L10n.blockedPeersEmptyDescrpition))
-        case let .whiteSpace(height):
-            return GeneralRowItem(initialSize, height: height, stableId: stableId)
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: L10n.blockedPeersEmptyDescrpition, viewType: .singleItem)
+        case .section:
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -188,23 +183,28 @@ private func blockedPeersControllerEntries(state: BlockedPeerControllerState, bl
     var entries: [BlockedPeerEntry] = []
     
     var index: Int32 = 0
-    
+    var sectionId: Int32 = 0
     if !blockedState.peers.isEmpty {
-        entries.append(.whiteSpace(16))
+        entries.append(.section(sectionId))
+        sectionId += 1
     }
-    for peer in blockedState.peers {
-        if let peer = peer.peer {
+    for rendered in blockedState.peers {
+        if let peer = rendered.peer {
             var deleting:ShortPeerDeleting? = nil
             if state.editing {
                 deleting = ShortPeerDeleting(editable: true)
             }
-            
-            entries.append(.peerItem(index, peer, deleting, state.removingPeerId != peer.id))
+
+            entries.append(.peerItem(sectionId, index, peer, deleting, state.removingPeerId != peer.id, bestGeneralViewType(blockedState.peers, for: rendered)))
             index += 1
         }
     }
-    if entries.isEmpty {
+    
+    if blockedState.peers.isEmpty {
         entries.append(.empty(blockedState.peers.isEmpty))
+    } else {
+        entries.append(.section(sectionId))
+        sectionId += 1
     }
     
     return entries
@@ -216,7 +216,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<BlockedPeerEntry
         return entry.entry.item(arguments, initialSize: initialSize)
     }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true, grouping: false)
 }
 
 
@@ -231,6 +231,11 @@ class BlockedPeersViewController: EditableViewController<TableView> {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.getBackgroundColor = {
+            theme.colors.listBackground
+        }
+        
         let context = self.context
         
         let updateState: ((BlockedPeerControllerState) -> BlockedPeerControllerState) -> Void = { [weak self] f in

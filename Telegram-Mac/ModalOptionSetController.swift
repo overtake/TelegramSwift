@@ -39,14 +39,23 @@ enum ModalOptionSetResult {
 
 private struct ModalOptionsState: Equatable {
     let options: [ModalOptionSet]
-    init(options:[ModalOptionSet]) {
+    let selectOne: Bool
+    init(options:[ModalOptionSet], selectOne: Bool) {
         self.options = options
+        self.selectOne = selectOne
     }
     
     func withToggledOptionAt(_ index: Int) -> ModalOptionsState {
         var options = self.options
         options[index] = options[index].withUpdatedSelected(!options[index].selected)
-        return ModalOptionsState(options: options)
+        if selectOne {
+            for i in 0 ..< options.count {
+                options[i] = options[i].withUpdatedSelected(false)
+            }
+            options[index] = options[index].withUpdatedSelected(true)
+        }
+        
+        return ModalOptionsState(options: options, selectOne: self.selectOne)
     }
 }
 
@@ -55,28 +64,30 @@ private let _id_border: InputDataIdentifier = InputDataIdentifier("_id_border")
 private func _id_option(_ index: Int)->InputDataIdentifier {
     return InputDataIdentifier("_id_option_\(index)")
 }
-private func modalOptionsSetEntries(state: ModalOptionsState, title: String?, arguments: ModalOptionsArguments) -> [InputDataEntry] {
+private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arguments: ModalOptionsArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     var sectionId: Int32 = 0
     var index: Int32 = 0
-    if let title = title {
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_title, equatable: InputDataEquatable(title), item: { initialSize, stableId in
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(title), textColor: theme.colors.grayText, alignment: .center, drawCustomSeparator: false, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 10, bottom: 10))
+    
+    if let desc = desc {
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_title, equatable: InputDataEquatable(desc), item: { initialSize, stableId in
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(desc), textColor: theme.colors.grayText, alignment: .center, drawCustomSeparator: false, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 10, bottom: 10))
         }))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_border, equatable: nil, item: { initialSize, stableId in
             return GeneralLineSeparatorRowItem.init(initialSize: initialSize, stableId: stableId)
         }))
         index += 1
-    } else {
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-    }
+    } 
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
     
     
     for (i, option) in state.options.enumerated() {
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(i), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: option.title, type: .selectable(option.selected), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: option.title, type: .selectable(option.selected), viewType: bestGeneralViewType(state.options, for: i), action: {
                 arguments.toggleOption(i)
             }, enabled: option.editable, disabledAction: {
                 
@@ -85,15 +96,15 @@ private func modalOptionsSetEntries(state: ModalOptionsState, title: String?, ar
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .custom(10)))
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries
 }
 
-func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet], actionText: (String, NSColor), title: String? = nil, result: @escaping ([ModalOptionSetResult])->Void) -> InputDataModalController {
+func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet], selectOne: Bool = false, actionText: (String, NSColor), desc: String? = nil, title: String, result: @escaping ([ModalOptionSetResult])->Void) -> InputDataModalController {
     
-    let initialState: ModalOptionsState = ModalOptionsState(options: options)
+    let initialState: ModalOptionsState = ModalOptionsState(options: options, selectOne: selectOne)
     let stateValue: Atomic<ModalOptionsState> = Atomic(value: initialState)
     let statePromise: ValuePromise<ModalOptionsState> = ValuePromise(initialState, ignoreRepeated: true)
     
@@ -110,7 +121,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     let actionsDisposable = DisposableSet()
     
     let dataSignal = statePromise.get() |> mapToSignal { state in
-        return .single(modalOptionsSetEntries(state: state, title: title, arguments: arguments))
+        return .single(modalOptionsSetEntries(state: state, desc: desc, arguments: arguments))
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
     }
@@ -119,7 +130,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     var dismiss:(()->Void)?
     
     
-    let controller = InputDataController(dataSignal: dataSignal, title: "", validateData: { data in
+    let controller = InputDataController(dataSignal: dataSignal, title: title, validateData: { data in
         
         result(stateValue.with { state in
             return state.options.map { option in
@@ -140,7 +151,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     
     let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: actionText.0, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, cancelTitle: L10n.modalCancel, height: 50)
+    }, drawBorder: true, height: 50, singleButton: true)
     
     
     
@@ -149,6 +160,9 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     dismiss = { [weak modalController] in
         modalController?.close()
     }
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: dismiss)
+    
     Queue.mainQueue().justDispatch {
         modalInteractions.updateDone { title in
             title.set(color: actionText.1, for: .Normal)

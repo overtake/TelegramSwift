@@ -2119,6 +2119,18 @@ public extension NSAttributedString {
         
         let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
         
+        
+        var index: Int = 1
+        while true {
+            let range = modified.string.nsstring.range(of: "\t0")
+            if range.location != NSNotFound {
+                modified.replaceCharacters(in: range, with: "\t\(index)")
+                index += 1
+            } else {
+                break
+            }
+        }
+        
         var attachments:[NSTextAttachment] = []
         
         string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
@@ -2274,3 +2286,36 @@ func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModifier?) -
         return data
     }
 }
+
+
+extension Double {
+    
+    func toString(decimal: Int = 9) -> String {
+        let value = decimal < 0 ? 0 : decimal
+        var string = String(format: "%.\(value)f", self)
+        
+        while string.last == "0" || string.last == "." {
+            if string.last == "." { string = String(string.dropLast()); break}
+            string = String(string.dropLast())
+        }
+        return string
+    }
+}
+
+
+public extension String {
+    func rightJustified(width: Int, pad: String = " ", truncate: Bool = false) -> String {
+        guard width > count else {
+            return truncate ? String(suffix(width)) : self
+        }
+        return String(repeating: pad, count: width - count) + self
+    }
+    
+    func leftJustified(width: Int, pad: String = " ", truncate: Bool = false) -> String {
+        guard width > count else {
+            return truncate ? String(prefix(width)) : self
+        }
+        return self + String(repeating: pad, count: width - count)
+    }
+}
+
