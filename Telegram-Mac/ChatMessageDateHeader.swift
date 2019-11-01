@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 private let timezoneOffset: Int32 = {
     let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)

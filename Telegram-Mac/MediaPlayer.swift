@@ -1,9 +1,10 @@
 import Foundation
-import SwiftSignalKitMac
-import PostboxMac
+import SwiftSignalKit
+import Postbox
 import CoreMedia
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 private let traceEvents = false
 
@@ -79,7 +80,7 @@ private final class MediaPlayerContext {
     private var forceAudioToSpeaker = false
     fileprivate let videoRenderer: VideoPlayerProxy
     
-    private var tickTimer: SwiftSignalKitMac.Timer?
+    private var tickTimer: SwiftSignalKit.Timer?
     
     private var lastStatusUpdateTimestamp: Double?
     private let playerStatus: ValuePromise<MediaPlayerStatus>
@@ -690,7 +691,7 @@ private final class MediaPlayerContext {
                 rate = self.baseRate
                 
                 let nextTickDelay = max(0.0, fullUntil - timestamp) / self.baseRate
-                let tickTimer = SwiftSignalKitMac.Timer(timeout: nextTickDelay, repeat: false, completion: { [weak self] in
+                let tickTimer = SwiftSignalKit.Timer(timeout: nextTickDelay, repeat: false, completion: { [weak self] in
                     self?.tick()
                 }, queue: self.queue)
                 self.tickTimer = tickTimer
@@ -707,7 +708,7 @@ private final class MediaPlayerContext {
                 if case .playing = self.state {
                     rate = self.baseRate
                     
-                    let tickTimer = SwiftSignalKitMac.Timer(timeout: nextTickDelay, repeat: false, completion: { [weak self] in
+                    let tickTimer = SwiftSignalKit.Timer(timeout: nextTickDelay, repeat: false, completion: { [weak self] in
                         self?.tick()
                     }, queue: self.queue)
                     self.tickTimer = tickTimer

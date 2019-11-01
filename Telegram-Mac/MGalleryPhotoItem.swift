@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 
 class MGalleryPhotoItem: MGalleryItem {
@@ -24,7 +25,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 if case let .Loaded(content) = webpage.content, let image = content.image {
                     self.media = image
                 } else if case let .Loaded(content) = webpage.content, let media = content.file  {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
@@ -34,7 +35,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 }
             } else {
                 if let media = entry.message!.media[0] as? TelegramMediaFile {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? NSZeroSize, resource: media.resource)
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
@@ -63,7 +64,7 @@ class MGalleryPhotoItem: MGalleryItem {
             if let modifiedSize = modifiedSize {
                 return modifiedSize.fitted(pagerSize)
             }
-            return largest.dimensions.fitted(pagerSize)
+            return largest.dimensions.size.fitted(pagerSize)
         }
         return NSZeroSize
     }
@@ -72,13 +73,13 @@ class MGalleryPhotoItem: MGalleryItem {
         if let largest = media.representations.last {
             if let modifiedSize = modifiedSize {
                 let lhsProportion = modifiedSize.width/modifiedSize.height
-                let rhsProportion = largest.dimensions.width/largest.dimensions.height
+                let rhsProportion = largest.dimensions.size.width/largest.dimensions.size.height
                 
                 if lhsProportion != rhsProportion {
                     return modifiedSize.fitted(size)
                 }
             }
-            return largest.dimensions.fitted(size)
+            return largest.dimensions.size.fitted(size)
         }
         return pagerSize
     }

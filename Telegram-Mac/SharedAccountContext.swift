@@ -7,10 +7,12 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
+import SyncCore
 
 private struct AccountAttributes: Equatable {
     let sortIndex: Int32

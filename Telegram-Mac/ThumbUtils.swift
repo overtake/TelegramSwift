@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
 private let extensionImageCache = Atomic<[String: CGImage]>(value: [:])
 

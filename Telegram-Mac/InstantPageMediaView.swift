@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
-
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import SyncCore
 final class InstantPageMediaView: View, InstantPageView {
     private let context: AccountContext
     let media: InstantPageMedia
@@ -178,7 +179,7 @@ final class InstantPageMediaView: View, InstantPageView {
 
             let resource = MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: Int32(dimensions.width), height: Int32(dimensions.height), zoom: zoom)
             
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
             let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)
             let signal = chatWebpageSnippetPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, small: false)
             self.imageView.setSignal(signal)
@@ -229,7 +230,7 @@ final class InstantPageMediaView: View, InstantPageView {
             self.imageView.frame = CGRect(origin: CGPoint(), size: size)
             
             if let image = self.media.media as? TelegramMediaImage, let largest = largestImageRepresentation(image.representations) {
-                var imageSize = largest.dimensions.aspectFilled(size)
+                var imageSize = largest.dimensions.size.aspectFilled(size)
                 var boundingSize = size
                 var radius: CGFloat = 0.0
                 
@@ -238,7 +239,7 @@ final class InstantPageMediaView: View, InstantPageView {
                     radius = roundCorners ? floor(min(size.width, size.height) / 2.0) : 0.0
                     
                     if fit {
-                        imageSize = largest.dimensions.fitted(size)
+                        imageSize = largest.dimensions.size.fitted(size)
                         boundingSize = imageSize;
                     }
                
@@ -251,7 +252,7 @@ final class InstantPageMediaView: View, InstantPageView {
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: radius), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
 
             } else if let file = self.media.media as? TelegramMediaFile {
-                let imageSize = file.dimensions?.aspectFilled(size) ?? size
+                let imageSize = file.dimensions?.size.aspectFilled(size) ?? size
                 let boundingSize = size
                 
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
@@ -270,7 +271,7 @@ final class InstantPageMediaView: View, InstantPageView {
                 
                 imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: imageSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
             } else if let webPage = media.media as? TelegramMediaWebpage, case let .Loaded(content) = webPage.content, let image = content.image, let largest = largestImageRepresentation(image.representations) {
-                var imageSize = largest.dimensions.aspectFilled(size)
+                var imageSize = largest.dimensions.size.aspectFilled(size)
                 var boundingSize = size
                 var radius: CGFloat = 0.0
                 
@@ -279,7 +280,7 @@ final class InstantPageMediaView: View, InstantPageView {
                     radius = roundCorners ? floor(min(size.width, size.height) / 2.0) : 0.0
                     
                     if fit {
-                        imageSize = largest.dimensions.fitted(size)
+                        imageSize = largest.dimensions.size.fitted(size)
                         boundingSize = imageSize;
                     }
                     

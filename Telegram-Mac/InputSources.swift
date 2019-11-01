@@ -6,10 +6,11 @@
 //  Copyright © 2019 Telegram. All rights reserved.
 //
 
-import SwiftSignalKitMac
+import SwiftSignalKit
 import Foundation
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 
 final class InputSources: NSObject {

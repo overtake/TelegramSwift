@@ -1,5 +1,5 @@
 import Foundation
-import SwiftSignalKitMac
+import SwiftSignalKit
 import CoreMedia
 
 

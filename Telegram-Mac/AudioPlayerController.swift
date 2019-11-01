@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 import AVKit
 
@@ -410,7 +411,7 @@ class APController : NSResponder {
     
     fileprivate(set) var needRepeat:Bool = false
 
-    fileprivate var timer:SwiftSignalKitMac.Timer?
+    fileprivate var timer:SwiftSignalKit.Timer?
 
     fileprivate var prevNextDisposable = DisposableSet()
 
@@ -886,7 +887,7 @@ class APController : NSResponder {
     private func startTimer() {
         var additional: Double = 0.2
         let duration: TimeInterval = 0.2
-        timer = SwiftSignalKitMac.Timer(timeout: duration, repeat: true, completion: { [weak self] in
+        timer = SwiftSignalKit.Timer(timeout: duration, repeat: true, completion: { [weak self] in
             if let `self` = self, let item = self.song {
                 let new = item.status.timestamp + additional * item.status.baseRate
                 item.state = .playing(current: new, duration: item.status.duration, progress: new / max((item.status.duration), 0.2), animated: true)

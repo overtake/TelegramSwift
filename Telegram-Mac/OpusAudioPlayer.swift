@@ -8,7 +8,7 @@
 
 import Cocoa
 import AudioUnit
-import SwiftSignalKitMac
+import SwiftSignalKit
 class OpusAudioPlayer: AudioPlayer, OpusBridgeDelegate {
 
     let bridge:OpusObjcBridge

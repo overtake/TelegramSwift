@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 class WPArticleLayout: WPLayout {
     
@@ -97,13 +98,13 @@ class WPArticleLayout: WPLayout {
         }
         
         if let image = content.image, groupLayout == nil {
-            if let dimensions = largestImageRepresentation(image.representations)?.dimensions {
+            if let dimensions = largestImageRepresentation(image.representations)?.dimensions.size {
                 imageSize = dimensions
             }
         }
         
         if let file = content.file, groupLayout == nil {
-            if let dimensions = file.dimensions {
+            if let dimensions = file.dimensions?.size {
                 imageSize = dimensions
             } else if isTheme {
                 imageSize = NSMakeSize(200, 200)

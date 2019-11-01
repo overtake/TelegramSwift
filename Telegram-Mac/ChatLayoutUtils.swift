@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 class ChatLayoutUtils: NSObject {
 
@@ -19,7 +20,7 @@ class ChatLayoutUtils: NSObject {
         let maxSize = NSMakeSize(min(width,320), min(width,320))
         
         if let image = media as? TelegramMediaImage {
-            size = image.representationForDisplayAtSize(maxSize)?.dimensions.fitted(maxSize) ?? maxSize
+            size = image.representationForDisplayAtSize(PixelDimensions(maxSize))?.dimensions.size.fitted(maxSize) ?? maxSize
             if size.width < 100 && size.height < 100 {
                 size = size.aspectFitted(NSMakeSize(200, 200))
             }
@@ -33,9 +34,9 @@ class ChatLayoutUtils: NSObject {
             var contentSize:NSSize = NSZeroSize
             for attr in file.attributes {
                 if case let .ImageSize(size) = attr {
-                    contentSize = size
+                    contentSize = size.size
                 } else if case let .Video(_,video, _) = attr {
-                    contentSize = video
+                    contentSize = video.size
                     if contentSize.width < 50 && contentSize.height < 50 {
                         contentSize = maxSize
                     }
@@ -44,7 +45,7 @@ class ChatLayoutUtils: NSObject {
                 }
             }
             if file.isAnimatedSticker {
-                let dimensions = file.dimensions
+                let dimensions = file.dimensions?.size
                 size = NSMakeSize(240, 240)
                 if file.isEmojiAnimatedSticker {
                     size = NSMakeSize(112, 112)

@@ -8,8 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import WalletCore
 
 private final class WalletTransactionArguments {
     let context: AccountContext
@@ -242,7 +244,7 @@ func WalletProcessTransactionController(context: AccountContext, tonContext: Ton
             let signal = getServerWalletSalt(network: context.account.network) |> mapError { _ in
                 return SendGramsFromWalletError.generic
                 } |> mapToSignal { salt in
-                    sendGramsFromWallet(postbox: context.account.postbox, network: context.account.network, tonInstance: tonContext.instance, walletInfo: walletInfo, decryptedSecret: decryptedSecret, localPassword: salt, toAddress: address, amount: state.amount, textMessage: comment.data(using: .utf8)!, forceIfDestinationNotInitialized: force, timeout: 0, randomId: state.randomId)
+                    sendGramsFromWallet(storage: tonContext.storage, tonInstance: tonContext.instance, walletInfo: walletInfo, decryptedSecret: decryptedSecret, localPassword: salt, toAddress: address, amount: state.amount, textMessage: comment.data(using: .utf8)!, forceIfDestinationNotInitialized: force, timeout: 0, randomId: state.randomId)
             } |> timeout(15.0, queue: .mainQueue(), alternate: .fail(.network)) |> deliverOnMainQueue
             
             sendDisposable.set(signal.start(error: { error in

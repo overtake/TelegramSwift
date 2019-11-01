@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 import Contacts

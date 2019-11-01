@@ -9,10 +9,11 @@
 import Cocoa
 import TGUIKit
 import MapKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
-import MtProtoKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
+
 
 
 private enum PickLocationState : Equatable {

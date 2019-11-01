@@ -9,9 +9,10 @@
 
 import Cocoa
 
-import PostboxMac
-import SwiftSignalKitMac
-import TelegramCoreMac
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 
 struct ChatTextFontAttributes: OptionSet {
     var rawValue: Int32 = 0

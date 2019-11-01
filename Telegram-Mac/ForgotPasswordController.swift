@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 
 private let _id_input_code = InputDataIdentifier("_id_input_code")

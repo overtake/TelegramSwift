@@ -1,8 +1,9 @@
 import Foundation
-import SwiftSignalKitMac
-import PostboxMac
+import SwiftSignalKit
+import Postbox
 import CoreMedia
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 
 

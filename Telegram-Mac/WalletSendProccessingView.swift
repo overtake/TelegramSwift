@@ -8,7 +8,8 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 final class WalletSendProccessingView : Control {
     private let titleView: TextView = TextView()

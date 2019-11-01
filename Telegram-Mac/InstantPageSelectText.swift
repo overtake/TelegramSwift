@@ -16,9 +16,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import AVFoundation
 
 struct InstantPageSelectContainer {

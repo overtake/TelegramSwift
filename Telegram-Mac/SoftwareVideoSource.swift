@@ -10,7 +10,7 @@ import Cocoa
 
 import Foundation
 import CoreMedia
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 private func readPacketCallback(userData: UnsafeMutableRawPointer?, buffer: UnsafeMutablePointer<UInt8>?, bufferSize: Int32) -> Int32 {
     let context = Unmanaged<SoftwareVideoSource>.fromOpaque(userData!).takeUnretainedValue()

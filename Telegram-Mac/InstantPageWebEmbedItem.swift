@@ -7,7 +7,8 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 final class InstantPageWebEmbedItem: InstantPageItem {
     var frame: CGRect

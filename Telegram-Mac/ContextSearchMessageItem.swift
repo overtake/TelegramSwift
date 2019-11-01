@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
+import Postbox
 
 
 class ContextSearchMessageItem: GeneralRowItem {

@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 struct EditedImageData : Equatable {
     let originalUrl: URL

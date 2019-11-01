@@ -1,5 +1,5 @@
 import Foundation
-import SwiftSignalKitMac
+import SwiftSignalKit
 import AVFoundation
 
 enum ManagedAudioSessionType {
@@ -124,7 +124,7 @@ public final class ManagedAudioSession {
     private let queue = Queue()
     private var holders: [HolderRecord] = []
     private var currentTypeAndOutputMode: (ManagedAudioSessionType, AudioSessionOutputMode)?
-    private var deactivateTimer: SwiftSignalKitMac.Timer?
+    private var deactivateTimer: SwiftSignalKit.Timer?
     
     private var isHeadsetPluggedInValue = false
     private let outputsToHeadphonesSubscribers = Bag<(Bool) -> Void>()
@@ -355,7 +355,7 @@ public final class ManagedAudioSession {
         if self.currentTypeAndOutputMode?.0 == .voiceCall {
             self.applyNone()
         } else {
-            let deactivateTimer = SwiftSignalKitMac.Timer(timeout: 1.0, repeat: false, completion: { [weak self] in
+            let deactivateTimer = SwiftSignalKit.Timer(timeout: 1.0, repeat: false, completion: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.applyNone()
                 }

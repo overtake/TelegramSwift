@@ -8,10 +8,9 @@
 
 import Cocoa
 import Compression
-import TelegramApiMac
 import Accelerate
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 
 private enum WriteResult {

@@ -8,9 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
+import SyncCore
 
 enum WallpaperPreviewMode : Equatable {
     case plain
@@ -62,14 +64,14 @@ extension Wallpaper {
         switch self {
         case let .file(_, file, _, _):
             if let dimensions = file.dimensions {
-                return dimensions
+                return dimensions.size
             }
              return NSMakeSize(300, 300)
         case let .image(representations, _):
             let largest = largestImageRepresentation(representations)
-            return largest!.dimensions
+            return largest!.dimensions.size
         case let .custom(representation, _):
-            return representation.dimensions
+            return representation.dimensions.size
         case .color:
             return NSMakeSize(300, 300)
         default:
@@ -90,7 +92,7 @@ private final class blurCheckbox : View {
     }
     
     private(set) var isSelected: Bool = false
-    private var timer: SwiftSignalKitMac.Timer?
+    private var timer: SwiftSignalKit.Timer?
     func set(isSelected: Bool, animated: Bool) {
         self.isSelected = isSelected
         if animated {
@@ -100,7 +102,7 @@ private final class blurCheckbox : View {
 
             let tick = isSelected ? ((1 - animationProgress) / (fps * 0.2)) : -(animationProgress / (fps * 0.2))
             
-            timer = SwiftSignalKitMac.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
+            timer = SwiftSignalKit.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
                 guard let `self` = self else {return}
                 self.animationProgress += tick
                 
@@ -707,7 +709,7 @@ private final class WallpaperPreviewView: View {
             blurCheckbox.isHidden = false
             colorCheckbox.isHidden = true
             patternCheckbox.isHidden = true
-            let dimensions = largestImageRepresentation(representations)!.dimensions
+            let dimensions = largestImageRepresentation(representations)!.dimensions.size
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
 
@@ -743,7 +745,7 @@ private final class WallpaperPreviewView: View {
                 representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource))
             }
             
-            let dimensions = largestImageRepresentation(representations)!.dimensions
+            let dimensions = largestImageRepresentation(representations)!.dimensions.size
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
 
@@ -864,7 +866,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
             if let representation = largestImageRepresentation(representations), let resource = representation.resource as? LocalFileReferenceMediaResource {
                 if let image = NSImage(contentsOfFile: resource.localFilePath)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                     
-                    let fittedImage = cropWallpaperImage(image, dimensions: representation.dimensions, rect: rect, magnify: magnify, settings: nil)
+                    let fittedImage = cropWallpaperImage(image, dimensions: representation.dimensions.size, rect: rect, magnify: magnify, settings: nil)
 
                     let options = NSMutableDictionary()
                     options.setValue(90 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
@@ -878,16 +880,16 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         if CGImageDestinationFinalize(colorDestination) {
                             let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                            result.append(TelegramMediaImageRepresentation(dimensions: fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90)), resource: thumdResource))
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource))
                         }
                     }
                     
-                    let fittedDimensions = WallpaperDimensions.aspectFitted(representation.dimensions)
+                    let fittedDimensions = WallpaperDimensions.aspectFitted(representation.dimensions.size)
                     
                      disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
                         copyToClipboard(path)
                         let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                        result.append(TelegramMediaImageRepresentation(dimensions: fittedDimensions, resource: resource))
+                        result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource))
                         
                         let wallpaper: Wallpaper = .image(result, settings: wallpaper.settings)
                         subscriber.putNext(wallpaper)
@@ -902,7 +904,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         subscriber.putNext(wallpaper.withUpdatedSettings(settings))
                         subscriber.putCompletion()
                     } else {
-                        let fittedImage = cropWallpaperImage(image, dimensions: dimensions, rect: rect, magnify: magnify, settings: isPattern ? settings : nil)
+                        let fittedImage = cropWallpaperImage(image, dimensions: dimensions.size, rect: rect, magnify: magnify, settings: isPattern ? settings : nil)
                         
                         let options = NSMutableDictionary()
                         options.setValue(90 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
@@ -916,11 +918,11 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                             if CGImageDestinationFinalize(colorDestination) {
                                 let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                                 account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                                result.append(TelegramMediaImageRepresentation(dimensions: fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90)), resource: thumdResource))
+                                result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource))
                             }
                         }
                         
-                        let fittedDimensions = WallpaperDimensions.aspectFitted(dimensions)
+                        let fittedDimensions = WallpaperDimensions.aspectFitted(dimensions.size)
                         
                         disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
                             let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
@@ -929,7 +931,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                             loop: for (i, attr) in attributes.enumerated() {
                                 switch attr {
                                 case .ImageSize:
-                                    attributes[i] = .ImageSize(size: fittedDimensions)
+                                    attributes[i] = .ImageSize(size: PixelDimensions(fittedDimensions))
                                     break loop
                                 default:
                                     break

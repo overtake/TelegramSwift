@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
     var messageText: NSString = message.text.fixed.nsstring
@@ -488,8 +489,8 @@ func showSlowModeTimeoutTooltip(_ slowMode: SlowMode, for view: NSView) {
     if let errorText = slowMode.errorText {
         if let validUntil = slowMode.validUntil {
             tooltip(for: view, text: errorText, updateText: { f in
-                var timer:SwiftSignalKitMac.Timer?
-                timer = SwiftSignalKitMac.Timer(timeout: 0.1, repeat: true, completion: {
+                var timer:SwiftSignalKit.Timer?
+                timer = SwiftSignalKit.Timer(timeout: 0.1, repeat: true, completion: {
                     
                     let timeout = (validUntil - Int32(Date().timeIntervalSince1970))
                     

@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 private func mediaForMessage(_ message: Message) -> Media? {
@@ -296,7 +297,7 @@ final class GridMessageItemNode: GridItemNode {
             let imageFrame = NSMakeRect(1, 1, bounds.width - 4, bounds.height - 4)
 
             
-            if let media = media as? TelegramMediaImage, let largestSize = largestImageRepresentation(media.representations)?.dimensions {
+            if let media = media as? TelegramMediaImage, let largestSize = largestImageRepresentation(media.representations)?.dimensions.size {
                 mediaDimensions = largestSize
 
                 let imageSize = largestSize.aspectFilled(NSMakeSize(bounds.width - 4, bounds.height - 4))
@@ -313,7 +314,7 @@ final class GridMessageItemNode: GridItemNode {
                 
                 self.videoAccessory?.removeFromSuperview()
                 self.videoAccessory = nil
-            } else if let file = media as? TelegramMediaFile, let imgSize = file.previewRepresentations.last?.dimensions {
+            } else if let file = media as? TelegramMediaFile, let imgSize = file.previewRepresentations.last?.dimensions.size {
 
                 mediaDimensions = imgSize
 

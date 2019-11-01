@@ -7,9 +7,10 @@
 //
 
 import Foundation
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 enum PeerChannelMemberContextKey: Equatable, Hashable {
     case recent
@@ -28,7 +29,7 @@ private final class PeerChannelMembersOnlineContext {
     let subscribers = Bag<(Int32) -> Void>()
     let disposable: Disposable
     var value: Int32?
-    var emptyTimer: SwiftSignalKitMac.Timer?
+    var emptyTimer: SwiftSignalKit.Timer?
     
     init(disposable: Disposable) {
         self.disposable = disposable
@@ -109,7 +110,7 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
                     current.subscribers.remove(index)
                     if current.subscribers.isEmpty {
                         if current.emptyTimer == nil {
-                            let timer = SwiftSignalKitMac.Timer(timeout: 60.0, repeat: false, completion: { [weak context] in
+                            let timer = SwiftSignalKit.Timer(timeout: 60.0, repeat: false, completion: { [weak context] in
                                 if let current = strongSelf.onlineContexts[peerId], let context = context, current === context {
                                     if current.subscribers.isEmpty {
                                         strongSelf.onlineContexts.removeValue(forKey: peerId)

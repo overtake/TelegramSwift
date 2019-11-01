@@ -11,8 +11,9 @@ import Cocoa
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 
 private let _id_input_code = InputDataIdentifier("_id_input_code")
 
@@ -110,7 +111,7 @@ private func timeoutSignal(codeData: CancelAccountResetData) -> Signal<Int32?, N
             let value = Atomic<Int32>(value: timeout)
             subscriber.putNext(timeout)
             
-            let timer = SwiftSignalKitMac.Timer(timeout: 1.0, repeat: true, completion: {
+            let timer = SwiftSignalKit.Timer(timeout: 1.0, repeat: true, completion: {
                 subscriber.putNext(value.modify { value in
                     return max(0, value - 1)
                 })

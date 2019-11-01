@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 
 final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let map:TelegramMediaMap
@@ -27,7 +28,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         self.resource = resource
         self.defaultImageSize = isVenue ? NSMakeSize(60, 60) : NSMakeSize(320, 120)
         self.url = "https://maps.google.com/maps?q=\(String(format:"%f", map.latitude)),\(String(format:"%f", map.longitude))"
-        let representation = TelegramMediaImageRepresentation(dimensions: defaultImageSize, resource: resource)
+        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(defaultImageSize), resource: resource)
         self.image = TelegramMediaImage(imageId: map.id ?? MediaId(namespace: 0, id: arc4random64()), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
         
         self.arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: defaultImageSize, boundingSize: defaultImageSize, intrinsicInsets: NSEdgeInsets())

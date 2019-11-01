@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 @available(OSX 10.12.2, *)
 private func peerMediaTouchBarItems(presentation: ChatPresentationInterfaceState) -> [NSTouchBarItem.Identifier] {

@@ -1,4 +1,4 @@
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 final class TelegramIconsTheme {
   private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])

@@ -8,7 +8,7 @@
 
 import Cocoa
 import Foundation
-import SwiftSignalKitMac
+import SwiftSignalKit
 import AVFoundation
 import Lottie
 import TGUIKit

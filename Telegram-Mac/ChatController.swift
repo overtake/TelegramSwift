@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 enum ChatMode {
@@ -1862,7 +1863,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.editEditingMessagePhoto = { [weak self] media in
             guard let `self` = self else {return}
-            if let resource = media.representationForDisplayAtSize(NSMakeSize(1280, 1280))?.resource {
+            if let resource = media.representationForDisplayAtSize(PixelDimensions(1280, 1280))?.resource {
                 _ = (context.account.postbox.mediaBox.resourceData(resource) |> deliverOnMainQueue).start(next: { [weak self] resource in
                     guard let `self` = self else {return}
                     let url = URL(fileURLWithPath: link(path:resource.path, ext:kMediaImageExt)!)

@@ -9,7 +9,8 @@
 import Cocoa
 
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 protocol TableItemListNodeEntry: Comparable, Identifiable {
     associatedtype ItemGenerationArguments

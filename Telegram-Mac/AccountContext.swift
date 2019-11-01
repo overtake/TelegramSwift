@@ -7,10 +7,13 @@
 //
 
 import Foundation
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
+import WalletCore
+import SyncCore
 
 struct TemporaryPasswordContainer {
     let date: TimeInterval
@@ -27,42 +30,142 @@ private final class TonInstanceData {
     var instance: TonInstance?
 }
 
+private final class TonNetworkProxyImpl: TonNetworkProxy {
+    private let network: Network
+    
+    init(network: Network) {
+        self.network = network
+    }
+    
+    func request(data: Data, timeout timeoutValue: Double, completion: @escaping (TonNetworkProxyResult) -> Void) -> Disposable {
+        return (walletProxyRequest(network: self.network, data: data)
+            |> timeout(timeoutValue, queue: .concurrentDefaultQueue(), alternate: .fail(.generic(500, "Local Timeout")))).start(next: { data in
+                completion(.reponse(data))
+            }, error: { error in
+                switch error {
+                case let .generic(_, text):
+                    completion(.error(text))
+                }
+            })
+    }
+}
 
-public final class StoredTonContext {
+final class WalletStorageInterfaceImpl: WalletStorageInterface {
+    private let postbox: Postbox
+    
+    init(postbox: Postbox) {
+        self.postbox = postbox
+    }
+    
+    func watchWalletRecords() -> Signal<[WalletStateRecord], NoError> {
+        return self.postbox.preferencesView(keys: [PreferencesKeys.walletCollection])
+            |> map { view -> [WalletStateRecord] in
+                guard let walletCollection = view.values[PreferencesKeys.walletCollection] as? WalletCollection else {
+                    return []
+                }
+                return walletCollection.wallets.compactMap { item -> WalletStateRecord? in
+                    do {
+                        return WalletStateRecord(info: try JSONDecoder().decode(WalletInfo.self, from: item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap { try? JSONDecoder().decode(CombinedWalletState.self, from: $0) })
+                    } catch {
+                        return nil
+                    }
+                }
+        }
+    }
+    
+    func getWalletRecords() -> Signal<[WalletStateRecord], NoError> {
+        return self.postbox.transaction { transaction -> [WalletStateRecord] in
+            guard let walletCollection = transaction.getPreferencesEntry(key: PreferencesKeys.walletCollection) as? WalletCollection else {
+                return []
+            }
+            return walletCollection.wallets.compactMap { item -> WalletStateRecord? in
+                do {
+                    return WalletStateRecord(info: try JSONDecoder().decode(WalletInfo.self, from: item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap { try? JSONDecoder().decode(CombinedWalletState.self, from: $0) })
+                } catch {
+                    return nil
+                }
+            }
+        }
+    }
+    
+    func updateWalletRecords(_ f: @escaping ([WalletStateRecord]) -> [WalletStateRecord]) -> Signal<[WalletStateRecord], NoError> {
+        return self.postbox.transaction { transaction -> [WalletStateRecord] in
+            let updatedRecords: [WalletStateRecord] = []
+            transaction.updatePreferencesEntry(key: PreferencesKeys.walletCollection, { current in
+                var walletCollection = (current as? WalletCollection) ?? WalletCollection(wallets: [])
+                let updatedItems = f(walletCollection.wallets.compactMap { item -> WalletStateRecord? in
+                    do {
+                        return WalletStateRecord(info: try JSONDecoder().decode(WalletInfo.self, from: item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap { try? JSONDecoder().decode(CombinedWalletState.self, from: $0) })
+                    } catch {
+                        return nil
+                    }
+                })
+                walletCollection.wallets = updatedItems.compactMap { item in
+                    do {
+                        return WalletCollectionItem(info: try JSONEncoder().encode(item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap {
+                            try? JSONEncoder().encode($0)
+                        })
+                    } catch {
+                        return nil
+                    }
+                }
+                return walletCollection
+            })
+            return updatedRecords
+        }
+    }
+    
+    func localWalletConfiguration() -> Signal<LocalWalletConfiguration, NoError> {
+        return .single(LocalWalletConfiguration(source: .string(""), blockchainName: ""))
+    }
+    
+    func updateLocalWalletConfiguration(_ f: @escaping (LocalWalletConfiguration) -> LocalWalletConfiguration) -> Signal<Never, NoError> {
+        return .complete()
+    }
+}
+
+final class StoredTonContext {
     private let basePath: String
     private let postbox: Postbox
     private let network: Network
-    public let keychain: TonKeychain
+    let keychain: TonKeychain
     private let currentInstance = Atomic<TonInstanceData>(value: TonInstanceData())
     
-    public init(basePath: String, postbox: Postbox, network: Network, keychain: TonKeychain) {
+    init(basePath: String, postbox: Postbox, network: Network, keychain: TonKeychain) {
         self.basePath = basePath
         self.postbox = postbox
         self.network = network
         self.keychain = keychain
     }
     
-    public func context(config: String, blockchainName: String, enableProxy: Bool) -> TonContext {
+    func context(config: String, blockchainName: String, enableProxy: Bool) -> TonContext {
         return self.currentInstance.with { data -> TonContext in
             if let instance = data.instance, data.config == config, data.blockchainName == blockchainName {
-                return TonContext(instance: instance, keychain: self.keychain)
+                return TonContext(instance: instance, keychain: self.keychain, storage: WalletStorageInterfaceImpl(postbox: self.postbox))
             } else {
                 data.config = config
-                let instance = TonInstance(basePath: self.basePath, config: config, blockchainName: blockchainName, network: enableProxy ? self.network : nil)
+                let tonNetwork: TonNetworkProxy?
+                if enableProxy {
+                    tonNetwork = TonNetworkProxyImpl(network: self.network)
+                } else {
+                    tonNetwork = nil
+                }
+                let instance = TonInstance(basePath: self.basePath, config: config, blockchainName: blockchainName, proxy: tonNetwork)
                 data.instance = instance
-                return TonContext(instance: instance, keychain: self.keychain)
+                return TonContext(instance: instance, keychain: self.keychain, storage: WalletStorageInterfaceImpl(postbox: self.postbox))
             }
         }
     }
 }
 
-public struct TonContext {
-    public let instance: TonInstance
-    public let keychain: TonKeychain
-    
-    public init(instance: TonInstance, keychain: TonKeychain) {
+struct TonContext {
+    let instance: TonInstance
+    let keychain: TonKeychain
+    let storage: WalletStorageInterfaceImpl
+    init(instance: TonInstance, keychain: TonKeychain, storage: WalletStorageInterfaceImpl) {
         self.instance = instance
         self.keychain = keychain
+        self.storage = storage
     }
 }
 

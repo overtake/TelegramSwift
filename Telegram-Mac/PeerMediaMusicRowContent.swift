@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 class PeerMediaMusicRowItem: PeerMediaRowItem {
     fileprivate let textLayout:TextViewLayout
@@ -210,7 +211,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             thumbView.layer?.contents = theme.icons.playerMusicPlaceholder
             thumbView.layer?.cornerRadius = .cornerRadius
             
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PeerMediaIconSize, resource: item.thumbResource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: item.thumbResource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
             
             thumbView.setSignal(chatMessagePhotoThumbnail(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
             

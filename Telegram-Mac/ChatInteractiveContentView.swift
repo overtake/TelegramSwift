@@ -7,18 +7,20 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
+import SyncCore
 
 final class ChatVideoAutoplayView {
     let mediaPlayer: MediaPlayer
     let view: MediaPlayerView
     
-    fileprivate var playTimer: SwiftSignalKitMac.Timer?
+    fileprivate var playTimer: SwiftSignalKit.Timer?
     
-    private var timer: SwiftSignalKitMac.Timer? = nil
+    private var timer: SwiftSignalKit.Timer? = nil
     var status: MediaPlayerStatus?
     
     init(mediaPlayer: MediaPlayer, view: MediaPlayerView) {
@@ -43,7 +45,7 @@ final class ChatVideoAutoplayView {
 
                 let tick = (enabled ? 1 - current : -current) / (fps * 0.3)
                 
-                self?.timer = SwiftSignalKitMac.Timer(timeout: abs(Double(tick)), repeat: true, completion: { [weak self] in
+                self?.timer = SwiftSignalKit.Timer(timeout: abs(Double(tick)), repeat: true, completion: { [weak self] in
                     current += tick
                     self?.mediaPlayer.setVolume(min(1, max(0, current)))
                     
@@ -136,7 +138,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             switch status.status {
             case .playing:
                 autoplayVideoView.playTimer?.invalidate()
-                autoplayVideoView.playTimer = SwiftSignalKitMac.Timer(timeout: 0.5, repeat: true, completion: { [weak self] in
+                autoplayVideoView.playTimer = SwiftSignalKit.Timer(timeout: 0.5, repeat: true, completion: { [weak self] in
                     self?.updateVideoAccessory(.Local, file: media, mediaPlayerStatus: status, animated: animated)
                     }, queue: .mainQueue())
                 
@@ -394,7 +396,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayVideoView = nil
                 videoAccessory?.removeFromSuperview()
                 videoAccessory = nil
-                dimensions = image.representationForDisplayAtSize(size)?.dimensions ?? size
+                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
                 
                 if let parent = parent, parent.containsSecretMedia {
                     updateImageSignal = chatSecretPhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
@@ -437,7 +439,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 }
                 
-                dimensions = file.dimensions ?? size
+                dimensions = file.dimensions?.size ?? size
                 
 
                 

@@ -7,10 +7,11 @@
 //
 
 import Foundation
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 final class InstantPageDetailsItem: InstantPageItem {
     var hasLinks: Bool = false
@@ -348,7 +349,7 @@ final class InstantPageDetailsArrowView : View {
     
     private var progress: CGFloat = 0.0
     private var targetProgress: CGFloat?
-    private var timer: SwiftSignalKitMac.Timer?
+    private var timer: SwiftSignalKit.Timer?
     
     init(color: NSColor, open: Bool) {
         self.color = color
@@ -379,7 +380,7 @@ final class InstantPageDetailsArrowView : View {
     }
     private func startTimer() {
         if timer == nil {
-            timer = SwiftSignalKitMac.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
+            timer = SwiftSignalKit.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
                 self?.displayLinkEvent()
             }, queue: Queue.mainQueue())
             timer?.start()

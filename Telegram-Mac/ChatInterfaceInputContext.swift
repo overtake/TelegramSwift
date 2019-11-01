@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 struct PossibleContextQueryTypes: OptionSet {
     var rawValue: Int32

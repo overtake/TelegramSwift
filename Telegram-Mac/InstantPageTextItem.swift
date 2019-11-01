@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 
 extension NSAttributedString.Key {
@@ -533,7 +534,7 @@ func attributedStringForRichText(_ text: RichText, styleStack: InstantPageTextSt
             let width: CGFloat
         }
         
-        var dimensions = dimensions
+        var dimensions = dimensions.size
         if let boundingWidth = boundingWidth {
             dimensions = dimensions.fittedToWidthOrSmaller(boundingWidth)
         }

@@ -8,9 +8,10 @@
 
 import Cocoa
 
-import PostboxMac
-import SwiftSignalKitMac
-import TelegramCoreMac
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 
 final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize?

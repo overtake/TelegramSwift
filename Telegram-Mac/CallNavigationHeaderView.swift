@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 class CallNavigationHeaderView: NavigationHeaderView {
     private let backgroundView = NSView()

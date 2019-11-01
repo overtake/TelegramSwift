@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
-
+import WalletCore
 
 private final class WalletReceiveArguments {
     let context: AccountContext

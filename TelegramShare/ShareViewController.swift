@@ -8,10 +8,12 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
-
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import SyncCore
+import OpenSSLEncryption
 
 class ShareViewController: NSViewController {
 
@@ -47,8 +49,10 @@ class ShareViewController: NSViewController {
         let encryptionParameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
 
         
+        
+        
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
-        let networkArguments = NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos", appVersion: "", voipMaxLayer: 90, appData: .single(nil))
+        let networkArguments = NetworkInitializationArguments(apiId: 2834, languagesCategory: "macos", appVersion: "", voipMaxLayer: 90, appData: .single(nil), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
         
         let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: { _ in })
         

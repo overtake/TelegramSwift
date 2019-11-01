@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 
@@ -54,7 +55,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
         
         if let iconImageRepresentation = iconImageRepresentation {
-            iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
+            iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
             icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
         } else {
             let fileName: String = file.fileName ?? ""

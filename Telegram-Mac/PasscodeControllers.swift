@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 
 enum PasscodeMode : Equatable {
@@ -178,7 +179,7 @@ func PasscodeController(sharedContext: SharedAccountContext, mode: PasscodeMode)
                     f(.fail(.fields(fields)))
                 } else {
                     actionsDisposable.add((sharedContext.accountManager.transaction { transaction in
-                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: 60 * 60, attempts: nil))
+                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode))
                     } |> deliverOnMainQueue).start(completed: {
                         f(.success(.navigationBackWithPushAnimation))
                     }))
@@ -229,7 +230,7 @@ func PasscodeController(sharedContext: SharedAccountContext, mode: PasscodeMode)
                     f(.fail(.fields(fields)))
                 } else {
                     actionsDisposable.add((sharedContext.accountManager.transaction { transaction in
-                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: nil, attempts: nil))
+                        transaction.setAccessChallengeData(.plaintextPassword(value: passcode))
                     } |> deliverOnMainQueue).start(completed: {
                         f(.success(.navigationBackWithPushAnimation))
                     }))

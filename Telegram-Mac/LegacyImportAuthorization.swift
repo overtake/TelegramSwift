@@ -7,10 +7,11 @@
 //
 
 
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
-//import MtProtoKitMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
+//
 //
 //enum AuthorizationLegacyData {
 //    case data(masterDatacenterId: Int32, userId:Int32, groups:[String: [String: Data]], peers:[Peer], secretMessages:[StoreMessage], resources: [(MediaResource, Data)], secretState:[PeerId: SecretChatStateBridge], passcode:String?)

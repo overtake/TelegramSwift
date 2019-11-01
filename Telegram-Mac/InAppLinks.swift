@@ -9,10 +9,12 @@
 import Cocoa
 import Foundation
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
-import MtProtoKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
+import MtProtoKit
+import WalletCore
 
 private let inapp:String = "chat://"
 private let tgme:String = "tg://"
@@ -441,28 +443,35 @@ func execute(inapp:inAppLink) {
         })
     case let .tonTransfer(_, context, data: data):
         if #available(OSX 10.12, *) {
-            let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, wallets, hasKeys in
+            let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, hasKeys in
                 if  let config = configuration.config, let blockchainName = configuration.blockchainName {
                     let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
-                    if !wallets.wallets.isEmpty, hasKeys {
-                        let amount = data.amount ?? 0
-                        let formattedAmount: String
-                        if amount > 0 {
-                            formattedAmount = formatBalanceText(amount)
-                        } else {
-                            formattedAmount = ""
-                        }
-                        let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: formattedAmount)
-                        showModal(with: controller, for: context.window)
-                        } else {
-                        confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in
-                            switch result {
-                            case .basic:
-                                context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
-                            default:
-                                break
+                    if hasKeys {
+                        let signal = tonContext.storage.getWalletRecords() |> deliverOnMainQueue
+                        _ = signal.start(next: { wallets in
+                            if !wallets.isEmpty {
+                                let amount = data.amount ?? 0
+                                let formattedAmount: String
+                                if amount > 0 {
+                                    formattedAmount = formatBalanceText(amount)
+                                } else {
+                                    formattedAmount = ""
+                                }
+                                let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: formattedAmount)
+                                showModal(with: controller, for: context.window)
+                            } else {
+                                confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in
+                                    switch result {
+                                    case .basic:
+                                        context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
+                                    default:
+                                        break
+                                    }
+                                })
                             }
                         })
+                    } else {
+                       context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable))
                     }
                 }
             })

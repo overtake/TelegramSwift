@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 struct GroupAccess {
     let highlightAdmins:Bool

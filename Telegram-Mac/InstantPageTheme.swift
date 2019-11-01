@@ -9,7 +9,7 @@
 import Cocoa
 
 import Foundation
-import PostboxMac
+import Postbox
 
 enum InstantPageFontStyle {
     case sans

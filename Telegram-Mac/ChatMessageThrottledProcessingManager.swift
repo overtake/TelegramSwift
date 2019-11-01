@@ -7,8 +7,8 @@
 //
 
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 final class ChatMessageThrottledProcessingManager {
     private let queue = Queue(name: "ChatMessageThrottledProcessingManager")
@@ -20,7 +20,7 @@ final class ChatMessageThrottledProcessingManager {
     
     var process: ((Set<MessageId>) -> Void)?
     
-    private var timer: SwiftSignalKitMac.Timer?
+    private var timer: SwiftSignalKit.Timer?
     private var processed = Set<MessageId>()
     private var buffer = Set<MessageId>()
     
@@ -41,7 +41,7 @@ final class ChatMessageThrottledProcessingManager {
             
             if self.timer == nil {
                 var completionImpl: (() -> Void)?
-                let timer = SwiftSignalKitMac.Timer(timeout: self.delay, repeat: false, completion: {
+                let timer = SwiftSignalKit.Timer(timeout: self.delay, repeat: false, completion: {
                     completionImpl?()
                 }, queue: self.queue)
                 completionImpl = { [weak self, weak timer] in

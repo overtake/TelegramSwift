@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 import WebKit
 
 
@@ -59,7 +60,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     
     
     override func measure(size: NSSize) {
-        if let embedSize = content.embedSize {
+        if let embedSize = content.embedSize?.size {
             let size = embedSize.aspectFitted(NSMakeSize(min(size.width - 100, 800), min(size.height - 100, 800)))
             webview.setFrameSize(size)
             

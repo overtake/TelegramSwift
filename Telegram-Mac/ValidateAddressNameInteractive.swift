@@ -8,9 +8,10 @@
 
 import Cocoa
 
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 enum AddressNameValidationStatus: Equatable {
     case checking

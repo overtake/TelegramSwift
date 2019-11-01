@@ -8,9 +8,10 @@
 
 import Cocoa
 
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
 
 enum ChatHistoryInitialSearchLocation {

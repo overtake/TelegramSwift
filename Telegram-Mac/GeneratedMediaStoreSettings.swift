@@ -7,8 +7,8 @@
 //
 
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 public struct GeneratedMediaStoreSettings: PreferencesEntry, Equatable {
     public let storeEditedPhotos: Bool

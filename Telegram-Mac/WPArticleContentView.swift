@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 
 class WPArticleContentView: WPContentView {
@@ -255,7 +256,7 @@ class WPArticleContentView: WPContentView {
             if layout.content.image == nil, let file = layout.content.file, let dimension = layout.imageSize {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)
-                representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimension), resource: file.resource))
                 image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: arc4random64()), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
                 
             }
@@ -272,7 +273,7 @@ class WPArticleContentView: WPContentView {
                     self.addSubview(imageView!)
                 }
                 
-                let closestRepresentation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280))//(largestImageRepresentation(image.representations))
+                let closestRepresentation = image.representationForDisplayAtSize(PixelDimensions(1280, 1280))
                 
                 if let closestRepresentation = closestRepresentation {
                     statusDisposable.set((layout.context.account.postbox.mediaBox.resourceStatus(closestRepresentation.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue).start(next: { [weak self] status in

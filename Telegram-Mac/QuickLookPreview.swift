@@ -7,13 +7,14 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 import Quartz
 import Foundation
-
+import SyncCore
 
 private class QuickLookPreviewItem : NSObject, QLPreviewItem {
     let media:Media

@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 
 
@@ -126,7 +127,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         container.addSubview(view)
                     } else {
                         let file = data.file
-                        let imageSize = file.dimensions?.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
+                        let imageSize = file.dimensions?.size.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
                         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
                         let view = TransformImageView()
                         view.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)

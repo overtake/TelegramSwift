@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
-
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
+import SyncCore
 enum LaunchNavigation : PostboxCoding, Equatable {
     case chat(PeerId, necessary: Bool)
     case settings

@@ -7,8 +7,8 @@
 //
 
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 class BaseApplicationSettings: PreferencesEntry, Equatable {
     let handleInAppKeys: Bool
     let sidebar: Bool

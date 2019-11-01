@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 
 final class SettingsThemeWallpaperView: View {
@@ -103,7 +104,7 @@ final class SettingsThemeWallpaperView: View {
             self.label.isHidden = true
             self.imageView.isHidden = false
             self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, autoFetchFullSize: true, scale: backingScaleFactor))
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil))
+            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.size.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil))
             
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
         case let .file(_, file, settings, isPattern):
@@ -129,7 +130,7 @@ final class SettingsThemeWallpaperView: View {
             }
             
             self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, autoFetchFullSize: true, scale: backingScaleFactor))
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
+            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.size.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
             
             
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())

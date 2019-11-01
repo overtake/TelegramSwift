@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
     let imageView:ImageView = ImageView()

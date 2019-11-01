@@ -1,9 +1,10 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 
 private final class BlockedPeerControllerArguments {

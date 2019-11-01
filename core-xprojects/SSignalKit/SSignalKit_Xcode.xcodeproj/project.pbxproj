@@ -1,0 +1,1368 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A790A346236B1822000451B5 /* SAtomic.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ADA1B28285400EAF753 /* SAtomic.m */; };
+		A790A347236B1822000451B5 /* SBag.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ADC1B28285400EAF753 /* SBag.m */; };
+		A790A348236B1822000451B5 /* SSubscriber.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC91B28285400EAF753 /* SSubscriber.m */; };
+		A790A349236B1822000451B5 /* SDisposableSet.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD01B28285400EAF753 /* SDisposableSet.m */; };
+		A790A34A236B1822000451B5 /* SMetaDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD11B28285400EAF753 /* SMetaDisposable.m */; };
+		A790A34B236B1822000451B5 /* SBlockDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ADE1B28285400EAF753 /* SBlockDisposable.m */; };
+		A790A34C236B1822000451B5 /* SThreadPool.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB21B28285400EAF753 /* SThreadPool.m */; };
+		A790A34D236B1822000451B5 /* SThreadPoolTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ACB1B28285400EAF753 /* SThreadPoolTask.m */; };
+		A790A34E236B1822000451B5 /* SThreadPoolQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ACC1B28285400EAF753 /* SThreadPoolQueue.m */; };
+		A790A34F236B1822000451B5 /* SQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB31B28285400EAF753 /* SQueue.m */; };
+		A790A350236B1822000451B5 /* STimer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AE61B28285400EAF753 /* STimer.m */; };
+		A790A351236B1822000451B5 /* SSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB81B28285400EAF753 /* SSignal.m */; };
+		A790A352236B1822000451B5 /* SSignal+Single.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD81B28285400EAF753 /* SSignal+Single.m */; };
+		A790A353236B1822000451B5 /* SSignal+Mapping.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD71B28285400EAF753 /* SSignal+Mapping.m */; };
+		A790A354236B1822000451B5 /* SSignal+Combine.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ABD1B28285400EAF753 /* SSignal+Combine.m */; };
+		A790A355236B1822000451B5 /* SSignal+Accumulate.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC51B28285400EAF753 /* SSignal+Accumulate.m */; };
+		A790A356236B1822000451B5 /* SSignal+SideEffects.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC11B28285400EAF753 /* SSignal+SideEffects.m */; };
+		A790A357236B1823000451B5 /* SSignal+Take.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB41B28285400EAF753 /* SSignal+Take.m */; };
+		A790A358236B1823000451B5 /* SSignal+Timing.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB11B28285400EAF753 /* SSignal+Timing.m */; };
+		A790A359236B1823000451B5 /* SSignal+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB51B28285400EAF753 /* SSignal+Meta.m */; };
+		A790A35A236B1823000451B5 /* SSignal+Pipe.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ABF1B28285400EAF753 /* SSignal+Pipe.m */; };
+		A790A35B236B1823000451B5 /* SSignal+Catch.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC21B28285400EAF753 /* SSignal+Catch.m */; };
+		A790A35C236B1823000451B5 /* SSignal+Dispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ACA1B28285400EAF753 /* SSignal+Dispatch.m */; };
+		A790A35D236B1823000451B5 /* SSignal+Multicast.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD21B28285400EAF753 /* SSignal+Multicast.m */; };
+		A790A35E236B1823000451B5 /* SMulticastSignalManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ABB1B28285400EAF753 /* SMulticastSignalManager.m */; };
+		A790A35F236B1823000451B5 /* SVariable.m in Sources */ = {isa = PBXBuildFile; fileRef = D09FD73D1BA9BAB900FF0A4F /* SVariable.m */; };
+		A790A360236B1858000451B5 /* SAtomic.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD91B28285400EAF753 /* SAtomic.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A361236B1858000451B5 /* SBag.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ADB1B28285400EAF753 /* SBag.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A362236B1858000451B5 /* SSubscriber.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD31B28285400EAF753 /* SSubscriber.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A363236B1858000451B5 /* SDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD41B28285400EAF753 /* SDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A364236B1858000451B5 /* SDisposableSet.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ADF1B28285400EAF753 /* SDisposableSet.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A365236B1858000451B5 /* SMetaDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE21B28285400EAF753 /* SMetaDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A366236B1858000451B5 /* SBlockDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ADD1B28285400EAF753 /* SBlockDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A367236B1858000451B5 /* SThreadPool.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ACE1B28285400EAF753 /* SThreadPool.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A368236B1858000451B5 /* SThreadPoolTask.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ACF1B28285400EAF753 /* SThreadPoolTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A369236B1858000451B5 /* SThreadPoolQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ACD1B28285400EAF753 /* SThreadPoolQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A36A236B1858000451B5 /* SQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC61B28285400EAF753 /* SQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A36B236B1858000451B5 /* STimer.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE51B28285400EAF753 /* STimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A36C236B1858000451B5 /* SSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD51B28285400EAF753 /* SSignal.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A36D236B1858000451B5 /* SSignal+Single.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AB71B28285400EAF753 /* SSignal+Single.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A36E236B1858000451B5 /* SSignal+Mapping.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD61B28285400EAF753 /* SSignal+Mapping.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A36F236B1858000451B5 /* SSignal+Combine.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ABC1B28285400EAF753 /* SSignal+Combine.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A370236B1858000451B5 /* SSignal+Accumulate.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AB61B28285400EAF753 /* SSignal+Accumulate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A371236B1858000451B5 /* SSignal+SideEffects.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC01B28285400EAF753 /* SSignal+SideEffects.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A372236B1858000451B5 /* SSignal+Take.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC41B28285400EAF753 /* SSignal+Take.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A373236B1858000451B5 /* SSignal+Timing.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC81B28285400EAF753 /* SSignal+Timing.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A374236B1858000451B5 /* SSignal+Meta.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC71B28285400EAF753 /* SSignal+Meta.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A375236B1858000451B5 /* SSignal+Pipe.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ABE1B28285400EAF753 /* SSignal+Pipe.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A376236B1858000451B5 /* SSignal+Catch.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC31B28285400EAF753 /* SSignal+Catch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A377236B1858000451B5 /* SSignal+Dispatch.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE31B28285400EAF753 /* SSignal+Dispatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A378236B1858000451B5 /* SSignal+Multicast.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE41B28285400EAF753 /* SSignal+Multicast.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A379236B1858000451B5 /* SMulticastSignalManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ABA1B28285400EAF753 /* SMulticastSignalManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A37A236B1858000451B5 /* SVariable.h in Headers */ = {isa = PBXBuildFile; fileRef = D09FD73C1BA9BAB900FF0A4F /* SVariable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A790A37E236B1CC9000451B5 /* SSignalKit.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AB91B28285400EAF753 /* SSignalKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0467D1920D7F7BC0055C28F /* Signal_Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0467D1720D7F7BC0055C28F /* Signal_Loop.swift */; };
+		D053B4011F16881000E2D58A /* QueueLocalObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = D053B3FF1F16881000E2D58A /* QueueLocalObject.swift */; };
+		D0B417F11D7DFA63004562A4 /* SwiftSignalKit.h in Headers */ = {isa = PBXBuildFile; fileRef = D0B417EF1D7DFA63004562A4 /* SwiftSignalKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0B417F61D7DFAAB004562A4 /* Signal_Timing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3C1B282BEE00EAF753 /* Signal_Timing.swift */; };
+		D0B417F71D7DFAAB004562A4 /* Signal_SideEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3D1B282BEE00EAF753 /* Signal_SideEffects.swift */; };
+		D0B417F81D7DFAAB004562A4 /* Signal_Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3E1B282BEE00EAF753 /* Signal_Dispatch.swift */; };
+		D0B417F91D7DFAAB004562A4 /* ThreadPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3F1B282BEE00EAF753 /* ThreadPool.swift */; };
+		D0B417FA1D7DFAAB004562A4 /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B401B282BEE00EAF753 /* Timer.swift */; };
+		D0B417FB1D7DFAAB004562A4 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B411B282BEE00EAF753 /* Queue.swift */; };
+		D0B417FC1D7DFAAB004562A4 /* ValuePipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B421B282BEE00EAF753 /* ValuePipe.swift */; };
+		D0B417FD1D7DFAAB004562A4 /* Bag.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B431B282BEE00EAF753 /* Bag.swift */; };
+		D0B417FE1D7DFAAB004562A4 /* Signal_Take.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B441B282BEE00EAF753 /* Signal_Take.swift */; };
+		D0B417FF1D7DFAAB004562A4 /* Signal_Catch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B451B282BEE00EAF753 /* Signal_Catch.swift */; };
+		D0B418001D7DFAAB004562A4 /* Signal_Single.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B461B282BEE00EAF753 /* Signal_Single.swift */; };
+		D0B418011D7DFAAB004562A4 /* Signal_Meta.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B471B282BEE00EAF753 /* Signal_Meta.swift */; };
+		D0B418021D7DFAAB004562A4 /* Signal_Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B481B282BEE00EAF753 /* Signal_Combine.swift */; };
+		D0B418031D7DFAAB004562A4 /* Signal_Merge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FC1A391CA3284F0056AE9A /* Signal_Merge.swift */; };
+		D0B418041D7DFAAB004562A4 /* Atomic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B491B282BEE00EAF753 /* Atomic.swift */; };
+		D0B418051D7DFAAB004562A4 /* Signal_Reduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4A1B282BEE00EAF753 /* Signal_Reduce.swift */; };
+		D0B418061D7DFAAB004562A4 /* Signal_Materialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CD17B11CC17C83007C5650 /* Signal_Materialize.swift */; };
+		D0B418071D7DFAAB004562A4 /* Signal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4B1B282BEE00EAF753 /* Signal.swift */; };
+		D0B418081D7DFAAB004562A4 /* Disposable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4C1B282BEE00EAF753 /* Disposable.swift */; };
+		D0B418091D7DFAAB004562A4 /* Signal_Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4D1B282BEE00EAF753 /* Signal_Mapping.swift */; };
+		D0B4180A1D7DFAAB004562A4 /* Subscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4E1B282BEE00EAF753 /* Subscriber.swift */; };
+		D0B4180B1D7DFAAB004562A4 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07A5CFC1BBDE6E400451791 /* Promise.swift */; };
+		D0B4180C1D7DFAAB004562A4 /* Multicast.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F09A71C9EF77100BB6F96 /* Multicast.swift */; };
+		D0B4180D1D7DFAAB004562A4 /* Lock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D066BD091C7FE06700D7A576 /* Lock.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A790A321236B17DF000451B5 /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A37C236B1C44000451B5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		D0085AB11B28285400EAF753 /* SSignal+Timing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Timing.m"; sourceTree = "<group>"; };
+		D0085AB21B28285400EAF753 /* SThreadPool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SThreadPool.m; sourceTree = "<group>"; };
+		D0085AB31B28285400EAF753 /* SQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQueue.m; sourceTree = "<group>"; };
+		D0085AB41B28285400EAF753 /* SSignal+Take.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Take.m"; sourceTree = "<group>"; };
+		D0085AB51B28285400EAF753 /* SSignal+Meta.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Meta.m"; sourceTree = "<group>"; };
+		D0085AB61B28285400EAF753 /* SSignal+Accumulate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Accumulate.h"; sourceTree = "<group>"; };
+		D0085AB71B28285400EAF753 /* SSignal+Single.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Single.h"; sourceTree = "<group>"; };
+		D0085AB81B28285400EAF753 /* SSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSignal.m; sourceTree = "<group>"; };
+		D0085AB91B28285400EAF753 /* SSignalKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSignalKit.h; sourceTree = "<group>"; };
+		D0085ABA1B28285400EAF753 /* SMulticastSignalManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMulticastSignalManager.h; sourceTree = "<group>"; };
+		D0085ABB1B28285400EAF753 /* SMulticastSignalManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMulticastSignalManager.m; sourceTree = "<group>"; };
+		D0085ABC1B28285400EAF753 /* SSignal+Combine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Combine.h"; sourceTree = "<group>"; };
+		D0085ABD1B28285400EAF753 /* SSignal+Combine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Combine.m"; sourceTree = "<group>"; };
+		D0085ABE1B28285400EAF753 /* SSignal+Pipe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Pipe.h"; sourceTree = "<group>"; };
+		D0085ABF1B28285400EAF753 /* SSignal+Pipe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Pipe.m"; sourceTree = "<group>"; };
+		D0085AC01B28285400EAF753 /* SSignal+SideEffects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+SideEffects.h"; sourceTree = "<group>"; };
+		D0085AC11B28285400EAF753 /* SSignal+SideEffects.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+SideEffects.m"; sourceTree = "<group>"; };
+		D0085AC21B28285400EAF753 /* SSignal+Catch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Catch.m"; sourceTree = "<group>"; };
+		D0085AC31B28285400EAF753 /* SSignal+Catch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Catch.h"; sourceTree = "<group>"; };
+		D0085AC41B28285400EAF753 /* SSignal+Take.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Take.h"; sourceTree = "<group>"; };
+		D0085AC51B28285400EAF753 /* SSignal+Accumulate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Accumulate.m"; sourceTree = "<group>"; };
+		D0085AC61B28285400EAF753 /* SQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQueue.h; sourceTree = "<group>"; };
+		D0085AC71B28285400EAF753 /* SSignal+Meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Meta.h"; sourceTree = "<group>"; };
+		D0085AC81B28285400EAF753 /* SSignal+Timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Timing.h"; sourceTree = "<group>"; };
+		D0085AC91B28285400EAF753 /* SSubscriber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSubscriber.m; sourceTree = "<group>"; };
+		D0085ACA1B28285400EAF753 /* SSignal+Dispatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Dispatch.m"; sourceTree = "<group>"; };
+		D0085ACB1B28285400EAF753 /* SThreadPoolTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SThreadPoolTask.m; sourceTree = "<group>"; };
+		D0085ACC1B28285400EAF753 /* SThreadPoolQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SThreadPoolQueue.m; sourceTree = "<group>"; };
+		D0085ACD1B28285400EAF753 /* SThreadPoolQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SThreadPoolQueue.h; sourceTree = "<group>"; };
+		D0085ACE1B28285400EAF753 /* SThreadPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SThreadPool.h; sourceTree = "<group>"; };
+		D0085ACF1B28285400EAF753 /* SThreadPoolTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SThreadPoolTask.h; sourceTree = "<group>"; };
+		D0085AD01B28285400EAF753 /* SDisposableSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDisposableSet.m; sourceTree = "<group>"; };
+		D0085AD11B28285400EAF753 /* SMetaDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMetaDisposable.m; sourceTree = "<group>"; };
+		D0085AD21B28285400EAF753 /* SSignal+Multicast.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Multicast.m"; sourceTree = "<group>"; };
+		D0085AD31B28285400EAF753 /* SSubscriber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSubscriber.h; sourceTree = "<group>"; };
+		D0085AD41B28285400EAF753 /* SDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDisposable.h; sourceTree = "<group>"; };
+		D0085AD51B28285400EAF753 /* SSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSignal.h; sourceTree = "<group>"; };
+		D0085AD61B28285400EAF753 /* SSignal+Mapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Mapping.h"; sourceTree = "<group>"; };
+		D0085AD71B28285400EAF753 /* SSignal+Mapping.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Mapping.m"; sourceTree = "<group>"; };
+		D0085AD81B28285400EAF753 /* SSignal+Single.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Single.m"; sourceTree = "<group>"; };
+		D0085AD91B28285400EAF753 /* SAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SAtomic.h; sourceTree = "<group>"; };
+		D0085ADA1B28285400EAF753 /* SAtomic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SAtomic.m; sourceTree = "<group>"; };
+		D0085ADB1B28285400EAF753 /* SBag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBag.h; sourceTree = "<group>"; };
+		D0085ADC1B28285400EAF753 /* SBag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBag.m; sourceTree = "<group>"; };
+		D0085ADD1B28285400EAF753 /* SBlockDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBlockDisposable.h; sourceTree = "<group>"; };
+		D0085ADE1B28285400EAF753 /* SBlockDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBlockDisposable.m; sourceTree = "<group>"; };
+		D0085ADF1B28285400EAF753 /* SDisposableSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDisposableSet.h; sourceTree = "<group>"; };
+		D0085AE21B28285400EAF753 /* SMetaDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMetaDisposable.h; sourceTree = "<group>"; };
+		D0085AE31B28285400EAF753 /* SSignal+Dispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Dispatch.h"; sourceTree = "<group>"; };
+		D0085AE41B28285400EAF753 /* SSignal+Multicast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Multicast.h"; sourceTree = "<group>"; };
+		D0085AE51B28285400EAF753 /* STimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STimer.h; sourceTree = "<group>"; };
+		D0085AE61B28285400EAF753 /* STimer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STimer.m; sourceTree = "<group>"; };
+		D0085B251B282B9800EAF753 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D0085B261B282B9800EAF753 /* SwiftSignalKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftSignalKit.h; sourceTree = "<group>"; };
+		D0085B3B1B282BEE00EAF753 /* SwiftSignalKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SwiftSignalKit.h; sourceTree = "<group>"; };
+		D0085B3C1B282BEE00EAF753 /* Signal_Timing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Timing.swift; sourceTree = "<group>"; };
+		D0085B3D1B282BEE00EAF753 /* Signal_SideEffects.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_SideEffects.swift; sourceTree = "<group>"; };
+		D0085B3E1B282BEE00EAF753 /* Signal_Dispatch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Dispatch.swift; sourceTree = "<group>"; };
+		D0085B3F1B282BEE00EAF753 /* ThreadPool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThreadPool.swift; sourceTree = "<group>"; };
+		D0085B401B282BEE00EAF753 /* Timer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
+		D0085B411B282BEE00EAF753 /* Queue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
+		D0085B421B282BEE00EAF753 /* ValuePipe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValuePipe.swift; sourceTree = "<group>"; };
+		D0085B431B282BEE00EAF753 /* Bag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bag.swift; sourceTree = "<group>"; };
+		D0085B441B282BEE00EAF753 /* Signal_Take.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Take.swift; sourceTree = "<group>"; };
+		D0085B451B282BEE00EAF753 /* Signal_Catch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Catch.swift; sourceTree = "<group>"; };
+		D0085B461B282BEE00EAF753 /* Signal_Single.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Single.swift; sourceTree = "<group>"; };
+		D0085B471B282BEE00EAF753 /* Signal_Meta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Meta.swift; sourceTree = "<group>"; };
+		D0085B481B282BEE00EAF753 /* Signal_Combine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Combine.swift; sourceTree = "<group>"; };
+		D0085B491B282BEE00EAF753 /* Atomic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Atomic.swift; sourceTree = "<group>"; };
+		D0085B4A1B282BEE00EAF753 /* Signal_Reduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Reduce.swift; sourceTree = "<group>"; };
+		D0085B4B1B282BEE00EAF753 /* Signal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal.swift; sourceTree = "<group>"; };
+		D0085B4C1B282BEE00EAF753 /* Disposable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Disposable.swift; sourceTree = "<group>"; };
+		D0085B4D1B282BEE00EAF753 /* Signal_Mapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Mapping.swift; sourceTree = "<group>"; };
+		D0085B4E1B282BEE00EAF753 /* Subscriber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Subscriber.swift; sourceTree = "<group>"; };
+		D0445DDC1A7C2CA500267924 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D0467D1720D7F7BC0055C28F /* Signal_Loop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signal_Loop.swift; sourceTree = "<group>"; };
+		D053B3FF1F16881000E2D58A /* QueueLocalObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueueLocalObject.swift; sourceTree = "<group>"; };
+		D05F09A71C9EF77100BB6F96 /* Multicast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Multicast.swift; sourceTree = "<group>"; };
+		D066BD091C7FE06700D7A576 /* Lock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Lock.swift; sourceTree = "<group>"; };
+		D07A5CFC1BBDE6E400451791 /* Promise.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
+		D09FD73C1BA9BAB900FF0A4F /* SVariable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVariable.h; sourceTree = "<group>"; };
+		D09FD73D1BA9BAB900FF0A4F /* SVariable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SVariable.m; sourceTree = "<group>"; };
+		D0B417ED1D7DFA63004562A4 /* SwiftSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0B417EF1D7DFA63004562A4 /* SwiftSignalKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftSignalKit.h; sourceTree = "<group>"; };
+		D0B417F01D7DFA63004562A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D0CD17B11CC17C83007C5650 /* Signal_Materialize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Materialize.swift; sourceTree = "<group>"; };
+		D0FC1A391CA3284F0056AE9A /* Signal_Merge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Merge.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A790A31E236B17DF000451B5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B417E91D7DFA63004562A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A790A37B236B1C43000451B5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A790A37C236B1C44000451B5 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D0085B231B282B9800EAF753 /* SwiftSignalKit */ = {
+			isa = PBXGroup;
+			children = (
+				D0085B3B1B282BEE00EAF753 /* SwiftSignalKit.h */,
+				D0085B3C1B282BEE00EAF753 /* Signal_Timing.swift */,
+				D0085B3D1B282BEE00EAF753 /* Signal_SideEffects.swift */,
+				D0085B3E1B282BEE00EAF753 /* Signal_Dispatch.swift */,
+				D0085B3F1B282BEE00EAF753 /* ThreadPool.swift */,
+				D0085B401B282BEE00EAF753 /* Timer.swift */,
+				D0085B411B282BEE00EAF753 /* Queue.swift */,
+				D0085B421B282BEE00EAF753 /* ValuePipe.swift */,
+				D0085B431B282BEE00EAF753 /* Bag.swift */,
+				D0085B441B282BEE00EAF753 /* Signal_Take.swift */,
+				D0085B451B282BEE00EAF753 /* Signal_Catch.swift */,
+				D0085B461B282BEE00EAF753 /* Signal_Single.swift */,
+				D0085B471B282BEE00EAF753 /* Signal_Meta.swift */,
+				D0085B481B282BEE00EAF753 /* Signal_Combine.swift */,
+				D0FC1A391CA3284F0056AE9A /* Signal_Merge.swift */,
+				D0085B491B282BEE00EAF753 /* Atomic.swift */,
+				D0085B4A1B282BEE00EAF753 /* Signal_Reduce.swift */,
+				D0CD17B11CC17C83007C5650 /* Signal_Materialize.swift */,
+				D0085B4B1B282BEE00EAF753 /* Signal.swift */,
+				D0085B4C1B282BEE00EAF753 /* Disposable.swift */,
+				D0085B4D1B282BEE00EAF753 /* Signal_Mapping.swift */,
+				D0467D1720D7F7BC0055C28F /* Signal_Loop.swift */,
+				D0085B4E1B282BEE00EAF753 /* Subscriber.swift */,
+				D07A5CFC1BBDE6E400451791 /* Promise.swift */,
+				D05F09A71C9EF77100BB6F96 /* Multicast.swift */,
+				D066BD091C7FE06700D7A576 /* Lock.swift */,
+				D053B3FF1F16881000E2D58A /* QueueLocalObject.swift */,
+				D0085B261B282B9800EAF753 /* SwiftSignalKit.h */,
+				D0085B241B282B9800EAF753 /* Supporting Files */,
+			);
+			name = SwiftSignalKit;
+			path = "../../submodules/telegram-ios/submodules/SSignalKit/SwiftSignalKit";
+			sourceTree = "<group>";
+		};
+		D0085B241B282B9800EAF753 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D0085B251B282B9800EAF753 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D0445DCE1A7C2CA500267924 = {
+			isa = PBXGroup;
+			children = (
+				D0445DDA1A7C2CA500267924 /* SSignalKit */,
+				D0085B231B282B9800EAF753 /* SwiftSignalKit */,
+				D0B417EE1D7DFA63004562A4 /* SwiftSignalKit */,
+				D0445DD91A7C2CA500267924 /* Products */,
+				A790A37B236B1C43000451B5 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		D0445DD91A7C2CA500267924 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D0B417ED1D7DFA63004562A4 /* SwiftSignalKit.framework */,
+				A790A321236B17DF000451B5 /* SSignalKit.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D0445DDA1A7C2CA500267924 /* SSignalKit */ = {
+			isa = PBXGroup;
+			children = (
+				D0085AD91B28285400EAF753 /* SAtomic.h */,
+				D0085ADA1B28285400EAF753 /* SAtomic.m */,
+				D0085ADB1B28285400EAF753 /* SBag.h */,
+				D0085ADC1B28285400EAF753 /* SBag.m */,
+				D0085AD31B28285400EAF753 /* SSubscriber.h */,
+				D0085AC91B28285400EAF753 /* SSubscriber.m */,
+				D0085AD41B28285400EAF753 /* SDisposable.h */,
+				D0085ADF1B28285400EAF753 /* SDisposableSet.h */,
+				D0085AD01B28285400EAF753 /* SDisposableSet.m */,
+				D0085AE21B28285400EAF753 /* SMetaDisposable.h */,
+				D0085AD11B28285400EAF753 /* SMetaDisposable.m */,
+				D0085ADD1B28285400EAF753 /* SBlockDisposable.h */,
+				D0085ADE1B28285400EAF753 /* SBlockDisposable.m */,
+				D0085ACE1B28285400EAF753 /* SThreadPool.h */,
+				D0085AB21B28285400EAF753 /* SThreadPool.m */,
+				D0085ACF1B28285400EAF753 /* SThreadPoolTask.h */,
+				D0085ACB1B28285400EAF753 /* SThreadPoolTask.m */,
+				D0085ACD1B28285400EAF753 /* SThreadPoolQueue.h */,
+				D0085ACC1B28285400EAF753 /* SThreadPoolQueue.m */,
+				D0085AC61B28285400EAF753 /* SQueue.h */,
+				D0085AB31B28285400EAF753 /* SQueue.m */,
+				D0085AE51B28285400EAF753 /* STimer.h */,
+				D0085AE61B28285400EAF753 /* STimer.m */,
+				D0085AD51B28285400EAF753 /* SSignal.h */,
+				D0085AB81B28285400EAF753 /* SSignal.m */,
+				D0085AB71B28285400EAF753 /* SSignal+Single.h */,
+				D0085AD81B28285400EAF753 /* SSignal+Single.m */,
+				D0085AD61B28285400EAF753 /* SSignal+Mapping.h */,
+				D0085AD71B28285400EAF753 /* SSignal+Mapping.m */,
+				D0085ABC1B28285400EAF753 /* SSignal+Combine.h */,
+				D0085ABD1B28285400EAF753 /* SSignal+Combine.m */,
+				D0085AB61B28285400EAF753 /* SSignal+Accumulate.h */,
+				D0085AC51B28285400EAF753 /* SSignal+Accumulate.m */,
+				D0085AC01B28285400EAF753 /* SSignal+SideEffects.h */,
+				D0085AC11B28285400EAF753 /* SSignal+SideEffects.m */,
+				D0085AC41B28285400EAF753 /* SSignal+Take.h */,
+				D0085AB41B28285400EAF753 /* SSignal+Take.m */,
+				D0085AC81B28285400EAF753 /* SSignal+Timing.h */,
+				D0085AB11B28285400EAF753 /* SSignal+Timing.m */,
+				D0085AC71B28285400EAF753 /* SSignal+Meta.h */,
+				D0085AB51B28285400EAF753 /* SSignal+Meta.m */,
+				D0085ABE1B28285400EAF753 /* SSignal+Pipe.h */,
+				D0085ABF1B28285400EAF753 /* SSignal+Pipe.m */,
+				D0085AC31B28285400EAF753 /* SSignal+Catch.h */,
+				D0085AC21B28285400EAF753 /* SSignal+Catch.m */,
+				D0085AE31B28285400EAF753 /* SSignal+Dispatch.h */,
+				D0085ACA1B28285400EAF753 /* SSignal+Dispatch.m */,
+				D0085AE41B28285400EAF753 /* SSignal+Multicast.h */,
+				D0085AD21B28285400EAF753 /* SSignal+Multicast.m */,
+				D0085ABA1B28285400EAF753 /* SMulticastSignalManager.h */,
+				D0085ABB1B28285400EAF753 /* SMulticastSignalManager.m */,
+				D09FD73C1BA9BAB900FF0A4F /* SVariable.h */,
+				D09FD73D1BA9BAB900FF0A4F /* SVariable.m */,
+				D0085AB91B28285400EAF753 /* SSignalKit.h */,
+				D0445DDB1A7C2CA500267924 /* Supporting Files */,
+			);
+			name = SSignalKit;
+			path = "../../submodules/telegram-ios/submodules/SSignalKit/SSignalKit";
+			sourceTree = "<group>";
+		};
+		D0445DDB1A7C2CA500267924 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D0445DDC1A7C2CA500267924 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D0B417EE1D7DFA63004562A4 /* SwiftSignalKit */ = {
+			isa = PBXGroup;
+			children = (
+				D0B417EF1D7DFA63004562A4 /* SwiftSignalKit.h */,
+				D0B417F01D7DFA63004562A4 /* Info.plist */,
+			);
+			path = SwiftSignalKit;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		A790A31C236B17DF000451B5 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A790A37E236B1CC9000451B5 /* SSignalKit.h in Headers */,
+				A790A360236B1858000451B5 /* SAtomic.h in Headers */,
+				A790A361236B1858000451B5 /* SBag.h in Headers */,
+				A790A362236B1858000451B5 /* SSubscriber.h in Headers */,
+				A790A363236B1858000451B5 /* SDisposable.h in Headers */,
+				A790A364236B1858000451B5 /* SDisposableSet.h in Headers */,
+				A790A365236B1858000451B5 /* SMetaDisposable.h in Headers */,
+				A790A366236B1858000451B5 /* SBlockDisposable.h in Headers */,
+				A790A367236B1858000451B5 /* SThreadPool.h in Headers */,
+				A790A368236B1858000451B5 /* SThreadPoolTask.h in Headers */,
+				A790A369236B1858000451B5 /* SThreadPoolQueue.h in Headers */,
+				A790A36A236B1858000451B5 /* SQueue.h in Headers */,
+				A790A36B236B1858000451B5 /* STimer.h in Headers */,
+				A790A36C236B1858000451B5 /* SSignal.h in Headers */,
+				A790A36D236B1858000451B5 /* SSignal+Single.h in Headers */,
+				A790A36E236B1858000451B5 /* SSignal+Mapping.h in Headers */,
+				A790A36F236B1858000451B5 /* SSignal+Combine.h in Headers */,
+				A790A370236B1858000451B5 /* SSignal+Accumulate.h in Headers */,
+				A790A371236B1858000451B5 /* SSignal+SideEffects.h in Headers */,
+				A790A372236B1858000451B5 /* SSignal+Take.h in Headers */,
+				A790A373236B1858000451B5 /* SSignal+Timing.h in Headers */,
+				A790A374236B1858000451B5 /* SSignal+Meta.h in Headers */,
+				A790A375236B1858000451B5 /* SSignal+Pipe.h in Headers */,
+				A790A376236B1858000451B5 /* SSignal+Catch.h in Headers */,
+				A790A377236B1858000451B5 /* SSignal+Dispatch.h in Headers */,
+				A790A378236B1858000451B5 /* SSignal+Multicast.h in Headers */,
+				A790A379236B1858000451B5 /* SMulticastSignalManager.h in Headers */,
+				A790A37A236B1858000451B5 /* SVariable.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B417EA1D7DFA63004562A4 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0B417F11D7DFA63004562A4 /* SwiftSignalKit.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		A790A320236B17DF000451B5 /* SSignalKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A790A332236B17DF000451B5 /* Build configuration list for PBXNativeTarget "SSignalKit" */;
+			buildPhases = (
+				A790A31C236B17DF000451B5 /* Headers */,
+				A790A31D236B17DF000451B5 /* Sources */,
+				A790A31E236B17DF000451B5 /* Frameworks */,
+				A790A31F236B17DF000451B5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SSignalKit;
+			productName = SSignalKit;
+			productReference = A790A321236B17DF000451B5 /* SSignalKit.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D0B417EC1D7DFA63004562A4 /* SwiftSignalKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0B417F21D7DFA63004562A4 /* Build configuration list for PBXNativeTarget "SwiftSignalKit" */;
+			buildPhases = (
+				D0B417E81D7DFA63004562A4 /* Sources */,
+				D0B417E91D7DFA63004562A4 /* Frameworks */,
+				D0B417EA1D7DFA63004562A4 /* Headers */,
+				D0B417EB1D7DFA63004562A4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SwiftSignalKit;
+			productName = SwiftSignalKitMac;
+			productReference = D0B417ED1D7DFA63004562A4 /* SwiftSignalKit.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D0445DCF1A7C2CA500267924 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				DefaultBuildSystemTypeForWorkspace = Latest;
+				LastSwiftMigration = 0700;
+				LastSwiftUpdateCheck = 0700;
+				LastUpgradeCheck = 0800;
+				ORGANIZATIONNAME = Telegram;
+				TargetAttributes = {
+					A790A320236B17DF000451B5 = {
+						CreatedOnToolsVersion = 10.3;
+						DevelopmentTeam = 6N38VWS5BX;
+						ProvisioningStyle = Automatic;
+					};
+					D0B417EC1D7DFA63004562A4 = {
+						CreatedOnToolsVersion = 8.0;
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = D0445DD21A7C2CA500267924 /* Build configuration list for PBXProject "SSignalKit_Xcode" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				English,
+				en,
+			);
+			mainGroup = D0445DCE1A7C2CA500267924;
+			productRefGroup = D0445DD91A7C2CA500267924 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D0B417EC1D7DFA63004562A4 /* SwiftSignalKit */,
+				A790A320236B17DF000451B5 /* SSignalKit */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A790A31F236B17DF000451B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B417EB1D7DFA63004562A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A790A31D236B17DF000451B5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A790A346236B1822000451B5 /* SAtomic.m in Sources */,
+				A790A347236B1822000451B5 /* SBag.m in Sources */,
+				A790A348236B1822000451B5 /* SSubscriber.m in Sources */,
+				A790A349236B1822000451B5 /* SDisposableSet.m in Sources */,
+				A790A34A236B1822000451B5 /* SMetaDisposable.m in Sources */,
+				A790A34B236B1822000451B5 /* SBlockDisposable.m in Sources */,
+				A790A34C236B1822000451B5 /* SThreadPool.m in Sources */,
+				A790A34D236B1822000451B5 /* SThreadPoolTask.m in Sources */,
+				A790A34E236B1822000451B5 /* SThreadPoolQueue.m in Sources */,
+				A790A34F236B1822000451B5 /* SQueue.m in Sources */,
+				A790A350236B1822000451B5 /* STimer.m in Sources */,
+				A790A351236B1822000451B5 /* SSignal.m in Sources */,
+				A790A352236B1822000451B5 /* SSignal+Single.m in Sources */,
+				A790A353236B1822000451B5 /* SSignal+Mapping.m in Sources */,
+				A790A354236B1822000451B5 /* SSignal+Combine.m in Sources */,
+				A790A355236B1822000451B5 /* SSignal+Accumulate.m in Sources */,
+				A790A356236B1822000451B5 /* SSignal+SideEffects.m in Sources */,
+				A790A357236B1823000451B5 /* SSignal+Take.m in Sources */,
+				A790A358236B1823000451B5 /* SSignal+Timing.m in Sources */,
+				A790A359236B1823000451B5 /* SSignal+Meta.m in Sources */,
+				A790A35A236B1823000451B5 /* SSignal+Pipe.m in Sources */,
+				A790A35B236B1823000451B5 /* SSignal+Catch.m in Sources */,
+				A790A35C236B1823000451B5 /* SSignal+Dispatch.m in Sources */,
+				A790A35D236B1823000451B5 /* SSignal+Multicast.m in Sources */,
+				A790A35E236B1823000451B5 /* SMulticastSignalManager.m in Sources */,
+				A790A35F236B1823000451B5 /* SVariable.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B417E81D7DFA63004562A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0B417F61D7DFAAB004562A4 /* Signal_Timing.swift in Sources */,
+				D0B417F71D7DFAAB004562A4 /* Signal_SideEffects.swift in Sources */,
+				D0B417F81D7DFAAB004562A4 /* Signal_Dispatch.swift in Sources */,
+				D0B417F91D7DFAAB004562A4 /* ThreadPool.swift in Sources */,
+				D0B417FA1D7DFAAB004562A4 /* Timer.swift in Sources */,
+				D0B417FB1D7DFAAB004562A4 /* Queue.swift in Sources */,
+				D0B417FC1D7DFAAB004562A4 /* ValuePipe.swift in Sources */,
+				D0B417FD1D7DFAAB004562A4 /* Bag.swift in Sources */,
+				D0B417FE1D7DFAAB004562A4 /* Signal_Take.swift in Sources */,
+				D0B417FF1D7DFAAB004562A4 /* Signal_Catch.swift in Sources */,
+				D0B418001D7DFAAB004562A4 /* Signal_Single.swift in Sources */,
+				D0B418011D7DFAAB004562A4 /* Signal_Meta.swift in Sources */,
+				D0B418021D7DFAAB004562A4 /* Signal_Combine.swift in Sources */,
+				D0B418031D7DFAAB004562A4 /* Signal_Merge.swift in Sources */,
+				D0B418041D7DFAAB004562A4 /* Atomic.swift in Sources */,
+				D0B418051D7DFAAB004562A4 /* Signal_Reduce.swift in Sources */,
+				D0B418061D7DFAAB004562A4 /* Signal_Materialize.swift in Sources */,
+				D0B418071D7DFAAB004562A4 /* Signal.swift in Sources */,
+				D0B418081D7DFAAB004562A4 /* Disposable.swift in Sources */,
+				D0467D1920D7F7BC0055C28F /* Signal_Loop.swift in Sources */,
+				D0B418091D7DFAAB004562A4 /* Signal_Mapping.swift in Sources */,
+				D053B4011F16881000E2D58A /* QueueLocalObject.swift in Sources */,
+				D0B4180A1D7DFAAB004562A4 /* Subscriber.swift in Sources */,
+				D0B4180B1D7DFAAB004562A4 /* Promise.swift in Sources */,
+				D0B4180C1D7DFAAB004562A4 /* Multicast.swift in Sources */,
+				D0B4180D1D7DFAAB004562A4 /* Lock.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A790A333236B17DF000451B5 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.SSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		A790A334236B17DF000451B5 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.SSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyappMacAlpha;
+		};
+		A790A336236B17DF000451B5 /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.SSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugAppStore;
+		};
+		A790A338236B17DF000451B5 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.SSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseHockeyapp;
+		};
+		A790A33A236B17DF000451B5 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.SSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseAppStore;
+		};
+		D0364D5522B3E38E002A6EF0 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0364D5A22B3E38E002A6EF0 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_OPTIMIZATION_LEVEL = s;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.SwiftSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0445DEC1A7C2CA500267924 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		D0445DED1A7C2CA500267924 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_BITCODE = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseHockeyapp;
+		};
+		D086A5741CC0117500F08284 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_BITCODE = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseAppStore;
+		};
+		D0B417F31D7DFA63004562A4 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_OPTIMIZATION_LEVEL = s;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.SwiftSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+			};
+			name = DebugHockeyapp;
+		};
+		D0B417F41D7DFA63004562A4 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.SwiftSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+			};
+			name = ReleaseHockeyapp;
+		};
+		D0B417F51D7DFA63004562A4 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.SwiftSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+			};
+			name = ReleaseAppStore;
+		};
+		D0DB57B61E5C4B7A0071854C /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugAppStore;
+		};
+		D0DB57BB1E5C4B7A0071854C /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = SwiftSignalKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.SwiftSignalKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = DebugAppStore;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A790A332236B17DF000451B5 /* Build configuration list for PBXNativeTarget "SSignalKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A790A333236B17DF000451B5 /* DebugHockeyapp */,
+				A790A334236B17DF000451B5 /* HockeyappMacAlpha */,
+				A790A336236B17DF000451B5 /* DebugAppStore */,
+				A790A338236B17DF000451B5 /* ReleaseHockeyapp */,
+				A790A33A236B17DF000451B5 /* ReleaseAppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+		D0445DD21A7C2CA500267924 /* Build configuration list for PBXProject "SSignalKit_Xcode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0445DEC1A7C2CA500267924 /* DebugHockeyapp */,
+				D0364D5522B3E38E002A6EF0 /* HockeyappMacAlpha */,
+				D0DB57B61E5C4B7A0071854C /* DebugAppStore */,
+				D0445DED1A7C2CA500267924 /* ReleaseHockeyapp */,
+				D086A5741CC0117500F08284 /* ReleaseAppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+		D0B417F21D7DFA63004562A4 /* Build configuration list for PBXNativeTarget "SwiftSignalKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0B417F31D7DFA63004562A4 /* DebugHockeyapp */,
+				D0364D5A22B3E38E002A6EF0 /* HockeyappMacAlpha */,
+				D0DB57BB1E5C4B7A0071854C /* DebugAppStore */,
+				D0B417F41D7DFA63004562A4 /* ReleaseHockeyapp */,
+				D0B417F51D7DFA63004562A4 /* ReleaseAppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D0445DCF1A7C2CA500267924 /* Project object */;
+}

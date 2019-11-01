@@ -1,0 +1,1129 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A7D2826F236C77FA0000A9BF /* RLottie.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2826D236C77FA0000A9BF /* RLottie.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7D28280236C78DF0000A9BF /* RLottieBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = A7D2827E236C78DF0000A9BF /* RLottieBridge.mm */; };
+		A7D28281236C78DF0000A9BF /* RLottieBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2827F236C78DF0000A9BF /* RLottieBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7D282A2236C79C40000A9BF /* lottieanimation_capi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282A1236C79C40000A9BF /* lottieanimation_capi.cpp */; };
+		A7D282B1236C79D70000A9BF /* lottieloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282A4236C79D60000A9BF /* lottieloader.cpp */; };
+		A7D282B2236C79D70000A9BF /* lottieproxymodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282A5236C79D60000A9BF /* lottieproxymodel.cpp */; };
+		A7D282B3236C79D70000A9BF /* lottiekeypath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282A6236C79D70000A9BF /* lottiekeypath.cpp */; };
+		A7D282B4236C79D70000A9BF /* lottiemodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282A7236C79D70000A9BF /* lottiemodel.cpp */; };
+		A7D282B5236C79D70000A9BF /* lottieanimation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282A8236C79D70000A9BF /* lottieanimation.cpp */; };
+		A7D282B6236C79D70000A9BF /* lottieparser.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282A9236C79D70000A9BF /* lottieparser.h */; };
+		A7D282B7236C79D70000A9BF /* lottiemodel.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282AA236C79D70000A9BF /* lottiemodel.h */; };
+		A7D282B8236C79D70000A9BF /* lottiekeypath.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282AB236C79D70000A9BF /* lottiekeypath.h */; };
+		A7D282B9236C79D70000A9BF /* lottieitem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282AC236C79D70000A9BF /* lottieitem.cpp */; };
+		A7D282BA236C79D70000A9BF /* lottieitem.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282AD236C79D70000A9BF /* lottieitem.h */; };
+		A7D282BB236C79D70000A9BF /* lottieparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D282AE236C79D70000A9BF /* lottieparser.cpp */; };
+		A7D282BC236C79D70000A9BF /* lottieloader.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282AF236C79D70000A9BF /* lottieloader.h */; };
+		A7D282BD236C79D70000A9BF /* lottieproxymodel.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282B0236C79D70000A9BF /* lottieproxymodel.h */; };
+		A7D282E6236C79F60000A9BF /* prettywriter.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282BF236C79F50000A9BF /* prettywriter.h */; };
+		A7D282E7236C79F60000A9BF /* ieee754.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C1236C79F50000A9BF /* ieee754.h */; };
+		A7D282E8236C79F60000A9BF /* strtod.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C2236C79F50000A9BF /* strtod.h */; };
+		A7D282E9236C79F60000A9BF /* swap.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C3236C79F50000A9BF /* swap.h */; };
+		A7D282EA236C79F60000A9BF /* regex.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C4236C79F50000A9BF /* regex.h */; };
+		A7D282EB236C79F60000A9BF /* diyfp.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C5236C79F50000A9BF /* diyfp.h */; };
+		A7D282EC236C79F60000A9BF /* biginteger.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C6236C79F50000A9BF /* biginteger.h */; };
+		A7D282ED236C79F60000A9BF /* strfunc.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C7236C79F50000A9BF /* strfunc.h */; };
+		A7D282EE236C79F60000A9BF /* itoa.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C8236C79F50000A9BF /* itoa.h */; };
+		A7D282EF236C79F60000A9BF /* stack.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282C9236C79F50000A9BF /* stack.h */; };
+		A7D282F0236C79F60000A9BF /* dtoa.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282CA236C79F50000A9BF /* dtoa.h */; };
+		A7D282F1236C79F60000A9BF /* meta.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282CB236C79F50000A9BF /* meta.h */; };
+		A7D282F2236C79F60000A9BF /* pow10.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282CC236C79F50000A9BF /* pow10.h */; };
+		A7D282F3236C79F60000A9BF /* filewritestream.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282CD236C79F50000A9BF /* filewritestream.h */; };
+		A7D282F4236C79F60000A9BF /* allocators.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282CE236C79F50000A9BF /* allocators.h */; };
+		A7D282F5236C79F60000A9BF /* reader.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282CF236C79F50000A9BF /* reader.h */; };
+		A7D282F6236C79F60000A9BF /* schema.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282D0236C79F50000A9BF /* schema.h */; };
+		A7D282F7236C79F60000A9BF /* writer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282D1236C79F50000A9BF /* writer.h */; };
+		A7D282FA236C79F60000A9BF /* filereadstream.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282D5236C79F50000A9BF /* filereadstream.h */; };
+		A7D282FB236C79F60000A9BF /* encodedstream.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282D6236C79F50000A9BF /* encodedstream.h */; };
+		A7D282FC236C79F60000A9BF /* document.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282D7236C79F50000A9BF /* document.h */; };
+		A7D282FD236C79F60000A9BF /* memorystream.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282D8236C79F50000A9BF /* memorystream.h */; };
+		A7D282FE236C79F60000A9BF /* cursorstreamwrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282D9236C79F50000A9BF /* cursorstreamwrapper.h */; };
+		A7D282FF236C79F60000A9BF /* encodings.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282DA236C79F60000A9BF /* encodings.h */; };
+		A7D28300236C79F60000A9BF /* fwd.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282DB236C79F60000A9BF /* fwd.h */; };
+		A7D28301236C79F60000A9BF /* memorybuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282DC236C79F60000A9BF /* memorybuffer.h */; };
+		A7D28302236C79F60000A9BF /* istreamwrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282DD236C79F60000A9BF /* istreamwrapper.h */; };
+		A7D28303236C79F60000A9BF /* ostreamwrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282DE236C79F60000A9BF /* ostreamwrapper.h */; };
+		A7D28304236C79F60000A9BF /* stream.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282DF236C79F60000A9BF /* stream.h */; };
+		A7D28305236C79F60000A9BF /* error.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282E1236C79F60000A9BF /* error.h */; };
+		A7D28306236C79F60000A9BF /* en.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282E2236C79F60000A9BF /* en.h */; };
+		A7D28307236C79F60000A9BF /* rapidjson.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282E3236C79F60000A9BF /* rapidjson.h */; };
+		A7D28308236C79F60000A9BF /* stringbuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282E4236C79F60000A9BF /* stringbuffer.h */; };
+		A7D28309236C79F60000A9BF /* pointer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D282E5236C79F60000A9BF /* pointer.h */; };
+		A7D28337236C7A270000A9BF /* vpath.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2830B236C7A250000A9BF /* vpath.h */; };
+		A7D28338236C7A270000A9BF /* vraster.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2830C236C7A250000A9BF /* vraster.h */; };
+		A7D28339236C7A270000A9BF /* vmatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2830D236C7A250000A9BF /* vmatrix.h */; };
+		A7D2833A236C7A270000A9BF /* vdrawhelper_neon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2830E236C7A250000A9BF /* vdrawhelper_neon.cpp */; };
+		A7D2833B236C7A270000A9BF /* vpainter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2830F236C7A250000A9BF /* vpainter.cpp */; };
+		A7D2833C236C7A270000A9BF /* vbitmap.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28310236C7A250000A9BF /* vbitmap.h */; };
+		A7D2833D236C7A270000A9BF /* vrect.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28311236C7A250000A9BF /* vrect.h */; };
+		A7D2833E236C7A270000A9BF /* vinterpolator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28312236C7A250000A9BF /* vinterpolator.cpp */; };
+		A7D2833F236C7A270000A9BF /* vpathmesure.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28313236C7A250000A9BF /* vpathmesure.cpp */; };
+		A7D28340236C7A270000A9BF /* vdasher.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28314236C7A250000A9BF /* vdasher.h */; };
+		A7D28341236C7A270000A9BF /* vcowptr.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28315236C7A250000A9BF /* vcowptr.h */; };
+		A7D28342236C7A270000A9BF /* vrect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28316236C7A250000A9BF /* vrect.cpp */; };
+		A7D28343236C7A270000A9BF /* vbitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28317236C7A250000A9BF /* vbitmap.cpp */; };
+		A7D28344236C7A270000A9BF /* vpainter.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28318236C7A250000A9BF /* vpainter.h */; };
+		A7D28345236C7A270000A9BF /* velapsedtimer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28319236C7A250000A9BF /* velapsedtimer.h */; };
+		A7D28346236C7A270000A9BF /* vdebug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2831A236C7A260000A9BF /* vdebug.cpp */; };
+		A7D28347236C7A270000A9BF /* vdrawhelper_sse2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2831B236C7A260000A9BF /* vdrawhelper_sse2.cpp */; };
+		A7D28348236C7A270000A9BF /* vdrawhelper.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2831C236C7A260000A9BF /* vdrawhelper.h */; };
+		A7D28349236C7A270000A9BF /* vimageloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2831D236C7A260000A9BF /* vimageloader.cpp */; };
+		A7D2834A236C7A270000A9BF /* vdrawable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2831E236C7A260000A9BF /* vdrawable.cpp */; };
+		A7D2834B236C7A270000A9BF /* vmatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2831F236C7A260000A9BF /* vmatrix.cpp */; };
+		A7D2834C236C7A270000A9BF /* vraster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28320236C7A260000A9BF /* vraster.cpp */; };
+		A7D2834D236C7A270000A9BF /* vline.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28321236C7A260000A9BF /* vline.h */; };
+		A7D2834E236C7A270000A9BF /* vdebug.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28322236C7A260000A9BF /* vdebug.h */; };
+		A7D2834F236C7A270000A9BF /* vdrawable.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28323236C7A260000A9BF /* vdrawable.h */; };
+		A7D28350236C7A270000A9BF /* vpoint.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28324236C7A260000A9BF /* vpoint.h */; };
+		A7D28351236C7A270000A9BF /* vbezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28325236C7A260000A9BF /* vbezier.cpp */; };
+		A7D28352236C7A270000A9BF /* vpathmesure.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28326236C7A260000A9BF /* vpathmesure.h */; };
+		A7D28353236C7A270000A9BF /* velapsedtimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28327236C7A260000A9BF /* velapsedtimer.cpp */; };
+		A7D28354236C7A270000A9BF /* vrle.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28328236C7A260000A9BF /* vrle.h */; };
+		A7D28355236C7A270000A9BF /* vglobal.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28329236C7A260000A9BF /* vglobal.h */; };
+		A7D28356236C7A270000A9BF /* vbrush.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2832A236C7A260000A9BF /* vbrush.cpp */; };
+		A7D28357236C7A270000A9BF /* vrle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2832B236C7A260000A9BF /* vrle.cpp */; };
+		A7D28358236C7A270000A9BF /* vpath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2832C236C7A260000A9BF /* vpath.cpp */; };
+		A7D28359236C7A270000A9BF /* vtaskqueue.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2832D236C7A260000A9BF /* vtaskqueue.h */; };
+		A7D2835A236C7A270000A9BF /* vbrush.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2832E236C7A260000A9BF /* vbrush.h */; };
+		A7D2835B236C7A270000A9BF /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2832F236C7A260000A9BF /* config.h */; };
+		A7D2835C236C7A270000A9BF /* vinterpolator.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28330236C7A270000A9BF /* vinterpolator.h */; };
+		A7D2835D236C7A270000A9BF /* vcompositionfunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28331236C7A270000A9BF /* vcompositionfunctions.cpp */; };
+		A7D2835E236C7A270000A9BF /* vdrawhelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28332236C7A270000A9BF /* vdrawhelper.cpp */; };
+		A7D2835F236C7A270000A9BF /* vstackallocator.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28333236C7A270000A9BF /* vstackallocator.h */; };
+		A7D28360236C7A270000A9BF /* vdasher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28334236C7A270000A9BF /* vdasher.cpp */; };
+		A7D28361236C7A270000A9BF /* vbezier.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28335236C7A270000A9BF /* vbezier.h */; };
+		A7D28362236C7A270000A9BF /* vimageloader.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28336236C7A270000A9BF /* vimageloader.h */; };
+		A7D2836B236C7A380000A9BF /* v_ft_types.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28364236C7A380000A9BF /* v_ft_types.h */; };
+		A7D2836C236C7A380000A9BF /* v_ft_stroker.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28365236C7A380000A9BF /* v_ft_stroker.h */; };
+		A7D2836D236C7A380000A9BF /* v_ft_raster.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28366236C7A380000A9BF /* v_ft_raster.h */; };
+		A7D2836E236C7A380000A9BF /* v_ft_math.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28367236C7A380000A9BF /* v_ft_math.h */; };
+		A7D2836F236C7A380000A9BF /* v_ft_math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28368236C7A380000A9BF /* v_ft_math.cpp */; };
+		A7D28370236C7A380000A9BF /* v_ft_stroker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28369236C7A380000A9BF /* v_ft_stroker.cpp */; };
+		A7D28371236C7A380000A9BF /* v_ft_raster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2836A236C7A380000A9BF /* v_ft_raster.cpp */; };
+		A7D28375236C7A8E0000A9BF /* vregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D28373236C7A8E0000A9BF /* vregion.cpp */; };
+		A7D28376236C7A8E0000A9BF /* vregion.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28374236C7A8E0000A9BF /* vregion.h */; };
+		A7D28380236C7AC90000A9BF /* rlottie.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2837D236C7AC90000A9BF /* rlottie.h */; };
+		A7D28381236C7AC90000A9BF /* rlottiecommon.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2837E236C7AC90000A9BF /* rlottiecommon.h */; };
+		A7D28382236C7AC90000A9BF /* rlottie_capi.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2837F236C7AC90000A9BF /* rlottie_capi.h */; };
+		A7ED5DB2236C7D5500040372 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DB1236C7D5500040372 /* QuartzCore.framework */; };
+		A7ED5DB4236C7D6300040372 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DB3236C7D6300040372 /* Accelerate.framework */; };
+		A7ED5DB6236C7D6B00040372 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DB5236C7D6B00040372 /* CoreMedia.framework */; };
+		A7ED5DB8236C7D8000040372 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DB7236C7D8000040372 /* AppKit.framework */; };
+		A7ED5DBA236C7D9100040372 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DB9236C7D9100040372 /* Foundation.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A7D2826A236C77FA0000A9BF /* RLottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RLottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7D2826D236C77FA0000A9BF /* RLottie.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RLottie.h; sourceTree = "<group>"; };
+		A7D2826E236C77FA0000A9BF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A7D2827E236C78DF0000A9BF /* RLottieBridge.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RLottieBridge.mm; sourceTree = "<group>"; };
+		A7D2827F236C78DF0000A9BF /* RLottieBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RLottieBridge.h; sourceTree = "<group>"; };
+		A7D282A1236C79C40000A9BF /* lottieanimation_capi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottieanimation_capi.cpp; path = ../../../../rlottie/src/binding/c/lottieanimation_capi.cpp; sourceTree = "<group>"; };
+		A7D282A4236C79D60000A9BF /* lottieloader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottieloader.cpp; path = ../../../rlottie/src/lottie/lottieloader.cpp; sourceTree = "<group>"; };
+		A7D282A5236C79D60000A9BF /* lottieproxymodel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottieproxymodel.cpp; path = ../../../rlottie/src/lottie/lottieproxymodel.cpp; sourceTree = "<group>"; };
+		A7D282A6236C79D70000A9BF /* lottiekeypath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottiekeypath.cpp; path = ../../../rlottie/src/lottie/lottiekeypath.cpp; sourceTree = "<group>"; };
+		A7D282A7236C79D70000A9BF /* lottiemodel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottiemodel.cpp; path = ../../../rlottie/src/lottie/lottiemodel.cpp; sourceTree = "<group>"; };
+		A7D282A8236C79D70000A9BF /* lottieanimation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottieanimation.cpp; path = ../../../rlottie/src/lottie/lottieanimation.cpp; sourceTree = "<group>"; };
+		A7D282A9236C79D70000A9BF /* lottieparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lottieparser.h; path = ../../../rlottie/src/lottie/lottieparser.h; sourceTree = "<group>"; };
+		A7D282AA236C79D70000A9BF /* lottiemodel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lottiemodel.h; path = ../../../rlottie/src/lottie/lottiemodel.h; sourceTree = "<group>"; };
+		A7D282AB236C79D70000A9BF /* lottiekeypath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lottiekeypath.h; path = ../../../rlottie/src/lottie/lottiekeypath.h; sourceTree = "<group>"; };
+		A7D282AC236C79D70000A9BF /* lottieitem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottieitem.cpp; path = ../../../rlottie/src/lottie/lottieitem.cpp; sourceTree = "<group>"; };
+		A7D282AD236C79D70000A9BF /* lottieitem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lottieitem.h; path = ../../../rlottie/src/lottie/lottieitem.h; sourceTree = "<group>"; };
+		A7D282AE236C79D70000A9BF /* lottieparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lottieparser.cpp; path = ../../../rlottie/src/lottie/lottieparser.cpp; sourceTree = "<group>"; };
+		A7D282AF236C79D70000A9BF /* lottieloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lottieloader.h; path = ../../../rlottie/src/lottie/lottieloader.h; sourceTree = "<group>"; };
+		A7D282B0236C79D70000A9BF /* lottieproxymodel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lottieproxymodel.h; path = ../../../rlottie/src/lottie/lottieproxymodel.h; sourceTree = "<group>"; };
+		A7D282BF236C79F50000A9BF /* prettywriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prettywriter.h; path = ../../../../rlottie/src/lottie/rapidjson/prettywriter.h; sourceTree = "<group>"; };
+		A7D282C1236C79F50000A9BF /* ieee754.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ieee754.h; sourceTree = "<group>"; };
+		A7D282C2236C79F50000A9BF /* strtod.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = strtod.h; sourceTree = "<group>"; };
+		A7D282C3236C79F50000A9BF /* swap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = swap.h; sourceTree = "<group>"; };
+		A7D282C4236C79F50000A9BF /* regex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = regex.h; sourceTree = "<group>"; };
+		A7D282C5236C79F50000A9BF /* diyfp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diyfp.h; sourceTree = "<group>"; };
+		A7D282C6236C79F50000A9BF /* biginteger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = biginteger.h; sourceTree = "<group>"; };
+		A7D282C7236C79F50000A9BF /* strfunc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = strfunc.h; sourceTree = "<group>"; };
+		A7D282C8236C79F50000A9BF /* itoa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = itoa.h; sourceTree = "<group>"; };
+		A7D282C9236C79F50000A9BF /* stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stack.h; sourceTree = "<group>"; };
+		A7D282CA236C79F50000A9BF /* dtoa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dtoa.h; sourceTree = "<group>"; };
+		A7D282CB236C79F50000A9BF /* meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = meta.h; sourceTree = "<group>"; };
+		A7D282CC236C79F50000A9BF /* pow10.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pow10.h; sourceTree = "<group>"; };
+		A7D282CD236C79F50000A9BF /* filewritestream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filewritestream.h; path = ../../../../rlottie/src/lottie/rapidjson/filewritestream.h; sourceTree = "<group>"; };
+		A7D282CE236C79F50000A9BF /* allocators.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = allocators.h; path = ../../../../rlottie/src/lottie/rapidjson/allocators.h; sourceTree = "<group>"; };
+		A7D282CF236C79F50000A9BF /* reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reader.h; path = ../../../../rlottie/src/lottie/rapidjson/reader.h; sourceTree = "<group>"; };
+		A7D282D0236C79F50000A9BF /* schema.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = schema.h; path = ../../../../rlottie/src/lottie/rapidjson/schema.h; sourceTree = "<group>"; };
+		A7D282D1236C79F50000A9BF /* writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = writer.h; path = ../../../../rlottie/src/lottie/rapidjson/writer.h; sourceTree = "<group>"; };
+		A7D282D5236C79F50000A9BF /* filereadstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filereadstream.h; path = ../../../../rlottie/src/lottie/rapidjson/filereadstream.h; sourceTree = "<group>"; };
+		A7D282D6236C79F50000A9BF /* encodedstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = encodedstream.h; path = ../../../../rlottie/src/lottie/rapidjson/encodedstream.h; sourceTree = "<group>"; };
+		A7D282D7236C79F50000A9BF /* document.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = document.h; path = ../../../../rlottie/src/lottie/rapidjson/document.h; sourceTree = "<group>"; };
+		A7D282D8236C79F50000A9BF /* memorystream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = memorystream.h; path = ../../../../rlottie/src/lottie/rapidjson/memorystream.h; sourceTree = "<group>"; };
+		A7D282D9236C79F50000A9BF /* cursorstreamwrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cursorstreamwrapper.h; path = ../../../../rlottie/src/lottie/rapidjson/cursorstreamwrapper.h; sourceTree = "<group>"; };
+		A7D282DA236C79F60000A9BF /* encodings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = encodings.h; path = ../../../../rlottie/src/lottie/rapidjson/encodings.h; sourceTree = "<group>"; };
+		A7D282DB236C79F60000A9BF /* fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fwd.h; path = ../../../../rlottie/src/lottie/rapidjson/fwd.h; sourceTree = "<group>"; };
+		A7D282DC236C79F60000A9BF /* memorybuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = memorybuffer.h; path = ../../../../rlottie/src/lottie/rapidjson/memorybuffer.h; sourceTree = "<group>"; };
+		A7D282DD236C79F60000A9BF /* istreamwrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = istreamwrapper.h; path = ../../../../rlottie/src/lottie/rapidjson/istreamwrapper.h; sourceTree = "<group>"; };
+		A7D282DE236C79F60000A9BF /* ostreamwrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ostreamwrapper.h; path = ../../../../rlottie/src/lottie/rapidjson/ostreamwrapper.h; sourceTree = "<group>"; };
+		A7D282DF236C79F60000A9BF /* stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stream.h; path = ../../../../rlottie/src/lottie/rapidjson/stream.h; sourceTree = "<group>"; };
+		A7D282E1236C79F60000A9BF /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
+		A7D282E2236C79F60000A9BF /* en.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = en.h; sourceTree = "<group>"; };
+		A7D282E3236C79F60000A9BF /* rapidjson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rapidjson.h; path = ../../../../rlottie/src/lottie/rapidjson/rapidjson.h; sourceTree = "<group>"; };
+		A7D282E4236C79F60000A9BF /* stringbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stringbuffer.h; path = ../../../../rlottie/src/lottie/rapidjson/stringbuffer.h; sourceTree = "<group>"; };
+		A7D282E5236C79F60000A9BF /* pointer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pointer.h; path = ../../../../rlottie/src/lottie/rapidjson/pointer.h; sourceTree = "<group>"; };
+		A7D2830B236C7A250000A9BF /* vpath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vpath.h; path = ../../../rlottie/src/vector/vpath.h; sourceTree = "<group>"; };
+		A7D2830C236C7A250000A9BF /* vraster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vraster.h; path = ../../../rlottie/src/vector/vraster.h; sourceTree = "<group>"; };
+		A7D2830D236C7A250000A9BF /* vmatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmatrix.h; path = ../../../rlottie/src/vector/vmatrix.h; sourceTree = "<group>"; };
+		A7D2830E236C7A250000A9BF /* vdrawhelper_neon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vdrawhelper_neon.cpp; path = ../../../rlottie/src/vector/vdrawhelper_neon.cpp; sourceTree = "<group>"; };
+		A7D2830F236C7A250000A9BF /* vpainter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vpainter.cpp; path = ../../../rlottie/src/vector/vpainter.cpp; sourceTree = "<group>"; };
+		A7D28310236C7A250000A9BF /* vbitmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vbitmap.h; path = ../../../rlottie/src/vector/vbitmap.h; sourceTree = "<group>"; };
+		A7D28311236C7A250000A9BF /* vrect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vrect.h; path = ../../../rlottie/src/vector/vrect.h; sourceTree = "<group>"; };
+		A7D28312236C7A250000A9BF /* vinterpolator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vinterpolator.cpp; path = ../../../rlottie/src/vector/vinterpolator.cpp; sourceTree = "<group>"; };
+		A7D28313236C7A250000A9BF /* vpathmesure.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vpathmesure.cpp; path = ../../../rlottie/src/vector/vpathmesure.cpp; sourceTree = "<group>"; };
+		A7D28314236C7A250000A9BF /* vdasher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vdasher.h; path = ../../../rlottie/src/vector/vdasher.h; sourceTree = "<group>"; };
+		A7D28315236C7A250000A9BF /* vcowptr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vcowptr.h; path = ../../../rlottie/src/vector/vcowptr.h; sourceTree = "<group>"; };
+		A7D28316236C7A250000A9BF /* vrect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vrect.cpp; path = ../../../rlottie/src/vector/vrect.cpp; sourceTree = "<group>"; };
+		A7D28317236C7A250000A9BF /* vbitmap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vbitmap.cpp; path = ../../../rlottie/src/vector/vbitmap.cpp; sourceTree = "<group>"; };
+		A7D28318236C7A250000A9BF /* vpainter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vpainter.h; path = ../../../rlottie/src/vector/vpainter.h; sourceTree = "<group>"; };
+		A7D28319236C7A250000A9BF /* velapsedtimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = velapsedtimer.h; path = ../../../rlottie/src/vector/velapsedtimer.h; sourceTree = "<group>"; };
+		A7D2831A236C7A260000A9BF /* vdebug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vdebug.cpp; path = ../../../rlottie/src/vector/vdebug.cpp; sourceTree = "<group>"; };
+		A7D2831B236C7A260000A9BF /* vdrawhelper_sse2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vdrawhelper_sse2.cpp; path = ../../../rlottie/src/vector/vdrawhelper_sse2.cpp; sourceTree = "<group>"; };
+		A7D2831C236C7A260000A9BF /* vdrawhelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vdrawhelper.h; path = ../../../rlottie/src/vector/vdrawhelper.h; sourceTree = "<group>"; };
+		A7D2831D236C7A260000A9BF /* vimageloader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vimageloader.cpp; path = ../../../rlottie/src/vector/vimageloader.cpp; sourceTree = "<group>"; };
+		A7D2831E236C7A260000A9BF /* vdrawable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vdrawable.cpp; path = ../../../rlottie/src/vector/vdrawable.cpp; sourceTree = "<group>"; };
+		A7D2831F236C7A260000A9BF /* vmatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmatrix.cpp; path = ../../../rlottie/src/vector/vmatrix.cpp; sourceTree = "<group>"; };
+		A7D28320236C7A260000A9BF /* vraster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vraster.cpp; path = ../../../rlottie/src/vector/vraster.cpp; sourceTree = "<group>"; };
+		A7D28321236C7A260000A9BF /* vline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vline.h; path = ../../../rlottie/src/vector/vline.h; sourceTree = "<group>"; };
+		A7D28322236C7A260000A9BF /* vdebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vdebug.h; path = ../../../rlottie/src/vector/vdebug.h; sourceTree = "<group>"; };
+		A7D28323236C7A260000A9BF /* vdrawable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vdrawable.h; path = ../../../rlottie/src/vector/vdrawable.h; sourceTree = "<group>"; };
+		A7D28324236C7A260000A9BF /* vpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vpoint.h; path = ../../../rlottie/src/vector/vpoint.h; sourceTree = "<group>"; };
+		A7D28325236C7A260000A9BF /* vbezier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vbezier.cpp; path = ../../../rlottie/src/vector/vbezier.cpp; sourceTree = "<group>"; };
+		A7D28326236C7A260000A9BF /* vpathmesure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vpathmesure.h; path = ../../../rlottie/src/vector/vpathmesure.h; sourceTree = "<group>"; };
+		A7D28327236C7A260000A9BF /* velapsedtimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = velapsedtimer.cpp; path = ../../../rlottie/src/vector/velapsedtimer.cpp; sourceTree = "<group>"; };
+		A7D28328236C7A260000A9BF /* vrle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vrle.h; path = ../../../rlottie/src/vector/vrle.h; sourceTree = "<group>"; };
+		A7D28329236C7A260000A9BF /* vglobal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vglobal.h; path = ../../../rlottie/src/vector/vglobal.h; sourceTree = "<group>"; };
+		A7D2832A236C7A260000A9BF /* vbrush.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vbrush.cpp; path = ../../../rlottie/src/vector/vbrush.cpp; sourceTree = "<group>"; };
+		A7D2832B236C7A260000A9BF /* vrle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vrle.cpp; path = ../../../rlottie/src/vector/vrle.cpp; sourceTree = "<group>"; };
+		A7D2832C236C7A260000A9BF /* vpath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vpath.cpp; path = ../../../rlottie/src/vector/vpath.cpp; sourceTree = "<group>"; };
+		A7D2832D236C7A260000A9BF /* vtaskqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vtaskqueue.h; path = ../../../rlottie/src/vector/vtaskqueue.h; sourceTree = "<group>"; };
+		A7D2832E236C7A260000A9BF /* vbrush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vbrush.h; path = ../../../rlottie/src/vector/vbrush.h; sourceTree = "<group>"; };
+		A7D2832F236C7A260000A9BF /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = config.h; path = ../../../rlottie/src/vector/config.h; sourceTree = "<group>"; };
+		A7D28330236C7A270000A9BF /* vinterpolator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vinterpolator.h; path = ../../../rlottie/src/vector/vinterpolator.h; sourceTree = "<group>"; };
+		A7D28331236C7A270000A9BF /* vcompositionfunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vcompositionfunctions.cpp; path = ../../../rlottie/src/vector/vcompositionfunctions.cpp; sourceTree = "<group>"; };
+		A7D28332236C7A270000A9BF /* vdrawhelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vdrawhelper.cpp; path = ../../../rlottie/src/vector/vdrawhelper.cpp; sourceTree = "<group>"; };
+		A7D28333236C7A270000A9BF /* vstackallocator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vstackallocator.h; path = ../../../rlottie/src/vector/vstackallocator.h; sourceTree = "<group>"; };
+		A7D28334236C7A270000A9BF /* vdasher.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vdasher.cpp; path = ../../../rlottie/src/vector/vdasher.cpp; sourceTree = "<group>"; };
+		A7D28335236C7A270000A9BF /* vbezier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vbezier.h; path = ../../../rlottie/src/vector/vbezier.h; sourceTree = "<group>"; };
+		A7D28336236C7A270000A9BF /* vimageloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vimageloader.h; path = ../../../rlottie/src/vector/vimageloader.h; sourceTree = "<group>"; };
+		A7D28364236C7A380000A9BF /* v_ft_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_ft_types.h; path = ../../../../rlottie/src/vector/freetype/v_ft_types.h; sourceTree = "<group>"; };
+		A7D28365236C7A380000A9BF /* v_ft_stroker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_ft_stroker.h; path = ../../../../rlottie/src/vector/freetype/v_ft_stroker.h; sourceTree = "<group>"; };
+		A7D28366236C7A380000A9BF /* v_ft_raster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_ft_raster.h; path = ../../../../rlottie/src/vector/freetype/v_ft_raster.h; sourceTree = "<group>"; };
+		A7D28367236C7A380000A9BF /* v_ft_math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_ft_math.h; path = ../../../../rlottie/src/vector/freetype/v_ft_math.h; sourceTree = "<group>"; };
+		A7D28368236C7A380000A9BF /* v_ft_math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_ft_math.cpp; path = ../../../../rlottie/src/vector/freetype/v_ft_math.cpp; sourceTree = "<group>"; };
+		A7D28369236C7A380000A9BF /* v_ft_stroker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_ft_stroker.cpp; path = ../../../../rlottie/src/vector/freetype/v_ft_stroker.cpp; sourceTree = "<group>"; };
+		A7D2836A236C7A380000A9BF /* v_ft_raster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_ft_raster.cpp; path = ../../../../rlottie/src/vector/freetype/v_ft_raster.cpp; sourceTree = "<group>"; };
+		A7D28373236C7A8E0000A9BF /* vregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vregion.cpp; path = ../../../../rlottie/src/vector/pixman/vregion.cpp; sourceTree = "<group>"; };
+		A7D28374236C7A8E0000A9BF /* vregion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vregion.h; path = ../../../../rlottie/src/vector/pixman/vregion.h; sourceTree = "<group>"; };
+		A7D2837D236C7AC90000A9BF /* rlottie.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rlottie.h; path = ../../rlottie/inc/rlottie.h; sourceTree = "<group>"; };
+		A7D2837E236C7AC90000A9BF /* rlottiecommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rlottiecommon.h; path = ../../rlottie/inc/rlottiecommon.h; sourceTree = "<group>"; };
+		A7D2837F236C7AC90000A9BF /* rlottie_capi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rlottie_capi.h; path = ../../rlottie/inc/rlottie_capi.h; sourceTree = "<group>"; };
+		A7ED5DB1236C7D5500040372 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		A7ED5DB3236C7D6300040372 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		A7ED5DB5236C7D6B00040372 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		A7ED5DB7236C7D8000040372 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		A7ED5DB9236C7D9100040372 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A7D28267236C77FA0000A9BF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7ED5DBA236C7D9100040372 /* Foundation.framework in Frameworks */,
+				A7ED5DB8236C7D8000040372 /* AppKit.framework in Frameworks */,
+				A7ED5DB6236C7D6B00040372 /* CoreMedia.framework in Frameworks */,
+				A7ED5DB4236C7D6300040372 /* Accelerate.framework in Frameworks */,
+				A7ED5DB2236C7D5500040372 /* QuartzCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A7D28260236C77FA0000A9BF = {
+			isa = PBXGroup;
+			children = (
+				A7D2837C236C7AC20000A9BF /* include */,
+				A7D28282236C793E0000A9BF /* src */,
+				A7D2827D236C78B00000A9BF /* Sources */,
+				A7D2826C236C77FA0000A9BF /* RLottie */,
+				A7D2826B236C77FA0000A9BF /* Products */,
+				A7ED5DB0236C7D5400040372 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A7D2826B236C77FA0000A9BF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A7D2826A236C77FA0000A9BF /* RLottie.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A7D2826C236C77FA0000A9BF /* RLottie */ = {
+			isa = PBXGroup;
+			children = (
+				A7D2826D236C77FA0000A9BF /* RLottie.h */,
+				A7D2826E236C77FA0000A9BF /* Info.plist */,
+			);
+			path = RLottie;
+			sourceTree = "<group>";
+		};
+		A7D2827D236C78B00000A9BF /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				A7D2827F236C78DF0000A9BF /* RLottieBridge.h */,
+				A7D2827E236C78DF0000A9BF /* RLottieBridge.mm */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		A7D28282236C793E0000A9BF /* src */ = {
+			isa = PBXGroup;
+			children = (
+				A7D2830A236C7A110000A9BF /* vector */,
+				A7D282A3236C79CC0000A9BF /* lottie */,
+				A7D2829F236C79B30000A9BF /* binding */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		A7D2829F236C79B30000A9BF /* binding */ = {
+			isa = PBXGroup;
+			children = (
+				A7D282A0236C79BB0000A9BF /* c */,
+			);
+			path = binding;
+			sourceTree = "<group>";
+		};
+		A7D282A0236C79BB0000A9BF /* c */ = {
+			isa = PBXGroup;
+			children = (
+				A7D282A1236C79C40000A9BF /* lottieanimation_capi.cpp */,
+			);
+			path = c;
+			sourceTree = "<group>";
+		};
+		A7D282A3236C79CC0000A9BF /* lottie */ = {
+			isa = PBXGroup;
+			children = (
+				A7D282BE236C79D90000A9BF /* rapidjson */,
+				A7D282A8236C79D70000A9BF /* lottieanimation.cpp */,
+				A7D282AC236C79D70000A9BF /* lottieitem.cpp */,
+				A7D282AD236C79D70000A9BF /* lottieitem.h */,
+				A7D282A6236C79D70000A9BF /* lottiekeypath.cpp */,
+				A7D282AB236C79D70000A9BF /* lottiekeypath.h */,
+				A7D282A4236C79D60000A9BF /* lottieloader.cpp */,
+				A7D282AF236C79D70000A9BF /* lottieloader.h */,
+				A7D282A7236C79D70000A9BF /* lottiemodel.cpp */,
+				A7D282AA236C79D70000A9BF /* lottiemodel.h */,
+				A7D282AE236C79D70000A9BF /* lottieparser.cpp */,
+				A7D282A9236C79D70000A9BF /* lottieparser.h */,
+				A7D282A5236C79D60000A9BF /* lottieproxymodel.cpp */,
+				A7D282B0236C79D70000A9BF /* lottieproxymodel.h */,
+			);
+			path = lottie;
+			sourceTree = "<group>";
+		};
+		A7D282BE236C79D90000A9BF /* rapidjson */ = {
+			isa = PBXGroup;
+			children = (
+				A7D282CE236C79F50000A9BF /* allocators.h */,
+				A7D282D9236C79F50000A9BF /* cursorstreamwrapper.h */,
+				A7D282D7236C79F50000A9BF /* document.h */,
+				A7D282D6236C79F50000A9BF /* encodedstream.h */,
+				A7D282DA236C79F60000A9BF /* encodings.h */,
+				A7D282E0236C79F60000A9BF /* error */,
+				A7D282D5236C79F50000A9BF /* filereadstream.h */,
+				A7D282CD236C79F50000A9BF /* filewritestream.h */,
+				A7D282DB236C79F60000A9BF /* fwd.h */,
+				A7D282C0236C79F50000A9BF /* internal */,
+				A7D282DD236C79F60000A9BF /* istreamwrapper.h */,
+				A7D282DC236C79F60000A9BF /* memorybuffer.h */,
+				A7D282D8236C79F50000A9BF /* memorystream.h */,
+				A7D282DE236C79F60000A9BF /* ostreamwrapper.h */,
+				A7D282E5236C79F60000A9BF /* pointer.h */,
+				A7D282BF236C79F50000A9BF /* prettywriter.h */,
+				A7D282E3236C79F60000A9BF /* rapidjson.h */,
+				A7D282CF236C79F50000A9BF /* reader.h */,
+				A7D282D0236C79F50000A9BF /* schema.h */,
+				A7D282DF236C79F60000A9BF /* stream.h */,
+				A7D282E4236C79F60000A9BF /* stringbuffer.h */,
+				A7D282D1236C79F50000A9BF /* writer.h */,
+			);
+			path = rapidjson;
+			sourceTree = "<group>";
+		};
+		A7D282C0236C79F50000A9BF /* internal */ = {
+			isa = PBXGroup;
+			children = (
+				A7D282C1236C79F50000A9BF /* ieee754.h */,
+				A7D282C2236C79F50000A9BF /* strtod.h */,
+				A7D282C3236C79F50000A9BF /* swap.h */,
+				A7D282C4236C79F50000A9BF /* regex.h */,
+				A7D282C5236C79F50000A9BF /* diyfp.h */,
+				A7D282C6236C79F50000A9BF /* biginteger.h */,
+				A7D282C7236C79F50000A9BF /* strfunc.h */,
+				A7D282C8236C79F50000A9BF /* itoa.h */,
+				A7D282C9236C79F50000A9BF /* stack.h */,
+				A7D282CA236C79F50000A9BF /* dtoa.h */,
+				A7D282CB236C79F50000A9BF /* meta.h */,
+				A7D282CC236C79F50000A9BF /* pow10.h */,
+			);
+			name = internal;
+			path = ../../../../rlottie/src/lottie/rapidjson/internal;
+			sourceTree = "<group>";
+		};
+		A7D282E0236C79F60000A9BF /* error */ = {
+			isa = PBXGroup;
+			children = (
+				A7D282E1236C79F60000A9BF /* error.h */,
+				A7D282E2236C79F60000A9BF /* en.h */,
+			);
+			name = error;
+			path = ../../../../rlottie/src/lottie/rapidjson/error;
+			sourceTree = "<group>";
+		};
+		A7D2830A236C7A110000A9BF /* vector */ = {
+			isa = PBXGroup;
+			children = (
+				A7D28372236C7A400000A9BF /* pixman */,
+				A7D28363236C7A2F0000A9BF /* freetype */,
+				A7D2832F236C7A260000A9BF /* config.h */,
+				A7D28325236C7A260000A9BF /* vbezier.cpp */,
+				A7D28335236C7A270000A9BF /* vbezier.h */,
+				A7D28317236C7A250000A9BF /* vbitmap.cpp */,
+				A7D28310236C7A250000A9BF /* vbitmap.h */,
+				A7D2832A236C7A260000A9BF /* vbrush.cpp */,
+				A7D2832E236C7A260000A9BF /* vbrush.h */,
+				A7D28331236C7A270000A9BF /* vcompositionfunctions.cpp */,
+				A7D28315236C7A250000A9BF /* vcowptr.h */,
+				A7D28334236C7A270000A9BF /* vdasher.cpp */,
+				A7D28314236C7A250000A9BF /* vdasher.h */,
+				A7D2831A236C7A260000A9BF /* vdebug.cpp */,
+				A7D28322236C7A260000A9BF /* vdebug.h */,
+				A7D2831E236C7A260000A9BF /* vdrawable.cpp */,
+				A7D28323236C7A260000A9BF /* vdrawable.h */,
+				A7D2830E236C7A250000A9BF /* vdrawhelper_neon.cpp */,
+				A7D2831B236C7A260000A9BF /* vdrawhelper_sse2.cpp */,
+				A7D28332236C7A270000A9BF /* vdrawhelper.cpp */,
+				A7D2831C236C7A260000A9BF /* vdrawhelper.h */,
+				A7D28327236C7A260000A9BF /* velapsedtimer.cpp */,
+				A7D28319236C7A250000A9BF /* velapsedtimer.h */,
+				A7D28329236C7A260000A9BF /* vglobal.h */,
+				A7D2831D236C7A260000A9BF /* vimageloader.cpp */,
+				A7D28336236C7A270000A9BF /* vimageloader.h */,
+				A7D28312236C7A250000A9BF /* vinterpolator.cpp */,
+				A7D28330236C7A270000A9BF /* vinterpolator.h */,
+				A7D28321236C7A260000A9BF /* vline.h */,
+				A7D2831F236C7A260000A9BF /* vmatrix.cpp */,
+				A7D2830D236C7A250000A9BF /* vmatrix.h */,
+				A7D2830F236C7A250000A9BF /* vpainter.cpp */,
+				A7D28318236C7A250000A9BF /* vpainter.h */,
+				A7D2832C236C7A260000A9BF /* vpath.cpp */,
+				A7D2830B236C7A250000A9BF /* vpath.h */,
+				A7D28313236C7A250000A9BF /* vpathmesure.cpp */,
+				A7D28326236C7A260000A9BF /* vpathmesure.h */,
+				A7D28324236C7A260000A9BF /* vpoint.h */,
+				A7D28320236C7A260000A9BF /* vraster.cpp */,
+				A7D2830C236C7A250000A9BF /* vraster.h */,
+				A7D28316236C7A250000A9BF /* vrect.cpp */,
+				A7D28311236C7A250000A9BF /* vrect.h */,
+				A7D2832B236C7A260000A9BF /* vrle.cpp */,
+				A7D28328236C7A260000A9BF /* vrle.h */,
+				A7D28333236C7A270000A9BF /* vstackallocator.h */,
+				A7D2832D236C7A260000A9BF /* vtaskqueue.h */,
+			);
+			path = vector;
+			sourceTree = "<group>";
+		};
+		A7D28363236C7A2F0000A9BF /* freetype */ = {
+			isa = PBXGroup;
+			children = (
+				A7D28368236C7A380000A9BF /* v_ft_math.cpp */,
+				A7D28367236C7A380000A9BF /* v_ft_math.h */,
+				A7D2836A236C7A380000A9BF /* v_ft_raster.cpp */,
+				A7D28366236C7A380000A9BF /* v_ft_raster.h */,
+				A7D28369236C7A380000A9BF /* v_ft_stroker.cpp */,
+				A7D28365236C7A380000A9BF /* v_ft_stroker.h */,
+				A7D28364236C7A380000A9BF /* v_ft_types.h */,
+			);
+			path = freetype;
+			sourceTree = "<group>";
+		};
+		A7D28372236C7A400000A9BF /* pixman */ = {
+			isa = PBXGroup;
+			children = (
+				A7D28373236C7A8E0000A9BF /* vregion.cpp */,
+				A7D28374236C7A8E0000A9BF /* vregion.h */,
+			);
+			path = pixman;
+			sourceTree = "<group>";
+		};
+		A7D2837C236C7AC20000A9BF /* include */ = {
+			isa = PBXGroup;
+			children = (
+				A7D2837F236C7AC90000A9BF /* rlottie_capi.h */,
+				A7D2837D236C7AC90000A9BF /* rlottie.h */,
+				A7D2837E236C7AC90000A9BF /* rlottiecommon.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		A7ED5DB0236C7D5400040372 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A7ED5DB9236C7D9100040372 /* Foundation.framework */,
+				A7ED5DB7236C7D8000040372 /* AppKit.framework */,
+				A7ED5DB5236C7D6B00040372 /* CoreMedia.framework */,
+				A7ED5DB3236C7D6300040372 /* Accelerate.framework */,
+				A7ED5DB1236C7D5500040372 /* QuartzCore.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		A7D28265236C77FA0000A9BF /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7D282B6236C79D70000A9BF /* lottieparser.h in Headers */,
+				A7D28281236C78DF0000A9BF /* RLottieBridge.h in Headers */,
+				A7D282FE236C79F60000A9BF /* cursorstreamwrapper.h in Headers */,
+				A7D282FB236C79F60000A9BF /* encodedstream.h in Headers */,
+				A7D282FC236C79F60000A9BF /* document.h in Headers */,
+				A7D282B7236C79D70000A9BF /* lottiemodel.h in Headers */,
+				A7D28339236C7A270000A9BF /* vmatrix.h in Headers */,
+				A7D282BA236C79D70000A9BF /* lottieitem.h in Headers */,
+				A7D282E7236C79F60000A9BF /* ieee754.h in Headers */,
+				A7D28302236C79F60000A9BF /* istreamwrapper.h in Headers */,
+				A7D282EE236C79F60000A9BF /* itoa.h in Headers */,
+				A7D282F6236C79F60000A9BF /* schema.h in Headers */,
+				A7D282ED236C79F60000A9BF /* strfunc.h in Headers */,
+				A7D282FD236C79F60000A9BF /* memorystream.h in Headers */,
+				A7D28381236C7AC90000A9BF /* rlottiecommon.h in Headers */,
+				A7D28338236C7A270000A9BF /* vraster.h in Headers */,
+				A7D2835A236C7A270000A9BF /* vbrush.h in Headers */,
+				A7D282F3236C79F60000A9BF /* filewritestream.h in Headers */,
+				A7D282FA236C79F60000A9BF /* filereadstream.h in Headers */,
+				A7D28341236C7A270000A9BF /* vcowptr.h in Headers */,
+				A7D28355236C7A270000A9BF /* vglobal.h in Headers */,
+				A7D2835B236C7A270000A9BF /* config.h in Headers */,
+				A7D2826F236C77FA0000A9BF /* RLottie.h in Headers */,
+				A7D2836D236C7A380000A9BF /* v_ft_raster.h in Headers */,
+				A7D282E6236C79F60000A9BF /* prettywriter.h in Headers */,
+				A7D282EA236C79F60000A9BF /* regex.h in Headers */,
+				A7D282FF236C79F60000A9BF /* encodings.h in Headers */,
+				A7D282EF236C79F60000A9BF /* stack.h in Headers */,
+				A7D28309236C79F60000A9BF /* pointer.h in Headers */,
+				A7D28301236C79F60000A9BF /* memorybuffer.h in Headers */,
+				A7D28354236C7A270000A9BF /* vrle.h in Headers */,
+				A7D28352236C7A270000A9BF /* vpathmesure.h in Headers */,
+				A7D2836B236C7A380000A9BF /* v_ft_types.h in Headers */,
+				A7D28380236C7AC90000A9BF /* rlottie.h in Headers */,
+				A7D282EB236C79F60000A9BF /* diyfp.h in Headers */,
+				A7D282E8236C79F60000A9BF /* strtod.h in Headers */,
+				A7D28359236C7A270000A9BF /* vtaskqueue.h in Headers */,
+				A7D282E9236C79F60000A9BF /* swap.h in Headers */,
+				A7D2835F236C7A270000A9BF /* vstackallocator.h in Headers */,
+				A7D282BD236C79D70000A9BF /* lottieproxymodel.h in Headers */,
+				A7D28362236C7A270000A9BF /* vimageloader.h in Headers */,
+				A7D28348236C7A270000A9BF /* vdrawhelper.h in Headers */,
+				A7D28382236C7AC90000A9BF /* rlottie_capi.h in Headers */,
+				A7D282B8236C79D70000A9BF /* lottiekeypath.h in Headers */,
+				A7D28303236C79F60000A9BF /* ostreamwrapper.h in Headers */,
+				A7D2833D236C7A270000A9BF /* vrect.h in Headers */,
+				A7D28307236C79F60000A9BF /* rapidjson.h in Headers */,
+				A7D28306236C79F60000A9BF /* en.h in Headers */,
+				A7D28361236C7A270000A9BF /* vbezier.h in Headers */,
+				A7D282F4236C79F60000A9BF /* allocators.h in Headers */,
+				A7D282F5236C79F60000A9BF /* reader.h in Headers */,
+				A7D2833C236C7A270000A9BF /* vbitmap.h in Headers */,
+				A7D282F2236C79F60000A9BF /* pow10.h in Headers */,
+				A7D28376236C7A8E0000A9BF /* vregion.h in Headers */,
+				A7D282F1236C79F60000A9BF /* meta.h in Headers */,
+				A7D282BC236C79D70000A9BF /* lottieloader.h in Headers */,
+				A7D2836C236C7A380000A9BF /* v_ft_stroker.h in Headers */,
+				A7D2834D236C7A270000A9BF /* vline.h in Headers */,
+				A7D28344236C7A270000A9BF /* vpainter.h in Headers */,
+				A7D28340236C7A270000A9BF /* vdasher.h in Headers */,
+				A7D28304236C79F60000A9BF /* stream.h in Headers */,
+				A7D28300236C79F60000A9BF /* fwd.h in Headers */,
+				A7D28308236C79F60000A9BF /* stringbuffer.h in Headers */,
+				A7D282EC236C79F60000A9BF /* biginteger.h in Headers */,
+				A7D282F7236C79F60000A9BF /* writer.h in Headers */,
+				A7D28350236C7A270000A9BF /* vpoint.h in Headers */,
+				A7D2835C236C7A270000A9BF /* vinterpolator.h in Headers */,
+				A7D2834F236C7A270000A9BF /* vdrawable.h in Headers */,
+				A7D2836E236C7A380000A9BF /* v_ft_math.h in Headers */,
+				A7D282F0236C79F60000A9BF /* dtoa.h in Headers */,
+				A7D2834E236C7A270000A9BF /* vdebug.h in Headers */,
+				A7D28337236C7A270000A9BF /* vpath.h in Headers */,
+				A7D28345236C7A270000A9BF /* velapsedtimer.h in Headers */,
+				A7D28305236C79F60000A9BF /* error.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		A7D28269236C77FA0000A9BF /* RLottie */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7D28272236C77FA0000A9BF /* Build configuration list for PBXNativeTarget "RLottie" */;
+			buildPhases = (
+				A7D28265236C77FA0000A9BF /* Headers */,
+				A7D28266236C77FA0000A9BF /* Sources */,
+				A7D28267236C77FA0000A9BF /* Frameworks */,
+				A7D28268236C77FA0000A9BF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RLottie;
+			productName = RLottie;
+			productReference = A7D2826A236C77FA0000A9BF /* RLottie.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A7D28261236C77FA0000A9BF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1030;
+				ORGANIZATIONNAME = Telegram;
+				TargetAttributes = {
+					A7D28269236C77FA0000A9BF = {
+						CreatedOnToolsVersion = 10.3;
+					};
+				};
+			};
+			buildConfigurationList = A7D28264236C77FA0000A9BF /* Build configuration list for PBXProject "RLottie_Xcode" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = A7D28260236C77FA0000A9BF;
+			productRefGroup = A7D2826B236C77FA0000A9BF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A7D28269236C77FA0000A9BF /* RLottie */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A7D28268236C77FA0000A9BF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A7D28266236C77FA0000A9BF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7D282B4236C79D70000A9BF /* lottiemodel.cpp in Sources */,
+				A7D28351236C7A270000A9BF /* vbezier.cpp in Sources */,
+				A7D2834C236C7A270000A9BF /* vraster.cpp in Sources */,
+				A7D2833B236C7A270000A9BF /* vpainter.cpp in Sources */,
+				A7D2834A236C7A270000A9BF /* vdrawable.cpp in Sources */,
+				A7D282B1236C79D70000A9BF /* lottieloader.cpp in Sources */,
+				A7D2833A236C7A270000A9BF /* vdrawhelper_neon.cpp in Sources */,
+				A7D28358236C7A270000A9BF /* vpath.cpp in Sources */,
+				A7D28343236C7A270000A9BF /* vbitmap.cpp in Sources */,
+				A7D2835D236C7A270000A9BF /* vcompositionfunctions.cpp in Sources */,
+				A7D282B5236C79D70000A9BF /* lottieanimation.cpp in Sources */,
+				A7D2833F236C7A270000A9BF /* vpathmesure.cpp in Sources */,
+				A7D2836F236C7A380000A9BF /* v_ft_math.cpp in Sources */,
+				A7D28347236C7A270000A9BF /* vdrawhelper_sse2.cpp in Sources */,
+				A7D28353236C7A270000A9BF /* velapsedtimer.cpp in Sources */,
+				A7D282B3236C79D70000A9BF /* lottiekeypath.cpp in Sources */,
+				A7D28375236C7A8E0000A9BF /* vregion.cpp in Sources */,
+				A7D28357236C7A270000A9BF /* vrle.cpp in Sources */,
+				A7D28356236C7A270000A9BF /* vbrush.cpp in Sources */,
+				A7D28346236C7A270000A9BF /* vdebug.cpp in Sources */,
+				A7D2834B236C7A270000A9BF /* vmatrix.cpp in Sources */,
+				A7D282B2236C79D70000A9BF /* lottieproxymodel.cpp in Sources */,
+				A7D2835E236C7A270000A9BF /* vdrawhelper.cpp in Sources */,
+				A7D28370236C7A380000A9BF /* v_ft_stroker.cpp in Sources */,
+				A7D28360236C7A270000A9BF /* vdasher.cpp in Sources */,
+				A7D28349236C7A270000A9BF /* vimageloader.cpp in Sources */,
+				A7D2833E236C7A270000A9BF /* vinterpolator.cpp in Sources */,
+				A7D282A2236C79C40000A9BF /* lottieanimation_capi.cpp in Sources */,
+				A7D28342236C7A270000A9BF /* vrect.cpp in Sources */,
+				A7D282BB236C79D70000A9BF /* lottieparser.cpp in Sources */,
+				A7D28280236C78DF0000A9BF /* RLottieBridge.mm in Sources */,
+				A7D282B9236C79D70000A9BF /* lottieitem.cpp in Sources */,
+				A7D28371236C7A380000A9BF /* v_ft_raster.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A7D28271236C77FA0000A9BF /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseHockeyapp;
+		};
+		A7D28274236C77FA0000A9BF /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = RLottie/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.RLottie;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = ReleaseHockeyapp;
+		};
+		A7D28275236C78800000A9BF /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		A7D28276236C78800000A9BF /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = RLottie/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.RLottie;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = DebugHockeyapp;
+		};
+		A7D28277236C78870000A9BF /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseAppStore;
+		};
+		A7D28278236C78870000A9BF /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = RLottie/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.RLottie;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = ReleaseAppStore;
+		};
+		A7D28279236C78950000A9BF /* HockeyapMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyapMacAlpha;
+		};
+		A7D2827A236C78950000A9BF /* HockeyapMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = RLottie/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.RLottie;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = HockeyapMacAlpha;
+		};
+		A7D2827B236C78A30000A9BF /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugAppStore;
+		};
+		A7D2827C236C78A30000A9BF /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = RLottie/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.RLottie;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = DebugAppStore;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A7D28264236C77FA0000A9BF /* Build configuration list for PBXProject "RLottie_Xcode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7D28271236C77FA0000A9BF /* ReleaseHockeyapp */,
+				A7D28275236C78800000A9BF /* DebugHockeyapp */,
+				A7D28277236C78870000A9BF /* ReleaseAppStore */,
+				A7D28279236C78950000A9BF /* HockeyapMacAlpha */,
+				A7D2827B236C78A30000A9BF /* DebugAppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+		A7D28272236C77FA0000A9BF /* Build configuration list for PBXNativeTarget "RLottie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7D28274236C77FA0000A9BF /* ReleaseHockeyapp */,
+				A7D28276236C78800000A9BF /* DebugHockeyapp */,
+				A7D28278236C78870000A9BF /* ReleaseAppStore */,
+				A7D2827A236C78950000A9BF /* HockeyapMacAlpha */,
+				A7D2827C236C78A30000A9BF /* DebugAppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A7D28261236C77FA0000A9BF /* Project object */;
+}

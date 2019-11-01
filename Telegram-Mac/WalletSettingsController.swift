@@ -7,11 +7,12 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
-
+import WalletCore
 private final class WalletSettingsArguments {
     let context: AccountContext
     let deleteWallet:()->Void
@@ -52,7 +53,11 @@ func WalletSettingsController(context: AccountContext, tonContext: TonContext, w
     let arguments = WalletSettingsArguments(context: context, deleteWallet: {
         confirm(for: context.window, header: L10n.walletSettingsDeleteConfirmHeader, information: L10n.walletSettingsDeleteConfirmText, okTitle: L10n.walletSettingsDeleteConfirmOK, successHandler: { _ in
             
-            let signals = combineLatest(TONKeychain.delete(account: context.account) |> castError(DeleteAllLocalWalletsDataError.self) |> ignoreValues, deleteAllLocalWalletsData(postbox: context.account.postbox, network: context.account.network, tonInstance: tonContext.instance))
+            
+            
+            
+            
+            let signals = combineLatest(TONKeychain.delete(account: context.account) |> castError(DeleteAllLocalWalletsDataError.self) |> ignoreValues, deleteAllLocalWalletsData(storage: tonContext.storage, tonInstance: tonContext.instance))
             
             let _ = showModalProgress(signal: signals
                 |> deliverOnMainQueue, for: context.window).start(error: { error in

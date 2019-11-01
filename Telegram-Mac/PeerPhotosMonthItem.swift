@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 private struct LayoutItem : Equatable {
     static func == (lhs: LayoutItem, rhs: LayoutItem) -> Bool {
@@ -185,7 +186,7 @@ private class MediaCell : Control {
             let arguments: TransformImageArguments
             let cacheArguments: TransformImageArguments
             let signal: Signal<ImageDataTransformation, NoError>
-            if let image = layout.message.media.first as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions {
+            if let image = layout.message.media.first as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
                 media = image
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 arguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: layout.frame.size, intrinsicInsets: NSEdgeInsets())
@@ -193,7 +194,7 @@ private class MediaCell : Control {
                 signal = mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.message), media: image), scale: backingScaleFactor)
             } else if let file = layout.message.media.first as? TelegramMediaFile {
                 media = file
-                let largestSize = file.previewRepresentations.last?.dimensions ?? file.imageSize
+                let largestSize = file.previewRepresentations.last?.dimensions.size ?? file.imageSize
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 arguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: layout.frame.size, intrinsicInsets: NSEdgeInsets())
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())

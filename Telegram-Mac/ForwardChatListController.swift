@@ -8,7 +8,8 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 class ForwardChatListController: ChatListController {
     override func getLeftBarViewOnce() -> BarView {
         let button = TextButtonBarView(controller: self, text: tr(L10n.chatCancel))

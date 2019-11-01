@@ -1,7 +1,8 @@
 import Foundation
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 private final class DocumentContext {
     private let disposable: Disposable

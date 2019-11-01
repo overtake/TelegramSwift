@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 class ChatGIFContentView: ChatMediaContentView {
     
     private var player:GIFPlayerView = GIFPlayerView()
@@ -191,7 +192,7 @@ class ChatGIFContentView: ChatMediaContentView {
         
         if let media = media as? TelegramMediaFile {
             
-            let dimensions = media.dimensions ?? size
+            let dimensions = media.dimensions?.size ?? size
             var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media)

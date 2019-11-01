@@ -1,7 +1,8 @@
 
 import Foundation
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 
 

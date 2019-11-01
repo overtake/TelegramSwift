@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 
 private let queue: Queue = Queue()
@@ -405,14 +406,14 @@ final class ChatUndoManager  {
     }
     
     func clearHistoryInteractively(postbox: Postbox, peerId: PeerId, type: InteractiveHistoryClearingType = .forLocalPeer) {
-        _ = TelegramCoreMac.clearHistoryInteractively(postbox: postbox, peerId: peerId, type: type).start(completed: { [weak context] in
+        _ = TelegramCore.clearHistoryInteractively(postbox: postbox, peerId: peerId, type: type).start(completed: { [weak context] in
             queue.async {
               context?.finishAction(for: peerId, type: .clearHistory)
             }
         })
     }
     func removePeerChat(account: Account, peerId: PeerId, type: ChatUndoActionType, reportChatSpam: Bool, deleteGloballyIfPossible: Bool = false) {
-        _ = TelegramCoreMac.removePeerChat(account: account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: deleteGloballyIfPossible).start(completed: { [weak context] in
+        _ = TelegramCore.removePeerChat(account: account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: deleteGloballyIfPossible).start(completed: { [weak context] in
             queue.async {
                 context?.finishAction(for: peerId, type: type)
             }
@@ -430,5 +431,5 @@ final class ChatUndoManager  {
 
 func enqueueMessages(context: AccountContext, peerId: PeerId, messages: [EnqueueMessage]) -> Signal<[MessageId?], NoError> {
     context.chatUndoManager.invokeNow(for: peerId, type: .clearHistory)
-    return TelegramCoreMac.enqueueMessages(account: context.account, peerId: peerId, messages: messages)
+    return TelegramCore.enqueueMessages(account: context.account, peerId: peerId, messages: messages)
 }

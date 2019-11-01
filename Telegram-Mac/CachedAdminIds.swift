@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 private final class CachedAdminIdsContext {
     var hash:Int32 = 0

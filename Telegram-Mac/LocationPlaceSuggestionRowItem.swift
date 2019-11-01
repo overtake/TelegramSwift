@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 class LocationPlaceSuggestionRowItem: GeneralRowItem {
     private let result: ChatContextResult
@@ -33,7 +34,7 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
                     _ = attr.append(string: venue.address, color: theme.colors.grayText, font: .normal(.text))
                     if let type = venue.type {
                         let resource = HttpReferenceMediaResource(url: "https://ss3.4sqi.net/img/categories_v2/\(type)_88.png", size: nil)
-                        let representation = TelegramMediaImageRepresentation(dimensions: NSMakeSize(60, 60), resource: resource)
+                        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 60, height: 60), resource: resource)
                         image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
 
                     }

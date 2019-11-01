@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
+import Postbox
 private class EmojiTolerance : View {
     
     

@@ -8,7 +8,7 @@
 
 import Foundation
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 import AVFoundation
 
 private final class MediaPlayerViewLayer: AVSampleBufferDisplayLayer {
@@ -57,7 +57,7 @@ final class MediaPlayerView: View {
     }
     
     var takeFrameAndQueue: (Queue, () -> MediaTrackFrameResult)?
-    var timer: SwiftSignalKitMac.Timer?
+    var timer: SwiftSignalKit.Timer?
     var polling = false
     
     var currentRotationAngle = 0.0
@@ -152,7 +152,7 @@ final class MediaPlayerView: View {
                     strongSelf.timer?.invalidate()
                     switch status {
                     case let .delay(delay):
-                        strongSelf.timer = SwiftSignalKitMac.Timer(timeout: delay, repeat: true, completion: {
+                        strongSelf.timer = SwiftSignalKit.Timer(timeout: delay, repeat: true, completion: {
                             if let strongSelf = self, let videoLayer = strongSelf.videoLayer, let (_, requestFrames, _, _) = strongSelf.state, requestFrames, strongSelf.videoInHierarchy {
                                 if videoLayer.isReadyForMoreMediaData {
                                     strongSelf.timer?.invalidate()

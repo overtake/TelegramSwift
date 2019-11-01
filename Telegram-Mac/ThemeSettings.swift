@@ -6,10 +6,12 @@
 //  Copyright © 2017 Telegram. All rights reserved.
 //
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
-import TelegramCoreMac
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 import TGUIKit
+import SyncCore
 
 public enum PresentationThemeParsingError: Error {
     case generic

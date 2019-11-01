@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 class UndoOverlayHeaderView: NavigationHeaderView {
@@ -18,7 +19,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
     private let manager: ChatUndoManager
     private let disposable = MetaDisposable()
     private var didSetReady: Bool = false
-    private var timer: SwiftSignalKitMac.Timer?
+    private var timer: SwiftSignalKit.Timer?
     private var progressValue: Double = 0.0
     private var secondsUntilFinish: Int = 0
     private let undoButton = TitleButton()
@@ -105,7 +106,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
             timer?.invalidate()
             
             
-             timer = SwiftSignalKitMac.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
+             timer = SwiftSignalKit.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
                 self?.progressValue = 1.0 - min(1.0, max(0, statuses.secondsUntilFinish / statuses.maximumDuration))
                 self?.updateDuration(value: Int(round(max(1, statuses.secondsUntilFinish))), animated: true)
                 self?.updateProgress(force: true)

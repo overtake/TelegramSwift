@@ -7,9 +7,10 @@
 //
 
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 class ChatInvoiceItem: ChatRowItem {
@@ -40,10 +41,9 @@ class ChatInvoiceItem: ChatRowItem {
             
             for attr in photo.attributes {
                 switch attr {
-                case .ImageSize(let size):
-                    //videoSize.fitted()
-                    contentSize = size.fitted(NSMakeSize(200, 200))
-                    arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: size, boundingSize: contentSize, intrinsicInsets: NSEdgeInsets())
+                case let .ImageSize(size):
+                    contentSize = size.size.fitted(NSMakeSize(200, 200))
+                    arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: size.size, boundingSize: contentSize, intrinsicInsets: NSEdgeInsets())
 
                 default:
                     break

@@ -9,7 +9,7 @@
 import Cocoa
 import Foundation
 import CoreImage
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
 
 

@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 import TGUIKit
 
 
@@ -64,7 +65,7 @@ class TouchBarStickerItemView: NSScrubberItemView {
             guard let imageView = self.imageView else {
                 return
             }
-            let dimensions = file.dimensions ?? frame.size
+            let dimensions = file.dimensions?.size ?? frame.size
             let imageSize = NSMakeSize(30, 30)
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions.aspectFitted(imageSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
             

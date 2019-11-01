@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 
 enum QuickPreviewMedia : Equatable {

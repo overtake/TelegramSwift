@@ -8,9 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
+import SyncCore
 
 private func generatePollAddOption(_ color: NSColor) -> CGImage {
     let image = NSImage(named: "Icon_PollAddOption")!.precomposed(color)

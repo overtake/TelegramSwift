@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 private class JoinLinkPreviewView : View {
     private let imageView:AvatarControl = AvatarControl(font: .avatar(.huge))

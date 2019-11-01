@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 class EditMessageModel: ChatAccessoryModel {
     
     private var account:Account
@@ -49,14 +50,14 @@ class EditMessageModel: ChatAccessoryModel {
             for media in message.media {
                 if let image = media as? TelegramMediaImage {
                     if let representation = largestRepresentationForPhoto(image) {
-                        imageDimensions = representation.dimensions
+                        imageDimensions = representation.dimensions.size
                     }
                     break
                 } else if let file = media as? TelegramMediaFile, file.isVideo {
-                    if let dimensions = file.dimensions {
+                    if let dimensions = file.dimensions?.size {
                         imageDimensions = dimensions
                     } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
-                        imageDimensions = representation.dimensions
+                        imageDimensions = representation.dimensions.size
                     }
                     break
                 }
@@ -94,16 +95,16 @@ class EditMessageModel: ChatAccessoryModel {
                     if let image = media as? TelegramMediaImage {
                         updatedMedia = image
                         if let representation = largestRepresentationForPhoto(image) {
-                            imageDimensions = representation.dimensions
+                            imageDimensions = representation.dimensions.size
                         }
                         break
                     } else if let file = media as? TelegramMediaFile, file.isVideo {
                         updatedMedia = file
                         
                         if let dimensions = file.dimensions {
-                            imageDimensions = dimensions
+                            imageDimensions = dimensions.size
                         } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
-                            imageDimensions = representation.dimensions
+                            imageDimensions = representation.dimensions.size
                         }
                         if file.isInstantVideo {
                             hasRoundImage = true

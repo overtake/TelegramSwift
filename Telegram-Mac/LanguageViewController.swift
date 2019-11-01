@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 
 

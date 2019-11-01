@@ -1,9 +1,10 @@
 import Foundation
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
-import MtProtoKitMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
+
 import IOKit
 
 private final class AuthModalController : ModalController {

@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 enum SendingType :String {
     case enter = "enter"

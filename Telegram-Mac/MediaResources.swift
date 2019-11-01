@@ -8,8 +8,9 @@
 
 import Cocoa
 
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 
 public final class VideoMediaResourceAdjustments: PostboxCoding, Equatable {
     let data: MemoryBuffer

@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
-import MtProtoKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
+
 private let manager = CountryManager()
 
 final class LoginAuthViewArguments {
@@ -1005,7 +1006,7 @@ private final class AwaitingResetConfirmationView : View {
     private let reset: TitleButton = TitleButton()
     private var phoneNumber: String = ""
     private var protectedUntil: Int32 = 0
-    private var timer: SwiftSignalKitMac.Timer?
+    private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         textView.isSelectable = false
@@ -1026,7 +1027,7 @@ private final class AwaitingResetConfirmationView : View {
         }, for: .Click)
         
         if self.timer == nil {
-            let timer = SwiftSignalKitMac.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
+            let timer = SwiftSignalKit.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
                 self?.updateTimerValue()
                 }, queue: Queue.mainQueue())
             self.timer = timer

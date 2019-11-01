@@ -1,8 +1,9 @@
 import Foundation
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import MapKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 public struct MapSnapshotMediaResourceId: MediaResourceId {
     public let latitude: Double

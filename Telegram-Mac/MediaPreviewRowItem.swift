@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
+import SwiftSignalKit
+import Postbox
 
 class MediaPreviewRowItem: TableRowItem {
     

@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import WalletCore
 private final class WalletInvoiceArguments {
     let context: AccountContext
     let copy:()->Void

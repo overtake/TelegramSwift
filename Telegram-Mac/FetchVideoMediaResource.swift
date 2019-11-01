@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 func fetchGifMediaResource(resource: LocalFileGifMediaResource) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> {
     return Signal { subscriber in
@@ -68,7 +69,7 @@ func fetchMovMediaResource(resource: LocalFileVideoMediaResource) -> Signal<Medi
 
         subscriber.putCompletion()
         
-//        var timer: SwiftSignalKitMac.Timer?
+//        var timer: SwiftSignalKit.Timer?
 //
 //        let exportSession = AVAssetExportSession(asset: avAsset, presetName: AVAssetExportPreset1280x720)
 //        if let exportSession = exportSession {
@@ -111,7 +112,7 @@ func fetchMovMediaResource(resource: LocalFileVideoMediaResource) -> Signal<Medi
 //                }
 //            }
 //
-//            timer = SwiftSignalKitMac.Timer(timeout: 0.05, repeat: true, completion: {
+//            timer = SwiftSignalKit.Timer(timeout: 0.05, repeat: true, completion: {
 //                subscriber.putNext(.progressUpdated(exportSession.progress))
 //            }, queue: queue)
 //

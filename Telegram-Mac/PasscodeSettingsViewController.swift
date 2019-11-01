@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 import LocalAuthentication
 
 private enum PasscodeEntry : Comparable, Identifiable {
@@ -84,8 +85,8 @@ private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, _ addi
         entries.append(.turnOn(sectionId: sectionId, viewType: .singleItem))
         entries.append(.turnOnDescription(sectionId: sectionId, viewType: .textBottomItem))
     case let .plaintextPassword(value), let .numericalPassword(value):
-        entries.append(.turnOff(sectionId: sectionId, current: value.value, viewType: .firstItem))
-        entries.append(.change(sectionId: sectionId, current: value.value, viewType: .lastItem))
+        entries.append(.turnOff(sectionId: sectionId, current: value, viewType: .firstItem))
+        entries.append(.change(sectionId: sectionId, current: value, viewType: .lastItem))
         entries.append(.turnOffDescription(sectionId: sectionId, viewType: .textBottomItem))
         
         entries.append(.section(sectionId: sectionId))
@@ -192,10 +193,10 @@ class PasscodeSettingsViewController: TableViewController {
             switch transaction.getAccessChallengeData() {
             case .none:
                 break
-            case let .numericalPassword(passcode, _, attempts):
-                transaction.setAccessChallengeData(.numericalPassword(value: passcode, timeout: timeout, attempts: attempts))
-            case let .plaintextPassword(passcode, _, attempts):
-                transaction.setAccessChallengeData(.plaintextPassword(value: passcode, timeout: timeout, attempts: attempts))
+            case let .numericalPassword(passcode):
+                transaction.setAccessChallengeData(.numericalPassword(value: passcode))
+            case let .plaintextPassword(passcode):
+                transaction.setAccessChallengeData(.plaintextPassword(value: passcode))
             }
             return true
         }.start())
