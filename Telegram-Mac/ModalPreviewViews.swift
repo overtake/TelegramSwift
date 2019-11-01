@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 class StickerPreviewModalView : View, ModalPreviewControllerView {
     fileprivate let imageView:TransformImageView = TransformImageView()
@@ -37,7 +38,7 @@ class StickerPreviewModalView : View, ModalPreviewControllerView {
     func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
         if let reference = reference.fileReference {
             
-            let size = reference.media.dimensions?.aspectFitted(NSMakeSize(min(300, frame.size.width), min(300, frame.size.height))) ?? frame.size
+            let size = reference.media.dimensions?.size.aspectFitted(NSMakeSize(min(300, frame.size.width), min(300, frame.size.height))) ?? frame.size
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
             imageView.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
             if animated {
@@ -97,7 +98,7 @@ class GifPreviewModalView : View, ModalPreviewControllerView {
             self.player.layer?.borderWidth = 0
             self.player.layer?.cornerRadius = .cornerRadius
             addSubview(self.player)
-            let size = reference.media.dimensions?.aspectFitted(NSMakeSize(frame.size.width, frame.size.height - 40)) ?? frame.size
+            let size = reference.media.dimensions?.size.aspectFitted(NSMakeSize(frame.size.width, frame.size.height - 40)) ?? frame.size
             
             player.update(with: reference.resourceReference(reference.media.resource), size: size, viewSize: size, file: reference.media, context: context, table: nil, iconSignal: chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor))
             player.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
@@ -145,7 +146,7 @@ class ImagePreviewModalView : View, ModalPreviewControllerView {
             
             let size = frame.size
             
-            let dimensions = largestImageRepresentation(reference.media.representations)?.dimensions ?? size
+            let dimensions = largestImageRepresentation(reference.media.representations)?.dimensions.size ?? size
 
             let arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: dimensions.fitted(size), boundingSize: dimensions.fitted(size), intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
             

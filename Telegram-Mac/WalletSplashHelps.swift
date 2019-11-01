@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 @available (OSX 10.12, *)
 extension WalletSplashMode {

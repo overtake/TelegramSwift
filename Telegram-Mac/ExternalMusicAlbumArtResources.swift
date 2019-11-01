@@ -9,9 +9,10 @@
 import Cocoa
 
 import Foundation
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 private func urlEncodedStringFromString(_ string: String) -> String {
     var nsString: NSString = string as NSString

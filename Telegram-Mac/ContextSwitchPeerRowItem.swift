@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 class ContextSwitchPeerRowItem: TableRowItem {
     fileprivate let account:Account
     fileprivate let peerId:PeerId

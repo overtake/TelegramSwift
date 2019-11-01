@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 
 class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView {

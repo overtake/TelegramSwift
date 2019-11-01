@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 enum ItemListStickerPackItemControl: Equatable {
@@ -243,8 +244,8 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
                     thumbnailItem = thumbnail
                     resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
                 } else if let topItem = item.topItem {
-                    let dimensions = topItem.file.dimensions ?? NSMakeSize(35, 35)
-                    thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: topItem.file.resource)
+                    let dimensions = topItem.file.dimensions?.size ?? NSMakeSize(35, 35)
+                    thumbnailItem = TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: topItem.file.resource)
                     resourceReference = MediaResourceReference.media(media: .stickerPack(stickerPack: StickerPackReference.id(id: item.info.id.id, accessHash: item.info.accessHash), media: topItem.file), resource: topItem.file.resource)
                 }
                 if let thumbnailItem = thumbnailItem {

@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 
 class ReplyMarkupButtonLayout {

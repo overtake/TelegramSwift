@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 
 class ChatHoleRowItem: ChatRowItem {
 

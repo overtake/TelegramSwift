@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 
 class MGalleryPeerPhotoItem: MGalleryItem {
@@ -21,21 +22,21 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override var sizeValue: NSSize {
-        if let largest = media.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
-            return largest.dimensions.fitted(pagerSize)
+        if let largest = media.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
+            return largest.dimensions.size.fitted(pagerSize)
         }
         return NSZeroSize
     }
     
     override func smallestValue(for size: NSSize) -> NSSize {
-        if let largest = media.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
-            return largest.dimensions.fitted(size)
+        if let largest = media.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
+            return largest.dimensions.size.fitted(size)
         }
         return pagerSize
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
-        if let largestRepresentation = media.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
+        if let largestRepresentation = media.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
             return context.account.postbox.mediaBox.resourceStatus(largestRepresentation.resource)
         } else {
             return .never()
@@ -101,7 +102,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
 //        }
         
 
-        if let representation = media.representationForDisplayAtSize(NSMakeSize(1280, 1280))  {
+        if let representation = media.representationForDisplayAtSize(PixelDimensions(1280, 1280))  {
             path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
                 
                 if resource.complete {
@@ -123,7 +124,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     
     override func cancel() -> Void {
         super.cancel()
-        if let representation = media.representationForDisplayAtSize(NSMakeSize(1280, 1280))  {
+        if let representation = media.representationForDisplayAtSize(PixelDimensions(1280, 1280))  {
             cancelFreeMediaFileInteractiveFetch(context: context, resource: representation.resource)
         }
         fetching.set(nil)

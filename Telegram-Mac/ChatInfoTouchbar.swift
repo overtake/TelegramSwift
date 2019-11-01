@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
 
 @available(OSX 10.12.2, *)

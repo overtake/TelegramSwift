@@ -7,10 +7,12 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 import TGUIKit
+import WalletCore
 
 @available (OSX 10.12, *)
 enum WalletSplashMode : Equatable {
@@ -259,7 +261,7 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
                             return CreateWalletError.generic
                         }
                     |> mapToSignal { salt in
-                        return createWallet(postbox: context.account.postbox, tonInstance: tonContext.instance, keychain: tonContext.keychain, localPassword: salt)
+                        return createWallet(storage: tonContext.storage, tonInstance: tonContext.instance, keychain: tonContext.keychain, localPassword: salt)
                     }
                     |> map { data in
                          return (key, data)
@@ -386,7 +388,7 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
                                     return ImportWalletError.generic
                                 }
                                 |> mapToSignal { salt in
-                                    return importWallet(postbox: context.account.postbox, tonInstance: tonContext.instance, keychain: tonContext.keychain, wordList: wordList, localPassword: salt)
+                                    return importWallet(storage: tonContext.storage, tonInstance: tonContext.instance, keychain: tonContext.keychain, wordList: wordList, localPassword: salt)
                                 }
                                 |> map { data in
                                     return (key, data)
@@ -406,7 +408,7 @@ func WalletSplashController(context: AccountContext, tonContext: TonContext, mod
                 
             }))
         case let .success(info):
-            let signal = getCombinedWalletState(postbox: context.account.postbox, subject: .wallet(info), tonInstance: tonContext.instance)
+            let signal = getCombinedWalletState(storage: tonContext.storage, subject: .wallet(info), tonInstance: tonContext.instance)
                  |> filter { state in
                     switch state {
                     case let .cached(state):

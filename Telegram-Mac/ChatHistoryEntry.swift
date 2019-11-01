@@ -8,9 +8,11 @@
 
 import Cocoa
 
-import PostboxMac
-import TelegramCoreMac
-import MtProtoKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import MtProtoKit
+
 enum ChatHistoryEntryId : Hashable {
     case message(Message)
     case groupedPhotos(groupInfo: MessageGroupInfo)

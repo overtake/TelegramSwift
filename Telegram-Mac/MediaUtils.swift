@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 import AVFoundation
 import Accelerate
@@ -51,7 +52,7 @@ func chatMessageFileCancelInteractiveFetch(account: Account, file: TelegramMedia
 }
 
 func largestRepresentationForPhoto(_ photo: TelegramMediaImage) -> TelegramMediaImageRepresentation? {
-    return photo.representationForDisplayAtSize(NSMakeSize(1280.0, 1280.0))
+    return photo.representationForDisplayAtSize(PixelDimensions(1280, 1280))
 }
 
 func smallestImageRepresentation(_ representation:[TelegramMediaImageRepresentation]) -> TelegramMediaImageRepresentation? {
@@ -61,7 +62,7 @@ func smallestImageRepresentation(_ representation:[TelegramMediaImageRepresentat
 
 //
 func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageRenderData, NoError> {
-    if let smallestRepresentation = smallestImageRepresentation(imageReference.media.representations), let largestRepresentation = imageReference.media.representationForDisplayAtSize(fullRepresentationSize) {
+    if let smallestRepresentation = smallestImageRepresentation(imageReference.media.representations), let largestRepresentation = imageReference.media.representationForDisplayAtSize(PixelDimensions(fullRepresentationSize)) {
         
         
         let maybeFullSize = postbox.mediaBox.resourceData(largestRepresentation.resource, option: .complete(waitUntilFetchStatus: false), attemptSynchronously: synchronousLoad)
@@ -788,7 +789,7 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: TelegramMed
 private func chatMessageAnimatedStickerThumbnailData(postbox: Postbox, file: TelegramMediaFile, synchronousLoad: Bool) -> Signal<Data?, NoError> {
     let thumbnailResource = chatMessageStickerResource(file: file, small: true)
     var size: NSSize = NSMakeSize(60, 60)
-    size = file.dimensions?.aspectFitted(size) ?? size
+    size = file.dimensions?.size.aspectFitted(size) ?? size
     let maybeFetched = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size), complete: false, fetch: false, attemptSynchronously: synchronousLoad)
     
     return maybeFetched
@@ -985,7 +986,7 @@ public func chatMessageStickerPackThumbnail(postbox: Postbox, representation: Te
 
 
 func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaReference, small:Bool) -> Signal<Data?, NoError> {
-    if let closestRepresentation = (small ? imageRefence.media.representationForDisplayAtSize(CGSize(width: 120.0, height: 120.0)) : largestImageRepresentation(imageRefence.media.representations)) {
+    if let closestRepresentation = (small ? imageRefence.media.representationForDisplayAtSize(PixelDimensions(120, 120)) : largestImageRepresentation(imageRefence.media.representations)) {
         let resourceData = account.postbox.mediaBox.resourceData(closestRepresentation.resource) |> map { next in
             return !next.complete ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: .mappedIfSafe)
         }
@@ -1168,7 +1169,7 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
-    if let largestRepresentation = photo.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
+    if let largestRepresentation = photo.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
         return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource, approximateSynchronousValue: approximateSynchronousValue)
     } else {
         return .never()
@@ -1176,7 +1177,7 @@ func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approxi
 }
 
 func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageMediaReference, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) -> Signal<Void, NoError> {
-    if let largestRepresentation = imageReference.media.representationForDisplayAtSize(toRepresentationSize) {
+    if let largestRepresentation = imageReference.media.representationForDisplayAtSize(PixelDimensions(toRepresentationSize)) {
         return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageReference.resourceReference(largestRepresentation.resource), statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
     } else {
         return .never()
@@ -2361,7 +2362,7 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
 
 private func chatMessagePhotoThumbnailDatas(account: Account, imageReference: ImageMediaReference, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageRenderData, NoError> {
     let fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0)
-    if let smallestRepresentation = smallestImageRepresentation(imageReference.media.representations), let largestRepresentation = imageReference.media.representationForDisplayAtSize(fullRepresentationSize) {
+    if let smallestRepresentation = smallestImageRepresentation(imageReference.media.representations), let largestRepresentation = imageReference.media.representationForDisplayAtSize(PixelDimensions(fullRepresentationSize)) {
         
         let size = CGSize(width: 160.0, height: 160.0)
         let maybeFullSize: Signal<MediaResourceData, NoError>
@@ -2900,7 +2901,7 @@ func mapResourceToAvatarSizes(postbox: Postbox, resource: MediaResource, represe
             
             var result: [Int: Data] = [:]
             for i in 0 ..< representations.count {
-                if let scaledImage = generateScaledImage(image: image, size: representations[i].dimensions, scale: 1.0) {
+                if let scaledImage = generateScaledImage(image: image, size: representations[i].dimensions.size, scale: 1.0) {
                     
                     let mutableData: CFMutableData = NSMutableData() as CFMutableData
                     if let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, options) {

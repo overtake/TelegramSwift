@@ -1,8 +1,9 @@
 import Foundation
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 
 private let manager = CountryManager()

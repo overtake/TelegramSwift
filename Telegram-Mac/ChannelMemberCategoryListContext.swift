@@ -8,9 +8,10 @@
 
 import Cocoa
 
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 private let initialBatchSize: Int32 = 64
 private let defaultEmptyTimeout: Double = 2.0 * 60.0
@@ -140,7 +141,7 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
     private let loadingDisposable = MetaDisposable()
     private let headUpdateDisposable = MetaDisposable()
     
-    private var headUpdateTimer: SwiftSignalKitMac.Timer?
+    private var headUpdateTimer: SwiftSignalKit.Timer?
     
     init(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, category: ChannelMemberListCategory) {
         self.postbox = postbox
@@ -295,7 +296,7 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
         }
         
         if self.headUpdateTimer == nil {
-            let headUpdateTimer = SwiftSignalKitMac.Timer(timeout: headUpdateTimeout, repeat: false, completion: { [weak self] in
+            let headUpdateTimer = SwiftSignalKit.Timer(timeout: headUpdateTimeout, repeat: false, completion: { [weak self] in
                 guard let strongSelf = self else {
                     return
                 }
@@ -627,7 +628,7 @@ private final class PeerChannelMemberContextWithSubscribers {
     private let disposable = MetaDisposable()
     private let becameEmpty: () -> Void
     
-    private var emptyTimer: SwiftSignalKitMac.Timer?
+    private var emptyTimer: SwiftSignalKit.Timer?
     
     init(context: ChannelMemberCategoryListContext, emptyTimeout: Double, becameEmpty: @escaping () -> Void) {
         self.context = context
@@ -651,7 +652,7 @@ private final class PeerChannelMemberContextWithSubscribers {
     private func resetAndBeginEmptyTimer() {
         self.context.reset(false)
         self.emptyTimer?.invalidate()
-        let emptyTimer = SwiftSignalKitMac.Timer(timeout: self.emptyTimeout, repeat: false, completion: { [weak self] in
+        let emptyTimer = SwiftSignalKit.Timer(timeout: self.emptyTimeout, repeat: false, completion: { [weak self] in
             if let strongSelf = self {
                 if strongSelf.subscribers.isEmpty {
                     strongSelf.becameEmpty()

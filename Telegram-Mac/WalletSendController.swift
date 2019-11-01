@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
-
+import WalletCore
 
 
 private final class WalletSendArguments {
@@ -185,7 +186,7 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
     let transferDisposable = MetaDisposable()
     
     let updateBalance:()->Void = {
-        let signal = getCombinedWalletState(postbox: context.account.postbox, subject: .wallet(walletInfo), tonInstance: tonContext.instance)
+        let signal = getCombinedWalletState(storage: tonContext.storage, subject: .wallet(walletInfo), tonInstance: tonContext.instance)
         
         let address = walletAddress(publicKey: walletInfo.publicKey, tonInstance: tonContext.instance)
             |> mapError { _ in

@@ -1,7 +1,8 @@
 import Foundation
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 private struct FetchManagerLocationEntryId: Hashable {
     let location: FetchManagerLocation

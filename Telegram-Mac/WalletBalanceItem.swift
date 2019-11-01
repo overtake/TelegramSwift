@@ -8,8 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import WalletCore
 
 public enum RelativeTimestampFormatDay {
     case today

@@ -8,9 +8,12 @@
 
 import Cocoa
 import Security
-import MtProtoKitMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import MtProtoKit
+import WalletCore
 
 private let salt = "string with no sense".data(using: .utf8)!
 

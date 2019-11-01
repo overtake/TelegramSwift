@@ -7,11 +7,12 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 import TGUIKit
-import MtProtoKitMac
+import MtProtoKit
 
 private let _p_id_enable: InputDataIdentifier = InputDataIdentifier("_p_id_enable")
 private let _p_id_add: InputDataIdentifier = InputDataIdentifier("_p_id_add")

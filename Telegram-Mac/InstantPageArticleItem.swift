@@ -8,10 +8,11 @@
 
 import Cocoa
 import Foundation
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 
 final class InstantPageArticleItem: InstantPageItem {
@@ -221,7 +222,7 @@ final class InstantPageArticleView: Button, InstantPageView {
         self.contentTileView.frame = self.bounds
         
         if let imageView = self.imageView, let image = self.cover, let largest = largestImageRepresentation(image.representations) {
-            let size = largest.dimensions.aspectFilled(imageSize)
+            let size = largest.dimensions.size.aspectFilled(imageSize)
             let boundingSize = imageSize
             
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 5.0), imageSize: size, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))

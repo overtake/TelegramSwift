@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 class GIFContainerView: Control {
 
     let player:GIFPlayerView = GIFPlayerView()
@@ -180,7 +181,7 @@ class GIFContainerView: Control {
         player.center()
         progressView?.center()
         let imageSize = viewSize.aspectFitted(NSMakeSize(size.width, size.height))
-        let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: (file?.dimensions ?? imageSize).aspectFilled(viewSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+        let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: (file?.dimensions?.size ?? imageSize).aspectFilled(viewSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
 
         if let file = file {
             player.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)

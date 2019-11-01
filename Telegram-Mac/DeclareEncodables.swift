@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import PostboxMac
+import Postbox
 
 private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(ChatInterfaceState.self, f: { ChatInterfaceState(decoder: $0) })

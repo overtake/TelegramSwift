@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 import TGUIKit
 
 enum InputPasswordValueError {

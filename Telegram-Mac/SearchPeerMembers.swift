@@ -9,9 +9,10 @@
 import Cocoa
 
 import Foundation
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 func searchPeerMembers(context: AccountContext, peerId: PeerId, query: String) -> Signal<[Peer], NoError> {
     if peerId.namespace == Namespaces.Peer.CloudChannel {

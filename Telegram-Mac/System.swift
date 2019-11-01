@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
+import Postbox
 private let _dQueue = Queue.init(name: "chatListQueue")
 private let _sQueue = Queue.init(name: "ChatQueue")
 

@@ -8,7 +8,8 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 class EBlockItem: TableRowItem {
 
     var _stableId:Int64 = Int64(arc4random())

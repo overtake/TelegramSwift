@@ -1,6 +1,6 @@
-import SwiftSignalKitMac
-import PostboxMac
-import RLottieMac
+import SwiftSignalKit
+import Postbox
+import RLottie
 import TGUIKit
 import Metal
 
@@ -224,7 +224,7 @@ private final class PlayerRenderer {
     private var layer: Atomic<RLottieBridge?> = Atomic(value: nil)
     private let updateState:(LottiePlayerState)->Void
     private let displayFrame: (RenderedFrame)->Void
-    private var timer: SwiftSignalKitMac.Timer?
+    private var timer: SwiftSignalKit.Timer?
     private let release:()->Void
     init(animation: LottieAnimation, displayFrame: @escaping(RenderedFrame)->Void, release:@escaping()->Void, updateState:@escaping(LottiePlayerState)->Void) {
         self.animation = animation
@@ -439,7 +439,7 @@ private final class PlayerRenderer {
         }
         add_frames()
         
-        self.timer = SwiftSignalKitMac.Timer(timeout: (1.0 / TimeInterval(fps)), repeat: true, completion: {
+        self.timer = SwiftSignalKit.Timer(timeout: (1.0 / TimeInterval(fps)), repeat: true, completion: {
             render()
         }, queue: stateQueue)
         

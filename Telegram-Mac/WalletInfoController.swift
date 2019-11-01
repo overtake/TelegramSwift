@@ -7,9 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
+import WalletCore
 
 enum WalletInfoTransaction: Equatable {
     case completed(WalletTransaction)
@@ -247,7 +249,10 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
 
     let updateBalanceDisposable = MetaDisposable()
     let updateBalance:()->Void = {
-        let signal = combineLatest(queue: .mainQueue(), getCombinedWalletState(postbox: context.account.postbox, subject: .wallet(walletInfo), tonInstance: tonContext.instance), walletAddress(publicKey: walletInfo.publicKey, tonInstance: tonContext.instance) |> mapError { _ in return .generic }, TONKeychain.hasKeys(for: context.account) |> castError(GetCombinedWalletStateError.self))
+        
+        
+        
+        let signal = combineLatest(queue: .mainQueue(), getCombinedWalletState(storage: tonContext.storage, subject: .wallet(walletInfo), tonInstance: tonContext.instance), walletAddress(publicKey: walletInfo.publicKey, tonInstance: tonContext.instance) |> mapError { _ in return .generic }, TONKeychain.hasKeys(for: context.account) |> castError(GetCombinedWalletStateError.self))
         
         let short = signal |> then(signal |> delay(3.3, queue: .mainQueue()) |> restart)
         

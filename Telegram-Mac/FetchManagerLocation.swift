@@ -1,6 +1,6 @@
 
 import Foundation
-import PostboxMac
+import Postbox
 
 enum FetchManagerCategory: Int32 {
     case image

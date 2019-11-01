@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import Contacts
-import SwiftSignalKitMac
+import SwiftSignalKit
 //
 //private class VCardContactView : View {
 //    let tableView: TableView = TableView(frame: NSZeroRect)

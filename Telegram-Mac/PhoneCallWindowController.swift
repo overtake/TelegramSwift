@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
-import MtProtoKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
+
 
 private class ShadowView : View {
     
@@ -539,7 +540,7 @@ class PhoneCallWindowController {
         let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
         
 
-        if let dimension = user.profileImageRepresentations.last?.dimensions {
+        if let dimension = user.profileImageRepresentations.last?.dimensions.size {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: view.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
             view.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor), clearInstantly: true)
             view.imageView.setSignal(chatMessagePhoto(account: session.account, imageReference: ImageMediaReference.standalone(media: media), scale: view.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in

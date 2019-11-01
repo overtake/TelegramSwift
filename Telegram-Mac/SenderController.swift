@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import AVFoundation
 import QuickLook
 
@@ -114,7 +115,7 @@ class Sender: NSObject {
                     if CGImageDestinationFinalize(colorDestination) {
                         let resource = LocalFileMediaResource(fileId: arc4random64())
                         account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                        preview.append(TelegramMediaImageRepresentation(dimensions: image.size, resource: resource))
+                        preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource))
                     }
                 }
                 
@@ -146,7 +147,7 @@ class Sender: NSObject {
                         if CGImageDestinationFinalize(colorDestination) {
                             let resource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size, resource: resource))
+                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource))
                         }
                     }
                 }
@@ -250,7 +251,7 @@ class Sender: NSObject {
                     }
                     
                     
-                    attrs.append(TelegramMediaFileAttribute.Video(duration: Int(container.duration), size: container.size, flags: [.instantRoundVideo]))
+                    attrs.append(TelegramMediaFileAttribute.Video(duration: Int(container.duration), size: PixelDimensions(container.size), flags: [.instantRoundVideo]))
                     media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, account: account), immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: attrs)
 
                 } else if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif"), let imageData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
@@ -283,7 +284,7 @@ class Sender: NSObject {
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: scaledSize, resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
                             }
                             
                         } else {
@@ -346,7 +347,7 @@ class Sender: NSObject {
             let video = asset.tracks(withMediaType: AVMediaType.video).first
             let audio = asset.tracks(withMediaType: AVMediaType.audio).first
             if let video = video {
-                attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: video.naturalSize, flags: []))
+                attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: PixelDimensions(video.naturalSize), flags: []))
                 attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
                 if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024) {
                     attrs.append(TelegramMediaFileAttribute.Animated)
@@ -356,12 +357,12 @@ class Sender: NSObject {
         }
         
         if mime.hasSuffix("gif"), isMedia {
-            attrs.append(TelegramMediaFileAttribute.Video(duration: 0, size:TGGifConverter.gifDimensionSize(path), flags: []))
+            attrs.append(TelegramMediaFileAttribute.Video(duration: 0, size:TGGifConverter.gifDimensionSize(path).pixel, flags: []))
             attrs.append(TelegramMediaFileAttribute.Animated)
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
 
         } else if mime.hasPrefix("image"), let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
-            attrs.append(TelegramMediaFileAttribute.ImageSize(size: image.size))
+            attrs.append(TelegramMediaFileAttribute.ImageSize(size: image.size.pixel))
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent))
         } else {
             let getname:(String)->String = { path in

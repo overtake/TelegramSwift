@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 
 final class InstantPageAudioItem: InstantPageItem {
     let wantsView: Bool = true

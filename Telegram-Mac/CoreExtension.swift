@@ -8,27 +8,14 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
-import MtProtoKitMac
+import SyncCore
+import MtProtoKit
 
-extension AdminLogEventsFlags {
-    
-    /*
-     "ChannelEventFilter.NewRestrictions" = "New Restrictions";
-     "ChannelEventFilter.NewAdmins" = "New Admins";
-     "ChannelEventFilter.NewMembers" = "New Members";
-     "ChannelEventFilter.GroupInfo" = "Group Info";
-     "ChannelEventFilter.DeletedMessages" = "Deleted Messages";
-     "ChannelEventFilter.EditedMessages" = "Edited Messages";
-     "ChannelEventFilter.PinnedMessages" = "Pinned Messages";
-     "ChannelEventFilter.LeavingMembers" = "Leaving Members";
- */
-    
-    
-}
 
 extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
@@ -241,7 +228,7 @@ extension TelegramMediaFile {
     var videoSize:NSSize {
         for attr in attributes {
             if case let .Video(_,size, _) = attr {
-                return size
+                return size.size
             }
         }
         return NSZeroSize
@@ -261,7 +248,7 @@ extension TelegramMediaFile {
     var imageSize:NSSize {
         for attr in attributes {
             if case let .ImageSize(size) = attr {
-                return size
+                return size.size
             }
         }
         return NSZeroSize
@@ -2186,8 +2173,8 @@ extension PostboxAccessChallengeData {
         switch self {
         case .none:
             return nil
-        case let .numericalPassword(_, timeout, _), let .plaintextPassword(_, timeout, _):
-            return timeout
+        case let .numericalPassword(_), let .plaintextPassword(_):
+            return 0
         }
     }
 }
@@ -2499,7 +2486,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: NSMakeSize(100, 100), resource: document.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
     }
 }
 
@@ -2738,5 +2725,3 @@ extension TelegramMediaWebpageLoadedContent {
 
 
 //
-
-

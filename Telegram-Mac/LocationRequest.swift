@@ -8,7 +8,7 @@
 
 import Cocoa
 import CoreLocation
-import SwiftSignalKitMac
+import SwiftSignalKit
 import AVKit
 enum UserLocationResult : Equatable {
     case success(CLLocation)

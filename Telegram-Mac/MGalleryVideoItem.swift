@@ -8,9 +8,10 @@
 
 import Cocoa
 
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 import AVFoundation
 import AVKit
@@ -116,16 +117,16 @@ class MGalleryVideoItem: MGalleryItem {
             return examinatedSize
         }
         if let dimensions = media.dimensions {
-            return dimensions
+            return dimensions.size
         }
         let linked = link(path: context.account.postbox.mediaBox.resourcePath(media.resource), ext: "mp4")
         guard let path = linked else {
-            return media.dimensions
+            return media.dimensions?.size
         }
         
         let url = URL(fileURLWithPath: path)
         guard let track = AVURLAsset(url: url).tracks(withMediaType: .video).first else {
-            return media.dimensions
+            return media.dimensions?.size
         }
         try? FileManager.default.removeItem(at: url)
         self.examinatedSize = track.naturalSize.applying(track.preferredTransform)
@@ -178,7 +179,7 @@ class MGalleryVideoItem: MGalleryItem {
         let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
         
         
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: media.dimensions?.fitted(pagerSize) ?? sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .fill(.black))
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: media.dimensions?.size.fitted(pagerSize) ?? sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .fill(.black))
         let result = signal |> mapToThrottled { data -> Signal<CGImage?, NoError> in
             return .single(data.execute(arguments, data.data)?.generateImage())
         }

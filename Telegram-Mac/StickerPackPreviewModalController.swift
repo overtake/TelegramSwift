@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
-import MtProtoKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+
 
 
 

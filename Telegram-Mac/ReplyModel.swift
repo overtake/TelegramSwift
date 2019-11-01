@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 class ReplyModel: ChatAccessoryModel {
 
     private let account:Account
@@ -81,14 +82,14 @@ class ReplyModel: ChatAccessoryModel {
                 for media in message.media {
                     if let image = media as? TelegramMediaImage {
                         if let representation = largestRepresentationForPhoto(image) {
-                            imageDimensions = representation.dimensions
+                            imageDimensions = representation.dimensions.size
                         }
                         break
                     } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
                         if let dimensions = file.dimensions {
-                            imageDimensions = dimensions
+                            imageDimensions = dimensions.size
                         } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
-                            imageDimensions = representation.dimensions
+                            imageDimensions = representation.dimensions.size
                         } else if file.isAnimatedSticker {
                             imageDimensions = NSMakeSize(30, 30)
                         }
@@ -125,16 +126,16 @@ class ReplyModel: ChatAccessoryModel {
                     if let image = media as? TelegramMediaImage {
                         updatedMedia = image
                         if let representation = largestRepresentationForPhoto(image) {
-                            imageDimensions = representation.dimensions
+                            imageDimensions = representation.dimensions.size
                         }
                         break
                     } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
                         updatedMedia = file
                         
-                        if let dimensions = file.dimensions {
+                        if let dimensions = file.dimensions?.size {
                             imageDimensions = dimensions
                         } else if let representation = largestImageRepresentation(file.previewRepresentations) {
-                            imageDimensions = representation.dimensions
+                            imageDimensions = representation.dimensions.size
                         } else if file.isAnimatedSticker {
                             imageDimensions = NSMakeSize(30, 30)
                         }

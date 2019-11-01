@@ -9,10 +9,11 @@
 import Cocoa
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
-
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
+import SyncCore
 
 private struct PercentCounterItem : Comparable  {
     var index: Int = 0

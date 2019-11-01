@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 class MajorBackNavigationBar: BackNavigationBar {
     private let disposable:MetaDisposable = MetaDisposable()
     private let context:AccountContext

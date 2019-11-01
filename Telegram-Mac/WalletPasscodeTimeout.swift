@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 enum WalletPasscodeTimeoutLevel : Int32, Equatable  {
     case none = 0

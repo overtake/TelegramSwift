@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
 import Lottie
 
@@ -219,7 +220,7 @@ enum GalleryEntry : Comparable, Identifiable {
     func peerPhotoResource() -> MediaResourceReference {
         switch self {
         case let .photo(_, _, image, _, peer, message, _):
-            if let representation = image.representationForDisplayAtSize(NSMakeSize(1280, 1280)) {
+            if let representation = image.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
                 if let message = message {
                     return .media(media: .message(message: MessageReference(message), media: image), resource: representation.resource)
                 }

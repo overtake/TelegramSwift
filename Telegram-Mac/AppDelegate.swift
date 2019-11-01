@@ -1,13 +1,16 @@
 import Cocoa
 
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
 import Quartz
-import MtProtoKitMac
+import MtProtoKit
 import CoreServices
 import LocalAuthentication
+import WalletCore
+import OpenSSLEncryption
 
 #if !APP_STORE
     import HockeySDK
@@ -26,32 +29,6 @@ private final class SharedApplicationContext {
         self.sharedWakeupManager = sharedWakeupManager
     }
 }
-
-/*
- _statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
- 
- 
- [_statusItem setTarget:self];
- [_statusItem setAction:@selector(didStatusItemClicked)];
- 
- NSImage *menuIcon = [NSImage imageNamed:@"StatusIcon"];
- [menuIcon setTemplate:YES];
- 
- NSMenu *statusMenu = [StandartViewController attachMenu];
- 
- 
- [statusMenu addItem:[NSMenuItem separatorItem]];
- 
- [statusMenu addItem:[NSMenuItem menuItemWithTitle:NSLocalizedString(@"Quit", nil) withBlock:^(id sender) {
- 
- [[NSApplication sharedApplication] terminate:self];
- 
- }]];
- 
- [_statusItem setMenu:statusMenu];
- 
- [_statusItem setImage:menuIcon];
- */
 
 #if !APP_STORE
 extension AppDelegate : BITHockeyManagerDelegate {
@@ -116,20 +93,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-//        final class Test {
-//
-//            init() {
-//            }
-//            deinit {
-//                NSLog("dealloc test")
-//                var bp:Int = 0
-//                bp += 1
-//            }
-//        }
-//
-//
-//        let signal = Signal<(Test?, Test?, Test?, Bool), NoError>.single((Test(), Test(), nil, false))
-//        signal.start()
 
       
         initializeSelectManager()
@@ -453,7 +416,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             
             
-            let networkArguments = NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(nil))
+            let networkArguments = NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(nil), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
             
             let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: displayUpgrade)
             
@@ -498,29 +461,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let tonKeychain: TonKeychain
             
-//            #if DEBUG
-//            tonKeychain = TonKeychain(encryptionPublicKey: {
-//                return .single(Data())
-//            }, encrypt: { data in
-//                return Signal { subscriber in
-//                    subscriber.putNext(data)
-//                    subscriber.putCompletion()
-//                    return EmptyDisposable
-//                }
-//            }, decrypt: { data in
-//                return Signal { subscriber in
-//                    subscriber.putNext(data)
-//                    subscriber.putCompletion()
-//                    return EmptyDisposable
-//                }
-//            })
-//            #else
             tonKeychain = TonKeychain(encryptionPublicKey: {
                 return Signal { subscriber in
-//                    BuildConfig.getHardwareEncryptionAvailable(withBaseAppBundleId: self.baseAppBundleId, completion: { value in
-//                        subscriber.putNext(value)
-//                        subscriber.putCompletion()
-//                    })
                     return EmptyDisposable
                 }
             }, encrypt: { data in
@@ -542,7 +484,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     return EmptyDisposable
                 }
             })
-//            #endif
 
 
             

@@ -7,14 +7,14 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 func countdown(_ count:Double, delay:Double) -> Signal<Double,Void> {
     return Signal { subscriber in
         var value:Double = count
         subscriber.putNext(value)
-        var timer:SwiftSignalKitMac.Timer? = nil
-        timer = SwiftSignalKitMac.Timer(timeout: delay, repeat: true, completion: {
+        var timer:SwiftSignalKit.Timer? = nil
+        timer = SwiftSignalKit.Timer(timeout: delay, repeat: true, completion: {
             value -= delay
             subscriber.putNext(max(value,0))
             if value <= 0 {
@@ -35,9 +35,9 @@ public func `repeat`<T, E>(_ delay:Double, onQueue:Queue) -> (Signal<T, E>) -> S
         return Signal { subscriber in
             
            // let disposable:MEtadi = DisposableSet()
-            var timer:SwiftSignalKitMac.Timer? = nil
+            var timer:SwiftSignalKit.Timer? = nil
 
-            timer = SwiftSignalKitMac.Timer(timeout: delay, repeat: true, completion: {
+            timer = SwiftSignalKit.Timer(timeout: delay, repeat: true, completion: {
                  _ = signal.start(next: { (next) in
                     subscriber.putNext(next)
                 })

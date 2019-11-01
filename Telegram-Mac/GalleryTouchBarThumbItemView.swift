@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 @available(OSX 10.12.2, *)
 class GalleryTouchBarThumbItemView: NSScrubberItemView {
@@ -26,20 +27,20 @@ class GalleryTouchBarThumbItemView: NSScrubberItemView {
         var size: NSSize?
         if let item = item as? MGalleryPhotoItem {
             signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor, small: true, secureIdAccessContext: item.secureIdAccessContext)
-            size = item.media.representations.first?.dimensions
+            size = item.media.representations.first?.dimensions.size
         } else if let item = item as? MGalleryGIFItem {
             signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
         } else if let item = item as? MGalleryExternalVideoItem {
             signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.mediaImage), scale: backingScaleFactor, small: true, secureIdAccessContext: nil)
-            size = item.mediaImage.representations.first?.dimensions
+            size = item.mediaImage.representations.first?.dimensions.size
         } else if let item = item as? MGalleryVideoItem {
             signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
         } else if let item = item as? MGalleryPeerPhotoItem {
             signal = chatMessagePhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
             
-            size = item.media.representations.first?.dimensions
+            size = item.media.representations.first?.dimensions.size
         }
         item.fetch()
         

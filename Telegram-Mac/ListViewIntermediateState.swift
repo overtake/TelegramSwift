@@ -8,7 +8,7 @@
 
 import Cocoa
 
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 public enum ListViewCenterScrollPositionOverflow {
     case Top

@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 //
 //public enum TelegramWallpaper: OrderedItemListEntryContents, Equatable {
 //    case none

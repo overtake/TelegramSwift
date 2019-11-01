@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import SwiftSignalKitMac
-import TelegramCoreMac
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 
 private final class AvatarTabContainer : View {
     private let avatar = AvatarControl(font: .avatar(12))

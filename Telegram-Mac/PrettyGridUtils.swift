@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 
 
@@ -275,7 +276,7 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
             
             case kBotInlineTypePhoto:
                 if let image = data.image, let representation = image.representations.last {
-                    dimension = representation.dimensions
+                    dimension = representation.dimensions.size
                     entries.append(.photo(image: image))
                 } else {
                     removeResultIndexes.append(i)

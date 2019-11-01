@@ -16,7 +16,6 @@
 #import <Security/Security.h>
 #import <AVFoundation/AVFoundation.h>
 #import <OpenGL/gl.h>
-#import "DFRPrivateHeader.h"
 #import "MP4Atom.h"
 #import "HackUtils.h"
 #import "BuildConfig.h"

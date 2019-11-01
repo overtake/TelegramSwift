@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 private final class ValuesSelectorArguments <T> where T : Equatable {
     let selectItem:(ValuesSelectorValue<T>)->Void

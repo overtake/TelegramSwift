@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 class MGalleryGIFItem: MGalleryItem {
 
@@ -67,7 +68,7 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override var sizeValue: NSSize {
-        if let size = media.dimensions {
+        if let size = media.dimensions?.size {
             return size.fitted(pagerSize)
         }
         return pagerSize

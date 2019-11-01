@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 
 func reportReasonSelector(context: AccountContext) -> Signal<ReportReason, NoError> {

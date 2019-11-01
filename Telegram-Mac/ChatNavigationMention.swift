@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 
 class ChatNavigationMention: ImageButton {

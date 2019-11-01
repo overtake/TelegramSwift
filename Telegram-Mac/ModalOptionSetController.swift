@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
 
 private final class ModalOptionsArguments {

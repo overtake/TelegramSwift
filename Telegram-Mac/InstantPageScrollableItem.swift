@@ -1,7 +1,8 @@
 
 import Foundation
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 
 protocol InstantPageScrollableItem: class, InstantPageItem {

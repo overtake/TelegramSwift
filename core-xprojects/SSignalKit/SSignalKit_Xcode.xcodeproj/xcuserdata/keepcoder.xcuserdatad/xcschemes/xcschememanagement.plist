@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SchemeUserState</key>
+	<dict>
+		<key>SSignalKit.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>29</integer>
+		</dict>
+		<key>SwiftSignalKit.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>34</integer>
+		</dict>
+		<key>SwiftSignalKitMac.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>31</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>D0085B211B282B9800EAF753</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D0085B2B1B282B9800EAF753</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D0445DD71A7C2CA500267924</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D0445DE21A7C2CA500267924</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D0B417EC1D7DFA63004562A4</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+	</dict>
+</dict>
+</plist>

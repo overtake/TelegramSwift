@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 private let _id_no_preview1 = InputDataIdentifier("_id_no_preview1")
 private let _id_no_preview2 = InputDataIdentifier("_id_no_preview2")

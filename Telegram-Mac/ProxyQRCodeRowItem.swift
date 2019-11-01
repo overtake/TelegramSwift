@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 class ProxyQRCodeRowItem: GeneralRowItem {
 

@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 class UsernameInputRowItem: GeneralInputRowItem {
     let status:AddressNameValidationStatus?
     let changeHandler:(String)->Void

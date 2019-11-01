@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 
 class ChatVoiceContentView: ChatAudioContentView {

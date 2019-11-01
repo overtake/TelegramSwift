@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 enum SVideoControlsStyle : Equatable {
     case regular(pip: Bool, fullScreen: Bool, hideRewind: Bool)

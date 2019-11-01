@@ -1,6 +1,6 @@
 import Foundation
 import CoreLocation
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 func geocodeLocation(dictionary: [String: String]) -> Signal<(Double, Double)?, NoError> {
     return Signal { subscriber in

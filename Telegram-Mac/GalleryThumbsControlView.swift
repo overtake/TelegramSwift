@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 class GalleryThumbContainer : Control {
     
@@ -22,7 +22,7 @@ class GalleryThumbContainer : Control {
         var size: NSSize?
         if let item = item as? MGalleryPhotoItem {
             signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor, small: true, secureIdAccessContext: item.secureIdAccessContext)
-            size = item.media.representations.first?.dimensions
+            size = item.media.representations.first?.dimensions.size
             item.fetch()
         } else if let item = item as? MGalleryGIFItem {
             signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
@@ -33,7 +33,7 @@ class GalleryThumbContainer : Control {
         } else if let item = item as? MGalleryPeerPhotoItem {
             signal = chatMessagePhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
             
-            size = item.media.representations.first?.dimensions
+            size = item.media.representations.first?.dimensions.size
             item.fetch()
         }
         

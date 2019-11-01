@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
 import Lottie
 
@@ -251,7 +252,7 @@ class ChatFileContentView: ChatMediaContentView {
         
         if !file.previewRepresentations.isEmpty {
             
-            let arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: file.previewRepresentations[0].dimensions, boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: file.previewRepresentations[0].dimensions.size, boundingSize: NSMakeSize(70, 70), intrinsicInsets: NSEdgeInsets())
             thumbView.setSignal(signal: cachedMedia(messageId: stableId, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)

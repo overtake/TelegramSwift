@@ -6,7 +6,7 @@
 //  Copyright © 2018 Telegram. All rights reserved.
 //
 import Zip
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 enum ArchiveStatus : Equatable {
     case none

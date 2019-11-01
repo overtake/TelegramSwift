@@ -8,7 +8,8 @@
 
 import Cocoa
 
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 enum InstantPageShape {
     case rect

@@ -10,9 +10,10 @@ import Cocoa
 
 import Foundation
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 private final class ChannelPermissionsControllerArguments {
     let context: AccountContext

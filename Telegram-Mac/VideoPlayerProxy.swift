@@ -1,5 +1,5 @@
 import Foundation
-import SwiftSignalKitMac
+import SwiftSignalKit
 import AVFoundation
 
 private final class VideoPlayerProxyContext {

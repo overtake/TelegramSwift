@@ -7,10 +7,13 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
+import SyncCore
+
 private class AvatarNodeParameters: NSObject {
     let account: Account
     let peerId: Peer

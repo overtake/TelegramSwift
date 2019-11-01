@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 import Lottie
 private final class LottieTestView : ImageView {
     required override init(frame frameRect: NSRect) {

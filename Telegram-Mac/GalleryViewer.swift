@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import AVFoundation
 import Lottie
 
@@ -484,7 +485,7 @@ class GalleryViewer: NSResponder {
                         default: 
                             break
                         }
-                    } else if let base = firstStableId.base as? String, base == photo.image.representationForDisplayAtSize(NSMakeSize(640, 640))?.resource.id.uniqueId {
+                    } else if let base = firstStableId.base as? String, base == photo.image.representationForDisplayAtSize(PixelDimensions(640, 640))?.resource.id.uniqueId {
                         foundIndex = true
                         currentIndex = i
                         

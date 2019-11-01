@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 
@@ -415,17 +416,20 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 let context = arguments.context
                 if #available(OSX 10.12, *) {
                     
-                    let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), availableWallets(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, wallets, hasKeys in
+                    let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, hasKeys in
                         if let config = configuration.config, let blockchainName = configuration.blockchainName {
                             let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
-                            if wallets.wallets.isEmpty {
-                                arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .intro), true)
+                            if hasKeys {
+                                let signal = tonContext.storage.getWalletRecords() |> deliverOnMainQueue
+                                _ = signal.start(next: { wallets in
+                                    if wallets.isEmpty {
+                                        arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .intro), true)
+                                    } else {
+                                        arguments.presentController(WalletInfoController(context: context, tonContext: tonContext, walletInfo: wallets[0].info), true)
+                                    }
+                                })
                             } else {
-                                if hasKeys {
-                                    arguments.presentController(WalletInfoController(context: context, tonContext: tonContext, walletInfo: wallets.wallets[0].info), true)
-                                } else {
-                                    arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable), true)
-                                }
+                                arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable), true)
                             }
                         }
                     })

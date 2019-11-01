@@ -5,10 +5,11 @@
 //  Created by keepcoder on 25/05/2017.
 //  Copyright © 2017 Telegram. All rights reserved.
 //
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 import TGUIKit
-
+import SyncCore
 #if !APP_STORE
     import Sparkle
 #endif

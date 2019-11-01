@@ -7,9 +7,10 @@
 //
 
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 @available(OSX 10.12.2, *)
 extension NSTouchBar.CustomizationIdentifier {

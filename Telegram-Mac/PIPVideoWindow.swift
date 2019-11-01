@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import AVKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 private let pipFrameKey: String = "kPipFrameKey3"
 

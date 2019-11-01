@@ -8,11 +8,12 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 import AVFoundation
 import AVKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import Lottie
 
 fileprivate class GMagnifyView : MagnifyView  {

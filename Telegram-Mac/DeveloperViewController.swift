@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import MtProtoKitMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import MtProtoKit
+import Postbox
 
 private final class DeveloperArguments {
     let importColors:()->Void

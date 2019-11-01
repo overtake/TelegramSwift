@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 let archiver: ArchiverContext = ArchiverContext()

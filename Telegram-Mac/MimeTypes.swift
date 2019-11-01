@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
 fileprivate var mimestore:[String:String] = [:]
 fileprivate var extensionstore:[String:String] = [:]

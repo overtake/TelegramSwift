@@ -2,31 +2,49 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/libphonenumber/libphonenumber_Xcode.xcodeproj">
+      location = "group:submodules/TGUIKit/TGUIKit.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/Crc32/Crc32_Xcode.xcodeproj">
+      location = "group:submodules/RLottie_Xcode/RLottie_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/sqlcipher/sqlcipher_Xcode.xcodeproj">
+      location = "group:core-xprojects/MtProtoKit/MtProtoKit_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/TelegramApi/TelegramApi_Xcode.xcodeproj">
+      location = "group:core-xprojects/libphonenumber/libphonenumber_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:RLottieMac/RLottieMac.xcodeproj">
+      location = "group:core-xprojects/TelegramApi/TelegramApi_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/MtProtoKit/MtProtoKit_Xcode.xcodeproj">
+      location = "group:core-xprojects/TelegramCore/TelegramCore_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/TelegramCore/TelegramCore_Xcode.xcodeproj">
+      location = "group:core-xprojects/crc32/Crc32_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/Postbox/Postbox_Xcode.xcodeproj">
+      location = "group:core-xprojects/SSignalKit/SSignalKit_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/telegram-ios/submodules/SSignalKit/SSignalKit_Xcode.xcodeproj">
+      location = "group:core-xprojects/sqlcipher/sqlcipher_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/Postbox/Postbox_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/SyncCore/SyncCore_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/TonBinding/TonBinding_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/WalletCore/WalletCore_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/EncryptionProviderMac/EncryptionProvider_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/OpenSSLEncryption/OpenSSLEncryption_Xcode.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:submodules/lottie-ios/Lottie.xcodeproj">
@@ -39,9 +57,6 @@
    </FileRef>
    <FileRef
       location = "group:submodules/libtgvoip/libtgvoip_osx.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:TGUIKit/TGUIKit.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Telegram.xcodeproj">

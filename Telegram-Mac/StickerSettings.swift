@@ -1,6 +1,6 @@
 import Foundation
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 public enum EmojiStickerSuggestionMode: Int32 {
     case none

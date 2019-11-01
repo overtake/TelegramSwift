@@ -19,9 +19,10 @@ import TGUIKit
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 
@@ -173,7 +174,7 @@ class SEPasslockController: ModalViewController {
                     switch transaction.getAccessChallengeData() {
                     case .none:
                         return (value, nil)
-                    case let .plaintextPassword(passcode, _, _), let .numericalPassword(passcode, _, _):
+                    case let .plaintextPassword(passcode), let .numericalPassword(passcode):
                         return (value, passcode)
                     }
                 }

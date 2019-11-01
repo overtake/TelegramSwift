@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
 func stringForTimestamp(day: Int32, month: Int32, year: Int32) -> String {
     return String(format: "%d.%02d.%02d", day, month, year - 100)

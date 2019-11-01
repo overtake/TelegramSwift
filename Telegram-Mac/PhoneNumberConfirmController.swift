@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
-import MtProtoKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
+
 
 private let manager = CountryManager()
 

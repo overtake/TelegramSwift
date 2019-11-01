@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import AVFoundation
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 
 final class CIStickerContext : CIContext {

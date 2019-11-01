@@ -7,8 +7,8 @@
 //
 
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 struct DownloadedPath : PostboxCoding, Equatable {
     let id: MediaId

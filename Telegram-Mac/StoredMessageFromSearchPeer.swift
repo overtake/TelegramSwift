@@ -7,9 +7,11 @@
 //
 
 import Foundation
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import SyncCore
 
 func storedMessageFromSearchPeer(account: Account, peer: Peer) -> Signal<PeerId, NoError> {
     return account.postbox.transaction { transaction -> PeerId in

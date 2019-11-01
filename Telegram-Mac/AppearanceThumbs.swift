@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
+import SwiftSignalKit
+import Postbox
 
 private func cloudThemeData(context: AccountContext, file: TelegramMediaFile) -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?), NoError> {
     return Signal { subscriber in

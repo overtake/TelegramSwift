@@ -8,7 +8,8 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 class ExMajorNavigationController: MajorNavigationController {
     private let context:AccountContext

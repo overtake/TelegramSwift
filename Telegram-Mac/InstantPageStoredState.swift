@@ -9,9 +9,10 @@
 import Cocoa
 
 import Foundation
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 final class InstantPageStoredDetailsState: PostboxCoding {
     let index: Int32

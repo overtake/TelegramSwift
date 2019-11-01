@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
-import TelegramCoreMac
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 
 public enum VoiceCallDataSaving: Int32 {
     case never

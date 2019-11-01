@@ -8,10 +8,11 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 import Foundation
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 
 let mediaExts:[String] = ["png","jpg","jpeg","tiff","mp4","mov","avi", "gif"]
 let photoExts:[String] = ["png","jpg","jpeg","tiff"]

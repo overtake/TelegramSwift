@@ -7,10 +7,12 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
+import SyncCore
 
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 

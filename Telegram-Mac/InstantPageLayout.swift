@@ -7,9 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
+import SyncCore
 
 final class InstantPageLayout {
     let origin: CGPoint
@@ -404,7 +406,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         return InstantPageLayout(origin: CGPoint(), contentSize: contentSize, items: items)
     case let .image(id, caption, url, webpageId):
         if let image = media[id] as? TelegramMediaImage, let largest = largestImageRepresentation(image.representations) {
-            let imageSize = largest.dimensions
+            let imageSize = largest.dimensions.size
             var filledSize = imageSize.aspectFitted(CGSize(width: boundingWidth - safeInset * 2.0, height: 1200.0))
             
             if let size = fillToSize {
@@ -441,7 +443,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             return InstantPageLayout(origin: CGPoint(), contentSize: CGSize(), items: [])
         }
     case let .video(id, caption, autoplay, loop):
-        if let file = media[id] as? TelegramMediaFile, let dimensions = file.dimensions {
+        if let file = media[id] as? TelegramMediaFile, let dimensions = file.dimensions?.size {
             let imageSize = dimensions
             var filledSize = imageSize.aspectFitted(CGSize(width: boundingWidth - safeInset * 2.0, height: 1200.0))
 
@@ -587,7 +589,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         for subBlock in subItems {
             switch subBlock {
             case let .image(id, caption, url, webpageId):
-                if let image = media[id] as? TelegramMediaImage, let imageSize = largestImageRepresentation(image.representations)?.dimensions {
+                if let image = media[id] as? TelegramMediaImage, let imageSize = largestImageRepresentation(image.representations)?.dimensions.size {
                     let mediaIndex = mediaIndexCounter
                     mediaIndexCounter += 1
                     
@@ -724,7 +726,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         }
         return InstantPageLayout(origin: CGPoint(), contentSize: contentSize, items: items)
     case let .map(latitude, longitude, zoom, dimensions, caption):
-        let imageSize = dimensions
+        let imageSize = dimensions.size
         var filledSize = imageSize.aspectFitted(CGSize(width: boundingWidth - safeInset * 2.0, height: 1200.0))
         
         if let size = fillToSize {
@@ -737,7 +739,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         }
         
         let map = TelegramMediaMap(latitude: latitude, longitude: longitude, geoPlace: nil, venue: nil, liveBroadcastingTimeout: nil)
-        let attributes: [InstantPageImageAttribute] = [InstantPageMapAttribute(zoom: zoom, dimensions: dimensions)]
+        let attributes: [InstantPageImageAttribute] = [InstantPageMapAttribute(zoom: zoom, dimensions: dimensions.size)]
         
         var contentSize = CGSize(width: boundingWidth - safeInset * 2.0, height: 0.0)
         var items: [InstantPageItem] = []
@@ -761,7 +763,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
         embedIndexCounter += 1
         
         let size: CGSize
-        if let dimensions = dimensions {
+        if let dimensions = dimensions?.size {
             if dimensions.width.isLessThanOrEqualTo(0.0) {
                 size = CGSize(width: embedBoundingWidth, height: dimensions.height)
             } else {
@@ -784,7 +786,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             if url.lowercased().contains("youtube"),  url.lowercased().contains("embed/") {
                 url = url.replacingOccurrences(of: "embed/", with: "watch?v=")
             }
-            let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: size, duration: nil, author: nil, image: image, file: nil, files: nil, instantPage: nil)
+            let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: PixelDimensions(size), duration: nil, author: nil, image: image, file: nil, files: nil, instantPage: nil)
             let content = TelegramMediaWebpageContent.Loaded(loadedContent)
             
             item = InstantPageImageItem(frame: frame, webPage: webpage, media: InstantPageMedia(index: embedIndex, media: TelegramMediaWebpage(webpageId: MediaId(namespace: Namespaces.Media.LocalWebpage, id: -1), content: content), webpage: webpage, url: nil, caption: nil, credit: nil), attributes: [], interactive: false, roundCorners: false, fit: false)

@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 final class StickerPackGridItem: GridItem {
 
@@ -211,7 +212,7 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
     }
     
     func setup(context: AccountContext, file: TelegramMediaFile) {
-        if let dimensions = file.dimensions {
+        if let dimensions = file.dimensions?.size {
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(60, 60), boundingSize: NSMakeSize(60, 60), intrinsicInsets: NSEdgeInsets())
             imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
