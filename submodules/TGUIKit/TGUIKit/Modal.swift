@@ -783,6 +783,8 @@ public class Modal: NSObject {
                     }
                     if let value = strongSelf.controller?.becomeFirstResponder(), value {
                         _ = strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                    } else {
+                        _ = strongSelf.window.makeFirstResponder(nil)
                     }
                     
                     if strongSelf.animated {

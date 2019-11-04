@@ -105,13 +105,14 @@ class GeneralInteractedRowView: GeneralRowView {
                 nextView.image = item.isSelected ? nil : theme.icons.generalNext
                 nextView.sizeToFit()
             }
-        
             switch item.viewType {
             case .legacy:
                 containerView.setCorners([], animated: false)
-            case let .modern(position, _):
-                containerView.setCorners(position.corners, animated: animated)
+            case let .modern:
+                containerView.setCorners(item.viewType.corners, animated: animated)
             }
+
+
         }
         super.set(item: item, animated: animated)
         
@@ -127,7 +128,7 @@ class GeneralInteractedRowView: GeneralRowView {
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
-            let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.grayHighlight
+            let highlighted = item.viewType.isPlainMode ? self.backdorColor : theme.colors.grayHighlight
             descriptionView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
             textView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
             containerView.set(background: self.backdorColor, for: .Normal)
@@ -311,11 +312,9 @@ class GeneralInteractedRowView: GeneralRowView {
                     }
                 }
                 nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
-            case let .modern(position, innerInsets):
-                
+            case let .modern(_, innerInsets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), insets.top, item.blockWidth, frame.height - insets.bottom - insets.top)
-                self.containerView.setCorners(position.corners)
-                
+                self.containerView.setCorners(item.viewType.corners)
                 if let descriptionView = self.descriptionView {
                     descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
                 }

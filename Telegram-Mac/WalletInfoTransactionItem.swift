@@ -234,7 +234,7 @@ private final class WalletInfoTransactionView: TableRowView {
             return
         }
         
-        let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.grayHighlight
+        let highlighted = item.viewType.isPlainMode ? self.backdorColor : theme.colors.grayHighlight
         
         self.backgroundColor = item.viewType.rowBackground
         self.borderView.backgroundColor = theme.colors.border

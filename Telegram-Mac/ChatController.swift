@@ -829,6 +829,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var chatLocation:ChatLocation
     private let peerView = Promise<PostboxView?>()
     
+    private let undoTooltipControl: UndoTooltipControl
+    
     private let historyDisposable:MetaDisposable = MetaDisposable()
     private let peerDisposable:MetaDisposable = MetaDisposable()
     private let updatedChannelParticipants:MetaDisposable = MetaDisposable()
@@ -983,7 +985,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.viewDidLoad()
         
         
-
+        self.undoTooltipControl.getYInset = { [weak self] in
+            guard let `self` = self else {
+                return 10
+            }
+            return self.genericView.inputView.frame.height + 10
+        }
         
         weak var previousView = self.previousView
         let context = self.context
@@ -3280,7 +3287,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 
                                 if peer.isGroup || peer.isUser || (peer.isSupergroup && peer.addressName == nil) {
                                     if let peer = peer as? TelegramChannel, peer.flags.contains(.hasGeo) {} else {
-                                        items.append(SPopoverItem(L10n.chatContextClearHistory, {
+                                        items.append(SPopoverItem(L10n.chatContextClearHistory, { [weak self] in
                                             
                                             var thridTitle: String? = nil
                                             
@@ -3296,17 +3303,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             }
                                             
                                             modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-                                                context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
+                                                self?.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
                                                     switch status {
                                                     case .success:
                                                         context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
-                                                        // _ = clearHistoryInteractively(postbox: account.postbox, peerId: peerId).start()
                                                         break
                                                     default:
                                                         break
                                                     }
                                                 }))
-                                                
                                             })
                                         }, theme.icons.chatActionClearHistory))
                                     }
@@ -3352,6 +3357,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         case .Some:
             break
         }
+    }
+    
+    private func addUndoAction(_ action: ChatUndoAction) {
+        
+        self.context.chatUndoManager.add(action: action)
+        
+        self.undoTooltipControl.add(controller: self)
+
     }
     
     override func getLeftBarViewOnce() -> BarView {
@@ -3901,6 +3914,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.chatLocation = chatLocation
         self.messageId = messageId
         self.mode = mode
+        self.undoTooltipControl = UndoTooltipControl(context: context)
         self.chatInteraction = ChatInteraction(chatLocation: chatLocation, context: context, mode: mode)
         if let action = initialAction {
             switch action {

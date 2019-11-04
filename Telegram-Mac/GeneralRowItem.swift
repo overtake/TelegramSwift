@@ -145,7 +145,7 @@ enum GeneralViewType : Equatable {
     case modern(position: GeneralViewItemPosition, insets: NSEdgeInsets)
 
     var isPlainMode: Bool {
-        return theme.colors.listBackground == theme.colors.background
+        return theme.colors.listBackground == theme.colors.background || self == .legacy
     }
     var innerInset: NSEdgeInsets {
         switch self {

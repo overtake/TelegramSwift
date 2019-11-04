@@ -523,3 +523,7 @@ func showInstantPage(_ page: InstantPageViewController) {
     }
 }
 
+func closeInstantView() {
+    instantController?.window?.orderOut(nil)
+    instantController = nil
+}

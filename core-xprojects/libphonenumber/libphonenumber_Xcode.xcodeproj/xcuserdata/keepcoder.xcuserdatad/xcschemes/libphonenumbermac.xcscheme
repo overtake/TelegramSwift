@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D0208ABD2306E85800A23503"
-               BuildableName = "libphonenumbermac.framework"
-               BlueprintName = "libphonenumbermac"
+               BuildableName = "libphonenumber.framework"
+               BlueprintName = "libphonenumber"
                ReferencedContainer = "container:libphonenumber_Xcode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,8 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "DebugAppStoreLLC"
@@ -46,13 +44,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D0208ABD2306E85800A23503"
-            BuildableName = "libphonenumbermac.framework"
-            BlueprintName = "libphonenumbermac"
+            BuildableName = "libphonenumber.framework"
+            BlueprintName = "libphonenumber"
             ReferencedContainer = "container:libphonenumber_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "ReleaseAppStoreLLC"
@@ -64,8 +60,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D0208ABD2306E85800A23503"
-            BuildableName = "libphonenumbermac.framework"
-            BlueprintName = "libphonenumbermac"
+            BuildableName = "libphonenumber.framework"
+            BlueprintName = "libphonenumber"
             ReferencedContainer = "container:libphonenumber_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

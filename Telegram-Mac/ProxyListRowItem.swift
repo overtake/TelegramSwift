@@ -99,7 +99,7 @@ class ProxyListRowItem: GeneralRowItem {
 }
 
 
-private final class ProxyListRowView : GeneralRowView {
+private final class ProxyListRowView : TableRowView, ViewDisplayDelegate {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let headerView: TextView = TextView()
     private let statusView: TextView = TextView()
@@ -159,7 +159,7 @@ private final class ProxyListRowView : GeneralRowView {
     override func updateColors() {
         guard let item = item as? ProxyListRowItem else {return}
         
-        let highlighted = item.viewType == .legacy ? self.backdorColor : theme.colors.grayHighlight
+        let highlighted = item.viewType.isPlainMode ? self.backdorColor : theme.colors.grayHighlight
         headerView.backgroundColor = containerView.controlState == .Highlight ? highlighted : backdorColor
         statusView.backgroundColor = containerView.controlState == .Highlight ? highlighted : backdorColor
         self.layer?.backgroundColor = item.viewType.rowBackground.cgColor

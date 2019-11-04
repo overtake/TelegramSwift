@@ -17,69 +17,6 @@ import SyncCore
 
 
 
-private final class ChatListTooltipController : NSObject {
-    var current: ArchiveTooltipController?
-    private let disposable = MetaDisposable()
-    private let context: AccountContext
-    init(context: AccountContext) {
-        self.context = context
-        super.init()
-        
-        let invocation: (NSEvent)-> KeyHandlerResult = { [weak self] _ in
-            self?.hideCurrentIfNeeded()
-            return .rejected
-        }
-        
-        self.context.window.set(mouseHandler: invocation, with: self, for: .leftMouseUp, priority: .supreme)
-        self.context.window.set(mouseHandler: invocation, with: self, for: .rightMouseUp, priority: .supreme)
-        self.context.window.set(mouseHandler: invocation, with: self, for: .rightMouseDown, priority: .supreme)
-        
-        
-        self.context.window.set(handler: { [weak self] in
-            self?.hideCurrentIfNeeded()
-            return .rejected
-        }, with: self, for: .All, priority: .supreme)
-    }
-    
-    func add(type: ArchiveTooltipType, peerId: PeerId, controller: ViewController) {
-        let context = self.context
-        hideCurrentIfNeeded()
-        
-        let new = ArchiveTooltipController(context, controller: controller, peerId: peerId, type: type)
-        new.show()
-        
-        self.current = new
-        
-        new.view.layer?.animatePosition(from: NSMakePoint(new.view.frame.minX, new.view.frame.maxY), to: new.view.frame.origin, duration: 0.25, timingFunction: .spring)
-        new.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .spring)
-
-        
-        disposable.set((Signal<Never, NoError>.complete() |> delay(5.0, queue: .mainQueue())).start(completed: { [weak self] in
-            self?.hideCurrentIfNeeded()
-        }))
-    }
-    
-    private func hideCurrentIfNeeded(animated: Bool = true) {
-        if let current = self.current {
-            self.current = nil
-            let view = current.view
-            if animated {
-                view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, view.frame.maxY), duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
-                view._change(opacity: 0, timingFunction: .spring, completion: { [weak view] completed in
-                    view?.removeFromSuperview()
-                })
-            } else {
-                view.removeFromSuperview()
-            }
-        }
-    }
-    
-    deinit {
-        disposable.dispose()
-        context.window.removeAllHandlers(for: self)
-    }
-}
-
 
 enum UIChatListEntryId : Hashable {
     case chatId(PeerId)
@@ -266,7 +203,7 @@ class ChatListController : PeersListController {
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
     private let archivationTooltipDisposable = MetaDisposable()
-    private let tooltipController: ChatListTooltipController
+    private let undoTooltipControl: UndoTooltipControl
     private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
     private var activityStatusesDisposable:Disposable?
     private let hiddenArchiveValue: Atomic<HiddenArchiveStatus> = Atomic(value: FastSettings.archiveStatus)
@@ -599,21 +536,11 @@ class ChatListController : PeersListController {
         
     }
     
-    func addArchiveTooltip(_ peerId:PeerId) {
+    func addUndoAction(_ action:ChatUndoAction) {
+        let context = self.context
+        context.chatUndoManager.add(action: action)
         guard self.context.sharedContext.layout != .minimisize else { return }
-        let type: ArchiveTooltipType = .justArchive
-//        let count = FastSettings.archivedTooltipCountAndIncrement()
-//        switch count {
-//        case 0:
-//            type = .first
-//        case 1:
-//            type = .second
-//        case 2:
-//            type = .third
-//        default:
-//            type = .justArchive
-//        }
-        self.tooltipController.add(type: type, peerId: peerId, controller: self)
+        self.undoTooltipControl.add(controller: self)
     }
     
     private func enqueueTransition(_ transition: TableUpdateTransition) {
@@ -1055,7 +982,7 @@ class ChatListController : PeersListController {
     }
     
     init(_ context: AccountContext, modal:Bool = false, groupId: PeerGroupId? = nil) {
-        self.tooltipController = ChatListTooltipController(context: context)
+        self.undoTooltipControl = UndoTooltipControl(context: context)
         super.init(context, followGlobal:!modal, mode: groupId != nil ? .folder(groupId!) : .plain)
         
         if groupId != nil {

@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D0B418661D7E03D5004562A4"
-               BuildableName = "TelegramCoreMac.framework"
-               BlueprintName = "TelegramCoreMac"
+               BuildableName = "TelegramCore.framework"
+               BlueprintName = "TelegramCore"
                ReferencedContainer = "container:TelegramCore_Xcode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,8 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "DebugAppStore"
@@ -46,13 +44,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D0B418661D7E03D5004562A4"
-            BuildableName = "TelegramCoreMac.framework"
-            BlueprintName = "TelegramCoreMac"
+            BuildableName = "TelegramCore.framework"
+            BlueprintName = "TelegramCore"
             ReferencedContainer = "container:TelegramCore_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "ReleaseHockeyapp"
@@ -64,8 +60,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D0B418661D7E03D5004562A4"
-            BuildableName = "TelegramCoreMac.framework"
-            BlueprintName = "TelegramCoreMac"
+            BuildableName = "TelegramCore.framework"
+            BlueprintName = "TelegramCore"
             ReferencedContainer = "container:TelegramCore_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

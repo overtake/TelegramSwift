@@ -990,6 +990,11 @@ class ChatRowItem: TableRowItem {
                             
                             let appLink = inAppLink.peerInfo(link: "", peerId: author.id, action: nil, openChat: !(author is TelegramUser), postId: info.sourceMessageId?.id, callback: chatInteraction.openInfo)
                             attr.add(link: appLink, for: range, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble))
+                        } else {
+                            let range = attr.append(string: info.authorTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
+                            attr.add(link: inAppLink.callback("hid", { _ in
+                                hiddenFwdTooltip?()
+                            }), for: range)
                         }
                     } else {
                         if let source = info.source, source.isChannel {

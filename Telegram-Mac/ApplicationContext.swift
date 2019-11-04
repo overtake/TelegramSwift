@@ -61,19 +61,9 @@ final class UnauthorizedApplicationContext {
         rootController.alwaysAnimate = true
 
         
-        
-//        for (key, _) in UserDefaults.standard.dictionaryRepresentation() {
-//            UserDefaults.standard.removeObject(forKey: key)
-//        }
-//        UserDefaults.standard.synchronize()
-        
-        
         account.shouldBeServiceTaskMaster.set(.single(.now))
         
-      
-
-        
-        
+ 
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
         
     }
@@ -148,14 +138,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
         window.minSize = NSMakeSize(380, 500)
         
-        
-        
         if !window.initFromSaver {
             window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
             window.center()
         }
-        
-        
         
         context.account.importableContacts.set(.single([:]))
         
@@ -175,11 +161,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         rightController.set(callHeader: CallNavigationHeader(35, initializer: { header -> NavigationHeaderView in
             let view = CallNavigationHeaderView(header)
-            return view
-        }))
-        
-        rightController.set(undoHeader: UndoNavigationHeader(35, initializer: { header -> NavigationHeaderView in
-            let view = UndoOverlayHeaderView(header, manager: context.chatUndoManager)
             return view
         }))
         
@@ -364,9 +345,18 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
 //        window.set(handler: { [weak self] () -> KeyHandlerResult in
-//            showModal(with: InputPasswordController(context: context, title: "Passcoword", desc: "desc password", checker: { _ in return .never() }), for: window)
+//            var items: [ValuesSelectorValue<String>] = []
+//            for i in 0 ..< 100 {
+//                items.append(ValuesSelectorValue(localized: "value: \(i)", value: "\(i)"))
+//            }
+//            
+//            let controller = ValuesSelectorModalController(values: items, selected: items[0], title: "test", onComplete: { value in
+//                
+//            })
+//            
+//            showModal(with: controller, for: window)
 //            return .invoked
-//        }, with: self, for: .T, priority: .supreme)
+//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
         
         

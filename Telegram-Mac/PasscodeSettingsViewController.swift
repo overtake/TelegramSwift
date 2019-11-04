@@ -73,7 +73,7 @@ private func <(lhs:PasscodeEntry, rhs:PasscodeEntry) -> Bool {
 
 
 
-private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, _ additional: AdditionalSettings) -> [PasscodeEntry] {
+private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, passcodeSettings: PasscodeSettings, _ additional: AdditionalSettings) -> [PasscodeEntry] {
     var entries:[PasscodeEntry] = []
     
     var sectionId:Int = 1
@@ -93,7 +93,7 @@ private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, _ addi
         sectionId += 1
         
         let context = LAContext()
-        entries.append(.autoLock(sectionId: sectionId, time: passcode.timeout, viewType: context.canUseBiometric ? .firstItem : .singleItem))
+        entries.append(.autoLock(sectionId: sectionId, time: passcodeSettings.timeout, viewType: context.canUseBiometric ? .firstItem : .singleItem))
         if context.canUseBiometric {
             entries.append(.turnTouchId(sectionId: sectionId, enabled: additional.useTouchId, viewType: .lastItem))
         }
@@ -189,17 +189,9 @@ class PasscodeSettingsViewController: TableViewController {
     }
     
     func updateAwayTimeout(_ timeout:Int32?) {
-        disposable.set(context.sharedContext.accountManager.transaction { transaction -> Bool in
-            switch transaction.getAccessChallengeData() {
-            case .none:
-                break
-            case let .numericalPassword(passcode):
-                transaction.setAccessChallengeData(.numericalPassword(value: passcode))
-            case let .plaintextPassword(passcode):
-                transaction.setAccessChallengeData(.plaintextPassword(value: passcode))
-            }
-            return true
-        }.start())
+        disposable.set(updatePasscodeSettings(context.sharedContext.accountManager, {
+            $0.withUpdatedTimeout(timeout)
+        }).start())
     }
     
     func showIfAwayOptions() {
@@ -254,8 +246,8 @@ class PasscodeSettingsViewController: TableViewController {
        
         let previous:Atomic<[AppearanceWrapperEntry<PasscodeEntry>]> = Atomic(value: [])
         
-        genericView.merge(with: combineLatest(queue: self.queue, context.sharedContext.accountManager.accessChallengeData(), appearanceSignal, additionalSettings(accountManager: context.sharedContext.accountManager)) |> map { passcode, appearance, additional in
-            let entries = passcodeSettinsEntry(passcode.data, additional).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        genericView.merge(with: combineLatest(queue: self.queue, context.sharedContext.accountManager.accessChallengeData(), passcodeSettingsView(context.sharedContext.accountManager), appearanceSignal, additionalSettings(accountManager: context.sharedContext.accountManager)) |> map { passcode, passcodeSettings, appearance, additional in
+            let entries = passcodeSettinsEntry(passcode.data, passcodeSettings: passcodeSettings, additional).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize, arguments: arguments)
         } |> deliverOnMainQueue)
         

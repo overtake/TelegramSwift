@@ -133,8 +133,6 @@ class UndoOverlayHeaderView: NavigationHeaderView {
         }
         
         
-        
-        
         if !didSetReady {
             self.ready.set(.single(true))
             didSetReady = true

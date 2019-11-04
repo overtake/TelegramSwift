@@ -22,6 +22,7 @@ enum ChatUndoActionType : Equatable {
     case deleteChannel
     case leftChat
     case leftChannel
+    case archiveChat
 }
 
 
@@ -62,7 +63,7 @@ struct ChatUndoAction : Hashable  {
     fileprivate let endpoint: Double
     fileprivate let duration: Double
     private let peerId: PeerId
-    fileprivate let type: ChatUndoActionType
+    let type: ChatUndoActionType
     fileprivate let action: (ChatUndoActionStatus) -> Void
     init(peerId: PeerId, type: ChatUndoActionType, duration: Double = 5, action: @escaping(ChatUndoActionStatus) -> Void = { _ in}) {
         self.peerId = peerId
@@ -157,34 +158,42 @@ struct ChatUndoStatuses {
 
         let leftChatCount = statuses.filter {$0.key.type == .leftChat && $0.value == .processing}.count
         let leftChannelCount = statuses.filter {$0.key.type == .leftChannel && $0.value == .processing}.count
+        let archiveChatCount = statuses.filter {$0.key.type == .archiveChat && $0.value == .processing}.count
 
         
         var text: String = ""
+        
+        if archiveChatCount > 0 {
+            if !text.isEmpty {
+                text += ", "
+            }
+            text += L10n.chatUndoManagerChatsArchivedCountable(archiveChatCount)
+        }
         
         if leftChatCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text = L10n.chatUndoManagerChatLeftCountable(leftChatCount)
+            text += L10n.chatUndoManagerChatLeftCountable(leftChatCount)
         }
         
         if leftChannelCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text = L10n.chatUndoManagerChannelLeftCountable(leftChannelCount)
+            text += L10n.chatUndoManagerChannelLeftCountable(leftChannelCount)
         }
         if deleteCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text = L10n.chatUndoManagerChatsDeletedCountable(deleteCount)
+            text += L10n.chatUndoManagerChatsDeletedCountable(deleteCount)
         }
         if deleteChannelCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text = L10n.chatUndoManagerChannelDeletedCountable(deleteChannelCount)
+            text += L10n.chatUndoManagerChannelDeletedCountable(deleteChannelCount)
         }
         if clearingCount > 0 {
             if !text.isEmpty {
@@ -308,10 +317,12 @@ private final class ChatUndoManagerContext {
             if statuses[action] == nil {
                 disposableDict.set(nil, forKey: action)
                 statuses[action]?.status = .cancelled
+                action.action(.cancelled)
                 actions.remove(action)
             } else if let status = statuses[action], status.status == .processing {
                 disposableDict.set(nil, forKey: action)
                 statuses[action]?.status = .cancelled
+                action.action(.cancelled)
                 actions.remove(action)
             }
         }

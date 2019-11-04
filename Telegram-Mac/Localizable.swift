@@ -1604,6 +1604,32 @@ internal final class L10n {
     return L10n.tr("Localizable", "Chat.UndoManager.ChatLeft_zero", p1)
   }
   /// %d
+  internal static func chatUndoManagerChatsArchivedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsArchived_countable", p1)
+  }
+  /// %d Chats Archived
+  internal static func chatUndoManagerChatsArchivedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsArchived_few", p1)
+  }
+  /// %d Chats Archived
+  internal static func chatUndoManagerChatsArchivedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsArchived_many", p1)
+  }
+  /// Chat Archived
+  internal static var chatUndoManagerChatsArchivedOne: String  { return L10n.tr("Localizable", "Chat.UndoManager.ChatsArchived_one") }
+  /// %d Chats Archived
+  internal static func chatUndoManagerChatsArchivedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsArchived_other", p1)
+  }
+  /// %d Chats Archived
+  internal static func chatUndoManagerChatsArchivedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsArchived_two", p1)
+  }
+  /// %d Chat Archived
+  internal static func chatUndoManagerChatsArchivedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UndoManager.ChatsArchived_zero", p1)
+  }
+  /// %d
   internal static func chatUndoManagerChatsDeletedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.UndoManager.ChatsDeleted_countable", p1)
   }

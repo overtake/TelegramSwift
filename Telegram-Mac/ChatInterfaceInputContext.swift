@@ -222,13 +222,15 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         if chatPresentationInterfaceState.state == .editing && (possibleTypes != [.contextRequest] && possibleTypes != [.mention] && possibleTypes != [.emoji]) {
             return .none
         }
-        var possibleQueryRange = possibleQueryRange
-        if possibleQueryRange.upperBound >= inputState.inputText.endIndex {
-            possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.endIndex
-        }
+//        var possibleQueryRange = possibleQueryRange
+//        if possibleQueryRange.upperBound > inputState.inputText.endIndex {
+//            possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.endIndex
+//        }
+//        possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.index(after: inputState.inputText.endIndex)
+
         
         let value = inputState.inputText[possibleQueryRange]
-        let query = String(value) //.substring(with: possibleQueryRange)
+        let query = String(value) 
         if possibleTypes == [.hashtag] {
             return .hashtag(query)
         } else if possibleTypes == [.mention] {

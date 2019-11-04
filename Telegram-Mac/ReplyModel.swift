@@ -228,12 +228,12 @@ class ReplyModel: ChatAccessoryModel {
 
         if let message = message {
             
-            var peer = message.author
+            var title: String? = message.author?.displayTitle
         
             for attr in message.attributes {
                 if let _ = attr as? SourceReferenceMessageAttribute {
                     if let info = message.forwardInfo {
-                        peer = info.author
+                        title = info.authorTitle
                     }
                     break
                 }
@@ -244,7 +244,7 @@ class ReplyModel: ChatAccessoryModel {
             if text.isEmpty {
                 text = serviceMessageText(message, account: account, isReplied: true)
             }
-            self.headerAttr = .initialize(string: !isPinned ? peer?.displayTitle : tr(L10n.chatHeaderPinnedMessage), color: presentation.title, font: .medium(.text))
+            self.headerAttr = .initialize(string: !isPinned ? title : L10n.chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
         } else {
             self.headerAttr = nil
