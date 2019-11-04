@@ -24,19 +24,25 @@ public class HorizontalTableView: TableView {
                 
         var scrollPoint = contentView.bounds.origin
         let isInverted: Bool = System.isScrollInverted
-        if event.scrollingDeltaY != 0 {
+        let scrollingDeltaY: CGFloat
+        if event.scrollingDeltaY < 0 {
+            scrollingDeltaY = min(-1, event.scrollingDeltaY)
+        } else {
+            scrollingDeltaY = max(1, event.scrollingDeltaY)
+        }
+        if scrollingDeltaY != 0 {
             if isInverted {
-                scrollPoint.y += -event.scrollingDeltaY
+                scrollPoint.y += -scrollingDeltaY
             } else {
-                scrollPoint.y -= event.scrollingDeltaY
+                scrollPoint.y -= scrollingDeltaY
             }
         }
         
         if event.scrollingDeltaX != 0 {
             if !isInverted {
-                scrollPoint.y += -event.scrollingDeltaX
+                scrollPoint.y += -scrollingDeltaY
             } else {
-                scrollPoint.y -= event.scrollingDeltaX
+                scrollPoint.y -= scrollingDeltaY
             }
         }
                

@@ -300,7 +300,7 @@ private final class SVideoControlsView : Control {
         
         addSubview(volumeContainer)
         
-        backgroundView.material = .ultraDark
+        backgroundView.material = .dark
         backgroundView.blendingMode = .withinWindow
         
         playOrPause.autohighlight = false

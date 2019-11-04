@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D0B418121D7DFAF2004562A4"
-               BuildableName = "PostboxMac.framework"
-               BlueprintName = "PostboxMac"
+               BuildableName = "Postbox.framework"
+               BlueprintName = "Postbox"
                ReferencedContainer = "container:Postbox_Xcode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,8 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "DebugHockeyapp"
@@ -46,13 +44,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D0B418121D7DFAF2004562A4"
-            BuildableName = "PostboxMac.framework"
-            BlueprintName = "PostboxMac"
+            BuildableName = "Postbox.framework"
+            BlueprintName = "Postbox"
             ReferencedContainer = "container:Postbox_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "ReleaseHockeyapp"
@@ -64,8 +60,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D0B418121D7DFAF2004562A4"
-            BuildableName = "PostboxMac.framework"
-            BlueprintName = "PostboxMac"
+            BuildableName = "Postbox.framework"
+            BlueprintName = "Postbox"
             ReferencedContainer = "container:Postbox_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

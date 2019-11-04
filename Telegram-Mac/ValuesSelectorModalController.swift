@@ -73,29 +73,21 @@ private func <<T>(lhs: ValuesSelectorEntry<T>, rhs: ValuesSelectorEntry<T>) -> B
 
 private final class ValuesSelectorModalView : View {
     let tableView: TableView = TableView(frame: NSZeroRect)
-    private let title: TextView = TextView()
     fileprivate let searchView: SearchView = SearchView(frame: NSZeroRect)
     private let separator : View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(title)
         addSubview(tableView)
         addSubview(separator)
         addSubview(searchView)
         tableView.getBackgroundColor = {
-            return theme.colors.grayBackground
+            return theme.colors.listBackground
         }
         separator.backgroundColor = theme.colors.border
     }
     
     func hasSearch(_ hasSearch: Bool) {
         searchView.isHidden = !hasSearch
-        title.isHidden = hasSearch
-    }
-    
-    func updateTitle(_ title: String) {
-        self.title.update(TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
-        needsLayout = true
     }
     
     required init?(coder: NSCoder) {
@@ -105,9 +97,6 @@ private final class ValuesSelectorModalView : View {
     override func layout() {
         super.layout()
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
-        title.layout?.measure(width: frame.width - 60)
-        title.update(title.layout)
-        title.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - title.frame.height) / 2))
         searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
         searchView.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - searchView.frame.height) / 2))
         separator.frame = NSMakeRect(0, 49, frame.width, .borderSize)
@@ -138,7 +127,7 @@ fileprivate func prepareTransition<T>(left:[ValuesSelectorEntry<T>], right: [Val
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.item(arguments, initialSize: initialSize)
     }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: false)
 }
 
 struct ValuesSelectorValue <T> : Equatable where T : Equatable {
@@ -156,17 +145,18 @@ func ==<T>(lhs: ValuesSelectorValue<T>, rhs: ValuesSelectorValue<T>) -> Bool {
 
 class ValuesSelectorModalController<T>: ModalViewController where T : Equatable {
 
-    override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.modalCancel, accept: { [weak self] in
-            self?.close()
-        }, drawBorder: true, height: 50)
-    }
     
     private func complete() {
         if let selected = stateValue.modify({$0}).selected {
             self.onComplete(selected)
         }
         close()
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: self.title), right: nil)
     }
     
     
@@ -182,14 +172,13 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
         self.stateValue = Atomic(value: ValuesSelectorState(selected: nil, values: values))
         self.onComplete = onComplete
         self.title = title
-        super.init(frame: NSMakeRect(0, 0, 300, 100))
+        super.init(frame: NSMakeRect(0, 0, 350, 100))
         self.bar = .init(height: 0)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.updateTitle(self.title)
         genericView.hasSearch(self.stateValue.modify({$0}).values.count > 10)
         
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
@@ -239,7 +228,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
                 return search.request.isEmpty || !result.isEmpty
             }
             for value in values {
-                entries.append(ValuesSelectorEntry.value(sectionId: sectionId, index: index, value: value, selected: state.selected == value, viewType: bestGeneralViewType(state.values, for: value)))
+                entries.append(ValuesSelectorEntry.value(sectionId: sectionId, index: index, value: value, selected: state.selected == value, viewType: bestGeneralViewType(values, for: value)))
                 index += 1
             }
             entries.append(.sectionId(sectionId: sectionId))
@@ -256,18 +245,22 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
         
     }
     
+    override func becomeFirstResponder() -> Bool? {
+        return false
+    }
+    
     override func firstResponder() -> NSResponder? {
         return genericView.searchView.isHidden ? nil : genericView.searchView.input
     }
     
     private func updateSize(_ width: CGFloat, animated: Bool) {
         if let contentSize = self.window?.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 70, genericView.tableView.listHeight + 50)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 150, genericView.tableView.listHeight + 50)), animated: animated)
         }
     }
     
     override func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.tableView.listHeight + 50)), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 150, genericView.tableView.listHeight + 50)), animated: false)
     }
     
     override func returnKeyAction() -> KeyHandlerResult {

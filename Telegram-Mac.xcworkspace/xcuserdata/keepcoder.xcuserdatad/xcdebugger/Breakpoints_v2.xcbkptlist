@@ -513,38 +513,6 @@
             endingLineNumber = "93"
             landmarkName = "addSavedGif(postbox:fileReference:)"
             landmarkType = "9">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "TelegramCoreMac.addSavedGif(postbox: PostboxMac.Postbox, fileReference: TelegramCoreMac.MediaReference&lt;TelegramCoreMac.TelegramMediaFile&gt;) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt;"
-                  moduleName = "TelegramCoreMac"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "594152775.949963"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "93"
-                  endingLineNumber = "93"
-                  offsetFromSymbolStart = "107">
-               </Location>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 (PostboxMac.Transaction) -&gt; () in TelegramCoreMac.addSavedGif(postbox: PostboxMac.Postbox, fileReference: TelegramCoreMac.MediaReference&lt;TelegramCoreMac.TelegramMediaFile&gt;) -&gt; SwiftSignalKitMac.Signal&lt;(), SwiftSignalKitMac.NoError&gt;"
-                  moduleName = "TelegramCoreMac"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/keepcoder/Dropbox/Telegram-multi-acc/submodules/telegram-ios/submodules/TelegramCore/TelegramCore/SynchronizeSavedGifsOperation.swift"
-                  timestampString = "594152775.952908"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "94"
-                  endingLineNumber = "94"
-                  offsetFromSymbolStart = "244">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy

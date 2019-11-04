@@ -185,7 +185,6 @@ class TextAndLabelRowView: GeneralRowView {
             switch item.viewType {
             case .legacy:
                 self.containerView.frame = bounds
-                self.containerView.setCorners([])
 
                 if let _ = item.labelLayout {
                     labelView.setFrameOrigin(item.inset.left, item.textY)
@@ -194,7 +193,6 @@ class TextAndLabelRowView: GeneralRowView {
                 }
             case let .modern(position, innerInsets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
-                self.containerView.setCorners(position.corners)
 
                 if let _ = item.labelLayout {
                     labelView.setFrameOrigin(innerInsets.left, item.textY)
@@ -202,7 +200,8 @@ class TextAndLabelRowView: GeneralRowView {
                     labelView.centerY(x: innerInsets.left)
                 }
             }
-            
+            self.containerView.setCorners(item.viewType.corners)
+
         }
         
     }

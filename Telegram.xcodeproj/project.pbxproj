@@ -12,7 +12,7 @@
 		9F0367EE22709C5600456348 /* MGalleryLottieItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367ED22709C5600456348 /* MGalleryLottieItem.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
-		9F0367F72273260A00456348 /* ArchiveTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* ArchiveTooltipController.swift */; };
+		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
 		9F0368012277091800456348 /* LAnimationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0368002277091800456348 /* LAnimationButton.swift */; };
 		9F03680F22771A9700456348 /* anim_unarchive.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F03680222771A9600456348 /* anim_unarchive.json */; };
 		9F03681022771A9700456348 /* anim_ungroup.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F03680322771A9600456348 /* anim_ungroup.json */; };
@@ -202,6 +202,8 @@
 		9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE513205AB50C000C028E /* libz.tbd */; };
 		A7664939236C816400163DF4 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A766493A236C817200163DF4 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
+		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
+		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
 		A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */; };
 		A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
@@ -762,7 +764,6 @@
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
 		D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */; };
 		D0675D6B217E20B9004900A7 /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0675D6A217E20B9004900A7 /* Zip.framework */; };
-		D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = D0675D6A217E20B9004900A7 /* Zip.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0675D83217F1F27004900A7 /* ArchiverContext.swift */; };
 		D06ACAEF231AC265002DCD81 /* ChatMessageBubbleImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */; };
 		D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */; };
@@ -801,7 +802,6 @@
 		D07B558423338B6B00F076A8 /* WalletSplashController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07B558323338B6B00F076A8 /* WalletSplashController.swift */; };
 		D07B55872333903C00F076A8 /* WalletSplashRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07B55862333903C00F076A8 /* WalletSplashRowItem.swift */; };
 		D07B55892333A41600F076A8 /* WalletSplashButtonRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07B55882333A41600F076A8 /* WalletSplashButtonRowItem.swift */; };
-		D07B558B2333BCC000F076A8 /* toncfg.json in Resources */ = {isa = PBXBuildFile; fileRef = D07B558A2333BCC000F076A8 /* toncfg.json */; };
 		D07B558D2333E1FE00F076A8 /* Wallet24WordsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07B558C2333E1FE00F076A8 /* Wallet24WordsItem.swift */; };
 		D07B55912334108E00F076A8 /* WalletSplashHelps.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07B55902334108E00F076A8 /* WalletSplashHelps.swift */; };
 		D07C6D7923464C8000468B1A /* WalletKeychainController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07C6D7823464C8000468B1A /* WalletKeychainController.swift */; };
@@ -860,7 +860,6 @@
 				A7D2820C236C3C2A0000A9BF /* MtProtoKit.framework in Copy Files */,
 				A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */,
 				9F0367E522707A4D00456348 /* Lottie.framework in Copy Files */,
-				D0675D6C217E20CE004900A7 /* Zip.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
 			);
 			name = "Copy Files";
@@ -915,7 +914,7 @@
 		9F0367ED22709C5600456348 /* MGalleryLottieItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MGalleryLottieItem.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
-		9F0367F62273260A00456348 /* ArchiveTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveTooltipController.swift; sourceTree = "<group>"; };
+		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
 		9F0368002277091800456348 /* LAnimationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LAnimationButton.swift; sourceTree = "<group>"; };
 		9F03680222771A9600456348 /* anim_unarchive.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = anim_unarchive.json; sourceTree = "<group>"; };
 		9F03680322771A9600456348 /* anim_ungroup.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = anim_ungroup.json; sourceTree = "<group>"; };
@@ -1223,6 +1222,7 @@
 		9FFAE50E205AB4A3000C028E /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		9FFAE510205AB4AB000C028E /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
 		9FFAE513205AB50C000C028E /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaPhotosController.swift; sourceTree = "<group>"; };
 		A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotosMonthItem.swift; sourceTree = "<group>"; };
 		A7D28204236C3C0B0000A9BF /* Postbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Postbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1886,7 +1886,6 @@
 		D07B558323338B6B00F076A8 /* WalletSplashController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSplashController.swift; sourceTree = "<group>"; };
 		D07B55862333903C00F076A8 /* WalletSplashRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSplashRowItem.swift; sourceTree = "<group>"; };
 		D07B55882333A41600F076A8 /* WalletSplashButtonRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSplashButtonRowItem.swift; sourceTree = "<group>"; };
-		D07B558A2333BCC000F076A8 /* toncfg.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = toncfg.json; sourceTree = "<group>"; };
 		D07B558C2333E1FE00F076A8 /* Wallet24WordsItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallet24WordsItem.swift; sourceTree = "<group>"; };
 		D07B55902334108E00F076A8 /* WalletSplashHelps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSplashHelps.swift; sourceTree = "<group>"; };
 		D07C6D7823464C8000468B1A /* WalletKeychainController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletKeychainController.swift; sourceTree = "<group>"; };
@@ -2891,7 +2890,7 @@
 				C20B8F3F1DFD9999008A354E /* ChatListNothingItem.swift */,
 				C2AC9C141E1E627F0085C7DE /* TabBadgeItem.swift */,
 				D0186730223807D200A77C45 /* ChatListEmptyRowItem.swift */,
-				9F0367F62273260A00456348 /* ArchiveTooltipController.swift */,
+				9F0367F62273260A00456348 /* UndoTooltipController.swift */,
 			);
 			name = chatlist;
 			sourceTree = "<group>";
@@ -3363,7 +3362,6 @@
 				9FC8ADA7206A77E00094F7B4 /* countries */,
 				9FDE0A8E21AD41C2001546D7 /* emoji1014-1.txt */,
 				D01E1EFF22B261A800AD6DAE /* Alpha.xcconfig */,
-				D07B558A2333BCC000F076A8 /* toncfg.json */,
 			);
 			name = resources;
 			sourceTree = "<group>";
@@ -3478,6 +3476,7 @@
 				9F77B3972211979B003B65B8 /* AutoplayPreferences.swift */,
 				9F1890922238F3DC00665EF5 /* DownloadedFilesPaths.swift */,
 				D07450F02340DC8200769D7F /* WalletConfiguration.swift */,
+				A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -4749,7 +4748,6 @@
 				9F03681222771A9700456348 /* anim_read.json in Resources */,
 				D07450F32340E89100769D7F /* sad_man.tgs in Resources */,
 				D07C6D802346A43000468B1A /* monkey_unsee.tgs in Resources */,
-				D07B558B2333BCC000F076A8 /* toncfg.json in Resources */,
 				D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */,
 				D07450EE233D61B800769D7F /* keychain.tgs in Resources */,
 				D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */,
@@ -4850,6 +4848,7 @@
 				C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */,
 				C232EAB81E1D12A300C4D38C /* ShortPeerRowItem.swift in Sources */,
 				C232EAB91E1D12A300C4D38C /* ShortPeerRowView.swift in Sources */,
+				A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */,
 				C232EAC91E1D536200C4D38C /* SEModalProgressView.swift in Sources */,
 				C232EAB71E1D123800C4D38C /* System.swift in Sources */,
 				C232EAB61E1D11CA00C4D38C /* InterfaceObserver.swift in Sources */,
@@ -4973,7 +4972,7 @@
 				A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */,
 				9F0F8E82226DCD1C00A97F6A /* OpmizeDatabaseView.swift in Sources */,
 				D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */,
-				9F0367F72273260A00456348 /* ArchiveTooltipController.swift in Sources */,
+				9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */,
 				9F21A7D321C167000037784F /* InstantPageImageItem.swift in Sources */,
 				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,
 				C210959A1E9FE04700E10BDB /* ChatVideoMessageContentView.swift in Sources */,
@@ -5447,6 +5446,7 @@
 				C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */,
 				C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */,
 				9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */,
+				A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */,
 				9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */,
 				9F52F51A2130286E006FC0B5 /* LocationRequest.swift in Sources */,
 				C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */,

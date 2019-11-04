@@ -2093,7 +2093,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         
         return modernConfirmSignal(for: mainWindow, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false) |> mapToSignal { result -> Signal<Bool, NoError> in
             
-            context.chatUndoManager.add(action: ChatUndoAction(peerId: peerId, type: type, action: { status in
+            context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: type, action: { status in
                 switch status {
                 case .success:
                     context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
@@ -2104,7 +2104,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
                     break
                 }
             }))
-            
+                        
             return .single(true)
         }
     }
@@ -2168,16 +2168,7 @@ extension SecureIdDate {
     }
 }
 
-extension PostboxAccessChallengeData {
-    var timeout:Int32? {
-        switch self {
-        case .none:
-            return nil
-        case let .numericalPassword(_), let .plaintextPassword(_):
-            return 0
-        }
-    }
-}
+
 
 func clearCache(_ path: String, excludes: [(partial: String, complete: String)]) -> Signal<Void, NoError> {
     return Signal { subscriber -> Disposable in

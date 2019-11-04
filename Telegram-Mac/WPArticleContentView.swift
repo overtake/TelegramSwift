@@ -263,7 +263,7 @@ class WPArticleContentView: WPContentView {
             var updateImageSignal:Signal<ImageDataTransformation, NoError>?
             if let image = image {
                 if layout.wallpaper != nil || layout.isTheme {
-                    updateImageSignal = chatWallpaper(account: layout.context.account, representations: image.representations, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false)
+                    updateImageSignal = chatWallpaper(account: layout.context.account, representations: image.representations, file: layout.content.file, webpage: layout.webPage, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false)
                 } else {
                     updateImageSignal = chatWebpageSnippetPhoto(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
                 }

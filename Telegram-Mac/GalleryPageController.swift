@@ -477,7 +477,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     func next() {
         if !lockedTransition {
             let item = self.item(at: min(controller.selectedIndex + 1, controller.arrangedObjects.count - 1))
-          //  item.size.set(.single(item.pagerSize))
+            item.request()
             
             if let index = self.items.firstIndex(of: item) {
                 self.set(index: index, animated: false)
@@ -488,8 +488,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     func prev() {
         if !lockedTransition {
             let item = self.item(at: max(controller.selectedIndex - 1, 0))
-           // item.size.set(.single(item.pagerSize))
-            
+            item.request()
             if let index = self.items.firstIndex(of: item) {
                 self.set(index: index, animated: false)
             }

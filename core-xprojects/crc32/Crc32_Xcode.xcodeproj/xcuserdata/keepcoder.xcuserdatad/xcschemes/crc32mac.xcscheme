@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D03E46312306E0BB0049C28B"
-               BuildableName = "crc32mac.framework"
-               BlueprintName = "crc32mac"
+               BuildableName = "Crc32.framework"
+               BlueprintName = "Crc32"
                ReferencedContainer = "container:Crc32_Xcode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,8 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "DebugAppStoreLLC"
@@ -46,13 +44,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D03E46312306E0BB0049C28B"
-            BuildableName = "crc32mac.framework"
-            BlueprintName = "crc32mac"
+            BuildableName = "Crc32.framework"
+            BlueprintName = "Crc32"
             ReferencedContainer = "container:Crc32_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "ReleaseAppStoreLLC"
@@ -64,8 +60,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D03E46312306E0BB0049C28B"
-            BuildableName = "crc32mac.framework"
-            BlueprintName = "crc32mac"
+            BuildableName = "Crc32.framework"
+            BlueprintName = "Crc32"
             ReferencedContainer = "container:Crc32_Xcode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

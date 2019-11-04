@@ -93,6 +93,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     return self.logout()
                 })
                 closeAllModals()
+                closeInstantView()
                 closeGalleryViewer(false)
                 showModal(with: controller, for: window, isOverlay: true)
                 return .single(show) |> then( controller.doneValue |> map {_ in return false} |> take(1) )
@@ -120,7 +121,11 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         
         let passlock = Signal<Void, NoError>.single(Void()) |> delay(10, queue: Queue.concurrentDefaultQueue()) |> restart |> mapToSignal { () -> Signal<Int32?, NoError> in
             return accountManager.transaction { transaction -> Int32? in
-                return transaction.getAccessChallengeData().timeout
+                if transaction.getAccessChallengeData().isLockable {
+                    return passcodeSettings(transaction).timeout
+                } else {
+                    return nil
+                }
             }
             } |> map { [weak self] timeout -> Bool in
                 if let timeout = timeout {
