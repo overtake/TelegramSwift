@@ -265,10 +265,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"../../thrid-party/openssl/lib/",
-					"../../thrid-party/ton/lib/",
-				);
+				LIBRARY_SEARCH_PATHS = "../../thrid-party/openssl/lib";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.WalletCore;
@@ -356,10 +353,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"../../thrid-party/openssl/lib/",
-					"../../thrid-party/ton/lib/",
-				);
+				LIBRARY_SEARCH_PATHS = "../../thrid-party/openssl/lib";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.WalletCore;
@@ -447,10 +441,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"../../thrid-party/openssl/lib/",
-					"../../thrid-party/ton/lib/",
-				);
+				LIBRARY_SEARCH_PATHS = "../../thrid-party/openssl/lib";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.WalletCore;
@@ -538,10 +529,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"../../thrid-party/openssl/lib/",
-					"../../thrid-party/ton/lib/",
-				);
+				LIBRARY_SEARCH_PATHS = "../../thrid-party/openssl/lib";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.WalletCore;
@@ -629,10 +617,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"../../thrid-party/openssl/lib/",
-					"../../thrid-party/ton/lib/",
-				);
+				LIBRARY_SEARCH_PATHS = "../../thrid-party/openssl/lib";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.WalletCore;

@@ -10,65 +10,56 @@
 		A790A3A3236B1E36000451B5 /* TonBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = A790A3A1236B1E36000451B5 /* TonBinding.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A790A405236B1FC1000451B5 /* TON.mm in Sources */ = {isa = PBXBuildFile; fileRef = A790A403236B1FC1000451B5 /* TON.mm */; };
 		A790A406236B1FC1000451B5 /* TON.h in Headers */ = {isa = PBXBuildFile; fileRef = A790A404236B1FC1000451B5 /* TON.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7D2823F236C6CBA0000A9BF /* libcrc32c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EC236B1F6B000451B5 /* libcrc32c.a */; };
-		A7D28240236C6CBA0000A9BF /* libadnllite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E4236B1F6A000451B5 /* libadnllite.a */; };
-		A7D28241236C6CBA0000A9BF /* libkeys.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E8236B1F6A000451B5 /* libkeys.a */; };
-		A7D28242236C6CBA0000A9BF /* liblite-client-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E3236B1F6A000451B5 /* liblite-client-common.a */; };
-		A7D28243236C6CBA0000A9BF /* libsmc-envelope.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E2236B1F6A000451B5 /* libsmc-envelope.a */; };
-		A7D28244236C6CBA0000A9BF /* libtdactor.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EF236B1F6B000451B5 /* libtdactor.a */; };
-		A7D28245236C6CBA0000A9BF /* libtddb.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E9236B1F6B000451B5 /* libtddb.a */; };
-		A7D28246236C6CBA0000A9BF /* libtdnet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3F0236B1F6B000451B5 /* libtdnet.a */; };
-		A7D28247236C6CBA0000A9BF /* libtdutils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E1236B1F6A000451B5 /* libtdutils.a */; };
-		A7D28248236C6CBA0000A9BF /* libtl_api.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E5236B1F6A000451B5 /* libtl_api.a */; };
-		A7D28249236C6CBA0000A9BF /* libtl_lite_api.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E7236B1F6A000451B5 /* libtl_lite_api.a */; };
-		A7D2824A236C6CBA0000A9BF /* libtl_tonlib_api.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E0236B1F6A000451B5 /* libtl_tonlib_api.a */; };
-		A7D2824B236C6CBA0000A9BF /* libtl-lite-utils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3ED236B1F6B000451B5 /* libtl-lite-utils.a */; };
-		A7D2824C236C6CBA0000A9BF /* libtl-utils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E6236B1F6A000451B5 /* libtl-utils.a */; };
-		A7D2824D236C6CBA0000A9BF /* libton_block.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EA236B1F6B000451B5 /* libton_block.a */; };
-		A7D2824E236C6CBA0000A9BF /* libton_crypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EB236B1F6B000451B5 /* libton_crypto.a */; };
-		A7D2824F236C6CBA0000A9BF /* libtonlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EE236B1F6B000451B5 /* libtonlib.a */; };
+		A7DF1B452372EDEE00ACC01F /* SSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7DF1B442372EDEE00ACC01F /* SSignalKit.framework */; };
+		A7DF1B4A23730B3100ACC01F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D2821F236C50700000A9BF /* libz.tbd */; };
+		A7DF1B4B23730B6A00ACC01F /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A407236B2013000451B5 /* libc++.tbd */; };
+		A7DF1B4C23730CE500ACC01F /* libadnllite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E4236B1F6A000451B5 /* libadnllite.a */; };
+		A7DF1B4D23730CE500ACC01F /* libcrc32c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EC236B1F6B000451B5 /* libcrc32c.a */; };
+		A7DF1B4E23730CE500ACC01F /* libkeys.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E8236B1F6A000451B5 /* libkeys.a */; };
+		A7DF1B4F23730CE500ACC01F /* liblite-client-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E3236B1F6A000451B5 /* liblite-client-common.a */; };
+		A7DF1B5023730CE500ACC01F /* libsmc-envelope.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E2236B1F6A000451B5 /* libsmc-envelope.a */; };
+		A7DF1B5123730CE500ACC01F /* libtdactor.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EF236B1F6B000451B5 /* libtdactor.a */; };
+		A7DF1B5223730CE500ACC01F /* libtddb.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E9236B1F6B000451B5 /* libtddb.a */; };
+		A7DF1B5323730CE500ACC01F /* libtdnet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3F0236B1F6B000451B5 /* libtdnet.a */; };
+		A7DF1B5423730CE500ACC01F /* libtdutils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E1236B1F6A000451B5 /* libtdutils.a */; };
+		A7DF1B5523730CE500ACC01F /* libtl_api.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E5236B1F6A000451B5 /* libtl_api.a */; };
+		A7DF1B5623730CE500ACC01F /* libtl_lite_api.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E7236B1F6A000451B5 /* libtl_lite_api.a */; };
+		A7DF1B5723730CE500ACC01F /* libtl_tonlib_api.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E0236B1F6A000451B5 /* libtl_tonlib_api.a */; };
+		A7DF1B5823730CE500ACC01F /* libtl-lite-utils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3ED236B1F6B000451B5 /* libtl-lite-utils.a */; };
+		A7DF1B5923730CE500ACC01F /* libtl-utils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3E6236B1F6A000451B5 /* libtl-utils.a */; };
+		A7DF1B5A23730CE500ACC01F /* libton_block.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EA236B1F6B000451B5 /* libton_block.a */; };
+		A7DF1B5B23730CE500ACC01F /* libton_crypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EB236B1F6B000451B5 /* libton_crypto.a */; };
+		A7DF1B5C23730CE500ACC01F /* libtonlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A3EE236B1F6B000451B5 /* libtonlib.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A790A39E236B1E36000451B5 /* TonBinding.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TonBinding.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A790A3A1236B1E36000451B5 /* TonBinding.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TonBinding.h; sourceTree = "<group>"; };
 		A790A3A2236B1E36000451B5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A790A3BE236B1F3F000451B5 /* tonlib_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tonlib_api.h; sourceTree = "<group>"; };
-		A790A3C0236B1F3F000451B5 /* TlObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TlObject.h; sourceTree = "<group>"; };
-		A790A3C2236B1F3F000451B5 /* tonlib_client_json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tonlib_client_json.h; sourceTree = "<group>"; };
-		A790A3C3236B1F3F000451B5 /* tonlibjson_export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tonlibjson_export.h; sourceTree = "<group>"; };
-		A790A3C4236B1F3F000451B5 /* Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Client.h; sourceTree = "<group>"; };
-		A790A3C7236B1F3F000451B5 /* Slice-decl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Slice-decl.h"; sourceTree = "<group>"; };
-		A790A3C8236B1F3F000451B5 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
-		A790A3C9236B1F3F000451B5 /* SharedSlice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SharedSlice.h; sourceTree = "<group>"; };
-		A790A3CA236B1F3F000451B5 /* Slice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Slice.h; sourceTree = "<group>"; };
-		A790A3CB236B1F3F000451B5 /* int_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = int_types.h; sourceTree = "<group>"; };
-		A790A3CC236B1F3F000451B5 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
-		A790A3CD236B1F3F000451B5 /* check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = check.h; sourceTree = "<group>"; };
-		A790A3CE236B1F3F000451B5 /* unique_ptr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unique_ptr.h; sourceTree = "<group>"; };
-		A790A3D0236B1F3F000451B5 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = platform.h; sourceTree = "<group>"; };
-		A790A3E0236B1F6A000451B5 /* libtl_tonlib_api.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtl_tonlib_api.a; path = "../../thrid-party/ton/lib/libtl_tonlib_api.a"; sourceTree = "<group>"; };
-		A790A3E1236B1F6A000451B5 /* libtdutils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtdutils.a; path = "../../thrid-party/ton/lib/libtdutils.a"; sourceTree = "<group>"; };
-		A790A3E2236B1F6A000451B5 /* libsmc-envelope.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libsmc-envelope.a"; path = "../../thrid-party/ton/lib/libsmc-envelope.a"; sourceTree = "<group>"; };
-		A790A3E3236B1F6A000451B5 /* liblite-client-common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "liblite-client-common.a"; path = "../../thrid-party/ton/lib/liblite-client-common.a"; sourceTree = "<group>"; };
-		A790A3E4236B1F6A000451B5 /* libadnllite.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libadnllite.a; path = "../../thrid-party/ton/lib/libadnllite.a"; sourceTree = "<group>"; };
-		A790A3E5236B1F6A000451B5 /* libtl_api.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtl_api.a; path = "../../thrid-party/ton/lib/libtl_api.a"; sourceTree = "<group>"; };
-		A790A3E6236B1F6A000451B5 /* libtl-utils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libtl-utils.a"; path = "../../thrid-party/ton/lib/libtl-utils.a"; sourceTree = "<group>"; };
-		A790A3E7236B1F6A000451B5 /* libtl_lite_api.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtl_lite_api.a; path = "../../thrid-party/ton/lib/libtl_lite_api.a"; sourceTree = "<group>"; };
-		A790A3E8236B1F6A000451B5 /* libkeys.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkeys.a; path = "../../thrid-party/ton/lib/libkeys.a"; sourceTree = "<group>"; };
-		A790A3E9236B1F6B000451B5 /* libtddb.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtddb.a; path = "../../thrid-party/ton/lib/libtddb.a"; sourceTree = "<group>"; };
-		A790A3EA236B1F6B000451B5 /* libton_block.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libton_block.a; path = "../../thrid-party/ton/lib/libton_block.a"; sourceTree = "<group>"; };
-		A790A3EB236B1F6B000451B5 /* libton_crypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libton_crypto.a; path = "../../thrid-party/ton/lib/libton_crypto.a"; sourceTree = "<group>"; };
-		A790A3EC236B1F6B000451B5 /* libcrc32c.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrc32c.a; path = "../../thrid-party/ton/lib/libcrc32c.a"; sourceTree = "<group>"; };
-		A790A3ED236B1F6B000451B5 /* libtl-lite-utils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libtl-lite-utils.a"; path = "../../thrid-party/ton/lib/libtl-lite-utils.a"; sourceTree = "<group>"; };
-		A790A3EE236B1F6B000451B5 /* libtonlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtonlib.a; path = "../../thrid-party/ton/lib/libtonlib.a"; sourceTree = "<group>"; };
-		A790A3EF236B1F6B000451B5 /* libtdactor.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtdactor.a; path = "../../thrid-party/ton/lib/libtdactor.a"; sourceTree = "<group>"; };
-		A790A3F0236B1F6B000451B5 /* libtdnet.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtdnet.a; path = "../../thrid-party/ton/lib/libtdnet.a"; sourceTree = "<group>"; };
+		A790A3E0236B1F6A000451B5 /* libtl_tonlib_api.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtl_tonlib_api.a; path = "ton-lib/build/out/lib/libtl_tonlib_api.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E1236B1F6A000451B5 /* libtdutils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtdutils.a; path = "ton-lib/build/out/lib/libtdutils.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E2236B1F6A000451B5 /* libsmc-envelope.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libsmc-envelope.a"; path = "ton-lib/build/out/lib/libsmc-envelope.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E3236B1F6A000451B5 /* liblite-client-common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "liblite-client-common.a"; path = "ton-lib/build/out/lib/liblite-client-common.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E4236B1F6A000451B5 /* libadnllite.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libadnllite.a; path = "ton-lib/build/out/lib/libadnllite.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E5236B1F6A000451B5 /* libtl_api.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtl_api.a; path = "ton-lib/build/out/lib/libtl_api.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E6236B1F6A000451B5 /* libtl-utils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libtl-utils.a"; path = "ton-lib/build/out/lib/libtl-utils.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E7236B1F6A000451B5 /* libtl_lite_api.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtl_lite_api.a; path = "ton-lib/build/out/lib/libtl_lite_api.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E8236B1F6A000451B5 /* libkeys.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkeys.a; path = "ton-lib/build/out/lib/libkeys.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3E9236B1F6B000451B5 /* libtddb.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtddb.a; path = "ton-lib/build/out/lib/libtddb.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3EA236B1F6B000451B5 /* libton_block.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libton_block.a; path = "ton-lib/build/out/lib/libton_block.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3EB236B1F6B000451B5 /* libton_crypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libton_crypto.a; path = "ton-lib/build/out/lib/libton_crypto.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3EC236B1F6B000451B5 /* libcrc32c.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrc32c.a; path = "ton-lib/build/out/lib/libcrc32c.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3ED236B1F6B000451B5 /* libtl-lite-utils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libtl-lite-utils.a"; path = "ton-lib/build/out/lib/libtl-lite-utils.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3EE236B1F6B000451B5 /* libtonlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtonlib.a; path = "ton-lib/build/out/lib/libtonlib.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3EF236B1F6B000451B5 /* libtdactor.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtdactor.a; path = "ton-lib/build/out/lib/libtdactor.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A790A3F0236B1F6B000451B5 /* libtdnet.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtdnet.a; path = "ton-lib/build/out/lib/libtdnet.a"; sourceTree = "<group>"; };
 		A790A403236B1FC1000451B5 /* TON.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TON.mm; sourceTree = "<group>"; };
 		A790A404236B1FC1000451B5 /* TON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TON.h; sourceTree = "<group>"; };
 		A790A407236B2013000451B5 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		A790A409236B2019000451B5 /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D2821F236C50700000A9BF /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		A7DF1B442372EDEE00ACC01F /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7DF1B472372F52A00ACC01F /* TonBinding.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TonBinding.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,23 +67,26 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7D2823F236C6CBA0000A9BF /* libcrc32c.a in Frameworks */,
-				A7D28240236C6CBA0000A9BF /* libadnllite.a in Frameworks */,
-				A7D28241236C6CBA0000A9BF /* libkeys.a in Frameworks */,
-				A7D28242236C6CBA0000A9BF /* liblite-client-common.a in Frameworks */,
-				A7D28243236C6CBA0000A9BF /* libsmc-envelope.a in Frameworks */,
-				A7D28244236C6CBA0000A9BF /* libtdactor.a in Frameworks */,
-				A7D28245236C6CBA0000A9BF /* libtddb.a in Frameworks */,
-				A7D28246236C6CBA0000A9BF /* libtdnet.a in Frameworks */,
-				A7D28247236C6CBA0000A9BF /* libtdutils.a in Frameworks */,
-				A7D28248236C6CBA0000A9BF /* libtl_api.a in Frameworks */,
-				A7D28249236C6CBA0000A9BF /* libtl_lite_api.a in Frameworks */,
-				A7D2824A236C6CBA0000A9BF /* libtl_tonlib_api.a in Frameworks */,
-				A7D2824B236C6CBA0000A9BF /* libtl-lite-utils.a in Frameworks */,
-				A7D2824C236C6CBA0000A9BF /* libtl-utils.a in Frameworks */,
-				A7D2824D236C6CBA0000A9BF /* libton_block.a in Frameworks */,
-				A7D2824E236C6CBA0000A9BF /* libton_crypto.a in Frameworks */,
-				A7D2824F236C6CBA0000A9BF /* libtonlib.a in Frameworks */,
+				A7DF1B4B23730B6A00ACC01F /* libc++.tbd in Frameworks */,
+				A7DF1B4A23730B3100ACC01F /* libz.tbd in Frameworks */,
+				A7DF1B452372EDEE00ACC01F /* SSignalKit.framework in Frameworks */,
+				A7DF1B4C23730CE500ACC01F /* libadnllite.a in Frameworks */,
+				A7DF1B4D23730CE500ACC01F /* libcrc32c.a in Frameworks */,
+				A7DF1B4E23730CE500ACC01F /* libkeys.a in Frameworks */,
+				A7DF1B4F23730CE500ACC01F /* liblite-client-common.a in Frameworks */,
+				A7DF1B5023730CE500ACC01F /* libsmc-envelope.a in Frameworks */,
+				A7DF1B5123730CE500ACC01F /* libtdactor.a in Frameworks */,
+				A7DF1B5223730CE500ACC01F /* libtddb.a in Frameworks */,
+				A7DF1B5323730CE500ACC01F /* libtdnet.a in Frameworks */,
+				A7DF1B5423730CE500ACC01F /* libtdutils.a in Frameworks */,
+				A7DF1B5523730CE500ACC01F /* libtl_api.a in Frameworks */,
+				A7DF1B5623730CE500ACC01F /* libtl_lite_api.a in Frameworks */,
+				A7DF1B5723730CE500ACC01F /* libtl_tonlib_api.a in Frameworks */,
+				A7DF1B5823730CE500ACC01F /* libtl-lite-utils.a in Frameworks */,
+				A7DF1B5923730CE500ACC01F /* libtl-utils.a in Frameworks */,
+				A7DF1B5A23730CE500ACC01F /* libton_block.a in Frameworks */,
+				A7DF1B5B23730CE500ACC01F /* libton_crypto.a in Frameworks */,
+				A7DF1B5C23730CE500ACC01F /* libtonlib.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,7 +97,6 @@
 			isa = PBXGroup;
 			children = (
 				A790A402236B1FC1000451B5 /* Sources */,
-				A790A3BB236B1F3F000451B5 /* include */,
 				A790A3A0236B1E36000451B5 /* TonBinding */,
 				A790A39F236B1E36000451B5 /* Products */,
 				A790A3DF236B1F6A000451B5 /* Frameworks */,
@@ -123,91 +116,15 @@
 			children = (
 				A790A3A1236B1E36000451B5 /* TonBinding.h */,
 				A790A3A2236B1E36000451B5 /* Info.plist */,
+				A7DF1B472372F52A00ACC01F /* TonBinding.xcconfig */,
 			);
 			path = TonBinding;
-			sourceTree = "<group>";
-		};
-		A790A3BB236B1F3F000451B5 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3BC236B1F3F000451B5 /* auto */,
-				A790A3BF236B1F3F000451B5 /* tl */,
-				A790A3C1236B1F3F000451B5 /* tonlib */,
-				A790A3C5236B1F3F000451B5 /* td */,
-			);
-			name = include;
-			path = "../../thrid-party/ton/include";
-			sourceTree = "<group>";
-		};
-		A790A3BC236B1F3F000451B5 /* auto */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3BD236B1F3F000451B5 /* tl */,
-			);
-			path = auto;
-			sourceTree = "<group>";
-		};
-		A790A3BD236B1F3F000451B5 /* tl */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3BE236B1F3F000451B5 /* tonlib_api.h */,
-			);
-			path = tl;
-			sourceTree = "<group>";
-		};
-		A790A3BF236B1F3F000451B5 /* tl */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3C0236B1F3F000451B5 /* TlObject.h */,
-			);
-			path = tl;
-			sourceTree = "<group>";
-		};
-		A790A3C1236B1F3F000451B5 /* tonlib */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3C2236B1F3F000451B5 /* tonlib_client_json.h */,
-				A790A3C3236B1F3F000451B5 /* tonlibjson_export.h */,
-				A790A3C4236B1F3F000451B5 /* Client.h */,
-			);
-			path = tonlib;
-			sourceTree = "<group>";
-		};
-		A790A3C5236B1F3F000451B5 /* td */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3C6236B1F3F000451B5 /* utils */,
-			);
-			path = td;
-			sourceTree = "<group>";
-		};
-		A790A3C6236B1F3F000451B5 /* utils */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3C7236B1F3F000451B5 /* Slice-decl.h */,
-				A790A3C8236B1F3F000451B5 /* config.h */,
-				A790A3C9236B1F3F000451B5 /* SharedSlice.h */,
-				A790A3CA236B1F3F000451B5 /* Slice.h */,
-				A790A3CB236B1F3F000451B5 /* int_types.h */,
-				A790A3CC236B1F3F000451B5 /* common.h */,
-				A790A3CD236B1F3F000451B5 /* check.h */,
-				A790A3CE236B1F3F000451B5 /* unique_ptr.h */,
-				A790A3CF236B1F3F000451B5 /* port */,
-			);
-			path = utils;
-			sourceTree = "<group>";
-		};
-		A790A3CF236B1F3F000451B5 /* port */ = {
-			isa = PBXGroup;
-			children = (
-				A790A3D0236B1F3F000451B5 /* platform.h */,
-			);
-			path = port;
 			sourceTree = "<group>";
 		};
 		A790A3DF236B1F6A000451B5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A7DF1B442372EDEE00ACC01F /* SSignalKit.framework */,
 				A7D2821F236C50700000A9BF /* libz.tbd */,
 				A790A409236B2019000451B5 /* SSignalKit.framework */,
 				A790A407236B2013000451B5 /* libc++.tbd */,
@@ -261,9 +178,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A790A3A6236B1E36000451B5 /* Build configuration list for PBXNativeTarget "TonBinding" */;
 			buildPhases = (
+				A7DF1B432372D6AF00ACC01F /* Run Script */,
+				A790A39B236B1E36000451B5 /* Frameworks */,
 				A790A399236B1E36000451B5 /* Headers */,
 				A790A39A236B1E36000451B5 /* Sources */,
-				A790A39B236B1E36000451B5 /* Frameworks */,
 				A790A39C236B1E36000451B5 /* Resources */,
 			);
 			buildRules = (
@@ -315,6 +233,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A7DF1B432372D6AF00ACC01F /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nsh ./TonBinding/build.sh ${BUILT_PRODUCTS_DIR}/ton-lib ${PROJECT_DIR}/../../submodules/ton /usr/local/Cellar/openssl@1.1/1.1.1d\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A790A39A236B1E36000451B5 /* Sources */ = {
@@ -377,6 +316,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_LIBTOOLFLAGS = "";
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -385,6 +325,7 @@
 		};
 		A790A3A8236B1E36000451B5 /* DebugHockeyapp */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7DF1B472372F52A00ACC01F /* TonBinding.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
@@ -398,7 +339,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				HEADER_SEARCH_PATHS = "../../thrid-party/ton/include/";
+				HEADER_SEARCH_PATHS = "${BUILT_PRODUCTS_DIR}/ton-lib/build/out/include/";
 				INFOPLIST_FILE = TonBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -406,7 +347,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "../../thrid-party/ton/lib/";
+				LIBRARY_SEARCH_PATHS = (
+					"${BUILT_PRODUCTS_DIR}/ton-lib/build/out/lib",
+					"$(PROJECT_DIR)/ton-lib/build/out/lib",
+				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TonBinding;
@@ -465,6 +409,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_LIBTOOLFLAGS = "";
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -473,6 +418,7 @@
 		};
 		A790A3AA236B1E57000451B5 /* HockeyappMacAlpha */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7DF1B472372F52A00ACC01F /* TonBinding.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
@@ -486,7 +432,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				HEADER_SEARCH_PATHS = "../../thrid-party/ton/include/";
+				HEADER_SEARCH_PATHS = "${BUILT_PRODUCTS_DIR}/ton-lib/build/out/include/";
 				INFOPLIST_FILE = TonBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -494,7 +440,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "../../thrid-party/ton/lib/";
+				LIBRARY_SEARCH_PATHS = (
+					"${BUILT_PRODUCTS_DIR}/ton-lib/build/out/lib",
+					"$(PROJECT_DIR)/ton-lib/build/out/lib",
+				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TonBinding;
@@ -553,6 +502,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_LIBTOOLFLAGS = "";
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -561,6 +511,7 @@
 		};
 		A790A3AE236B1E63000451B5 /* DebugAppStore */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7DF1B472372F52A00ACC01F /* TonBinding.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
@@ -574,7 +525,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				HEADER_SEARCH_PATHS = "../../thrid-party/ton/include/";
+				HEADER_SEARCH_PATHS = "${BUILT_PRODUCTS_DIR}/ton-lib/build/out/include/";
 				INFOPLIST_FILE = TonBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -582,7 +533,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "../../thrid-party/ton/lib/";
+				LIBRARY_SEARCH_PATHS = (
+					"${BUILT_PRODUCTS_DIR}/ton-lib/build/out/lib",
+					"$(PROJECT_DIR)/ton-lib/build/out/lib",
+				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TonBinding;
@@ -641,6 +595,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_LIBTOOLFLAGS = "";
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -649,6 +604,7 @@
 		};
 		A790A3B2236B1E70000451B5 /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7DF1B472372F52A00ACC01F /* TonBinding.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
@@ -662,7 +618,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				HEADER_SEARCH_PATHS = "../../thrid-party/ton/include/";
+				HEADER_SEARCH_PATHS = "${BUILT_PRODUCTS_DIR}/ton-lib/build/out/include/";
 				INFOPLIST_FILE = TonBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -670,7 +626,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "../../thrid-party/ton/lib/";
+				LIBRARY_SEARCH_PATHS = (
+					"${BUILT_PRODUCTS_DIR}/ton-lib/build/out/lib",
+					"$(PROJECT_DIR)/ton-lib/build/out/lib",
+				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TonBinding;
@@ -729,6 +688,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_LIBTOOLFLAGS = "";
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -737,6 +697,7 @@
 		};
 		A790A3B6236B1E7E000451B5 /* ReleaseAppStore */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7DF1B472372F52A00ACC01F /* TonBinding.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
@@ -750,7 +711,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				HEADER_SEARCH_PATHS = "../../thrid-party/ton/include/";
+				HEADER_SEARCH_PATHS = "${BUILT_PRODUCTS_DIR}/ton-lib/build/out/include/";
 				INFOPLIST_FILE = TonBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -758,7 +719,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "../../thrid-party/ton/lib/";
+				LIBRARY_SEARCH_PATHS = (
+					"${BUILT_PRODUCTS_DIR}/ton-lib/build/out/lib",
+					"$(PROJECT_DIR)/ton-lib/build/out/lib",
+				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TonBinding;

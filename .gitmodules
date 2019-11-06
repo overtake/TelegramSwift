@@ -1,6 +1,3 @@
-[submodule "Signals"]
-	path = Signals
-	url = https://github.com/peter-iakovlev/Signals.git
 [submodule "submodules/libtgvoip"]
 	path = submodules/libtgvoip
 url=git@github.com:telegramdesktop/libtgvoip
@@ -19,3 +16,6 @@ url=git@gitlab.com:peter-iakovlev/telegram-ios.git
 [submodule "submodules/rlottie"]
 	path = submodules/rlottie
 url=git@github.com:overtake/rlottie.git
+[submodule "submodules/ton"]
+	path = submodules/ton
+	url = git@github.com:ton-blockchain/ton.git
