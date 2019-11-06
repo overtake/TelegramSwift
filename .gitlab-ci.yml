@@ -31,4 +31,4 @@ alpha:
     script:
         - fastlane alpha
     environment:
-    name: internal
+        name: internal
