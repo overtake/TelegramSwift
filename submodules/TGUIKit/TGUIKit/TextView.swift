@@ -34,6 +34,12 @@ private enum CornerType {
     case bottomRight
 }
 
+public extension NSAttributedString.Key {
+    static let hexColorMark = NSAttributedString.Key("TextViewHexColorMarkAttribute")
+    static let hexColorMarkDimensions = NSAttributedString.Key("TextViewHexColorMarkAttributeDimensions")
+
+}
+
 private func drawFullCorner(context: CGContext, color: NSColor, at point: CGPoint, type: CornerType, radius: CGFloat) {
     context.setFillColor(color.cgColor)
     switch type {
@@ -188,7 +194,8 @@ public final class TextViewInteractions {
     public var localizeLinkCopy:(LinkType)-> String
     public var resolveLink:(Any)->String?
     public var copyAttributedString:(NSAttributedString)->Bool
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}) {
+    public var copyToClipboard:((String)->Void)?
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -197,6 +204,7 @@ public final class TextViewInteractions {
         self.localizeLinkCopy = localizeLinkCopy
         self.resolveLink = resolveLink
         self.copyAttributedString = copyAttributedString
+        self.copyToClipboard = copyToClipboard
     }
 }
 
@@ -265,7 +273,7 @@ public final class TextViewLayout : Equatable {
     public var cutout:TextViewCutout?
     public var mayBlocked: Bool = true
     fileprivate var blockImage:(CGPoint, CGImage?) = (CGPoint(), nil)
-
+    
     public fileprivate(set) var lineSpacing:CGFloat?
     
     public private(set) var layoutSize:NSSize = NSZeroSize
@@ -274,7 +282,7 @@ public final class TextViewLayout : Equatable {
     fileprivate var selectText: NSColor
     public var strokeLinks: Bool
     fileprivate var strokeRects: [(NSRect, NSColor)] = []
-    
+    fileprivate var hexColorsRect: [(NSRect, NSColor, String)] = []
     fileprivate var toolTipRects:[NSRect] = []
     private let disableTooltips: Bool
     fileprivate var isBigEmoji: Bool = false
@@ -666,6 +674,25 @@ public final class TextViewLayout : Equatable {
             }
             
         })
+        hexColorsRect.removeAll()
+        attributedString.enumerateAttribute(NSAttributedString.Key.hexColorMark, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
+            if let color = value as? NSColor, let size = attributedString.attribute(.hexColorMarkDimensions, at: range.location, effectiveRange: nil) as? NSSize {
+                for line in lines {
+                    let lineRange = NSIntersectionRange(range, line.range)
+                    if lineRange.length != 0 {
+                        var leftOffset: CGFloat = 0
+                        if lineRange.location != line.range.location {
+                            leftOffset += floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
+                        }
+                        
+                        
+                        let rect = NSMakeRect(line.frame.minX + leftOffset + 10, line.frame.minY - (size.height - 7) + 2, size.width - 8, size.height - 8)
+                        hexColorsRect.append((rect, color, attributedString.attributedSubstring(from: range).string))
+                    }
+                }
+            }
+            
+        })
         
         attributedString.enumerateAttribute(NSAttributedString.Key.underlineStyle, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
             if let _ = value {
@@ -789,6 +816,16 @@ public final class TextViewLayout : Equatable {
         
         return (pos.y > rect.minY) && pos.y < rect.maxY
         
+    }
+    
+    fileprivate func color(at point: NSPoint) -> (NSColor, String)? {
+        
+        for value in self.hexColorsRect {
+            if NSPointInRect(point, value.0) {
+                return (value.1, value.2)
+            }
+        }
+        return nil
     }
 
     public func link(at point:NSPoint) -> (Any, LinkType, NSRange, NSRect)? {
@@ -1191,7 +1228,10 @@ public class TextView: Control, NSViewToolTipOwner {
                 ctx.fill(stroke.0)
             }
             
-            
+            for hexColor in layout.hexColorsRect {
+                ctx.setFillColor(hexColor.1.cgColor)
+                ctx.fill(hexColor.0)
+            }
 
             
         }
@@ -1455,7 +1495,9 @@ public class TextView: Control, NSViewToolTipOwner {
                 layout.selectWord(at : point)
                 layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
             } else if !layout.selectedRange.hasSelectText || !isSelectable && (event.clickCount == 1 || !isSelectable) {
-                if let (link, _, _, _) = layout.link(at: point) {
+                if let color = layout.color(at: point), let copyToClipboard = layout.interactions.copyToClipboard {
+                    copyToClipboard(color.0.hexString.lowercased())
+                } else if let (link, _, _, _) = layout.link(at: point) {
                     if event.clickCount == 1 {
                         layout.interactions.processURL(link)
                     }
@@ -1495,8 +1537,9 @@ public class TextView: Control, NSViewToolTipOwner {
         let location = self.convert(event.locationInWindow, from: nil)
         
         if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
-            
-            if let layout = layout, let (_, _, _, _) = layout.link(at: location) {
+            if layout?.color(at: location) != nil {
+                NSCursor.pointingHand.set()
+            } else if let layout = layout, let (_, _, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand.set()
             } else if isSelectable {
                 NSCursor.iBeam.set()

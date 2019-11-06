@@ -57,30 +57,40 @@ private struct WalletInfoState : Equatable {
     let updatedTimestamp: Int64?
     let previousTimestamp: Int64?
     let address: String
+    let syncProgress: Float
+    let isSynced: Bool
     let transactions:[WalletInfoTransaction]
-    init(walletState: WalletState?, updatedTimestamp: Int64?, previousTimestamp: Int64?, address: String, transactions:[WalletInfoTransaction]) {
+    init(walletState: WalletState?, updatedTimestamp: Int64?, previousTimestamp: Int64?, address: String, syncProgress: Float, isSynced: Bool, transactions:[WalletInfoTransaction]) {
         self.walletState = walletState
         self.address = address
+        self.isSynced = isSynced
+        self.syncProgress = syncProgress
         self.updatedTimestamp = updatedTimestamp
         self.previousTimestamp = previousTimestamp
         self.transactions = transactions.sorted(by: { $0.timestamp > $1.timestamp })
     }
     
     func withUpdatedWalletState(_ walletState: WalletState?) -> WalletInfoState {
-        return WalletInfoState(walletState: walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, transactions: self.transactions)
+        return WalletInfoState(walletState: walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, syncProgress: self.syncProgress, isSynced: self.isSynced, transactions: self.transactions)
     }
     func withUpdatedAddress(_ address: String) -> WalletInfoState {
-        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: address, transactions: self.transactions)
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: address, syncProgress: self.syncProgress, isSynced: self.isSynced, transactions: self.transactions)
     }
     
     func withUpdatedTimestamp(_ updatedTimestamp: Int64?) -> WalletInfoState {
-        return WalletInfoState(walletState: self.walletState, updatedTimestamp: updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, transactions: self.transactions)
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, syncProgress: self.syncProgress, isSynced: self.isSynced, transactions: self.transactions)
+    }
+    func withUpdatedSyncProgress(_ syncProgress: Float) -> WalletInfoState {
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, syncProgress: syncProgress, isSynced: self.isSynced, transactions: self.transactions)
+    }
+    func withUpdatedSynced(_ isSynced: Bool) -> WalletInfoState {
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, syncProgress: self.syncProgress, isSynced: isSynced, transactions: self.transactions)
     }
     func withUpdatedPreviousTimestamp(_ previousTimestamp: Int64?) -> WalletInfoState {
-        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: previousTimestamp, address: self.address, transactions: self.transactions)
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: previousTimestamp, address: self.address, syncProgress: self.syncProgress, isSynced: self.isSynced, transactions: self.transactions)
     }
     func withUpdatedTransactions(_ transactions: [WalletInfoTransaction]) -> WalletInfoState {
-        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, transactions: transactions)
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, syncProgress: self.syncProgress, isSynced: self.isSynced, transactions: transactions)
     }
     
     func withAddedTransactions(_ transactions: [WalletInfoTransaction]) -> WalletInfoState {
@@ -104,7 +114,7 @@ private struct WalletInfoState : Equatable {
                 break
             }
         }
-        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, transactions: updated)
+        return WalletInfoState(walletState: self.walletState, updatedTimestamp: self.updatedTimestamp, previousTimestamp: self.previousTimestamp, address: self.address, syncProgress: self.syncProgress, isSynced: self.isSynced, transactions: updated)
     }
 }
 
@@ -127,7 +137,7 @@ private func walletInfoEntries(_ state: WalletInfoState, arguments: WalletInfoAr
     
     if let _ = state.walletState {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-            return WalletBalanceItem(initialSize, stableId: stableId, context: arguments.context, state: state.walletState, updatedTimestamp: state.updatedTimestamp, viewType: .singleItem, receiveMoney: arguments.openReceive, sendMoney: arguments.openSend, update: arguments.update)
+            return WalletBalanceItem(initialSize, stableId: stableId, context: arguments.context, state: state.walletState, updatedTimestamp: state.updatedTimestamp, syncProgress: state.syncProgress, viewType: .singleItem, receiveMoney: arguments.openReceive, sendMoney: arguments.openSend, update: arguments.update)
         }))
         index += 1
  
@@ -236,13 +246,15 @@ private func walletInfoEntries(_ state: WalletInfoState, arguments: WalletInfoAr
 @available(OSX 10.12, *)
 func WalletInfoController(context: AccountContext, tonContext: TonContext, walletInfo: WalletInfo) -> InputDataController {
     
-    let initialState = WalletInfoState(walletState: nil, updatedTimestamp: nil, previousTimestamp: nil, address: "", transactions: [])
+    let initialState = WalletInfoState(walletState: nil, updatedTimestamp: nil, previousTimestamp: nil, address: "", syncProgress: 0, isSynced: true, transactions: [])
     let state: ValuePromise<WalletInfoState> = ValuePromise()
     let stateValue: Atomic<WalletInfoState> = Atomic(value: initialState)
     
     let updateState:((WalletInfoState)->WalletInfoState) -> Void = { f in
         state.set(stateValue.modify(f))
     }
+    
+    let syncDisposable = MetaDisposable()
     
     var getController:(()->InputDataController?)? = nil
 
@@ -318,6 +330,12 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
         }))
     }
     
+    syncDisposable.set(tonContext.instance.syncProgress.start(next: { value in
+        updateState {
+            $0.withUpdatedSyncProgress(value)
+        }
+    }))
+    
     let transactionListDisposable = MetaDisposable()
     
     var loadMoreTransactions: Bool = true
@@ -367,6 +385,7 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
     controller.onDeinit = {
         transactionListDisposable.dispose()
         updateBalanceDisposable.dispose()
+        syncDisposable.dispose()
     }
     
     

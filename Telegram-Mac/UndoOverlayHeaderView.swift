@@ -91,10 +91,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
     }
     
     private func update(statuses: ChatUndoStatuses) {
-        
-        
-
-        
+                
         if statuses.hasProcessingActions {
             
             let newValue = 1.0 - min(1.0, max(0, statuses.secondsUntilFinish / statuses.maximumDuration))

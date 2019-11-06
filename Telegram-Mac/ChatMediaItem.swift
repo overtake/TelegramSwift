@@ -379,7 +379,13 @@ class ChatMediaItem: ChatRowItem {
             }
             captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false)
             
-            captionLayout?.interactions = globalLinkExecutor
+            let interactions = globalLinkExecutor
+            
+            interactions.copyToClipboard = { text in
+                copyToClipboard(text)
+                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+            }
+            captionLayout?.interactions = interactions
             
             if let textLayout = self.captionLayout {
                 if let highlightFoundText = entry.additionalData?.highlightFoundText {

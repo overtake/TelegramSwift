@@ -170,8 +170,19 @@ private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewStat
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_value, equatable: InputDataEquatable(state.transaction), item: { initialSize, stableId in
-        let date = formatDay(Date(timeIntervalSince1970: TimeInterval(timestamp) - arguments.context.timeDifference))
-        return WalletTransactionTextItem(initialSize, stableId: stableId, context: arguments.context, value: title, subText: date, color: color, viewType: .modern(position: .single, insets: NSEdgeInsets(left: 12, right: 12, top: 30, bottom: 20)))
+        var subText: String = ""
+        if case let .completed(transaction) = state.transaction {
+            if transaction.otherFee != 0 {
+                subText += L10n.walletTransactionPreviewTransactionFee("-\(formatBalanceText(transaction.otherFee))")
+            }
+            if transaction.storageFee != 0 {
+                if !subText.isEmpty {
+                    subText += "\n"
+                }
+                subText += L10n.walletTransactionPreviewStorageFee("-\(formatBalanceText(transaction.storageFee))")
+            }
+        }
+        return WalletTransactionTextItem(initialSize, stableId: stableId, context: arguments.context, value: title, subText: subText, color: color, viewType: .modern(position: .single, insets: NSEdgeInsets(left: 12, right: 12, top: 30, bottom: 20)))
     }))
     index += 1
     
@@ -191,47 +202,7 @@ private func WalletTransactionPreviewEntries(state: WalletTransactionPreviewStat
     entries.append(.general(sectionId: sectionId, index: index, value: .string(address), error: nil, identifier: _id_send, data: InputDataGeneralData(name: L10n.walletTransactionPreviewSendGrams, color: theme.colors.accent, viewType: .lastItem)))
     index += 1
     
-    
-    if case let .completed(transaction) = state.transaction {
-        if transaction.otherFee != 0 {
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-            
-            let text = L10n.walletTransactionPreviewTransactionFee
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(text), data: InputDataGeneralTextData(viewType: .textTopItem)))
-            index += 1
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_fee_other, equatable: InputDataEquatable(state.transaction), item: { initialSize, stableId in
-                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "-\(formatBalanceText(transaction.otherFee))", font: .normal(.text))
-            }))
-            index += 1
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.walletTransactionPreviewTransactionFeeDesc, linkHandler: { link in
-                openFaq(context: arguments.context, dest: .ton)
-            }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-            index += 1
-        }
-        if transaction.storageFee != 0 {
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-            
-            let text = L10n.walletTransactionPreviewStorageFee
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(text), data: InputDataGeneralTextData(viewType: .textTopItem)))
-            index += 1
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_fee_storage, equatable: InputDataEquatable(state.transaction), item: { initialSize, stableId in
-                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "-\(formatBalanceText(transaction.storageFee))", font: .normal(.text))
-            }))
-            index += 1
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.walletTransactionPreviewStorageFeeDesc, linkHandler: { link in
-                openFaq(context: arguments.context, dest: .ton)
-            }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-            index += 1
-            
-        }
-    }
-    
+
     
     if !comment.isEmpty {
         
@@ -294,6 +265,9 @@ func WalletTransactionPreviewController(context: AccountContext, tonContext: Ton
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {
         getModalController?()?.close()
     })
+    
+    let date = formatDay(Date(timeIntervalSince1970: TimeInterval(transaction.timestamp) - arguments.context.timeDifference))
+    controller.centerModalHeader = ModalHeaderData(title: L10n.walletTransactionPreviewTitle, subtitle: date)
     
     getController = { [weak controller] in
         return controller
