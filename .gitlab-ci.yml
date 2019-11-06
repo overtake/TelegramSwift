@@ -1,34 +1,34 @@
 stages:
-- deploy
+    - deploy
 
 variables:
-LANG: "en_US.UTF-8"
-LC_ALL: "en_US.UTF-8"
-GIT_SUBMODULE_STRATEGY: normal
+    LANG: "en_US.UTF-8"
+    LC_ALL: "en_US.UTF-8"
+    GIT_SUBMODULE_STRATEGY: normal
 
 beta:
-tags:
-- macos_appcenter
-stage: deploy
-only:
-- master
-except:
-- tags
-script:
-- bash fastlane beta
-environment:
-name: internal
+    tags:
+        - macos_appcenter
+    stage: deploy
+    only:
+        - master
+    except:
+        - tags
+    script:
+        - fastlane beta
+    environment:
+        name: internal
 
 
 alpha:
-tags:
-- macos_appcenter
-stage: deploy
-only:
-- master
-except:
-- tags
-script:
-- bash fastlane alpha
-environment:
-name: internal
+    tags:
+        - macos_appcenter
+    stage: deploy
+    only:
+        - master
+    except:
+        - tags
+    script:
+        - fastlane alpha
+    environment:
+    name: internal
