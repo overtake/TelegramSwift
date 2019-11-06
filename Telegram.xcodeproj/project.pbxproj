@@ -578,7 +578,6 @@
 		C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */; };
 		C29E0EE01F4DC43100C0C7A8 /* InstantViewAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */; };
 		C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29E0EE11F4EFB5100C0C7A8 /* GroupStickerSetController.swift */; };
-		C29F4C761F45F58B00DBFC00 /* MIHSliderView.m in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C751F45F58B00DBFC00 /* MIHSliderView.m */; };
 		C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C771F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift */; };
 		C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F4C7C1F47283600DBFC00 /* InstantPageBrowser.swift */; };
 		C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */; };
@@ -1631,8 +1630,6 @@
 		C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPreviewHandler.swift; sourceTree = "<group>"; };
 		C29E0EDF1F4DC43100C0C7A8 /* InstantViewAppearance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantViewAppearance.swift; sourceTree = "<group>"; };
 		C29E0EE11F4EFB5100C0C7A8 /* GroupStickerSetController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupStickerSetController.swift; sourceTree = "<group>"; };
-		C29F4C741F45F58B00DBFC00 /* MIHSliderView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIHSliderView.h; sourceTree = "<group>"; };
-		C29F4C751F45F58B00DBFC00 /* MIHSliderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIHSliderView.m; sourceTree = "<group>"; };
 		C29F4C771F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageSlideshowItem.swift; sourceTree = "<group>"; };
 		C29F4C7C1F47283600DBFC00 /* InstantPageBrowser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstantPageBrowser.swift; sourceTree = "<group>"; };
 		C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryPageController.swift; sourceTree = "<group>"; };
@@ -3253,8 +3250,6 @@
 				C24102631FD5877E00DB8625 /* NSImage+RHResizableImageAdditions.h */,
 				C24102641FD5877E00DB8625 /* NSImage+RHResizableImageAdditions.m */,
 				C2A8E1451F7D2602000FD5E3 /* opengl */,
-				C29F4C741F45F58B00DBFC00 /* MIHSliderView.h */,
-				C29F4C751F45F58B00DBFC00 /* MIHSliderView.m */,
 				C21B24661EDB116B00FC6CDA /* NumberPluralizationForm.h */,
 				C21B24671EDB116B00FC6CDA /* NumberPluralizationForm.m */,
 				C26E82CF1E83EFFE0046DF2F /* TimeObserver.h */,
@@ -5227,7 +5222,6 @@
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
 				D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
-				C29F4C761F45F58B00DBFC00 /* MIHSliderView.m in Sources */,
 				D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */,
 				C2DF47C31DE79574003AA6C0 /* internal.c in Sources */,
 				D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */,

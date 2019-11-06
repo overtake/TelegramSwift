@@ -536,42 +536,6 @@ NS_ASSUME_NONNULL_END
 +(NSArray<CEmojiSuggestion *> * __nonnull)getSuggestions:(NSString * __nonnull)q;
 @end
 
-typedef enum {
-    MIHSliderTransitionFade,
-    MIHSliderTransitionPushVertical,
-    MIHSliderTransitionPushHorizontalFromLeft,
-    MIHSliderTransitionPushHorizontalFromRight
-} MIHSliderTransition;
-
-@class MIHSliderDotsControl;
-
-@interface MIHSliderView : NSView
-
-@property (retain, readonly) NSArray * __nonnull slides;
-
-- (void)addSlide:(NSView * __nonnull)aSlide;
-- (void)removeSlide:(NSView * __nonnull)aSlide;
-@property (assign, readonly) NSUInteger indexOfDisplayedSlide;
-@property (retain, readonly) NSView * __nonnull displayedSlide;
-- (void)displaySlideAtIndex:(NSUInteger)aIndex;
-@property (assign) MIHSliderTransition transitionStyle;
-@property (assign) BOOL scheduledTransition;
-@property (assign) BOOL repeatingScheduledTransition;
-@property (assign) NSTimeInterval scheduledTransitionInterval;
-@property (assign) NSTimeInterval transitionAnimationDuration;
-
-@property (retain) MIHSliderDotsControl * __nonnull dotsControl;
-
-@end
-
-@interface MIHSliderDotsControl : NSView
-
-@property (retain) NSImage * __nullable normalDotImage;
-
-@property (retain) NSImage * __nullable highlightedDotImage;
-
-@end
-
 @interface TGVideoCameraGLRenderer : NSObject
 
 @property (nonatomic, readonly) __attribute__((NSObject)) CMFormatDescriptionRef outputFormatDescription;
