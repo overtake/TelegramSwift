@@ -2705,9 +2705,9 @@ internal final class L10n {
   internal static var hyVFhRgOTitle: String  { return L10n.tr("Localizable", "HyV-fh-RgO.title") }
   /// Join
   internal static var ivChannelJoin: String  { return L10n.tr("Localizable", "IV.Channel.Join") }
-  /// open %@?
-  internal static func inAppLinksConfirmOpenExternal(_ p1: String) -> String {
-    return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal", p1)
+  /// Do you want to open "%@"?
+  internal static func inAppLinksConfirmOpenExternalNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternalNew", p1)
   }
   /// Open Link
   internal static var inAppLinksConfirmOpenExternalHeader: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.Header") }
@@ -5997,6 +5997,10 @@ internal final class L10n {
   internal static var walletBalanceInfoRetrieveError: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.RetrieveError") }
   /// Send
   internal static var walletBalanceInfoSend: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Send") }
+  /// %@ syncing...
+  internal static func walletBalanceInfoSyncing(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallet.BalanceInfo.Syncing", p1)
+  }
   /// Wallet
   internal static var walletBalanceInfoTitle: String  { return L10n.tr("Localizable", "Wallet.BalanceInfo.Title") }
   /// updating.
@@ -6107,9 +6111,9 @@ internal final class L10n {
   internal static var walletSendConfirmationHeader: String  { return L10n.tr("Localizable", "Wallet.Send.Confirmation.Header") }
   /// Send Grams
   internal static var walletSendConfirmationOK: String  { return L10n.tr("Localizable", "Wallet.Send.Confirmation.OK") }
-  /// Do you want to send %@ Grams to %@?
-  internal static func walletSendConfirmationText(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Wallet.Send.Confirmation.Text", p1, p2)
+  /// Do you want to send %@ Grams to %@?\n\nFees: ~%@ grams
+  internal static func walletSendConfirmationText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Wallet.Send.Confirmation.Text", p1, p2, p3)
   }
   /// This address belongs to an empty wallet. Are you sure you want to transfer grams to it?
   internal static var walletSendErrorDestinationIsNotInitialized: String  { return L10n.tr("Localizable", "Wallet.Send.Error.DestinationIsNotInitialized") }
@@ -6287,16 +6291,16 @@ internal final class L10n {
   internal static var walletTransactionPreviewSender: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.Sender") }
   /// Send Grams
   internal static var walletTransactionPreviewSendGrams: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.SendGrams") }
-  /// STORAGE FEE
-  internal static var walletTransactionPreviewStorageFee: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.StorageFee") }
+  /// %@ storage fee
+  internal static func walletTransactionPreviewStorageFee(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallet.TransactionPreview.StorageFee", p1)
+  }
   /// Transaction
   internal static var walletTransactionPreviewTitle: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.Title") }
-  /// TRANSACTION FEE
-  internal static var walletTransactionPreviewTransactionFee: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.TransactionFee") }
-  /// Blockchain validators collect a tiny fee for storing information about your decentralized wallet.\n[More info]()
-  internal static var walletTransactionPreviewStorageFeeDesc: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.StorageFee.Desc") }
-  /// Blockchain validators collect a tiny fee for processing your decentralized transactions.\n[More info]()
-  internal static var walletTransactionPreviewTransactionFeeDesc: String  { return L10n.tr("Localizable", "Wallet.TransactionPreview.TransactionFee.Desc") }
+  /// %@ transaction fee
+  internal static func walletTransactionPreviewTransactionFee(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallet.TransactionPreview.TransactionFee", p1)
+  }
   /// Apply
   internal static var wallpaperPreviewApply: String  { return L10n.tr("Localizable", "WallpaperPreview.Apply") }
   /// Blurred

@@ -19,7 +19,7 @@ struct SelectContainer {
 }
 
 class SelectManager : NSResponder {
-    
+    fileprivate weak var chatInteraction: ChatInteraction?
     override init() {
         super.init()
     }
@@ -82,10 +82,32 @@ class SelectManager : NSResponder {
     
     @objc func copy(_ sender:Any) {
         let selectedText = self.selectedText
-        if !globalLinkExecutor.copyAttributedString(selectedText) {
-            NSPasteboard.general.declareTypes([.string], owner: self)
-            NSPasteboard.general.setString(selectedText.string, forType: .string)
+        if !selectedText.string.isEmpty {
+            if !globalLinkExecutor.copyAttributedString(selectedText) {
+                NSPasteboard.general.declareTypes([.string], owner: self)
+                NSPasteboard.general.setString(selectedText.string, forType: .string)
+            }
+        } else if let chatInteraction = self.chatInteraction {
+            if let selectionState = chatInteraction.presentation.selectionState {
+                _ = chatInteraction.context.account.postbox.messagesAtIds(Array(selectionState.selectedIds.sorted(by: <))).start(next: { messages in
+                    var text: String = ""
+                    for message in messages {
+                        if !text.isEmpty {
+                            text += "\n\n"
+                        }
+                        if let forwardInfo = message.forwardInfo {
+                            text += "> " + forwardInfo.authorTitle + ":"
+                        } else {
+                            text += "> " + (message.effectiveAuthor?.displayTitle ?? "") + ":"
+                        }
+                        text += "\n"
+                        text += pullText(from: message) as String
+                    }
+                    copyToClipboard(text)
+                })
+            }
         }
+        
     }
     
     func selectNextChar() -> Bool {
@@ -205,6 +227,8 @@ class ChatSelectText : NSObject {
     }
     
     func initializeHandlers(for window:Window, chatInteraction:ChatInteraction) {
+        
+        selectManager.chatInteraction = chatInteraction
         
         table.addScroll(listener: TableScrollListener (dispatchWhenVisibleRangeUpdated: false, { [weak table] _ in
             table?.enumerateVisibleViews(with: { view in

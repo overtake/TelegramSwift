@@ -82,9 +82,11 @@ class WalletBalanceItem: GeneralRowItem {
     fileprivate let updatedTimestamp: Int64?
     fileprivate let update:()->Void
     fileprivate let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: WalletState?, updatedTimestamp: Int64?, viewType: GeneralViewType, receiveMoney:@escaping()->Void, sendMoney:@escaping()->Void, update:@escaping()->Void) {
+    fileprivate let syncProgress: Float
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: WalletState?, updatedTimestamp: Int64?, syncProgress: Float, viewType: GeneralViewType, receiveMoney:@escaping()->Void, sendMoney:@escaping()->Void, update:@escaping()->Void) {
         self.walletState = state
         self.context = context
+        self.syncProgress = syncProgress
         self.receiveMoney = receiveMoney
         self.sendMoney = sendMoney
         self.update = update
@@ -277,27 +279,33 @@ private final class WalletBalanceView : TableRowView {
         self.reloadButton.layer?.position = NSMakePoint(containerView.frame.width - reloadButton.frame.width + 20, 20)
         self.reloadButton.layer?.transform = CATransform3DMakeRotation((baseValue + self.currentAngle) * CGFloat.pi * 2.0, 0.0, 0.0, 1.0)
         
-        
         let updatedTimestampLayout: TextViewLayout
-        if let updatedTimestamp = item.updatedTimestamp {
-            updatedTimestampLayout = TextViewLayout(.initialize(string: lastUpdateTimestampString(statusTimestamp: Int32(updatedTimestamp), relativeTo: Int32(Date().timeIntervalSince1970)), color: theme.colors.grayText, font: .normal(12)))
+
+        if item.syncProgress < 1 {
+            updatedTimestampLayout = TextViewLayout(.initialize(string: L10n.walletBalanceInfoSyncing("\(item.syncProgress * 100.0)"), color: theme.colors.grayText, font: .normal(12)))
         } else {
-            let text: String
-            if currentTextIndex <= 15 {
-                 text = L10n.walletBalanceInfoUpdating1
-            } else if currentTextIndex <= 30 {
-                text = L10n.walletBalanceInfoUpdating2
+            if let updatedTimestamp = item.updatedTimestamp {
+                updatedTimestampLayout = TextViewLayout(.initialize(string: lastUpdateTimestampString(statusTimestamp: Int32(updatedTimestamp), relativeTo: Int32(Date().timeIntervalSince1970)), color: theme.colors.grayText, font: .normal(12)))
             } else {
-                text = L10n.walletBalanceInfoUpdating3
-            }
-            updatedTimestampLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(12)))
-            
-            currentTextIndex += 1
-            
-            if currentTextIndex > 45 {
-                currentTextIndex = 0
+                let text: String
+                if currentTextIndex <= 15 {
+                    text = L10n.walletBalanceInfoUpdating1
+                } else if currentTextIndex <= 30 {
+                    text = L10n.walletBalanceInfoUpdating2
+                } else {
+                    text = L10n.walletBalanceInfoUpdating3
+                }
+                updatedTimestampLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(12)))
+                
+                currentTextIndex += 1
+                
+                if currentTextIndex > 45 {
+                    currentTextIndex = 0
+                }
             }
         }
+        
+        
         updatedTimestampLayout.measure(width: .greatestFiniteMagnitude)
         self.updatedTimestampView.update(updatedTimestampLayout)
         if !self.currentExtraSpeed.isZero || !speed.isZero || self.animateToZeroState != nil {

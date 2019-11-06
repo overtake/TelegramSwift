@@ -250,6 +250,7 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
             return .single(nil)
         })
 
+    let validationDisposable = MetaDisposable()
     
     controller.validateData = { data in
         let state = stateValue.with { $0 }
@@ -265,41 +266,49 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
         }
         
         return .fail(.doSomething(next: { f in
-            confirm(for: context.window, header: L10n.walletSendConfirmationHeader, information: L10n.walletSendConfirmationText(state.amount, state.recipient), okTitle: L10n.walletSendConfirmationOK, successHandler: { _ in
+            
+            let feesSignal = showModalProgress(signal: verifySendGramsRequestAndEstimateFees(tonInstance: tonContext.instance, walletInfo: walletInfo, toAddress: state.recipient, amount: amountValue(state.amount), textMessage: state.comment.data(using: .utf8)!, timeout: 5), for: context.window)
+            
+            validationDisposable.set(feesSignal.start(next: { fees in
                 
-                let state = stateValue.with { $0 }
-                
-                let invoke:()->Void = {
+                let feeAmount = fees.inFwdFee + fees.storageFee + fees.gasFee + fees.fwdFee
+
+                confirm(for: context.window, header: L10n.walletSendConfirmationHeader, information: L10n.walletSendConfirmationText(state.amount, state.recipient, formatBalanceText(feeAmount)), okTitle: L10n.walletSendConfirmationOK, successHandler: { _ in
                     
-                    let controller = WalletProcessTransactionController(context: context, tonContext: tonContext, walletInfo: walletInfo, amount: amountValue(state.amount), to: state.recipient, comment: state.comment, updateMode: { mode in
-                        updateState { $0.withUpdatedSendingState(mode) }
-                    }, updateWallet: { close in
-                        if close {
-                            getModalController?()?.close()
-                        }
-                        if let updateWallet = updateWallet {
-                            updateWallet()
-                        } else if close {
-                            context.sharedContext.bindings.rootNavigation().push(WalletInfoController(context: context, tonContext: tonContext, walletInfo: walletInfo))
-                        }
+                    let state = stateValue.with { $0 }
+                    
+                    let invoke:()->Void = {
                         
-                    })
-                    
-                    
-                    if let parentModal = getModalController?()?.modal {
-                        let modal = Modal(controller: controller, for: context.window, isOverlay: false, animationType: .scaleCenter, parentView: parentModal.containerView)
-                         modal.show()
+                        let controller = WalletProcessTransactionController(context: context, tonContext: tonContext, walletInfo: walletInfo, amount: amountValue(state.amount), to: state.recipient, comment: state.comment, updateMode: { mode in
+                            updateState { $0.withUpdatedSendingState(mode) }
+                        }, updateWallet: { close in
+                            if close {
+                                getModalController?()?.close()
+                            }
+                            if let updateWallet = updateWallet {
+                                updateWallet()
+                            } else if close {
+                                context.sharedContext.bindings.rootNavigation().push(WalletInfoController(context: context, tonContext: tonContext, walletInfo: walletInfo))
+                            }
+                            
+                        })
+                        
+                        
+                        if let parentModal = getModalController?()?.modal {
+                            let modal = Modal(controller: controller, for: context.window, isOverlay: false, animationType: .scaleCenter, parentView: parentModal.containerView)
+                            modal.show()
+                        }
                     }
-                }
-                
-                if state.recipient == state.address {
-                    confirm(for: context.window, header: L10n.walletSendConfirmTitle, information: L10n.walletSendSelfConfirmText, okTitle: L10n.walletSendSelfConfirmOK, successHandler: { _ in
+                    
+                    if state.recipient == state.address {
+                        confirm(for: context.window, header: L10n.walletSendConfirmTitle, information: L10n.walletSendSelfConfirmText, okTitle: L10n.walletSendSelfConfirmOK, successHandler: { _ in
+                            invoke()
+                        })
+                    } else {
                         invoke()
-                    })
-                } else {
-                    invoke()
-                }
-            })
+                    }
+                })
+            }))
         }))
     }
     
@@ -322,6 +331,7 @@ func WalletSendController(context: AccountContext, tonContext: TonContext, walle
     controller.onDeinit = {
         transferDisposable.dispose()
         updateBalanceDisposable.dispose()
+        validationDisposable.dispose()
     }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.wallet_close, handler: {

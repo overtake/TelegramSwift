@@ -59,7 +59,7 @@ public class InputDataModalController : ModalViewController {
         if controller.defaultBarTitle.isEmpty {
             return nil
         }
-        return (left: self.controller.leftModalHeader, center: ModalHeaderData(title: controller.defaultBarTitle), right: self.controller.rightModalHeader)
+        return (left: self.controller.leftModalHeader, center: self.controller.centerModalHeader ?? ModalHeaderData(title: controller.defaultBarTitle), right: self.controller.rightModalHeader)
     }
     
     
@@ -262,6 +262,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var tabKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
     var rightModalHeader: ModalHeaderData? = nil
     var leftModalHeader: ModalHeaderData? = nil
+    var centerModalHeader: ModalHeaderData? = nil
     var keyWindowUpdate:(Bool, InputDataController) -> Void = { _, _ in }
     var hasBackSwipe:()->Bool = { return true }
     private let searchKeyInvocation:() -> InputDataDeleteResult

@@ -429,6 +429,10 @@ class ChatMessageItem: ChatRowItem {
                 selectManager.copy(selectManager)
                 return !selectManager.isEmpty
             }
+            interactions.copyToClipboard = { text in
+                copyToClipboard(text)
+                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+            }
             interactions.menuItems = { [weak self] type in
                 var items:[ContextMenuItem] = []
                 if let strongSelf = self, let layout = self?.textLayout {
@@ -868,6 +872,35 @@ class ChatMessageItem: ChatRowItem {
                     nsString = text as NSString
                 }
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
+                if let color = NSColor(hexString: nsString!.substring(with: range)) {
+                    
+                    struct RunStruct {
+                        let ascent: CGFloat
+                        let descent: CGFloat
+                        let width: CGFloat
+                    }
+                    
+                    let dimensions = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
+                    let extentBuffer = UnsafeMutablePointer<RunStruct>.allocate(capacity: 1)
+                    extentBuffer.initialize(to: RunStruct(ascent: 0.0, descent: 0.0, width: dimensions.width))
+                    var callbacks = CTRunDelegateCallbacks(version: kCTRunDelegateVersion1, dealloc: { (pointer) in
+                    }, getAscent: { (pointer) -> CGFloat in
+                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
+                        return d.pointee.ascent
+                    }, getDescent: { (pointer) -> CGFloat in
+                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
+                        return d.pointee.descent
+                    }, getWidth: { (pointer) -> CGFloat in
+                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
+                        return d.pointee.width
+                    })
+                    let delegate = CTRunDelegateCreate(&callbacks, extentBuffer)
+                    let key = kCTRunDelegateAttributeName as String
+                    let attrDictionaryDelegate:[NSAttributedString.Key : Any] = [NSAttributedString.Key(key): delegate as Any, .hexColorMark : color, .hexColorMarkDimensions: dimensions]
+                    
+                    string.addAttributes(attrDictionaryDelegate, range: NSMakeRange(range.upperBound - 1, 1))
+                }
+                
             case .Strikethrough:
                 string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
             case .Underline:

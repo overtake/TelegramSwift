@@ -1260,20 +1260,34 @@ public extension NSEdgeInsets {
 public extension NSColor {
     
     convenience init?(hexString: String) {
-        let scanner = Scanner(string: hexString)
+        let scanner = Scanner(string: hexString.prefix(7))
         if hexString.hasPrefix("#") {
             scanner.scanLocation = 1
         }
         var num: UInt32 = 0
-        if scanner.scanHexInt32(&num) {
-            self.init(rgb: num)
+        var alpha: CGFloat = 1.0
+        let checkSet = CharacterSet(charactersIn: "#0987654321abcdef")
+        for char in hexString.lowercased().unicodeScalars {
+            if !checkSet.contains(char) {
+                return nil
+            }
+        }
+        if scanner.scanHexInt32(&num), hexString.length >= 7 && hexString.length <= 9 {
+            if hexString.length == 9 {
+                let scanner = Scanner(string: hexString)
+                scanner.scanLocation = 7
+                var intAlpha: UInt32 = 0
+                scanner.scanHexInt32(&intAlpha)
+                alpha = CGFloat(intAlpha) / 255
+            }
+            self.init(num, alpha)
         } else {
             return nil
         }
     }
     
     
-    public convenience init(_ rgbValue:UInt32, _ alpha:CGFloat = 1.0) {
+    convenience init(_ rgbValue:UInt32, _ alpha:CGFloat = 1.0) {
         let r: CGFloat = ((CGFloat)((rgbValue & 0xFF0000) >> 16))
         let g: CGFloat = ((CGFloat)((rgbValue & 0xFF00) >> 8))
         let b: CGFloat = ((CGFloat)(rgbValue & 0xFF))

@@ -1273,8 +1273,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if apply {
                         switch self.chatLocation {
                         case let .peer(peerId):
-                            clearNotifies(peerId, maxId: messageIndex.id)
-                            _ = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex).start()
+                            if !hasModals() {
+                                clearNotifies(peerId, maxId: messageIndex.id)
+                                _ = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex).start()
+                            }
                         }
                     }
                 }
@@ -3997,6 +3999,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     DispatchQueue.main.async { [weak self] in
                         self?.chatInteraction.update({$0.withUpdatedBasicActions((false, false))})
                     }
+                }
+                if value.selectionState != nil {
+                    _ = window?.makeFirstResponder(selectManager)
+                } else {
+                    _ = window?.makeFirstResponder(self.firstResponder())
                 }
             }
             
