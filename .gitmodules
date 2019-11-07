@@ -18,4 +18,4 @@ url=git@gitlab.com:peter-iakovlev/telegram-ios.git
 url=git@github.com:overtake/rlottie.git
 [submodule "submodules/ton"]
 	path = submodules/ton
-	url = git@github.com:ton-blockchain/ton.git
+url=git@github.com:overtake/ton.git
