@@ -1,3 +1,7 @@
+before_script:
+    - eval $(ssh-agent -s)
+    - echo ssh-add ~/.ssh/id_rsa
+
 stages:
     - deploy
 
