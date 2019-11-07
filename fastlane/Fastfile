@@ -1,0 +1,64 @@
+# Customise this file, documentation can be found here:
+# https://github.com/fastlane/fastlane/tree/master/fastlane/docs
+# All available actions: https://github.com/fastlane/fastlane/blob/master/fastlane/docs/Actions.md
+# can also be listed using the `fastlane actions` command
+
+# Change the syntax highlighting to Ruby
+# All lines starting with a # are ignored when running `fastlane`
+
+# If you want to automatically update fastlane if a new version is available:
+# update_fastlane
+
+# This is the minimum version number required.
+# Update this, if you use features of a newer version
+fastlane_version "2.3.1"
+
+default_platform :mac
+
+# Fastfile actions accept additional configuration, but
+# don't worry, fastlane will prompt you for required
+# info which you can add here later
+
+lane :beta do
+    sh("rm -rf ~/build-beta/")
+    sh("mkdir ~/build-beta")
+    gym(
+      scheme: "Hockeyapp",
+      clean: true,
+      silent: true,
+      output_directory: "~/build-beta"
+    )
+end
+
+lane :alpha do
+    sh("rm -rf ~/build-alpha/")
+    sh("mkdir ~/build-alpha")
+    gym(
+      scheme: "HockeyappMacAlpha",
+      clean: true,
+      silent: true,
+      output_directory: "~/build-alpha"
+    )
+end
+
+lane :release do
+    sh("rm -rf ~/build-release/")
+    sh("mkdir ~/build-release")
+    gym(
+      scheme: "Release",
+      clean: true,
+      silent: true,
+      output_directory: "~/build-release"
+    )
+end
+
+lane :appstore do
+    sh("rm -rf ~/build-appstore/")
+    sh("mkdir ~/build-appstore")
+    gym(
+      scheme: "AppStore",
+      clean: true,
+      silent: true,
+      output_directory: "~/build-appstore"
+    )
+end
