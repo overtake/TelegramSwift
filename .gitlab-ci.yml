@@ -8,7 +8,7 @@ variables:
 
 beta:
     tags:
-        - macos_appcenter
+        - beta
     stage: deploy
     only:
         - master
@@ -22,7 +22,7 @@ beta:
 
 alpha:
     tags:
-        - macos_appcenter
+        - alpha
     stage: deploy
     only:
         - master
