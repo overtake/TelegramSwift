@@ -4,7 +4,7 @@ stages:
 variables:
     LANG: "en_US.UTF-8"
     LC_ALL: "en_US.UTF-8"
-    GIT_SUBMODULE_STRATEGY: normal
+    GIT_SUBMODULE_STRATEGY: recursive
 
 beta:
     tags:
@@ -15,20 +15,6 @@ beta:
     except:
         - tags
     script:
-        - fastlane beta
-    environment:
-        name: internal
-
-
-alpha:
-    tags:
-        - alpha
-    stage: deploy
-    only:
-        - master
-    except:
-        - tags
-    script:
-        - fastlane alpha
+        - bash ./buildbox/beta.sh
     environment:
         name: internal
