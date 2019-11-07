@@ -953,6 +953,8 @@ class ChatListController : PeersListController {
         switch mode.groupId {
         case .root:
             return super.defaultBarTitle
+        case Namespaces.PeerGroup.circles:
+            return L10n.chatListCircledChats
         default:
             return L10n.chatListArchivedChats
         }

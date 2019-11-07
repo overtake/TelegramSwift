@@ -324,7 +324,13 @@ class ChatListRowItem: TableRowItem {
         self.isScam = false
         self.hasFailed = hasFailed
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
+        switch groupId {
+        case Namespaces.PeerGroup.circles:
+            let _ = titleText.append(string: L10n.chatListCircledChats, color: theme.chatList.textColor, font: .medium(.title))
+        default:
+            let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
+        }
+        
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
         self.titleText = titleText
@@ -655,6 +661,19 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
+    func toggleCircles() {
+        if let peerId = peerId {
+            switch associatedGroupId {
+            case .root:
+                 _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: Namespaces.PeerGroup.circles).start()
+                 context.sharedContext.bindings.mainController().chatList.addArchiveTooltip(peerId, circles: true)
+                 context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
+            default:
+                 _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
+            }
+        }
+    }
+    
     func delete() {
         if let peerId = peerId {
             let signal = removeChatInteractively(context: context, peerId: peerId, userId: peer?.id)
@@ -726,6 +745,10 @@ class ChatListRowItem: TableRowItem {
                 self?.toggleArchive()
             }
             
+            let toggleCircles:()->Void = { [weak self] in
+                self?.toggleCircles()
+            }
+            
             let toggleMute:()->Void = { [weak self] in
                 self?.toggleMuted()
             }
@@ -746,6 +769,10 @@ class ChatListRowItem: TableRowItem {
             
             if groupId == .root, (canArchive || associatedGroupId != .root) {
                 items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
+            }
+            
+            if groupId == .root {
+                items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingCircle : L10n.chatListSwipingUncircle, handler: toggleCircles))
             }
             
             if context.peerId != peer.id, pinnedType != .ad {

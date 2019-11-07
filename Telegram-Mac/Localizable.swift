@@ -337,6 +337,8 @@ internal final class L10n {
   internal static var archiveTooltipFirstTitle: String  { return L10n.tr("Localizable", "Archive.Tooltip.First.Title") }
   /// Chat Archived
   internal static var archiveTooltipJustArchiveTitle: String  { return L10n.tr("Localizable", "Archive.Tooltip.JustArchive.Title") }
+  /// Chat Circled
+  internal static var archiveTooltipCirclesTitle: String  { return L10n.tr("Localizable", "Archive.Tooltip.Circles.Title") }
   /// muted chats will stay archivated after new messages arrive.
   internal static var archiveTooltipSecondText: String  { return L10n.tr("Localizable", "Archive.Tooltip.Second.Text") }
   /// Chat Archived
@@ -1813,6 +1815,8 @@ internal final class L10n {
   internal static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
   /// Archived Chats
   internal static var chatListArchivedChats: String  { return L10n.tr("Localizable", "ChatList.ArchivedChats") }
+  /// Circles
+    internal static var chatListCircledChats: String { return L10n.tr("Localizable", "ChatList.CircledChats")}
   /// Draft:
   internal static var chatListDraft: String  { return L10n.tr("Localizable", "ChatList.Draft") }
   /// **You have no conversations yet**\nStart messaging by tapping the pencil button in the top right corner or got to the Contacts section.
@@ -1941,6 +1945,9 @@ internal final class L10n {
   }
   /// Archive
   internal static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
+  /// Circles
+  internal static var chatListSwipingCircle: String  { return L10n.tr("Localizable", "ChatList.Swiping.Circle") }
+  internal static var chatListSwipingUncircle: String  { return L10n.tr("Localizable", "ChatList.Swiping.Uncircle") }
   /// Delete
   internal static var chatListSwipingDelete: String  { return L10n.tr("Localizable", "ChatList.Swiping.Delete") }
   /// Mute
