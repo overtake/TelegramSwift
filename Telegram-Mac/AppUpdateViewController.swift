@@ -527,7 +527,11 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
 private let disposable = MetaDisposable()
 
 func setAppUpdaterBaseDomain(_ basicDomain: String?) {
-    updater.basicDomain = basicDomain
+    if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+        if let v = Int(version.replacingOccurrences(of: ".", with: "")), v >= 582 {
+            updater.basicDomain = basicDomain
+        }
+    }
 }
 
 
@@ -574,13 +578,7 @@ enum UpdaterSource : Equatable {
 private func resetUpdater() {
     
     let update:()->Void = {
-        var url = Bundle.main.infoDictionary!["SUFeedURL"] as! String
-        
-        if let basicDomain = updater.basicDomain {
-            let previous = URL(string: url)!
-            let current = URL(string: basicDomain)!
-            url = url.replacingOccurrences(of: previous.host!, with: current.host!)
-        }
+        let url = updater.basicDomain ?? Bundle.main.infoDictionary!["SUFeedURL"] as! String
         let state = stateValue.with { $0.loadingState }
         switch state {
         case .readyToInstall, .installing, .unarchiving, .loading:
