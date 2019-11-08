@@ -34,6 +34,7 @@ enum AvatarNodeState: Equatable {
     case Empty
     case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, Message?)
     case ArchivedChats
+    case Circles
 
 }
 
@@ -44,6 +45,8 @@ func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
     case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, _), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, _)):
         return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations
     case (.ArchivedChats, .ArchivedChats):
+        return true
+    case (.Circles, .Circles):
         return true
     default:
         return false

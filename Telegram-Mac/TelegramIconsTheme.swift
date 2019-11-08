@@ -4268,6 +4268,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var circles: CGImage {
+    if let image = cached.with({ $0["circles"] }) {
+          return image
+      } else {
+          let image = _circles()
+          _ = cached.modify { current in
+              var current = current
+              current["circles"] = image
+              return current
+          }
+          return image
+      }
+  }
   var hintPeerActive: CGImage {
       if let image = cached.with({ $0["hintPeerActive"] }) {
           return image
@@ -6092,6 +6105,7 @@ final class TelegramIconsTheme {
   private let _searchArticle: ()->CGImage
   private let _searchSaved: ()->CGImage
   private let _archivedChats: ()->CGImage
+  private let _circles: ()->CGImage
   private let _hintPeerActive: ()->CGImage
   private let _hintPeerActiveSelected: ()->CGImage
   private let _chatSwiping_delete: ()->CGImage
@@ -6537,6 +6551,7 @@ final class TelegramIconsTheme {
       searchArticle: @escaping()->CGImage,
       searchSaved: @escaping()->CGImage,
       archivedChats: @escaping()->CGImage,
+      circles: @escaping()->CGImage,
       hintPeerActive: @escaping()->CGImage,
       hintPeerActiveSelected: @escaping()->CGImage,
       chatSwiping_delete: @escaping()->CGImage,
@@ -6981,6 +6996,7 @@ final class TelegramIconsTheme {
       self._searchArticle = searchArticle
       self._searchSaved = searchSaved
       self._archivedChats = archivedChats
+      self._circles = circles
       self._hintPeerActive = hintPeerActive
       self._hintPeerActiveSelected = hintPeerActiveSelected
       self._chatSwiping_delete = chatSwiping_delete

@@ -327,8 +327,10 @@ class ChatListRowItem: TableRowItem {
         switch groupId {
         case Namespaces.PeerGroup.circles:
             let _ = titleText.append(string: L10n.chatListCircledChats, color: theme.chatList.textColor, font: .medium(.title))
+            photo = .Circles
         default:
             let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
+            photo = .ArchivedChats
         }
         
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
@@ -374,7 +376,6 @@ class ChatListRowItem: TableRowItem {
         
         
         
-        photo = .ArchivedChats
         
         super.init(initialSize)
         
