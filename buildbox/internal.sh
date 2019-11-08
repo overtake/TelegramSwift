@@ -7,5 +7,5 @@ export PATH="$PATH:$HOME/.fastlane/bin"
 
 tag="$1"
 
-sh ./buildbox/build.sh $tag
-source deploy-beta.sh ~/build-beta $PWD Telegram.app ~/.credentials/dsa-$tag
+#sh ./buildbox/build.sh $tag
+source deploy-$tag.sh ~/build-$tag $PWD Telegram.app ~/.credentials/dsa-$tag

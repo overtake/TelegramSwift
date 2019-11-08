@@ -9,4 +9,4 @@ DSA_PEM_FILE = dsa_pub.pem
 
 SIMPLE_SLASH=/
 
-SFEED_URL = https:${SIMPLE_SLASH}/rink.hockeyapp.net/api/2/apps/6ed2ac3049e1407387c2f1ffcb74e81f
+SFEED_URL = https:${SIMPLE_SLASH}/api.appcenter.ms/v0.1/public/sparkle/apps/6ed2ac30-49e1-4073-87c2-f1ffcb74e81f

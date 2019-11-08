@@ -19,6 +19,7 @@ import OpenSSLEncryption
 
 
 
+
 private final class SharedApplicationContext {
     let sharedContext: SharedAccountContext
     let notificationManager: SharedNotificationManager
