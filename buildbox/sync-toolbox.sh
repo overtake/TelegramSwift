@@ -7,7 +7,6 @@ source variables.sh
 
 cd ..
 if [ ! -d "./deploy" ]; then
-    chmod -R a+rX ./
     mkdir -p ./deploy
     git clone "$deploy_repository" deploy
 else
