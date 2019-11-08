@@ -1,5 +1,7 @@
 before_script:
     - eval $(ssh-agent -s)
+    - set -x
+    - set -e
     - echo ssh-add ~/.ssh/id_rsa
 
 stages:
