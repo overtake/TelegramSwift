@@ -2,7 +2,7 @@
 #set -x
 #set -e
 
-export PATH="$PATH:$PWD/.credentials"
+export PATH="$PATH:$HOME/.credentials"
 
 
 cd ..
