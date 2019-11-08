@@ -769,11 +769,15 @@ class ChatListRowItem: TableRowItem {
             }
             
             if groupId == .root, (canArchive || associatedGroupId != .root) {
-                items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
+                if associatedGroupId != Namespaces.PeerGroup.circles {
+                    items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
+                }
             }
             
             if groupId == .root {
-                items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingCircle : L10n.chatListSwipingUncircle, handler: toggleCircles))
+                if associatedGroupId != Namespaces.PeerGroup.archive {
+                    items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingCircle : L10n.chatListSwipingUncircle, handler: toggleCircles))
+                }
             }
             
             if context.peerId != peer.id, pinnedType != .ad {
