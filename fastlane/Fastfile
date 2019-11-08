@@ -20,45 +20,34 @@ default_platform :mac
 # info which you can add here later
 
 lane :beta do
-    sh("rm -rf ~/build-beta/")
-    sh("mkdir ~/build-beta")
+    sh("rm -rf ./output")
+    sh("mkdir ./output")
     gym(
       scheme: "Hockeyapp",
       clean: true,
       silent: true,
-      output_directory: "~/build-beta"
+      output_directory: "./output"
     )
 end
 
 lane :alpha do
-    sh("rm -rf ~/build-alpha/")
-    sh("mkdir ~/build-alpha")
+    sh("rm -rf ./output")
+    sh("mkdir ./output")
     gym(
       scheme: "HockeyappMacAlpha",
       clean: true,
       silent: true,
-      output_directory: "~/build-alpha"
+      output_directory: "./output"
     )
 end
 
 lane :release do
-    sh("rm -rf ~/build-release/")
-    sh("mkdir ~/build-release")
+    sh("rm -rf ./output")
+    sh("mkdir ./output")
     gym(
       scheme: "Release",
       clean: true,
       silent: true,
-      output_directory: "~/build-release"
-    )
-end
-
-lane :appstore do
-    sh("rm -rf ~/build-appstore/")
-    sh("mkdir ~/build-appstore")
-    gym(
-      scheme: "AppStore",
-      clean: true,
-      silent: true,
-      output_directory: "~/build-appstore"
+      output_directory: "./output"
     )
 end

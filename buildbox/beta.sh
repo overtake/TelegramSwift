@@ -3,7 +3,6 @@
 #set -e
 
 export PATH="$PATH:$PWD/../deploy"
-export PATH="$PATH:$HOME/.fastlane"
-
-fastlane beta
-source beta.sh ~/build-beta .. Telegram.app dsa-beta
+export PATH="$PATH:$HOME/.fastlane/bin"
+sh ./buildbox/build.sh beta
+source deploy-beta.sh ~/build-beta $PWD Telegram.app ~/.credentials/dsa-beta
