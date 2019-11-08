@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D098C7141D7E175A007784E4"
-               BuildableName = "Telegram.app"
-               BlueprintName = "Telegram"
+               BuildableName = "Circles for Telegram.app"
+               BlueprintName = "Circles for Telegram"
                ReferencedContainer = "container:Telegram.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -27,19 +27,17 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-      </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
-            BuildableName = "Telegram.app"
-            BlueprintName = "Telegram"
+            BuildableName = "Circles for Telegram.app"
+            BlueprintName = "Circles for Telegram"
             ReferencedContainer = "container:Telegram.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <Testables>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "ReleaseHockeyapp"
@@ -56,13 +54,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
-            BuildableName = "Telegram.app"
-            BlueprintName = "Telegram"
+            BuildableName = "Circles for Telegram.app"
+            BlueprintName = "Circles for Telegram"
             ReferencedContainer = "container:Telegram.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "ReleaseHockeyapp"
@@ -75,8 +71,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
-            BuildableName = "Telegram.app"
-            BlueprintName = "Telegram"
+            BuildableName = "Circles for Telegram.app"
+            BlueprintName = "Circles for Telegram"
             ReferencedContainer = "container:Telegram.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
