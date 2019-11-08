@@ -41,6 +41,7 @@ options="$options -DOPENSSL_LIBRARIES=${openssl_crypto_library}"
 options="$options -DTON_ONLY_TONLIB=ON"
 options="$options -DCMAKE_BUILD_TYPE=Release"
 options="$options -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11"
+options="$options -DTON_ARCH="
 rm -rf $build
 mkdir -p $build
 mkdir -p $install

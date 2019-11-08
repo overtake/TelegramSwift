@@ -21,6 +21,7 @@ beta:
     except:
         - tags
     script:
+        - bash ./buildbox/sync-toolbox.sh
         - bash ./buildbox/beta.sh
     environment:
         name: internal
