@@ -10,7 +10,7 @@ if [ ! -d "./deploy" ]; then
     git clone "$deploy_repository" deploy
 else
     cd ./deploy
-    chmod -R +w,g=rw,o-rw .
+    chmod -R a+rX ./
     git reset --hard
     git pull origin master
 fi
