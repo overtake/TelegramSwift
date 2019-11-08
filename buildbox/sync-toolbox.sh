@@ -10,7 +10,7 @@ cd ..
 if [ ! -d "./deploy" ]; then
     git clone "$deploy_repository" deploy
 else
-    git reset --hard
+    git reset --hard --git-dir=./deploy/.git
     git --work-tree=./deploy --git-dir=./deploy/.git pull origin master
 fi
 
