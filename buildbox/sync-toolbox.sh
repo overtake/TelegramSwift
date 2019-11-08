@@ -6,6 +6,11 @@ export PATH="$PATH:$HOME/.credentials"
 source variables.sh
 
 cd ..
-rm -rf "./deploy"
-git clone "$deploy_repository" deploy
+
+if [ ! -d "./deploy" ]; then
+    git clone "$deploy_repository" deploy
+else
+    git reset --hard
+    git --work-tree=./deploy --git-dir=./deploy/.git pull origin master
+fi
 
