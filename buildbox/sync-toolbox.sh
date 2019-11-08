@@ -6,7 +6,7 @@ export PATH="$PATH:$HOME/.credentials"
 source variables.sh
 
 cd ..
-
+chmod -R +w,g=rw,o-rw ./deploy
 if [ ! -d "./deploy" ]; then
     git clone "$deploy_repository" deploy
 else
