@@ -58,4 +58,10 @@
    <FileRef
       location = "group:Telegram.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/Alamofire/Alamofire.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/telegram-ios/submodules/SwiftyJSON/SwiftyJSON.xcodeproj">
+   </FileRef>
 </Workspace>
