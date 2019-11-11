@@ -41,11 +41,11 @@ lane :alpha do
     )
 end
 
-lane :release do
+lane :appstore do
     sh("rm -rf ./output")
     sh("mkdir ./output")
     gym(
-      scheme: "Release",
+      scheme: "AppStore",
       clean: true,
       silent: true,
       output_directory: "./output"
