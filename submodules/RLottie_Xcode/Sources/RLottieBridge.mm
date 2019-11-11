@@ -221,6 +221,7 @@
     
 -(void)setColor:(NSColor *)color forKeyPath:(NSString *)keyPath {
     player->setValue<rlottie::Property::FillColor>(keyPath.UTF8String, rlottie::Color(color.redComponent, color.greenComponent, color.blueComponent));
+    player->setValue<rlottie::Property::StrokeColor>(keyPath.UTF8String, rlottie::Color(color.redComponent, color.greenComponent, color.blueComponent));
 }
 
 @end

@@ -257,6 +257,9 @@ private final class PlayerRenderer {
             let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
             if let json = String(data: modified, encoding: .utf8) {
                 if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
+                    for color in self.animation.colors {
+                        bridge.setColor(color.color, forKeyPath: color.keyPath)
+                    }
                     self.play(self.layer.modify({_ in bridge})!)
                 } else {
                     self.updateState(.failed)
@@ -511,6 +514,7 @@ struct LottieAnimationEntryKey : Hashable {
 
 enum LottieAnimationKey : Equatable {
     case media(MediaId?)
+    case bundle(String)
 }
 
 enum LottiePlayPolicy : Equatable {
@@ -520,9 +524,14 @@ enum LottiePlayPolicy : Equatable {
     case framesCount(Int32)
 }
 
+struct LottieColor : Equatable {
+    let keyPath: String
+    let color: NSColor
+}
+
 final class LottieAnimation : Equatable {
     static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
-        return lhs.key == rhs.key
+        return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors
     }
     
     var liveTime: Int {
@@ -539,12 +548,14 @@ final class LottieAnimation : Equatable {
     let cache: ASCachePurpose
     let maximumFps: Int
     let playPolicy: LottiePlayPolicy
-    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60) {
+    let colors:[LottieColor]
+    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = []) {
         self.compressed = compressed
         self.key = key
         self.cache = cachePurpose
         self.maximumFps = maximumFps
         self.playPolicy = playPolicy
+        self.colors = colors
     }
     
     var size: NSSize {
@@ -555,7 +566,10 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors)
+    }
+    func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors)
     }
     
     var cacheKey: String {
@@ -570,6 +584,8 @@ final class LottieAnimation : Equatable {
             } else {
                 return "\(arc4random())"
             }
+        case let .bundle(string):
+            return string
         }
     }
 }
@@ -743,6 +759,10 @@ private final class MetalRenderer: View {
         holder?.incrementUseCount()
     }
     
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
+    }
+    
     deinit {
         holder?.decrementUseCount()
     }
@@ -795,6 +815,12 @@ private final class MetalRenderer: View {
         commandBuffer.commit()
     }
     
+}
+
+private final class LottieFallbackView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
+    }
 }
 
 class LottiePlayerView : NSView {
@@ -860,7 +886,7 @@ class LottiePlayerView : NSView {
                         self?.stateValue.set(state)
                     })
                 } else {
-                    let fallback = NSView()
+                    let fallback = LottieFallbackView()
                     fallback.wantsLayer = true
                     fallback.setFrameSize(animation.size)
                     self.addSubview(fallback)
