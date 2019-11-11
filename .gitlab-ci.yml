@@ -22,11 +22,11 @@ beta:
     script:
         - bash ./buildbox/internal.sh beta
     environment:
-        name: internal
+        name: beta
 
 alpha:
     tags:
-        - beta
+        - alpha
     stage: deploy
     only:
         - alpha
@@ -35,4 +35,17 @@ alpha:
     script:
         - bash ./buildbox/internal.sh alpha
     environment:
-        name: internal
+        name: alpha
+
+appstore:
+    tags:
+        - appstore
+    stage: deploy
+    only:
+        - appstore
+    except:
+        - tags
+    script:
+        - bash ./buildbox/internal.sh appstore
+    environment:
+        name: appstore
