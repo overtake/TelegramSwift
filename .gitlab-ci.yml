@@ -29,7 +29,7 @@ beta:
 alpha:
     tags:
         - beta
-        stage: deploy
+    stage: deploy
     only:
         - alpha
     except:
