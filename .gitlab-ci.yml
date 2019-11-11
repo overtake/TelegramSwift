@@ -1,6 +1,5 @@
 before_script:
-    - eval $(ssh-agent -s)
-    - echo ssh-add ~/.ssh/id_rsa
+    - bash ./buildbox/sync-toolbox.sh
 
 stages:
     - deploy
@@ -21,7 +20,6 @@ beta:
     except:
         - tags
     script:
-        - bash ./buildbox/sync-toolbox.sh
         - bash ./buildbox/internal.sh beta
     environment:
         name: internal
@@ -35,7 +33,6 @@ alpha:
     except:
         - tags
     script:
-        - bash ./buildbox/sync-toolbox.sh
         - bash ./buildbox/internal.sh alpha
     environment:
         name: internal

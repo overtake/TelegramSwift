@@ -176,27 +176,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             MSAppCenter.start(secret, withServices: [MSCrashes.self])
         }
         
-//        let hockeyAppId:String
-//        #if BETA
-//            hockeyAppId = "6ed2ac3049e1407387c2f1ffcb74e81f"
-//        #elseif ALPHA
-//            hockeyAppId = "f012091f35d947bbb3db9cbd3b0232d3"
-//        #endif
-//
-//        #if BETA || ALPHA
-//            BITHockeyManager.shared().configure(withIdentifier: hockeyAppId)
-//            BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = true
-//            BITHockeyManager.shared().start()
-//            BITHockeyManager.shared()?.delegate = self
-//        #endif
-//
-//            #if STABLE     
-//                let hockeyAppId:String = "d77af558b21e0878953100680b5ac66a"
-//                BITHockeyManager.shared().configure(withIdentifier: hockeyAppId)
-//                BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = false
-//            #endif
-            
-     //   #endif
         
 
         telegramUIDeclareEncodables()
