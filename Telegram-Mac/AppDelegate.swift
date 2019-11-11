@@ -176,8 +176,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             MSAppCenter.start(secret, withServices: [MSCrashes.self])
         }
         
-
-        
 //        let hockeyAppId:String
 //        #if BETA
 //            hockeyAppId = "6ed2ac3049e1407387c2f1ffcb74e81f"

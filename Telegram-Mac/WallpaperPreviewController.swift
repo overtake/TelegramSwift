@@ -316,7 +316,7 @@ final class WallpaperColorPickerContainerView : View, TGModernGrowingDelegate {
         return 7
     }
     
-    var defaultColor: NSColor = NSColor(hexString: "FFFFFF")! {
+    var defaultColor: NSColor = NSColor(hexString: "#FFFFFF")! {
         didSet {
             textView.setString(defaultColor.hexString)
         }
@@ -458,7 +458,7 @@ private final class WallpaperPreviewView: View {
             colorPicker.colorPicker.color = NSColor(UInt32(color))
             colorPicker.defaultColor = colorPicker.colorPicker.color
         case let .file(_, _, settings, _):
-            colorPicker.colorPicker.color = settings.color != nil ? NSColor(UInt32(settings.color!)) :  NSColor(hexString: "ffffff")!
+            colorPicker.colorPicker.color = settings.color != nil ? NSColor(UInt32(settings.color!)) :  NSColor(hexString: "#ffffff")!
             colorPicker.defaultColor = colorPicker.colorPicker.color
         default:
             break
