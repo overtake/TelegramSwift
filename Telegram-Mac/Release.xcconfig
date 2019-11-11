@@ -10,4 +10,4 @@ DSA_PEM_FILE = dsa_pub_prod.pem
 SIMPLE_SLASH=/
 
 SFEED_URL = https:$(SIMPLE_SLASH)/osx.telegram.org/updates/versions.xml
-
+APPCENTER_SECRET = 0af668a6-29fa-4a9e-8a70-002913f8efba

@@ -201,8 +201,8 @@
 		9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE50E205AB4A3000C028E /* libiconv.tbd */; };
 		9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE513205AB50C000C028E /* libz.tbd */; };
 		A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
-		A7664939236C816400163DF4 /* HockeySDK.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A766493A236C817200163DF4 /* HockeySDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F388C8B213550C500830715 /* HockeySDK.framework */; };
+		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
+		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
@@ -851,7 +851,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A7664939236C816400163DF4 /* HockeySDK.framework in Copy Files */,
 				A7D28258236C6FA20000A9BF /* WalletCore.framework in Copy Files */,
 				A7D28212236C3D3E0000A9BF /* SyncCore.framework in Copy Files */,
 				A7D2820F236C3C3B0000A9BF /* Postbox.framework in Copy Files */,
@@ -941,7 +940,6 @@
 		9F0E6F75203EC7090086699C /* DFRPrivateHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFRPrivateHeader.h; sourceTree = "<group>"; };
 		9F0E6F77203ED1380086699C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		9F0E6F79203EFE870086699C /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
-		9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DFRFoundation.framework; path = ../../../../System/Library/PrivateFrameworks/DFRFoundation.framework; sourceTree = "<group>"; };
 		9F0F8E81226DCD1C00A97F6A /* OpmizeDatabaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpmizeDatabaseView.swift; sourceTree = "<group>"; };
 		9F10CE8720610127002DD61A /* PassportController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportController.swift; sourceTree = "<group>"; };
 		9F10CE8920611536002DD61A /* PassportHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportHeaderItem.swift; sourceTree = "<group>"; };
@@ -994,7 +992,6 @@
 		9F354E9F227076A6006F1D42 /* libLottie.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libLottie.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F354EA1227076EF006F1D42 /* Lottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Lottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F354EA3227077BD006F1D42 /* Lottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Lottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F388C8B213550C500830715 /* HockeySDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HockeySDK.framework; path = submodules/HockeySDK.framework; sourceTree = "<group>"; };
 		9F3D5F6222044D8700CB0CAA /* AppUpdateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateViewController.swift; sourceTree = "<group>"; };
 		9F3D5F8522085B2000CB0CAA /* UpdaterNotifySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterNotifySettings.swift; sourceTree = "<group>"; };
 		9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkUsageStatsController.swift; sourceTree = "<group>"; };
@@ -1222,6 +1219,8 @@
 		9FFAE50E205AB4A3000C028E /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		9FFAE510205AB4AB000C028E /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
 		9FFAE513205AB50C000C028E /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
+		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaPhotosController.swift; sourceTree = "<group>"; };
 		A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotosMonthItem.swift; sourceTree = "<group>"; };
@@ -1940,8 +1939,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */,
+				A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */,
 				A7DF1B6C237415AD00ACC01F /* Zip.framework in Frameworks */,
-				A766493A236C817200163DF4 /* HockeySDK.framework in Frameworks */,
 				A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */,
 				A7D28259236C70A50000A9BF /* SSignalKit.framework in Frameworks */,
 				A7D28232236C57DD0000A9BF /* libphonenumber.framework in Frameworks */,
@@ -4486,6 +4486,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A74EB06F237961A1005F55AE /* AppCenter.framework */,
+				A74EB070237961A1005F55AE /* AppCenterCrashes.framework */,
 				A7DF1B6B237415AD00ACC01F /* Zip.framework */,
 				A7ED5DAE236C7CE100040372 /* RLottie.framework */,
 				A7D2823B236C69070000A9BF /* SSignalKit.framework */,
@@ -4505,14 +4507,12 @@
 				9F6FF3212248E298004364FE /* UserNotifications.framework */,
 				9F4EEF8321D4F59C002C3B33 /* Accelerate.framework */,
 				D0675D6A217E20B9004900A7 /* Zip.framework */,
-				9F388C8B213550C500830715 /* HockeySDK.framework */,
 				9F13EE182100B6DA00562E53 /* Contacts.framework */,
 				9F21F65C20B5A9C900332C85 /* MapKit.framework */,
 				9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */,
 				9FFAE513205AB50C000C028E /* libz.tbd */,
 				9FFAE510205AB4AB000C028E /* libbz2.tbd */,
 				9FFAE50E205AB4A3000C028E /* libiconv.tbd */,
-				9F0E6F7B203F02DB0086699C /* DFRFoundation.framework */,
 				9F0E6F77203ED1380086699C /* AppKit.framework */,
 				C251FB501FEE300E0035E5D7 /* Telegram.xcodeproj */,
 				C256A9131FB9CBF10043D497 /* LocalAuthentication.framework */,
@@ -5656,6 +5656,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 					"$(PROJECT_DIR)/submodules",
+					"$(PROJECT_DIR)/submodules/AppCenter",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
@@ -5862,6 +5863,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 					"$(PROJECT_DIR)/submodules",
+					"$(PROJECT_DIR)/submodules/AppCenter",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
@@ -6010,6 +6012,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 					"$(PROJECT_DIR)/submodules",
+					"$(PROJECT_DIR)/submodules/AppCenter",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
@@ -6210,6 +6213,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 					"$(PROJECT_DIR)/submodules",
+					"$(PROJECT_DIR)/submodules/AppCenter",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
@@ -6279,6 +6283,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
 					"$(PROJECT_DIR)/HockeySDK-Mac",
 					"$(PROJECT_DIR)/submodules",
+					"$(PROJECT_DIR)/submodules/AppCenter",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;

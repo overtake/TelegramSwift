@@ -17,6 +17,7 @@ BUILD_MACHINE="macOS";
 BUILDBOX_DIR="buildbox"
 BUILD_CONFIGURATION="$1"
 
+rm -rf "$HOME/build-$BUILD_CONFIGURATION"
 mkdir -p "$HOME/build-$BUILD_CONFIGURATION"
 
 PROCESS_ID="$$"
@@ -55,7 +56,7 @@ ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/nul
 
 scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -pr telegram@"$VM_IP":build/output/Telegram.tar "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
 
-rm -rf "$HOME/build-$BUILD_CONFIGURATION"
+
 tar -xf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" -C "$HOME/build-$BUILD_CONFIGURATION"
 rm -f "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
 

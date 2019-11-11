@@ -15,3 +15,4 @@ DSA_PEM_FILE = dsa_pub.pem
 SIMPLE_SLASH=/
 
 SFEED_URL = https:${SIMPLE_SLASH}/api.appcenter.ms/v0.1/public/sparkle/apps/f012091f-35d9-47bb-b3db-9cbd3b0232d3
+APPCENTER_SECRET = f012091f-35d9-47bb-b3db-9cbd3b0232d3

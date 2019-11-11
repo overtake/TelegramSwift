@@ -12,10 +12,8 @@ import LocalAuthentication
 import WalletCore
 import OpenSSLEncryption
 
-#if !APP_STORE
-    import HockeySDK
-#endif
-
+import AppCenter
+import AppCenterCrashes
 
 
 
@@ -31,11 +29,6 @@ private final class SharedApplicationContext {
     }
 }
 
-#if !APP_STORE
-extension AppDelegate : BITHockeyManagerDelegate {
-    
-}
-#endif
 
 @NSApplicationMain
 class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
@@ -179,24 +172,25 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
       //  Timer.scheduledTimer(timeInterval: 60 * 60, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: true)
         
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
-
-                
-
+        if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
+            MSAppCenter.start(secret, withServices: [MSCrashes.self])
+        }
+        
 
         
-        let hockeyAppId:String
-        #if BETA
-            hockeyAppId = "6ed2ac3049e1407387c2f1ffcb74e81f"
-        #elseif ALPHA
-            hockeyAppId = "f012091f35d947bbb3db9cbd3b0232d3"
-        #endif
-        
-        #if BETA || ALPHA
-            BITHockeyManager.shared().configure(withIdentifier: hockeyAppId)
-            BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = true
-            BITHockeyManager.shared().start()
-            BITHockeyManager.shared()?.delegate = self
-        #endif
+//        let hockeyAppId:String
+//        #if BETA
+//            hockeyAppId = "6ed2ac3049e1407387c2f1ffcb74e81f"
+//        #elseif ALPHA
+//            hockeyAppId = "f012091f35d947bbb3db9cbd3b0232d3"
+//        #endif
+//
+//        #if BETA || ALPHA
+//            BITHockeyManager.shared().configure(withIdentifier: hockeyAppId)
+//            BITHockeyManager.shared().crashManager.isAutoSubmitCrashReport = true
+//            BITHockeyManager.shared().start()
+//            BITHockeyManager.shared()?.delegate = self
+//        #endif
 //
 //            #if STABLE     
 //                let hockeyAppId:String = "d77af558b21e0878953100680b5ac66a"
@@ -1031,28 +1025,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         semaphore.wait()
         
         return result
-        
-//        var description = ""
-//        if let sortedLogFileInfos = fileLogger.logFileManager.sortedLogFileInfos {
-//            for logFile in sortedLogFileInfos {
-//                if let logData = FileManager.default.contents(atPath: logFile.filePath) {
-//                    if logData.count > 0 {
-//                        description.append(String(data: logData, encoding: String.Encoding.utf8)!)
-//                    }
-//                }
-//            }
-//        }
-//        if (description.characters.count > maxSize) {
-//            description = description.substring(from: description.index(description.startIndex, offsetBy: description.characters.count - maxSize - 1))
-//        }
-//        return description;
     }
     
-    #if !APP_STORE
-    func applicationLog(for crashManager: BITCrashManager!) -> String! {
-        return getLogFilesContentWithMaxSize()
-    }
-    #endif
     @IBAction func showQuickSwitcher(_ sender: Any) {
         
         if let context = contextValue?.context, authContextValue == nil {
