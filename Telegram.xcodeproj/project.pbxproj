@@ -207,7 +207,7 @@
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
 		A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */; };
-		A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; };
+		A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7D28205236C3C0B0000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28204236C3C0B0000A9BF /* Postbox.framework */; };
 		A7D28207236C3C0F0000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28206236C3C0F0000A9BF /* SwiftSignalKit.framework */; };
@@ -4589,6 +4589,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Telegram" */;
 			buildPhases = (
+				9F193BD82130B968001C0800 /* ShellScript */,
 				D098C7121D7E175A007784E4 /* Frameworks */,
 				C20D5AB61DAA94500042616A /* Copy Files */,
 				D098C7111D7E175A007784E4 /* Sources */,
@@ -4597,7 +4598,6 @@
 				C23D0D7B1F1A648600AF5151 /* Fonts */,
 				C2786FF51FEC128F001FB044 /* Palettes */,
 				C2D85FD51F25FE5400EDEA15 /* ShellScript */,
-				9F193BD82130B968001C0800 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -4785,7 +4785,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nFILE=\"${SRCROOT}/HockeySDK-Mac/BuildAgent\"\nif [ -f \"$FILE\" ]; then\n\"$FILE\"\nfi\n";
+			shellScript = "
+";
 		};
 		C2D85FD51F25FE5400EDEA15 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

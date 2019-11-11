@@ -11,10 +11,10 @@ import CoreServices
 import LocalAuthentication
 import WalletCore
 import OpenSSLEncryption
-
+#if !APP_STORE
 import AppCenter
 import AppCenterCrashes
-
+#endif
 
 
 
@@ -163,18 +163,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         mw = window
         
         #if !APP_STORE
-          //  self.updater.automaticallyChecksForUpdates = true
-           // self.updater.automaticallyDownloadsUpdates = false
-           // self.updater.checkForUpdatesInBackground()
+            if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
+                MSAppCenter.start(secret, withServices: [MSCrashes.self])
+            }
         #endif
         
         
       //  Timer.scheduledTimer(timeInterval: 60 * 60, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: true)
         
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
-        if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
-            MSAppCenter.start(secret, withServices: [MSCrashes.self])
-        }
+        
         
         
 
