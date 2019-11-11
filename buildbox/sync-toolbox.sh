@@ -4,7 +4,7 @@ set -e
 
 export PATH="$PATH:$HOME/.credentials"
 source variables.sh
-
+MAIN_REPOSITORY=$PWD
 cd ..
 if [ ! -d "./deploy" ]; then
     mkdir -p ./deploy
@@ -13,5 +13,7 @@ else
     cd ./deploy
     git reset --hard
     git pull origin master
+    cd ..
 fi
 
+cp ./deploy/Config.swift $MAIN_REPOSITORY/Telegram-Mac
