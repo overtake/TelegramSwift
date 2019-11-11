@@ -32,12 +32,6 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerC
     } else if let resource = resource as? LocalFileVideoMediaResource {
         return fetchMovMediaResource(resource: resource)
     }
-    
-//    if let resource = resource as? VideoLibraryMediaResource {
-//        return fetchVideoLibraryMediaResource(resource: resource)
-//    } else if let resource = resource as? LocalFileVideoMediaResource {
-//        return fetchLocalFileVideoMediaResource(resource: resource)
-//    }
     return nil
 }, fetchResourceMediaReferenceHash: { resource in
     return .single(nil)

@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreMedia/CoreMedia.h>
-
+#import <AppKit/AppKit.h>
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RLottieBridge : NSObject
@@ -21,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(int)startFrame;
 -(int)endFrame;
 -(int)fps;
+-(void)setColor:(NSColor *)color forKeyPath:(NSString *)keyPath;
 @end
 
 NS_ASSUME_NONNULL_END

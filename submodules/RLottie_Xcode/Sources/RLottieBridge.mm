@@ -218,6 +218,10 @@
     rlottie::Surface surface((uint32_t *)buffer, width, height, width * 4);
     player->renderSync(index, surface);
 }
+    
+-(void)setColor:(NSColor *)color forKeyPath:(NSString *)keyPath {
+    player->setValue<rlottie::Property::FillColor>(keyPath.UTF8String, rlottie::Color(color.redComponent, color.greenComponent, color.blueComponent));
+}
 
 @end
 
