@@ -7,7 +7,7 @@
 //
 
 import TGUIKit
-import Lottie
+
 
 enum LButtonAutoplaySide {
     case left
@@ -15,56 +15,60 @@ enum LButtonAutoplaySide {
 }
 
 class LAnimationButton: Button {
-    private let scale: CGFloat
-    private let animationView: AnimationView
+    private let animationView: LottiePlayerView = LottiePlayerView(frame: NSZeroRect)
     var speed: CGFloat = 1.0 {
         didSet {
-           animationView.animationSpeed = speed
+           //animationView.animationSpeed = speed
         }
     }
     private let offset: CGFloat
-    private var colorCallbacks: [ColorValueProvider] = []
     
     var played = false
     var completion: (() -> Void)?
 
     var autoplayOnVisibleSide: LButtonAutoplaySide? = nil
-    
-    init(animation: String, keysToColor: [String]? = nil, color: NSColor = .black, scale: CGFloat = 1.0, offset: CGFloat = 0, autoplaySide: LButtonAutoplaySide? = nil, rotated: Bool = false) {
-        self.scale = scale
+    private var animation: LottieAnimation?
+    private var firstFrame: LottieAnimation?
+    init(animation: String, size: NSSize, keysToColor: [String]? = nil, color: NSColor = .black, offset: CGFloat = 0, autoplaySide: LButtonAutoplaySide? = nil, rotated: Bool = false) {
         self.offset = offset
         self.autoplayOnVisibleSide = autoplaySide
-        let animation = Animation.named(animation, bundle: Bundle.main, subdirectory: nil, animationCache: LRUAnimationCache.sharedCache)
-        self.animationView = AnimationView(animation: animation)
-        super.init(frame: NSZeroRect)
-        //self.animationView.background = .red
+        if let file = Bundle.main.path(forResource: animation, ofType: "json"), let data = try? Data(contentsOf: URL(fileURLWithPath: file)) {
+            self.animation = LottieAnimation(compressed: data, key: .init(key: .bundle(animation), size: size), cachePurpose: .none, playPolicy: .once, maximumFps: 60)
+            self.firstFrame = LottieAnimation(compressed: data, key: .init(key: .bundle(animation), size: size), cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60)
+        } else {
+            self.animation = nil
+            self.firstFrame = nil
+        }
+        animationView.setFrameSize(size)
+        super.init(frame: NSMakeRect(0, 0, size.width, size.height))
         addSubview(animationView)
-        animationView.setFrameSize(animationView.frame.width * scale, animationView.frame.height)
         self.set(keysToColor: keysToColor, color: color)
         
         if rotated {
             animationView.rotate(byDegrees: 180)
         }
-       
     }
     
     func set(keysToColor: [String]? = nil, color: NSColor = .black) {
         let newColor = color.usingColorSpace(.deviceRGB)!
         
-        
-        let colorCallback = ColorValueProvider(Color(r: Double(newColor.redComponent), g: Double(newColor.greenComponent), b: Double(newColor.blueComponent), a: Double(newColor.alphaComponent)))
-        self.colorCallbacks.append(colorCallback)
+        var colors: [LottieColor] = []
         if let keysToColor = keysToColor {
-            for key in keysToColor {
-                animationView.setValueProvider(colorCallback, keypath: AnimationKeypath(keypath: "\(key).Color"))
+            for keyToColor in keysToColor {
+                colors.append(LottieColor(keyPath: keyToColor, color: newColor))
             }
         }
+        
+        self.animation = self.animation?.withUpdatedColors(colors)
+        self.firstFrame = self.firstFrame?.withUpdatedColors(colors)
+        animationView.set(self.firstFrame)
+
     }
     
     
     override func viewDidMoveToWindow() {
         if window == nil {
-            animationView.stop()
+            animationView.set(nil)
         }
     }
     
@@ -81,15 +85,14 @@ class LAnimationButton: Button {
                 point = NSMakePoint(frame.width / 3, frame.height / 2)
             }
             let locationInWindow = self.convert(point, to: nil)
-            
             if window?.contentView?.hitTest(locationInWindow) == self.animationView {
                 if !self.played {
                     self.played = true
-                    animationView.play()
+                    animationView.set(self.animation)
                 }
             } else if self.played {
                 self.played = false
-                animationView.play(toFrame: AnimationFrameTime())
+                //animationView.set(self.firstFrame)
             }
         }
        
@@ -97,51 +100,17 @@ class LAnimationButton: Button {
         self.prevVisibleRect = visibleRect
     }
     
-    func play() {
-        if !animationView.isAnimationPlaying, !self.played {
-            self.played = true
-            animationView.play { [weak self] _ in
-                self?.completion?()
-            }
-        }
-    }
+
     
     func loop() {
-        animationView.play()
+        self.animationView.set(self.animation)
     }
     
-    func reset() {
-        if self.played {
-            self.played = false
-            animationView.stop()
-        }
-    }
-    
-    func goToEnd(animated: Bool) {
-        isSelected = true
-        if !animated {
-           // animationView.play(fromFrame: .greatestFiniteMagnitude, toFrame: .greatestFiniteMagnitude, loopMode: nil, completion: nil)
-            animationView.currentFrame = .greatestFiniteMagnitude
-          //  animationView.stop()
-        } else {
-            animationView.play(fromFrame: animationView.realtimeAnimationFrame, toFrame: .greatestFiniteMagnitude, loopMode: nil, completion: nil)
-        }
-    }
-    
-    func goToStart(animated: Bool) {
-        isSelected = false
-        if !animated {
-            animationView.currentFrame = .init()
-            animationView.stop()
 
-        } else  {
-            animationView.play(fromFrame: animationView.realtimeAnimationFrame, toFrame: .init(), loopMode: nil, completion: nil)
-        }
-    }
+
     
     override func layout() {
         super.layout()
-    //    animationView.setFrameSize(frame.size)
         animationView.center()
         animationView.setFrameOrigin(animationView.frame.minX, animationView.frame.minY - offset)
     }
