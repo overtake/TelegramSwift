@@ -13,7 +13,6 @@ import TelegramCore
 import SyncCore
 import Postbox
 import AVFoundation
-import Lottie
 
 final class GalleryInteractions {
     var dismiss:()->KeyHandlerResult = { return .rejected}
@@ -79,8 +78,6 @@ private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
                 return file
             } else if file.isVideoFile, FileManager.default.fileExists(atPath: postbox.mediaBox.resourcePath(file.resource)) {
                 return file
-            } else if Animation.filepath(postbox.mediaBox.resourcePath(file.resource), animationCache: LRUAnimationCache.sharedCache) != nil {
-                return file
             }
         } else if let webpage = media as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
@@ -110,8 +107,6 @@ fileprivate func itemFor(entry: ChatHistoryEntry, context: AccountContext, pager
                         return MGalleryPhotoItem(context, .message(entry), pagerSize)
                     } else if file.isVideo && file.isAnimated {
                         return MGalleryGIFItem(context, .message(entry), pagerSize)
-                    } else if let animation = Animation.filepath(context.account.postbox.mediaBox.resourcePath(file.resource), animationCache: LRUAnimationCache.sharedCache) {
-                        return MGalleryLottieItem(context, .lottie(animation, entry), pagerSize)
                     } else if file.isVideoFile {
                         return MGalleryVideoItem(context, .message(entry), pagerSize)
                     }

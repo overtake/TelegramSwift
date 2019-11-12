@@ -12,7 +12,6 @@ import TelegramCore
 import SyncCore
 import TGUIKit
 import SwiftSignalKit
-import Lottie
 
 
 

@@ -14,7 +14,6 @@ import AVKit
 import TelegramCore
 import SyncCore
 import Postbox
-import Lottie
 
 fileprivate class GMagnifyView : MagnifyView  {
     private var progressView: RadialProgressView?
@@ -512,29 +511,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     
     func decreaseSpeed() {
-        let speeds:[CGFloat] = [0.1, 0.3, 0.5, 0.7, 1.0]
-        if let magnigy = controller.selectedViewController?.view as? MagnifyView {
-            if let animation = magnigy.contentView as? AnimationView {
-                if let index = speeds.firstIndex(of: animation.animationSpeed) {
-                    animation.animationSpeed = speeds[max(0, index - 1)]
-                }
-            } else {
-                zoomOut()
-            }
-        }
+        
     }
     
     func increaseSpeed() {
-        let speeds:[CGFloat] = [0.1, 0.3, 0.5, 0.7, 1.0]
-        if let magnigy = controller.selectedViewController?.view as? MagnifyView {
-            if let animation = magnigy.contentView as? AnimationView {
-                if let index = speeds.firstIndex(of: animation.animationSpeed) {
-                    animation.animationSpeed = speeds[min(speeds.count - 1, index + 1)]
-                }
-            } else {
-                zoomIn()
-            }
-        }
+        
     }
     
     

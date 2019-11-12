@@ -42,7 +42,9 @@ class LAnimationButton: Button {
         animationView.setFrameSize(size)
         super.init(frame: NSMakeRect(0, 0, size.width, size.height))
         addSubview(animationView)
-        self.set(keysToColor: keysToColor, color: color)
+        if keysToColor != nil {
+            self.set(keysToColor: keysToColor, color: color)
+        }
         
         if rotated {
             animationView.rotate(byDegrees: 180)
@@ -69,6 +71,8 @@ class LAnimationButton: Button {
     override func viewDidMoveToWindow() {
         if window == nil {
             animationView.set(nil)
+        } else {
+            animationView.set(self.firstFrame)
         }
     }
     

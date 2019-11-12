@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9F0367E522707A4D00456348 /* Lottie.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F354E9D2270757E006F1D42 /* Lottie.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F0367EC2270836400456348 /* LottieTestModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EB2270836400456348 /* LottieTestModalController.swift */; };
-		9F0367EE22709C5600456348 /* MGalleryLottieItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367ED22709C5600456348 /* MGalleryLottieItem.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
 		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
@@ -90,7 +87,6 @@
 		9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F10CE8720610127002DD61A /* PassportController.swift */; };
 		9F291CA12264E57F00C66267 /* BuildConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F291C9F2264E57F00C66267 /* BuildConfig.m */; };
 		9F354E9C2270630A006F1D42 /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F354E9B2270630A006F1D42 /* HapticEngine.swift */; };
-		9F354EA4227077BD006F1D42 /* Lottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F354EA3227077BD006F1D42 /* Lottie.framework */; };
 		9F3D5F6322044D8700CB0CAA /* AppUpdateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3D5F6222044D8700CB0CAA /* AppUpdateViewController.swift */; };
 		9F3D5F8622085B2000CB0CAA /* UpdaterNotifySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3D5F8522085B2000CB0CAA /* UpdaterNotifySettings.swift */; };
 		9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */; };
@@ -858,7 +854,6 @@
 				A7D2820D236C3C2F0000A9BF /* TelegramCore.framework in Copy Files */,
 				A7D2820C236C3C2A0000A9BF /* MtProtoKit.framework in Copy Files */,
 				A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */,
-				9F0367E522707A4D00456348 /* Lottie.framework in Copy Files */,
 				C224F2941E43CDC4002FF0B2 /* TGUIKit.framework in Copy Files */,
 			);
 			name = "Copy Files";
@@ -909,8 +904,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		9F0367EB2270836400456348 /* LottieTestModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieTestModalController.swift; sourceTree = "<group>"; };
-		9F0367ED22709C5600456348 /* MGalleryLottieItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MGalleryLottieItem.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
 		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
@@ -1954,7 +1947,6 @@
 				A7D28205236C3C0B0000A9BF /* Postbox.framework in Frameworks */,
 				A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */,
 				D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */,
-				9F354EA4227077BD006F1D42 /* Lottie.framework in Frameworks */,
 				C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */,
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
 				9F18908F2237E95400665EF5 /* VideoToolbox.framework in Frameworks */,
@@ -3488,7 +3480,6 @@
 				C24DAB851E08026C005EE404 /* MGalleryVideoItem.swift */,
 				C29A65021E08396F0071BCEF /* MGalleryExternalVideoItem.swift */,
 				C2D1839C1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift */,
-				9F0367ED22709C5600456348 /* MGalleryLottieItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -4219,7 +4210,6 @@
 				9F262D5E21BFD5BC006817CD /* LocalizationPreviewModalController.swift */,
 				9F6314E021CAA0AB009FD379 /* NewPollController.swift */,
 				9F18908C2237B5A400665EF5 /* InputURLFormatterModalController.swift */,
-				9F0367EB2270836400456348 /* LottieTestModalController.swift */,
 				D014193B22AE939F008667CB /* ModalOptionSetController.swift */,
 			);
 			name = overlay;
@@ -4899,7 +4889,6 @@
 				D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */,
 				C25BB1691F867FEE0089ED02 /* ChatMessageAccessoryView.swift in Sources */,
 				C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */,
-				9F0367EE22709C5600456348 /* MGalleryLottieItem.swift in Sources */,
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
 				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
@@ -4942,7 +4931,6 @@
 				C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */,
 				C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */,
 				D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */,
-				9F0367EC2270836400456348 /* LottieTestModalController.swift in Sources */,
 				9FFAE506205A928C000C028E /* RingByteBuffer.swift in Sources */,
 				C24DABBE1E0834B7005EE404 /* XCDYouTubeLogger.m in Sources */,
 				9F4EC948218B459A002B3C56 /* RenderedTotalUnreadCount.swift in Sources */,

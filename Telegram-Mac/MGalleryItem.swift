@@ -12,7 +12,6 @@ import TelegramCore
 import SyncCore
 import SwiftSignalKit
 import TGUIKit
-import Lottie
 
 
 enum GPreviewValue {
@@ -72,12 +71,6 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case .lottie(_, let lhsEntry):
-        if case let .lottie(_, rhsEntry) = rhs {
-            return lhsEntry < rhsEntry
-        } else {
-            return false
-        }
     }
 }
 
@@ -107,12 +100,6 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .lottie(_, lhsEntry):
-        if case .lottie(_, let rhsEntry) = rhs {
-            return lhsEntry.stableId == rhsEntry.stableId
-        } else {
-            return false
-        }
     }
 }
 enum GalleryEntry : Comparable, Identifiable {
@@ -120,7 +107,6 @@ enum GalleryEntry : Comparable, Identifiable {
     case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, message: Message?, date: TimeInterval)
     case instantMedia(InstantPageMedia, Message?)
     case secureIdDocument(SecureIdDocumentValue, Int)
-    case lottie(Animation, ChatHistoryEntry)
     var stableId: AnyHashable {
         switch self {
         case let .message(entry):
@@ -131,8 +117,6 @@ enum GalleryEntry : Comparable, Identifiable {
             return media.index
         case let .secureIdDocument(document, _):
             return document.stableId
-        case let .lottie(_, entry):
-            return entry.stableId
         }
     }
     
@@ -173,17 +157,6 @@ enum GalleryEntry : Comparable, Identifiable {
             }
         case .instantMedia(let media, _):
             return media.media as? TelegramMediaFile
-        case let .lottie(_, entry):
-            if let media = entry.message!.media[0] as? TelegramMediaFile {
-                return media
-            } else if let media = entry.message!.media[0] as? TelegramMediaWebpage {
-                switch media.content {
-                case let .Loaded(content):
-                    return content.file
-                default:
-                    return nil
-                }
-            }
         default:
             return nil
         }
@@ -212,8 +185,6 @@ enum GalleryEntry : Comparable, Identifiable {
             return ImageMediaReference.standalone(media: image)
         case .photo:
             return ImageMediaReference.standalone(media: image)
-        case .lottie:
-            preconditionFailure()
         }
     }
     
@@ -247,8 +218,6 @@ enum GalleryEntry : Comparable, Identifiable {
             return FileMediaReference.standalone(media: file)
         case .photo:
             return FileMediaReference.standalone(media: file)
-        case .lottie:
-            preconditionFailure()
         }
     }
     
@@ -263,16 +232,12 @@ enum GalleryEntry : Comparable, Identifiable {
             return "\(stableId)"
         case let .secureIdDocument(document, _):
             return "secureId: \(document.document.id.hashValue)"
-        case let .lottie(_, entry):
-            return "lottie-animation-\(entry.message?.stableId ?? 0)"
         }
     }
     
     var chatEntry: ChatHistoryEntry? {
         switch self {
         case let .message(entry):
-            return entry
-        case let .lottie(_, entry):
             return entry
         default:
             return nil

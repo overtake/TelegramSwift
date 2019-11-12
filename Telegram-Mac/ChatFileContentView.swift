@@ -12,7 +12,6 @@ import Postbox
 import TelegramCore
 import SyncCore
 import TGUIKit
-import Lottie
 
 class ChatFileContentView: ChatMediaContentView {
     
@@ -85,12 +84,7 @@ class ChatFileContentView: ChatMediaContentView {
             if media.isGraphicFile || media.isVideoFile {
                 showChatGallery(context: context, message: parent, table, parameters as? ChatMediaGalleryParameters, type: media.isVideoFile ? .alone : .history)
             } else {
-                if let _ = Animation.filepath(context.account.postbox.mediaBox.resourcePath(media.resource)) {
-                    showChatGallery(context: context, message: parent, self.table, self.parameters as? ChatMediaGalleryParameters, type: .alone)
-                } else {
-                    QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
-                }
-                
+                QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
             }
         }
     }
