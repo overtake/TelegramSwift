@@ -12,7 +12,6 @@ import Postbox
 import TelegramCore
 import SyncCore
 import TGUIKit
-import Lottie
 
 
 class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvider {

@@ -7,9 +7,6 @@ url=https://github.com/overtake/Sparkle
 [submodule "submodules/Zip"]
 	path = submodules/Zip
 	url = https://github.com/overtake/Zip
-[submodule "submodules/lottie-ios"]
-	path = submodules/lottie-ios
-url=git@github.com:overtake/lottie-ios.git
 [submodule "submodules/telegram-ios"]
 	path = submodules/telegram-ios
 url=git@gitlab.com:peter-iakovlev/telegram-ios.git

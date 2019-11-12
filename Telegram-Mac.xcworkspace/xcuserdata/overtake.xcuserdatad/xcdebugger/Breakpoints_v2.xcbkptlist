@@ -211,13 +211,45 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/LottiePlayer.swift"
-            timestampString = "595193780.454183"
+            timestampString = "595244666.898375"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "572"
-            endingLineNumber = "572"
-            landmarkName = "withUpdatedColors(_:)"
+            startingLineNumber = "263"
+            endingLineNumber = "263"
+            landmarkName = "initializeAndPlay()"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Telegram.(PlayerRenderer in _C132402AC8EF995BA0EA2570D70292AB).initializeAndPlay() -&gt; ()"
+                  moduleName = "Telegram"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/overtake/Dropbox/Telegram-macOS/Telegram/Telegram-Mac/LottiePlayer.swift"
+                  timestampString = "595242990.59867"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "263"
+                  endingLineNumber = "263"
+                  offsetFromSymbolStart = "1972">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Optional&lt;__C.RLottieBridge&gt;) -&gt; Swift.Optional&lt;__C.RLottieBridge&gt; in Telegram.(PlayerRenderer in _C132402AC8EF995BA0EA2570D70292AB).initializeAndPlay() -&gt; ()"
+                  moduleName = "Telegram"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/overtake/Dropbox/Telegram-macOS/Telegram/Telegram-Mac/LottiePlayer.swift"
+                  timestampString = "595242990.600628"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "263"
+                  endingLineNumber = "263"
+                  offsetFromSymbolStart = "20">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

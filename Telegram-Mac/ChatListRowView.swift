@@ -536,7 +536,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
             } else if case .ArchivedChats = item.photo {
                 if self.archivedPhoto == nil {
-                    self.archivedPhoto = LAnimationButton(animation: "archiveAvatar", size: NSMakeSize(46, 46), keysToColor: ["box2.box2.Fill 1"], color: theme.colors.grayForeground, offset: 0)
+                    self.archivedPhoto = LAnimationButton(animation: "archiveAvatar", size: NSMakeSize(46, 46), offset: 0)
                     containerView.addSubview(self.archivedPhoto!, positioned: .above, relativeTo: self.photo)
                 }
                 self.archivedPhoto?.frame = self.photo.frame
@@ -695,7 +695,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             
             
-            let archive: LAnimationButton = LAnimationButton(animation: item.associatedGroupId != .root ? "anim_unarchive" : "anim_archive", size: NSMakeSize(frame.height, frame.height), keysToColor: ["box2.box2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: item.associatedGroupId != .root ? 9.0 : 0.0, autoplaySide: .left)
+            let archive: LAnimationButton = LAnimationButton(animation: item.associatedGroupId != .root ? "anim_unarchive" : "anim_archive", size: item.associatedGroupId != .root ? NSMakeSize(45, 45) : NSMakeSize(frame.height, frame.height), keysToColor: ["box2.box2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: item.associatedGroupId != .root ? 9.0 : 0.0, autoplaySide: .left)
             let archiveTitle = TextViewLabel()
             archiveTitle.attributedString = .initialize(string: item.associatedGroupId != .root ? L10n.chatListSwipingUnarchive : L10n.chatListSwipingArchive, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
             archiveTitle.sizeToFit()

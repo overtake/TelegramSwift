@@ -47,9 +47,6 @@
       location = "group:core-xprojects/OpenSSLEncryption/OpenSSLEncryption_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/lottie-ios/Lottie.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:submodules/Zip/Zip.xcodeproj">
    </FileRef>
    <FileRef
