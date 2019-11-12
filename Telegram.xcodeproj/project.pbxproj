@@ -710,7 +710,6 @@
 		C2FD33F81E6C1486008D13D4 /* SSKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33F51E6C1486008D13D4 /* SSKeychain.m */; };
 		C2FD33F91E6C1486008D13D4 /* SSKeychainQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33F71E6C1486008D13D4 /* SSKeychainQuery.m */; };
 		C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2FD33FA1E6C169C008D13D4 /* Security.framework */; };
-		C2FD34131E6C2503008D13D4 /* LegacyImportAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */; };
 		C2FD34151E6C9003008D13D4 /* BaseApplicationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD34141E6C9003008D13D4 /* BaseApplicationSettings.swift */; };
 		C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */; };
 		C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */; };
@@ -929,8 +928,6 @@
 		9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentColorRowItem.swift; sourceTree = "<group>"; };
 		9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sparkle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sparkle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F0E6F74203EC7090086699C /* DFRPrivateHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DFRPrivateHeader.m; sourceTree = "<group>"; };
-		9F0E6F75203EC7090086699C /* DFRPrivateHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFRPrivateHeader.h; sourceTree = "<group>"; };
 		9F0E6F77203ED1380086699C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		9F0E6F79203EFE870086699C /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		9F0F8E81226DCD1C00A97F6A /* OpmizeDatabaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpmizeDatabaseView.swift; sourceTree = "<group>"; };
@@ -1793,7 +1790,6 @@
 		C2FD33F61E6C1486008D13D4 /* SSKeychainQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSKeychainQuery.h; sourceTree = "<group>"; };
 		C2FD33F71E6C1486008D13D4 /* SSKeychainQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSKeychainQuery.m; sourceTree = "<group>"; };
 		C2FD33FA1E6C169C008D13D4 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LegacyImportAuthorization.swift; sourceTree = "<group>"; };
 		C2FD34141E6C9003008D13D4 /* BaseApplicationSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseApplicationSettings.swift; sourceTree = "<group>"; };
 		C2FD382D1DCA1FA3009DC28C /* PreviewSenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewSenderController.swift; sourceTree = "<group>"; };
 		C2FD38311DCA215F009DC28C /* GeneralInputRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralInputRow.swift; sourceTree = "<group>"; };
@@ -2019,15 +2015,6 @@
 				9F0AE6BF2199CDB500A8B53A /* SVideoView.swift */,
 			);
 			name = player;
-			sourceTree = "<group>";
-		};
-		9F0E6F73203EC7090086699C /* DFRPrivate */ = {
-			isa = PBXGroup;
-			children = (
-				9F0E6F74203EC7090086699C /* DFRPrivateHeader.m */,
-				9F0E6F75203EC7090086699C /* DFRPrivateHeader.h */,
-			);
-			path = DFRPrivate;
 			sourceTree = "<group>";
 		};
 		9F10CE862060FFB7002DD61A /* secure-id */ = {
@@ -3362,7 +3349,6 @@
 				9FC4DA9F21DD1D6C003E2A62 /* libjpeg-turbo */,
 				9F8FDED3205A7AD5001A7A77 /* ffmpeg */,
 				9FA0E52720519DF8001E5649 /* Video Encoder */,
-				9F0E6F73203EC7090086699C /* DFRPrivate */,
 				C209C36E1F262520009231FE /* emoji */,
 				C2C9B90B1E800F0C00380D79 /* media-key-tap */,
 				C2FD33F31E6C1486008D13D4 /* sskeychain */,
@@ -3555,14 +3541,6 @@
 			children = (
 			);
 			name = palettes;
-			sourceTree = "<group>";
-		};
-		C279824C1E72C83500262BFD /* legacy */ = {
-			isa = PBXGroup;
-			children = (
-				C2FD34121E6C2503008D13D4 /* LegacyImportAuthorization.swift */,
-			);
-			name = legacy;
 			sourceTree = "<group>";
 		};
 		C27A8E971EC9D45C00C8E7E7 /* quick-switcher */ = {
@@ -4451,7 +4429,6 @@
 			children = (
 				D05F392122FB448E0040F341 /* experemental */,
 				9FDA713020E64541001ED8ED /* media */,
-				C279824C1E72C83500262BFD /* legacy */,
 				C25F71461E410DD50046AF4E /* inapp-settings */,
 				C253E22F1DE34FA20022A29F /* audio */,
 				C253A9531D9164CE00CDC850 /* thrid-party */,
@@ -5107,7 +5084,6 @@
 				D017A3FB2339404D0086174B /* WalletTransactionTextItem.swift in Sources */,
 				C209C3731F262537009231FE /* emoji_suggestions_data.cpp in Sources */,
 				D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */,
-				C2FD34131E6C2503008D13D4 /* LegacyImportAuthorization.swift in Sources */,
 				C28BAB271DF980DE0027CE3A /* AudioRecorder.swift in Sources */,
 				C21B24651EDB115700FC6CDA /* StringPluralization.swift in Sources */,
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
