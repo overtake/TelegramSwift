@@ -9,12 +9,12 @@
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
-			<integer>34</integer>
+			<integer>36</integer>
 		</dict>
 		<key>MtProtoKit.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>55</integer>
+			<integer>50</integer>
 		</dict>
 		<key>MtProtoKitDynamic.xcscheme_^#shared#^_</key>
 		<dict>
