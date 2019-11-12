@@ -7,12 +7,12 @@
 		<key>SSignalKit.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>10</integer>
+			<integer>14</integer>
 		</dict>
 		<key>SwiftSignalKit.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>27</integer>
+			<integer>25</integer>
 		</dict>
 		<key>SwiftSignalKitMac.xcscheme_^#shared#^_</key>
 		<dict>
