@@ -983,7 +983,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         
     }
     override func scrollup() {
-        self.genericView.tableView.scroll(to: .up(true))
+        self.position.set(.initial)
+      //  self.genericView.tableView.scroll(to: .up(true))
     }
     
     override var supportSwipes: Bool {
