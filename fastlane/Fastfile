@@ -34,7 +34,7 @@ lane :alpha do
     sh("rm -rf ./output")
     sh("mkdir ./output")
     gym(
-      scheme: "HockeyappMacAlpha",
+      scheme: "HockeyappAlpha",
       clean: true,
       silent: true,
       output_directory: "./output"
