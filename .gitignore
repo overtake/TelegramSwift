@@ -1,15 +1,5 @@
 Telegram-Mac/Config.swift
-Telegram-Mac.xcworkspace/xcuserdata/telegram.xcuserdatad/UserInterfaceState.xcuserstate
-Telegram-Mac.xcworkspace/xcuserdata/telegram.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
-Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/Hockeyapp.xcscheme
-Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/Release.xcscheme
-Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/Telegram.xcscheme
-Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/xcschememanagement.plist
-TGUIKit/TGUIKit.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/TGUIKit.xcscheme
-TGUIKit/TGUIKit.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/xcschememanagement.plist
-
-Telegram-Mac.xcworkspace/xcuserdata/keepcoder.xcuserdatad/UserInterfaceState.xcuserstate
-Telegram.xcodeproj/xcuserdata/keepcoder.xcuserdatad/xcschemes/xcschememanagement.plist
-TGUIKit/TGUIKit.xcodeproj/xcuserdata/keepcoder.xcuserdatad/xcschemes/xcschememanagement.plist
 fastlane/README.md
 fastlane/report.xml
+xcuserdata
+xcuserstate
