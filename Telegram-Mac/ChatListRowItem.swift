@@ -325,12 +325,12 @@ class ChatListRowItem: TableRowItem {
         self.hasFailed = hasFailed
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         switch groupId {
-        case Namespaces.PeerGroup.circles:
-            let _ = titleText.append(string: L10n.chatListCircledChats, color: theme.chatList.textColor, font: .medium(.title))
-            photo = .Circles
-        default:
+        case Namespaces.PeerGroup.archive:
             let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
             photo = .ArchivedChats
+        default:
+            let _ = titleText.append(string: groupName, color: theme.chatList.textColor, font: .medium(.title))
+            photo = .Circles
         }
         
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
@@ -662,16 +662,15 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    func toggleCircles() {
+    func addToCircle(id: PeerGroupId) {
         if let peerId = peerId {
-            switch associatedGroupId {
-            case .root:
-                 _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: Namespaces.PeerGroup.circles).start()
-                 context.sharedContext.bindings.mainController().chatList.addArchiveTooltip(peerId, circles: true)
-                 context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
-            default:
-                 _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
-            }
+            _ = updatePeerGroupIdInteractively(postbox: self.context.account.postbox, peerId: peerId, groupId: id).start()
+            context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(id)
+        }
+    }
+    func removeFromCircles() {
+        if let peerId = peerId {
+            _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
         }
     }
     
@@ -683,6 +682,14 @@ class ChatListRowItem: TableRowItem {
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        let strongSelf = self
+        return getCirclesSettings(postbox: self.context.account.postbox)
+        |> mapToSignal {settings -> Signal<[ContextMenuItem], NoError> in
+            return strongSelf.menuItemsOrig(in: location, circlesSettings: settings)
+        }
+    }
+    
+    func menuItemsOrig(in location: NSPoint, circlesSettings: Circles?) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
 
         let context = self.context
@@ -746,9 +753,6 @@ class ChatListRowItem: TableRowItem {
                 self?.toggleArchive()
             }
             
-            let toggleCircles:()->Void = { [weak self] in
-                self?.toggleCircles()
-            }
             
             let toggleMute:()->Void = { [weak self] in
                 self?.toggleMuted()
@@ -768,16 +772,32 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             }
             
-            if groupId == .root, (canArchive || associatedGroupId != .root) {
-                if associatedGroupId != Namespaces.PeerGroup.circles {
-                    items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
+            if groupId == .root, ((canArchive && associatedGroupId == .root) || associatedGroupId == Namespaces.PeerGroup.archive) {
+                items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
+            }
+            
+            if groupId == .root && associatedGroupId == .root{
+                if let groupNames = circlesSettings?.groupNames {
+                    if groupNames.keys.count > 0 {
+                        items.append(ContextSeparatorItem())
+                        for id in groupNames.keys {
+                            items.append(
+                                ContextMenuItem(
+                                    groupNames[id]!,
+                                    handler: { [weak self] in self?.addToCircle(id:id) }
+                                )
+                            )
+                        }
+                        items.append(ContextSeparatorItem())
+                    }
                 }
             }
             
-            if groupId == .root {
-                if associatedGroupId != Namespaces.PeerGroup.archive {
-                    items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingCircle : L10n.chatListSwipingUncircle, handler: toggleCircles))
-                }
+            if groupId == .root && (associatedGroupId != .root && associatedGroupId != Namespaces.PeerGroup.archive) {
+                ContextMenuItem(
+                    L10n.chatListSwipingUncircle,
+                    handler: { [weak self] in self?.removeFromCircles() }
+                )
             }
             
             if context.peerId != peer.id, pinnedType != .ad {

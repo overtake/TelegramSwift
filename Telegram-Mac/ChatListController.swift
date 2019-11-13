@@ -128,24 +128,22 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     }
                     return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: groupId, hasFailed: hasFailed)
                 }
-            case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
-                return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
             }
-        }
-        
-        
-        
-        let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
-            return makeItem(entry)
-        })
-        
-        let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: nState, animateVisibleOnly: false)
-        
-        subscriber.putNext(transition)
-        subscriber.putCompletion()
-        return ActionDisposable {
-           cancelled = true
+            
+            
+            
+            let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
+                return makeItem(entry)
+            })
+            
+            let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
+            let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: nState, animateVisibleOnly: false)
+            
+            subscriber.putNext(transition)
+            subscriber.putCompletion()
+            return ActionDisposable {
+               cancelled = true
+            }
         }
     }
 }
