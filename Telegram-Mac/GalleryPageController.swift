@@ -242,7 +242,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         cache.countLimit = 10
         captionView.isSelectable = false
-        captionView.userInteractionEnabled = false
+        captionView.userInteractionEnabled = true
         
         var dragged: NSPoint? = nil
         

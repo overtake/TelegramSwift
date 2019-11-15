@@ -480,6 +480,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         if L10n.peerSavedMessages.lowercased().hasPrefix(query.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.lowercased()) {
                             entries.append(.savedMessages(accountPeer))
+                            ids[accountPeer.id] = accountPeer.id
                         }
                         
                         var index = 1

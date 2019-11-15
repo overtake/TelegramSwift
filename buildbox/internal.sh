@@ -9,3 +9,4 @@ tag="$1"
 
 sh ./buildbox/build.sh $tag
 sh deploy-$tag.sh ~/build-$tag $PWD Telegram.app ~/.credentials/dsa-$tag
+rm -rf ~/build-$tag

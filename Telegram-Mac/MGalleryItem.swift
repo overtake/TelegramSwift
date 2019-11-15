@@ -382,13 +382,30 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: caption.prefixWithDots(255), color: .white, font: .normal(.text))
             
-//            attr.detectLinks(type: [.Links, .Mentions], account: account, color: .linkColor, openInfo: { peerId, _, _, _ in
-//                context.sharedContext.bindings.rootNavigation().push(PeerInfoController.init(account: account, peerId: peerId))
-//                viewer?.close()
-//            }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
+            attr.detectLinks(type: [.Links, .Mentions], context: context, color: .linkColor, openInfo: { peerId, toChat, postId, action in
+                let navigation = context.sharedContext.bindings.rootNavigation()
+                let controller = navigation.controller
+                if toChat {
+                    if peerId == (controller as? ChatController)?.chatInteraction.peerId {
+                        if let postId = postId {
+                            (controller as? ChatController)?.chatInteraction.focusMessageId(nil, postId, TableScrollState.center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                        }
+                    } else {
+                        navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                    }
+                } else {
+                    navigation.push(PeerInfoController(context: context, peerId: peerId))
+                }
+                viewer?.close()
+            }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
             
             self.caption = TextViewLayout(attr, alignment: .center)
-            self.caption?.interactions = globalLinkExecutor
+            self.caption?.interactions = TextViewInteractions(processURL: { link in
+                if let link = link as? inAppLink {
+                    execute(inapp: link)
+                    viewer?.close()
+                }
+            })
 
             
             self.caption?.measure(width: pagerSize.width - 200)

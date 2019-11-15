@@ -199,7 +199,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
                 timer?.start()
             }
             
-            let layout = TextViewLayout(.initialize(string: statuses.activeDescription, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 10)
+            let layout = TextViewLayout(.initialize(string: statuses.activeDescription, color: .white, font: .medium(.text)), maximumNumberOfLines: 10)
             textView.update(layout)
             
             progressValue = min(max(newValue, 0), 1.0)
@@ -222,11 +222,11 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
     func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
         
-        self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.text, lineWidth: 2, clockwise: false)
+        self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, lineWidth: 2, clockwise: false)
         
         let attributed = textView.layout?.attributedString.mutableCopy() as? NSMutableAttributedString
         if let attributed = attributed {
-            attributed.addAttribute(.foregroundColor, value: theme.colors.text, range: attributed.range)
+            attributed.addAttribute(.foregroundColor, value: NSColor.white, range: attributed.range)
             self.textView.update(TextViewLayout(attributed, maximumNumberOfLines: 1))
         }
         undoButton.set(text: L10n.chatUndoManagerUndo, for: .Normal)
