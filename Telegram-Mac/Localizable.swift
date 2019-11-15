@@ -3261,6 +3261,8 @@ internal final class L10n {
   internal static var notificationSettingsAllAccounts: String  { return L10n.tr("Localizable", "NotificationSettings.AllAccounts") }
   /// Switch off to show the number of unread chats instead of messages.
   internal static var notificationSettingsBadgeDesc: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeDesc") }
+  /// Badge Enabled
+  internal static var notificationSettingsBadgeEnabled: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeEnabled") }
   /// BADGE COUNTER
   internal static var notificationSettingsBadgeHeader: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeHeader") }
   /// New Contacts

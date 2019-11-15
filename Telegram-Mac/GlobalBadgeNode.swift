@@ -116,11 +116,10 @@ class GlobalBadgeNode: Node {
                 var excludeTotal: Int32 = 0
                 
                 var dockText: String?
-                let totalValue = collectAllAccounts && !inAppSettings.notifyAllAccounts ? 0 : max(0, counts.reduce(0, { $0 + $1.0 }))
+                let totalValue = !inAppSettings.badgeEnabled  ? 0 : (collectAllAccounts && !inAppSettings.notifyAllAccounts ? 0 : max(0, counts.reduce(0, { $0 + $1.0 })))
                 if totalValue > 0 {
                      dockText = "\(totalValue)"
                 }
-                
                 
                 excludeTotal = totalValue
  
