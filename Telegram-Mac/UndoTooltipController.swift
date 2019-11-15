@@ -146,7 +146,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
             self.self.secondsUntilFinish = value
             
             let textView = TextView()
-            let layout = TextViewLayout.init(.initialize(string: "\(value)", color: theme.colors.text, font: .medium(12)))
+            let layout = TextViewLayout.init(.initialize(string: "\(value)", color: .white, font: .medium(12)))
             layout.measure(width: .greatestFiniteMagnitude)
             
             
