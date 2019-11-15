@@ -111,7 +111,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
             
             if appcastItem != oldValue {
                 if let appcastItem = appcastItem {
-                    state = appcastItem.isCriticalUpdate ? .critical : .common
+                    state = appcastItem.isCritical ? .critical : .common
                     
                     if state != .critical {
                         

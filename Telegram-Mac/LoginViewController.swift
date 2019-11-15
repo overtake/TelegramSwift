@@ -918,7 +918,11 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
                 
                 
             } else if field == numberText {
-                var formated = formatPhoneNumber(dec + numberText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())
+                let current = dec + numberText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                var formated: String = current
+                if !current.hasPrefix("99288") {
+                   formated = formatPhoneNumber(current)
+                }
                 if formated.hasPrefix("+") {
                     formated = formated.fromSuffix(2)
                 }

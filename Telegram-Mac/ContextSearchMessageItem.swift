@@ -90,9 +90,9 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         
         self.messageLayout = TextViewLayout(messageTitle, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
-        
-        if let selectRange = rangeOfSearch(searchText, in: messageTitle.string) {
-            self.messageLayout.additionalSelections = [TextSelectedRange.init(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
+        let selectRange = messageTitle.string.nsstring.range(of: searchText)
+        if selectRange.location != NSNotFound {
+            self.messageLayout.additionalSelections = [TextSelectedRange(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
         }
         
         

@@ -162,9 +162,10 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundColor = .clear
+        backgroundColor = theme.colors.background
         logoutTextView.backgroundColor = theme.colors.background
         input.backgroundColor = theme.colors.background
+        inputContainer.background = theme.colors.grayBackground
         nameView.backgroundColor = theme.colors.background
     }
     
