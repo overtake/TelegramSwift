@@ -2015,6 +2015,7 @@
 				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
 				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
 				C209C3881F262D48009231FE /* libstdc++.tbd in Frameworks */,
+				88349F76237EC2E4007BE217 /* Alamofire.framework in Frameworks */,
 				C271EB971EB916870034792D /* libtgvoip.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
@@ -2026,6 +2027,7 @@
 				C253A9671D92E3AF00CDC850 /* AVFoundation.framework in Frameworks */,
 				C2DF47BC1DE79574003AA6C0 /* libopus.a in Frameworks */,
 				C22E06261D7F16C000A11C88 /* TGUIKit.framework in Frameworks */,
+				88349F79237EC2F9007BE217 /* SwiftyJSON.framework in Frameworks */,
 				C253A95C1D9165A400CDC850 /* libwebp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
