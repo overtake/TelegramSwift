@@ -1948,6 +1948,7 @@ internal final class L10n {
   /// Circles
   internal static var chatListSwipingCircle: String  { return L10n.tr("Localizable", "ChatList.Swiping.Circle") }
   internal static var chatListSwipingUncircle: String  { return L10n.tr("Localizable", "ChatList.Swiping.Uncircle") }
+  internal static var chatListSwipingPersonal: String  { return L10n.tr("Localizable", "Chat.Context.PersonalCircle") }
   /// Delete
   internal static var chatListSwipingDelete: String  { return L10n.tr("Localizable", "ChatList.Swiping.Delete") }
   /// Mute

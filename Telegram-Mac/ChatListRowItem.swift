@@ -664,13 +664,16 @@ class ChatListRowItem: TableRowItem {
     
     func addToCircle(id: PeerGroupId) {
         if let peerId = peerId {
-            _ = updatePeerGroupIdInteractively(postbox: self.context.account.postbox, peerId: peerId, groupId: id).start()
+            _ = (updatePeerGroupIdInteractively(postbox: self.context.account.postbox, peerId: peerId, groupId: id)
+            |> mapToSignal {
+                updateCirclesSettings(postbox: self.context.account.postbox) { s in
+                    if let s = s {
+                        s.localInclusions[peerId] = id
+                    }
+                    return s
+                }
+            }).start()
             context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(id)
-        }
-    }
-    func removeFromCircles() {
-        if let peerId = peerId {
-            _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
         }
     }
     
@@ -776,11 +779,12 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
             }
             
-            if groupId == .root && associatedGroupId == .root{
-                if let groupNames = circlesSettings?.groupNames {
-                    if groupNames.keys.count > 0 {
-                        items.append(ContextSeparatorItem())
-                        for id in groupNames.keys {
+            
+            if let groupNames = circlesSettings?.groupNames {
+                if groupNames.keys.count > 0 {
+                    items.append(ContextSeparatorItem())
+                    for id in groupNames.keys {
+                        if id != associatedGroupId {
                             items.append(
                                 ContextMenuItem(
                                     groupNames[id]!,
@@ -788,16 +792,17 @@ class ChatListRowItem: TableRowItem {
                                 )
                             )
                         }
-                        items.append(ContextSeparatorItem())
                     }
+                    if associatedGroupId != .root {
+                        items.append(
+                            ContextMenuItem(
+                                L10n.chatListSwipingPersonal,
+                                handler: { [weak self] in self?.addToCircle(id: .root) }
+                            )
+                        )
+                    }
+                    items.append(ContextSeparatorItem())
                 }
-            }
-            
-            if groupId == .root && (associatedGroupId != .root && associatedGroupId != Namespaces.PeerGroup.archive) {
-                ContextMenuItem(
-                    L10n.chatListSwipingUncircle,
-                    handler: { [weak self] in self?.removeFromCircles() }
-                )
             }
             
             if context.peerId != peer.id, pinnedType != .ad {
