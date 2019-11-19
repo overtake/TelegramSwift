@@ -8,7 +8,7 @@
 
 import TGUIKit
 
-
+import SyncCore
 
 private var timeIntervals:[TimeInterval?]  {
     var intervals:[TimeInterval?] = []
@@ -66,6 +66,7 @@ final class ScheduledMessageModalView : View {
     fileprivate let timePicker: DatePicker<Date>
     private let containerView = View()
     fileprivate let sendOn = TitleButton()
+    fileprivate let sendWhenOnline = TitleButton()
     required init(frame frameRect: NSRect) {
         
         self.dayPicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: formatDay(Date()), value: Date()))
@@ -80,6 +81,7 @@ final class ScheduledMessageModalView : View {
         self.atView.isSelectable = false
         self.sendOn.layer?.cornerRadius = .cornerRadius
         self.sendOn.disableActions()
+        self.addSubview(self.sendWhenOnline)
         self.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -91,12 +93,20 @@ final class ScheduledMessageModalView : View {
         self.sendOn.set(background: theme.colors.accent, for: .Normal)
         self.sendOn.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
 
+        self.sendWhenOnline.set(font: .normal(.text), for: .Normal)
+        self.sendWhenOnline.set(color: theme.colors.accent, for: .Normal)
+        self.sendWhenOnline.set(text: L10n.scheduleSendWhenOnline, for: .Normal)
+        _ = self.sendWhenOnline.sizeToFit()
         
         let atLayout = TextViewLayout(.initialize(string: L10n.scheduleControllerAt, color: theme.colors.text, font: .normal(.title)), alwaysStaticItems: true)
         atLayout.measure(width: .greatestFiniteMagnitude)
         atView.update(atLayout)
         
         needsLayout = true
+    }
+    
+    func possibleSendWhenOnline(_ sendWhenOnline: Bool) {
+        self.sendWhenOnline.isHidden = !sendWhenOnline
     }
     
     override func layout() {
@@ -115,7 +125,9 @@ final class ScheduledMessageModalView : View {
         
         _ = self.sendOn.sizeToFit(NSZeroSize, NSMakeSize(fullWidth, 30), thatFit: true)
         
-        self.sendOn.centerX(y: frame.height - self.sendOn.frame.height - 30)
+        self.sendOn.centerX(y: containerView.frame.maxY + 30)
+        
+        self.sendWhenOnline.centerX(y: self.sendOn.frame.maxY + 15)
     }
     
     required init?(coder: NSCoder) {
@@ -127,11 +139,13 @@ class ScheduledMessageModalController: ModalViewController {
     private let context: AccountContext
     private let scheduleAt: (Date)->Void
     private let defaultDate: Date?
-    init(context: AccountContext, defaultDate: Date? = nil, scheduleAt:@escaping(Date)->Void) {
+    private let sendWhenOnline: Bool
+    init(context: AccountContext, defaultDate: Date? = nil, sendWhenOnline: Bool = true, scheduleAt:@escaping(Date)->Void) {
         self.context = context
         self.defaultDate = defaultDate
         self.scheduleAt = scheduleAt
-        super.init(frame: NSMakeRect(0, 0, 300, 120))
+        self.sendWhenOnline = sendWhenOnline
+        super.init(frame: NSMakeRect(0, 0, 300, 200))
         self.bar = .init(height: 0)
     }
     
@@ -150,7 +164,7 @@ class ScheduledMessageModalController: ModalViewController {
     
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(frame.width, 150), animated: false)
+        self.modal?.resize(with:NSMakeSize(frame.width, sendWhenOnline ? 170 : 150), animated: false)
     }
     
     override var dynamicSize: Bool {
@@ -222,10 +236,17 @@ class ScheduledMessageModalController: ModalViewController {
         self.genericView.dayPicker.selected = DatePickerOption<Date>(name: formatDay(date), value: date)
         self.genericView.timePicker.selected = DatePickerOption<Date>(name: formatTime(date), value: date)
         
+        self.genericView.possibleSendWhenOnline(self.sendWhenOnline)
+        
         self.applyDay(date)
         
         self.genericView.sendOn.set(handler: { [weak self] _ in
             self?.schedule()
+        }, for: .Click)
+        
+        self.genericView.sendWhenOnline.set(handler: { [weak self] _ in
+            self?.scheduleAt(Date.init(timeIntervalSince1970: TimeInterval(scheduleWhenOnlineTimestamp)))
+            self?.close()
         }, for: .Click)
         
         self.readyOnce()
@@ -260,9 +281,7 @@ class ScheduledMessageModalController: ModalViewController {
                     } else if !items.isEmpty {
                         items.append(SPopoverItem())
                     }
-                    
                 }
-                
                 showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), edge: .maxY, inset: NSMakePoint(-12, -50))
             }
             

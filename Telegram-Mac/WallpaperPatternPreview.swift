@@ -41,7 +41,8 @@ private class WallpaperPatternView : Control {
     func update(with pattern: Wallpaper?, isSelected: Bool, account: Account, color: NSColor) {
         checkbox.isHidden = !isSelected
         self.pattern = pattern
-        
+        backgroundColor = color
+
         let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: color.brightnessAdjustedColor, font: .normal(.title)))
         layout.measure(width: 80)
         emptyTextView.update(layout)
@@ -57,12 +58,11 @@ private class WallpaperPatternView : Control {
                 if let dimensions = file.dimensions {
                     representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource))
                 }
-                imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false), animate: false, synchronousLoad: false)
+                imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false), animate: false, synchronousLoad: false)
             default:
                 break
             }
         } else {
-            backgroundColor = color
             emptyTextView.isHidden = false
             imageView.isHidden = true
         }
@@ -76,7 +76,7 @@ private class WallpaperPatternView : Control {
 
 final class WallpaperPatternPreviewView: View {
     private let documentView: View = View()
-    private let scrollView = NSScrollView()
+    private let scrollView = HorizontalScrollView()
     private let sliderView = LinearProgressControl(progressHeight: 5)
     private let intensityTextView = TextView()
     private let intensityContainerView = View()
@@ -226,6 +226,8 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.updateColor(color, account: context.account)
         
         genericView.updateIntensity = { [weak self] intensity in
             guard let `self` = self else {return}

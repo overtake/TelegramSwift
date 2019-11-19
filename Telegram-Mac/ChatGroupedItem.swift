@@ -264,12 +264,12 @@ class ChatGroupedItem: ChatRowItem {
         
         var items: [ContextMenuItem] = []
         
-        if chatInteraction.mode == .scheduled {
+        if chatInteraction.mode == .scheduled, let peer = chatInteraction.peer {
             items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
                 _ = sendScheduledMessageNowInteractively(postbox: context.account.postbox, messageId: message.id).start()
             }))
             items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
-                showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)) , scheduleAt: { date in
+                showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), sendWhenOnline: peer.isUser, scheduleAt: { date in
                     _ = showModalProgress(signal: requestEditMessage(account: context.account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start()
                 }), for: context.window)
             }))

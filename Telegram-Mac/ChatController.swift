@@ -162,6 +162,10 @@ class ChatControllerView : View, ChatInputDelegate {
         inputView = ChatInputView(frame: NSMakeRect(0,tableView.frame.maxY, frameRect.width,50), chatInteraction: chatInteraction)
         //inputView.autoresizingMask = [.width]
         super.init(frame: frameRect)
+        
+        self.layer = CAGradientLayer()
+        self.layer?.disableActions()
+        
         addSubview(tableView)
         addSubview(inputView)
         inputView.delegate = self
@@ -1498,9 +1502,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .scheduled:
                         if let atDate = atDate {
                             apply(strongSelf, atDate: atDate)
-                        } else if presentation.state != .editing {
+                        } else if presentation.state != .editing, let peer = chatInteraction.peer {
                             DispatchQueue.main.async {
-                                showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak strongSelf] date in
+                                showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
                                     if let strongSelf = strongSelf {
                                         apply(strongSelf, atDate: date)
                                     }
@@ -1827,11 +1831,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .history:
                     apply(strongSelf, atDate: nil)
                 case .scheduled:
-                    showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak strongSelf] date in
-                        if let strongSelf = strongSelf {
-                            apply(strongSelf, atDate: Int32(date.timeIntervalSince1970))
-                        }
-                    }), for: context.window)
+                    if let peer = strongSelf.chatInteraction.peer {
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
+                            if let strongSelf = strongSelf {
+                                apply(strongSelf, atDate: Int32(date.timeIntervalSince1970))
+                            }
+                        }), for: context.window)
+                    }
                 }
                 
             }
@@ -2056,7 +2062,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 switch strongSelf.mode {
                 case .scheduled:
-                    showModal(with: ScheduledMessageModalController(context: strongSelf.context, scheduleAt: { [weak strongSelf] date in
+                    showModal(with: ScheduledMessageModalController(context: strongSelf.context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
                         if let strongSelf = strongSelf {
                             let _ = (Sender.enqueue(media: media, context: context, peerId: strongSelf.chatInteraction.peerId, chatInteraction: strongSelf.chatInteraction, atDate: date) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                             strongSelf.nextTransaction.set(handler: {})
@@ -2157,7 +2163,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 switch strongSelf.mode {
                 case .scheduled:
-                    showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak strongSelf] date in
+                    showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
                         if let controller = strongSelf {
                             apply(controller, atDate: date)
                         }
@@ -2186,7 +2192,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let atDate = atDate {
                         apply(strongSelf, atDate: atDate)
                     } else {
-                        showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: date)
                             }
@@ -2227,7 +2233,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 switch strongSelf.mode {
                 case .scheduled:
                     DispatchQueue.main.async {
-                        showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: date)
                             }

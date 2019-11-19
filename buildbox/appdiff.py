@@ -5,7 +5,6 @@ import tempfile
 import re
 import filecmp
 import subprocess
-from zipfile import ZipFile
 
 
 def get_file_list(dir):
@@ -22,9 +21,7 @@ def get_file_list(dir):
 def remove_codesign_dirs(dirs):
     result = set()
     for dir in dirs:
-        if dir == 'SC_Info':
-            continue
-        if re.match('Watch/.*\\.appex/SC_Info', dir):
+        if dir == '_CodeSignature':
             continue
         if re.match('PlugIns/.*\\.appex/SC_Info', dir):
             continue
@@ -37,35 +34,21 @@ def remove_codesign_dirs(dirs):
 def remove_codesign_files(files):
     result = set()
     for f in files:
-        if f == 'embedded.mobileprovision':
+        if f == 'Contents/embedded.provisionprofile':
             continue
-        if re.match('.*/.*\\.appex/embedded.mobileprovision', f):
+        if re.match('Contents/.*/.*\\.appex/embedded.provisionprofile', f):
             continue
-        if f == '_CodeSignature/CodeResources':
+        if re.match('Contents/_CodeSignature/CodeResources', f):
             continue
-        if f == 'CrackerXI':
+        if f == 'Contents/CodeResources':
             continue
-        if re.match('Watch/.*\\.app/embedded.mobileprovision', f):
+        if re.match('Contents/PlugIns/.*\\.appex/Contents/_CodeSignature', f):
             continue
-        if re.match('PlugIns/.*\\.appex/_CodeSignature/CodeResources', f):
-            continue
-        if re.match('Frameworks/.*\\.framework/_CodeSignature/CodeResources', f):
-            continue
-        if f == 'Frameworks/ModernProto.framework/ModernProto':
+        if re.match('Contents/Frameworks/.*\\.framework/Versions/A/_CodeSignature', f):
             continue
         result.add(f)
     return result
 
-
-def remove_watch_files(files):
-    result = set()
-    excluded = set()
-    for f in files:
-        if re.match('Watch/.*', f):
-            excluded.add(f)
-        else:
-            result.add(f)
-    return (result, excluded)
 
 
 def remove_plugin_files(files):
@@ -94,10 +77,7 @@ def remove_nib_files(files):
     result = set()
     excluded = set()
     for f in files:
-        if re.match('.*\\.nib', f):
-            excluded.add(f)
-        else:
-            result.add(f)
+        result.add(f)
     return (result, excluded)
 
 
@@ -217,12 +197,7 @@ def diff_files(app1, files1, app2, files2):
 
 
 def base_app_dir(path):
-    result = glob.glob(path + '/Payload/*.app')
-    if len(result) == 1:
-        return result[0]
-    else:
-        print('Could not find .app directory at ' + path + '/Payload')
-        sys.exit(1)
+    return path
 
 
 def diff_file(tempdir, self_base_path, path1, path2):
@@ -241,11 +216,9 @@ def diff_file(tempdir, self_base_path, path1, path2):
 def appdiff(self_base_path, app1, app2):
     tempdir = tempfile.mkdtemp()
 
-    app1_dir = tempdir + '/app1'
-    app2_dir = tempdir + '/app2'
+    app1_dir = app1
+    app2_dir = app2
 
-    ZipFile(app1, 'r').extractall(path=app1_dir)
-    ZipFile(app2, 'r').extractall(path=app2_dir)
     (app1_dirs, app1_files) = get_file_list(base_app_dir(app1_dir))
     (app2_dirs, app2_files) = get_file_list(base_app_dir(app2_dir))
 
@@ -258,14 +231,11 @@ def appdiff(self_base_path, app1, app2):
     diff_dirs(app1, clean_app1_dirs, app2, clean_app2_dirs)
     diff_files(app1, clean_app1_files, app2, clean_app2_files)
 
-    clean_app1_files, watch_app1_files = remove_watch_files(clean_app1_files)
-    clean_app2_files, watch_app2_files = remove_watch_files(clean_app2_files)
-
     clean_app1_files, plugin_app1_files = remove_plugin_files(clean_app1_files)
     clean_app2_files, plugin_app2_files = remove_plugin_files(clean_app2_files)
 
-    clean_app1_files, asset_app1_files = remove_asset_files(clean_app1_files)
-    clean_app2_files, asset_app2_files = remove_asset_files(clean_app2_files)
+    clean_app1_files, plugin_app1_files = remove_asset_files(clean_app1_files)
+    clean_app2_files, plugin_app2_files = remove_asset_files(clean_app2_files)
 
     clean_app1_files, nib_app1_files = remove_nib_files(clean_app1_files)
     clean_app2_files, nib_app2_files = remove_nib_files(clean_app2_files)
@@ -286,23 +256,12 @@ def appdiff(self_base_path, app1, app2):
         for relative_file_path in different_files:
             print('    ' + relative_file_path)
     else:
-        if len(encrypted_files) != 0 or len(watch_app1_files) != 0 or len(plugin_app1_files) != 0:
-            print('APPs are equal, except for the files that can\'t currently be checked:')
-        else:
-            print('APPs are equal')
-
         if len(encrypted_files) != 0:
             print('    Excluded files that couldn\'t be checked due to being encrypted:')
             for relative_file_path in encrypted_files:
                 print('        ' + relative_file_path)
-        if len(watch_app1_files) != 0:
-            print('    APPs contain Watch directory with a Watch app which currently can\'t be checked.')
         if len(plugin_app1_files) != 0:
             print('    APPs contain PlugIns directory with app extensions. Extensions can\'t currently be checked.')
-        if len(asset_app1_files) != 0:
-            print('    APPs contain .car (Asset Catalog) files that are compiled by the App Store and can\'t currently be checked:')
-            for relative_file_path in asset_app1_files:
-                print('        ' + relative_file_path)
         if len(nib_app1_files) != 0:
             print('    APPs contain .nib (compiled Interface Builder) files that are compiled by the App Store and can\'t currently be checked:')
             for relative_file_path in nib_app1_files:

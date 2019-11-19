@@ -12,10 +12,15 @@ import SwiftSignalKit
 
 
 open class BackgroundView: ImageView {
-    
+    private let gradient = CAGradientLayer()
+
     public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        gradient.actions = [:]
+        self.layer = gradient
+        self.layer?.disableActions()
         self.layer?.contentsGravity = .resizeAspectFill
+        
     }
     open override var isFlipped: Bool {
         return true
@@ -31,10 +36,16 @@ open class BackgroundView: ImageView {
             case let .background(image):
                 layer?.backgroundColor = .clear
                 layer?.contents = image
+                gradient.colors = nil
             case let .color(color):
                 layer?.backgroundColor = color.cgColor
                 layer?.contents = nil
+                gradient.colors = nil
+            case let .gradient(top, bottom):
+                gradient.colors = [top.cgColor, bottom.cgColor]
+                layer?.contents = nil
             default:
+                gradient.colors = nil
                 layer?.backgroundColor = presentation.colors.background.cgColor
                 layer?.contents = nil
             }
@@ -349,10 +360,19 @@ open class ViewController : NSObject {
     public func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
         switch backgroundMode {
         case .background:
+            (self.view.layer as? CAGradientLayer)?.colors = nil
             backgroundColor = .clear
+        case let .gradient(top, bottom):
+            if let layer = self.view.layer as? CAGradientLayer {
+                layer.colors = [top.cgColor, bottom.cgColor]
+            } else {
+                backgroundColor = top.blended(withFraction: 0.5, of: bottom)!
+            }
         case let .color(color):
+            (self.view.layer as? CAGradientLayer)?.colors = nil
             backgroundColor = color
         default:
+            (self.view.layer as? CAGradientLayer)?.colors = nil
             backgroundColor = presentation.colors.background
         }
     }

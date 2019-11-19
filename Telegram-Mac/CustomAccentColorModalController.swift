@@ -21,7 +21,7 @@ private final class CustomAccentColorView : View {
     private let context: AccountContext
     fileprivate var disableTint: Bool = false {
         didSet {
-            colorPicker.colorChanged?(colorPicker.colorPicker.color)
+            //colorPicker.colorChanged?(colorPicker.colorPicker.color)
         }
     }
     required init(frame frameRect: NSRect, theme: TelegramPresentationTheme, context: AccountContext) {
@@ -31,31 +31,31 @@ private final class CustomAccentColorView : View {
         self.addSubview(colorPicker)
         self.addSubview(tintedCheckbox)
         colorPicker.colorPicker.color = theme.colors.accent
-        colorPicker.defaultColor = colorPicker.colorPicker.color
+      //  colorPicker.defaultColor = colorPicker.colorPicker.color
         tintedCheckbox.update(by: nil)
         tintedCheckbox.isSelected = theme.colors.tinted
         tintedCheckbox.isHidden = true//!theme.colors.tinted || !theme.bubbled
-        colorPicker.colorPicker.colorChanged = { [weak self] color in
-            guard let `self` = self else {return}
-            self.colorPicker.textView.setString(color.hexString)
-        }
-        
-        tintedCheckbox.onChangedValue = { [weak self] value in
-            self?.disableTint = !value
-        }
-        
-        colorPicker.colorChanged = { [weak self] color in
-            guard let `self` = self else {return}
-            self.colorPicker.colorPicker.color = color
-            self.colorPicker.colorPicker.needsLayout = true
-            let colors = theme.colors.withoutAccentColor().withAccentColor(color, disableTint: self.disableTint)
-            let newTheme = theme.withUpdatedColors(colors)
-            self.addTableItems(self.context, theme: newTheme)
-            self.tableView.updateLocalizationAndTheme(theme: newTheme)
-            self.controller?.updateLocalizationAndTheme(theme: newTheme)
-            self.colorPicker.updateLocalizationAndTheme(theme: newTheme)
-            self.tintedCheckbox.update(by: nil)
-        }
+//        colorPicker.colorPicker.colorChanged = { [weak self] color in
+//            guard let `self` = self else {return}
+//            self.colorPicker.textView.setString(color.hexString)
+//        }
+//
+//        tintedCheckbox.onChangedValue = { [weak self] value in
+//            self?.disableTint = !value
+//        }
+//
+//        colorPicker.colorChanged = { [weak self] color in
+//            guard let `self` = self else {return}
+//            self.colorPicker.colorPicker.color = color
+//            self.colorPicker.colorPicker.needsLayout = true
+//            let colors = theme.colors.withoutAccentColor().withAccentColor(color, disableTint: self.disableTint)
+//            let newTheme = theme.withUpdatedColors(colors)
+//            self.addTableItems(self.context, theme: newTheme)
+//            self.tableView.updateLocalizationAndTheme(theme: newTheme)
+//            self.controller?.updateLocalizationAndTheme(theme: newTheme)
+//            self.colorPicker.updateLocalizationAndTheme(theme: newTheme)
+//            self.tintedCheckbox.update(by: nil)
+//        }
         layout()
     }
     
@@ -194,6 +194,6 @@ class CustomAccentColorModalController: ModalViewController {
     }
     
     override func firstResponder() -> NSResponder? {
-        return genericView.colorPicker.textView
+        return nil//genericView.colorPicker.textView
     }
 }

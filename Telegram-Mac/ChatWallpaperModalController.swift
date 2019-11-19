@@ -192,7 +192,7 @@ class ChatWallpaperModalController: ModalViewController {
         
         let interaction = ThemeGridControllerInteraction(openWallpaper: { wallpaper, telegramWallpaper in
             switch wallpaper {
-            case .image, .file, .color:
+            case .image, .file, .color, .gradient:
                 showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: context.window)
             default:
                 _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
@@ -235,16 +235,23 @@ class ChatWallpaperModalController: ModalViewController {
                 
                 
                 let wallpaper: Wallpaper
-                if theme.colors.accent != theme.colors.basicAccent {
-                    wallpaper  = .color(Int32(bitPattern: theme.colors.basicAccent.rgb))
-                } else {
-                    wallpaper = .color(Int32(bitPattern: theme.colors.basicAccent.lighter(amount: 0.25).rgb))
+                
+                switch theme.wallpaper.wallpaper {
+                case .gradient:
+                    entries.append(ThemeGridControllerEntry(index: index, wallpaper: theme.wallpaper.wallpaper, telegramWallapper: nil, selected: true))
+                default:
+                    if theme.colors.accent != theme.colors.basicAccent {
+                        wallpaper  = .color(Int32(bitPattern: theme.colors.basicAccent.rgb))
+                    } else {
+                        wallpaper = .color(Int32(bitPattern: theme.colors.basicAccent.lighter(amount: 0.25).rgb))
+                    }
+                    entries.append(ThemeGridControllerEntry(index: index, wallpaper: wallpaper, telegramWallapper: nil, selected: theme.wallpaper.wallpaper.isSemanticallyEqual(to: wallpaper)))
                 }
-                entries.append(ThemeGridControllerEntry(index: index, wallpaper: wallpaper, telegramWallapper: nil, selected: theme.wallpaper.wallpaper.isSemanticallyEqual(to: wallpaper)))
+                
 
                 
                 switch selected {
-                case .none, .color:
+                case .none, .color, .gradient:
                     break
                 default:
                     entries.append(ThemeGridControllerEntry(index: index, wallpaper: selected, telegramWallapper: telegramWallpaper, selected: true))
