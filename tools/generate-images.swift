@@ -418,6 +418,10 @@ func initialize() -> [String] {
     array.append("wallet_passcode_hidden")
     
 
+    array.append("wallpaper_color_close")
+    array.append("wallpaper_color_add")
+    array.append("wallpaper_color_swap")
+
     return array
 }
 
@@ -493,5 +497,5 @@ func generateClass() -> String {
     return result
 }
 
-
-try? generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)
+print(FileManager.default.currentDirectoryPath)
+try? generateClass().write(toFile: FileManager.default.currentDirectoryPath + "Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)

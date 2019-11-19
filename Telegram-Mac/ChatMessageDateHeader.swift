@@ -83,7 +83,11 @@ class ChatDateStickItem : TableStickItem {
             let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
             switch interaction.mode {
             case .scheduled:
-                text = L10n.chatDateScheduledFor(dateString)
+                if timestamp == 2147457600 {
+                    text = L10n.chatDateScheduledUntilOnline
+                } else {
+                    text = L10n.chatDateScheduledFor(dateString)
+                }
             default:
                 text = dateString
             }

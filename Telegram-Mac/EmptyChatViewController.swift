@@ -17,6 +17,9 @@ class EmptyChatView : View {
     private let imageView:ImageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.layer = CAGradientLayer()
+        self.layer?.disableActions()
+        
         addSubview(containerView)
         containerView.addSubview(imageView)
         containerView.addSubview(label)

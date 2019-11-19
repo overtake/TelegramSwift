@@ -818,6 +818,7 @@ extension WallpaperSettings {
 enum Wallpaper : Equatable, PostboxCoding {
     case builtin
     case color(Int32)
+    case gradient(Int32, Int32)
     case image([TelegramMediaImageRepresentation], settings: WallpaperSettings)
     case file(slug: String, file: TelegramMediaFile, settings: WallpaperSettings, isPattern: Bool)
     case none
@@ -833,6 +834,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .image(image, settings: settings)
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
+        case let .gradient(top, bottom):
+            self = .gradient(top, bottom)
         }
     }
     
@@ -846,6 +849,12 @@ enum Wallpaper : Equatable, PostboxCoding {
             }
         case let .color(value):
             if case .color(value) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .gradient(top, bottom):
+            if case .gradient(top, bottom) = rhs {
                 return true
             } else {
                 return false
@@ -922,6 +931,9 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .custom(decoder.decodeObjectForKey("rep", decoder: { TelegramMediaImageRepresentation(decoder: $0) }) as! TelegramMediaImageRepresentation, blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
         case 5:
             self = .none
+        case 6:
+            self = .gradient(decoder.decodeInt32ForKey("ct", orElse: 0), decoder.decodeInt32ForKey("cb", orElse: 0))
+
         default:
             assertionFailure()
             self = .color(0xffffff)
@@ -952,6 +964,10 @@ enum Wallpaper : Equatable, PostboxCoding {
             encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
         case .none:
             encoder.encodeInt32(5, forKey: "v")
+        case let .gradient(top, bottom):
+            encoder.encodeInt32(6, forKey: "v")
+            encoder.encodeInt32(top, forKey: "ct")
+            encoder.encodeInt32(bottom, forKey: "cb")
         }
     }
     
@@ -960,6 +976,8 @@ enum Wallpaper : Equatable, PostboxCoding {
         case .builtin:
             return self
         case .color:
+            return self
+        case .gradient:
             return self
         case let .image(representations, settings):
             return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, intensity: settings.intensity))
@@ -978,6 +996,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             return self
         case .color:
             return self
+        case .gradient:
+            return self
         case let .image(representations, _):
             return .image(representations, settings: settings)
         case let .file(values):
@@ -994,6 +1014,8 @@ enum Wallpaper : Equatable, PostboxCoding {
         case .builtin:
             return false
         case .color:
+            return false
+        case .gradient:
             return false
         case let .image(_, settings):
             return settings.blur
@@ -1024,6 +1046,8 @@ enum Wallpaper : Equatable, PostboxCoding {
         case .builtin:
             return other == self
         case .color:
+            return other == self
+        case .gradient:
             return other == self
         case let .custom(resource, _):
             if case .custom(resource, _) = other {
@@ -1112,6 +1136,12 @@ class TelegramPresentationTheme : PresentationTheme {
                     } else {
                         return color
                     }
+                case let .gradient(top, bottom):
+                    if let blended = top.blended(withFraction: 0.5, of: bottom) {
+                        return getAverageColor(blended)
+                    } else {
+                        return getAverageColor(top)
+                    }
                 case let .tiled(image):
                     chatServiceItemColor = getAverageColor(image)
                 case .plain:
@@ -1141,6 +1171,8 @@ class TelegramPresentationTheme : PresentationTheme {
                     } else {
                         chatServiceItemTextColor = colors.grayText
                     }
+                case .gradient:
+                    chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
                 case .tiled:
                     chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
                 case .plain:
@@ -1180,6 +1212,8 @@ class TelegramPresentationTheme : PresentationTheme {
                 backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
             case let.color(color):
                 backgroundMode = .color(color: NSColor(UInt32(abs(color))))
+            case let .gradient(top, bottom):
+                backgroundMode = .gradient(top: NSColor(UInt32(abs(top))), bottom: NSColor(UInt32(abs(bottom))))
             case let .image(representation, settings):
                 if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
                     backgroundMode = .background(image: image)
@@ -1727,7 +1761,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                wallet_update: { NSImage(named: "Icon_WalletUpdate")!.precomposed(palette.grayIcon) },
                                                wallet_passcode_visible: { NSImage(named: "Icon_WalletPasscodeVisible")!.precomposed(palette.grayIcon) },
                                                wallet_passcode_hidden: { NSImage(named: "Icon_WalletPasscodeHidden")!.precomposed(palette.grayIcon) }
-                                               
+//                                               wallpaper_color_close: { NSImage(named: "Icon_GradientClose")!.precomposed(palette.grayIcon) },
+//                                               wallpaper_color_add: { NSImage(named: "Icon_GradientAdd")!.precomposed(palette.grayIcon) },
+//                                               wallpaper_color_swap: { NSImage(named: "Icon_GradientSwap")!.precomposed(palette.grayIcon) }                                      
     )
 
 }

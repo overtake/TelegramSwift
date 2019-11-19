@@ -145,6 +145,10 @@ internal final class L10n {
   internal static var adminsWhoCanInviteText: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Text") }
   /// Cancel
   internal static var alertCancel: String  { return L10n.tr("Localizable", "Alert.Cancel") }
+  /// Discard
+  internal static var alertDiscard: String  { return L10n.tr("Localizable", "Alert.Discard") }
+  /// No
+  internal static var alertNO: String  { return L10n.tr("Localizable", "Alert.NO") }
   /// OK
   internal static var alertOK: String  { return L10n.tr("Localizable", "Alert.OK") }
   /// Sorry, this user doesn't seem to exist.
@@ -1189,6 +1193,8 @@ internal final class L10n {
   }
   /// Scheduled for today
   internal static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
+  /// Scheduled until online
+  internal static var chatDateScheduledUntilOnline: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledUntilOnline") }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
@@ -3261,7 +3267,7 @@ internal final class L10n {
   internal static var notificationSettingsAllAccounts: String  { return L10n.tr("Localizable", "NotificationSettings.AllAccounts") }
   /// Switch off to show the number of unread chats instead of messages.
   internal static var notificationSettingsBadgeDesc: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeDesc") }
-  /// Badge Enabled
+  /// Enabled
   internal static var notificationSettingsBadgeEnabled: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeEnabled") }
   /// BADGE COUNTER
   internal static var notificationSettingsBadgeHeader: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeHeader") }
@@ -4531,6 +4537,8 @@ internal final class L10n {
   internal static func scheduleSendToday(_ p1: String) -> String {
     return L10n.tr("Localizable", "Schedule.SendToday", p1)
   }
+  /// Send When Online
+  internal static var scheduleSendWhenOnline: String  { return L10n.tr("Localizable", "Schedule.SendWhenOnline") }
   /// at
   internal static var scheduleControllerAt: String  { return L10n.tr("Localizable", "ScheduleController.at") }
   /// Schedule Message

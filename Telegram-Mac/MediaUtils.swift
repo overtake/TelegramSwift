@@ -2589,9 +2589,8 @@ private func chatWallpaperDatas(account: Account, representations: [TelegramMedi
                     fullReference = MediaResourceReference.media(media: AnyMediaReference.webPage(webPage: WebpageReference(webpage), media: file), resource: largestRepresentation.resource)
                 } else {
                     smallReference = MediaResourceReference.wallpaper(resource: smallestRepresentation.resource)
-                    fullReference = MediaResourceReference.wallpaper(resource: smallestRepresentation.resource)
+                    fullReference = MediaResourceReference.wallpaper(resource: largestRepresentation.resource)
                 }
-                
                 
                 let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: smallReference, statsCategory: .image)
                 let fetchedFullSize = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: fullReference, statsCategory: .image)

@@ -22,6 +22,8 @@ final class SettingsThemeWallpaperView: View {
     private let label: TextView = TextView()
     override init() {
         super.init()
+        self.layer = CAGradientLayer()
+        self.layer?.disableActions()
         backgroundColor = theme.chatBackground
         layer?.borderColor = theme.colors.border.cgColor
         layer?.borderWidth = .borderSize
@@ -73,12 +75,10 @@ final class SettingsThemeWallpaperView: View {
         self.imageView.frame = CGRect(origin: CGPoint(), size: size)
         
         
-        
-
-        
         self.wallpaper = wallpaper
         switch wallpaper {
         case .builtin:
+            (self.layer as? CAGradientLayer)?.colors = nil
             self.label.isHidden = true
             self.imageView.isHidden = false
             
@@ -99,7 +99,14 @@ final class SettingsThemeWallpaperView: View {
         case let .color(color):
             self.imageView.isHidden = true
             self.label.isHidden = true
+            (self.layer as? CAGradientLayer)?.colors = nil
             backgroundColor = NSColor(UInt32(color))
+        case let .gradient(t, b):
+            self.imageView.isHidden = true
+            self.label.isHidden = true
+            let top = NSColor(UInt32(t))
+            let bottom = NSColor(UInt32(b))
+            (self.layer as? CAGradientLayer)?.colors = [top.cgColor, bottom.cgColor]
         case let .image(representations, _):
             self.label.isHidden = true
             self.imageView.isHidden = false
@@ -110,7 +117,7 @@ final class SettingsThemeWallpaperView: View {
         case let .file(_, file, settings, isPattern):
             self.label.isHidden = true
             self.imageView.isHidden = false
-            
+            (self.layer as? CAGradientLayer)?.colors = nil
             var patternColor: NSColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
 
             if isPattern {
@@ -135,7 +142,8 @@ final class SettingsThemeWallpaperView: View {
             
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
         default:
-            break
+            (self.layer as? CAGradientLayer)?.colors = nil
+
         }
     }
     

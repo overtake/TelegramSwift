@@ -242,7 +242,7 @@ fileprivate class PreviewSenderView : Control {
                 switch chatInteraction.mode {
                 case .history:
                     items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
-                        showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak controller] date in
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak controller] date in
                             controller?.send(false, atDate: date)
                         }), for: context.window)
                     }))
@@ -811,9 +811,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     func send(_ silent: Bool, atDate: Date? = nil) {
         switch chatInteraction.mode {
         case .scheduled:
-            showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak self] date in
-                self?.sendCurrentMedia?(silent, date)
-            }), for: context.window)
+            if let peer = chatInteraction.peer {
+                showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak self] date in
+                    self?.sendCurrentMedia?(silent, date)
+                }), for: context.window)
+            }
         case .history:
             sendCurrentMedia?(silent, atDate)
         }
