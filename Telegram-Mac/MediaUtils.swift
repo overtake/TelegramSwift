@@ -698,7 +698,12 @@ public func chatMessageSticker(postbox: Postbox, file: TelegramMediaFile, small:
             context.withFlippedContext(isHighQuality: data.fullSizeData != nil, { c in
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
-                    c.setFillColor(color.cgColor)
+                    switch color {
+                    case let .color(color):
+                        c.setFillColor(color.cgColor)
+                    default:
+                        break
+                    }
                     c.fill(drawingRect)
                 } else {
                     c.setBlendMode(.copy)
@@ -874,7 +879,12 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: TelegramMediaFile
             context.withFlippedContext(isHighQuality: data.fullSizeData != nil, { c in
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
-                    c.setFillColor(color.cgColor)
+                    switch color {
+                    case let .color(color):
+                        c.setFillColor(color.cgColor)
+                    default:
+                        break
+                    }
                     c.fill(drawingRect)
                 } else {
                     c.setBlendMode(.copy)
@@ -964,7 +974,12 @@ public func chatMessageStickerPackThumbnail(postbox: Postbox, representation: Te
                 context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                     if let color = arguments.emptyColor {
                         c.setBlendMode(.normal)
-                        c.setFillColor(color.cgColor)
+                        switch color {
+                        case let .color(color):
+                            c.setFillColor(color.cgColor)
+                        default:
+                            break
+                        }
                         c.fill(drawingRect)
                     } else {
                         c.setBlendMode(.copy)
@@ -2729,8 +2744,17 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
             
             
             if let combinedColor = arguments.emptyColor {
-                let color = combinedColor.withAlphaComponent(1.0)
-                let intensity = combinedColor.alpha
+                
+                let color:NSColor
+                let intensity: CGFloat
+                switch combinedColor {
+                case let .color(combinedColor):
+                    color = combinedColor.withAlphaComponent(1.0)
+                    intensity = combinedColor.alpha
+                case .gradient:
+                    fatalError("unsupported")
+                }
+                
                 
                 if fullSizeImage == nil {
                     let context = DrawingContext(size: arguments.drawingSize, scale: 1.0, clear: true)
@@ -2821,8 +2845,15 @@ func instantPageImageFile(account: Account, fileReference: FileMediaReference, s
                 
                 context.withFlippedContext { c in
                     if var fullSizeImage = fullSizeImage {
-                        if let color = arguments.emptyColor, imageRequiresInversion(fullSizeImage), let tintedImage = generateTintedImage(image: fullSizeImage, color: color) {
-                            fullSizeImage = tintedImage
+                        if let color = arguments.emptyColor {
+                            switch color {
+                            case let .color(color):
+                                if imageRequiresInversion(fullSizeImage), let tintedImage = generateTintedImage(image: fullSizeImage, color: color) {
+                                   fullSizeImage = tintedImage
+                                }
+                            default:
+                                break
+                            }
                         }
                         
                         c.setBlendMode(.normal)

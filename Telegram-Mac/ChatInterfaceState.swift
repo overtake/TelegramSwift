@@ -151,37 +151,38 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
     
     var inputAttributes:[ChatTextInputAttribute] = []
     
-    attributed.enumerateAttribute(NSAttributedString.Key.font, in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { font, range, _ in
-        if let font = font as? NSFont {
-            let descriptor = font.fontDescriptor
-            let symTraits = descriptor.symbolicTraits
-            let traitSet = NSFontTraitMask(rawValue: UInt(symTraits.rawValue))
-            let isBold = traitSet.contains(.boldFontMask)
-            let isItalic = traitSet.contains(.italicFontMask)
-            let isMonospace = font.fontName == "Menlo-Regular"
-            
-            if isItalic {
-                inputAttributes.append(.italic(range.location ..< range.location + range.length))
-            }
-            if isBold {
-                inputAttributes.append(.bold(range.location ..< range.location + range.length))
-            }
-            if isMonospace {
-                inputAttributes.append(.code(range.location ..< range.location + range.length))
+    
+    attributed.enumerateAttributes(in: attributed.range, options: []) { (keys, range, _) in
+        for (_, value) in keys {
+            if let font = value as? NSFont {
+                let descriptor = font.fontDescriptor
+                let symTraits = descriptor.symbolicTraits
+                let traitSet = NSFontTraitMask(rawValue: UInt(symTraits.rawValue))
+                let isBold = traitSet.contains(.boldFontMask)
+                let isItalic = traitSet.contains(.italicFontMask)
+                let isMonospace = font.fontName == "Menlo-Regular"
+                
+                if isItalic {
+                    inputAttributes.append(.italic(range.location ..< range.location + range.length))
+                }
+                if isBold {
+                    inputAttributes.append(.bold(range.location ..< range.location + range.length))
+                }
+                if isMonospace {
+                    inputAttributes.append(.code(range.location ..< range.location + range.length))
+                }
+            } else if let tag = value as? TGInputTextTag {
+                if let uid = tag.attachment as? NSNumber {
+                    inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
+                } else if let url = tag.attachment as? String {
+                    inputAttributes.append(.url(range.location ..< range.location + range.length, url))
+                }
             }
         }
     }
     
-    attributed.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { tag, range, _ in
-        if let tag = tag as? TGInputTextTag {
-            if let uid = tag.attachment as? NSNumber {
-                inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
-            } else if let url = tag.attachment as? String {
-                inputAttributes.append(.url(range.location ..< range.location + range.length, url))
-            }
-        }
-    }
-    return inputAttributes
+
+    return Array(inputAttributes.prefix(100))
 }
 
 //x/m

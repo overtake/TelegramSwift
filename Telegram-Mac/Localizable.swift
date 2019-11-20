@@ -3829,6 +3829,8 @@ internal final class L10n {
   internal static var peerInfoSharelink: String  { return L10n.tr("Localizable", "PeerInfo.sharelink") }
   /// Share My Contact Info
   internal static var peerInfoShareMyInfo: String  { return L10n.tr("Localizable", "PeerInfo.ShareMyInfo") }
+  /// Show More
+  internal static var peerInfoShowMore: String  { return L10n.tr("Localizable", "PeerInfo.ShowMore") }
   /// Sign Messages
   internal static var peerInfoSignMessages: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages") }
   /// Start Secret Chat

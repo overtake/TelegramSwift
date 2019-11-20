@@ -432,7 +432,7 @@ func generateClass() -> String {
     let items = initialize()
     
     var lines:[String] = []
-    lines.append("import SwiftSignalKitMac")
+    lines.append("import SwiftSignalKit")
     lines.append("")
 
     lines.append("final class TelegramIconsTheme {")
@@ -498,4 +498,4 @@ func generateClass() -> String {
 }
 
 print(FileManager.default.currentDirectoryPath)
-try? generateClass().write(toFile: FileManager.default.currentDirectoryPath + "Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)
+try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)

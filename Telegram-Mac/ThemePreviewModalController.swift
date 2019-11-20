@@ -250,7 +250,7 @@ class ThemePreviewModalController: ModalViewController {
             } else {
                 settings = settings.withUpdatedDefaultDay(defaultTheme)
             }
-            settings = settings.withUpdatedDefaultIsDark(colors.isDark)
+            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultWallpaper()
             return settings
         }).start()
         
