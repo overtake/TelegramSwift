@@ -50,7 +50,7 @@ private class WallpaperPatternView : Control {
         if let pattern = pattern {
             emptyTextView.isHidden = true
             imageView.isHidden = false
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(400, 400)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: color))
+            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(400, 400)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: .color(color)))
             switch pattern {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []

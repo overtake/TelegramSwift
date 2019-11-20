@@ -1089,6 +1089,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                         return
                     }
                 }
+                if NSPointInRect(location, bubbleFrame), item.isBubbled {
+                    return
+                }
                 if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId) {
                     item.chatInteraction.setupReplyMessage(item.message?.id)
                 }

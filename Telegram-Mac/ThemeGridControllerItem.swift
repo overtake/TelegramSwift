@@ -118,7 +118,7 @@ final class SettingsThemeWallpaperView: View {
             self.label.isHidden = true
             self.imageView.isHidden = false
             (self.layer as? CAGradientLayer)?.colors = nil
-            var patternColor: NSColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+            var patternColor: TransformImageEmptyColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
 
             if isPattern {
                 var patternIntensity: CGFloat = 0.5
@@ -126,7 +126,7 @@ final class SettingsThemeWallpaperView: View {
                     if let intensity = settings.intensity {
                         patternIntensity = CGFloat(intensity) / 100.0
                     }
-                    patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
+                    patternColor = .color(NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity))
                 }
             }
             

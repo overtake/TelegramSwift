@@ -330,7 +330,7 @@ private final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
         textView.textFont = .normal(.text)
         backgroundColor = theme.colors.background
         textView.cursorColor = theme.colors.indicatorColor
-        resetButton.set(image: theme.icons.recentDismiss, for: .Normal)
+        resetButton.set(image: theme.icons.wallpaper_color_close, for: .Normal)
         _ = resetButton.sizeToFit()
         addSubview(resetButton)
         addSubview(colorBulb)
@@ -341,7 +341,7 @@ private final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
     
     override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {
         super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        resetButton.change(pos: NSMakePoint(frame.width - resetButton.frame.width - 10, resetButton.frame.minY), animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
+        resetButton.change(pos: NSMakePoint(frame.width - resetButton.frame.width - 5, resetButton.frame.minY), animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
     }
     
     override func layout() {
@@ -349,7 +349,7 @@ private final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
         
         colorBulb.centerY(x: 10)
         textView.frame = NSMakeRect(colorBulb.frame.maxX + 3, 0, frame.width - resetButton.frame.width - 26, frame.height)
-        resetButton.centerY(x: frame.width - resetButton.frame.width - 10)
+        resetButton.centerY(x: frame.width - resetButton.frame.width - 5)
     }
     
     required init?(coder: NSCoder) {
@@ -372,6 +372,7 @@ final class WallpaperColorPickerContainerView : View {
     let colorPicker = WallpaperColorPickerView()
     private let colorsContainer: View
     fileprivate let addColorButton: ImageButton = ImageButton()
+    fileprivate let swapColors: ImageButton = ImageButton()
     private(set) var mode: WallpaperColorSelectMode = .single(NSColor(hexString: "#ffffff")!)
     
     required init(frame frameRect: NSRect) {
@@ -379,9 +380,10 @@ final class WallpaperColorPickerContainerView : View {
         super.init(frame: frameRect)
         colorsContainer.addSubview(firstView)
         colorsContainer.addSubview(addColorButton)
+        colorsContainer.addSubview(swapColors)
         addSubview(colorPicker)
         addSubview(colorsContainer)
-
+        swapColors.hideAnimated = true
         updateLocalizationAndTheme(theme: theme)
         
         firstView.colorChanged = { [weak self] color in
@@ -398,6 +400,13 @@ final class WallpaperColorPickerContainerView : View {
                 self?.colorChanged?(.single(secondView.defaultColor))
             }
         }, for: .Click)
+        
+        swapColors.set(handler: { [weak self] _ in
+            guard let `self` = self, let secondView = self.secondView else {
+                return
+            }
+            self.colorChanged?(.gradient(top: secondView.defaultColor, bottom: self.firstView.defaultColor))
+        }, for: .Click)
     }
     
     
@@ -408,7 +417,10 @@ final class WallpaperColorPickerContainerView : View {
         colorsContainer.borderColor = theme.colors.border
         backgroundColor = theme.colors.background
         
-        addColorButton.set(image: theme.icons.pollAddOption, for: .Normal)
+        swapColors.set(image: theme.icons.wallpaper_color_swap, for: .Normal)
+        _ = swapColors.sizeToFit()
+        
+        addColorButton.set(image: theme.icons.wallpaper_color_add, for: .Normal)
         _ = addColorButton.sizeToFit()
     }
     
@@ -419,6 +431,7 @@ final class WallpaperColorPickerContainerView : View {
             case let .single(color):
                 firstView.defaultColor = color
                 firstView.resetButton.isHidden = true
+                self.swapColors.isHidden = true
                 if let secondView = secondView {
                     self.secondView = nil
                     if animated {
@@ -433,7 +446,7 @@ final class WallpaperColorPickerContainerView : View {
             case let .gradient(top, bottom):
                 firstView.defaultColor = top
                 firstView.resetButton.isHidden = false
-                
+                self.swapColors.isHidden = false
                 if secondView == nil {
                     secondView = WallpaperAdditionColorView(frame: NSMakeRect(colorsContainer.frame.width, 4, 200, 30))
                     secondView?.resetButton.isHidden = false
@@ -484,15 +497,17 @@ final class WallpaperColorPickerContainerView : View {
     private func updateFrame(animated: Bool) {
         switch self.mode {
         case .gradient:
-            firstView.change(size: NSMakeSize(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - 30) / 2) , firstView.frame.height), animated: animated)
-            secondView!.change(size: NSMakeSize(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - 30) / 2), secondView!.frame.height), animated: animated)
+            firstView.change(size: NSMakeSize(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - (30 + swapColors.frame.width)) / 2) , firstView.frame.height), animated: animated)
+            secondView!.change(size: NSMakeSize(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - (30 + swapColors.frame.width)) / 2), secondView!.frame.height), animated: animated)
             firstView.change(pos: NSMakePoint(10, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - firstView.frame.height) / 2)), animated: animated)
-            secondView!.change(pos: NSMakePoint(firstView.frame.maxX + 10, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - secondView!.frame.height) / 2)), animated: animated)
+            secondView!.change(pos: NSMakePoint(firstView.frame.maxX + 10 + swapColors.frame.width, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - secondView!.frame.height) / 2)), animated: animated)
             addColorButton.isHidden = true
+            swapColors.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - swapColors.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - swapColors.frame.height) / 2)), animated: animated)
         case .single:
             addColorButton.centerY(x: colorsContainer.frame.width - addColorButton.frame.width - 10)
             firstView.change(size: NSMakeSize(colorsContainer.frame.width - 20 - (canUseGradient ? addColorButton.frame.width + 10 : 0), firstView.frame.height), animated: animated)
             firstView.change(pos: NSMakePoint(10, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - firstView.frame.height) / 2)), animated: animated)
+            swapColors.change(pos: NSMakePoint(colorsContainer.frame.width, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - swapColors.frame.height) / 2)), animated: animated)
             addColorButton.isHidden = !canUseGradient
         }
     }
@@ -622,14 +637,19 @@ private final class WallpaperPreviewView: View {
         case let .color(color):
             colorPicker.colorPicker.color = NSColor(UInt32(color))
             colorPicker.updateMode(.single(colorPicker.colorPicker.color), animated: false)
+            patternsController.color = colorPicker.colorPicker.color
         case let .file(_, _, settings, _):
             colorPicker.colorPicker.color = settings.color != nil ? NSColor(UInt32(settings.color!)) :  NSColor(hexString: "#ffffff")!
             colorPicker.updateMode(.single(colorPicker.colorPicker.color), animated: false)
+            patternsController.color = colorPicker.colorPicker.color
         case let .gradient(t, b):
             let top = NSColor(UInt32(t))
             let bottom = NSColor(UInt32(b))
             colorPicker.colorPicker.color = top
             colorPicker.updateMode(.gradient(top: top, bottom: bottom), animated: false)
+            
+            patternsController.color = top.blended(withFraction: 0.5, of: bottom)!
+
         default:
             break
         }
@@ -647,16 +667,18 @@ private final class WallpaperPreviewView: View {
                     self.wallpaper = self.wallpaper.withUpdatedSettings(settings.withUpdatedColor(Int32(bitPattern: color.rgb)))
                     self.colorPicker.updateMode(.single(color), animated: true)
                 }
+                self.patternsController.color = color
             case let .gradient(top, bottom):
                 switch self.colorPicker.currentResponder {
                 case .first:
                     self.wallpaper = .gradient(Int32(bitPattern: color.rgb), Int32(bitPattern: bottom.rgb))
                     self.colorPicker.updateMode(.gradient(top: color, bottom: bottom), animated: true)
+                    self.patternsController.color = color.blended(withFraction: 0.5, of: bottom)!
                 case .second:
                     self.wallpaper = .gradient(Int32(bitPattern: top.rgb), Int32(bitPattern: color.rgb))
                     self.colorPicker.updateMode(.gradient(top: top, bottom: color), animated: true)
+                    self.patternsController.color = top.blended(withFraction: 0.5, of: color)!
                 }
-
             }
            
         }
@@ -666,31 +688,16 @@ private final class WallpaperPreviewView: View {
             switch mode {
             case let .single(color):
                 self.wallpaper = .color(Int32(bitPattern: color.rgb))
-                if self.colorPicker.colorPicker.color != color {
-                    self.colorPicker.colorPicker.color = color
-                    self.colorPicker.colorPicker.colorChanged?(color)
-                    self.patternsController.color = color
-                    self.colorPicker.colorPicker.needsLayout = true
-                }
-                
+                self.patternsController.color = color
             case let .gradient(top, bottom):
                 self.wallpaper = .gradient(Int32(bitPattern: top.rgb), Int32(bitPattern: bottom.rgb))
-//                if self.colorPicker.colorPicker.color != color {
-//                    self.colorPicker.colorPicker.color = color
-//                    self.colorPicker.colorPicker.colorChanged?(color)
-//                    self.patternsController.color = color
-//                    self.colorPicker.colorPicker.needsLayout = true
-//                }
+                self.patternsController.color = top.blended(withFraction: 0.5, of: bottom)!
             }
             
             self.colorPicker.updateMode(mode, animated: true)
         }
         
-        colorPicker.colorPicker.colorChangeEnded = { [weak self] color in
-            self?.patternsController.color = color
-        }
         
-        patternsController.color = colorPicker.colorPicker.color
         
         patternsController.selected = { [weak self] wallpaper in
             guard let `self` = self else {return}
@@ -698,6 +705,11 @@ private final class WallpaperPreviewView: View {
                 switch self.wallpaper {
                 case let .color(color):
                      self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: color, intensity: self.patternsController.intensity))
+                case let .gradient(t, b):
+                    let top = NSColor(UInt32(t))
+                    let bottom = NSColor(UInt32(b))
+                    let middle = top.blended(withFraction: 0.5, of: bottom)!
+                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: Int32(bitPattern: middle.rgb), intensity: self.patternsController.intensity))
                 case let .file(_, _, settings, _):
                     self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: settings.color, intensity: self.patternsController.intensity))
                 default:
@@ -797,7 +809,7 @@ private final class WallpaperPreviewView: View {
         if !colorCheckbox.isHidden {
             checkboxWidth += (checkboxWidth != 0 ? 10 + colorCheckbox.frame.width : colorCheckbox.frame.width)
         }
-        
+                
         checkboxContainer.setFrameSize(NSMakeSize(checkboxWidth, 28))
         
         var point: NSPoint = NSZeroPoint
@@ -834,7 +846,7 @@ private final class WallpaperPreviewView: View {
         
         self.progressView?.center()
         colorPicker.setFrameSize(NSMakeSize(frame.width, 168))
-        patternsController.view.setFrameSize(NSMakeSize(frame.width, 160))
+        patternsController.view.setFrameSize(NSMakeSize(frame.width, 168))
         
         updateModifyState(self.previewState, animated: false)
     }
@@ -843,7 +855,7 @@ private final class WallpaperPreviewView: View {
     func updateModifyState(_ state: WallpaperPreviewState, animated: Bool) {
         
         switch state  {
-        case .color, .pattern:
+        case .color:
             backgroundView.change(size: NSMakeSize(frame.width, frame.height - colorPicker.frame.height), animated: animated)
         default:
             backgroundView.change(size: NSMakeSize(frame.width, frame.height), animated: animated)
@@ -858,6 +870,7 @@ private final class WallpaperPreviewView: View {
             documentView._change(pos: NSMakePoint(0, frame.height - colorPicker.frame.height - tableView.listHeight), animated: animated)
             checkboxContainer.change(pos: NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - colorPicker.frame.height - checkboxContainer.frame.height - 10), animated: animated)
             patternsController.view._change(pos: NSMakePoint(0, frame.height), animated: animated)
+            updateBackground(wallpaper)
         case .normal:
             patternCheckbox.isSelected = false
             colorCheckbox.isSelected = false
@@ -865,15 +878,60 @@ private final class WallpaperPreviewView: View {
             documentView._change(pos: NSMakePoint(0, frame.height - tableView.listHeight), animated: animated)
             colorPicker.change(pos: NSMakePoint(0, frame.height), animated: animated)
             patternsController.view._change(pos: NSMakePoint(0, frame.height), animated: animated)
+            updateBackground(wallpaper)
         case .pattern:
-            patternsController.pattern = self.wallpaper
+            var wallpaper = self.wallpaper
+            switch wallpaper {
+            case let .gradient(t, b):
+                let top = NSColor(UInt32(t))
+                let bottom = NSColor(UInt32(b))
+                let middle = top.blended(withFraction: 0.5, of: bottom)!
+                wallpaper = .color(Int32(bitPattern: middle.rgb))
+            default:
+                break
+            }
+            patternsController.pattern = wallpaper
             patternCheckbox.isSelected = true
             colorCheckbox.isSelected = false
             colorPicker.change(pos: NSMakePoint(0, frame.height), animated: animated)
             documentView._change(pos: NSMakePoint(0, frame.height - patternsController.view.frame.height - tableView.listHeight), animated: animated)
             checkboxContainer.change(pos: NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - patternsController.view.frame.height - checkboxContainer.frame.height - 10), animated: animated)
             patternsController.view._change(pos: NSMakePoint(0, frame.height - patternsController.view.frame.height), animated: animated)
+            
+            
+            
+            updateBackground(wallpaper)
+
         }
+    }
+    
+    private func updateBackground(_ wallpaper: Wallpaper) {
+        switch wallpaper {
+        case .builtin:
+            (backgroundView.layer as? CAGradientLayer)?.colors = nil
+            backgroundView.isHidden = true
+        case let .color(color):
+            backgroundView.backgroundColor = NSColor(UInt32(color))
+            (backgroundView.layer as? CAGradientLayer)?.colors = nil
+            backgroundView.isHidden = true
+        case let .gradient(t, b):
+            let top = NSColor(UInt32(t))
+            let bottom = NSColor(UInt32(b))
+            let middle = top.blended(withFraction: 0.5, of: bottom)!
+            (backgroundView.layer as? CAGradientLayer)?.colors = [top.cgColor, bottom.cgColor]
+            backgroundView.backgroundColor = middle
+            backgroundView.isHidden = false
+        case .image:
+            (backgroundView.layer as? CAGradientLayer)?.colors = nil
+            backgroundView.isHidden = true
+        case .file:
+            (backgroundView.layer as? CAGradientLayer)?.colors = nil
+            backgroundView.isHidden = true
+        default:
+            (backgroundView.layer as? CAGradientLayer)?.colors = nil
+            backgroundView.isHidden = true
+        }
+        self.backgroundColor = backgroundView.backgroundColor
     }
     
     func updateState(synchronousLoad: Bool) {
@@ -886,7 +944,6 @@ private final class WallpaperPreviewView: View {
             blurCheckbox.isHidden = false
             colorCheckbox.isHidden = true
             patternCheckbox.isHidden = true
-            (backgroundView.layer as? CAGradientLayer)?.colors = nil
             let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], immediateThumbnailData: nil, reference: nil, partialReference: nil)
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: CGSize(), intrinsicInsets: NSEdgeInsets())
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
@@ -897,8 +954,6 @@ private final class WallpaperPreviewView: View {
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
             patternCheckbox.isHidden = false
-            backgroundView.backgroundColor = NSColor(UInt32(color))
-            (backgroundView.layer as? CAGradientLayer)?.colors = nil
             let image = generateImage(NSMakeSize(1, 1), contextGenerator: { size, ctx in
                 ctx.setFillColor(NSColor(UInt32(color)).cgColor)
                 ctx.fill(NSMakeRect(0, 0, size.width, size.height))
@@ -907,19 +962,14 @@ private final class WallpaperPreviewView: View {
             self.colorCheckbox.update(by: image)
             self.patternCheckbox.update(by: image)
         case let .gradient(t, b):
-            let top = NSColor(UInt32(t))
-            let bottom = NSColor(UInt32(b))
-
-            let middle = top.blended(withFraction: 0.5, of: bottom)!
-            
             self.imageView.isHidden = true
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
-            patternCheckbox.isHidden = false
-            backgroundColor = middle
-            
-            (backgroundView.layer as? CAGradientLayer)?.colors = [top.cgColor, bottom.cgColor]
-            
+            patternCheckbox.isHidden = true
+            let top = NSColor(UInt32(t))
+            let bottom = NSColor(UInt32(b))
+            let middle = top.blended(withFraction: 0.5, of: bottom)!
+
             let image = generateImage(NSMakeSize(1, 1), contextGenerator: { size, ctx in
                 ctx.setFillColor(middle.cgColor)
                 ctx.fill(NSMakeRect(0, 0, size.width, size.height))
@@ -933,7 +983,6 @@ private final class WallpaperPreviewView: View {
             blurCheckbox.isHidden = false
             colorCheckbox.isHidden = true
             patternCheckbox.isHidden = true
-            (backgroundView.layer as? CAGradientLayer)?.colors = nil
             let dimensions = largestImageRepresentation(representations)!.dimensions.size
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
@@ -947,11 +996,10 @@ private final class WallpaperPreviewView: View {
         case let .file(_, file, settings, isPattern):
             self.imageView.isHidden = false
             blurCheckbox.isHidden = isPattern
-            
+
             colorCheckbox.isHidden = !isPattern
             patternCheckbox.isHidden = !isPattern
-            (backgroundView.layer as? CAGradientLayer)?.colors = nil
-            var patternColor: NSColor? = nil
+            var patternColor: TransformImageEmptyColor? = nil
             
             if isPattern {
                 var patternIntensity: CGFloat = 0.5
@@ -959,7 +1007,7 @@ private final class WallpaperPreviewView: View {
                     if let intensity = settings.intensity {
                         patternIntensity = CGFloat(intensity) / 100.0
                     }
-                    patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
+                    patternColor = .color(NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity))
                 }
             }
             magnifyView.maxMagnify = !isPattern ? 3.0 : 1.0
@@ -979,9 +1027,11 @@ private final class WallpaperPreviewView: View {
             self.imageView.setSignal(chatWallpaper(account: context.account, representations: representations, file: file, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad), animate: true, synchronousLoad: synchronousLoad)
             self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
         default:
-            (backgroundView.layer as? CAGradientLayer)?.colors = nil
+            break
         }
         
+        updateBackground(self.wallpaper)
+
         
         if let updatedStatusSignal = updatedStatusSignal {
             disposable.set(updatedStatusSignal.start(next: { [weak self] status in

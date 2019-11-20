@@ -463,7 +463,7 @@ class PeerInfoController: EditableViewController<TableView> {
         
        
      
-        genericView.setScrollHandler { position in
+        genericView.setScrollHandler { [weak self] position in
             if let loadMoreControl = loadMoreControl {
                 switch position.direction {
                 case .bottom:

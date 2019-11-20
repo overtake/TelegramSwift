@@ -171,7 +171,7 @@ class WPArticleLayout: WPLayout {
                 contentSize.width = max(groupLayout.dimensions.width, contentSize.width)
             }
             
-            var emptyColor: NSColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+            var emptyColor: TransformImageEmptyColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
             var isColor: Bool = false
             if let wallpaper = wallpaper {
                 switch wallpaper {
@@ -183,7 +183,7 @@ class WPArticleLayout: WPLayout {
                             if let intensity = settings.intensity {
                                 patternIntensity = CGFloat(intensity) / 100.0
                             }
-                            emptyColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
+                            emptyColor = .color(NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity))
                         }
                     case .color:
                         isColor = true
@@ -242,7 +242,6 @@ class WPArticleLayout: WPLayout {
             }
             
             if let imageSize = imageSize {
-               
                 
                 let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: isTheme ? contrainedImageSize : imageSize.aspectFilled(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground, emptyColor: emptyColor)
                 
