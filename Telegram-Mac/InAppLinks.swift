@@ -524,7 +524,7 @@ func escape(with link:String, addPercent: Bool = true) -> String {
 }
 
 
-private func urlVars(with url:String) -> [String:String] {
+func urlVars(with url:String) -> [String:String] {
     var vars:[String:String] = [:]
     let range = url.nsstring.range(of: "?")
     let ns:NSString = range.location != NSNotFound ? url.nsstring.substring(from: range.location + 1).nsstring : url.nsstring

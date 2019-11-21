@@ -212,6 +212,7 @@ final class AccountContext {
     let chatUndoManager = ChatUndoManager()
     let blockedPeersContext: BlockedPeersContext
     let walletPasscodeTimeoutContext: WalletPasscodeTimeoutContext
+
     #endif
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
@@ -270,6 +271,7 @@ final class AccountContext {
     
     public var closeFolderFirst: Bool = false
     
+    
     init(sharedContext: SharedAccountContext, window: Window, tonContext: StoredTonContext?, account: Account) {
         self.sharedContext = sharedContext
         self.account = account
@@ -280,6 +282,8 @@ final class AccountContext {
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.walletPasscodeTimeoutContext = WalletPasscodeTimeoutContext(postbox: account.postbox)
         #endif
+        
+        
         
         
         let limitConfiguration = _limitConfiguration

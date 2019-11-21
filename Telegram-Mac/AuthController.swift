@@ -491,7 +491,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
                 }
 
                 
-                self?.actionDisposable.set((showModalProgress(signal: sendAuthorizationCode(accountManager: sharedContext.accountManager, account: strongSelf.account, phoneNumber: phoneNumber, apiId: API_ID, apiHash: API_HASH, syncContacts: false)
+                self?.actionDisposable.set((showModalProgress(signal: sendAuthorizationCode(accountManager: sharedContext.accountManager, account: strongSelf.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false)
                     |> map {Optional($0)}
                     |> mapError {Optional($0)}
                     |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))

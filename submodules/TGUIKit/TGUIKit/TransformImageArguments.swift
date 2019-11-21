@@ -110,6 +110,7 @@ public struct TransformImageArguments: Equatable {
     public let intrinsicInsets: NSEdgeInsets
     public let resizeMode: TransformImageResizeMode
     public let emptyColor: TransformImageEmptyColor?
+    public let scale: CGFloat
     public var drawingSize: CGSize {
         let cornersExtendedEdges = self.corners.extendedEdges
         return CGSize(width: max(self.boundingSize.width + cornersExtendedEdges.left + cornersExtendedEdges.right + self.intrinsicInsets.left + self.intrinsicInsets.right, 1), height: max(self.boundingSize.height + cornersExtendedEdges.top + cornersExtendedEdges.bottom + self.intrinsicInsets.top + self.intrinsicInsets.bottom, 1))
@@ -125,7 +126,7 @@ public struct TransformImageArguments: Equatable {
         return NSEdgeInsets(top: cornersExtendedEdges.top + self.intrinsicInsets.top, left: cornersExtendedEdges.left + self.intrinsicInsets.left, bottom: cornersExtendedEdges.bottom + self.intrinsicInsets.bottom, right: cornersExtendedEdges.right + self.intrinsicInsets.right)
     }
     
-    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none, emptyColor: TransformImageEmptyColor? = nil) {
+    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none, emptyColor: TransformImageEmptyColor? = nil, scale: CGFloat = System.backingScale) {
         self.corners = corners
         let min = corners.topLeft.corner + corners.topRight.corner
         self.imageSize = NSMakeSize(max(imageSize.width, min), max(imageSize.height, min))
@@ -133,11 +134,12 @@ public struct TransformImageArguments: Equatable {
         self.intrinsicInsets = intrinsicInsets
         self.resizeMode = resizeMode
         self.emptyColor = emptyColor
+        self.scale = scale
     }
 }
 
 public func ==(lhs: TransformImageArguments, rhs: TransformImageArguments) -> Bool {
-    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners && lhs.emptyColor == rhs.emptyColor
+    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners && lhs.emptyColor == rhs.emptyColor && lhs.scale == rhs.scale
 }
 
 

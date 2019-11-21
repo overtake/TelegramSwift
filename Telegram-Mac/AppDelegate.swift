@@ -11,6 +11,7 @@ import CoreServices
 import LocalAuthentication
 import WalletCore
 import OpenSSLEncryption
+import CoreSpotlight
 #if !APP_STORE
 import AppCenter
 import AppCenterCrashes
@@ -87,8 +88,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-
       
+        evaluateApiHash()
+        
         initializeSelectManager()
         startLottieCacheCleaner()
         
@@ -181,7 +183,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
 
         let logger = Logger(basePath: containerUrl.path + "/logs")
-        logger.logToConsole = TEST_SERVER
+        logger.logToConsole = false
         logger.logToFile = UserDefaults.standard.bool(forKey: "enablelogs")
         
         #if DEBUG
@@ -278,8 +280,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             updateTheme(with: themeSettings, for: window)
             
             
-
-            
             let basicTheme = Atomic<ThemePaletteSettings?>(value: themeSettings)
             let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
             let backingProperties:ValuePromise<CGFloat> = ValuePromise(System.backingScale, ignoreRepeated: true)
@@ -299,13 +299,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 backingProperties.set(System.backingScale)
             })
             
-            
-            
             let autoNightSignal = viewDidChangedAppearance.get() |> mapToSignal { _ in
                 return combineLatest(autoNightSettings(accountManager: accountManager), Signal<Void, NoError>.single(Void()) |> then( Signal<Void, NoError>.single(Void()) |> delay(60, queue: Queue.mainQueue()) |> restart))
             } |> deliverOnMainQueue
             
-            var previousIsEnabled: Bool? = nil
             
             _ = autoNightSignal.start(next: { preference, _ in
                 
@@ -338,9 +335,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     }
                     
                 } else if preference.systemBased {
-                    
-
-                    
                     if #available(OSX 10.14, *) {
                         switch systemAppearance.name {
                         case NSAppearance.Name.aqua:
@@ -384,9 +378,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
             })
             
-            
-            
-            let networkArguments = NetworkInitializationArguments(apiId: API_ID, languagesCategory: languagesCategory, appVersion: appVersion, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(nil), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
+            let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(nil), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
             
             let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: displayUpgrade)
             
@@ -585,9 +577,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     
                     self.contextValue = context
                     
-                  
-                    
-                    
                     if let context = context {
                         context.context.isCurrent = true
                         context.applyNewTheme()
@@ -619,6 +608,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         
                         if let url = AppDelegate.eventProcessed {
                             self.processURL(url)
+                        }
+                        if let action = AppDelegate.spotlightAction {
+                            self.processSpotlightAction(action)
                         }
                         
                         if !self.window.isKeyWindow {
@@ -792,7 +784,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     private static var eventProcessed: String? = nil
-    
+    private static var spotlightAction: SpotlightIdentifier? = nil
+
     @objc func handleURLEvent(_ event:NSAppleEventDescriptor, with replyEvent:NSAppleEventDescriptor) {
         let url = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue
         processURL(url)
@@ -985,6 +978,38 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     @IBAction func closeWindow(_ sender: Any) {
         NSApp.keyWindow?.close()
+    }
+    
+    func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([NSUserActivityRestoring]) -> Void) -> Bool {
+        if userActivity.activityType == CSSearchableItemActionType {
+            if let uniqueIdentifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String {
+                if let identifier = parseSpotlightIdentifier(uniqueIdentifier) {
+                    self.processSpotlightAction(identifier)
+                }
+            }
+        }
+        
+        return true
+    }
+        
+    private func processSpotlightAction(_ identifier: SpotlightIdentifier) {
+        if let context = contextValue?.context {
+            AppDelegate.spotlightAction = nil
+            if context.account.id == identifier.recordId {
+                switch identifier.source {
+                case let .peerId(peerId):
+                    context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                }
+            } else {
+                switch identifier.source {
+                case let .peerId(peerId):
+                    context.sharedContext.switchToAccount(id: identifier.recordId, action: .chat(peerId, necessary: true))
+                }
+            }
+        } else {
+            AppDelegate.spotlightAction = identifier
+        }
+        
     }
     
     func getLogFilesContentWithMaxSize() -> String {
