@@ -196,6 +196,12 @@
 		9FFAE50D205AA1FB000C028E /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F8FDF3A205A7AE7001A7A77 /* libswresample.a */; };
 		9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE50E205AB4A3000C028E /* libiconv.tbd */; };
 		9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE513205AB50C000C028E /* libz.tbd */; };
+		A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */; };
+		A71DC82D23858356000EEDE2 /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82C23858356000EEDE2 /* Spotlight.swift */; };
+		A71DC82F2386AADF000EEDE2 /* Signature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82E2386AADF000EEDE2 /* Signature.swift */; };
+		A71DC8322386C845000EEDE2 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A71DC8342386D512000EEDE2 /* Signature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82E2386AADF000EEDE2 /* Signature.swift */; };
+		A71DC8352386D512000EEDE2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
 		A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
 		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
 		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
@@ -717,7 +723,6 @@
 		D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004167422D37AD00000566B /* StickerPackPanelRowItem.swift */; };
 		D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004167622D4AD3B0000566B /* StickerPackItems.swift */; };
 		D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */; };
-		D007AB9D2347F06F0022C27F /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D007AB9F234C8DCB0022C27F /* WalletPasscodeTimeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D007AB9E234C8DCB0022C27F /* WalletPasscodeTimeout.swift */; };
 		D007ABA1234CACE40022C27F /* WalletCreateInvoiceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D007ABA0234CACE40022C27F /* WalletCreateInvoiceController.swift */; };
 		D00C73B62302C196004B1E2B /* ChatScheduleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00C73B52302C196004B1E2B /* ChatScheduleController.swift */; };
@@ -830,7 +835,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		D007AB9B2347F0670022C27F /* PBXContainerItemProxy */ = {
+		A71DC8302386C83E000EEDE2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
 			proxyType = 1;
@@ -864,7 +869,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				D007AB9D2347F06F0022C27F /* TelegramShare.appex in Embed App Extensions */,
+				A71DC8322386C845000EEDE2 /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1209,6 +1214,9 @@
 		9FFAE50E205AB4A3000C028E /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		9FFAE510205AB4AB000C028E /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
 		9FFAE513205AB50C000C028E /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreSpotlight.framework; path = System/Library/Frameworks/CoreSpotlight.framework; sourceTree = SDKROOT; };
+		A71DC82C23858356000EEDE2 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
+		A71DC82E2386AADF000EEDE2 /* Signature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signature.swift; sourceTree = "<group>"; };
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
@@ -1928,6 +1936,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */,
 				A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */,
 				A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */,
 				A7DF1B6C237415AD00ACC01F /* Zip.framework in Frameworks */,
@@ -2410,6 +2419,15 @@
 			name = modern;
 			sourceTree = "<group>";
 		};
+		A71DC8332386D0C4000EEDE2 /* api-credentials */ = {
+			isa = PBXGroup;
+			children = (
+				A71DC82E2386AADF000EEDE2 /* Signature.swift */,
+				C2BB2DAF1F8BDF6700520255 /* Config.swift */,
+			);
+			name = "api-credentials";
+			sourceTree = "<group>";
+		};
 		A7C41DAF2358622F00CF9402 /* modern */ = {
 			isa = PBXGroup;
 			children = (
@@ -2447,6 +2465,7 @@
 				C219E1E51D8AC83A0042F0C8 /* views */,
 				C20232A71D81D189007C9ADE /* ChatController.swift */,
 				C219E1DA1D8884290042F0C8 /* ChatHistoryEntry.swift */,
+				D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */,
 				C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */,
 				C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */,
 				C295C65E1F75808600BA309D /* ChatAdditionController.swift */,
@@ -4276,7 +4295,7 @@
 		D05F392122FB448E0040F341 /* experemental */ = {
 			isa = PBXGroup;
 			children = (
-				D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */,
+				A71DC82C23858356000EEDE2 /* Spotlight.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -4427,6 +4446,7 @@
 		D098C7171D7E175A007784E4 /* Telegram-Mac */ = {
 			isa = PBXGroup;
 			children = (
+				A71DC8332386D0C4000EEDE2 /* api-credentials */,
 				D05F392122FB448E0040F341 /* experemental */,
 				9FDA713020E64541001ED8ED /* media */,
 				C25F71461E410DD50046AF4E /* inapp-settings */,
@@ -4440,7 +4460,6 @@
 				C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */,
 				9F7D422822240235007B68BB /* account */,
 				C24949131E5B763F00D7ED5D /* ApplicationContext.swift */,
-				C2BB2DAF1F8BDF6700520255 /* Config.swift */,
 				D098C71A1D7E175A007784E4 /* Assets.xcassets */,
 				D098C71C1D7E175A007784E4 /* MainMenu.xib */,
 				D098C71F1D7E175A007784E4 /* Info.plist */,
@@ -4453,6 +4472,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */,
 				A74EB06F237961A1005F55AE /* AppCenter.framework */,
 				A74EB070237961A1005F55AE /* AppCenterCrashes.framework */,
 				A7DF1B6B237415AD00ACC01F /* Zip.framework */,
@@ -4569,7 +4589,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				D007AB9C2347F0670022C27F /* PBXTargetDependency */,
+				A71DC8312386C83E000EEDE2 /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -4582,7 +4602,8 @@
 		D098C70D1D7E175A007784E4 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0820;
+				DefaultBuildSystemTypeForWorkspace = Latest;
+				LastSwiftUpdateCheck = 1030;
 				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = Telegram;
 				TargetAttributes = {
@@ -4775,6 +4796,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A71DC8342386D512000EEDE2 /* Signature.swift in Sources */,
+				A71DC8352386D512000EEDE2 /* Config.swift in Sources */,
 				D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */,
 				D06ACAEF231AC265002DCD81 /* ChatMessageBubbleImages.swift in Sources */,
 				D04D2145230DB57300609388 /* TelegramIconsTheme.swift in Sources */,
@@ -5321,6 +5344,7 @@
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
 				C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */,
 				9F10CE942061C8C8002DD61A /* InputDataControllerEntries.swift in Sources */,
+				A71DC82F2386AADF000EEDE2 /* Signature.swift in Sources */,
 				D02BD7C0232D0FB800D1814A /* AppAppearanceViewController.swift in Sources */,
 				C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */,
@@ -5413,6 +5437,7 @@
 				9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */,
 				9F52F51A2130286E006FC0B5 /* LocationRequest.swift in Sources */,
 				C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */,
+				A71DC82D23858356000EEDE2 /* Spotlight.swift in Sources */,
 				C205DB9D1EE88765003711DF /* Views.swift in Sources */,
 				D07B558423338B6B00F076A8 /* WalletSplashController.swift in Sources */,
 				C27AAFE91DE9DA61009B9629 /* CountryManager.swift in Sources */,
@@ -5484,10 +5509,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		D007AB9C2347F0670022C27F /* PBXTargetDependency */ = {
+		A71DC8312386C83E000EEDE2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
-			targetProxy = D007AB9B2347F0670022C27F /* PBXContainerItemProxy */;
+			targetProxy = A71DC8302386C83E000EEDE2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -5552,6 +5577,154 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		A71DC8392386D6C2000EEDE2 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+			};
+			name = Github;
+		};
+		A71DC83A2386D6C2000EEDE2 /* Github */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C21074251E77F79A006EE5EF /* Beta.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = NO;
+				CLANG_WARN_SUSPICIOUS_MOVE = NO;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				ENABLE_BITCODE = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+					"$(PROJECT_DIR)/HockeySDK-Mac",
+					"$(PROJECT_DIR)/submodules",
+					"$(PROJECT_DIR)/submodules/AppCenter",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
+				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;
+				HEADERMAP_USES_VFS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/thrid-party/ogg",
+					"$(PROJECT_DIR)/submodules/libtgvoip",
+					"$(PROJECT_DIR)/thrid-party",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/include/",
+					"$(PROJECT_DIR)/thrid-party/rlottie/**",
+				);
+				INFOPLIST_FILE = "Telegram-Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/thrid-party/libwebp/lib",
+					"$(SDKROOT)/usr/lib/system",
+					"$(PROJECT_DIR)/thrid-party/opus/lib",
+					"$(PROJECT_DIR)/thrid-party/ffmpeg/lib",
+					"$(PROJECT_DIR)/thrid-party/libjpeg-turbo",
+					"$(PROJECT_DIR)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_LDFLAGS = "";
+				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D GITHUB";
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = off;
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_REFLECTION_METADATA_LEVEL = none;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Github;
+		};
+		A71DC83B2386D6C2000EEDE2 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
+					"$(PROJECT_DIR)",
+				);
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
+				INFOPLIST_FILE = TelegramShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_SWIFT_FLAGS = "-D DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
+				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
+				SWIFT_VERSION = 4.2;
+				VALID_ARCHS = x86_64;
+			};
+			name = Github;
+		};
 		C232EA251E1BC1A100C4D38C /* ReleaseAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -5610,6 +5783,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Sandbox.entitlements";
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
@@ -5649,11 +5823,12 @@
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = "";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D APP_STORE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = off;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -5817,6 +5992,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
@@ -5856,11 +6032,12 @@
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = "";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D STABLE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = off;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -5964,6 +6141,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -6006,11 +6184,12 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = "";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D ALPHA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = off;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
@@ -6165,6 +6344,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -6207,11 +6387,12 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = "";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D BETA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_ENFORCE_EXCLUSIVE_ACCESS = off;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
@@ -6236,6 +6417,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -6277,7 +6459,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = "";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
@@ -6302,6 +6484,7 @@
 				C232EAA11E1D07E700C4D38C /* DebugHockeyapp */,
 				D01E1ECB22B2608F00AD6DAE /* HockeyappMacAlpha */,
 				C232EAA21E1D07E700C4D38C /* DebugAppStore */,
+				A71DC83B2386D6C2000EEDE2 /* Github */,
 				C248BD1F1E6ECB24004B9106 /* ReleaseHockeyapp */,
 				C232EAA31E1D07E700C4D38C /* ReleaseAppStore */,
 			);
@@ -6314,6 +6497,7 @@
 				D098C7201D7E175A007784E4 /* DebugHockeyapp */,
 				D01E1EC922B2608F00AD6DAE /* HockeyappMacAlpha */,
 				D098C7211D7E175A007784E4 /* DebugAppStore */,
+				A71DC8392386D6C2000EEDE2 /* Github */,
 				C248BD1D1E6ECB24004B9106 /* ReleaseHockeyapp */,
 				C232EA251E1BC1A100C4D38C /* ReleaseAppStore */,
 			);
@@ -6326,6 +6510,7 @@
 				D098C7231D7E175A007784E4 /* DebugHockeyapp */,
 				D01E1ECA22B2608F00AD6DAE /* HockeyappMacAlpha */,
 				D098C7241D7E175A007784E4 /* DebugAppStore */,
+				A71DC83A2386D6C2000EEDE2 /* Github */,
 				C248BD1E1E6ECB24004B9106 /* ReleaseHockeyapp */,
 				C232EA261E1BC1A100C4D38C /* ReleaseAppStore */,
 			);

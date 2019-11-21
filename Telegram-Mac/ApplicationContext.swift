@@ -344,19 +344,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .option])
         
         #if DEBUG
-//        window.set(handler: { [weak self] () -> KeyHandlerResult in
-//            var items: [ValuesSelectorValue<String>] = []
-//            for i in 0 ..< 100 {
-//                items.append(ValuesSelectorValue(localized: "value: \(i)", value: "\(i)"))
-//            }
-//            
-//            let controller = ValuesSelectorModalController(values: items, selected: items[0], title: "test", onComplete: { value in
-//                
-//            })
-//            
-//            showModal(with: controller, for: window)
-//            return .invoked
-//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
+        window.set(handler: { () -> KeyHandlerResult in
+            alert(for: window, info: evaluateApiHash())
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
         
         
