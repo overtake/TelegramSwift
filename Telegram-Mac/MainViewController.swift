@@ -223,9 +223,10 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
 
 class MainViewController: TelegramViewController {
 
+    let circlesController: CirclesController
     let tabController:TabBarController = TabBarController()
     let contacts:ContactsController
-    let chatListNavigation:NavigationViewController
+    let chatListNavigation:UpdatedNavigationViewController
     let settings:AccountViewController
     private let phoneCalls:RecentCallsViewController
     private let layoutDisposable:MetaDisposable = MetaDisposable()
@@ -256,7 +257,9 @@ class MainViewController: TelegramViewController {
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        tabController.view.frame = bounds
+        let (splice, remainder) = bounds.divided(atDistance: 70, from: .minXEdge)
+        circlesController.view.frame = splice
+        tabController.view.frame = remainder
         #if !APP_STORE
         updateController.updateLayout(context.sharedContext.layout, parentSize: size, isChatList: true)
         #endif
@@ -268,6 +271,7 @@ class MainViewController: TelegramViewController {
         self.bar = NavigationBarStyle(height: 0)
         backgroundColor = theme.colors.background
         addSubview(tabController.view)
+        addSubview(circlesController.view)
         #if !APP_STORE
         addSubview(updateController.view)
         #endif
@@ -309,12 +313,40 @@ class MainViewController: TelegramViewController {
         
         tabController.didChangedIndex = { [weak self] index in
             self?.checkSettings(index)
+            if index != 2 {
+                self?.circlesController.select(groupId: nil)
+            } else {
+                if let nav = self?.chatListNavigation {
+                    if let controller = nav.controller as? ChatListController {
+                        switch controller.mode {
+                        case let .folder(groupId):
+                            self?.circlesController.select(groupId: groupId)
+                        default:
+                            break
+                        }
+                    }
+                }
+            }
         }
+        chatListNavigation.callback =  { [weak self] in
+           if let nav = self?.chatListNavigation {
+               if let controller = nav.controller as? ChatListController {
+                   switch controller.mode {
+                   case let .folder(groupId):
+                       self?.circlesController.select(groupId: groupId)
+                   default:
+                       break
+                   }
+               }
+           }
+       }
+       chatListNavigation.callback?()
     }
     
     func prepareControllers() {
         chatList.loadViewIfNeeded(bounds)
         settings.loadViewIfNeeded(bounds)
+        circlesController.loadViewIfNeeded(bounds)
     }
     
     private func showCallsTab() {
@@ -634,11 +666,15 @@ class MainViewController: TelegramViewController {
     }
     
     override init(_ context: AccountContext) {
-        
-        chatListNavigation = NavigationViewController(ChatListController(context), context.window)
+        chatListNavigation = UpdatedNavigationViewController(ChatListController(context), context.window)
         contacts = ContactsController(context)
         settings = AccountViewController(context)
         phoneCalls = RecentCallsViewController(context)
+        circlesController = CirclesController(
+            context: context,
+            chatListNavigationController: chatListNavigation,
+            tabController: tabController
+        )
         #if !APP_STORE
             updateController = UpdateTabController(context.sharedContext)
         #endif

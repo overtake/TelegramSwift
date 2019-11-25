@@ -187,14 +187,9 @@ class PeerListContainerView : View {
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
     private var searchState: SearchFieldState = .None
     
-    var mode: PeerListMode = .plain {
+    var mode: PeerListMode = .folder(PeerGroupId(rawValue: 0)) {
         didSet {
-            switch mode {
-            case .folder:
-                compose.isHidden = true
-            case .plain:
-                compose.isHidden = false
-            }
+            compose.isHidden = false
             needsLayout = true
         }
     }
@@ -242,7 +237,7 @@ class PeerListContainerView : View {
     
     func searchStateChanged(_ state: SearchFieldState, animated: Bool) {
         self.searchState = state
-        searchView.change(size: NSMakeSize(state == .Focus || mode.isFolder ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
+        searchView.change(size: NSMakeSize(state == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
         compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
         proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
     }
@@ -282,15 +277,15 @@ class PeerListContainerView : View {
         
         if frame.width < 200 {
             switch self.mode {
-            case .folder:
+            /*case .folder:
                 offset = 0
-                
+            */
             default:
                 break
             }
         }
         
-        searchView.setFrameSize(NSMakeSize(searchState == .Focus || mode.isFolder ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
+        searchView.setFrameSize(NSMakeSize(searchState == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
         tableView.setFrameSize(frame.width, frame.height - offset)
         
         searchView.isHidden = frame.width < 200
@@ -365,12 +360,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    init(_ context: AccountContext, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
+    init(_ context: AccountContext, followGlobal:Bool = true, mode: PeerListMode = .folder(PeerGroupId(rawValue: 0)), searchOptions: AppSearchOptions = [.chats, .messages]) {
         self.followGlobal = followGlobal
         self.mode = mode
         self.searchOptions = searchOptions
         super.init(context)
-        self.bar = .init(height: mode.isFolder ? 50 : 0)
+        self.bar = .init(height: 0)
     }
     
     override var redirectUserInterfaceCalls: Bool {
@@ -538,13 +533,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     override func requestUpdateBackBar() {
-        self.leftBarView.minWidth = 70
+        self.leftBarView.minWidth = 70+70
         super.requestUpdateBackBar()
     }
     
     override func getLeftBarViewOnce() -> BarView {
         let view = BackNavigationBar(self, canBeEmpty: true)
-        view.minWidth = 70
+        view.minWidth = 70+70
         return view
     }
     
@@ -675,8 +670,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId) : ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction)
                 navigation.push(chat, context.sharedContext.layout == .single)
             }
-        case let .groupId(groupId):
-            self.navigationController?.push(ChatListController(context, modal: false, groupId: groupId))
+        default:
+            break
+        //case let .groupId(groupId):
+        //    self.navigationController?.push(ChatListController(context, modal: false, groupId: groupId))
         }
         if close {
             self.genericView.searchView.cancel(true)

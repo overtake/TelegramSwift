@@ -944,36 +944,24 @@ class ChatListController : PeersListController {
     
     
     override var enableBack: Bool {
-        return mode.groupId != .root
+        return false
     }
     
-    override var defaultBarTitle: String {
-        switch mode.groupId {
-        case .root:
-            return super.defaultBarTitle
-        case Namespaces.PeerGroup.circles:
-            return L10n.chatListCircledChats
-        default:
-            return L10n.chatListArchivedChats
-        }
-    }
-
-    override func escapeKeyAction() -> KeyHandlerResult {
-        if mode.isFolder, let navigation = navigationController {
-            navigation.back()
-            return .invoked
-        }
-        return super.escapeKeyAction()
-    }
     
     init(_ context: AccountContext, modal:Bool = false, groupId: PeerGroupId? = nil) {
+<<<<<<< HEAD
         self.undoTooltipControl = UndoTooltipControl(context: context)
         super.init(context, followGlobal:!modal, mode: groupId != nil ? .folder(groupId!) : .plain)
         
         if groupId != nil {
             context.closeFolderFirst = true
         }
+=======
+        self.tooltipController = ChatListTooltipController(context: context)
+        super.init(context, followGlobal:!modal, mode: groupId != nil ? .folder(groupId!) : .folder(PeerGroupId(rawValue: 0)))
+>>>>>>> circles base ui
     }
+
 
     override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         if let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = context.sharedContext.bindings.rootNavigation().modalAction {
