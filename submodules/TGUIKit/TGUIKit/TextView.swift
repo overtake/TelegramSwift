@@ -1615,6 +1615,12 @@ public class TextView: Control, NSViewToolTipOwner {
         super.removeFromSuperview()
     }
     
+    
+    public func updateWithNewWidth(_ width: CGFloat) {
+        let layout = self.layout
+        layout?.measure(width: width)
+        self.update(layout)
+    }
  
     
     required public init?(coder aDecoder: NSCoder) {

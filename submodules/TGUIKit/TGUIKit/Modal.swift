@@ -891,20 +891,21 @@ public func showModal(with controller: NavigationViewController, for window:Wind
 
 
 private func hideBelowModalsIfNeeded(except: Modal) -> Bool {
-    var hided: Bool = false
-    if let exceptController = except.controller, exceptController.containerBackground != .clear {
-        for modal in activeModals {
-            if modal.value != except {
-                modal.value?.background.isHidden = true
-                hided = true
-            }
-        }
-    }
-    
-    return hided
+//    var hided: Bool = false
+//    if let exceptController = except.controller, exceptController.containerBackground != .clear {
+//        for modal in activeModals {
+//            if modal.value != except, let controller = modal.value?.controller, !controller.isFullScreen {
+//                modal.value?.background.isHidden = true
+//                hided = true
+//            }
+//        }
+//    }
+//
+//    return hided
+    return false
 }
 
 private func unhideModalIfNeeded() -> Bool {
-    activeModals.last?.value?.background.isHidden = false
-    return !activeModals.isEmpty
+//    activeModals.last?.value?.background.isHidden = false
+    return false
 }

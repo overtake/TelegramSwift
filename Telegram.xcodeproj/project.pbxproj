@@ -236,6 +236,7 @@
 		A7D28259236C70A50000A9BF /* SSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D2823B236C69070000A9BF /* SSignalKit.framework */; };
 		A7DF1B6C237415AD00ACC01F /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7DF1B6B237415AD00ACC01F /* Zip.framework */; };
 		A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
+		A7F282B2238D122900742C20 /* QRLoginConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282B1238D122900742C20 /* QRLoginConfiguration.swift */; };
 		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
 		C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
@@ -1236,6 +1237,7 @@
 		A7D2823B236C69070000A9BF /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7DF1B6B237415AD00ACC01F /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7ED5DAE236C7CE100040372 /* RLottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7F282B1238D122900742C20 /* QRLoginConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRLoginConfiguration.swift; sourceTree = "<group>"; };
 		C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentPeerRowItem.swift; sourceTree = "<group>"; };
 		C2016F431EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/ShareViewController.strings"; sourceTree = "<group>"; };
 		C2016F451EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
@@ -3472,6 +3474,7 @@
 				9F1890922238F3DC00665EF5 /* DownloadedFilesPaths.swift */,
 				D07450F02340DC8200769D7F /* WalletConfiguration.swift */,
 				A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */,
+				A7F282B1238D122900742C20 /* QRLoginConfiguration.swift */,
 			);
 			name = "inapp-settings";
 			sourceTree = "<group>";
@@ -5473,6 +5476,7 @@
 				C29C3E711E43881500193A7E /* ModalPreviewViews.swift in Sources */,
 				9F7B74032227F492006610E4 /* ManageSharedAccountInfo.swift in Sources */,
 				D0CD3095221970F8005D23DD /* FFMpegRemuxer.m in Sources */,
+				A7F282B2238D122900742C20 /* QRLoginConfiguration.swift in Sources */,
 				9FC4DA9C21DD187C003E2A62 /* SearchPeerMembers.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
 				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,

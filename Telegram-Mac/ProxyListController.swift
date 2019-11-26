@@ -155,6 +155,9 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
     return entries
 }
 
@@ -194,8 +197,6 @@ func proxyListController(accountManager: AccountManager, network: Network, showU
     actionsDisposable.add(updateDisposable)
     
     let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettings(accountManager: accountManager) |> map { $0.servers})
-    
-    weak var _controller: ViewController? = nil
     
     let stateValue:Atomic<ProxyListState> = Atomic(value: ProxyListState())
     let statePromise:ValuePromise<ProxyListState> = ValuePromise(ignoreRepeated: true)

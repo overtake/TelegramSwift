@@ -24,6 +24,8 @@
 		9FAA268820D457A300D26CF3 /* RemoteStorageConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EA188120D3D2B1001AEE19 /* RemoteStorageConfiguration.swift */; };
 		9FC8ADA9206BBD000094F7B4 /* SaveSecureIdValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093D805206539D000BC3599 /* SaveSecureIdValue.swift */; };
 		9FC8ADAC206BC00A0094F7B4 /* RecentWebSessions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8ADAA206BBFF10094F7B4 /* RecentWebSessions.swift */; };
+		A71DC83D2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */; };
+		A71DC83F2387CE10000EEDE2 /* AuthTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */; };
 		A7D281DE236C25500000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281DD236C25500000A9BF /* SwiftSignalKit.framework */; };
 		A7D281E2236C25710000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E1236C25710000A9BF /* Postbox.framework */; };
 		A7D281E4236C257C0000A9BF /* TelegramApi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E3236C257C0000A9BF /* TelegramApi.framework */; };
@@ -369,6 +371,8 @@
 		09FC986C22FD99D400915E37 /* ScheduledMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledMessages.swift; sourceTree = "<group>"; };
 		9F06830F21A40DEC001D8EDB /* NotificationExceptionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationExceptionsList.swift; sourceTree = "<group>"; };
 		9FC8ADAA206BBFF10094F7B4 /* RecentWebSessions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentWebSessions.swift; sourceTree = "<group>"; };
+		A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnauthorizedAccountStateManager.swift; sourceTree = "<group>"; };
+		A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthTransfer.swift; sourceTree = "<group>"; };
 		A7D281D7236C25370000A9BF /* libphonenumber.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libphonenumber.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281D9236C253C0000A9BF /* TelegramApi.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApi.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281DB236C25440000A9BF /* MtProtoKitMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MtProtoKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1114,6 +1118,8 @@
 		D03B0D601D631A7200955575 /* Account */ = {
 			isa = PBXGroup;
 			children = (
+				A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */,
+				A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */,
 				D03B0D611D631A8B00955575 /* Account.swift */,
 				D049EAF41E44DF3300A2CD3A /* AccountState.swift */,
 				D03B0D631D631A8B00955575 /* AccountViewTracker.swift */,
@@ -1688,6 +1694,7 @@
 				C205FEA91EB3B75900455808 /* ExportMessageLink.swift in Sources */,
 				D0448CA31E291B14005A61A7 /* FetchSecretFileResource.swift in Sources */,
 				D0B8444C1DAB91FD005F29E1 /* UpdateCachedPeerData.swift in Sources */,
+				A71DC83D2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift in Sources */,
 				D0329EA322FC5A7C00F9F071 /* MessageReactions.swift in Sources */,
 				D0FA8B9F1E1F973B001E855B /* SecretChatIncomingEncryptedOperation.swift in Sources */,
 				D03C536C1DAD5CA9004C17B3 /* TelegramChannel.swift in Sources */,
@@ -1723,6 +1730,7 @@
 				D0CA3F85207391560042D2B6 /* SecureIdPadding.swift in Sources */,
 				D0F3CC791DDE2859008148FA /* SearchMessages.swift in Sources */,
 				D093D7EF206413F600BC3599 /* SecureIdDataTypes.swift in Sources */,
+				A71DC83F2387CE10000EEDE2 /* AuthTransfer.swift in Sources */,
 				D06CA13622772EB20094E707 /* ManagedNotificationSettingsBehaviors.swift in Sources */,
 				D0C44B621FC616E200227BE0 /* SearchGroupMembers.swift in Sources */,
 				D00BDA1A1EE593D600C64C5E /* TelegramChannelAdminRights.swift in Sources */,

@@ -207,7 +207,7 @@ class SuccessModalController : ModalViewController {
 public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, disposeAfterComplete: Bool = true) -> Signal<T,E> {
     return Signal { subscriber in
         
-        let signal = signal |> deliverOnMainQueue
+        var signal = signal |> deliverOnMainQueue
         let beforeDisposable:DisposableSet = DisposableSet()
 
         let modal = ProgressModalController(beforeDisposable)
@@ -218,6 +218,9 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
             showModal(with: modal, for: window, animationType: .scaleCenter)
         }))
         
+        signal = signal |> afterDisposed {
+            modal.close()
+        }
         
         beforeDisposable.add(signal.start(next: { next in
             subscriber.putNext(next)

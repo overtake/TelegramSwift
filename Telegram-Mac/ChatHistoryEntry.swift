@@ -388,6 +388,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             message = message.withUpdatedMedia([media]).withUpdatedText("")
         }
         
+        
         if message.media.isEmpty {
             if message.text.length <= 6 {
                 let original = message.text.fixed
@@ -410,10 +411,17 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                             return attribute
                         }
                     }
-                    
-                    attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
-                    file = file.withUpdatedAttributes(attributes)
-                    message = message.withUpdatedMedia([file])
+                    var disableStickers: Bool = false
+                    if let peer = messageMainPeer(message) as? TelegramChannel {
+                        if permissionText(from: peer, for: [.banSendGifs, .banSendStickers]) != nil {
+                            disableStickers = true
+                        }
+                    }
+                    if !disableStickers {
+                        attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
+                        file = file.withUpdatedAttributes(attributes)
+                        message = message.withUpdatedMedia([file])
+                    }
                 }
             }
         }

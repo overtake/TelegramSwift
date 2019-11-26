@@ -421,6 +421,9 @@ func initialize() -> [String] {
     array.append("wallpaper_color_close")
     array.append("wallpaper_color_add")
     array.append("wallpaper_color_swap")
+    
+    array.append("login_cap")
+    array.append("login_qr_cap")
 
     return array
 }

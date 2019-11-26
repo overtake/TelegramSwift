@@ -1644,8 +1644,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 } else {
                     channelAdmin.set(.single(nil))
                 }
-                
-
+            
                 
                 self?.messagesActionDisposable.set(combineLatest(context.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue, channelAdmin.get() |> deliverOnMainQueue).start( next:{ [weak strongSelf] messages, admins in
                     if let strongSelf = strongSelf, let peer = strongSelf.chatInteraction.peer {
