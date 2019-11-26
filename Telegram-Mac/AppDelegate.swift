@@ -378,7 +378,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
             })
             
-            let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(nil), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
+            let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
             
             let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: displayUpgrade)
             

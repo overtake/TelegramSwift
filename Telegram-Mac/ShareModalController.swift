@@ -1036,10 +1036,11 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         disposable.set(list.start(next: { [weak self] transition in
             self?.genericView.tableView.resetScrollNotifies()
+            self?.genericView.tableView.scroll(to: .up(false))
             self?.genericView.tableView.merge(with:transition)
             
+            
             self?.genericView.tableView.cancelHighlight()
-        //    self?.genericView.tableView.highlightNext()
             
             self?.readyOnce()
         }))
@@ -1203,38 +1204,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     }
                 }
             })
-            
-            //(context.account.postbox.combin |> take(1) |> deliverOnMainQueue)
-//            _ = signal.start(next: { peerView in
-//
-//                if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
-//                    switch peer.info {
-//                    case let .group(info):
-//                        if info.flags.contains(.slowModeEnabled) {
-//                            if let cachedData = peerView.cachedData as? CachedChannelData, let validUntil = cachedData.slowModeValidUntilTimestamp {
-//                                if validUntil > context.timestamp {
-//                                    alert(for: context.window, info: slowModeTooltipText(validUntil - context.timestamp))
-//                                    return
-//                                }
-//                            }
-//                            if let share = share as? ShareMessageObject {
-//                                if share.messageIds.count > 1 {
-//                                    alert(for: context.window, info: L10n.channelSlowModeMultipleError)
-//                                    return
-//                                }
-//                            }
-//                        }
-//                    default:
-//                        break
-//                    }
-//                }
-//
-//            })
-            
-//            _ = share.perform(to: selectInteractions.presentation.peers.map {$0.key}, comment: genericView.textView.string()).start()
-//            emoji.popover?.hide()
-//            modal?.close(true)
-          
+        
             return .invoked
         }
         

@@ -17,6 +17,7 @@ private let manager = CountryManager()
 
 final class LoginAuthViewArguments {
     let sendCode:(String)->Void
+    let updatePhoneNumberField:(String)->Void
     let resendCode:()->Void
     let editPhone:()->Void
     let checkCode:(String)->Void
@@ -24,7 +25,8 @@ final class LoginAuthViewArguments {
     let requestPasswordRecovery: (@escaping(PasswordRecoveryOption)-> Void)->Void
     let resetAccount: ()->Void
     let signUp:(String, String, URL?) -> Void
-    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(PasswordRecoveryOption)-> Void)->Void, resetAccount: @escaping()->Void, signUp:@escaping(String, String, URL?) -> Void) {
+    let cancelQrAuth:()->Void
+    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(PasswordRecoveryOption)-> Void)->Void, resetAccount: @escaping()->Void, signUp:@escaping(String, String, URL?) -> Void, cancelQrAuth: @escaping()->Void, updatePhoneNumberField:@escaping(String)->Void) {
         self.sendCode = sendCode
         self.resendCode = resendCode
         self.editPhone = editPhone
@@ -33,6 +35,8 @@ final class LoginAuthViewArguments {
         self.requestPasswordRecovery = requestPasswordRecovery
         self.resetAccount = resetAccount
         self.signUp = signUp
+        self.cancelQrAuth = cancelQrAuth
+        self.updatePhoneNumberField = updatePhoneNumberField
     }
 }
 
@@ -928,6 +932,8 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
                 }
                 formated = formated.substring(from: dec.endIndex).prefix(17)
                 numberText.stringValue = formated
+                
+                self.arguments?.updatePhoneNumberField(formated)
             }
             
         }

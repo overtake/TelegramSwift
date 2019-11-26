@@ -8,8 +8,7 @@
 
 import Cocoa
 import Security
-import MtProtoKit
-
+import CommonCrypto
 
 func evaluateApiHash() -> String? {
     var rawStaticCode: SecStaticCode? = nil
@@ -48,7 +47,10 @@ func evaluateApiHash() -> String? {
             return nil
         }
     }
-    
-    let apiHash = MTSha1(certsData)
-    return apiHash!.map { String(format: "%02hhx", $0) }.joined()
+    var digest = [UInt8](repeating: 0, count:Int(CC_SHA1_DIGEST_LENGTH))
+    certsData.withUnsafeBytes {
+        _ = CC_SHA1($0, CC_LONG(certsData.count), &digest)
+    }
+    let hexBytes = digest.map { String(format: "%02hhx", $0) }
+    return hexBytes.joined()
 }

@@ -2927,6 +2927,18 @@ internal final class L10n {
   internal static var loginHeaderSignUp: String  { return L10n.tr("Localizable", "Login.Header.SignUp") }
   /// Switch
   internal static var loginPhoneNumberAlreadyAuthorizedSwitch: String  { return L10n.tr("Localizable", "Login.PhoneNumberAlreadyAuthorized.Switch") }
+  /// Login by phone Number
+  internal static var loginQRCancel: String  { return L10n.tr("Localizable", "Login.QR.Cancel") }
+  /// Open Telegram on your phone
+  internal static var loginQRHelp1: String  { return L10n.tr("Localizable", "Login.QR.Help1") }
+  /// Open **Settings** and select **Devices**
+  internal static var loginQRHelp2: String  { return L10n.tr("Localizable", "Login.QR.Help2") }
+  /// Point your phone to this screen to capture the code
+  internal static var loginQRHelp3: String  { return L10n.tr("Localizable", "Login.QR.Help3") }
+  /// Login by QR Code
+  internal static var loginQRLogin: String  { return L10n.tr("Localizable", "Login.QR.Login") }
+  /// Login Telegram by QR Code
+  internal static var loginQRTitle: String  { return L10n.tr("Localizable", "Login.QR.Title") }
   /// Enter your name and add a profile picture.
   internal static var loginRegisterDesc: String  { return L10n.tr("Localizable", "Login.Register.Desc") }
   /// add\nphoto
