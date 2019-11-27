@@ -565,26 +565,30 @@ enum UpdaterSource : Equatable {
 
 private func resetUpdater() {
     
-    let update:()->Void = {
-        let url = updater.domain ?? Bundle.main.infoDictionary!["SUFeedURL"] as! String
-        let state = stateValue.with { $0.loadingState }
-        switch state {
-        case .readyToInstall, .installing, .unarchiving, .loading:
-            break
-        default:
-            driver?.checkForUpdates(at: URL(string: url)!, host: host, domain: updater.host)
+    #if !GITHUB
+        let update:()->Void = {
+            let url = updater.domain ?? Bundle.main.infoDictionary!["SUFeedURL"] as! String
+            let state = stateValue.with { $0.loadingState }
+            switch state {
+            case .readyToInstall, .installing, .unarchiving, .loading:
+                break
+            default:
+                driver?.checkForUpdates(at: URL(string: url)!, host: host, domain: updater.host)
+            }
         }
-    }
     
     
-    let signal: Signal<Never, NoError> = Signal { subscriber in
+        let signal: Signal<Never, NoError> = Signal { subscriber in
+            update()
+            subscriber.putCompletion()
+            return EmptyDisposable
+            } |> delay(20 * 60, queue: .mainQueue()) |> restart
+        disposable.set(signal.start())
+    
         update()
-        subscriber.putCompletion()
-        return EmptyDisposable
-    } |> delay(20 * 60, queue: .mainQueue()) |> restart
-    disposable.set(signal.start())
+    #endif
     
-    update()
+   
 }
 
 private var updaterSource: UpdaterSource? = nil

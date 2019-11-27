@@ -2238,7 +2238,7 @@ func moveWallpaperToCache(postbox: Postbox, wallpaper: Wallpaper) -> Signal<Wall
 func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMediaResource, blurred: Bool) -> Signal<String, NoError> {
     return Signal { subscriber in
         
-        let wallpapers = "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath
+        let wallpapers = "~/Library/Group Containers/\(ApiEnvironment.group)/Wallpapers/".nsstring.expandingTildeInPath
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
         let out = wallpapers + "/" + resource.id.uniqueId + "\(blurred ? ":\(CachedBlurredWallpaperRepresentation.uniqueId)" : "")" + ".jpg"
@@ -2254,7 +2254,7 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
 }
 
 func wallpaperPath(_ resource: TelegramMediaResource, blurred: Bool) -> String {
-    return "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/Wallpapers/".nsstring.expandingTildeInPath + "/" + resource.id.uniqueId + "\(blurred ? ":\(CachedBlurredWallpaperRepresentation.uniqueId)" : "")" + ".jpg"
+    return "~/Library/Group Containers/\(ApiEnvironment.group)/Wallpapers/".nsstring.expandingTildeInPath + "/" + resource.id.uniqueId + "\(blurred ? ":\(CachedBlurredWallpaperRepresentation.uniqueId)" : "")" + ".jpg"
 }
 
 

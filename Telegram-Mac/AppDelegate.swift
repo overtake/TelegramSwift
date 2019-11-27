@@ -89,8 +89,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
       
-        evaluateApiHash()
-        
         initializeSelectManager()
         startLottieCacheCleaner()
         
@@ -98,7 +96,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
         }
         
-        let appGroupName = "6N38VWS5BX.\(baseAppBundleId)"
+        let appGroupName = ApiEnvironment.group
         guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
             return
         }
