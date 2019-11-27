@@ -28,19 +28,34 @@ enum QRLoginType : String {
     fileprivate init(qr: QRLoginType) {
         self.qr = qr
     }
-    
+    public static func with(appConfiguration: AppConfiguration) -> UnauthorizedConfiguration {
+        if let data = appConfiguration.data, let rawType = data["qr_login_code"] as? String, let qr = QRLoginType(rawValue: rawType) {
+            return UnauthorizedConfiguration(qr: qr)
+        } else {
+            return .defaultValue
+        }
+    }
 }
 
 
-func unauthorizedConfiguration(network: Network) -> Signal<UnauthorizedConfiguration, NoError> {
-    return network.request(Api.functions.help.getAppConfig()) |> retryRequest
-        |> map { result -> UnauthorizedConfiguration in
-            if let data = JSON(apiJson: result), let rawQr = data["qr_login_code"] as? String, let qr = QRLoginType(rawValue: rawQr) {
-                return UnauthorizedConfiguration(qr: .secondary)
-            } else {
-                return .defaultValue
-            }
+func unauthorizedConfiguration(postbox: Postbox) -> Signal<UnauthorizedConfiguration, NoError> {
+    return postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> mapToSignal { view in
+        if let appConfiguration = view.values[PreferencesKeys.appConfiguration] as? AppConfiguration {
+            let configuration = UnauthorizedConfiguration.with(appConfiguration: appConfiguration)
+            return .single(configuration)
+        } else {
+            return .never()
         }
+    } |> deliverOnMainQueue
+}
+
+
+private func updateAppConfiguration(transaction: Transaction, _ f: (AppConfiguration) -> AppConfiguration) {
+    let current = currentAppConfiguration(transaction: transaction)
+    let updated = f(current)
+    if updated != current {
+        transaction.setPreferencesEntry(key: PreferencesKeys.appConfiguration, value: updated)
+    }
 }
 
 

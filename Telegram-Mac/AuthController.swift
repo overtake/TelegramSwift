@@ -359,9 +359,18 @@ class AuthHeaderView : View {
         descLayout.measure(width: 300)
         desc.update(descLayout)
         
-        nextButton.set(text: self.isQrEnabled != nil && self.isQrEnabled! ? L10n.loginQRLogin : L10n.loginNext, for: .Normal)
-        _ = nextButton.sizeToFit(NSMakeSize(30, 0), NSMakeSize(0, 36), thatFit: true)
-        nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: .white, backgroundColor: theme.colors.accent)
+        
+        if let isQrEnabled = self.isQrEnabled, isQrEnabled {
+            nextButton.set(text: L10n.loginQRLogin, for: .Normal)
+            _ = nextButton.sizeToFit(NSMakeSize(30, 0), NSMakeSize(0, 36), thatFit: true)
+            nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: theme.colors.accent, backgroundColor: .clear)
+        } else {
+            nextButton.set(text: L10n.loginNext, for: .Normal)
+            _ = nextButton.sizeToFit(NSMakeSize(30, 0), NSMakeSize(0, 36), thatFit: true)
+            nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: theme.colors.underSelectedColor, backgroundColor: theme.colors.accent)
+        }
+        
+        
         proxyConnecting.progressColor = theme.colors.accentIcon
         
         
@@ -986,7 +995,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         }))
        
 
-        configurationDisposable.set((unauthorizedConfiguration(network: self.account.network) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue).start(next: { [weak self] value in
+        configurationDisposable.set((unauthorizedConfiguration(postbox: self.account.postbox) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue).start(next: { [weak self] value in
             
             self?.qrType = value.qr
             self?.genericView.isQrEnabled = value.qr != .disabled
