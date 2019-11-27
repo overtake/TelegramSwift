@@ -263,6 +263,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        genericView.needsLayout = true
     }
 
     override func viewDidAppear(_ animated: Bool) {

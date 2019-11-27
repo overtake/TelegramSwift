@@ -133,15 +133,24 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
+
+        var subviews = self.subviews
+
+        self.removeAllSubviews()
         
-        removeAllSubviews()
         if let item = item as? ContextMediaRowItem {
             var inset:CGFloat = 0
             for i in 0 ..< item.result.entries.count {
                 let container:NSView
                 switch item.result.entries[i] {
                 case let .gif(data):
-                    let view = GIFContainerView()
+                    let view: GIFContainerView
+                    let index = subviews.firstIndex(where: { $0 is GIFContainerView})
+                    if let index = index {
+                        view = subviews.remove(at: index) as! GIFContainerView
+                    } else {
+                        view = GIFContainerView()
+                    }
                     let signal:Signal<ImageDataTransformation, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     
                     view.set(handler: { [weak item] control in
@@ -160,13 +169,26 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     container = view
                 case let .sticker(data):
                     if data.file.isAnimatedSticker {
-                        let view = MediaAnimatedStickerView(frame: NSZeroRect)
+                        let view: MediaAnimatedStickerView
+                        let index = subviews.firstIndex(where: { $0 is MediaAnimatedStickerView})
+                        if let index = index {
+                            view = subviews.remove(at: index) as! MediaAnimatedStickerView
+                        } else {
+                            view = MediaAnimatedStickerView(frame: NSZeroRect)
+                        }
                         let size = NSMakeSize(round(item.result.sizes[i].width), round(item.result.sizes[i].height))
                         view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
                         view.userInteractionEnabled = false
                         container = view
                     } else {
-                        let view = TransformImageView()
+                        let view: TransformImageView
+                        let index = subviews.firstIndex(where: { $0 is TransformImageView})
+                        if let index = index {
+                            view = subviews.remove(at: index) as! TransformImageView
+                        } else {
+                            view = TransformImageView()
+                        }
+                        
                         view.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true))
                         let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
                         view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))

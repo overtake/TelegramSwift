@@ -24,12 +24,17 @@ private final class AuthModalController : ModalController {
 }
 
 
+
+
+
 final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
     let rootController: MajorNavigationController
     let window:Window
     let modal: ModalController
     let sharedContext: SharedAccountContext
+    
+    private let updatesDisposable: DisposableSet = DisposableSet()
     
     var rootView: NSView {
         return rootController.view
@@ -41,6 +46,8 @@ final class UnauthorizedApplicationContext {
         window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
         window.minSize = NSMakeSize(380, 500)
         
+        
+        updatesDisposable.add(managedAppConfigurationUpdates(postbox: account.postbox, network: account.network).start())
         
         if !window.initFromSaver {
             window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
@@ -70,6 +77,7 @@ final class UnauthorizedApplicationContext {
     
     deinit {
         account.shouldBeServiceTaskMaster.set(.single(.never))
+        updatesDisposable.dispose()
         NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
     
