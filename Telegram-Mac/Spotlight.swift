@@ -47,7 +47,7 @@ private func makeSearchItem(for peer: Peer, index: Int, accountPeer: Peer, accou
     attributeSet.creator = "Telegram"
     attributeSet.kind = "Contact"
     
-    return .recentPeer(key, index, CSSearchableItem(uniqueIdentifier: key.stringValue, domainIdentifier: "ru.keepcoder.Telegram", attributeSet: attributeSet), peer)
+    return .recentPeer(key, index, CSSearchableItem(uniqueIdentifier: key.stringValue, domainIdentifier: Bundle.main.bundleIdentifier!, attributeSet: attributeSet), peer)
 }
 
 private enum SpotlightItem : Identifiable, Comparable {

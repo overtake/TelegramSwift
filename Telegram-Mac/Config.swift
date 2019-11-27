@@ -1,17 +1,25 @@
-private let api_id:Int32=9
-private let api_hash:String="3975f648bb682ee889f35483bc618d1c"
-
 final class ApiEnvironment {
     static var apiId:Int32 {
-        return api_id
+        return 9
     }
     static var apiHash:String {
-        return api_hash
+        return "3975f648bb682ee889f35483bc618d1c"
     }
+    
+    static var bundleId: String {
+        return Bundle.main.bundleIdentifier!
+    }
+    static var teamId: String {
+        return "6N38VWS5BX"
+    }
+    
+    static var group: String {
+        return teamId + "." + bundleId
+    }
+    
     static var appData: Data {
         let apiData = evaluateApiHash() ?? ""
-        let bundleId = Bundle.main.bundleIdentifier ?? ""
-        let dict:[String: String] = ["bundleId":bundleId, "data":apiData]
+        let dict:[String: String] = ["bundleId": bundleId, "data": apiData]
         return try! JSONSerialization.data(withJSONObject: dict, options: [])
     }
     static var language: String {
@@ -20,15 +28,15 @@ final class ApiEnvironment {
     static var version: String {
         var suffix: String = ""
         #if STABLE
-        suffix = "STABLE"
+            suffix = "STABLE"
         #elseif APP_STORE
-        suffix = "APPSTORE"
+            suffix = "APPSTORE"
         #elseif ALPHA
-        suffix = "ALPHA"
+            suffix = "ALPHA"
         #elseif GITHUB
-        suffix = "GITHUB"
+            suffix = "GITHUB"
         #else
-        suffix = "BETA"
+            suffix = "BETA"
         #endif
         let shortVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? ""
         return "\(shortVersion) \(suffix)"

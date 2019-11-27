@@ -89,7 +89,6 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
 @end
 
 @implementation BuildConfig
-//6N38VWS5BX.ru.keepcoder.telegram
 + (NSString *)bundleId {
     NSDictionary *query = [NSDictionary dictionaryWithObjectsAndKeys:
         (__bridge NSString *)kSecClassGenericPassword, (__bridge NSString *)kSecClass,

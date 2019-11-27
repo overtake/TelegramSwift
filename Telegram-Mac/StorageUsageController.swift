@@ -288,7 +288,7 @@ class StorageUsageController: TableViewController {
             })
         
         let statsPromise = Promise<CacheUsageStatsResult?>()
-        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: context.account, additionalCachePaths: [], logFilesPath: "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/logs".nsstring.expandingTildeInPath) |> map { Optional($0) }))
+        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: context.account, additionalCachePaths: [], logFilesPath: "~/Library/Group Containers/\(ApiEnvironment.group)/logs".nsstring.expandingTildeInPath) |> map { Optional($0) }))
         
         let actionDisposables = DisposableSet()
         

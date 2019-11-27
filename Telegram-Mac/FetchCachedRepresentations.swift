@@ -244,7 +244,7 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
                 let unmanaged = convertFromWebP(data)
                 let image = unmanaged?.takeUnretainedValue()
                 unmanaged?.release()
-                let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
+                let appGroupName = ApiEnvironment.group
                 if let image = image, let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) {
                     var randomId: Int64 = 0
                     arc4random_buf(&randomId, 8)
