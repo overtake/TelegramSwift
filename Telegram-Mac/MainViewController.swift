@@ -257,7 +257,7 @@ class MainViewController: TelegramViewController {
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        let (splice, remainder) = bounds.divided(atDistance: 70, from: .minXEdge)
+        let (splice, remainder) = bounds.divided(atDistance: 80, from: .minXEdge)
         circlesController.view.frame = splice
         tabController.view.frame = remainder
         #if !APP_STORE

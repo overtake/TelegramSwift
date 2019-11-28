@@ -515,7 +515,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     func splitViewDidNeedSwapToLayout(state: SplitViewState) {
         let previousState = splitView.state
         splitView.removeAllControllers();
-        let w:CGFloat = 370;
+        let w:CGFloat = 380;
         FastSettings.isMinimisize = false
         splitView.mustMinimisize = false
         switch state {
@@ -544,7 +544,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         case .minimisize:
             splitView.mustMinimisize = true
             FastSettings.isMinimisize = true
-            splitView.addController(controller: leftController, proportion: SplitProportion(min:70+70, max:70+70))
+            splitView.addController(controller: leftController, proportion: SplitProportion(min:70+80, max:70+80))
             splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
         default:
             break;
