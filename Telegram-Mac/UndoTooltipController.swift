@@ -230,7 +230,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
             self.textView.update(TextViewLayout(attributed, maximumNumberOfLines: 1))
         }
         undoButton.set(text: L10n.chatUndoManagerUndo, for: .Normal)
-        undoButton.set(color: theme.colors.accent, for: .Normal)
+        undoButton.set(color: .white, for: .Normal)
         
         _ = undoButton.sizeToFit()
     }

@@ -440,19 +440,30 @@ class ChatMessageItem: ChatRowItem {
                     let text: String
                     if let type = type {
                         text = copyContextText(from: type)
-                    } else {
-                        text = layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy)
+                        items.append(ContextMenuItem(text, handler: {
+                            if let strongSelf = self {
+                                let pb = NSPasteboard.general
+                                pb.declareTypes([.string], owner: strongSelf)
+                                var effectiveRange = strongSelf.textLayout.selectedRange.range
+                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
+                                let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                if let attribute = attribute as? inAppLink {
+                                    pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                } else {
+                                    pb.setString(selectedText.string, forType: .string)
+                                }
+                            }
+                        }))
+                        
                     }
                     
-                    
-                    items.append(ContextMenuItem(text, handler: { [weak strongSelf] in
-                        let result = strongSelf?.textLayout.interactions.copy?()
-                        if let result = result, let strongSelf = strongSelf, !result {
+                    items.append(ContextMenuItem(layout.selectedRange.hasSelectText ? L10n.chatCopySelectedText : L10n.textCopy, handler: {
+                        let result = self?.textLayout.interactions.copy?()
+                        if let result = result, let strongSelf = self, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
                                 let pb = NSPasteboard.general
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
-                                
                                 let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
                                 let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
                                 if !isCopied {
@@ -468,6 +479,7 @@ class ChatMessageItem: ChatRowItem {
                             
                         }
                     }))
+                   
                     
                     if strongSelf.textLayout.selectedRange.hasSelectText {
                         var effectiveRange: NSRange = NSMakeRange(NSNotFound, 0)
