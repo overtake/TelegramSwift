@@ -6,8 +6,7 @@
 	git clone https://github.com/overtake/TelegramSwift.git --recurse-submodules
 	```
 2. Open `Telegram-Mac.xcworkspace` in **Xcode 10.3**.  Avoid Xcode 10.11+ because it causes additional errors when building the libraries with optimizations turned on.  
-3. Select build target to **Github**.
-4. You're all set up! Click **Run**.
+3. Select build target to **Github** and **Run** build.
 
 
 
