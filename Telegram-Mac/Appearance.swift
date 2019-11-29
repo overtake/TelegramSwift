@@ -1521,7 +1521,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                callOutgoing: { #imageLiteral(resourceName: "Icon_CallOutgoing").precomposed(palette.grayIcon, flipVertical: true) },
                                                recentDismiss: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon) },
                                                recentDismissActive: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(.white) },
-                                               webgameShare: { #imageLiteral(resourceName: "Icon_ShareExternal").precomposed(palette.accentIcon) },
+                                               webgameShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
                                                chatSearchCancel: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                chatSearchFrom: { #imageLiteral(resourceName: "Icon_ChatSearchFrom").precomposed(palette.accentIcon) },
                                                callWindowDecline: { #imageLiteral(resourceName: "Icon_CallDecline_Window").precomposed() },
