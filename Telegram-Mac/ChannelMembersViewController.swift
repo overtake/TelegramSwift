@@ -420,7 +420,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
-        return PeerInfoTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+        return SearchTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
             self?.searchChannelUsers()
         })
     }

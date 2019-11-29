@@ -67,7 +67,6 @@ fileprivate class GMagnifyView : MagnifyView  {
         }
         
         progressView?.userInteractionEnabled = status != .Local
-        hideOrShowControls(hasPrev: false, hasNext: false, animated: false)
     }
     
     override func mouseInside() -> Bool {
@@ -266,7 +265,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }
             dragged = nil
             
-            if self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
+            let point = self.controller.view.convert(event.locationInWindow, from: nil)
+            
+            if NSPointInRect(point, self.captionView.frame), self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
                 self.captionView.mouseUp(with: event)
                 return .invoked
             } else if self.captionView.mouseInside() {
@@ -846,16 +847,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             newView.frame = newRect
         }
         
-     //   newView.layer?.backgroundColor = NSColor.red.cgColor//self.selectedItem is MGalleryVideoItem ? .black : theme.colors.transparentBackground.cgColor
-        
         
         let copyView = oldView.copy() as! NSView
         addAccesoryOnCopiedView?((stableId, copyView))
 
         copyView.frame = NSMakeRect(oldRect.minX, oldRect.minY, oldAlphaFrom == 0 ? newRect.width : oldRect.width, oldAlphaFrom == 0 ? newRect.height : oldRect.height)
         copyView.wantsLayer = true
-       // copyView.layer?.contents = nil
-      //  copyView.layer?.backgroundColor = NSColor.blue.cgColor
         view.addSubview(newView)
         view.addSubview(copyView)
         
@@ -882,11 +879,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
 
-        
-        
-        //.animateBounds(from: NSMakeRect(0, 0, oldRect.width, oldRect.height), to: NSMakeRect(0, 0, newRect.width, newRect.height), duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
-
-     //   copyView._change(size: newRect.size, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
         copyView.layer?.animateAlpha(from: oldAlphaFrom , to: oldAlphaTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak self, weak copyView, weak newView] _ in
             completion()
             self?.lockedTransition = false

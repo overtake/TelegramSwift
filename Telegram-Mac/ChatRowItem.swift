@@ -1668,7 +1668,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             _ = sendScheduledMessageNowInteractively(postbox: account.postbox, messageId: message.id).start()
         }))
         items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
-            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), sendWhenOnline: peer.isUser, scheduleAt: { date in
+            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { date in
                 _ = showModalProgress(signal: requestEditMessage(account: account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start(next: { result in
                     
                 }, error: { error in

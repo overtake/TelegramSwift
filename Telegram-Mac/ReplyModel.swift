@@ -53,9 +53,7 @@ class ReplyModel: ChatAccessoryModel {
             
             make(with: nil, display: false)
            
-//            if !isPinned {
-//                messageViewSignal = account.postbox.messageAtId(replyMessageId)
-//            }
+
             nodeReady.set( messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
                  self?.make(with: message, isLoading: false, display: true)
                  return message != nil
@@ -160,7 +158,7 @@ class ReplyModel: ChatAccessoryModel {
                     view.addSubview(view.imageView!)
                 }
                 
-                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(System.backingScale, self.topOffset + (self.size.height - self.topOffset - boundingSize.height)/2))
+                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(System.backingScale, self.topOffset + (max(34, self.size.height) - self.topOffset - boundingSize.height)/2))
                 
                 
                 let mediaUpdated = true

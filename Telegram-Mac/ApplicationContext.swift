@@ -352,10 +352,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .option])
         
         #if DEBUG
-        window.set(handler: { () -> KeyHandlerResult in
-            alert(for: window, info: evaluateApiHash())
-            return .invoked
-        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
+//        window.set(handler: { () -> KeyHandlerResult in
+//            return .invoked
+//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
         
         

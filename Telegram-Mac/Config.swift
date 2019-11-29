@@ -18,7 +18,7 @@ final class ApiEnvironment {
     }
     
     static var appData: Data {
-        let apiData = evaluateApiHash() ?? ""
+        let apiData = evaluateApiData() ?? ""
         let dict:[String: String] = ["bundleId": bundleId, "data": apiData]
         return try! JSONSerialization.data(withJSONObject: dict, options: [])
     }
