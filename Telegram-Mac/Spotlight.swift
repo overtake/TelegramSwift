@@ -95,63 +95,67 @@ final class SpotlightContext {
     private var previousItems:[SpotlightItem] = []
     init(account: Account) {
         self.account = account
-        
-        let accountPeer = account.postbox.peerView(id: account.peerId) |> map {
-            return peerViewMainPeer($0)
-        } |> filter { $0 != nil } |> map { $0! } |> take(1)
-        
-        
-        let recently = recentlySearchedPeers(postbox: account.postbox) |> map {
-            $0.compactMap { $0.peer.chatMainPeer }
+        if #available(OSX 10.12, *) {
+            let accountPeer = account.postbox.peerView(id: account.peerId) |> map {
+                return peerViewMainPeer($0)
+                } |> filter { $0 != nil } |> map { $0! } |> take(1)
+            
+            
+            let recently = recentlySearchedPeers(postbox: account.postbox) |> map {
+                $0.compactMap { $0.peer.chatMainPeer }
+            }
+            
+            let peers:Signal<[Peer], NoError> = combineLatest(recently, recentPeers(account: account) |> mapToSignal { recent in
+                switch recent {
+                case .disabled:
+                    return .single([])
+                case let .peers(peers):
+                    return .single(peers)
+                }
+            }) |> map {
+                $0 + $1
+            }
+            
+            
+            
+            let signal = combineLatest(queue: .mainQueue(), accountPeer, peers)
+            
+            
+            
+            disposable.set(signal.start(next: { [weak self] accountPeer, peers in
+                guard let `self` = self else {
+                    return
+                }
+                var items: [SpotlightItem] = []
+                for (i, peer) in peers.enumerated() {
+                    items.append(makeSearchItem(for: peer, index: i, accountPeer: accountPeer, accountId: account.id))
+                }
+                
+                let (delete, insert, update) = mergeListsStableWithUpdates(leftList: self.previousItems, rightList: items)
+                
+                if !insert.isEmpty || !update.isEmpty {
+                    CSSearchableIndex.default().indexSearchableItems(insert.map { $0.1.item }, completionHandler: nil)
+                    CSSearchableIndex.default().indexSearchableItems(update.map { $0.1.item }, completionHandler: nil)
+                }
+                
+                var deleted: [SpotlightItem] = []
+                for index in delete.reversed() {
+                    deleted.append(self.previousItems.remove(at: index))
+                }
+                
+                self.previousItems = items
+                if !deleted.isEmpty {
+                    CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: deleted.map { $0.stableId.stringValue }, completionHandler: nil)
+                }
+            }))
         }
-        
-        let peers:Signal<[Peer], NoError> = combineLatest(recently, recentPeers(account: account) |> mapToSignal { recent in
-            switch recent {
-            case .disabled:
-                return .single([])
-            case let .peers(peers):
-                return .single(peers)
-            }
-        }) |> map {
-            $0 + $1
-        }
-        
-        
-        
-        let signal = combineLatest(queue: .mainQueue(), accountPeer, peers)
-        
-        
-        
-        disposable.set(signal.start(next: { [weak self] accountPeer, peers in
-            guard let `self` = self else {
-                return
-            }
-            var items: [SpotlightItem] = []
-            for (i, peer) in peers.enumerated() {
-                items.append(makeSearchItem(for: peer, index: i, accountPeer: accountPeer, accountId: account.id))
-            }
-            
-            let (delete, insert, update) = mergeListsStableWithUpdates(leftList: self.previousItems, rightList: items)
-            
-            if !insert.isEmpty || !update.isEmpty {
-                CSSearchableIndex.default().indexSearchableItems(insert.map { $0.1.item }, completionHandler: nil)
-                CSSearchableIndex.default().indexSearchableItems(update.map { $0.1.item }, completionHandler: nil)
-            }
-            
-            var deleted: [SpotlightItem] = []
-            for index in delete.reversed() {
-                deleted.append(self.previousItems.remove(at: index))
-            }
-            
-            self.previousItems = items
-            if !deleted.isEmpty {
-                CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: deleted.map { $0.stableId.stringValue }, completionHandler: nil)
-            }
-        }))
+       
     }
     
     deinit {
-        CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: previousItems.map { $0.stableId.stringValue }, completionHandler: nil)
+        if #available(OSX 10.12, *) {
+            CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: previousItems.map { $0.stableId.stringValue }, completionHandler: nil)
+        }
     }
 }
 
@@ -178,22 +182,3 @@ func parseSpotlightIdentifier(_ unique: String) -> SpotlightIdentifier? {
     return nil
 }
 
-//func reindexSpotlight(for account: Account) {
-//    let attributeSet = CSSearchableItemAttributeSet(itemContentType: kUTTypeData as String)
-//    // Add metadata that supplies details about the item.
-//    attributeSet.title = "MakeMakeMake"
-//    attributeSet.contentDescription = "Telegram test record"
-//    attributeSet.thumbnailData = nil
-//
-//    // Create an item with a unique identifier, a domain identifier, and the attribute set you created earlier.
-//    let item = CSSearchableItem(uniqueIdentifier: "1", domainIdentifier: "file-1", attributeSet: attributeSet)
-//
-//    // Add the item to the on-device index.
-//    CSSearchableIndex.default().indexSearchableItems([item]) { error in
-//        if error != nil {
-//            print(error?.localizedDescription)
-//        }  else {
-//            print("Item indexed.")
-//        }
-//    }
-//}

@@ -1071,6 +1071,10 @@ internal final class L10n {
   internal static var chatCopySelectedText: String  { return L10n.tr("Localizable", "Chat.CopySelectedText") }
   /// without compression
   internal static var chatDropAsFilesDesc: String  { return L10n.tr("Localizable", "Chat.DropAsFilesDesc") }
+  /// Drop file there to edit media
+  internal static var chatDropEditDesc: String  { return L10n.tr("Localizable", "Chat.DropEditDesc") }
+  /// Edit Media
+  internal static var chatDropEditTitle: String  { return L10n.tr("Localizable", "Chat.DropEditTitle") }
   /// in a quick way
   internal static var chatDropQuickDesc: String  { return L10n.tr("Localizable", "Chat.DropQuickDesc") }
   /// Drop files here to send them
@@ -2927,17 +2931,17 @@ internal final class L10n {
   internal static var loginHeaderSignUp: String  { return L10n.tr("Localizable", "Login.Header.SignUp") }
   /// Switch
   internal static var loginPhoneNumberAlreadyAuthorizedSwitch: String  { return L10n.tr("Localizable", "Login.PhoneNumberAlreadyAuthorized.Switch") }
-  /// Login by phone Number
+  /// Log in by phone Number
   internal static var loginQRCancel: String  { return L10n.tr("Localizable", "Login.QR.Cancel") }
   /// Open Telegram on your phone
   internal static var loginQRHelp1: String  { return L10n.tr("Localizable", "Login.QR.Help1") }
-  /// Open **Settings** and select **Devices**
+  /// Go to **Settings** > **Devices** > **Add Device**
   internal static var loginQRHelp2: String  { return L10n.tr("Localizable", "Login.QR.Help2") }
-  /// Point your phone to this screen to capture the code
+  /// Point your phone at this screen to confirm login
   internal static var loginQRHelp3: String  { return L10n.tr("Localizable", "Login.QR.Help3") }
-  /// Login by QR Code
+  /// Log in by QR Code
   internal static var loginQRLogin: String  { return L10n.tr("Localizable", "Login.QR.Login") }
-  /// Login Telegram by QR Code
+  /// Log in to Telegram by QR Code
   internal static var loginQRTitle: String  { return L10n.tr("Localizable", "Login.QR.Title") }
   /// Enter your name and add a profile picture.
   internal static var loginRegisterDesc: String  { return L10n.tr("Localizable", "Login.Register.Desc") }

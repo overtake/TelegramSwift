@@ -16,7 +16,7 @@ private var timeIntervals:[TimeInterval?]  {
         let current = Double(i) * 60.0 * 60
         intervals.append(current)
 //        #if DEBUG
-        for i in 1 ..< 59 {
+        for i in 1 ... 59 {
             intervals.append(current + Double(i) * 60.0)
         }
         if i < 23 {
@@ -111,8 +111,8 @@ final class ScheduledMessageModalView : View {
     
     override func layout() {
         super.layout()
-        self.dayPicker.setFrameSize(NSMakeSize(90, 30))
-        self.timePicker.setFrameSize(NSMakeSize(90, 30))
+        self.dayPicker.setFrameSize(NSMakeSize(115, 30))
+        self.timePicker.setFrameSize(NSMakeSize(115, 30))
 
         let fullWidth = dayPicker.frame.width + 15 + atView.frame.width + 15 + timePicker.frame.width
         self.containerView.setFrameSize(NSMakeSize(fullWidth, max(dayPicker.frame.height, timePicker.frame.height)))
@@ -145,7 +145,7 @@ class ScheduledMessageModalController: ModalViewController {
         self.defaultDate = defaultDate
         self.scheduleAt = scheduleAt
         self.sendWhenOnline = sendWhenOnline
-        super.init(frame: NSMakeRect(0, 0, 300, 200))
+        super.init(frame: NSMakeRect(0, 0, 350, 200))
         self.bar = .init(height: 0)
     }
     
@@ -154,11 +154,11 @@ class ScheduledMessageModalController: ModalViewController {
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: L10n.scheduleControllerTitle, handler: {
-            
-        }), right: ModalHeaderData(title: nil, image: theme.icons.modalClose, handler: { [weak self] in
+        return (left: ModalHeaderData(title: nil, image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }))
+        }), center: ModalHeaderData(title: L10n.scheduleControllerTitle, handler: {
+            
+        }), right: nil)
     }
     
     
@@ -245,7 +245,7 @@ class ScheduledMessageModalController: ModalViewController {
         }, for: .Click)
         
         self.genericView.sendWhenOnline.set(handler: { [weak self] _ in
-            self?.scheduleAt(Date.init(timeIntervalSince1970: TimeInterval(scheduleWhenOnlineTimestamp)))
+            self?.scheduleAt(Date(timeIntervalSince1970: TimeInterval(scheduleWhenOnlineTimestamp)))
             self?.close()
         }, for: .Click)
         
@@ -282,7 +282,7 @@ class ScheduledMessageModalController: ModalViewController {
                         items.append(SPopoverItem())
                     }
                 }
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), edge: .maxY, inset: NSMakePoint(-12, -50))
+                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), edge: .maxY, inset: NSMakePoint(0, -50))
             }
             
         }, for: .Down)

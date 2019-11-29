@@ -1504,7 +1504,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             apply(strongSelf, atDate: atDate)
                         } else if presentation.state != .editing, let peer = chatInteraction.peer {
                             DispatchQueue.main.async {
-                                showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
+                                showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak strongSelf] date in
                                     if let strongSelf = strongSelf {
                                         apply(strongSelf, atDate: date)
                                     }
@@ -1831,7 +1831,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     apply(strongSelf, atDate: nil)
                 case .scheduled:
                     if let peer = strongSelf.chatInteraction.peer {
-                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: Int32(date.timeIntervalSince1970))
                             }
@@ -2061,7 +2061,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 switch strongSelf.mode {
                 case .scheduled:
-                    showModal(with: ScheduledMessageModalController(context: strongSelf.context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
+                    showModal(with: ScheduledMessageModalController(context: strongSelf.context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak strongSelf] date in
                         if let strongSelf = strongSelf {
                             let _ = (Sender.enqueue(media: media, context: context, peerId: strongSelf.chatInteraction.peerId, chatInteraction: strongSelf.chatInteraction, atDate: date) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                             strongSelf.nextTransaction.set(handler: {})
@@ -2162,7 +2162,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 switch strongSelf.mode {
                 case .scheduled:
-                    showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
+                    showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak strongSelf] date in
                         if let controller = strongSelf {
                             apply(controller, atDate: date)
                         }
@@ -2191,7 +2191,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let atDate = atDate {
                         apply(strongSelf, atDate: atDate)
                     } else {
-                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: date)
                             }
@@ -2232,7 +2232,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 switch strongSelf.mode {
                 case .scheduled:
                     DispatchQueue.main.async {
-                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: date)
                             }
@@ -4228,7 +4228,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return false
                 }
                 
+                if list.count == 1, let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
+                    return [DragItem(title: L10n.chatDropEditTitle, desc: L10n.chatDropEditDesc, handler: { [weak self] in
+                        guard let strongSelf = self else {
+                            return
+                        }
+                        _ = (Sender.generateMedia(for: MediaSenderContainer(path: list[0], isFile: false), account: strongSelf.chatInteraction.context.account) |> deliverOnMainQueue).start(next: { media, _ in
+                            self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
+                        })
+                    })]
+                }
+                
+                
                 if !list.isEmpty {
+                    
+                    
                     let asMediaItem = DragItem(title:tr(L10n.chatDropTitle), desc: tr(L10n.chatDropQuickDesc), handler:{ [weak self] in
                         let shift = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
                         if shift {
@@ -4279,6 +4293,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else if let types = pasteboard.types, types.contains(.tiff) {
             let data = pasteboard.data(forType: .tiff)
             if let data = data, let image = NSImage(data: data) {
+                
+                if let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
+                    return [DragItem(title: L10n.chatDropEditTitle, desc: L10n.chatDropEditDesc, handler: { [weak self] in
+                        guard let strongSelf = self else {
+                            return
+                        }
+                        _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: strongSelf.chatInteraction.context.account)} |> deliverOnMainQueue).start(next: { media, _ in
+                            self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
+                        })
+                    })]
+                }
                 
                 var items:[DragItem] = []
 

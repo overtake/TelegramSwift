@@ -145,3 +145,43 @@ class CornerView : View {
     }
     
 }
+
+
+class SearchTitleBarView : TitledBarView {
+    private var search:ImageButton = ImageButton()
+    init(controller: ViewController, title:NSAttributedString, handler:@escaping() ->Void) {
+        super.init(controller: controller, title)
+        search.set(handler: { _ in
+            handler()
+        }, for: .Click)
+        addSubview(search)
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func updateSearchVisibility(_ visible: Bool) {
+        search.isHidden = !visible
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        search.set(image: theme.icons.chatSearch, for: .Normal)
+        _ = search.sizeToFit()
+        backgroundColor = theme.colors.background
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        search.centerY(x: frame.width - search.frame.width)
+    }
+    
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

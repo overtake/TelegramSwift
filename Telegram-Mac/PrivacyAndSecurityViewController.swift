@@ -115,8 +115,6 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return sectionId
         case let .accountInfo(sectionId):
             return sectionId
-        case let .proxySettings(sectionId, _, _):
-            return sectionId
         case let .togglePeerSuggestions(sectionId, _, _):
             return sectionId
         case let .togglePeerSuggestionsDesc(sectionId):
@@ -126,6 +124,8 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case let .clearCloudDrafts(sectionId, _):
             return sectionId
         case let .proxyHeader(sectionId):
+            return sectionId
+        case let .proxySettings(sectionId, _, _):
             return sectionId
         case let .section(sectionId):
             return sectionId
@@ -418,23 +418,23 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     }
 
 
-    entries.append(.section(sectionId: sectionId))
-    sectionId += 1
+//    entries.append(.section(sectionId: sectionId))
+//    sectionId += 1
+//
 
-
-    entries.append(.proxyHeader(sectionId: sectionId))
-    let text: String
-    if let active = proxy.activeServer, proxy.enabled {
-        switch active.connection {
-        case .socks5:
-            text = L10n.proxySettingsSocks5
-        case .mtp:
-            text = L10n.proxySettingsMTP
-        }
-    } else {
-        text = L10n.proxySettingsDisabled
-    }
-    entries.append(.proxySettings(sectionId: sectionId, text, viewType: .singleItem))
+//    entries.append(.proxyHeader(sectionId: sectionId))
+//    let text: String
+//    if let active = proxy.activeServer, proxy.enabled {
+//        switch active.connection {
+//        case .socks5:
+//            text = L10n.proxySettingsSocks5
+//        case .mtp:
+//            text = L10n.proxySettingsMTP
+//        }
+//    } else {
+//        text = L10n.proxySettingsDisabled
+//    }
+//    entries.append(.proxySettings(sectionId: sectionId, text, viewType: .singleItem))
 
 
     entries.append(.section(sectionId: sectionId))

@@ -128,8 +128,8 @@ private final class DataAndStorageControllerArguments {
     let toggleAutoplayGifs:(Bool) -> Void
     let toggleAutoplayVideos:(Bool) -> Void
     let toggleAutoplaySoundOnHover:(Bool) -> Void
-
-    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, openCategorySettings: @escaping(AutomaticMediaDownloadCategoryPeers, String) -> Void, toggleAutomaticDownload:@escaping(Bool) -> Void, resetDownloadSettings:@escaping()->Void, selectDownloadFolder: @escaping() -> Void, toggleAutoplayGifs: @escaping(Bool) -> Void, toggleAutoplayVideos:@escaping(Bool) -> Void, toggleAutoplaySoundOnHover:@escaping(Bool) -> Void) {
+    let openProxySettings:()->Void
+    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, openCategorySettings: @escaping(AutomaticMediaDownloadCategoryPeers, String) -> Void, toggleAutomaticDownload:@escaping(Bool) -> Void, resetDownloadSettings:@escaping()->Void, selectDownloadFolder: @escaping() -> Void, toggleAutoplayGifs: @escaping(Bool) -> Void, toggleAutoplayVideos:@escaping(Bool) -> Void, toggleAutoplaySoundOnHover:@escaping(Bool) -> Void, openProxySettings: @escaping()->Void) {
         self.openStorageUsage = openStorageUsage
         self.openNetworkUsage = openNetworkUsage
         self.openCategorySettings = openCategorySettings
@@ -139,6 +139,7 @@ private final class DataAndStorageControllerArguments {
         self.toggleAutoplayGifs = toggleAutoplayGifs
         self.toggleAutoplayVideos = toggleAutoplayVideos
         self.toggleAutoplaySoundOnHover = toggleAutoplaySoundOnHover
+        self.openProxySettings = openProxySettings
     }
 }
 
@@ -171,6 +172,8 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
     case soundOnHoverDesc(Int32, viewType: GeneralViewType)
     case resetDownloadSettings(Int32, Bool, viewType: GeneralViewType)
     case downloadFolder(Int32, String, viewType: GeneralViewType)
+    case proxyHeader(Int32)
+    case proxySettings(Int32, String, viewType: GeneralViewType)
     case sectionId(Int32)
     
     var stableId: Int32 {
@@ -197,18 +200,22 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return 9
         case .resetDownloadSettings:
             return 10
-        case .autoplayHeader:
-            return 11
-        case .autoplayGifs:
-            return 12
-        case .autoplayVideos:
-            return 13
-        case .soundOnHover:
-            return 14
-        case .soundOnHoverDesc:
-            return 15
         case .downloadFolder:
+            return 11
+        case .autoplayHeader:
+            return 12
+        case .autoplayGifs:
+            return 13
+        case .autoplayVideos:
+            return 14
+        case .soundOnHover:
+            return 15
+        case .soundOnHoverDesc:
             return 16
+        case .proxyHeader:
+            return 17
+        case .proxySettings:
+            return 18
         case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -250,6 +257,10 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + stableId
         case let .downloadFolder(sectionId, _, _):
             return (sectionId * 1000) + stableId
+        case let .proxyHeader(sectionId):
+            return sectionId
+        case let .proxySettings(sectionId, _, _):
+            return sectionId
         case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -324,6 +335,12 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             })
         case let .soundOnHoverDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.dataAndStorageAutoplaySoundOnHoverDesc, viewType: viewType)
+        case .proxyHeader:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsProxyHeader, viewType: .textTopItem)
+        case let .proxySettings(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsUseProxy, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openProxySettings()
+            })
         default:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -353,7 +370,7 @@ private struct DataAndStorageData: Equatable {
 }
 
 
-private func dataAndStorageControllerEntries(state: DataAndStorageControllerState, data: DataAndStorageData, autoplayMedia: AutoplayMediaPreferences) -> [DataAndStorageEntry] {
+private func dataAndStorageControllerEntries(state: DataAndStorageControllerState, data: DataAndStorageData, proxy: ProxySettings, autoplayMedia: AutoplayMediaPreferences) -> [DataAndStorageEntry] {
     var entries: [DataAndStorageEntry] = []
     
     var sectionId:Int32 = 1
@@ -377,18 +394,36 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    
-    entries.append(.autoplayHeader(sectionId, viewType: .textTopItem))
-    entries.append(.autoplayGifs(sectionId, autoplayMedia.gifs, viewType: .firstItem))
-    entries.append(.autoplayVideos(sectionId, autoplayMedia.videos, viewType: .lastItem))
-//    entries.append(.soundOnHover(sectionId, autoplayMedia.soundOnHover))
-//    entries.append(.soundOnHoverDesc(sectionId))
+    entries.append(.downloadFolder(sectionId, data.automaticMediaDownloadSettings.downloadFolder, viewType: .singleItem))
+
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.downloadFolder(sectionId, data.automaticMediaDownloadSettings.downloadFolder, viewType: .singleItem))
+    
+    entries.append(.autoplayHeader(sectionId, viewType: .textTopItem))
+    entries.append(.autoplayGifs(sectionId, autoplayMedia.gifs, viewType: .firstItem))
+    entries.append(.autoplayVideos(sectionId, autoplayMedia.videos, viewType: .lastItem))
 
+    
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
+    
+    
+    entries.append(.proxyHeader(sectionId))
+    let text: String
+    if let active = proxy.activeServer, proxy.enabled {
+        switch active.connection {
+        case .socks5:
+            text = L10n.proxySettingsSocks5
+        case .mtp:
+            text = L10n.proxySettingsMTP
+        }
+    } else {
+        text = L10n.proxySettingsDisabled
+    }
+    entries.append(.proxySettings(sectionId, text, viewType: .singleItem))
+    
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
@@ -492,13 +527,29 @@ class DataAndStorageViewController: TableViewController {
             _ = updateAutoplayMediaSettingsInteractively(postbox: context.account.postbox, {
                 return $0.withUpdatedAutoplaySoundOnHover(enable)
             }).start()
+        }, openProxySettings: {
+            let controller = proxyListController(accountManager: context.sharedContext.accountManager, network: context.account.network, share: { servers in
+                var message: String = ""
+                for server in servers {
+                    message += server.link + "\n\n"
+                }
+                message = message.trimmed
+                
+                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
+            }, pushController: { controller in
+                pushControllerImpl(controller)
+            })
+            pushControllerImpl(controller)
         })
         
-        self.genericView.merge(with: combineLatest(queue: .mainQueue(), statePromise.get(), dataAndStorageDataPromise.get(), appearanceSignal, autoplayMediaSettings(postbox: context.account.postbox))
-            |> map { state, dataAndStorageData, appearance, autoplayMediaSettings -> TableUpdateTransition in
+        let proxy:Signal<ProxySettings, NoError> = proxySettings(accountManager: context.sharedContext.accountManager)
+
+        
+        self.genericView.merge(with: combineLatest(queue: .mainQueue(), statePromise.get(), dataAndStorageDataPromise.get(), appearanceSignal, proxy, autoplayMediaSettings(postbox: context.account.postbox))
+            |> map { state, dataAndStorageData, appearance, proxy, autoplayMediaSettings -> TableUpdateTransition in
                 
-                let entries = dataAndStorageControllerEntries(state: state, data: dataAndStorageData, autoplayMedia: autoplayMediaSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-                return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
+            let entries = dataAndStorageControllerEntries(state: state, data: dataAndStorageData, proxy: proxy, autoplayMedia: autoplayMediaSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
 
         } |> beforeNext { [weak self] _ in
             self?.readyOnce()

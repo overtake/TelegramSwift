@@ -10,7 +10,7 @@ import Cocoa
 import Security
 import CommonCrypto
 
-func evaluateApiHash() -> String? {
+func evaluateApiData() -> String? {
     var rawStaticCode: SecStaticCode? = nil
     var result = SecStaticCodeCreateWithPath(URL(fileURLWithPath: Bundle.main.bundlePath) as CFURL, [], &rawStaticCode)
    
