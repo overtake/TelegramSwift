@@ -386,7 +386,7 @@ class ChatListController : PeersListController {
                 }
             }
            
-            if groupId != .root && groupId != Namespaces.PeerGroup.archive {
+            if groupId != PeerGroupId(rawValue: 2) && groupId != Namespaces.PeerGroup.archive {
                 func isUnread(_ entry: UIChatListEntry) -> Bool{
                     switch entry {
                     case let .chat(entry, _):
@@ -431,13 +431,29 @@ class ChatListController : PeersListController {
                         return false
                     }
                 }
+                func name(_ entry: UIChatListEntry) -> String {
+                    if let p = peer(entry) {
+                        switch p {
+                        case let p as TelegramUser:
+                            return p.name
+                        case let p as TelegramGroup:
+                            return p.title
+                        case let p as TelegramChannel:
+                            return p.title
+                        default:
+                            return ""
+                        }
+                    } else {
+                        return ""
+                    }
+                }
 
                 
                 mapped.sort(by: { lhs, rhs in
-                    if (isUnread(lhs) && isUnread(rhs)) || (!isUnread(lhs) && !isUnread(rhs)) {
+                    if !isUnread(lhs) && !isUnread(rhs) {
                         if (isGroupChat(lhs) && isGroupChat(rhs)) || (!isGroupChat(lhs) && !isGroupChat(rhs)) {
                             if (isBot(lhs) && isBot(rhs)) || (!isBot(lhs) && !isBot(rhs)) {
-                                return lhs < rhs
+                                return name(lhs).lowercased() > name(rhs).lowercased()
                             } else if isBot(lhs) {
                                 return true
                             } else {
@@ -448,6 +464,8 @@ class ChatListController : PeersListController {
                         } else {
                             return true
                         }
+                    } else if isUnread(lhs) && isUnread(rhs) {
+                        return lhs < rhs
                     } else if isUnread(lhs) {
                         return false
                     } else {
