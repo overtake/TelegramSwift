@@ -38,14 +38,14 @@ enum CirclesTableEntryStableId : Hashable {
 }
 
 enum CirclesTableEntry : TableItemListNodeEntry {
-    case group(groupId: PeerGroupId, title: String)
+    case group(groupId: PeerGroupId, title: String, unread: Int32)
     case sectionId
     
     var stableId:CirclesTableEntryStableId {
         switch self {
         case .sectionId:
             return .sectionId
-        case .group(let groupId, _):
+        case .group(let groupId, _, _):
             return .group(groupId)
         }
     }
@@ -53,9 +53,9 @@ enum CirclesTableEntry : TableItemListNodeEntry {
     func item(_ arguments: CirclesArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .sectionId:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .group(groupId, title):
-            return CirclesRowItem(initialSize, stableId: stableId, groupId: groupId, title: title)
+            return GeneralRowItem(initialSize, height: 10, stableId: stableId)
+        case let .group(groupId, title, unread):
+            return CirclesRowItem(initialSize, stableId: stableId, groupId: groupId, title: title, unread: Int(unread))
             
         }
     }
@@ -65,29 +65,35 @@ func <(lhs:CirclesTableEntry, rhs:CirclesTableEntry) -> Bool {
     return lhs.stableId.hashValue < rhs.stableId.hashValue
 }
 
-private func circlesControllerEntries(settings: Circles?) -> [CirclesTableEntry] {
+private func circlesControllerEntries(settings: Circles?, unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary]) -> [CirclesTableEntry] {
     var entries: [CirclesTableEntry] = []
     
     entries.append(.sectionId)
-    entries.append(.group(groupId: PeerGroupId(rawValue: 0), title: "Personal"))
+    entries.append(.group(groupId: PeerGroupId(rawValue: 2), title: "Personal", unread: unreadStates[PeerGroupId(rawValue: 2)]?.count(countingCategory: .messages, mutedCategory: .all) ?? 0))
     if let settings = settings {
         for key in settings.groupNames.keys {
-            entries.append(.group(groupId: key, title: settings.groupNames[key]!))
+            let unreadCount = unreadStates[key]?.count(countingCategory: .messages, mutedCategory: .all) ?? 0
+            entries.append(.group(
+                groupId: key,
+                title: settings.groupNames[key]!,
+                unread: unreadCount)
+            )
         }
     }
     
-    entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived"))
+    entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived", unread: unreadStates[Namespaces.PeerGroup.archive]?.count(countingCategory: .messages, mutedCategory: .all) ?? 0))
     return entries
 }
 
 class CirclesRowView: TableRowView {
     private let titleTextView:TextView
     private let iconView:ImageView
+    private var badgeView:View?
     
     required init(frame frameRect: NSRect) {
-        iconView = ImageView(frame: NSMakeRect(16, 0, 48, 48))
+        iconView = ImageView(frame: NSMakeRect(16, 10, 48, 48))
         iconView.layer?.contentsGravity = .resizeAspect
-        titleTextView = TextView(frame: NSMakeRect(5, 55, 70, 20))
+        titleTextView = TextView(frame: NSMakeRect(5, 65, 70, 20))
         
         super.init(frame: frameRect)
         addSubview(titleTextView)
@@ -132,6 +138,21 @@ class CirclesRowView: TableRowView {
                 iconView.layer?.borderWidth = 0
             }
             titleTextView.update(item.title)
+            
+            if let badgeNode = item.badgeNode {
+                if badgeView == nil {
+                    badgeView = View()
+                    addSubview(badgeView!)
+                }
+                badgeView?.setFrameSize(badgeNode.size)
+                badgeNode.view = badgeView
+                self.badgeView?.setFrameOrigin(50, 2)
+                badgeNode.setNeedDisplay()
+            } else {
+                badgeView?.removeFromSuperview()
+                badgeView = nil
+            }
+            
             needsLayout = true
         }
     }
@@ -139,7 +160,7 @@ class CirclesRowView: TableRowView {
     override func layout() {
         super.layout()
         if let item = item as? CirclesRowItem {
-            titleTextView.update(item.title, origin: NSMakePoint(5, 54))
+            titleTextView.update(item.title, origin: NSMakePoint(5, 65))
             titleTextView.centerX()
         }
         
@@ -150,15 +171,18 @@ class CirclesRowItem: TableRowItem {
     //let groupId: PeerGroupId
     public let title: TextViewLayout
     public let groupId: PeerGroupId
+    public let unread: Int
+    public var badgeNode:BadgeNode? = nil
     
     fileprivate let _stableId:AnyHashable
     override var stableId: AnyHashable {
         return _stableId
     }
     
-    init(_ initialSize:NSSize, stableId: CirclesTableEntryStableId, groupId: PeerGroupId, title:String) {
+    init(_ initialSize:NSSize, stableId: CirclesTableEntryStableId, groupId: PeerGroupId, title:String, unread: Int) {
         self.groupId = groupId
         self._stableId = stableId
+        self.unread = unread
         self.title = TextViewLayout(
             .initialize(
                 string: title,
@@ -171,6 +195,11 @@ class CirclesRowItem: TableRowItem {
         )
         super.init(initialSize)
         _ = makeSize(70, oldWidth: 0)
+        
+        if unread > 0 {
+            badgeNode = BadgeNode(.initialize(string: "\(unread)", color: .white, font: .medium(.small)), NSColor(red: 0xeb/255, green: 0x4b/255, blue: 0x44/255, alpha: 1))
+            
+        }
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
@@ -297,9 +326,18 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         
         let arguments = CirclesArguments(context: context)
         
-        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal)
-        |> map { settings, appearance in
-            let entries = circlesControllerEntries(settings: settings!)
+        
+        let chatHistoryView: Signal<(ChatListView, ViewUpdateType), NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 500)
+        
+        
+        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal, chatHistoryView)
+        |> map { settings, appearance, chatHistory in
+            var unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary] = [:]
+            for group in chatHistory.0.groupEntries {
+                unreadStates[group.groupId] = group.unreadState
+            }
+            
+            let entries = circlesControllerEntries(settings: settings!, unreadStates: unreadStates)
                 .map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             
             return prepareTransition(

@@ -1023,17 +1023,12 @@ class ChatListController : PeersListController {
     
     
     init(_ context: AccountContext, modal:Bool = false, groupId: PeerGroupId? = nil) {
-<<<<<<< HEAD
         self.undoTooltipControl = UndoTooltipControl(context: context)
-        super.init(context, followGlobal:!modal, mode: groupId != nil ? .folder(groupId!) : .plain)
+        super.init(context, followGlobal:!modal, mode: groupId != nil ? .folder(groupId!) : .folder(.root))
         
         if groupId != nil {
             context.closeFolderFirst = true
         }
-=======
-        self.tooltipController = ChatListTooltipController(context: context)
-        super.init(context, followGlobal:!modal, mode: groupId != nil ? .folder(groupId!) : .folder(PeerGroupId(rawValue: 0)))
->>>>>>> circles base ui
     }
 
 
