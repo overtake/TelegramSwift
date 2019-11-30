@@ -533,13 +533,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     override func requestUpdateBackBar() {
-        self.leftBarView.minWidth = 70+70
+        self.leftBarView.minWidth = 70+80
         super.requestUpdateBackBar()
     }
     
     override func getLeftBarViewOnce() -> BarView {
         let view = BackNavigationBar(self, canBeEmpty: true)
-        view.minWidth = 70+70
+        view.minWidth = 70+80
         return view
     }
     
