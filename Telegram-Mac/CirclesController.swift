@@ -93,7 +93,7 @@ class CirclesRowView: TableRowView {
         addSubview(titleTextView)
         addSubview(iconView)
         iconView.layer?.cornerRadius = 10
-        iconView.layer?.borderWidth = 2
+        
         iconView.layer?.borderColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1).cgColor
         //iconView.wantsLayer = true
         titleTextView.isSelectable = false
@@ -106,7 +106,7 @@ class CirclesRowView: TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return NSColor(red: 0x19/255, green: 0x13/255, blue: 0x3c/255, alpha: 1)
+        return NSColor(red: 0x21/255, green: 0x27/255, blue: 0x4d/255, alpha: 1)
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -125,9 +125,11 @@ class CirclesRowView: TableRowView {
             }()
             iconView.image = icon
             if item.isSelected {
-                iconView.layer?.backgroundColor = theme.colors.accent.cgColor
+                iconView.layer?.backgroundColor = NSColor(red: 0x1d/255, green: 0xa5/255, blue: 0xe9/255, alpha: 1).cgColor
+                iconView.layer?.borderWidth = 2
             } else {
                 iconView.layer?.backgroundColor = NSColor(red: 0x7a/255, green: 0x7d/255, blue: 0x94/255, alpha: 1).cgColor
+                iconView.layer?.borderWidth = 0
             }
             titleTextView.update(item.title)
             needsLayout = true
@@ -160,7 +162,7 @@ class CirclesRowItem: TableRowItem {
         self.title = TextViewLayout(
             .initialize(
                 string: title,
-                color: theme.colors.text,
+                color: .white,
                 font: .normal(.short)
             ),
             constrainedWidth: 70,
@@ -208,10 +210,9 @@ class CirclesListView: View {
         tableView.setFrameOrigin(0,0)
         
         wantsLayer = true
-        layer?.backgroundColor = NSColor(red: 0x19/255, green: 0x13/255, blue: 0x3c/255, alpha: 1).cgColor
+        layer?.backgroundColor = NSColor(red: 0x21/255, green: 0x27/255, blue: 0x4d/255, alpha: 1).cgColor
         
         tableView.layer?.backgroundColor = .clear
-        //tableView.backgroundColor = NSColor(red: 0x19/255, green: 0x13/255, blue: 0x3c/255, alpha: 1)
     }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -284,7 +285,6 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.backgroundColor = NSColor(red: 0x19/255, green: 0x13/255, blue: 0x3c/255, alpha: 1)
         
         genericView.tableView.delegate = self
         let context = self.context
