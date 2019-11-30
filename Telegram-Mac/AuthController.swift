@@ -1025,7 +1025,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
     }
     
     private func refreshQrToken(_ showProgress: Bool = false) {
-        var tokenSignal = exportAuthTransferToken(accountManager: self.sharedContext.accountManager, account: self.account, syncContacts: false)
+        var tokenSignal = exportAuthTransferToken(accountManager: self.sharedContext.accountManager, account: self.account, otherAccountUserIds: [], syncContacts: false)
         
         if showProgress {
             tokenSignal = showModalProgress(signal: tokenSignal |> take(1), for: mainWindow)

@@ -186,6 +186,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         #if DEBUG
             MTLogSetEnabled(true)
+            logger.logToConsole = true
             logger.logToFile = true
         #endif
         
@@ -413,7 +414,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
                 |> mapToSignal { sharedApplicationContext, loggingSettings -> Signal<SharedApplicationContext, NoError> in
                     Logger.shared.logToFile = loggingSettings.logToFile
-                    Logger.shared.logToConsole = false//loggingSettings.logToConsole
+                    Logger.shared.logToConsole = true//loggingSettings.logToConsole
                     Logger.shared.redactSensitiveData = true//loggingSettings.redactSensitiveData
                     return .single(sharedApplicationContext)
                 })
