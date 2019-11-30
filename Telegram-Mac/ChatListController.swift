@@ -333,7 +333,12 @@ class ChatListController : PeersListController {
             var removeNextAnimation: Bool = false
             switch location {
             case let .Initial(count, st):
-                signal = context.account.viewTracker.tailChatListView(groupId: groupId, count: count)
+                if groupId == .root || groupId == Namespaces.PeerGroup.archive {
+                    signal = context.account.viewTracker.tailChatListView(groupId: groupId, count: count)
+                } else {
+                    signal = context.account.viewTracker.tailChatListView(groupId: groupId, count: 500)
+                }
+                
                 scroll = st
             case let .Index(index, st):
                 signal = context.account.viewTracker.aroundChatListView(groupId: groupId, index: index, count: 50)
@@ -381,6 +386,75 @@ class ChatListController : PeersListController {
                 }
             }
            
+            if groupId != .root && groupId != Namespaces.PeerGroup.archive {
+                func isUnread(_ entry: UIChatListEntry) -> Bool{
+                    switch entry {
+                    case let .chat(entry, _):
+                        switch entry {
+                        case let .MessageEntry(_,_,readState,_,_,_,_,_):
+                            if let state = readState {
+                                return state.isUnread
+                            } else {
+                                return false
+                            }
+                        default:
+                            return false
+                        }
+                    default:
+                        return false
+                    }
+                }
+                func peer(_ entry: UIChatListEntry) -> Peer? {
+                    switch entry {
+                    case let .chat(entry, _):
+                        switch entry {
+                        case let .MessageEntry(_,_,_,_,_,renderedPeer,_,_):
+                            return renderedPeer.peer
+                        default: break
+                        }
+                    default: break
+                    }
+                    return nil
+                }
+            
+                func isGroupChat(_ entry: UIChatListEntry) -> Bool {
+                    if let peer = peer(entry) {
+                        return peer.id.namespace == Namespaces.Peer.CloudChannel || peer.id.namespace == Namespaces.Peer.CloudGroup
+                    } else {
+                        return false
+                    }   
+                }
+                func isBot(_ entry: UIChatListEntry) -> Bool {
+                    if let peer = peer(entry) as? TelegramUser {
+                        return peer.botInfo != nil
+                    } else {
+                        return false
+                    }
+                }
+
+                
+                mapped.sort(by: { lhs, rhs in
+                    if (isUnread(lhs) && isUnread(rhs)) || (!isUnread(lhs) && !isUnread(rhs)) {
+                        if (isGroupChat(lhs) && isGroupChat(rhs)) || (!isGroupChat(lhs) && !isGroupChat(rhs)) {
+                            if (isBot(lhs) && isBot(rhs)) || (!isBot(lhs) && !isBot(rhs)) {
+                                return lhs < rhs
+                            } else if isBot(lhs) {
+                                return true
+                            } else {
+                                return false
+                            }
+                        } else if isGroupChat(lhs) {
+                            return false
+                        } else {
+                            return true
+                        }
+                    } else if isUnread(lhs) {
+                        return false
+                    } else {
+                        return true
+                    }
+                })
+            }
             
             let entries = mapped.compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
                 switch entry {
