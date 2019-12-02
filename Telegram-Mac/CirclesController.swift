@@ -65,19 +65,35 @@ func <(lhs:CirclesTableEntry, rhs:CirclesTableEntry) -> Bool {
     return lhs.stableId.hashValue < rhs.stableId.hashValue
 }
 
-private func circlesControllerEntries(settings: Circles?, unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary]) -> [CirclesTableEntry] {
+
+private func circlesControllerEntries(settings: Circles?,
+                                      unreadStates: [PeerGroupId:PeerGroupUnreadCountersCombinedSummary],
+                                      notificationSettings: InAppNotificationSettings) -> [CirclesTableEntry] {
     var entries: [CirclesTableEntry] = []
     
+    let unreadCountDisplayCategory = notificationSettings.totalUnreadCountDisplayCategory
+    
+    func getUnread(_ groupId: PeerGroupId) -> Int32 {
+        if let unread = unreadStates[groupId]?.count(countingCategory: unreadCountDisplayCategory == .chats ? .chats : .messages, mutedCategory: .all) {
+            return unread
+        } else {
+            return 0
+        }
+    }
+    
     entries.append(.sectionId)
-    entries.append(.group(groupId: PeerGroupId(rawValue: 2), title: "Personal", unread: unreadStates[PeerGroupId(rawValue: 2)]?.count(countingCategory: .messages, mutedCategory: .all) ?? 0))
+    entries.append(.group(
+        groupId: PeerGroupId(rawValue: 2),
+        title: "Personal",
+        unread: getUnread(PeerGroupId(rawValue: 2))
+    ))
     if let settings = settings {
         for key in settings.groupNames.keys {
-            let unreadCount = unreadStates[key]?.count(countingCategory: .messages, mutedCategory: .all) ?? 0
             entries.append(.group(
                 groupId: key,
                 title: settings.groupNames[key]!,
-                unread: unreadCount)
-            )
+                unread: getUnread(key)
+            ))
         }
     }
     
@@ -146,7 +162,7 @@ class CirclesRowView: TableRowView {
                 }
                 badgeView?.setFrameSize(badgeNode.size)
                 badgeNode.view = badgeView
-                self.badgeView?.setFrameOrigin(50, 2)
+                self.badgeView?.setFrameOrigin(47, 2)
                 badgeNode.setNeedDisplay()
             } else {
                 badgeView?.removeFromSuperview()
@@ -197,7 +213,11 @@ class CirclesRowItem: TableRowItem {
         _ = makeSize(70, oldWidth: 0)
         
         if unread > 0 {
-            badgeNode = BadgeNode(.initialize(string: "\(unread)", color: .white, font: .medium(.small)), NSColor(red: 0xeb/255, green: 0x4b/255, blue: 0x44/255, alpha: 1))
+            var text = "\(unread)"
+            if unread > 99 {
+                text = "99+"
+            }
+            badgeNode = BadgeNode(.initialize(string: text, color: .white, font: .medium(.small)), NSColor(red: 0xeb/255, green: 0x4b/255, blue: 0x44/255, alpha: 1))
             
         }
     }
@@ -330,14 +350,18 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         let chatHistoryView: Signal<(ChatListView, ViewUpdateType), NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 500)
         
         
-        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal, chatHistoryView)
-        |> map { settings, appearance, chatHistory in
+        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(
+            signal,
+            appearanceSignal,
+            chatHistoryView,
+            appNotificationSettings(accountManager: context.sharedContext.accountManager))
+        |> map { settings, appearance, chatHistory, inAppSettings in
             var unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary] = [:]
             for group in chatHistory.0.groupEntries {
                 unreadStates[group.groupId] = group.unreadState
             }
             
-            let entries = circlesControllerEntries(settings: settings!, unreadStates: unreadStates)
+            let entries = circlesControllerEntries(settings: settings!, unreadStates: unreadStates, notificationSettings: inAppSettings)
                 .map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             
             return prepareTransition(
