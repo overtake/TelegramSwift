@@ -137,7 +137,7 @@ class CirclesRowView: TableRowView {
         if let item = item as? CirclesRowItem {
             let icon:CGImage = {
                 switch item.groupId {
-                case .group(0),.root:
+                case .group(0),.group(2),.root:
                     return #imageLiteral(resourceName: "Icon_CirclePersonal").precomposed()
                 case .group(1):
                     return #imageLiteral(resourceName: "Icon_CircleArchived").precomposed()
