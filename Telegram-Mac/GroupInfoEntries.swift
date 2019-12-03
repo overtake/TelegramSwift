@@ -1485,7 +1485,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             
             
             
-            var sortedParticipants = participants.filter({$0.peer.displayTitle != L10n.peerDeletedUser}).sorted(by: { lhs, rhs in
+            var sortedParticipants = participants.filter({!$0.peer.rawDisplayTitle.isEmpty}).sorted(by: { lhs, rhs in
                 let lhsPresence = lhs.presences[lhs.peer.id] as? TelegramUserPresence
                 let rhsPresence = rhs.presences[rhs.peer.id] as? TelegramUserPresence
                 

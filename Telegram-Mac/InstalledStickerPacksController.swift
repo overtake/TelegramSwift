@@ -13,6 +13,19 @@ import Postbox
 import TelegramCore
 import SyncCore
 
+enum InstalledStickerPacksEntryTag: ItemListItemTag {
+    case suggestOptions
+    case loopAnimatedStickers
+    
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? InstalledStickerPacksEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 private final class InstalledStickerPacksControllerArguments {
     let context: AccountContext
     
@@ -279,6 +292,11 @@ private func prepareTransition(left:[AppearanceWrapperEntry<InstalledStickerPack
 
 class InstalledStickerPacksController: TableViewController {
 
+    private let focusOnItemTag: InstalledStickerPacksEntryTag?
+    init(_ context: AccountContext, focusOnItemTag: InstalledStickerPacksEntryTag? = nil) {
+        self.focusOnItemTag = focusOnItemTag
+        super.init(context)
+    }
     
     private let disposbale = MetaDisposable()
     private func openSuggestionOptions() {

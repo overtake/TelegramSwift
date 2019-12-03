@@ -13,6 +13,20 @@ import SyncCore
 import SwiftSignalKit
 import Postbox
 
+
+enum PrivacyAndSecurityEntryTag: ItemListItemTag {
+    case accountTimeout
+    case topPeers
+    case cloudDraft
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? PrivacyAndSecurityEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 private final class PrivacyAndSecurityControllerArguments {
     let context: AccountContext
     let openBlockedUsers: () -> Void
@@ -707,7 +721,7 @@ class PrivacyAndSecurityViewController: TableViewController {
             }
         }, openActiveSessions: { [weak self] sessions in
             if let context = self?.context {
-                self?.navigationController?.push(RecentSessionsController(context, activeSessions: sessions))
+                self?.navigationController?.push(RecentSessionsController(context))
             }
         }, openWebAuthorizations: {
 
@@ -837,7 +851,7 @@ class PrivacyAndSecurityViewController: TableViewController {
     }
     
 
-    init(_ context: AccountContext, initialSettings: (AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)) {
+    init(_ context: AccountContext, initialSettings: (AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), focusOnItemTag: PrivacyAndSecurityEntryTag? = nil) {
         super.init(context)
         self.privacySettingsPromise.set(.single(initialSettings))
     }

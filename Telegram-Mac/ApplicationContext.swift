@@ -47,7 +47,7 @@ final class UnauthorizedApplicationContext {
         window.minSize = NSMakeSize(380, 500)
         
         
-        updatesDisposable.add(managedAppConfigurationUpdates(postbox: account.postbox, network: account.network).start())
+        updatesDisposable.add(managedAppConfigurationUpdates(accountManager: sharedContext.accountManager, network: account.network).start())
         
         if !window.initFromSaver {
             window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
@@ -123,6 +123,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let clearReadNotifiesDisposable = MetaDisposable()
     private let chatUndoManagerDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
+    private let updatesDisposable = MetaDisposable()
     
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
@@ -182,6 +183,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         super.init()
         
+        
+        updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
         
         context.sharedContext.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
@@ -584,6 +587,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         clearReadNotifiesDisposable.dispose()
         chatUndoManagerDisposable.dispose()
         appUpdateDisposable.dispose()
+        updatesDisposable.dispose()
         context.cleanup()
         NotificationCenter.default.removeObserver(self)
     }

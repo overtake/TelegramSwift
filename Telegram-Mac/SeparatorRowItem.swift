@@ -25,6 +25,7 @@ class SeparatorRowItem: TableRowItem {
     let rightText:NSAttributedString?
     var border:BorderType = [.Right]
     let state:SeparatorBlockState
+    let action: (()->Void)?
     override var height: CGFloat {
         return h
     }
@@ -33,9 +34,10 @@ class SeparatorRowItem: TableRowItem {
         return _stableId
     }
     
-    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0) {
+    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0, action: (()->Void)? = nil) {
         self._stableId = stableId
         self.h = height
+        self.action = action
         self.state = state
         text = .initialize(string: string, color: theme.colors.grayText, font:.normal(.short))
         if let right = right {
@@ -85,7 +87,11 @@ class SeparatorRowView: TableRowView {
 
             let rect = NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, frame.height)
             if NSPointInRect(point, rect) {
-                super.mouseDown(with: event)
+                if let action = item.action {
+                    action()
+                } else {
+                    super.mouseDown(with: event)
+                }
             }
         } else {
             super.mouseDown(with: event)

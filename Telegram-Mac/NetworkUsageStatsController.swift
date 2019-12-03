@@ -91,16 +91,16 @@ private func networkUsageStatsControllerEntries(stats: NetworkUsageStats) -> [In
     return entries
 }
 
-func networkUsageStatsController(context: AccountContext, f: @escaping((ViewController)) -> Void) -> Void {
+func networkUsageStatsController(context: AccountContext) -> ViewController {
     
     let promise: Promise<NetworkUsageStats> = Promise()
     promise.set(combineLatest(accountNetworkUsageStats(account: context.account, reset: []) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {$0.0})
     
-    f(InputDataController(dataSignal: promise.get() |> deliverOnPrepareQueue |> map {networkUsageStatsControllerEntries(stats: $0)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.networkUsageNetworkUsage, validateData: { data in
+    return InputDataController(dataSignal: promise.get() |> deliverOnPrepareQueue |> map {networkUsageStatsControllerEntries(stats: $0)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.networkUsageNetworkUsage, validateData: { data in
         if data[.init("reset")] != nil {
             let reset: ResetNetworkUsageStats = [.wifi, .cellular]
             promise.set(accountNetworkUsageStats(account: context.account, reset: reset))
         }
         return .fail(.none)
-    }, removeAfterDisappear: true, hasDone: false, identifier: "networkUsage"))
+    }, removeAfterDisappear: true, hasDone: false, identifier: "networkUsage")
 }

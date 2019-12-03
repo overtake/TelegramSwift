@@ -14,6 +14,23 @@ import SyncCore
 import SwiftSignalKit
 
 
+enum DataAndStorageEntryTag : ItemListItemTag {
+    case automaticDownloadReset
+    case autoplayGifs
+    case autoplayVideos
+    case saveEditedPhotos
+    case downloadInBackground
+    
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? DataAndStorageEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
+
 public func autodownloadDataSizeString(_ size: Int64) -> String {
     if size >= 1024 * 1024 * 1024 {
         let remainder = (size % (1024 * 1024 * 1024)) / (1024 * 1024 * 102)
@@ -441,6 +458,11 @@ private func prepareTransition(left:[AppearanceWrapperEntry<DataAndStorageEntry>
 
 class DataAndStorageViewController: TableViewController {
 
+    
+    init(_ context: AccountContext, focusOnItemTag: DataAndStorageEntryTag? = nil) {
+        super.init(context)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -476,7 +498,7 @@ class DataAndStorageViewController: TableViewController {
         let arguments = DataAndStorageControllerArguments(openStorageUsage: {
             pushControllerImpl(StorageUsageController(context))
         }, openNetworkUsage: {
-            networkUsageStatsController(context: context, f: pushControllerImpl)
+            pushControllerImpl(networkUsageStatsController(context: context))
         }, openCategorySettings: { category, title in
             pushControllerImpl(DownloadSettingsViewController(context, category, title, updateCategory: { category in
                 _ = updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, { current -> AutomaticMediaDownloadSettings in

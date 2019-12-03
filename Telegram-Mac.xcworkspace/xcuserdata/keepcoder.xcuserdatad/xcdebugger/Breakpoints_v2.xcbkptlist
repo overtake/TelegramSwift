@@ -132,12 +132,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Telegram-Mac/GroupInfoEntries.swift"
-            timestampString = "590171430.1455441"
+            timestampString = "597074104.860863"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "311"
             endingLineNumber = "311"
-            landmarkName = "addMember(_:)"
+            landmarkName = "updatePhoto(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

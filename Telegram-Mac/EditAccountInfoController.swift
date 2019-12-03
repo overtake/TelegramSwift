@@ -13,6 +13,20 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 
+
+enum EditSettingsEntryTag: ItemListItemTag {
+    case bio
+    
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? EditSettingsEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
+
 private func valuesRequiringUpdate(state: EditInfoState, view: PeerView) -> ((fn: String, ln: String)?, about: String?) {
     if let peer = view.peers[view.peerId] as? TelegramUser {
         var names:(String, String)? = nil
@@ -209,7 +223,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
 }
 
 
-func EditAccountInfoController(context: AccountContext, f: @escaping((ViewController)) -> Void) -> Void {
+func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSettingsEntryTag? = nil, f: @escaping((ViewController)) -> Void) -> Void {
     let state: Promise<EditInfoState> = Promise()
     let stateValue: Atomic<EditInfoState> = Atomic(value: EditInfoState())
     let actionsDisposable = DisposableSet()
@@ -307,7 +321,7 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     })
     
-    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.editAccountTitle, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()

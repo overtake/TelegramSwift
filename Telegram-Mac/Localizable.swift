@@ -1071,9 +1071,9 @@ internal final class L10n {
   internal static var chatCopySelectedText: String  { return L10n.tr("Localizable", "Chat.CopySelectedText") }
   /// without compression
   internal static var chatDropAsFilesDesc: String  { return L10n.tr("Localizable", "Chat.DropAsFilesDesc") }
-  /// Drop file there to edit media
-  internal static var chatDropEditDesc: String  { return L10n.tr("Localizable", "Chat.DropEditDesc") }
   /// Edit Media
+  internal static var chatDropEditDesc: String  { return L10n.tr("Localizable", "Chat.DropEditDesc") }
+  /// Drop file there to edit media
   internal static var chatDropEditTitle: String  { return L10n.tr("Localizable", "Chat.DropEditTitle") }
   /// in a quick way
   internal static var chatDropQuickDesc: String  { return L10n.tr("Localizable", "Chat.DropQuickDesc") }
@@ -2129,6 +2129,8 @@ internal final class L10n {
   internal static var editAccountLogout: String  { return L10n.tr("Localizable", "EditAccount.Logout") }
   /// Enter your name and add a profile photo.
   internal static var editAccountNameDesc: String  { return L10n.tr("Localizable", "EditAccount.NameDesc") }
+  /// Edit Profile
+  internal static var editAccountTitle: String  { return L10n.tr("Localizable", "EditAccount.Title") }
   /// Username
   internal static var editAccountUsername: String  { return L10n.tr("Localizable", "EditAccount.Username") }
   /// RESET
@@ -2527,8 +2529,6 @@ internal final class L10n {
   internal static var generalSettingsInputSettings: String  { return L10n.tr("Localizable", "GeneralSettings.InputSettings") }
   /// INSTANT VIEW
   internal static var generalSettingsInstantViewHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InstantViewHeader") }
-  /// Large Font
-  internal static var generalSettingsLargeFonts: String  { return L10n.tr("Localizable", "GeneralSettings.LargeFonts") }
   /// Handle media keys for in-app player
   internal static var generalSettingsMediaKeysForInAppPlayer: String  { return L10n.tr("Localizable", "GeneralSettings.MediaKeysForInAppPlayer") }
   /// Automatically Open Latest Chat
@@ -5135,6 +5135,186 @@ internal final class L10n {
   internal static var sessionsTerminateDescription: String  { return L10n.tr("Localizable", "Sessions.TerminateDescription") }
   /// Terminate all other sessions
   internal static var sessionsTerminateOthers: String  { return L10n.tr("Localizable", "Sessions.TerminateOthers") }
+  /// RECENT
+  internal static var settingsSearchRecent: String  { return L10n.tr("Localizable", "SettingsSearch.Recent") }
+  /// Clear
+  internal static var settingsSearchRecentClear: String  { return L10n.tr("Localizable", "SettingsSearch.Recent.Clear") }
+  ///  
+  internal static var settingsSearchSynonymsAppLanguage: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.AppLanguage") }
+  ///  
+  internal static var settingsSearchSynonymsFAQ: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.FAQ") }
+  ///  
+  internal static var settingsSearchSynonymsPassport: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Passport") }
+  ///  
+  internal static var settingsSearchSynonymsSavedMessages: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.SavedMessages") }
+  /// Support
+  internal static var settingsSearchSynonymsSupport: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Support") }
+  /// Apple Watch
+  internal static var settingsSearchSynonymsWatch: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Watch") }
+  /// Animations
+  internal static var settingsSearchSynonymsAppearanceAnimations: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.Animations") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceAutoNightTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.AutoNightTheme") }
+  /// Wallpaper
+  internal static var settingsSearchSynonymsAppearanceChatBackground: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceColorTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ColorTheme") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceLargeEmoji: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.LargeEmoji") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceTextSize: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.TextSize") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.Title") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceChatBackgroundCustom: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground.Custom") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceChatBackgroundSetColor: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground.SetColor") }
+  ///  
+  internal static var settingsSearchSynonymsCallsCallTab: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Calls.CallTab") }
+  ///  
+  internal static var settingsSearchSynonymsCallsTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Calls.Title") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoDownloadReset: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoDownloadReset") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoDownloadUsingCellular: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoDownloadUsingCellular") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoDownloadUsingWifi: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoDownloadUsingWifi") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoplayGifs: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoplayGifs") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoplayVideos: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoplayVideos") }
+  ///  
+  internal static var settingsSearchSynonymsDataCallsUseLessData: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.CallsUseLessData") }
+  ///  
+  internal static var settingsSearchSynonymsDataDownloadInBackground: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.DownloadInBackground") }
+  ///  
+  internal static var settingsSearchSynonymsDataNetworkUsage: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.NetworkUsage") }
+  ///  
+  internal static var settingsSearchSynonymsDataSaveEditedPhotos: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.SaveEditedPhotos") }
+  ///  
+  internal static var settingsSearchSynonymsDataSaveIncomingPhotos: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.SaveIncomingPhotos") }
+  ///  
+  internal static var settingsSearchSynonymsDataTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Title") }
+  ///  
+  internal static var settingsSearchSynonymsDataStorageClearCache: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Storage.ClearCache") }
+  ///  
+  internal static var settingsSearchSynonymsDataStorageKeepMedia: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Storage.KeepMedia") }
+  /// Cache
+  internal static var settingsSearchSynonymsDataStorageTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Storage.Title") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileAddAccount: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.AddAccount") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileBio: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Bio") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileLogout: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Logout") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfilePhoneNumber: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.PhoneNumber") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Title") }
+  /// nickname
+  internal static var settingsSearchSynonymsEditProfileUsername: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Username") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeCountUnreadMessages: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeCountUnreadMessages") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeIncludeMutedChannels: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeIncludeMutedChannels") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeIncludeMutedChats: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeIncludeMutedChats") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeIncludeMutedPublicGroups: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeIncludeMutedPublicGroups") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsAlert: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsAlert") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsExceptions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsExceptions") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsContactJoined: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ContactJoined") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsDisplayNamesOnLockScreen: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.DisplayNamesOnLockScreen") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsAlert: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsAlert") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsExceptions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsExceptions") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsInAppNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.InAppNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsInAppNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.InAppNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsInAppNotificationsVibrate: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.InAppNotificationsVibrate") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsAlert: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsAlert") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsExceptions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsExceptions") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsResetAllNotifications: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ResetAllNotifications") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.Title") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyAuthSessions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.AuthSessions") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyBlockedUsers: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.BlockedUsers") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyCalls: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Calls") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDeleteAccountIfAwayFor: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.DeleteAccountIfAwayFor") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyForwards: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Forwards") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyGroupsAndChannels: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.GroupsAndChannels") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyLastSeen: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.LastSeen") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyPasscode: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Passcode") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyPasscodeAndFaceId: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.PasscodeAndFaceId") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyPasscodeAndTouchId: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.PasscodeAndTouchId") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyProfilePhoto: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.ProfilePhoto") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Title") }
+  /// Password
+  internal static var settingsSearchSynonymsPrivacyTwoStepAuth: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.TwoStepAuth") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataClearPaymentsInfo: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.ClearPaymentsInfo") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataContactsReset: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.ContactsReset") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataContactsSync: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.ContactsSync") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataDeleteDrafts: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.DeleteDrafts") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataSecretChatLinkPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.SecretChatLinkPreview") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.Title") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataTopPeers: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.TopPeers") }
+  ///  
+  internal static var settingsSearchSynonymsProxyAddProxy: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Proxy.AddProxy") }
+  /// SOCKS5\nMTProto
+  internal static var settingsSearchSynonymsProxyTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Proxy.Title") }
+  ///  
+  internal static var settingsSearchSynonymsProxyUseForCalls: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Proxy.UseForCalls") }
+  ///  
+  internal static var settingsSearchSynonymsStickersArchivedPacks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.ArchivedPacks") }
+  ///  
+  internal static var settingsSearchSynonymsStickersFeaturedPacks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.FeaturedPacks") }
+  ///  
+  internal static var settingsSearchSynonymsStickersMasks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.Masks") }
+  ///  
+  internal static var settingsSearchSynonymsStickersSuggestStickers: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.SuggestStickers") }
+  ///  
+  internal static var settingsSearchSynonymsStickersTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.Title") }
   /// Copied to Clipboard
   internal static var shareLinkCopied: String  { return L10n.tr("Localizable", "Share.Link.Copied") }
   /// Cancel

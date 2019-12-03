@@ -476,6 +476,8 @@ func execute(inapp:inAppLink) {
                 }
             })
         }
+    case let .instantView(link, webpage, anchor):
+        break
     }
     
 }
@@ -586,6 +588,7 @@ enum inAppLink {
     case wallpaper(link: String, context: AccountContext, preview: WallpaperPreview)
     case theme(link: String, context: AccountContext, name: String)
     case tonTransfer(link: String, context: AccountContext, data: ParsedWalletUrl)
+    case instantView(link: String, webpage: TelegramMediaWebpage, anchor: String?)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -622,6 +625,8 @@ enum inAppLink {
         case let .theme(values):
             return values.link
         case let .tonTransfer(link, _, _):
+            return link
+        case let .instantView(link, _, _):
             return link
         case .nothing:
             return ""
@@ -1079,4 +1084,33 @@ public func parseWalletUrl(_ url: URL) -> ParsedWalletUrl? {
         }
     }
     return address.flatMap { ParsedWalletUrl(address: $0, amount: amount, comment: comment) }
+}
+
+
+
+func resolveInstantViewUrl(account: Account, url: String) -> Signal<inAppLink, NoError> {
+    return webpagePreview(account: account, url: url)
+        |> mapToSignal { webpage -> Signal<inAppLink, NoError> in
+            if let webpage = webpage {
+                
+                if case let .Loaded(content) = webpage.content {
+                    if content.instantPage != nil {
+                        var anchorValue: String?
+                        if let anchorRange = url.range(of: "#") {
+                            let anchor = url[anchorRange.upperBound...]
+                            if !anchor.isEmpty {
+                                anchorValue = String(anchor)
+                            }
+                        }
+                        return .single(.instantView(link: url, webpage: webpage, anchor: anchorValue))
+                    } else {
+                        return .single(.external(link: url, false))
+                    }
+                } else {
+                    return .complete()
+                }
+            } else {
+                return .single(.external(link: url, false))
+            }
+    }
 }
