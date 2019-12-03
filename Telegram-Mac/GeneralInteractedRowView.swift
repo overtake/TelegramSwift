@@ -108,7 +108,7 @@ class GeneralInteractedRowView: GeneralRowView {
             switch item.viewType {
             case .legacy:
                 containerView.setCorners([], animated: false)
-            case let .modern:
+            case .modern:
                 containerView.setCorners(item.viewType.corners, animated: animated)
             }
 
@@ -128,7 +128,7 @@ class GeneralInteractedRowView: GeneralRowView {
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
-            let highlighted = item.viewType.isPlainMode ? self.backdorColor : theme.colors.grayHighlight
+            let highlighted = theme.colors.grayHighlight
             descriptionView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
             textView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
             containerView.set(background: self.backdorColor, for: .Normal)

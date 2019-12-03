@@ -245,6 +245,7 @@ func initialize() -> [String] {
     array.append("settingsPassportActive")
     array.append("settingsWalletActive")
     array.append("settingsUpdateActive")
+    array.append("settingsProfile")
     array.append("generalCheck")
     array.append("settingsAbout")
     array.append("settingsLogout")

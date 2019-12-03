@@ -38,9 +38,9 @@ enum QRLoginType : String {
 }
 
 
-func unauthorizedConfiguration(postbox: Postbox) -> Signal<UnauthorizedConfiguration, NoError> {
-    return postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> mapToSignal { view in
-        if let appConfiguration = view.values[PreferencesKeys.appConfiguration] as? AppConfiguration {
+func unauthorizedConfiguration(accountManager: AccountManager) -> Signal<UnauthorizedConfiguration, NoError> {
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.appConfiguration]) |> mapToSignal { view in
+        if let appConfiguration = view.entries[ApplicationSharedPreferencesKeys.appConfiguration] as? AppConfiguration {
             let configuration = UnauthorizedConfiguration.with(appConfiguration: appConfiguration)
             return .single(configuration)
         } else {
@@ -49,22 +49,29 @@ func unauthorizedConfiguration(postbox: Postbox) -> Signal<UnauthorizedConfigura
     } |> deliverOnMainQueue
 }
 
-
-private func updateAppConfiguration(transaction: Transaction, _ f: (AppConfiguration) -> AppConfiguration) {
-    let current = currentAppConfiguration(transaction: transaction)
-    let updated = f(current)
-    if updated != current {
-        transaction.setPreferencesEntry(key: PreferencesKeys.appConfiguration, value: updated)
+private func currentUnauthorizedAppConfiguration(transaction: AccountManagerModifier) -> AppConfiguration {
+    if let entry = transaction.getSharedData(ApplicationSharedPreferencesKeys.appConfiguration) as? AppConfiguration {
+        return entry
+    } else {
+        return AppConfiguration.defaultValue
     }
 }
 
+private func updateAppConfiguration(transaction: AccountManagerModifier, _ f: (AppConfiguration) -> AppConfiguration) {
+    let current = currentUnauthorizedAppConfiguration(transaction: transaction)
+    let updated = f(current)
+    transaction.updateSharedData(ApplicationSharedPreferencesKeys.appConfiguration, { _ in
+        return updated
+    })
+}
 
-func managedAppConfigurationUpdates(postbox: Postbox, network: Network) -> Signal<Void, NoError> {
+
+func managedAppConfigurationUpdates(accountManager: AccountManager, network: Network) -> Signal<Void, NoError> {
     let poll = Signal<Void, NoError> { subscriber in
         return (network.request(Api.functions.help.getAppConfig())
             |> retryRequest
             |> mapToSignal { result -> Signal<Void, NoError> in
-                return postbox.transaction { transaction -> Void in
+                return accountManager.transaction { transaction -> Void in
                     if let data = JSON(apiJson: result) {
                         updateAppConfiguration(transaction: transaction, { configuration -> AppConfiguration in
                             var configuration = configuration

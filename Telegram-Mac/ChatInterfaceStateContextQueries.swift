@@ -187,7 +187,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         if peer.id == context.peerId {
                             return false
                         }
-                        if peer.displayTitle == L10n.peerDeletedUser {
+                        if peer.rawDisplayTitle.isEmpty {
                             return false
                         }
                         
@@ -316,7 +316,6 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                                         }
                                         return entry.message.author?.id
                                     })
-                                    
                                     let sorted = participants.sorted{ lhs, rhs in
                                         let lhsIndex = latestIds.firstIndex(where: {$0 == lhs.id})
                                         let rhsIndex = latestIds.firstIndex(where: {$0 == rhs.id})
@@ -329,9 +328,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                                         } else {
                                             return lhs.displayTitle < rhs.displayTitle
                                         }
-                                        
                                     }
-                                    
                                     return sorted
                                 }
                                 

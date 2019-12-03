@@ -14,6 +14,24 @@ import Postbox
 import TGUIKit
 import SyncCore
 
+enum ThemeSettingsEntryTag: ItemListItemTag {
+    case fontSize
+    case theme
+    case tint
+    case accentColor
+    case icon
+    case largeEmoji
+    case animations
+    
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? ThemeSettingsEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 
 struct InstallCloudThemeCachedData {
     let palette: ColorPalette
@@ -189,7 +207,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     return entries
 }
 
-func AppAppearanceViewController(context: AccountContext) -> InputDataController {
+func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeSettingsEntryTag? = nil) -> InputDataController {
 
     let applyCloudThemeDisposable = MetaDisposable()
     let updateDisposable = MetaDisposable()

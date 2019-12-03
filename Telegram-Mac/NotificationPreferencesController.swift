@@ -13,6 +13,33 @@ import Postbox
 import TelegramCore
 import SyncCore
 
+enum NotificationsAndSoundsEntryTag: ItemListItemTag {
+    case allAccounts
+    case messageAlerts
+    case messagePreviews
+    case groupAlerts
+    case groupPreviews
+    case channelAlerts
+    case channelPreviews
+    case inAppSounds
+    case inAppVibrate
+    case inAppPreviews
+    case displayNamesOnLockscreen
+    case includePublicGroups
+    case includeChannels
+    case unreadCountCategory
+    case joinedNotifications
+    case reset
+    
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? NotificationsAndSoundsEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 private final class NotificationArguments {
     let resetAllNotifications:() -> Void
     let toggleMessagesPreview:() -> Void
@@ -187,7 +214,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     return entries
 }
 
-func NotificationPreferencesController(_ context: AccountContext) -> ViewController {
+func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag: NotificationsAndSoundsEntryTag? = nil) -> ViewController {
 
     
     let arguments = NotificationArguments(resetAllNotifications: {

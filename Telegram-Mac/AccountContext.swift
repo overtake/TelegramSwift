@@ -211,6 +211,7 @@ final class AccountContext {
     let peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager()
     let chatUndoManager = ChatUndoManager()
     let blockedPeersContext: BlockedPeersContext
+    let activeSessionsContext: ActiveSessionsContext
     let walletPasscodeTimeoutContext: WalletPasscodeTimeoutContext
 
     #endif
@@ -280,6 +281,7 @@ final class AccountContext {
         #if !SHARE
         self.fetchManager = FetchManager(postbox: account.postbox)
         self.blockedPeersContext = BlockedPeersContext(account: account)
+        self.activeSessionsContext = ActiveSessionsContext(account: account)
         self.walletPasscodeTimeoutContext = WalletPasscodeTimeoutContext(postbox: account.postbox)
         #endif
         

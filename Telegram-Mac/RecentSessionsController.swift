@@ -320,14 +320,11 @@ private func prepareSessions(left:[AppearanceWrapperEntry<RecentSessionsEntry>],
 }
 
 class RecentSessionsController : TableViewController {
-    private let activeSessions: [RecentAccountSession]?
-    init(_ context: AccountContext, activeSessions: [RecentAccountSession]?) {
-        self.activeSessions = activeSessions
-        super.init(context)
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
         
         let statePromise = ValuePromise(RecentSessionsControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: RecentSessionsControllerState())
@@ -385,7 +382,9 @@ class RecentSessionsController : TableViewController {
             })
         })
         
-        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(self.activeSessions) |> then(requestRecentAccountSessions(account: context.account) |> map { Optional($0) })
+        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = context.activeSessionsContext.state |> map {
+            $0.sessions
+        }
         
         sessionsPromise.set(sessionsSignal)
         
@@ -401,6 +400,16 @@ class RecentSessionsController : TableViewController {
         }
         
         genericView.merge(with: signal)
+        
+        genericView.setScrollHandler { position in
+            switch position.direction {
+            case .bottom:
+                context.activeSessionsContext.loadMore()
+            default:
+                break
+            }
+        }
+        
         readyOnce()
     }
     

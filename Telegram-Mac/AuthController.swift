@@ -995,7 +995,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         }))
        
 
-        configurationDisposable.set((unauthorizedConfiguration(postbox: self.account.postbox) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue).start(next: { [weak self] value in
+        configurationDisposable.set((unauthorizedConfiguration(accountManager: self.sharedContext.accountManager) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue).start(next: { [weak self] value in
             
             self?.qrType = value.qr
             self?.genericView.isQrEnabled = value.qr != .disabled

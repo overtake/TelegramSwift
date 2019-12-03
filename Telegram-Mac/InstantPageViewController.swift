@@ -39,6 +39,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     private let mediaDisposable = MetaDisposable()
     private var appearance: InstantViewAppearance = InstantViewAppearance.defaultSettings
     private let actualizeDisposable = MetaDisposable()
+    private let loadStoredStateDisposable = MetaDisposable()
     private let saveProgressDisposable = MetaDisposable()
     private let loadWebpageDisposable = MetaDisposable()
     private let updateLayoutDisposable = MetaDisposable()
@@ -110,7 +111,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     
     func updateWebPage(_ webPage: TelegramMediaWebpage, anchor: String?, state: InstantPageStoredState? = nil) {
         if self.webPage != webPage {
-           
+            
             self.webPage = webPage
             if let anchor = anchor {
                 self.initialAnchor = anchor.removingPercentEncoding
@@ -125,7 +126,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 }
             }
             self.currentLayout = nil
-            
+            self.updateLayout()
             
             if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage, instantPage.isComplete {
                 self.loadProgress.set(1.0)
@@ -135,9 +136,9 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                     self.scrollToAnchor(anchor)
                 }
             }
-            
             reloadData()
         }
+        self.readyOnce()
     }
 
     
@@ -423,7 +424,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     }
     
     
-    private func scrollToAnchor(_ anchor: String) {
+    private func scrollToAnchor(_ anchor: String, animated: Bool = true) {
         guard let items = self.currentLayout?.items else {
             return
         }
@@ -458,13 +459,13 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 }
                 
                 let targetY = min(containerOffset + frame.minY + (reference ? -5 : lineOffset), self.documentView.frame.height - self.genericView.frame.height)
-                genericView.clipView.scroll(to: CGPoint(x: 0.0, y: targetY), animated: true)
+                genericView.clipView.scroll(to: CGPoint(x: 0.0, y: targetY), animated: animated)
             } else if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage, !instantPage.isComplete {
                // self.loadProgress.set(0.5)
                 self.pendingAnchor = anchor
             }
         } else {
-             genericView.clipView.scroll(to: NSZeroPoint, animated: true)
+             genericView.clipView.scroll(to: NSZeroPoint, animated: animated)
         }
         
 
@@ -546,7 +547,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         appearanceDisposable.set((ivAppearance(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
             self?.appearance = appearance
             self?.reloadData()
-            self?.readyOnce()
             if firstLoad, let currentLayout = self?.currentLayout, let webPage = self?.webPage, let scrollView = self?.genericView {
                 firstLoad = false
                 if let message = self?.message {
@@ -590,8 +590,18 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             }
         }))
         
-      
-        actualizeDisposable.set((actualizedWebpage(postbox: context.account.postbox, network: context.account.network, webpage: webPage) |> delay(1.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { [weak self] webpage in
+        loadStoredStateDisposable.set((instantPageStoredState(postbox: context.account.postbox, webPage: webPage) |> deliverOnMainQueue).start(next: { [weak self] state in
+            guard let `self` = self else {
+                return
+            }
+            self.updateWebPage(self.webPage, anchor: self.pendingAnchor, state: state)
+            if let anchor = self.pendingAnchor {
+                self.pendingAnchor = nil
+                self.scrollToAnchor(anchor, animated: false)
+            }
+        }))
+        
+        actualizeDisposable.set((actualizedWebpage(postbox: context.account.postbox, network: context.account.network, webpage: webPage) |> deliverOnMainQueue).start(next: { [weak self] webpage in
             self?.updateWebPage(webpage, anchor: self?.pendingAnchor)
         }))
 
@@ -938,6 +948,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         updateLayoutDisposable.dispose()
         loadWebpageDisposable.dispose()
         appearanceDisposable.dispose()
+        loadStoredStateDisposable.dispose()
         if let window = window {
             selectManager?.removeHandlers(for: window)
         }
