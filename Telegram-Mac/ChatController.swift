@@ -3150,8 +3150,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.update(animated: !wasEmpty, { current in
             var current = current.updatedHistoryCount(genericView.tableView.count - 1).updatedKeyboardButtonsMessage(initialData.buttonKeyboardMessage)
             
-            if let message = initialData.buttonKeyboardMessage, let replyMarkup = message.replyMarkup {
-                if replyMarkup.flags.contains(.setupReply) {
+            if let message = initialData.buttonKeyboardMessage {
+                if message.requestsSetupReply {
                     if message.id != current.interfaceState.dismissedForceReplyId {
                         current = current.updatedInterfaceState({$0.withUpdatedReplyMessageId(message.id)})
                     }

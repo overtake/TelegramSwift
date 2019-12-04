@@ -96,14 +96,14 @@ final class SpotlightContext {
     init(account: Account) {
         self.account = account
         if #available(OSX 10.12, *) {
-            let accountPeer = account.postbox.peerView(id: account.peerId) |> map {
-                return peerViewMainPeer($0)
-                } |> filter { $0 != nil } |> map { $0! } |> take(1)
+            let accountPeer = account.postbox.loadedPeerWithId(account.peerId)
             
             
             let recently = recentlySearchedPeers(postbox: account.postbox) |> map {
                 $0.compactMap { $0.peer.chatMainPeer }
-            }
+            } |> distinctUntilChanged(isEqual: { previous, current -> Bool in
+                return previous.count == current.count
+            })
             
             let peers:Signal<[Peer], NoError> = combineLatest(recently, recentPeers(account: account) |> mapToSignal { recent in
                 switch recent {
@@ -114,7 +114,9 @@ final class SpotlightContext {
                 }
             }) |> map {
                 $0 + $1
-            }
+            } |> distinctUntilChanged(isEqual: { previous, current -> Bool in
+                return previous.count == current.count
+            })
             
             
             
