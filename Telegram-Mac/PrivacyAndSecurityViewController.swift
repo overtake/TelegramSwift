@@ -44,7 +44,8 @@ private final class PrivacyAndSecurityControllerArguments {
     let openProxySettings:() ->Void
     let togglePeerSuggestions:(Bool)->Void
     let clearCloudDrafts: () -> Void
-    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void) {
+    let toggleSensitiveContent:(Bool)->Void
+    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void) {
         self.context = context
         self.openBlockedUsers = openBlockedUsers
         self.openLastSeenPrivacy = openLastSeenPrivacy
@@ -61,6 +62,7 @@ private final class PrivacyAndSecurityControllerArguments {
         self.openProfilePhotoPrivacy = openProfilePhotoPrivacy
         self.openForwardPrivacy = openForwardPrivacy
         self.openPhoneNumberPrivacy = openPhoneNumberPrivacy
+        self.toggleSensitiveContent = toggleSensitiveContent
     }
 }
 
@@ -87,7 +89,9 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case proxySettings(sectionId:Int, String, viewType: GeneralViewType)
     case togglePeerSuggestions(sectionId: Int, enabled: Bool, viewType: GeneralViewType)
     case togglePeerSuggestionsDesc(sectionId: Int)
-
+    case sensitiveContentHeader(sectionId: Int)
+    case sensitiveContentToggle(sectionId: Int, value: Bool, viewType: GeneralViewType)
+    case sensitiveContentDesc(sectionId: Int)
     case clearCloudDraftsHeader(sectionId: Int)
     case clearCloudDrafts(sectionId: Int, viewType: GeneralViewType)
 
@@ -140,6 +144,12 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case let .proxyHeader(sectionId):
             return sectionId
         case let .proxySettings(sectionId, _, _):
+            return sectionId
+        case let .sensitiveContentHeader(sectionId):
+            return sectionId
+        case let .sensitiveContentToggle(sectionId, _, _):
+            return sectionId
+        case let .sensitiveContentDesc(sectionId):
             return sectionId
         case let .section(sectionId):
             return sectionId
@@ -194,6 +204,12 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return 21
         case .clearCloudDrafts:
             return 22
+        case .sensitiveContentHeader:
+            return 23
+        case .sensitiveContentToggle:
+            return 24
+        case .sensitiveContentDesc:
+            return 25
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -315,6 +331,14 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecurityClearCloudDrafts, type: .none, viewType: viewType, action: {
                 arguments.clearCloudDrafts()
             })
+        case .sensitiveContentHeader:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveHeader, viewType: .textTopItem)
+        case let .sensitiveContentToggle(_, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecuritySensitiveText, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleSensitiveContent(!enabled)
+            }, autoswitch: true)
+        case .sensitiveContentDesc:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveDesc, viewType: .textBottomItem)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -474,7 +498,15 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
-
+    
+    #if !APP_STORE && !ALPHA && !BETA
+    entries.append(.sensitiveContentHeader(sectionId: sectionId))
+    entries.append(.sensitiveContentToggle(sectionId: sectionId, value: true, viewType: .singleItem))
+    entries.append(.sensitiveContentDesc(sectionId: sectionId))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    #endif
 
     let enabled: Bool
     switch recentPeers {
@@ -831,6 +863,8 @@ class PrivacyAndSecurityViewController: TableViewController {
             confirm(for: context.window, information: L10n.privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
                 _ = showModalProgress(signal: clearCloudDraftsInteractively(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId), for: mainWindow).start()
             })
+        }, toggleSensitiveContent: { value in
+            
         })
 
 

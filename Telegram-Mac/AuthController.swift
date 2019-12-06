@@ -59,8 +59,8 @@ private final class ExportTokenOptionView : View {
         super.layout()
         
         cap.setFrameOrigin(NSZeroPoint)
-        
-        optionText.setFrameOrigin(NSMakePoint(6, 2))
+        let offset: CGFloat = optionText.frame.width == 6 ? 7 : 6
+        optionText.setFrameOrigin(NSMakePoint(offset, 2))
         textView.setFrameOrigin(NSMakePoint(cap.frame.maxX + 10, 2))
     }
     
@@ -403,6 +403,7 @@ class AuthHeaderView : View {
         guard let exportTokenView = self.exportTokenView else {
             return
         }
+        CATransaction.begin()
         
         self.containerView.isHidden = false
         
@@ -412,18 +413,20 @@ class AuthHeaderView : View {
         
         animatedLogoView.frame = NSMakeRect(point.x, point.y, 40, 40)
         
-        exportTokenView.imageView.layer?.animateScaleSpring(from: 1, to: animatedLogoView.frame.width / exportTokenView.imageView.frame.width, duration: 0.5, removeOnCompletion: false, bounce: true)
+        exportTokenView.imageView.layer?.animateScaleSpring(from: 1, to: animatedLogoView.frame.width / exportTokenView.imageView.frame.width, duration: 0.4, removeOnCompletion: false, bounce: true)
 
         animatedLogoView.layer?.animateScaleX(from: 1, to: logo.frame.width / animatedLogoView.frame.width, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
         animatedLogoView.layer?.animateScaleY(from: 1, to: logo.frame.height / animatedLogoView.frame.height, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
 
         self.logo.isHidden = true
         
-        animatedLogoView.layer?.animatePosition(from: animatedLogoView.frame.origin, to: NSMakePoint(frame.width / 2 - logo.frame.width / 2, containerView.frame.minY + 20), duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak self] _ in
+        animatedLogoView.layer?.animatePosition(from: animatedLogoView.frame.origin, to: NSMakePoint((round(frame.width / 2) - logo.frame.width / 2), containerView.frame.minY + 20), duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak self] _ in
             self?.animatedLogoView.removeFromSuperview()
             self?.animatedLogoView.layer?.removeAllAnimations()
             self?.logo.isHidden = false
         })
+        
+        CATransaction.commit()
         
         self.arguments?.cancelQrAuth()
     }
@@ -439,7 +442,7 @@ class AuthHeaderView : View {
 
         animatedLogoView.frame = NSMakeRect(point.x, point.y, 40, 40)
         
-        exportTokenView.imageView.layer?.animateScaleSpring(from: animatedLogoView.frame.height / exportTokenView.imageView.frame.width, to: 1, duration: 0.5, removeOnCompletion: false, bounce: true)
+        exportTokenView.imageView.layer?.animateScaleSpring(from: animatedLogoView.frame.height / exportTokenView.imageView.frame.width, to: 1, duration: 0.4, removeOnCompletion: false, bounce: true)
         
         animatedLogoView.layer?.animateScaleX(from: logo.frame.width / animatedLogoView.frame.width, to: 1, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
         animatedLogoView.layer?.animateScaleY(from: logo.frame.height / animatedLogoView.frame.height, to: 1, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
@@ -1025,7 +1028,13 @@ class AuthController : GenericViewController<AuthHeaderView> {
     }
     
     private func refreshQrToken(_ showProgress: Bool = false) {
-        var tokenSignal = exportAuthTransferToken(accountManager: self.sharedContext.accountManager, account: self.account, otherAccountUserIds: [], syncContacts: false)
+        
+        let sharedContext = self.sharedContext
+        let account = self.account
+        
+        var tokenSignal: Signal<ExportAuthTransferTokenResult, ExportAuthTransferTokenError> = sharedContext.activeAccounts |> castError(ExportAuthTransferTokenError.self) |> take(1) |> mapToSignal { accounts in
+            return exportAuthTransferToken(accountManager: sharedContext.accountManager, account: account, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
+        }
         
         if showProgress {
             tokenSignal = showModalProgress(signal: tokenSignal |> take(1), for: mainWindow)

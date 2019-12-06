@@ -635,16 +635,18 @@ class ChatListRowItem: TableRowItem {
             switch associatedGroupId {
             case .root:
                 let postbox = context.account.postbox
-                _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
+                context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
                  context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: .archiveChat, action: { status in
                     switch status {
                     case .cancelled:
-                        _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: .root).start()
+                        break
+                        //_ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: .root).start()
+                    case .success:
+                        _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
                     default:
                         break
                     }
                  }))
-                 context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
             default:
                  _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
             }

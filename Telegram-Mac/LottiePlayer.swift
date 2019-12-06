@@ -860,10 +860,10 @@ class LottiePlayerView : NSView {
         }
     }
     
-    func set(_ animation: LottieAnimation?) {
+    func set(_ animation: LottieAnimation?, reset: Bool = false) {
         self.stateValue.set(.stoped)
         if let animation = animation {
-            if self.context?.animation != animation {
+            if self.context?.animation != animation || reset {
                 
                 if holder == nil {
                     holder = ContextHolder()

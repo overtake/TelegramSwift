@@ -261,12 +261,19 @@ final class AccountContext {
     private let actualizeCloudTheme = MetaDisposable()
     private let applyThemeDisposable = MetaDisposable()
     private let cloudThemeObserver = MetaDisposable()
-    private let limitsDisposable = MetaDisposable()
+    private let prefDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
     var limitConfiguration: LimitsConfiguration {
         return _limitConfiguration.with { $0 }
     }
+    
+    private let _autoplayMedia: Atomic<AutoplayMediaPreferences> = Atomic(value: AutoplayMediaPreferences.defaultSettings)
+    
+    var autoplayMedia: AutoplayMediaPreferences {
+        return _autoplayMedia.with { $0 }
+    }
+
     
     public let tonContext: StoredTonContext!
     
@@ -290,8 +297,14 @@ final class AccountContext {
         
         let limitConfiguration = _limitConfiguration
         
-        limitsDisposable.set(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
+        prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
             _ = limitConfiguration.swap(view.values[PreferencesKeys.limitsConfiguration] as? LimitsConfiguration ?? LimitsConfiguration.defaultValue)
+        }))
+        
+        let autoplayMedia = _autoplayMedia
+        
+        prefDisposable.add(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]).start(next: { view in
+            _ = autoplayMedia.swap(view.values[ApplicationSpecificPreferencesKeys.autoplayMedia] as? AutoplayMediaPreferences ?? AutoplayMediaPreferences.defaultSettings)
         }))
         
         
@@ -382,7 +395,7 @@ final class AccountContext {
     func cleanup() {
         updateDifferenceDisposable.dispose()
         temporaryPwdDisposable.dispose()
-        limitsDisposable.dispose()
+        prefDisposable.dispose()
         actualizeCloudTheme.dispose()
         applyThemeDisposable.dispose()
         cloudThemeObserver.dispose()

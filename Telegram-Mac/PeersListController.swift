@@ -755,9 +755,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
     }
     
-    override func firstResponder() -> NSResponder? {
-        return self.genericView.searchView.input
-    }
+
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

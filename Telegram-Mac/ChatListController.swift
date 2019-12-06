@@ -15,9 +15,6 @@ import SyncCore
 
 
 
-
-
-
 enum UIChatListEntryId : Hashable {
     case chatId(PeerId)
     case groupId(PeerGroupId)
@@ -395,7 +392,7 @@ class ChatListController : PeersListController {
                     case .HoleEntry:
                         return nil
                     case let .MessageEntry(values):
-                        if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel]) {
+                        if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel, .archiveChat]) {
                             return nil
                         } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.clearHistory]) {
                             let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6, values.7)
@@ -736,20 +733,6 @@ class ChatListController : PeersListController {
         }, with: self, for: .leftMouseDown, priority: .high)
         
         
-        
-        
-//        self.window?.set(responder: { [weak self] () -> NSResponder? in
-//
-//            guard let `self` = self else {return nil}
-//            switch self.genericView.searchView.state {
-//            case .None:
-//                return self.genericView.searchView.input
-//            default:
-//                break
-//            }
-//            return nil
-//        }, with: self, priority: .low)
-        
         context.window.add(swipe: { [weak self] direction -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window else {return .failed}
             let swipeState: SwipeState?
@@ -790,8 +773,6 @@ class ChatListController : PeersListController {
             
             
             guard let state = swipeState, self.context.sharedContext.layout != .minimisize else {return .failed}
-            
-            
             
             switch state {
             case .start:
@@ -838,7 +819,6 @@ class ChatListController : PeersListController {
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController
                 guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
-                
                 
                 var direction = direction
                 

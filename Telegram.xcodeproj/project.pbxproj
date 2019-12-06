@@ -243,6 +243,9 @@
 		A7F2830623954E1B00742C20 /* CachedFaqInstantPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2830523954E1B00742C20 /* CachedFaqInstantPage.swift */; };
 		A7F2830823954EF800742C20 /* CachedInstantPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2830723954EF800742C20 /* CachedInstantPages.swift */; };
 		A7F2830A2395570400742C20 /* SearchSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F283092395570400742C20 /* SearchSettingsController.swift */; };
+		A7F2831923994B9700742C20 /* AutoplayPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F77B3972211979B003B65B8 /* AutoplayPreferences.swift */; };
+		A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2831A239A496400742C20 /* ContextShowPeersHolder.swift */; };
+		A7F28337239A808500742C20 /* AudioAnimatedSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F28336239A808500742C20 /* AudioAnimatedSticker.swift */; };
 		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
 		C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
@@ -1249,6 +1252,8 @@
 		A7F2830523954E1B00742C20 /* CachedFaqInstantPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedFaqInstantPage.swift; sourceTree = "<group>"; };
 		A7F2830723954EF800742C20 /* CachedInstantPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedInstantPages.swift; sourceTree = "<group>"; };
 		A7F283092395570400742C20 /* SearchSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSettingsController.swift; sourceTree = "<group>"; };
+		A7F2831A239A496400742C20 /* ContextShowPeersHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextShowPeersHolder.swift; sourceTree = "<group>"; };
+		A7F28336239A808500742C20 /* AudioAnimatedSticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAnimatedSticker.swift; sourceTree = "<group>"; };
 		C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentPeerRowItem.swift; sourceTree = "<group>"; };
 		C2016F431EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/ShareViewController.strings"; sourceTree = "<group>"; };
 		C2016F451EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
@@ -3692,6 +3697,7 @@
 				C24FD40D1F20EE8B00A97196 /* ContextClueRowItem.swift */,
 				C2E6F3CE1F9F85260023653D /* ContextHashtagRowItem.swift */,
 				9F0AE6862191D29D00A8B53A /* ContextSearchMessageItem.swift */,
+				A7F2831A239A496400742C20 /* ContextShowPeersHolder.swift */,
 			);
 			name = context;
 			sourceTree = "<group>";
@@ -4322,6 +4328,7 @@
 			isa = PBXGroup;
 			children = (
 				A71DC82C23858356000EEDE2 /* Spotlight.swift */,
+				A7F28336239A808500742C20 /* AudioAnimatedSticker.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -4822,6 +4829,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7F2831923994B9700742C20 /* AutoplayPreferences.swift in Sources */,
 				A71DC8342386D512000EEDE2 /* Signature.swift in Sources */,
 				A71DC8352386D512000EEDE2 /* Config.swift in Sources */,
 				D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */,
@@ -4924,6 +4932,7 @@
 				9FDA713F20EE2D49001ED8ED /* PopularPeersRowItem.swift in Sources */,
 				9F77B3A6221C1DAC003B65B8 /* LogoutViewController.swift in Sources */,
 				C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */,
+				A7F28337239A808500742C20 /* AudioAnimatedSticker.swift in Sources */,
 				A7F2830623954E1B00742C20 /* CachedFaqInstantPage.swift in Sources */,
 				C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */,
 				C2DF47C51DE79574003AA6C0 /* stream.c in Sources */,
@@ -5192,6 +5201,7 @@
 				C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
+				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
 				9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */,
