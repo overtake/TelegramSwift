@@ -2765,6 +2765,8 @@ internal final class L10n {
   internal static var installedStickersArchived: String  { return L10n.tr("Localizable", "InstalledStickers.Archived") }
   /// Artists are welcome to add their own sticker sets using our @stickers bot.\n\nTap on a sticker to view and add the whole set.
   internal static var installedStickersDescrpiption: String  { return L10n.tr("Localizable", "InstalledStickers.Descrpiption") }
+  /// Loop Animated Stickers
+  internal static var installedStickersLoopAnimated: String  { return L10n.tr("Localizable", "InstalledStickers.LoopAnimated") }
   /// STICKER SETS
   internal static var installedStickersPacksTitle: String  { return L10n.tr("Localizable", "InstalledStickers.PacksTitle") }
   /// Trending Stickers
@@ -4201,6 +4203,12 @@ internal final class L10n {
   internal static var privacyAndSecurityClearCloudDrafts: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDrafts") }
   /// CHATS
   internal static var privacyAndSecurityClearCloudDraftsHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDraftsHeader") }
+  /// Display sensitive media in public channels on all your Telegram devices
+  internal static var privacyAndSecuritySensitiveDesc: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveDesc") }
+  /// SENSITIVE CONTENT
+  internal static var privacyAndSecuritySensitiveHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveHeader") }
+  /// Disable filtering
+  internal static var privacyAndSecuritySensitiveText: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveText") }
   /// CONNECTED WEBSITES
   internal static var privacyAndSecurityWebAuthorizationHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.WebAuthorizationHeader") }
   /// Are you sure you want to clear all cloud drafts?
@@ -5137,7 +5145,7 @@ internal final class L10n {
   internal static var sessionsTerminateOthers: String  { return L10n.tr("Localizable", "Sessions.TerminateOthers") }
   /// RECENT
   internal static var settingsSearchRecent: String  { return L10n.tr("Localizable", "SettingsSearch.Recent") }
-  /// Clear
+  /// clear
   internal static var settingsSearchRecentClear: String  { return L10n.tr("Localizable", "SettingsSearch.Recent.Clear") }
   ///  
   internal static var settingsSearchSynonymsAppLanguage: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.AppLanguage") }

@@ -48,7 +48,7 @@ class ChatMediaLayoutParameters : Equatable {
         }
     }
     
-    private let autoplayMedia: AutoplayMediaPreferences
+    let autoplayMedia: AutoplayMediaPreferences
     
     var autoplay: Bool
     var soundOnHover: Bool {
@@ -317,6 +317,7 @@ class ChatMediaItem: ChatRowItem {
         if let media = media as? TelegramMediaFile, media.isAnimatedSticker || media.isStaticSticker {
             canAddCaption = false
         }
+        
         
         self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
             guard let `self` = self else {return}

@@ -21,7 +21,7 @@ class LAnimationButton: Button {
            //animationView.animationSpeed = speed
         }
     }
-    private let offset: CGFloat
+    private let offset: NSSize
     
     var played = false
     var completion: (() -> Void)?
@@ -29,7 +29,7 @@ class LAnimationButton: Button {
     var autoplayOnVisibleSide: LButtonAutoplaySide? = nil
     private var animation: LottieAnimation?
     private var firstFrame: LottieAnimation?
-    init(animation: String, size: NSSize, keysToColor: [String]? = nil, color: NSColor = .black, offset: CGFloat = 0, autoplaySide: LButtonAutoplaySide? = nil, rotated: Bool = false) {
+    init(animation: String, size: NSSize, keysToColor: [String]? = nil, color: NSColor = .black, offset: NSSize = NSMakeSize(0, 0), autoplaySide: LButtonAutoplaySide? = nil, rotated: Bool = false) {
         self.offset = offset
         self.autoplayOnVisibleSide = autoplaySide
         if let file = Bundle.main.path(forResource: animation, ofType: "json"), let data = try? Data(contentsOf: URL(fileURLWithPath: file)) {
@@ -47,7 +47,7 @@ class LAnimationButton: Button {
         }
         
         if rotated {
-            animationView.rotate(byDegrees: 180)
+           // animationView.rotate(byDegrees: 180)
         }
     }
     
@@ -107,7 +107,7 @@ class LAnimationButton: Button {
 
     
     func loop() {
-        self.animationView.set(self.animation)
+        self.animationView.set(self.animation, reset: true)
     }
     
 
@@ -116,7 +116,7 @@ class LAnimationButton: Button {
     override func layout() {
         super.layout()
         animationView.center()
-        animationView.setFrameOrigin(animationView.frame.minX, animationView.frame.minY - offset)
+        animationView.setFrameOrigin(animationView.frame.minX - offset.width, animationView.frame.minY - offset.height)
     }
     
     required init?(coder: NSCoder) {

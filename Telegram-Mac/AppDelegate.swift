@@ -411,13 +411,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             self.sharedContextPromise.set(accountManager.transaction { transaction -> (SharedApplicationContext, LoggingSettings) in
                 return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings) as? LoggingSettings ?? LoggingSettings.defaultSettings)
-                }
-                |> mapToSignal { sharedApplicationContext, loggingSettings -> Signal<SharedApplicationContext, NoError> in
-                    Logger.shared.logToFile = loggingSettings.logToFile
-                    Logger.shared.logToConsole = false//loggingSettings.logToConsole
-                    Logger.shared.redactSensitiveData = true//loggingSettings.redactSensitiveData
-                    return .single(sharedApplicationContext)
-                })
+            }
+            |> mapToSignal { sharedApplicationContext, loggingSettings -> Signal<SharedApplicationContext, NoError> in
+                Logger.shared.logToFile = loggingSettings.logToFile
+                Logger.shared.logToConsole = false//loggingSettings.logToConsole
+                Logger.shared.redactSensitiveData = true//loggingSettings.redactSensitiveData
+                return .single(sharedApplicationContext)
+            })
             
             
             let tonKeychain: TonKeychain

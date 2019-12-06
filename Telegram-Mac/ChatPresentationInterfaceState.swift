@@ -45,7 +45,7 @@ enum ChatPresentationInputQueryResult: Equatable {
     case commands([PeerCommand])
     case stickers([FoundStickerItem])
     case emoji([String], Bool)
-    case searchMessages(([Message], SearchMessagesState?, (SearchMessagesState?)-> Void), String)
+    case searchMessages(([Message], SearchMessagesState?, (SearchMessagesState?)-> Void), [Peer], String)
     case contextRequestResult(Peer, ChatContextResultCollection?)
     
     static func ==(lhs: ChatPresentationInputQueryResult, rhs: ChatPresentationInputQueryResult) -> Bool {
@@ -68,8 +68,17 @@ enum ChatPresentationInputQueryResult: Equatable {
             } else {
                 return false
             }
-        case let .searchMessages(lhsMessages, lhsSearchText):
-            if case let .searchMessages(rhsMessages, rhsSearchText) = rhs {
+        case let .searchMessages(lhsMessages, lhsPeers, lhsSearchText):
+            if case let .searchMessages(rhsMessages, rhsPeers, rhsSearchText) = rhs {
+                if lhsPeers.count == rhsPeers.count {
+                    for i in 0 ..< rhsPeers.count {
+                        if !lhsPeers[i].isEqual(rhsPeers[i]) {
+                            return false
+                        }
+                    }
+                } else {
+                    return false
+                }
                 if lhsMessages.0.count == rhsMessages.0.count {
                     for i in 0 ..< lhsMessages.0.count {
                         if !isEqualMessages(lhsMessages.0[i], rhsMessages.0[i]) {

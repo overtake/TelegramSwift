@@ -864,8 +864,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     open func scrollDidChangedBounds() {
-        
-        
         if let autohide = autohide, let item = autohide.item, autohide.hideUntilOverscroll, let _ = liveScrollStartPosition {
             let rect = self.rectOf(item: item)
             
