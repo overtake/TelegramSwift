@@ -777,8 +777,8 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             }
             
-            if canArchive {
-                items.append(ContextMenuItem(associatedGroupId != L10n.chatListSwipingArchive, handler: toggleArchive))
+            if canArchive && associatedGroupId != Namespaces.PeerGroup.archive {
+                items.append(ContextMenuItem(L10n.chatListSwipingArchive, handler: toggleArchive))
             }
             
             
