@@ -148,11 +148,14 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     let index = subviews.firstIndex(where: { $0 is GIFContainerView})
                     if let index = index {
                         view = subviews.remove(at: index) as! GIFContainerView
+                        if view.subviews.last?.className == "TGUIKit.View" {
+                            view.subviews.last?.removeFromSuperview()
+                        }
                     } else {
                         view = GIFContainerView()
                     }
                     let signal:Signal<ImageDataTransformation, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
-                    
+                    view.removeAllHandlers()
                     view.set(handler: { [weak item] control in
                         if let item = item {
                             item.arguments.sendResult(item.result.results[i], control)

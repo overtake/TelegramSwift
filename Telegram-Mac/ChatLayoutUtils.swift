@@ -70,7 +70,9 @@ class ChatLayoutUtils: NSObject {
                       //  size.width = max(maxSize.width, size.width)
                     }
                 }
-                
+                if hasText {
+                    size.width = max(maxSize.width, size.width)
+                }
                 
             } else if contentSize.height > 0 {
                 size = NSMakeSize(width, 70)

@@ -62,7 +62,7 @@ struct ChatUndoAction : Hashable  {
     }
     fileprivate let endpoint: Double
     fileprivate let duration: Double
-    private let peerId: PeerId
+    fileprivate let peerId: PeerId
     let type: ChatUndoActionType
     fileprivate let action: (ChatUndoActionStatus) -> Void
     init(peerId: PeerId, type: ChatUndoActionType, duration: Double = 5, action: @escaping(ChatUndoActionStatus) -> Void = { _ in}) {
@@ -102,7 +102,7 @@ struct ChatUndoStatuses {
     func isActive(peerId: PeerId, types: [ChatUndoActionType]) -> Bool {
         for type in types {
             let result = statuses.first(where: { current -> Bool in
-                return current.key.isEqual(with: peerId, type: type) && (current.value == .processing || current.value == .success)
+                return current.key.isEqual(with: peerId, type: type) && (current.value == .processing || (current.value == .success))
             }) != nil
             
             if result {
@@ -371,6 +371,13 @@ private final class ChatUndoManagerContext {
             notifyAllSubscribers()
         }
     }
+    
+    fileprivate func invokeAll() {
+        let actions = self.actions
+        for action in actions {
+            invokeNow(for: action.peerId, type: action.type)
+        }
+    }
 }
 
 
@@ -437,6 +444,11 @@ final class ChatUndoManager  {
         }
     }
     
+    func invokeAll() {
+        queue.sync { [weak context] in
+            context?.invokeAll()
+        }
+    }
 }
 
 

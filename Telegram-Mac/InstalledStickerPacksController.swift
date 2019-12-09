@@ -388,7 +388,7 @@ class InstalledStickerPacksController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<InstalledStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal = combineLatest(queue: queue, statePromise.get(), stickerPacks, featured, appearanceSignal, preferencesView)
+        let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks, featured, appearanceSignal, preferencesView)
             |> map { state, view, featured, appearance, preferencesView -> TableUpdateTransition in
                 
                 var stickerSettings = StickerSettings.defaultSettings

@@ -359,7 +359,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
             return context.account.viewTracker.callListView(type: .all, index: index, count: 100)
         }
         
-        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: queue, signal, statePromise.get(), appearanceSignal) |> map { result in
+        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, signal, statePromise.get(), appearanceSignal) |> map { result in
             _ = callListView.swap(result.0)
             let entries = makeEntries(from: result.0.entries, state: result.1).map({AppearanceWrapperEntry(entry: $0, appearance: result.2)})
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false))
