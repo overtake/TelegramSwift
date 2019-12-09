@@ -676,6 +676,7 @@ class ChatListRowItem: TableRowItem {
                     newValue.groupNames = old.groupNames
                     newValue.localInclusions = old.localInclusions
                     newValue.remoteInclusions = old.remoteInclusions
+                    newValue.index = old.index
                     newValue.localInclusions[peerId] = id
                     return newValue
                 }

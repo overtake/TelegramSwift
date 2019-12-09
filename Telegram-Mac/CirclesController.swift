@@ -88,7 +88,7 @@ private func circlesControllerEntries(settings: Circles,
         unread: getUnread(.root, type: type)
     ))
     
-    for key in settings.groupNames.keys {
+    for key in settings.groupNames.keys.sorted(by: {settings.index[$0]! < settings.index[$1]!})  {
         entries.append(.group(
             groupId: key,
             title: settings.groupNames[key]!,
@@ -412,6 +412,7 @@ func CirclesSettingsController(_ context: AccountContext) -> ViewController {
             newValue.groupNames = old.groupNames
             newValue.localInclusions = old.localInclusions
             newValue.remoteInclusions = old.remoteInclusions
+            newValue.index = old.index
             return newValue
         } |> mapToSignal {
             Circles.fetch(postbox: context.account.postbox, userId: context.account.peerId)
