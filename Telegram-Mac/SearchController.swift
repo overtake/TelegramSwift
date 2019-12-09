@@ -248,7 +248,13 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
     let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
         switch entry.entry {
         case let .message(message, query, _):
-            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, query: query, renderedPeer: RenderedPeer(message: message))
+            var peer = RenderedPeer(message: message)
+            if let group = message.peers[message.id.peerId] as? TelegramGroup, let migrationReference = group.migrationReference {
+                if let channelPeer = message.peers[migrationReference.peerId] {
+                    peer = RenderedPeer(peer: channelPeer)
+                }
+            }
+            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, query: query, renderedPeer: peer)
             return item
         case let .globalPeer(foundPeer,_):
             var status: String? = nil
@@ -276,8 +282,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 
@@ -299,8 +303,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 
@@ -328,8 +330,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 
@@ -351,8 +351,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 

@@ -1992,13 +1992,13 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
                     case .blurBackground:
                         let blurSourceImage = thumbnailImage ?? fullSizeImage
                         
-                        if let fullSizeImage = blurSourceImage {
-                            let thumbnailSize = CGSize(width: fullSizeImage.width, height: fullSizeImage.height)
+                        if let image = blurSourceImage {
+                            let thumbnailSize = CGSize(width: image.width, height: image.height)
                             let thumbnailContextSize = thumbnailSize.aspectFitted(CGSize(width: 74.0, height: 74.0))
                             let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
                             thumbnailContext.withFlippedContext { c in
                                 c.interpolationQuality = .none
-                                c.draw(fullSizeImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
+                                c.draw(image, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
                             }
                             //   telegramFastBlur(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
                             telegramFastBlurMore(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
@@ -2012,6 +2012,15 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
                                 c.fill(arguments.drawingRect)
                                 c.setBlendMode(.copy)
                             }
+                            
+                            let value = arguments.imageSize.aspectFitted(arguments.boundingSize)
+                            
+                            if let fullSizeImage = fullSizeImage {
+                                c.interpolationQuality = .medium
+                                c.draw(fullSizeImage, in: NSMakeRect((arguments.boundingSize.width - value.width) / 2, (arguments.boundingSize.height - value.height) / 2, value.width, value.height))
+                            }
+
+                            
                         } else {
                             c.fill(arguments.drawingRect)
                         }
@@ -2022,22 +2031,32 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
                         c.setFillColor(theme.colors.transparentBackground.cgColor)
                         c.fill(arguments.drawingRect)
                     case .none:
-                        break
+                        c.setBlendMode(.copy)
+                        if let cgImage = blurredThumbnailImage {
+                            c.interpolationQuality = .low
+                            c.draw(cgImage, in: fittedRect)
+                            c.setBlendMode(.normal)
+                        }
+                        
+                        if let fullSizeImage = fullSizeImage {
+                            c.interpolationQuality = .medium
+                            c.draw(fullSizeImage, in: fittedRect)
+                        }
                     case .imageColor:
                         break
                     }
-                }
-                
-                c.setBlendMode(.copy)
-                if let cgImage = blurredThumbnailImage {
-                    c.interpolationQuality = .low
-                    c.draw(cgImage, in: fittedRect)
-                    c.setBlendMode(.normal)
-                }
-                
-                if let fullSizeImage = fullSizeImage {
-                    c.interpolationQuality = .medium
-                    c.draw(fullSizeImage, in: fittedRect)
+                } else {
+                    c.setBlendMode(.copy)
+                    if let cgImage = blurredThumbnailImage {
+                        c.interpolationQuality = .low
+                        c.draw(cgImage, in: fittedRect)
+                        c.setBlendMode(.normal)
+                    }
+                    
+                    if let fullSizeImage = fullSizeImage {
+                        c.interpolationQuality = .medium
+                        c.draw(fullSizeImage, in: fittedRect)
+                    }
                 }
             })
             

@@ -128,9 +128,9 @@ class GeneralInteractedRowView: GeneralRowView {
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
-            let highlighted = theme.colors.grayHighlight
-            descriptionView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
-            textView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
+            let highlighted = isSelect ? self.backdorColor : theme.colors.grayHighlight
+            descriptionView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
+            textView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
             containerView.set(background: self.backdorColor, for: .Normal)
             containerView.set(background: highlighted, for: .Highlight)
         }
