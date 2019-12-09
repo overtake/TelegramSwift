@@ -10,8 +10,9 @@ import Cocoa
 import Postbox
 import SwiftSignalKit
 
+private let queue = Queue(name: "ChatMessageThrottledProcessingManager")
+
 final class ChatMessageThrottledProcessingManager {
-    private let queue = Queue(name: "ChatMessageThrottledProcessingManager")
     
     private let delay: TimeInterval
     init(delay: TimeInterval = 1.0) {
@@ -25,13 +26,13 @@ final class ChatMessageThrottledProcessingManager {
     private var buffer = Set<MessageId>()
     
     func setProcess(process: @escaping (Set<MessageId>) -> Void) {
-        self.queue.async {
+        queue.async {
             self.process = process
         }
     }
     
     func add(_ messageIds: [MessageId]) {
-        self.queue.async {
+        queue.async {
             for id in messageIds {
                 if !self.processed.contains(id) {
                     self.processed.insert(id)
@@ -43,7 +44,7 @@ final class ChatMessageThrottledProcessingManager {
                 var completionImpl: (() -> Void)?
                 let timer = SwiftSignalKit.Timer(timeout: self.delay, repeat: false, completion: {
                     completionImpl?()
-                }, queue: self.queue)
+                }, queue: queue)
                 completionImpl = { [weak self, weak timer] in
                     if let strongSelf = self {
                         if let timer = timer, strongSelf.timer === timer {

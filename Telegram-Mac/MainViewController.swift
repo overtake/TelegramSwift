@@ -259,7 +259,7 @@ class MainViewController: TelegramViewController {
 //
 //        }).start()
         
-        self.ready.set(combineLatest(queue: self.queue, self.chatList.ready.get(), self.settings.ready.get()) |> map { $0 && $1 })
+        self.ready.set(combineLatest(queue: prepareQueue, self.chatList.ready.get(), self.settings.ready.get()) |> map { $0 && $1 })
         
         layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
             self?.tabController.hideTabView(state == .minimisize)
