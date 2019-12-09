@@ -239,7 +239,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
         timableProgressView?.center()
         videoAccessory?.setFrameOrigin(8, 8)
         self.image.setFrameSize(frame.size)
-        self.autoplayVideoView?.view.setFrameSize(frame.size)
+        
+        if let file = media as? TelegramMediaFile {
+            let dimensions = file.dimensions?.size ?? frame.size
+            self.autoplayVideoView?.view.setFrameSize(dimensions.aspectFitted(frame.size))
+            self.autoplayVideoView?.view.center()
+        }
+        
     }
     
     private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile, mediaPlayerStatus: MediaPlayerStatus? = nil, animated: Bool = false) {
@@ -464,7 +470,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let blurBackground: Bool = media is TelegramMediaImage && (parent != nil && parent?.groupingKey == nil)
+            let blurBackground: Bool = true//media is TelegramMediaImage && (parent != nil && parent?.groupingKey == nil)
             
             let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.fitted(NSMakeSize(320, 320)) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
             
@@ -527,15 +533,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             strongSelf.updatePlayerIfNeeded()
                         }
                         if let autoplay = strongSelf.autoplayVideoView {
-                            autoplay.view.frame = NSMakeRect(0, 0, size.width, size.height)
+                            let value = (file.dimensions?.size ?? size).aspectFitted(size)
+                            
+                            autoplay.view.frame = NSMakeRect(0, 0, value.width, value.height)
                             if let positionFlags = positionFlags {
                                 autoplay.view.positionFlags = positionFlags
                             } else {
                                 autoplay.view.layer?.cornerRadius = .cornerRadius
                             }
                             strongSelf.addSubview(autoplay.view, positioned: .above, relativeTo: strongSelf.image)
-                            
                             autoplay.mediaPlayer.attachPlayerView(autoplay.view)
+                            autoplay.view.center()
                         }
                         
                     } else {

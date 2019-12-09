@@ -211,7 +211,7 @@ class PCallSession {
     }
     
     func drop(_ reason:DropCallReason) {
-        account.callSessionManager.drop(internalId: id, reason: reason)
+        account.callSessionManager.drop(internalId: id, reason: reason, debugLog: .single(nil))
     }
     private func acceptAfterAccess() {
         callAcceptedTime = CFAbsoluteTimeGetCurrent()

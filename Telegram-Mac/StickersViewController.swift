@@ -723,7 +723,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             }
         }
         
-        let signal = combineLatest(queue: self.queue, self.searchValue.get(), self.position.get()) |> mapToSignal { values -> Signal<StickerPacksUpdateData, NoError> in
+        let signal = combineLatest(queue: prepareQueue, self.searchValue.get(), self.position.get()) |> mapToSignal { values -> Signal<StickerPacksUpdateData, NoError> in
             
             let count = initialSize.with { size -> Int in
                 return Int(round((size.height * (values.1 == .initial ? 2 : 20)) / 60 * 5))

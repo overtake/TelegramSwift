@@ -183,7 +183,7 @@ class FeaturedStickerPacksController: TableViewController {
         let initialSize = self.atomicSize
         
         
-        let signal = combineLatest(queue: self.queue,statePromise.get(), stickerPacks.get(), featured.get(), appearanceSignal)
+        let signal = combineLatest(queue: prepareQueue,statePromise.get(), stickerPacks.get(), featured.get(), appearanceSignal)
             |> map { state, view, featured, appearance -> TableUpdateTransition in
                 for item in featured {
                     if initialUnreadPacks[item.info.id] == nil {

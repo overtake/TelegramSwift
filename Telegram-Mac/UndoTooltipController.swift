@@ -65,6 +65,9 @@ import SyncCore
     private func hideCurrentIfNeeded(animated: Bool = true) {
         if let current = self.current {
             self.current = nil
+            if !current.cancelled {
+                context.chatUndoManager.invokeAll()
+            }
             let view = current.view
             if animated {
                 view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, view.frame.maxY), duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
@@ -220,7 +223,6 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
     }
     
     func updateLocalizationAndTheme(theme: PresentationTheme) {
-        let theme = (theme as! TelegramPresentationTheme)
         
         self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, lineWidth: 2, clockwise: false)
         
@@ -265,7 +267,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
 class UndoTooltipController: TelegramGenericViewController<UndoTooltipView> {
     private let undoManager: ChatUndoManager
     private weak var controller: ViewController?
-    
+    private(set) var cancelled: Bool = false
     init(_ context: AccountContext, controller: ViewController, undoManager: ChatUndoManager) {
         self.undoManager = undoManager
         self.controller = controller
@@ -281,7 +283,8 @@ class UndoTooltipController: TelegramGenericViewController<UndoTooltipView> {
     override func initializer() -> UndoTooltipView {
         return UndoTooltipView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), undoManager: undoManager, undo: { [weak self] in
             if let `self` = self {
-               self.undoManager.cancelAll()
+                self.undoManager.cancelAll()
+                self.cancelled = true
             }
         })
     }
