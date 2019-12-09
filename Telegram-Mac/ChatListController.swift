@@ -107,7 +107,8 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, state: ChatListRowState, groupId: PeerGroupId, circlesSettings: Circles) -> Signal<TableUpdateTransition, NoError> {
+    
     
     return Signal { subscriber in
         
@@ -126,24 +127,26 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     } else if index.pinningIndex == nil {
                         pinnedType = .none
                     }
-                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: groupId, hasFailed: hasFailed)
+                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, state: state,  activities: activities, associatedGroupId: circlesSettings.inclusions[renderedPeer.peerId] ?? groupId, hasFailed: hasFailed)
                 }
+            case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
+                return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus, groupName: circlesSettings.groupNames[groupId] ?? "unnamed circle")
             }
-            
-            
-            
-            let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
-                return makeItem(entry)
-            })
-            
-            let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
-            let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: nState, animateVisibleOnly: false)
-            
-            subscriber.putNext(transition)
-            subscriber.putCompletion()
-            return ActionDisposable {
-               cancelled = true
-            }
+        }
+        
+        
+        
+        let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
+            return makeItem(entry)
+        })
+        
+        let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
+        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: nState, animateVisibleOnly: false)
+        
+        subscriber.putNext(transition)
+        subscriber.putCompletion()
+        return ActionDisposable {
+           cancelled = true
         }
     }
 }
@@ -349,7 +352,7 @@ class ChatListController : PeersListController {
         }
         
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), Circles.settingsView(postbox: context.account.postbox)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings, circlesSettings -> Signal<TableUpdateTransition, NoError> in
                     
             var removeNextAnimation = value.2
             
@@ -386,7 +389,7 @@ class ChatListController : PeersListController {
                 }
             }
            
-            if groupId != PeerGroupId(rawValue: 2) && groupId != Namespaces.PeerGroup.archive {
+            if groupId != .root && groupId != PeerGroupId(rawValue: 2) && groupId != Namespaces.PeerGroup.archive {
                 func isUnread(_ entry: UIChatListEntry) -> Bool{
                     switch entry {
                     case let .chat(entry, _):
@@ -503,7 +506,7 @@ class ChatListController : PeersListController {
             
             let prev = previousEntries.swap(entries)
             
-            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, groupId: groupId)
+            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, state: state, groupId: groupId, circlesSettings: circlesSettings)
         }
         
         

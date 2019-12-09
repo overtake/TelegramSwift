@@ -668,11 +668,16 @@ class ChatListRowItem: TableRowItem {
         if let peerId = peerId {
             _ = (updatePeerGroupIdInteractively(postbox: self.context.account.postbox, peerId: peerId, groupId: id)
             |> mapToSignal {
-                updateCirclesSettings(postbox: self.context.account.postbox) { s in
-                    if let s = s {
-                        s.localInclusions[peerId] = id
-                    }
-                    return s
+                Circles.updateSettings(postbox: self.context.account.postbox) { old in
+                    let newValue = Circles.defaultConfig
+                    newValue.dev = old.dev
+                    newValue.botId = old.botId
+                    newValue.token = old.token
+                    newValue.groupNames = old.groupNames
+                    newValue.localInclusions = old.localInclusions
+                    newValue.remoteInclusions = old.remoteInclusions
+                    newValue.localInclusions[peerId] = id
+                    return newValue
                 }
             }).start()
             context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(id)
@@ -688,7 +693,7 @@ class ChatListRowItem: TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         let strongSelf = self
-        return getCirclesSettings(postbox: self.context.account.postbox)
+        return Circles.getSettings(postbox: self.context.account.postbox)
         |> mapToSignal {settings -> Signal<[ContextMenuItem], NoError> in
             return strongSelf.menuItemsOrig(in: location, circlesSettings: settings)
         }
@@ -786,11 +791,11 @@ class ChatListRowItem: TableRowItem {
                 if groupNames.keys.count > 0 {
                     items.append(ContextSeparatorItem())
                     
-                    if associatedGroupId != PeerGroupId(rawValue: 2) {
+                    if associatedGroupId != .root {
                         items.append(
                             ContextMenuItem(
                                 L10n.chatListSwipingPersonal,
-                                handler: { [weak self] in self?.addToCircle(id: PeerGroupId(rawValue: 2)) }
+                                handler: { [weak self] in self?.addToCircle(id: .root) }
                             )
                         )
                     }

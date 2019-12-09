@@ -1892,7 +1892,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                searchArticle: { #imageLiteral(resourceName: "Icon_SearchArticles").precomposed(.white) },
                                                searchSaved: { #imageLiteral(resourceName: "Icon_SearchSaved").precomposed(.white) },
                                                archivedChats: { #imageLiteral(resourceName: "Icon_ArchiveAvatar").precomposed(.white) },
-                                               circles: { #imageLiteral(resourceName: "Icon_Circles").precomposed() },
                                                hintPeerActive: { generateHitActiveIcon(activeColor: palette.accent, backgroundColor: palette.background) },
                                                hintPeerActiveSelected: { generateHitActiveIcon(activeColor: palette.underSelectedColor, backgroundColor: palette.accentSelect) },
                                                chatSwiping_delete: { #imageLiteral(resourceName: "Icon_ChatSwipingDelete").precomposed(.white) },

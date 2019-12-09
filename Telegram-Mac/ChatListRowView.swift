@@ -535,22 +535,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 let icon = theme.icons.searchSaved
                 photo.setState(account: item.context.account, state: .Empty)
                 photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
-            } else if case .Circles = item.photo {
-                self.archivedPhoto?.removeFromSuperview()
-                self.archivedPhoto = nil
-                let icon = theme.icons.circles
-                photo.setState(account: item.context.account, state: .Empty)
-                photo.setSignal(
-                    generateEmptyPhoto(
-                        photo.frame.size,
-                        type: .icon(
-                            colors: theme.colors.peerColors(5),
-                            icon: icon,
-                            iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width, photo.frame.size.height)),
-                            cornerRadius: nil
-                        )
-                    ) |> map {($0, false)}
-                )
             } else if case .ArchivedChats = item.photo {
                 if self.archivedPhoto == nil {
                     self.archivedPhoto = LAnimationButton(animation: "archiveAvatar", size: NSMakeSize(46, 46), offset: NSMakeSize(0, 0))

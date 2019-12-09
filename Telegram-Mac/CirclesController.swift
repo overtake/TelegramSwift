@@ -66,7 +66,7 @@ func <(lhs:CirclesTableEntry, rhs:CirclesTableEntry) -> Bool {
 }
 
 
-private func circlesControllerEntries(settings: Circles?,
+private func circlesControllerEntries(settings: Circles,
                                       unreadStates: [PeerGroupId:PeerGroupUnreadCountersCombinedSummary],
                                       notificationSettings: InAppNotificationSettings) -> [CirclesTableEntry] {
     var entries: [CirclesTableEntry] = []
@@ -83,19 +83,19 @@ private func circlesControllerEntries(settings: Circles?,
     
     entries.append(.sectionId)
     entries.append(.group(
-        groupId: PeerGroupId(rawValue: 2),
+        groupId: .root,
         title: "Personal",
-        unread: getUnread(PeerGroupId(rawValue: 2))
+        unread: getUnread(.root, type: type)
     ))
-    if let settings = settings {
-        for key in settings.groupNames.keys {
-            entries.append(.group(
-                groupId: key,
-                title: settings.groupNames[key]!,
-                unread: getUnread(key)
-            ))
-        }
+    
+    for key in settings.groupNames.keys {
+        entries.append(.group(
+            groupId: key,
+            title: settings.groupNames[key]!,
+            unread: getUnread(key, type: type)
+        ))
     }
+
     
     entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived", unread: unreadStates[Namespaces.PeerGroup.archive]?.count(countingCategory: .messages, mutedCategory: .all) ?? 0))
     return entries
@@ -341,27 +341,25 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         let previous:Atomic<[AppearanceWrapperEntry<CirclesTableEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
         
-        let signal = getCirclesSettings(postbox: context.account.postbox) |> deliverOnPrepareQueue
-        let first: Atomic<Bool> = Atomic(value: true)
-        
         let arguments = CirclesArguments(context: context)
-        
         
         let chatHistoryView: Signal<(ChatListView, ViewUpdateType), NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 500)
         
         
         let transition: Signal<TableUpdateTransition, NoError> = combineLatest(
-            signal,
+            Circles.settingsView(postbox: context.account.postbox),
             appearanceSignal,
             chatHistoryView,
             appNotificationSettings(accountManager: context.sharedContext.accountManager))
+            
         |> map { settings, appearance, chatHistory, inAppSettings in
             var unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary] = [:]
             for group in chatHistory.0.groupEntries {
                 unreadStates[group.groupId] = group.unreadState
             }
+            unreadStates[.root] = context.account.postbox.groupStats(.root)
             
-            let entries = circlesControllerEntries(settings: settings!, unreadStates: unreadStates, notificationSettings: inAppSettings)
+            let entries = circlesControllerEntries(settings: settings, unreadStates: unreadStates, notificationSettings: inAppSettings)
                 .map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             
             return prepareTransition(
@@ -379,5 +377,54 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
             self?.chatListNavigationController.callback?()
         }))
     }
+}
+
+private final class CirclesSettingsArguments {
+    let toggleDev:() -> Void;
+    
+    init(toggleDev: @escaping() -> Void) {
+        self.toggleDev = toggleDev;
+    }
+}
+
+private let _development_mode = InputDataIdentifier("_development_mode")
+
+private func circlesEntries(settings: Circles, arguments: CirclesSettingsArguments) -> [InputDataEntry] {
+    
+    var entries:[InputDataEntry] = []
+    
+    entries.append(.sectionId(0, type: .normal))
+    
+    entries.append(InputDataEntry.general(sectionId: 1, index: 0, value: .none, error: nil, identifier: _development_mode, data: InputDataGeneralData(name: "Development mode", color: theme.colors.text, type: .switchable(settings.dev), action: {
+        arguments.toggleDev()
+    })))
+
+    return entries
+}
+
+func CirclesSettingsController(_ context: AccountContext) -> ViewController {
+    let arguments = CirclesSettingsArguments.init(toggleDev: {
+        return (Circles.updateSettings(postbox: context.account.postbox) { old in
+            let newValue = Circles.defaultConfig
+            newValue.dev = !old.dev
+            newValue.botId = old.botId
+            newValue.token = old.token
+            newValue.groupNames = old.groupNames
+            newValue.localInclusions = old.localInclusions
+            newValue.remoteInclusions = old.remoteInclusions
+            return newValue
+        } |> mapToSignal {
+            Circles.fetch(postbox: context.account.postbox, userId: context.account.peerId)
+        }).start()
+    })
+    
+    let entriesSignal = Circles.settingsView(postbox: context.account.postbox)
+    |> map { circlesSettings -> [InputDataEntry] in
+        return circlesEntries(settings: circlesSettings, arguments: arguments)
+    } |> deliverOn(prepareQueue)
+
+    
+    return InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: "Circles", hasDone: false, identifier: "circles-settings")
+    
 }
 
