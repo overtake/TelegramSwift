@@ -1231,7 +1231,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             let proccesedView:ChatHistoryView
             if let view = view {
-                if let peer = chatInteraction.peer, peer.isRestrictedChannel {
+                if let peer = chatInteraction.peer, peer.isRestrictedChannel(context.contentSettings) {
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
                 } else if let clearHistoryStatus = clearHistoryStatus, clearHistoryStatus != .cancelled {
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
@@ -1583,7 +1583,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     signals.append(context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() })
                     
                     if result[1] == .selected {
-                        signals.append(removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: result[0] == .selected) |> ignoreValues)
+                        signals.append(removePeerChat(account: context.account, peerId: chatInteraction.peerId, reportChatSpam: result[0] == .selected) |> ignoreValues)
                     } else if result[0] == .selected {
                         signals.append(reportPeer(account: context.account, peerId: peer.id) |> ignoreValues)
                     }
@@ -2431,14 +2431,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return reportPeer(account: context.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
                         if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
                             if peer.id.namespace == Namespaces.Peer.CloudUser {
-                                return removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: false) |> deliverOnMainQueue
+                                return removePeerChat(account: context.account, peerId: strongSelf.chatInteraction.peerId, reportChatSpam: false) |> deliverOnMainQueue
                                 |> mapToSignal { _ in
                                     return context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() } |> mapToSignal { _ in
                                         return .complete()
                                     }
                                 }
                             } else {
-                                return removePeerChat(account: context.account, peerId: peer.id, reportChatSpam: true)
+                                return removePeerChat(account: context.account, peerId: strongSelf.chatInteraction.peerId, reportChatSpam: true)
                             }
                         }
                         return .complete()
@@ -3600,7 +3600,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
  
         
         if let peer = chatInteraction.peer {
-            if peer.isRestrictedChannel, let reason = peer.restrictionText {
+            if peer.isRestrictedChannel(context.contentSettings), let reason = peer.restrictionText {
                 alert(for: context.window, info: reason, completion: { [weak self] in
                     self?.dismiss()
                 })

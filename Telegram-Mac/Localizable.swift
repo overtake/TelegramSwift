@@ -4203,7 +4203,7 @@ internal final class L10n {
   internal static var privacyAndSecurityClearCloudDrafts: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDrafts") }
   /// CHATS
   internal static var privacyAndSecurityClearCloudDraftsHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDraftsHeader") }
-  /// Display sensitive media in public channels on all your Telegram devices
+  /// Display sensitive media in public channels on all your Telegram devices.
   internal static var privacyAndSecuritySensitiveDesc: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveDesc") }
   /// SENSITIVE CONTENT
   internal static var privacyAndSecuritySensitiveHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveHeader") }
@@ -5159,17 +5159,15 @@ internal final class L10n {
   internal static var settingsSearchSynonymsSupport: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Support") }
   /// Apple Watch
   internal static var settingsSearchSynonymsWatch: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Watch") }
-  /// Animations
-  internal static var settingsSearchSynonymsAppearanceAnimations: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.Animations") }
   ///  
   internal static var settingsSearchSynonymsAppearanceAutoNightTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.AutoNightTheme") }
   /// Wallpaper
   internal static var settingsSearchSynonymsAppearanceChatBackground: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground") }
+  /// bubbles\nlist
+  internal static var settingsSearchSynonymsAppearanceChatMode: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatMode") }
   ///  
   internal static var settingsSearchSynonymsAppearanceColorTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ColorTheme") }
-  ///  
-  internal static var settingsSearchSynonymsAppearanceLargeEmoji: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.LargeEmoji") }
-  ///  
+  /// font
   internal static var settingsSearchSynonymsAppearanceTextSize: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.TextSize") }
   ///  
   internal static var settingsSearchSynonymsAppearanceTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.Title") }

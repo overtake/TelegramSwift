@@ -17,17 +17,29 @@ import SyncCore
 enum ThemeSettingsEntryTag: ItemListItemTag {
     case fontSize
     case theme
-    case tint
+    case autoNight
+    case chatMode
     case accentColor
-    case icon
-    case largeEmoji
-    case animations
-    
     func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? ThemeSettingsEntryTag, self == other {
             return true
         } else {
             return false
+        }
+    }
+    
+    var stableId: InputDataEntryId {
+        switch self {
+        case .fontSize:
+            return .custom(_id_theme_text_size)
+        case .theme:
+            return .custom(_id_theme_list)
+        case .autoNight:
+            return .general(_id_theme_auto_night)
+        case .chatMode:
+            return .general(_id_theme_chat_mode)
+        case .accentColor:
+            return .custom(_id_theme_accent_list)
         }
     }
 }
@@ -208,7 +220,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
 }
 
 func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeSettingsEntryTag? = nil) -> InputDataController {
-
+    
     let applyCloudThemeDisposable = MetaDisposable()
     let updateDisposable = MetaDisposable()
     
@@ -336,7 +348,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     } |> deliverOnMainQueue
     
     
-    return InputDataController(dataSignal: signal, title: L10n.telegramAppearanceViewController, removeAfterDisappear:false, identifier: "app_appearance", customRightButton: { controller in
+    let controller = InputDataController(dataSignal: signal, title: L10n.telegramAppearanceViewController, removeAfterDisappear:false, identifier: "app_appearance", customRightButton: { controller in
         
         let view = ImageBarView(controller: controller, theme.icons.chatActions)
         
@@ -361,4 +373,12 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         return view
         
     })
+    
+    controller.didLoaded = { controller, _ in
+        if let focusOnItemTag = focusOnItemTag {
+            controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
+        }
+    }
+    
+    return controller
 }

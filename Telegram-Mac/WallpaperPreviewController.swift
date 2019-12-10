@@ -1347,7 +1347,7 @@ class WallpaperPreviewController: ModalViewController {
         
         _ = showModalProgress(signal: signal, for: context.window).start(next: { wallpaper in
             _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
+                return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withUpdatedBubbled(true)
             }) |> deliverOnMainQueue).start(completed: {
                 var stats:[Signal<Void, NoError>] = []
                 switch self.source {

@@ -15,21 +15,31 @@ import SyncCore
 
 enum NotificationsAndSoundsEntryTag: ItemListItemTag {
     case allAccounts
-    case messageAlerts
     case messagePreviews
-    case groupAlerts
-    case groupPreviews
-    case channelAlerts
-    case channelPreviews
-    case inAppSounds
-    case inAppVibrate
-    case inAppPreviews
-    case displayNamesOnLockscreen
     case includePublicGroups
     case includeChannels
     case unreadCountCategory
     case joinedNotifications
     case reset
+    
+    var stableId: InputDataEntryId {
+        switch self {
+        case .allAccounts:
+            return .general(_id_all_accounts)
+        case .messagePreviews:
+            return .general(_id_message_preview)
+        case .includePublicGroups:
+            return .general(_id_include_public_group)
+        case .includeChannels:
+            return .general(_id_include_channels)
+        case .unreadCountCategory:
+            return .general(_id_count_unred_messages)
+        case .joinedNotifications:
+            return .general(_id_new_contacts)
+        case .reset:
+            return .general(_id_reset)
+        }
+    }
     
     func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? NotificationsAndSoundsEntryTag, self == other {
@@ -215,8 +225,6 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
 }
 
 func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag: NotificationsAndSoundsEntryTag? = nil) -> ViewController {
-
-    
     let arguments = NotificationArguments(resetAllNotifications: {
         confirm(for: context.window, header: L10n.notificationSettingsConfirmReset, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
             _ = resetPeerNotificationSettings(network: context.account.network).start()
@@ -277,6 +285,14 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     }
 
     
-    return InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: L10n.telegramNotificationSettingsViewController, hasDone: false, identifier: "notification-settings")
+    let controller = InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: L10n.telegramNotificationSettingsViewController, hasDone: false, identifier: "notification-settings")
     
+    
+    controller.didLoaded = { controller, _ in
+        if let focusOnItemTag = focusOnItemTag {
+            controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
+        }
+    }
+    
+    return controller
 }
