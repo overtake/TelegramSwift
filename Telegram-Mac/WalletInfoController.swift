@@ -390,8 +390,8 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
     
     
     
-    controller.didLoaded = { [weak controller] _ in
-        controller?.tableView.setScrollHandler { position in
+    controller.didLoaded = { controller, _ in
+        controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
                 let lastTransactionId: WalletTransactionId? = stateValue.with { state in
@@ -412,7 +412,7 @@ func WalletInfoController(context: AccountContext, tonContext: TonContext, walle
                 break
             }
         }
-        controller?.tableView.set(stickClass: WalletTransactionDateStickItem.self, handler: { item in
+        controller.tableView.set(stickClass: WalletTransactionDateStickItem.self, handler: { item in
 
         })
     }

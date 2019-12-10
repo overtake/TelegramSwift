@@ -23,6 +23,10 @@ struct RevealAction {
     
 }
 
+public class RowAnimateView: View {
+    public var stableId:AnyHashable?
+}
+
 public final class RevealTableItemController : ViewController  {
     public let item: TableRowItem
     public init(item: TableRowItem)  {
@@ -2726,11 +2730,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             var applied = false
             let scrollListener = TableScrollListener({ [weak self, weak item] position in
-                if let item = item, !applied, let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
-                    applied = true
-                    if focus.focus {
-                        view.focusAnimation(innerId)
-                        focus.action?(view.interactableView)
+                if let item = item, !applied {
+                    if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
+                        applied = true
+                        if focus.focus {
+                            view.focusAnimation(innerId)
+                            focus.action?(view.interactableView)
+                        }
                     }
                 }
             })

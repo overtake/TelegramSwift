@@ -24,6 +24,12 @@ enum EditSettingsEntryTag: ItemListItemTag {
             return false
         }
     }
+    var stableId: InputDataEntryId {
+        switch self {
+        case .bio:
+            return .input(_id_about)
+        }
+    }
 }
 
 
@@ -224,6 +230,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
 
 
 func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSettingsEntryTag? = nil, f: @escaping((ViewController)) -> Void) -> Void {
+    
     let state: Promise<EditInfoState> = Promise()
     let stateValue: Atomic<EditInfoState> = Atomic(value: EditInfoState())
     let actionsDisposable = DisposableSet()
@@ -321,7 +328,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     })
     
-    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.editAccountTitle, validateData: { data -> InputDataValidation in
+    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.editAccountTitle, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -354,7 +361,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                     updateState { $0 }
                 }))
             }
-        })
+            })
     }, updateDatas: { data in
         updateState { current in
             return current.withUpdatedAbout(data[_id_about]?.stringValue ?? "")
@@ -372,5 +379,13 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 f(.disabled(L10n.navigationDone))
             }
         }
-    }, removeAfterDisappear: false, identifier: "account"))
+    }, removeAfterDisappear: false, identifier: "account")
+    
+    controller.didLoaded = { controller, _ in
+        if let focusOnItemTag = focusOnItemTag {
+            controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
+        }
+    }
+    
+    f(controller)
 }

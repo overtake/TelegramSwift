@@ -133,7 +133,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var hiddemMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
-    private var animatedView: ChatRowAnimateView?
+    private var animatedView: RowAnimateView?
     private var archivedPhoto: LAnimationButton?
     private let containerView: ChatListDraggingContainerView = ChatListDraggingContainerView(frame: NSZeroRect)
     private var expandView: ChatListExpandView?
@@ -241,7 +241,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     override func focusAnimation(_ innerId: AnyHashable?) {
         
         if animatedView == nil {
-            self.animatedView = ChatRowAnimateView(frame:bounds)
+            self.animatedView = RowAnimateView(frame:bounds)
             self.animatedView?.isEventLess = true
             containerView.addSubview(animatedView!)
             animatedView?.backgroundColor = theme.colors.focusAnimationColor

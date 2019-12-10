@@ -72,6 +72,7 @@ enum GeneralInteractedType : Equatable {
     case selectable(Bool)
     case switchable(Bool)
     case context(String)
+    case loading
     case image(CGImage)
     case button(String)
     case search(Bool)

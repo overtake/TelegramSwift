@@ -745,8 +745,6 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
         return .none
     }, afterDisappear: {
         actionsDisposable.dispose()
-    }, didLoaded: { data in
-        
     }, updateDoneValue: { data in
         return { f in
             
@@ -1313,8 +1311,6 @@ func twoStepVerificationPasswordEntryController(network: Network, mode: TwoStepV
         return .none
     }, afterDisappear: {
         actionsDisposable.dispose()
-    }, didLoaded: { data in
-        
     }, updateDoneValue: { data in
         return { f in
             updateState { state in
