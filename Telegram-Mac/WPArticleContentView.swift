@@ -18,6 +18,7 @@ class WPArticleContentView: WPContentView {
     private var durationView:VideoDurationView?
     private var progressIndicator:ProgressIndicator?
     private(set) var imageView:TransformImageView?
+    private(set) var gradientView: BackgroundView?
     private var playIcon:ImageView?
     private let openExternalDisposable:MetaDisposable = MetaDisposable()
     private let loadingStatusDisposable: MetaDisposable = MetaDisposable()
@@ -375,6 +376,7 @@ class WPArticleContentView: WPContentView {
             } else {
                 
                 var removeImageView: Bool = true
+                var removeGradientView: Bool = true
                 if let wallpaper = layout.wallpaper {
                     switch wallpaper {
                     case let .wallpaper(_, _, preview):
@@ -387,6 +389,15 @@ class WPArticleContentView: WPContentView {
                             imageView?.layer?.cornerRadius = .cornerRadius
                             imageView?.background = color
                             removeImageView = false
+                        case let .gradient(top, bottom):
+                            if gradientView == nil {
+                                gradientView = BackgroundView(frame: NSZeroRect)
+                                self.addSubview(gradientView!)
+                            }
+                            gradientView?.layer?.cornerRadius = .cornerRadius
+                            gradientView?.backgroundMode = .gradient(top: top, bottom: bottom)
+                            removeImageView = true
+                            removeGradientView = false
                         default:
                             break
                         }
@@ -397,6 +408,10 @@ class WPArticleContentView: WPContentView {
                 if removeImageView {
                     imageView?.removeFromSuperview()
                     imageView = nil
+                }
+                if removeGradientView {
+                    gradientView?.removeFromSuperview()
+                    gradientView = nil
                 }
                 downloadIndicator?.removeFromSuperview()
                 downloadIndicator = nil
@@ -486,6 +501,13 @@ class WPArticleContentView: WPContentView {
                 if let countAccessoryView = countAccessoryView {
                     countAccessoryView.setFrameOrigin(imageView.frame.width - countAccessoryView.frame.width - 10, 10)
                 }
+            }
+            if let gradientView = gradientView {
+                if let arguments = layout.imageArguments {
+                    gradientView.setFrameSize(arguments.boundingSize)
+                }
+                let origin:NSPoint = NSMakePoint(layout.contentRect.width - gradientView.frame.width, 0)
+                gradientView.setFrameOrigin(origin.x, origin.y)
             }
         }
        

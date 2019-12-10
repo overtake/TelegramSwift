@@ -343,12 +343,15 @@ func execute(inapp:inAppLink) {
         }
     case let .wallpaper(_, context, preview):
         switch preview {
+        case let .gradient(top, bottom):
+            let wallpaper: TelegramWallpaper = .gradient(Int32(top.rgb), Int32(bottom.rgb), WallpaperSettings())
+            showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .color(color):
             let wallpaper: TelegramWallpaper = .color(Int32(color.rgb))
-            showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: mainWindow)
+            showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .slug(slug, settings):
-            _ = showModalProgress(signal: getWallpaper(account: context.account, slug: slug) |> deliverOnMainQueue, for: mainWindow).start(next: { wallpaper in
-                showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper).withUpdatedSettings(settings), source: .link(wallpaper)), for: mainWindow)
+            _ = showModalProgress(signal: getWallpaper(account: context.account, slug: slug) |> deliverOnMainQueue, for: context.window).start(next: { wallpaper in
+                showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper).withUpdatedSettings(settings), source: .link(wallpaper)), for: context.window)
             }, error: { error in
                 switch error {
                 case .generic:
@@ -357,16 +360,16 @@ func execute(inapp:inAppLink) {
             })
         }
     case let .stickerPack(_, reference, context, peerId):
-        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: mainWindow)
+        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
     case let .confirmPhone(_, context, phone, hash):
         _ = showModalProgress(signal: requestCancelAccountResetData(network: context.account.network, hash: hash) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
-            showModal(with: cancelResetAccountController(account: context.account, phone: phone, data: data), for: mainWindow)
+            showModal(with: cancelResetAccountController(account: context.account, phone: phone, data: data), for: context.window)
         }, error: { error in
             switch error {
             case .limitExceeded:
-                alert(for: mainWindow, info: L10n.loginFloodWait)
+                alert(for: context.window, info: L10n.loginFloodWait)
             case .generic:
-                alert(for: mainWindow, info: L10n.unknownError)
+                alert(for: context.window, info: L10n.unknownError)
             }
         })
     case let .socks(_, settings, applyProxy):
@@ -564,6 +567,7 @@ struct inAppSecureIdRequest {
 enum WallpaperPreview {
     case color(NSColor)
     case slug(String, WallpaperSettings)
+    case gradient(NSColor, NSColor)
 }
 
 enum inAppLink {
@@ -715,9 +719,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if !value.isEmpty {
                             let component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
                             if let context = context {
-                                if component.count == 6, component.rangeOfCharacter(from: CharacterSet(charactersIn: "0123456789abcdefABCDEF").inverted) == nil, let color = NSColor(hexString: component) {
+                                if component.count == 6, component.rangeOfCharacter(from: CharacterSet(charactersIn: "0123456789abcdefABCDEF").inverted) == nil, let color = NSColor(hexString: "#\(component)") {
                                     return .wallpaper(link: urlString, context: context, preview: .color(color))
                                 } else {
+                                    
+                                    let components = component.components(separatedBy: "-")
+                                    if components.count == 2, let topColor = NSColor(hexString: "#\(components[0])"), let bottomColor = NSColor(hexString: "#\(components[1])")  {
+                                        return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor))
+                                    }
+
+                                    
                                     let vars = urlVars(with: value)
                                     var blur: Bool = false
                                     var intensity: Int32? = 80
@@ -943,6 +954,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     }
                     if let context = context, let value = vars["color"] {
                         return .wallpaper(link: urlString, context: context, preview: .slug(value, WallpaperSettings()))
+                    } else if let context = context, let component = vars["gradient"] {
+                        let components = component.components(separatedBy: "-")
+                        if components.count == 2, let topColor = NSColor(hexString: "#\(components[0])"), let bottomColor = NSColor(hexString: "#\(components[1])")  {
+                            return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor))
+                        }
                     }
                 case known_scheme[10]:
                     if let username = vars["channel"], let openInfo = openInfo {

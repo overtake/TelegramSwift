@@ -345,7 +345,7 @@ class ChatReportView : Control {
         _ = self.dismiss.sizeToFit()
         
         report.set(handler: { _ in
-            chatInteraction.reportSpamAndClose()
+            chatInteraction.blockContact()
         }, for: .SingleClick)
         
         dismiss.set(handler: { _ in

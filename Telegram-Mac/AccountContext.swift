@@ -213,7 +213,6 @@ final class AccountContext {
     let blockedPeersContext: BlockedPeersContext
     let activeSessionsContext: ActiveSessionsContext
     let walletPasscodeTimeoutContext: WalletPasscodeTimeoutContext
-
     #endif
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
@@ -275,6 +274,12 @@ final class AccountContext {
     }
 
     
+    private let _contentSettings: Atomic<ContentSettings> = Atomic(value: ContentSettings.default)
+    
+    var contentSettings: ContentSettings {
+        return _contentSettings.with { $0 }
+    }
+    
     public let tonContext: StoredTonContext!
     
     public var closeFolderFirst: Bool = false
@@ -296,15 +301,18 @@ final class AccountContext {
         
         
         let limitConfiguration = _limitConfiguration
-        
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
             _ = limitConfiguration.swap(view.values[PreferencesKeys.limitsConfiguration] as? LimitsConfiguration ?? LimitsConfiguration.defaultValue)
         }))
         
         let autoplayMedia = _autoplayMedia
-        
         prefDisposable.add(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]).start(next: { view in
             _ = autoplayMedia.swap(view.values[ApplicationSpecificPreferencesKeys.autoplayMedia] as? AutoplayMediaPreferences ?? AutoplayMediaPreferences.defaultSettings)
+        }))
+        
+        let contentSettings = _contentSettings
+        prefDisposable.add(getContentSettings(postbox: account.postbox).start(next: { settings in
+            _ = contentSettings.swap(settings)
         }))
         
         
