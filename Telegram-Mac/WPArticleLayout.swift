@@ -116,6 +116,8 @@ class WPArticleLayout: WPLayout {
                 switch preview {
                 case .color:
                     imageSize = NSMakeSize(150, 150)
+                case .gradient:
+                    imageSize = NSMakeSize(200, 200)
                 default:
                     break
                 }
@@ -186,6 +188,8 @@ class WPArticleLayout: WPLayout {
                             emptyColor = .color(NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity))
                         }
                     case .color:
+                        isColor = true
+                    case .gradient:
                         isColor = true
                     }
                 default:

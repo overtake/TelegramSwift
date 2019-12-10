@@ -978,16 +978,16 @@ extension Peer {
         return self is TelegramGroup
     }
     
-    var isRestrictedChannel: Bool {
+    func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
         if let peer = self as? TelegramChannel {
             if let restrictionInfo = peer.restrictionInfo {
-                #if APP_STORE
                 for rule in restrictionInfo.rules {
+                    #if APP_STORE
                     if rule.platform == "ios" || rule.platform == "all" {
-                        return true
+                        return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason)
                     }
+                    #endif
                 }
-                #endif
             }
         }
         return false
@@ -998,7 +998,7 @@ extension Peer {
             if let restrictionInfo = peer.restrictionInfo {
                 for rule in restrictionInfo.rules {
                     if rule.platform == "ios" || rule.platform == "all" {
-                        return rule.reason
+                        return rule.text
                     }
                 }
             }

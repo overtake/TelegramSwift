@@ -73,11 +73,15 @@ class ChatEmptyPeerItem: TableRowItem {
                 if let restriction = chatInteraction.presentation.restrictionInfo {
                     var hasRule: Bool = false
                     for rule in restriction.rules {
+                        #if APP_STORE
                         if rule.platform == "ios" || rule.platform == "all" {
-                            _ = attr.append(string: rule.reason, color: theme.colors.grayText, font: .medium(.text))
-                            hasRule = true
-                            break
+                            if !chatInteraction.context.contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
+                                _ = attr.append(string: rule.text, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                                hasRule = true
+                                break
+                            }
                         }
+                        #endif
                     }
                     if !hasRule {
                         _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))

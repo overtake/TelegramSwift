@@ -13,6 +13,9 @@ import Foundation
 
 open class TableRowView: NSTableRowView, CALayerDelegate {
     
+    private var animatedView: RowAnimateView?
+
+    
     open private(set) weak var item:TableRowItem?
     private let menuDisposable = MetaDisposable()
     // var selected:Bool?
@@ -366,6 +369,34 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open func focusAnimation(_ innerId: AnyHashable?) {
         
+        if animatedView == nil {
+            self.animatedView = RowAnimateView(frame: bounds)
+            self.animatedView?.isEventLess = true
+            self.addSubview(animatedView!)
+            animatedView?.backgroundColor = presentation.colors.focusAnimationColor
+            animatedView?.layer?.opacity = 0
+            
+        }
+        animatedView?.stableId = item?.stableId
+        
+        
+        let animation: CABasicAnimation = makeSpringAnimation("opacity")
+        
+        animation.fromValue = animatedView?.layer?.presentation()?.opacity ?? 0
+        animation.toValue = 0.5
+        animation.autoreverses = true
+        animation.isRemovedOnCompletion = true
+        animation.fillMode = CAMediaTimingFillMode.forwards
+        
+        animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
+            if completed {
+                self?.animatedView?.removeFromSuperview()
+                self?.animatedView = nil
+            }
+        })
+        animation.isAdditive = false
+        
+        animatedView?.layer?.add(animation, forKey: "opacity")
     }
     
     open var interactableView: NSView {

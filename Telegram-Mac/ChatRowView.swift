@@ -13,9 +13,7 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 
-class ChatRowAnimateView: View {
-    var stableId:AnyHashable?
-}
+
 
 class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDelegate, RevealTableView {
     
@@ -44,7 +42,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     let rightView:ChatRightView = ChatRightView(frame:NSZeroRect)
     private(set) var selectingView:SelectingControl?
     private var mouseDragged: Bool = false
-    private var animatedView:ChatRowAnimateView?
+    private var animatedView:RowAnimateView?
     
     private var forwardAccessory: ChatBubbleAccessoryForward? = nil
     private var viaAccessory: ChatBubbleViaAccessory? = nil
@@ -973,7 +971,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func focusAnimation(_ innerId: AnyHashable?) {
         
         if animatedView == nil {
-            self.animatedView = ChatRowAnimateView(frame:bounds)
+            self.animatedView = RowAnimateView(frame:bounds)
             self.animatedView?.isEventLess = true
             rowView.addSubview(animatedView!)
             animatedView?.backgroundColor = theme.colors.focusAnimationColor
@@ -1000,21 +998,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         animation.isAdditive = false
         
         animatedView?.layer?.add(animation, forKey: "opacity")
-        
-        
-        
-//        animatedView?.change(opacity: 0.5, animated: true, false, removeOnCompletion: false, duration: 0.5, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self] completed in
-//            if completed {
-//                self?.animatedView?.change(opacity: 0, animated: true, false, removeOnCompletion: true, duration: 1.5, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self] completed in
-//                    if completed {
-//                        self?.animatedView?.removeFromSuperview()
-//                        self?.animatedView = nil
-//                    }
-//                })
-//            }
-//        })
-     
-        
     }
     
     func canDropSelection(in location: NSPoint) -> Bool {

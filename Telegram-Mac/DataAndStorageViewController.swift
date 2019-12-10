@@ -18,14 +18,22 @@ enum DataAndStorageEntryTag : ItemListItemTag {
     case automaticDownloadReset
     case autoplayGifs
     case autoplayVideos
-    case saveEditedPhotos
-    case downloadInBackground
     
     func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? DataAndStorageEntryTag, self == other {
             return true
         } else {
             return false
+        }
+    }
+    var stableId: Int32 {
+        switch self {
+        case .automaticDownloadReset:
+            return 10
+        case .autoplayGifs:
+            return 13
+        case .autoplayVideos:
+            return 14
         }
     }
 }
@@ -457,9 +465,10 @@ private func prepareTransition(left:[AppearanceWrapperEntry<DataAndStorageEntry>
 }
 
 class DataAndStorageViewController: TableViewController {
-
-    
+    private let disposable = MetaDisposable()
+    private var focusOnItemTag: DataAndStorageEntryTag?
     init(_ context: AccountContext, focusOnItemTag: DataAndStorageEntryTag? = nil) {
+        self.focusOnItemTag = focusOnItemTag
         super.init(context)
     }
     
@@ -567,18 +576,32 @@ class DataAndStorageViewController: TableViewController {
         let proxy:Signal<ProxySettings, NoError> = proxySettings(accountManager: context.sharedContext.accountManager)
 
         
-        self.genericView.merge(with: combineLatest(queue: .mainQueue(), statePromise.get(), dataAndStorageDataPromise.get(), appearanceSignal, proxy, autoplayMediaSettings(postbox: context.account.postbox))
-            |> map { state, dataAndStorageData, appearance, proxy, autoplayMediaSettings -> TableUpdateTransition in
-                
+        
+        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), dataAndStorageDataPromise.get(), appearanceSignal, proxy, autoplayMediaSettings(postbox: context.account.postbox))
+        |> map { state, dataAndStorageData, appearance, proxy, autoplayMediaSettings -> TableUpdateTransition in
             let entries = dataAndStorageControllerEntries(state: state, data: dataAndStorageData, proxy: proxy, autoplayMedia: autoplayMediaSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
-
         } |> beforeNext { [weak self] _ in
             self?.readyOnce()
         } |> afterDisposed {
-                actionsDisposable.dispose()
-        })
+            actionsDisposable.dispose()
+        } |> deliverOnMainQueue
         
+        
+        
+        self.disposable.set(signal.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+            self?.readyOnce()
+            if let focusOnItemTag = self?.focusOnItemTag {
+                self?.genericView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
+                self?.focusOnItemTag = nil
+            }
+        }))
+        
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     override func getRightBarViewOnce() -> BarView {

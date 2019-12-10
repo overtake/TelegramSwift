@@ -234,6 +234,15 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return MessageIndex.absoluteUpperBound()
         }
     }
+    
+    func withUpdatedItemType(_ itemType: ChatItemType) -> ChatHistoryEntry {
+        switch self {
+        case let .MessageEntry(values):
+            return .MessageEntry(values.0, values.1, values.2, values.3, itemType, values.5, values.6)
+        default:
+            return self
+        }
+    }
 
 }
 
@@ -521,10 +530,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         itemType = .Full(rank: rank)
                     } else {
                         var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
-                        for attr in message.attributes {
+                        attrsLoop: for attr in message.attributes {
                             if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) && !(attr is AutoremoveTimeoutMessageAttribute) {
                                 canShort = false
-                                break
+                                break attrsLoop
                             }
                         }
                         itemType = !canShort ? .Full(rank: rank) : .Short
@@ -561,15 +570,12 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     if prev.message.forwardInfo != nil, message.timestamp - prev.message.timestamp < simpleDif  {
                         fwdType = .Inside
                         if let next = next  {
-                            
                             if message.author?.id != next.message.author?.id || next.message.timestamp - message.timestamp > simpleDif || next.message.forwardInfo == nil {
                                 fwdType = .Bottom
                             }
-                            
                         } else {
                             fwdType = .Bottom
                         }
-                        
                     } else {
                         fwdType = .ShortHeader
                     }
@@ -609,12 +615,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, data)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
-            
             if groupInfo == nil {
                 groupInfo = key
-                groupedPhotos.append(entry)
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
             } else if groupInfo == key {
-                groupedPhotos.append(entry)
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
             } else {
                 if groupedPhotos.count > 0 {
                     if let groupInfo = groupInfo {
@@ -624,7 +629,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
                 
                 groupInfo = key
-                groupedPhotos.append(entry)
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
             }
         } else {
             entries.append(entry)

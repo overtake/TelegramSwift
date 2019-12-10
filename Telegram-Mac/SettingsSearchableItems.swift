@@ -594,6 +594,9 @@ private func appearanceSearchableItems(context: AccountContext) -> [SettingsSear
         SettingsSearchableItem(id: .appearance(6), title: L10n.appearanceSettingsColorThemeHeader, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceColorTheme), icon: icon, breadcrumbs: [L10n.accountSettingsTheme], present: { context, _, present in
             presentAppearanceSettings(context, present, .accentColor)
         }),
+        SettingsSearchableItem(id: .appearance(6), title: L10n.appearanceSettingsChatViewHeader, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceChatMode), icon: icon, breadcrumbs: [L10n.accountSettingsTheme], present: { context, _, present in
+            presentAppearanceSettings(context, present, .chatMode)
+        }),
     ]
 }
 

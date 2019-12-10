@@ -353,7 +353,6 @@ class ChatRowItem: TableRowItem {
     }
     
     var forwardNameInset:NSPoint {
-        
         var top:CGFloat = forwardHeaderInset.y
         
         if let header = forwardHeader, !isBubbled {
