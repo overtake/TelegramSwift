@@ -3781,6 +3781,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
         
         
+        #if BETA || ALPHA || DEBUG
+        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+            if let `self` = self {
+                addAudioToSticker(context: self.context)
+            }
+            return .invoked
+        }, with: self, for: .Y, priority: .medium, modifierFlags: [.command, .shift])
+        #endif
+        
         self.context.window.add(swipe: { [weak self] direction -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window, self.chatInteraction.presentation.state == .normal else {return .failed}
             let swipeState: SwipeState?
