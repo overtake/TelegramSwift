@@ -282,9 +282,7 @@ private final class PlayerRenderer {
         } else {
             data = self.animation.compressed
         }
-        
         if let data = data, !data.isEmpty {
-            
             if let postbox = self.animation.postbox, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String : Any] {
                 if let soundEffect = json["soundEffect"] as? [String : Any] {
                     if let base64String = soundEffect["data"] as? String {
@@ -294,7 +292,6 @@ private final class PlayerRenderer {
                     }
                 }
             }
-            
             let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
             if let json = String(data: modified, encoding: .utf8) {
                 if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
