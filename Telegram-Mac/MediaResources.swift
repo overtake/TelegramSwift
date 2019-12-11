@@ -211,6 +211,60 @@ public final class LocalFileVideoMediaResource: TelegramMediaResource {
     
 }
 
+public struct LottieSoundMediaResourceId: MediaResourceId {
+    public let randomId: Int64
+    
+    public var uniqueId: String {
+        return "lottie-sound-\(self.randomId)"
+    }
+    
+    public var hashValue: Int {
+        return self.randomId.hashValue
+    }
+    
+    public func isEqual(to: MediaResourceId) -> Bool {
+        if let to = to as? LottieSoundMediaResourceId {
+            return self.randomId == to.randomId
+        } else {
+            return false
+        }
+    }
+}
+
+public final class LottieSoundMediaResource: TelegramMediaResource {
+    
+    public func isEqual(to: MediaResource) -> Bool {
+        if let to = to as? LottieSoundMediaResource {
+            return self.randomId == to.randomId && self.data == to.data
+        } else {
+            return false
+        }
+    }
+    
+    public let randomId: Int64
+    public let data: Data
+    
+    public init(randomId: Int64, data: Data) {
+        self.randomId = randomId
+        self.data = data
+    }
+    
+    public required init(decoder: PostboxDecoder) {
+        self.randomId = decoder.decodeInt64ForKey("i", orElse: 0)
+        self.data = decoder.decodeDataForKey("d") ?? Data()
+    }
+    
+    public func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeInt64(self.randomId, forKey: "i")
+        encoder.encodeData(self.data, forKey: "d")
+    }
+    
+    public var id: MediaResourceId {
+        return LottieSoundMediaResourceId(randomId: self.randomId)
+    }
+    
+}
+
 
 
 public struct LocalFileArchiveMediaResourceId: MediaResourceId {

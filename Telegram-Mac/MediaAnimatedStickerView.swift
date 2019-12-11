@@ -223,7 +223,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? 30 : 60
                 let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
-                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps)
+                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, postbox: self.context?.account.postbox)
                 self.fetchStatus = .Local
             } else {
                 self?.sticker = nil

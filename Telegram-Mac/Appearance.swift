@@ -14,6 +14,12 @@ import SwiftSignalKit
 import Postbox
 import SyncCore
 
+private func generateLoginQrEmptyCap() -> CGImage {
+    return generateImage(NSMakeSize(60, 60), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+    })!
+}
+
 private func generatePollAddOption(_ color: NSColor) -> CGImage {
     let image = NSImage(named: "Icon_PollAddOption")!.precomposed(color)
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
@@ -1766,7 +1772,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                wallpaper_color_add: { NSImage(named: "Icon_GradientAdd")!.precomposed(palette.grayIcon) },
                                                wallpaper_color_swap: { NSImage(named: "Icon_GradientSwap")!.precomposed(palette.grayIcon) },
                                                login_cap: { NSImage(named: "Icon_LoginCap")!.precomposed(palette.accentIcon) },
-                                               login_qr_cap: { NSImage(named: "Icon_loginQRCap")!.precomposed(palette.accentIcon) }
+                                               login_qr_cap: { NSImage(named: "Icon_loginQRCap")!.precomposed(palette.accentIcon) },
+                                               login_qr_empty_cap: { generateLoginQrEmptyCap() }
     )
 
 }

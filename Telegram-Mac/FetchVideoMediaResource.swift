@@ -159,3 +159,19 @@ func fetchArchiveMediaResource(account: Account, resource: LocalFileArchiveMedia
         }
     }
 }
+
+
+func fetchLottieSoundData(resource: LottieSoundMediaResource) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> {
+    return Signal { subscriber in
+        subscriber.putNext(.reset)
+        let remuxedPath = NSTemporaryDirectory() + "\(arc4random()).mp4"
+        try? resource.data.write(to: URL(fileURLWithPath: remuxedPath))
+        subscriber.putNext(.moveLocalFile(path: remuxedPath))
+        subscriber.putCompletion()
+        
+        
+        return ActionDisposable {
+            
+        }
+    }
+}
