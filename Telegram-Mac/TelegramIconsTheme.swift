@@ -5437,6 +5437,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var login_qr_empty_cap: CGImage {
+      if let image = cached.with({ $0["login_qr_empty_cap"] }) {
+          return image
+      } else {
+          let image = _login_qr_empty_cap()
+          _ = cached.modify { current in 
+              var current = current
+              current["login_qr_empty_cap"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -5856,6 +5869,7 @@ final class TelegramIconsTheme {
   private let _wallpaper_color_swap: ()->CGImage
   private let _login_cap: ()->CGImage
   private let _login_qr_cap: ()->CGImage
+  private let _login_qr_empty_cap: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -6275,7 +6289,8 @@ final class TelegramIconsTheme {
       wallpaper_color_add: @escaping()->CGImage,
       wallpaper_color_swap: @escaping()->CGImage,
       login_cap: @escaping()->CGImage,
-      login_qr_cap: @escaping()->CGImage
+      login_qr_cap: @escaping()->CGImage,
+      login_qr_empty_cap: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6695,11 +6710,6 @@ final class TelegramIconsTheme {
       self._wallpaper_color_swap = wallpaper_color_swap
       self._login_cap = login_cap
       self._login_qr_cap = login_qr_cap
+      self._login_qr_empty_cap = login_qr_empty_cap
   }
-
-  deinit {
-      var bp:Int = 0
-      bp += 1
-  }
-
 }

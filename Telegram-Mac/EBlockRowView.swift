@@ -35,11 +35,11 @@ private class EmojiSegmentView: View {
         return true
     }
     
-    private let item:Atomic<EBlockItem?> = Atomic(value: nil)
+    private var item: EBlockItem?
     
     fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        if let item = item.modify({$0}) {
+        if let item = self.item {
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             var ts:NSPoint = NSMakePoint(17, 29)
             
@@ -58,18 +58,9 @@ private class EmojiSegmentView: View {
     }
     
     
-    var tiled:ETiledLayer = ETiledLayer()
     
-    required override init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        wantsLayer = true
-      //  self.layer?.addSublayer(tiled)
-      //  tiled.frame = self.bounds
-      //  tiled.contentsScale = backingScaleFactor
-      //  tiled.levelsOfDetailBias = Int(backingScaleFactor)
-      //  self.tiled.delegate = self
-        
-        //tiled.shouldRasterize
     }
     
     required init?(coder: NSCoder) {
@@ -78,35 +69,13 @@ private class EmojiSegmentView: View {
     
     override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
-        tiled.contentsScale = backingScaleFactor
-      //  tiled.levelsOfDetailBias = Int(backingScaleFactor)
     }
     
-    override var needsDisplay: Bool {
-        get {
-            return super.needsDisplay
-        }
-        set {
-            super.needsDisplay = true
-        }
-    }
-    
-    override func setNeedsDisplay(_ invalidRect: NSRect) {
-        
-    }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        tiled.frame = bounds
-      //  tiled.tileSize = bounds.size
-    }
     
     func update(with item:EBlockItem?) -> Void {
-        _ = self.item.swap(item)
-        tiled.layoutNextRequest = true
+        self.item = item
         background = theme.colors.background
         self.needsDisplay = true
-        tiled.setNeedsDisplay()
     }
     
 }
@@ -115,8 +84,6 @@ private let xAdd:CGFloat = 41
 private let yAdd:CGFloat = 34
 
 class EBlockRowView: TableRowView {
-    
-   // var tiled:CATiledLayer = CATiledLayer()
     
     var button:Control = Control()
     private var segmentView:EmojiSegmentView = EmojiSegmentView(frame: NSZeroRect)

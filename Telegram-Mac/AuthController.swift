@@ -71,7 +71,7 @@ private final class ExportTokenOptionView : View {
 
 private final class ExportTokenView : View {
     fileprivate let imageView: ImageView = ImageView()
-    
+    fileprivate let logoView = ImageView(frame: NSMakeRect(0, 0, 60, 60))
     private let containerView = View()
     private let titleView = TextView()
     fileprivate let cancelButton = TitleButton()
@@ -86,6 +86,8 @@ private final class ExportTokenView : View {
         thridHelp = ExportTokenOptionView(frame: NSMakeRect(0, 0, frameRect.width, 0))
         super.init(frame: frameRect)
         containerView.addSubview(self.imageView)
+        
+        self.imageView.addSubview(logoView)
         containerView.addSubview(self.titleView)
         containerView.addSubview(firstHelp)
         containerView.addSubview(secondHelp)
@@ -98,6 +100,7 @@ private final class ExportTokenView : View {
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        let theme = theme as! TelegramPresentationTheme
         super.updateLocalizationAndTheme(theme: theme)
         self.backgroundColor = theme.colors.background
         
@@ -113,6 +116,8 @@ private final class ExportTokenView : View {
         cancelButton.set(color: theme.colors.accent, for: .Normal)
         cancelButton.set(text: L10n.loginQRCancel, for: .Normal)
         _ = cancelButton.sizeToFit()
+        logoView.image = theme.icons.login_qr_cap
+        logoView.sizeToFit()
     }
     
     required init?(coder: NSCoder) {
@@ -135,12 +140,13 @@ private final class ExportTokenView : View {
         containerView.center()
         
         imageView.centerX(y: 0)
+        logoView.center()
         titleView.updateWithNewWidth(containerView.frame.width)
-        titleView.centerX(y: imageView.frame.maxY + 20)
-        firstHelp.centerX(y: titleView.frame.maxY + 20)
+        titleView.centerX(y: imageView.frame.maxY + 10)
+        firstHelp.centerX(y: titleView.frame.maxY + 10)
         secondHelp.centerX(y: firstHelp.frame.maxY + 10)
         thridHelp.centerX(y: secondHelp.frame.maxY + 10)
-        cancelButton.centerX(y: thridHelp.frame.maxY + 30)
+        cancelButton.centerX(y: thridHelp.frame.maxY + 20)
         
     }
 }
@@ -326,7 +332,7 @@ class AuthHeaderView : View {
         
         cancelButton.setFrameOrigin(15, 15)
 
-        self.exportTokenView?.setFrameSize(NSMakeSize(300, 420))
+        self.exportTokenView?.setFrameSize(NSMakeSize(300, 500))
         self.exportTokenView?.center()
         
         self.progressView?.center()
@@ -409,9 +415,11 @@ class AuthHeaderView : View {
         
         addSubview(animatedLogoView)
         
+        exportTokenView.logoView.isHidden = true
+        
         let point = NSMakePoint(exportTokenView.frame.midX - 20, exportTokenView.frame.minY + exportTokenView.imageView.frame.height / 2 - 16)
         
-        animatedLogoView.frame = NSMakeRect(point.x, point.y, 40, 40)
+        animatedLogoView.frame = NSMakeRect(point.x, point.y, 60, 60)
         
         exportTokenView.imageView.layer?.animateScaleSpring(from: 1, to: animatedLogoView.frame.width / exportTokenView.imageView.frame.width, duration: 0.4, removeOnCompletion: false, bounce: true)
 
@@ -421,6 +429,7 @@ class AuthHeaderView : View {
         self.logo.isHidden = true
         
         animatedLogoView.layer?.animatePosition(from: animatedLogoView.frame.origin, to: NSMakePoint((round(frame.width / 2) - logo.frame.width / 2), containerView.frame.minY + 20), duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak self] _ in
+            self?.exportTokenView?.logoView.isHidden = false
             self?.animatedLogoView.removeFromSuperview()
             self?.animatedLogoView.layer?.removeAllAnimations()
             self?.logo.isHidden = false
@@ -438,9 +447,12 @@ class AuthHeaderView : View {
             return
         }
         
+        
+        exportTokenView.logoView.isHidden = true
+
         let point = NSMakePoint(frame.width / 2 - logo.frame.width / 2 + 1, containerView.frame.minY + 20)
 
-        animatedLogoView.frame = NSMakeRect(point.x, point.y, 40, 40)
+        animatedLogoView.frame = NSMakeRect(point.x, point.y, 60, 60)
         
         exportTokenView.imageView.layer?.animateScaleSpring(from: animatedLogoView.frame.height / exportTokenView.imageView.frame.width, to: 1, duration: 0.4, removeOnCompletion: false, bounce: true)
         
@@ -450,7 +462,8 @@ class AuthHeaderView : View {
         self.logo.isHidden = true
         
         
-        animatedLogoView.layer?.animatePosition(from: point, to: NSMakePoint(exportTokenView.frame.midX - 20, exportTokenView.frame.minY + exportTokenView.imageView.frame.height / 2 - 16), duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak self] _ in
+        animatedLogoView.layer?.animatePosition(from: point, to: NSMakePoint(exportTokenView.frame.midX - 30, exportTokenView.frame.minY + exportTokenView.imageView.frame.height / 2 - 26), duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak self] _ in
+            self?.exportTokenView?.logoView.isHidden = false
             self?.animatedLogoView.removeFromSuperview()
             self?.logo.isHidden = false
             self?.containerView.isHidden = true
@@ -474,7 +487,7 @@ class AuthHeaderView : View {
             self.logo.change(opacity: 0, animated: animated)
             var firstTime: Bool = false
             if self.exportTokenView == nil {
-                self.exportTokenView = ExportTokenView(frame: NSMakeRect(0, 0, 300, 420))
+                self.exportTokenView = ExportTokenView(frame: NSMakeRect(0, 0, 300, 500))
                 self.addSubview(self.exportTokenView!)
                 self.exportTokenView?.center()
                 
@@ -1052,13 +1065,13 @@ class AuthController : GenericViewController<AuthHeaderView> {
                     tokenString = tokenString.replacingOccurrences(of: "+", with: "-")
                     tokenString = tokenString.replacingOccurrences(of: "/", with: "_")
                     let urlString = "tg://login?token=\(tokenString)"
-                    let _ = (qrCode(string: urlString, color: theme.colors.text, backgroundColor: theme.colors.background, icon: .custom(theme.icons.login_qr_cap))
+                    let _ = (qrCode(string: urlString, color: theme.colors.text, backgroundColor: theme.colors.background, icon: .custom(theme.icons.login_qr_empty_cap))
                         |> deliverOnMainQueue).start(next: { _, generate in
                             guard let strongSelf = self else {
                                 return
                             }
                             
-                            let context = generate(TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(width: 200.0, height: 200.0), boundingSize: CGSize(width: 200.0, height: 200.0), intrinsicInsets: NSEdgeInsets()))
+                            let context = generate(TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(width: 280, height: 280), boundingSize: CGSize(width: 280, height: 280), intrinsicInsets: NSEdgeInsets()))
                             if let image = context?.generateImage() {
                                 strongSelf.qrTokenState = (state: .qr(image), animated: !strongSelf.isLoading.value)
                                 strongSelf.isLoading = (value: false, update: true)

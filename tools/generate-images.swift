@@ -426,6 +426,8 @@ func initialize() -> [String] {
     array.append("login_cap")
     array.append("login_qr_cap")
 
+    array.append("login_qr_empty_cap")
+    
     return array
 }
 
@@ -484,12 +486,12 @@ func generateClass() -> String {
     
     lines.append("  }")
     
-    lines.append("")
-    lines.append("  deinit {")
-    lines.append("      var bp:Int = 0")
-    lines.append("      bp += 1")
-    lines.append("  }")
-    lines.append("")
+//    lines.append("")
+//    lines.append("  deinit {")
+//    lines.append("      var bp:Int = 0")
+//    lines.append("      bp += 1")
+//    lines.append("  }")
+//    lines.append("")
 
     
     lines.append("}")

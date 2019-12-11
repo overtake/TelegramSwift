@@ -355,9 +355,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .option])
         
         #if DEBUG
-//        window.set(handler: { () -> KeyHandlerResult in
-//            return .invoked
-//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            if let `self` = self {
+                addAudioToSticker(context: self.context)
+            }
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
         
         

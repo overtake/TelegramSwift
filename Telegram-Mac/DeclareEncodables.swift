@@ -15,6 +15,7 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(BaseApplicationSettings.self, f: { BaseApplicationSettings(decoder: $0) })
     declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
     declareEncodable(LocalFileGifMediaResource.self, f: { LocalFileGifMediaResource(decoder: $0) })
+    declareEncodable(LottieSoundMediaResource.self, f: { LottieSoundMediaResource(decoder: $0) })
     declareEncodable(LocalFileVideoMediaResource.self, f: { LocalFileVideoMediaResource(decoder: $0) })
     declareEncodable(LocalFileArchiveMediaResource.self, f: { LocalFileArchiveMediaResource(decoder: $0) })
     declareEncodable(RecentUsedEmoji.self, f: { RecentUsedEmoji(decoder: $0) })

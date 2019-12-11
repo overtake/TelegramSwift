@@ -3,6 +3,8 @@ import Postbox
 import RLottie
 import TGUIKit
 import Metal
+import TelegramCore
+import SyncCore
 
 final class RenderAtomic<T> {
     private var lock: pthread_mutex_t
@@ -216,8 +218,36 @@ private final class RendererState  {
     }
 }
 
+private final class LottieSoundEffect {
+    private let player: MediaPlayer
+    let triggerOn: Int32?
+    
+    private(set) var isPlayable: Bool = false
+    
+    init(data: Data, animation: LottieAnimation, postbox: Postbox, triggerOn: Int32?) {
+        
+        
+        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: LottieSoundMediaResource(randomId: Int64(animation.cacheKey.hashValue), data: data)), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true, initialTimebase: nil)
+        self.triggerOn = triggerOn
+    }
+    func play() {
+        if isPlayable {
+            Queue.concurrentDefaultQueue().async { [weak self] in
+                self?.player.play()
+            }
+            isPlayable = false
+        }
+    }
+    
+    func markAsPlayable() -> Void {
+        isPlayable = true
+    }
+}
+
 private let maximum_rendered_frames: Int = 4
 private final class PlayerRenderer {
+    
+    private var soundEffect: LottieSoundEffect?
     
     private(set) var finished: Bool = false
     private let animation: LottieAnimation
@@ -254,6 +284,17 @@ private final class PlayerRenderer {
         }
         
         if let data = data, !data.isEmpty {
+            
+            if let postbox = self.animation.postbox, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String : Any] {
+                if let soundEffect = json["soundEffect"] as? [String : Any] {
+                    if let base64String = soundEffect["data"] as? String {
+                        if let data = Data(base64Encoded: base64String) {
+                            self.soundEffect = LottieSoundEffect(data: data, animation: self.animation, postbox: postbox, triggerOn: soundEffect["triggerOn"] as? Int32)
+                        }
+                    }
+                }
+            }
+            
             let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
             if let json = String(data: modified, encoding: .utf8) {
                 if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
@@ -278,6 +319,10 @@ private final class PlayerRenderer {
                 self.play(lottie)
             }
         }
+    }
+    
+    func playSoundEffect() {
+        self.soundEffect?.markAsPlayable()
     }
     
     private func play(_ player: RLottieBridge) {
@@ -307,7 +352,6 @@ private final class PlayerRenderer {
         
         var framesTask: ThreadPoolTask? = nil
         
-        var releaseState: Bool = false
         let isRendering: Atomic<Bool> = Atomic(value: false)
         
         self.onDispose = {
@@ -353,6 +397,18 @@ private final class PlayerRenderer {
                         if current.frame > 0 {
                             updateState(.playing)
                         }
+                        if let soundEffect = renderer.soundEffect {
+                            if let triggerOn = soundEffect.triggerOn {
+                                if triggerOn == current.frame {
+                                    soundEffect.play()
+                                }
+                            } else {
+                                if current.frame == 0 {
+                                    soundEffect.play()
+                                }
+                            }
+                        }
+                        
                         switch renderer.animation.playPolicy {
                         case .loop:
                             break
@@ -387,18 +443,10 @@ private final class PlayerRenderer {
             }
         }
         
-        
-        
-       // var prerender: Bool = true
-        
         let maximum = Int(initialState.startFrame + initialState.endFrame)
-        
-        
         framesTask = ThreadPoolTask { state in
-            
             _ = isRendering.swap(true)
-            
-            while !releaseState && !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_rendered_frames, maximum) {
+            while !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_rendered_frames, maximum) {
                 
                 let currentFrame = stateValue.with { $0?.currentFrame ?? 0 }
                 
@@ -477,7 +525,11 @@ private final class PlayerContext {
             }
         }
     }
-    
+    func playSoundEffect() {
+        self.rendererRef.with { renderer in
+            renderer.playSoundEffect()
+        }
+    }
 }
 
 
@@ -549,13 +601,17 @@ final class LottieAnimation : Equatable {
     let maximumFps: Int
     let playPolicy: LottiePlayPolicy
     let colors:[LottieColor]
-    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = []) {
+    
+    let postbox: Postbox?
+    
+    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], postbox: Postbox? = nil) {
         self.compressed = compressed
         self.key = key
         self.cache = cachePurpose
         self.maximumFps = maximumFps
         self.playPolicy = playPolicy
         self.colors = colors
+        self.postbox = postbox
     }
     
     var size: NSSize {
@@ -566,10 +622,10 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox)
     }
     func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors)
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox)
     }
     
     var cacheKey: String {
@@ -857,6 +913,8 @@ class LottiePlayerView : NSView {
     func playIfNeeded() {
         if let context = self.context, context.animation.playPolicy == .once {
             context.playAgain()
+        } else {
+            context?.playSoundEffect()
         }
     }
     

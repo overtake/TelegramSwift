@@ -242,8 +242,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         if let file = media as? TelegramMediaFile {
             let dimensions = file.dimensions?.size ?? frame.size
-            self.autoplayVideoView?.view.setFrameSize(dimensions.aspectFitted(frame.size))
-            self.autoplayVideoView?.view.center()
+            let size = dimensions.aspectFitted(frame.size)
+            self.autoplayVideoView?.view.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - size.width) / 2), floorToScreenPixels(backingScaleFactor, (frame.height - size.height) / 2), size.width, size.height)
         }
         
     }
@@ -470,7 +470,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let blurBackground: Bool = true//media is TelegramMediaImage && (parent != nil && parent?.groupingKey == nil)
+            let blurBackground: Bool = (parent != nil && parent?.groupingKey == nil)
             
             let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.fitted(NSMakeSize(320, 320)) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
             
