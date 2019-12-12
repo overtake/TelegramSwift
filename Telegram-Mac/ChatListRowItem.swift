@@ -788,32 +788,32 @@ class ChatListRowItem: TableRowItem {
             }
             
             
-            if let groupNames = circlesSettings?.groupNames {
-                if groupNames.keys.count > 0 {
-                    items.append(ContextSeparatorItem())
-                    
-                    if associatedGroupId != .root {
+            
+            if circlesSettings.groupNames.keys.count > 0 {
+                items.append(ContextSeparatorItem())
+                
+                if associatedGroupId != .root {
+                    items.append(
+                        ContextMenuItem(
+                            "Personal",
+                            handler: { [weak self] in self?.addToCircle(id: .root) }
+                        )
+                    )
+                }
+                
+                for id in circlesSettings.groupNames.keys.sorted(by: { circlesSettings.index[$0]! < circlesSettings.index[$1]! }) {
+                    if id != associatedGroupId {
                         items.append(
                             ContextMenuItem(
-                                L10n.chatListSwipingPersonal,
-                                handler: { [weak self] in self?.addToCircle(id: .root) }
+                                circlesSettings.groupNames[id]!,
+                                handler: { [weak self] in self?.addToCircle(id:id) }
                             )
                         )
                     }
-                    
-                    for id in groupNames.keys {
-                        if id != associatedGroupId {
-                            items.append(
-                                ContextMenuItem(
-                                    groupNames[id]!,
-                                    handler: { [weak self] in self?.addToCircle(id:id) }
-                                )
-                            )
-                        }
-                    }
-                    items.append(ContextSeparatorItem())
                 }
+                items.append(ContextSeparatorItem())
             }
+        
             
             if context.peerId != peer.id, pinnedType != .ad {
                 items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
