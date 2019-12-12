@@ -402,7 +402,7 @@ class ChatListController : PeersListController {
                 }
             }
            
-            if groupId != .root && groupId != PeerGroupId(rawValue: 2) && groupId != Namespaces.PeerGroup.archive {
+            if groupId != .root && groupId != Namespaces.PeerGroup.archive {
                 func isUnread(_ entry: UIChatListEntry) -> Bool{
                     switch entry {
                     case let .chat(entry, _):

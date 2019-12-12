@@ -404,19 +404,28 @@ private func circlesEntries(settings: Circles, arguments: CirclesSettingsArgumen
 
 func CirclesSettingsController(_ context: AccountContext) -> ViewController {
     let arguments = CirclesSettingsArguments.init(toggleDev: {
-        return (Circles.updateSettings(postbox: context.account.postbox) { old in
-            let newValue = Circles.defaultConfig
-            newValue.dev = !old.dev
-            newValue.botId = old.botId
-            newValue.token = old.token
-            newValue.groupNames = old.groupNames
-            newValue.localInclusions = old.localInclusions
-            newValue.remoteInclusions = old.remoteInclusions
-            newValue.index = old.index
-            return newValue
-        } |> mapToSignal {
-            Circles.fetch(postbox: context.account.postbox, userId: context.account.peerId)
-        }).start()
+        let signal = combineLatest(
+            context.sharedContext.accountManager.currentAccountRecord(allocateIfNotExists: false),
+            Circles.getSettings(postbox: context.account.postbox)
+        ) |> map { record, settings in
+            if let (recordId, _) = record {
+                let pathName = accountRecordIdPathName(recordId)
+                let appDelegate = NSApp.delegate as! AppDelegate
+                let rootPath = appDelegate.containerUrl!
+                let path = "\(rootPath)/\(pathName)"
+                
+                try! FileManager.default.removeItem(atPath: path)
+                
+                let appUrl = URL(fileURLWithPath: Bundle.main.resourcePath!)
+                let appPath = appUrl.deletingLastPathComponent().deletingLastPathComponent().absoluteString
+                let task = Process()
+                task.launchPath = "/usr/bin/open"
+                task.arguments = [appPath, "--args", "-circles-env", settings.dev ? "prod" : "dev"]
+                task.launch()
+                exit(0)
+            }
+        } |> deliverOnMainQueue
+        _ = signal.start()
     })
     
     let entriesSignal = Circles.settingsView(postbox: context.account.postbox)

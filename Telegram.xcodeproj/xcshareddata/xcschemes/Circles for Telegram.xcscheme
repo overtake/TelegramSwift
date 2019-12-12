@@ -49,10 +49,6 @@
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
-<<<<<<< HEAD:Telegram.xcodeproj/xcuserdata/telegram.xcuserdatad/xcschemes/AppStore.xcscheme
-=======
-      migratedStopOnEveryIssue = "YES"
->>>>>>> app rename changes:Telegram.xcodeproj/xcshareddata/xcschemes/Circles for Telegram.xcscheme
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable

@@ -700,7 +700,7 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    func menuItemsOrig(in location: NSPoint, circlesSettings: Circles?) -> Signal<[ContextMenuItem], NoError> {
+    func menuItemsOrig(in location: NSPoint, circlesSettings: Circles) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
 
         let context = self.context
