@@ -1,6 +1,6 @@
 [submodule "submodules/libtgvoip"]
 	path = submodules/libtgvoip
-url=git@github.com:telegramdesktop/libtgvoip
+url=https://github.com:telegramdesktop/libtgvoip
 [submodule "submodules/Sparkle"]
 	path = submodules/Sparkle
 url=https://github.com/overtake/Sparkle
@@ -9,7 +9,7 @@ url=https://github.com/overtake/Sparkle
 	url = https://github.com/overtake/Zip
 [submodule "submodules/telegram-ios"]
 	path = submodules/telegram-ios
-url=git@github.com:Shimbo/TelegramSwift.git
+url=https://github.com:Shimbo/TelegramSwift.git
 [submodule "submodules/rlottie"]
 	path = submodules/rlottie
 url=git@github.com:overtake/rlottie.git
