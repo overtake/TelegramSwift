@@ -127,6 +127,19 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     } else if index.pinningIndex == nil {
                         pinnedType = .none
                     }
+                    var gId = groupId
+                    if let inclusion = circlesSettings.inclusions[renderedPeer.peerId], gId != inclusion {
+                        (context.account.postbox.transaction { transaction in
+                            transaction.updatePeerChatListInclusion(
+                                renderedPeer.peerId,
+                                inclusion: .ifHasMessagesOrOneOf(
+                                    groupId: inclusion,
+                                    pinningIndex: nil,
+                                    minTimestamp: nil
+                                )
+                            )
+                            }).start()
+                    }
                     return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, state: state,  activities: activities, associatedGroupId: circlesSettings.inclusions[renderedPeer.peerId] ?? groupId, hasFailed: hasFailed)
                 }
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
