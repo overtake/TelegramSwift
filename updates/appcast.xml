@@ -3,11 +3,19 @@
 <title>Circles for Telegram</title>
 <item>
 <title>0.0.13</title>
-<description>
-<![CDATA[ <h2>github updates</h2> ]]>
+<description><![CDATA[ <h2>github updates</h2> ]]>
 </description>
 <pubDate>Fri, 13 Dec 2019 05:17:30 +0300</pubDate>
 <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
 <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/0.0.13/circles-0.0.13.zip" sparkle:version="181003" sparkle:shortVersionString="0.0.13" length="47444737" type="application/octet-stream"/>
 </item>
+<item>
+<title>0.0.14</title>
+<description><![CDATA[ <h2>chatlist badge on tab control removed</h2> ]]>
+</description>
+<pubDate>Fri, 13 Dec 2019 06:06:32 +0300</pubDate>
+<sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+<enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/0.0.14/circles-0.0.14.zip" sparkle:version="181004" sparkle:shortVersionString="0.0.14" length="47444430" type="application/octet-stream"/>
+</item>
+
 </channel></rss>
