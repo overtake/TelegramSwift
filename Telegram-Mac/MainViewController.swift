@@ -94,7 +94,7 @@ final class UpdateTabView : Control {
         progressView.center()
         imageView.center()
         
-        canDrawSubviewsIntoLayer = true
+        //canDrawSubviewsIntoLayer = true
         
     }
     
@@ -207,8 +207,8 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
                 self?.genericView.shake(beep: false)
             }))
         } else {
-            genericView.setFrameSize(NSMakeSize(parentSize.width, 50))
-            genericView.setFrameOrigin(NSMakePoint(0, layout == .minimisize ? 0 : 50))
+            genericView.setFrameSize(NSMakeSize(parentSize.width-80, 50))
+            genericView.setFrameOrigin(NSMakePoint(80, layout == .minimisize ? 0 : 50))
             genericView.layer?.cornerRadius = 0
             shakeDisposable.set(nil)
         }
@@ -262,9 +262,7 @@ class MainViewController: TelegramViewController {
         let (splice, remainder) = bounds.divided(atDistance: 80, from: .minXEdge)
         circlesController.view.frame = splice
         tabController.view.frame = remainder
-        #if !APP_STORE
         updateController.updateLayout(context.sharedContext.layout, parentSize: size, isChatList: true)
-        #endif
     }
     
     override func loadView() {
