@@ -122,15 +122,9 @@ class StickerPackPanelRowItem: TableRowItem {
                 inner: switch packInfo {
                 case .saved, .recent:
                     if let reference = file.stickerReference {
-                        inner2: switch reference {
-                        case let .id(id, _):
-                            items.append(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
-                                self?.arguments.navigate(ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 0, collectionId: ItemCollectionId.init(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
-                            }))
-                        default:
-                            break inner2
-                        }
-                        
+                        items.append(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
+                            self?.arguments.showPack(reference)
+                        }))
                     }
                 default:
                     break inner

@@ -827,6 +827,7 @@
 		D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */; };
 		D09D9DF4229C289F00378796 /* GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF3229C289F00378796 /* GZip.m */; };
 		D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B6D72922AA65D3008E36FE /* NewContactController.swift */; };
+		D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */; };
 		D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB98E21628C250055B718 /* EditImageModalController.swift */; };
 		D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9942166AF270055B718 /* PeerMediaTouchBar.swift */; };
 		D0BEB998216BD8A70055B718 /* EditImageControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB997216BD8A70055B718 /* EditImageControls.swift */; };
@@ -1917,6 +1918,7 @@
 		D09D9DF2229C289F00378796 /* GZip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GZip.h; sourceTree = "<group>"; };
 		D09D9DF3229C289F00378796 /* GZip.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GZip.m; sourceTree = "<group>"; };
 		D0B6D72922AA65D3008E36FE /* NewContactController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewContactController.swift; sourceTree = "<group>"; };
+		D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannelsController.swift; sourceTree = "<group>"; };
 		D0BEB98E21628C250055B718 /* EditImageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageModalController.swift; sourceTree = "<group>"; };
 		D0BEB9942166AF270055B718 /* PeerMediaTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaTouchBar.swift; sourceTree = "<group>"; };
 		D0BEB997216BD8A70055B718 /* EditImageControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageControls.swift; sourceTree = "<group>"; };
@@ -2500,6 +2502,7 @@
 				9F153D1521F3662700B95D82 /* StoredMessageFromSearchPeer.swift */,
 				D0B6D72922AA65D3008E36FE /* NewContactController.swift */,
 				D00C73B52302C196004B1E2B /* ChatScheduleController.swift */,
+				D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */,
 			);
 			name = chat;
 			sourceTree = "<group>";
@@ -5126,6 +5129,7 @@
 				9FDD78D121C8F0CC00F1B4EF /* ChatPollItem.swift in Sources */,
 				C25F71481E410DEE0046AF4E /* InAppNotificationSettings.swift in Sources */,
 				C250B0311DB78869004E9FBE /* QuickLookPreview.swift in Sources */,
+				D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */,
 				C2DE5D3A1F3CAD990081EC1E /* InstantPageLayout.swift in Sources */,
 				9F153D1621F3662700B95D82 /* StoredMessageFromSearchPeer.swift in Sources */,
 				9F7D422A22240404007B68BB /* AccountContext.swift in Sources */,
@@ -5743,7 +5747,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				ENABLE_HARDENED_RUNTIME = YES;

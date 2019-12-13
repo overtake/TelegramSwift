@@ -2785,6 +2785,8 @@ internal final class L10n {
   }
   /// Sorry, you are a member of too many groups and channels. Please leave some before joining one.
   internal static var joinChannelsTooMuch: String  { return L10n.tr("Localizable", "Join.ChannelsTooMuch") }
+  /// Inactive Chats
+  internal static var joinInactiveChannels: String  { return L10n.tr("Localizable", "Join.InactiveChannels") }
   /// Join
   internal static var joinLinkJoin: String  { return L10n.tr("Localizable", "JoinLink.Join") }
   /// Show All
@@ -5163,7 +5165,7 @@ internal final class L10n {
   internal static var settingsSearchSynonymsAppearanceAutoNightTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.AutoNightTheme") }
   /// Wallpaper
   internal static var settingsSearchSynonymsAppearanceChatBackground: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground") }
-  /// bubbles\nlist
+  /// bubbles
   internal static var settingsSearchSynonymsAppearanceChatMode: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatMode") }
   ///  
   internal static var settingsSearchSynonymsAppearanceColorTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ColorTheme") }

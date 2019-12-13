@@ -604,7 +604,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         default:
             if clickCount <= 1 {
                 item.action()
-                self.focusAnimation(nil)
+             //   self.focusAnimation(nil)
             }
         }
     }
