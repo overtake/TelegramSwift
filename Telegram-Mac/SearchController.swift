@@ -436,6 +436,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private let statePromise:Promise<(SeparatorBlockState,SeparatorBlockState)> = Promise((SeparatorBlockState.short, SeparatorBlockState.short))
     private let disposable:MetaDisposable = MetaDisposable()
     private let pinnedPromise: ValuePromise<[PinnedItemId]> = ValuePromise([], ignoreRepeated: true)
+    
+    private let isRevealed: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    
     var pinnedItems:[PinnedItemId] = [] {
         didSet {
             pinnedPromise.set(pinnedItems)
@@ -461,6 +464,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let searchMessagesState: ValuePromise<SearchMessagesState?> = ValuePromise()
         let searchMessagesStateValue: Atomic<SearchMessagesState?> = Atomic(value: nil)
 
+        let isRevealed = self.isRevealed.get()
         
         let arguments = self.arguments
         let statePromise = self.statePromise.get()
@@ -566,14 +570,36 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?), NoError> = !options.contains(.messages) ? .single(([], false, nil)) : .single(([], true, nil)) |> then(remoteSearch)
                 
-                return combineLatest(foundLocalPeers |> deliverOnPrepareQueue, foundRemotePeers |> deliverOnPrepareQueue, foundRemoteMessages |> deliverOnPrepareQueue)
-                    |> map { localPeers, remotePeers, remoteMessages -> ([ChatListSearchEntry], Bool, SearchMessagesState?) in
+                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed)
+                    |> map { localPeers, remotePeers, remoteMessages, isRevealed -> ([ChatListSearchEntry], Bool, SearchMessagesState?) in
                         
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
-                            entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: .none))
-                            entries += localPeers
-                            entries += remotePeers.0
+                            
+                            let peers = localPeers + remotePeers.0
+
+                            
+                            let state: SeparatorBlockState
+                            if peers.count > 5 && !remoteMessages.0.isEmpty {
+                                if isRevealed {
+                                    state = .all
+                                } else {
+                                    state = .short
+                                }
+                            } else {
+                                state = .none
+                            }
+                            
+                            entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: state))
+                            if !remoteMessages.0.isEmpty {
+                                if !isRevealed {
+                                    entries += peers.prefix(5)
+                                } else {
+                                    entries += peers
+                                }
+                            } else {
+                                entries += peers
+                            }
                         }
                         if !remotePeers.1.isEmpty {
                             entries.append(.separator(text: L10n.searchSeparatorGlobalPeers, index: 10000, state: .none))
@@ -934,16 +960,28 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
             peer = item.peer
         } else if let item = item as? SeparatorRowItem {
-            switch item.state {
-            case .short:
-                statePromise.set(.single((.all, .short)))
-            case .all:
-                statePromise.set(.single((.short, .short)))
-            case .clear:
-                arguments.clearRecent()
-            default:
-                break
+            if item.stableId == AnyHashable(ChatListSearchEntryStableId.separator(0)) {
+                switch item.state {
+                case .short:
+                    self.isRevealed.set(true)
+                case .all:
+                    self.isRevealed.set(false)
+                default:
+                    break
+                }
+            } else {
+                switch item.state {
+                case .short:
+                    statePromise.set(.single((.all, .short)))
+                case .all:
+                    statePromise.set(.single((.short, .short)))
+                case .clear:
+                    arguments.clearRecent()
+                default:
+                    break
+                }
             }
+            
 
             return
         } else if item is PopularPeersRowItem {

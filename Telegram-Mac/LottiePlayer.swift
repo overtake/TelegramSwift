@@ -232,9 +232,7 @@ private final class LottieSoundEffect {
     }
     func play() {
         if isPlayable {
-            Queue.concurrentDefaultQueue().async { [weak self] in
-                self?.player.play()
-            }
+            self.player.play()
             isPlayable = false
         }
     }
@@ -396,7 +394,8 @@ private final class PlayerRenderer {
                         }
                         if let soundEffect = renderer.soundEffect {
                             if let triggerOn = soundEffect.triggerOn {
-                                if triggerOn == current.frame {
+                                let triggers:[Int32] = [triggerOn - 1, triggerOn, triggerOn + 1]
+                                if triggers.contains(current.frame) {
                                     soundEffect.play()
                                 }
                             } else {
