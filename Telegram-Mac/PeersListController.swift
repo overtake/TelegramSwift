@@ -237,7 +237,7 @@ class PeerListContainerView : View {
     
     func searchStateChanged(_ state: SearchFieldState, animated: Bool) {
         self.searchState = state
-        searchView.change(size: NSMakeSize(state == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
+        searchView.change(size: NSMakeSize(state == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (17 + 12)), 30), animated: animated)
         compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
         proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
     }
@@ -285,7 +285,7 @@ class PeerListContainerView : View {
             }
         }
         
-        searchView.setFrameSize(NSMakeSize(searchState == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
+        searchView.setFrameSize(NSMakeSize(searchState == .Focus ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (17 + 12)), 30))
         tableView.setFrameSize(frame.width, frame.height - offset)
         
         searchView.isHidden = frame.width < 200
