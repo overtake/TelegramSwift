@@ -116,7 +116,7 @@ class CirclesRowView: TableRowView {
         addSubview(iconView)
         iconView.layer?.cornerRadius = 10
         
-        iconView.layer?.borderColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1).cgColor
+        //iconView.layer?.borderColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1).cgColor
         //iconView.wantsLayer = true
         titleTextView.isSelectable = false
         titleTextView.isEventLess = true
@@ -128,7 +128,7 @@ class CirclesRowView: TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return NSColor(red: 0x21/255, green: 0x27/255, blue: 0x4d/255, alpha: 1)
+        return theme.colors.grayBackground
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -147,11 +147,9 @@ class CirclesRowView: TableRowView {
             }()
             iconView.image = icon
             if item.isSelected {
-                iconView.layer?.backgroundColor = NSColor(red: 0x1d/255, green: 0xa5/255, blue: 0xe9/255, alpha: 1).cgColor
-                iconView.layer?.borderWidth = 2
+                iconView.layer?.backgroundColor = theme.colors.basicAccent.cgColor
             } else {
-                iconView.layer?.backgroundColor = NSColor(red: 0x7a/255, green: 0x7d/255, blue: 0x94/255, alpha: 1).cgColor
-                iconView.layer?.borderWidth = 0
+                iconView.layer?.backgroundColor = theme.colors.grayIcon.cgColor
             }
             titleTextView.update(item.title)
             
@@ -185,7 +183,7 @@ class CirclesRowView: TableRowView {
 
 class CirclesRowItem: TableRowItem {
     //let groupId: PeerGroupId
-    public let title: TextViewLayout
+    public var title: TextViewLayout!
     public let groupId: PeerGroupId
     public let unread: Int
     public var badgeNode:BadgeNode? = nil
@@ -199,17 +197,27 @@ class CirclesRowItem: TableRowItem {
         self.groupId = groupId
         self._stableId = stableId
         self.unread = unread
+        
+        super.init(initialSize)
+        
+        var textColor = theme.colors.text
+        if !isSelected {
+            textColor = theme.colors.grayIcon
+        } else {
+            textColor = theme.colors.text
+        }
+        
         self.title = TextViewLayout(
             .initialize(
                 string: title,
-                color: .white,
+                color: textColor,
                 font: .normal(.short)
             ),
             constrainedWidth: 70,
             maximumNumberOfLines: 1,
             alignment: .center
         )
-        super.init(initialSize)
+        
         _ = makeSize(70, oldWidth: 0)
         
         if unread > 0 {
@@ -217,7 +225,7 @@ class CirclesRowItem: TableRowItem {
             if unread > 99 {
                 text = "99+"
             }
-            badgeNode = BadgeNode(.initialize(string: text, color: .white, font: .medium(.small)), NSColor(red: 0xeb/255, green: 0x4b/255, blue: 0x44/255, alpha: 1))
+            badgeNode = BadgeNode(.initialize(string: text, color: .white, font: .medium(.small)), theme.chatList.badgeBackgroundColor)
             
         }
     }
@@ -259,7 +267,7 @@ class CirclesListView: View {
         tableView.setFrameOrigin(0,0)
         
         wantsLayer = true
-        layer?.backgroundColor = NSColor(red: 0x21/255, green: 0x27/255, blue: 0x4d/255, alpha: 1).cgColor
+        layer?.backgroundColor = theme.colors.grayBackground.cgColor
         
         tableView.layer?.backgroundColor = .clear
     }
@@ -285,6 +293,8 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         self.chatListNavigationController = chatListNavigationController
         self.tabController = tabController
         super.init(context)
+        
+        backgroundColor = theme.colors.grayBackground
 
     }
     
