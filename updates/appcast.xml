@@ -17,5 +17,14 @@
 <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
 <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/0.0.14/circles-0.0.14.zip" sparkle:version="181004" sparkle:shortVersionString="0.0.14" length="47444430" type="application/octet-stream"/>
 </item>
+<item>
+<title>0.0.15</title>
+<description><![CDATA[ <h2>group members extraction, search input width fix, ui theme colors</h2> ]]>
+</description>
+<pubDate>Sat, 14 Dec 2019 11:03:23 +0300</pubDate>
+<sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+<enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/0.0.15/circles-0.0.15.zip" sparkle:version="181016" sparkle:shortVersionString="0.0.14" length="47477090" type="application/octet-stream"/>
+</item>
+
 
 </channel></rss>
