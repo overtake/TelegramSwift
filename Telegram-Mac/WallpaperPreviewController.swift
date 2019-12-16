@@ -944,7 +944,7 @@ private final class WallpaperPreviewView: View {
             blurCheckbox.isHidden = false
             colorCheckbox.isHidden = true
             patternCheckbox.isHidden = true
-            let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+            let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: CGSize(), intrinsicInsets: NSEdgeInsets())
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
             self.imageView.setSignal(settingsBuiltinWallpaperImage(account: context.account, scale: backingScaleFactor))

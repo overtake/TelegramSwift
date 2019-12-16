@@ -537,7 +537,7 @@ class PhoneCallWindowController {
     
     private func updatePeerUI(_ user:TelegramUser) {
         
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         
 
         if let dimension = user.profileImageRepresentations.last?.dimensions.size {

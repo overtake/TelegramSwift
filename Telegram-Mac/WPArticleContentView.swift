@@ -258,7 +258,7 @@ class WPArticleContentView: WPContentView {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)
                 representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimension), resource: file.resource))
-                image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: arc4random64()), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
+                image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: arc4random64()), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                 
             }
             var updateImageSignal:Signal<ImageDataTransformation, NoError>?

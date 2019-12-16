@@ -38,7 +38,7 @@ class WPMediaContentView: WPContentView {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
                     representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
-                    let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
+                    let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
                 }
