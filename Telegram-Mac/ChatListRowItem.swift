@@ -801,17 +801,19 @@ class ChatListRowItem: TableRowItem {
                     )
                 }
                 
-                for id in circlesSettings.groupNames.keys.sorted(by: { circlesSettings.index[$0]! < circlesSettings.index[$1]! }) {
-                    if id != associatedGroupId {
-                        items.append(
-                            ContextMenuItem(
-                                circlesSettings.groupNames[id]!,
-                                handler: { [weak self] in self?.addToCircle(id:id) }
+                if circlesSettings.groupNames.keys.sorted() == circlesSettings.index.keys.sorted() {
+                    for id in circlesSettings.groupNames.keys.sorted(by: { circlesSettings.index[$0]! < circlesSettings.index[$1]! }) {
+                        if id != associatedGroupId {
+                            items.append(
+                                ContextMenuItem(
+                                    circlesSettings.groupNames[id]!,
+                                    handler: { [weak self] in self?.addToCircle(id:id) }
+                                )
                             )
-                        )
+                        }
                     }
+                    items.append(ContextSeparatorItem())
                 }
-                items.append(ContextSeparatorItem())
             }
         
             

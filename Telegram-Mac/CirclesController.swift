@@ -88,12 +88,14 @@ private func circlesControllerEntries(settings: Circles,
         unread: getUnread(.root, type: type)
     ))
     
-    for key in settings.groupNames.keys.sorted(by: {settings.index[$0]! < settings.index[$1]!})  {
-        entries.append(.group(
-            groupId: key,
-            title: settings.groupNames[key]!,
-            unread: getUnread(key, type: type)
-        ))
+    if settings.groupNames.keys.sorted() == settings.index.keys.sorted() {
+        for key in settings.groupNames.keys.sorted(by: {settings.index[$0]! < settings.index[$1]!})  {
+            entries.append(.group(
+                groupId: key,
+                title: settings.groupNames[key]!,
+                unread: getUnread(key, type: type)
+            ))
+        }
     }
 
     
