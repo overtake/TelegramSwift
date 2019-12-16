@@ -28,6 +28,7 @@
 <item>
 <title>v0.0.16</title>
 <description><![CDATA[ <b>Data consistency bugfix</b> ]]>
+</description>
 <pubDate>Mon, 16 Dec 2019 05:49:47 +0300</pubDate>
 <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
 <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.16/circles-v0.0.16.zip" sparkle:version="181024" sparkle:shortVersionString="v0.0.16" length="47479479" type="application/octet-stream"/>
