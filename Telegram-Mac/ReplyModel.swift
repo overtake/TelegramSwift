@@ -176,7 +176,7 @@ class ReplyModel: ChatAccessoryModel {
                         } else if file.isSticker {
                             updateImageSignal = chatMessageSticker(postbox: self.account.postbox, file: file, small: true, scale: view.backingScaleFactor)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
-                            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+                            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                             updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
                         }
                     }

@@ -299,7 +299,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     deleteControl.centerY(x: item.deleteInset)
                 }
                 if let selectControl = selectControl {
-                    selectControl.centerY(x: containerView.frame.width - selectControl.frame.width)
+                    selectControl.centerY(x: containerView.frame.width - selectControl.frame.width - innerInsets.right)
                 }
                 image.frame = NSMakeRect((item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
                 if let switchView = switchView {

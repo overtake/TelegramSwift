@@ -907,7 +907,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var peerIds:[PeerId] = []
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _):
+                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _):
                                 peerIds.append(renderedPeer.peerId)
                             default:
                                 break
@@ -939,7 +939,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _):
                                 if let main = renderedPeer.peer {
                                     if contains[main.id] == nil {
                                         if share.possibilityPerformTo(main) {

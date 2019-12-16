@@ -170,24 +170,14 @@ class JoinLinkPreviewModalController: ModalViewController {
                     self?.close()
                 }, error: { error in
                     let text: String
-                    let thrid: String?
                     switch error {
                     case .generic:
-                        thrid = nil
                         text = L10n.unknownError
                     case .tooMuchJoined:
-                        text = L10n.joinChannelsTooMuch
-                        thrid = L10n.joinInactiveChannels
+                        showInactiveChannels(context: context)
+                        return
                     }
-                    confirm(for: context.window, information: text, cancelTitle: "", thridTitle: thrid, successHandler: { result in
-                        switch result {
-                        case .thrid:
-                            showInactiveChannels(context: context)
-                        default:
-                            break
-                        }
-                    })
-//                    alert(for: context.window, info: text)
+                    alert(for: context.window, info: text)
                 })
             }
         }, cancelTitle: tr(L10n.modalCancel))

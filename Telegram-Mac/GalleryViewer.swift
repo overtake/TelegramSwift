@@ -435,7 +435,7 @@ class GalleryViewer: NSResponder {
                 }
                 
                 if image == nil {
-                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
+                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                 }
                 
                 _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0), pagerSize))], updated: []))

@@ -416,6 +416,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         guard let superview = superview else {return}
         textView.max_height = Int32(superview.frame.height / 2 + 50)
+        
+        textView.update(true)
     }
     
     override func layout() {

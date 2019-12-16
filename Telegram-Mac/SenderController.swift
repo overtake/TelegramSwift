@@ -284,7 +284,7 @@ class Sender: NSObject {
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                             }
                             
                         } else {

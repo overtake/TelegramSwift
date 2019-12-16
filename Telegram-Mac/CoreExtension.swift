@@ -2477,7 +2477,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil)
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
     }
 }
 

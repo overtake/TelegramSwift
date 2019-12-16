@@ -288,7 +288,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             let size = player.frame.size
             player.layer?.cornerRadius = player.frame.height / 2
             
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: item.file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: item.file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             player.setSignal( chatMessagePhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image), scale: backingScaleFactor))
             let arguments = TransformImageArguments(corners: ImageCorners(radius: 20), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             player.set(arguments: arguments)

@@ -2723,6 +2723,96 @@ internal final class L10n {
   internal static var inAppLinksConfirmOpenExternalHeader: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.Header") }
   /// Open
   internal static var inAppLinksConfirmOpenExternalOK: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.OK") }
+  /// MOST INACTIVE
+  internal static var inactiveChannelsHeader: String  { return L10n.tr("Localizable", "InactiveChannels.Header") }
+  /// %d
+  internal static func inactiveChannelsInactiveMonthCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_countable", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_few", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_many", p1)
+  }
+  /// inactive %d month
+  internal static func inactiveChannelsInactiveMonthOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_one", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_other", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_two", p1)
+  }
+  /// inactive %d month
+  internal static func inactiveChannelsInactiveMonthZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_zero", p1)
+  }
+  /// %d
+  internal static func inactiveChannelsInactiveWeekCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_countable", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_few", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_many", p1)
+  }
+  /// inactive %d week
+  internal static func inactiveChannelsInactiveWeekOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_one", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_other", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_two", p1)
+  }
+  /// inactive %d week
+  internal static func inactiveChannelsInactiveWeekZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_zero", p1)
+  }
+  /// %d
+  internal static func inactiveChannelsInactiveYearCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_countable", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_few", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_many", p1)
+  }
+  /// inactive %d year
+  internal static func inactiveChannelsInactiveYearOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_one", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_other", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_two", p1)
+  }
+  /// inactive %d year
+  internal static func inactiveChannelsInactiveYearZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_zero", p1)
+  }
+  /// Leave
+  internal static var inactiveChannelsOK: String  { return L10n.tr("Localizable", "InactiveChannels.OK") }
+  /// Limit Reached
+  internal static var inactiveChannelsTitle: String  { return L10n.tr("Localizable", "InactiveChannels.Title") }
   /// Select a user or chat to share content via %@
   internal static func inlineModalActionDesc(_ p1: String) -> String {
     return L10n.tr("Localizable", "InlineModalAction.Desc", p1)
@@ -2939,7 +3029,7 @@ internal final class L10n {
   internal static var loginQRCancel: String  { return L10n.tr("Localizable", "Login.QR.Cancel") }
   /// Open Telegram on your phone
   internal static var loginQRHelp1: String  { return L10n.tr("Localizable", "Login.QR.Help1") }
-  /// Go to **Settings** > **Devices** > **Add Device**
+  /// Go to **Settings** > **Devices** > **Scan QR**
   internal static var loginQRHelp2: String  { return L10n.tr("Localizable", "Login.QR.Help2") }
   /// Point your phone at this screen to confirm login
   internal static var loginQRHelp3: String  { return L10n.tr("Localizable", "Login.QR.Help3") }

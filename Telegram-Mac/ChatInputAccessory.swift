@@ -148,7 +148,7 @@ class ChatInputAccessory: Node {
                 progress = indicator
                 view?.addSubview(indicator)
             }
-            indicator.progressColor = theme.colors.accent
+            indicator.progressColor = theme.colors.text
         case let .progress(progress):
             let radial: RadialProgressView
             if let _radial = self.progress as? RadialProgressView {

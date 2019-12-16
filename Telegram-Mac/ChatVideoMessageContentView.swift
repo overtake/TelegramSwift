@@ -128,13 +128,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         removeNotificationListeners()
     }
     
-    override func updateMouse() {
-        super.updateMouse()
-        let signal = Signal<Void, NoError>.single(Void()) |> delay(mouseInside() ? 0.05 : 0.0, queue: .mainQueue())
-        updateMouseDisposable.set(signal.start(completed: { [weak self] in
-            self?.updatePlayerIfNeeded()
-        }))
-    }
     
     override func cancel() {
         fetchDisposable.set(nil)

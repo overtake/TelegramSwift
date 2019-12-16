@@ -513,6 +513,7 @@ class AuthHeaderView : View {
             }
             
         } else {
+            self.containerView.isHidden = false
             if let exportTokenView = self.exportTokenView {
                 if animated {
                     self.exportTokenView = nil
@@ -1087,6 +1088,11 @@ class AuthController : GenericViewController<AuthHeaderView> {
                             }
                             strongSelf.refreshQrToken()
                         }))
+                case .passwordRequested:
+                    strongSelf.genericView.isQrEnabled = false
+                    strongSelf.exportTokenDisposable.set(nil)
+                    strongSelf.tokenEventsDisposable.set(nil)
+                    strongSelf.qrTokenState = (state: nil, animated: true)
                 case let .changeAccountAndRetry(account):
                     strongSelf.exportTokenDisposable.set(nil)
                     strongSelf.account = account
