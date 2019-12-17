@@ -21,7 +21,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.0.15</string>
+	<string>v0.0.17</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -63,10 +63,16 @@
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/Shimbo/TelegramSwift/circles/updates/appcast.xml</string>
 	<key>SUPublicDSAKeyFile</key>
+<<<<<<< HEAD
 	<string>${DSA_PEM_FILE}</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SFCompactRounded-Semibold.otf</string>
 	</array>
+=======
+	<string>VshxSqMMRC72uUfMQSIGE6fyrXEvdYeBznTzuHRN5d8=</string>
+	<key>SUPublicEDKey</key>
+	<string>VshxSqMMRC72uUfMQSIGE6fyrXEvdYeBznTzuHRN5d8=</string>
+>>>>>>> delta updates and release script
 </dict>
 </plist>
