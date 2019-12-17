@@ -281,7 +281,9 @@ class MainViewController: TelegramViewController {
         
         tabController.add(tab: TabItem(image: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), selectedImage: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true), controller: phoneCalls))
         
-        tabController.add(tab: TabItem(image: theme.icons.chatTabIcon, selectedImage: hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected, controller: chatListNavigation))
+        tabController.add(tab: TabHiddenBadgeItem(context, controller: chatListNavigation, image: theme.icons.chatTabIcon, selectedImage: hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected, longHoverHandler: { [weak self] control in
+            self?.showFastChatSettings(control)
+        }))
         
         tabController.add(tab: TabAllBadgeItem(context, image: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), selectedImage: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true), controller: settings, longHoverHandler: { [weak self] control in
             self?.showFastSettings(control)

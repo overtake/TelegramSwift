@@ -79,6 +79,17 @@ private final class AvatarTabContainer : View {
 }
 
 
+class TabHiddenBadgeItem: TabItem {
+    private let context:AccountContext
+    init(_ context: AccountContext, controller:ViewController, image: CGImage, selectedImage: CGImage, longHoverHandler:((Control)->Void)? = nil) {
+        self.context = context
+        super.init(image: image, selectedImage: selectedImage, controller: controller, subNode:GlobalBadgeNode(context.account, sharedContext: context.sharedContext, dockTile: true, view: nil), longHoverHandler: longHoverHandler)
+    }
+    override func withUpdatedImages(_ image: CGImage, _ selectedImage: CGImage) -> TabItem {
+        return TabBadgeItem(context, controller: self.controller, image: image, selectedImage: selectedImage)
+    }
+}
+
 class TabBadgeItem: TabItem {
     private let context:AccountContext
     init(_ context: AccountContext, controller:ViewController, image: CGImage, selectedImage: CGImage, longHoverHandler:((Control)->Void)? = nil) {
