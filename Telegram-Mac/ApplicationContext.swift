@@ -357,7 +357,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             if let `self` = self {
-                showInactiveChannels(context: self.context)
+                showInactiveChannels(context: self.context, source: .join)
             }
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: .command)

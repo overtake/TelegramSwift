@@ -637,18 +637,16 @@ private final class WallpaperPreviewView: View {
         case let .color(color):
             colorPicker.colorPicker.color = NSColor(UInt32(color))
             colorPicker.updateMode(.single(colorPicker.colorPicker.color), animated: false)
-            patternsController.color = colorPicker.colorPicker.color
+            patternsController.color = [colorPicker.colorPicker.color]
         case let .file(_, _, settings, _):
             colorPicker.colorPicker.color = settings.color != nil ? NSColor(UInt32(settings.color!)) :  NSColor(hexString: "#ffffff")!
             colorPicker.updateMode(.single(colorPicker.colorPicker.color), animated: false)
-            patternsController.color = colorPicker.colorPicker.color
         case let .gradient(t, b):
             let top = NSColor(UInt32(t))
             let bottom = NSColor(UInt32(b))
             colorPicker.colorPicker.color = top
             colorPicker.updateMode(.gradient(top: top, bottom: bottom), animated: false)
-            
-            patternsController.color = top.blended(withFraction: 0.5, of: bottom)!
+            patternsController.color = [top, bottom]
 
         default:
             break
@@ -667,17 +665,27 @@ private final class WallpaperPreviewView: View {
                     self.wallpaper = self.wallpaper.withUpdatedSettings(settings.withUpdatedColor(Int32(bitPattern: color.rgb)))
                     self.colorPicker.updateMode(.single(color), animated: true)
                 }
-                self.patternsController.color = color
+                self.patternsController.color = [color]
             case let .gradient(top, bottom):
                 switch self.colorPicker.currentResponder {
                 case .first:
-                    self.wallpaper = .gradient(Int32(bitPattern: color.rgb), Int32(bitPattern: bottom.rgb))
+                    switch self.wallpaper {
+                    case let .file(_, _, settings, _):
+                        self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, color: Int32(color.rgb), bottomColor: Int32(bottom.rgb), intensity: settings.intensity, rotation: settings.rotation))
+                    default:
+                        self.wallpaper = .gradient(Int32(bitPattern: color.rgb), Int32(bitPattern: bottom.rgb))
+                    }
                     self.colorPicker.updateMode(.gradient(top: color, bottom: bottom), animated: true)
-                    self.patternsController.color = color.blended(withFraction: 0.5, of: bottom)!
+                    self.patternsController.color = [color, bottom]
                 case .second:
-                    self.wallpaper = .gradient(Int32(bitPattern: top.rgb), Int32(bitPattern: color.rgb))
+                    switch self.wallpaper {
+                    case let .file(_, _, settings, _):
+                        self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, color: Int32(top.rgb), bottomColor: Int32(color.rgb), intensity: settings.intensity, rotation: settings.rotation))
+                    default:
+                        self.wallpaper = .gradient(Int32(bitPattern: top.rgb), Int32(bitPattern: color.rgb))
+                    }
                     self.colorPicker.updateMode(.gradient(top: top, bottom: color), animated: true)
-                    self.patternsController.color = top.blended(withFraction: 0.5, of: color)!
+                    self.patternsController.color = [top, color]
                 }
             }
            
@@ -687,11 +695,9 @@ private final class WallpaperPreviewView: View {
             guard let `self` = self else {return}
             switch mode {
             case let .single(color):
-                self.wallpaper = .color(Int32(bitPattern: color.rgb))
-                self.patternsController.color = color
+                self.patternsController.color = [color]
             case let .gradient(top, bottom):
-                self.wallpaper = .gradient(Int32(bitPattern: top.rgb), Int32(bitPattern: bottom.rgb))
-                self.patternsController.color = top.blended(withFraction: 0.5, of: bottom)!
+                self.patternsController.color = [top, bottom]
             }
             
             self.colorPicker.updateMode(mode, animated: true)
@@ -706,12 +712,9 @@ private final class WallpaperPreviewView: View {
                 case let .color(color):
                      self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: color, intensity: self.patternsController.intensity))
                 case let .gradient(t, b):
-                    let top = NSColor(UInt32(t))
-                    let bottom = NSColor(UInt32(b))
-                    let middle = top.blended(withFraction: 0.5, of: bottom)!
-                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: Int32(bitPattern: middle.rgb), intensity: self.patternsController.intensity))
+                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: t, bottomColor: b, intensity: self.patternsController.intensity))
                 case let .file(_, _, settings, _):
-                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: settings.color, intensity: self.patternsController.intensity))
+                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: settings.color, bottomColor: settings.bottomColor, intensity: self.patternsController.intensity))
                 default:
                     break
                 }
@@ -720,8 +723,10 @@ private final class WallpaperPreviewView: View {
                 case .color:
                     break
                 case let .file(_, _, settings, _):
-                    if let color = settings.color {
+                    if let color = settings.color, settings.bottomColor == nil {
                         self.wallpaper = Wallpaper.color(color)
+                    } else if let t = settings.color, let b = settings.bottomColor {
+                        self.wallpaper = Wallpaper.gradient(t, b)
                     }
                 default:
                     break
@@ -883,10 +888,7 @@ private final class WallpaperPreviewView: View {
             var wallpaper = self.wallpaper
             switch wallpaper {
             case let .gradient(t, b):
-                let top = NSColor(UInt32(t))
-                let bottom = NSColor(UInt32(b))
-                let middle = top.blended(withFraction: 0.5, of: bottom)!
-                wallpaper = .color(Int32(bitPattern: middle.rgb))
+                wallpaper = .gradient(t, b)
             default:
                 break
             }
@@ -917,16 +919,28 @@ private final class WallpaperPreviewView: View {
         case let .gradient(t, b):
             let top = NSColor(UInt32(t))
             let bottom = NSColor(UInt32(b))
-            let middle = top.blended(withFraction: 0.5, of: bottom)!
             (backgroundView.layer as? CAGradientLayer)?.colors = [top.cgColor, bottom.cgColor]
-            backgroundView.backgroundColor = middle
             backgroundView.isHidden = false
         case .image:
             (backgroundView.layer as? CAGradientLayer)?.colors = nil
             backgroundView.isHidden = true
-        case .file:
-            (backgroundView.layer as? CAGradientLayer)?.colors = nil
-            backgroundView.isHidden = true
+        case let .file(_, _, settings, isPattern):
+            
+            if isPattern {
+                if let color = settings.color, settings.bottomColor == nil {
+                    (backgroundView.layer as? CAGradientLayer)?.colors = nil
+                    backgroundView.backgroundColor = NSColor(UInt32(color))
+                    backgroundView.isHidden = true
+                } else if let t = settings.color, let b = settings.bottomColor {
+                    let top = NSColor(UInt32(t))
+                    let bottom = NSColor(UInt32(b))
+                    (backgroundView.layer as? CAGradientLayer)?.colors = [top, bottom].map { $0.cgColor }
+                    backgroundView.isHidden = false
+                }
+            } else {
+                (backgroundView.layer as? CAGradientLayer)?.colors = nil
+                backgroundView.isHidden = true
+            }
         default:
             (backgroundView.layer as? CAGradientLayer)?.colors = nil
             backgroundView.isHidden = true
@@ -965,7 +979,7 @@ private final class WallpaperPreviewView: View {
             self.imageView.isHidden = true
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
-            patternCheckbox.isHidden = true
+            patternCheckbox.isHidden = false
             let top = NSColor(UInt32(t))
             let bottom = NSColor(UInt32(b))
             let middle = top.blended(withFraction: 0.5, of: bottom)!
@@ -1003,11 +1017,15 @@ private final class WallpaperPreviewView: View {
             
             if isPattern {
                 var patternIntensity: CGFloat = 0.5
-                if let color = settings.color {
-                    if let intensity = settings.intensity {
-                        patternIntensity = CGFloat(intensity) / 100.0
-                    }
+                if let intensity = settings.intensity {
+                    patternIntensity = CGFloat(intensity) / 100.0
+                }
+                if let color = settings.color, settings.bottomColor == nil {
                     patternColor = .color(NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity))
+                } else if let t = settings.color, let b = settings.bottomColor {
+                    let top = NSColor(UInt32(t))
+                    let bottom = NSColor(UInt32(b))
+                    patternColor = .gradient(top: top.withAlphaComponent(patternIntensity), bottom: bottom.withAlphaComponent(patternIntensity))
                 }
             }
             magnifyView.maxMagnify = !isPattern ? 3.0 : 1.0

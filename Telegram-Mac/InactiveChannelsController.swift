@@ -51,42 +51,24 @@ private func localizedInactiveDate(_ timestamp: Int32) -> String {
 private final class InactiveChannelsArguments  {
     let context: AccountContext
     let select: SelectPeerInteraction
-    let delete: (PeerId)->Void
-    init(context: AccountContext, select: SelectPeerInteraction, delete: @escaping(PeerId)->Void) {
+    init(context: AccountContext, select: SelectPeerInteraction) {
         self.context = context
         self.select = select
-        self.delete = delete
     }
 }
 
 private struct InactiveChannelsState : Equatable {
-    let channels:[InactiveChannel]
-    let processing:Set<PeerId>
-    init(channels: [InactiveChannel], processing: Set<PeerId>) {
+    let channels:[InactiveChannel]?
+    init(channels: [InactiveChannel]?) {
         self.channels = channels
-        self.processing = processing
     }
     func withUpdatedChannels(_ channels: [InactiveChannel]) -> InactiveChannelsState {
-        return InactiveChannelsState(channels: channels, processing: self.processing)
-    }
-    func withRemoveInactiveChannel(_ peerId: PeerId) -> InactiveChannelsState {
-        var channels = self.channels
-        if let index = channels.firstIndex(where: { $0.peer.id == peerId }) {
-            _ = channels.remove(at: index)
-        }
-        var processing = self.processing
-        processing.remove(peerId)
-        return InactiveChannelsState(channels: channels, processing: processing)
-    }
-    func withAddToProcessing(_ peerId: PeerId) -> InactiveChannelsState {
-        var processing = self.processing
-        processing.insert(peerId)
-        return InactiveChannelsState(channels: self.channels, processing: processing)
+        return InactiveChannelsState(channels: channels)
     }
 }
 
 
-private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveChannelsArguments) -> [InputDataEntry] {
+private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveChannelsArguments, source: InactiveSource) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -97,64 +79,72 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.joinChannelsTooMuch, font: .normal(.text))
+        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: source.localizedString, font: .normal(.text), header: GeneralBlockTextHeader(text: source.header, icon: theme.icons.sentFailed))
     }))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
-    index += 1
+  
 //
-    for channel in state.channels {
-        
-        let viewType = bestGeneralViewType(state.channels, for: channel)
-
-        struct _Equatable : Equatable {
-            let channel: InactiveChannel
-            let processing: Bool
-            let viewType: GeneralViewType
+    if let channels = state.channels {
+        if !channels.isEmpty {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
+            index += 1
         }
-        let equatable = _Equatable(channel: channel, processing: state.processing.contains(channel.peer.id), viewType: viewType)
+        for channel in channels {
+            let viewType = bestGeneralViewType(channels, for: channel)
+            struct _Equatable : Equatable {
+                let channel: InactiveChannel
+                let viewType: GeneralViewType
+            }
+            let equatable = _Equatable(channel: channel, viewType: viewType)
+            
+            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_peer_\(channel.peer.id.toInt64())"), equatable: InputDataEquatable(equatable), item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select), viewType: viewType)
+            }))
+            index += 1
+        }
+        if !channels.isEmpty {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
         
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_peer_\(channel.peer.id.toInt64())"), equatable: InputDataEquatable(equatable), item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, stableId: stableId, enabled: !equatable.processing, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select), viewType: viewType)
+    } else {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
+        index += 1
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_loading"), equatable: nil, item: { initialSize, stableId in
+            return LoadingTableItem(initialSize, height: 42, stableId: stableId, viewType: .singleItem)
         }))
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
     }
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
+
     return entries
 }
 
-func InactiveChannelsController(context: AccountContext, inactive: [InactiveChannel]) -> InputDataModalController {
-    let initialState = InactiveChannelsState(channels: inactive, processing: Set())
+func InactiveChannelsController(context: AccountContext, source: InactiveSource) -> InputDataModalController {
+    let initialState = InactiveChannelsState(channels: nil)
     let statePromise = ValuePromise<InactiveChannelsState>(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((InactiveChannelsState) -> InactiveChannelsState) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
     
-
     
-    let disposable = DisposableDict<PeerId>()
+    let disposable = MetaDisposable()
     
-    let arguments = InactiveChannelsArguments(context: context, select: SelectPeerInteraction(), delete: { peerId in
+    disposable.set((inactiveChannelList(network: context.account.network) |> delay(0.5, queue: .mainQueue())).start(next: { channels in
         updateState {
-            $0.withAddToProcessing(peerId)
+            $0.withUpdatedChannels(channels)
         }
-        disposable.set(removePeerChat(account: context.account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: false).start(completed: {
-            updateState {
-                $0.withRemoveInactiveChannel(peerId)
-            }
-        }), forKey: peerId)
-        
-    })
+    }))
+    
+    let arguments = InactiveChannelsArguments(context: context, select: SelectPeerInteraction())
     
     let signal = statePromise.get() |> map { state in
-        return InputDataSignalValue(entries: inactiveEntries(state: state, arguments: arguments))
+        return InputDataSignalValue(entries: inactiveEntries(state: state, arguments: arguments, source: source))
     }
     
     let controller = InputDataController(dataSignal: signal, title: L10n.inactiveChannelsTitle)
@@ -163,23 +153,39 @@ func InactiveChannelsController(context: AccountContext, inactive: [InactiveChan
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.inactiveChannelsOK, accept: {
         close?()
-        let removeSignal = combineLatest(arguments.select.presentation.selected.map { removePeerChat(account: context.account, peerId: $0, reportChatSpam: false)})
-        let peers = arguments.select.presentation.peers.map { $0.value }
-        let signal = context.account.postbox.transaction { transaction in
-            updatePeers(transaction: transaction, peers: peers, update: { _, updated in
-                return updated
-            })
-        } |> mapToSignal { _ in
-             return removeSignal
+        
+        if !arguments.select.presentation.selected.isEmpty {
+            let removeSignal = combineLatest(arguments.select.presentation.selected.map { removePeerChat(account: context.account, peerId: $0, reportChatSpam: false)})
+            let peers = arguments.select.presentation.peers.map { $0.value }
+            let signal = context.account.postbox.transaction { transaction in
+                updatePeers(transaction: transaction, peers: peers, update: { _, updated in
+                    return updated
+                })
+                } |> mapToSignal { _ in
+                    return removeSignal
+            }
+            
+            _ = showModalProgress(signal: signal, for: context.window).start()
         }
         
-        _ = showModalProgress(signal: signal, for: context.window).start()
     }, drawBorder: true, height: 50, singleButton: true)
     
     
     arguments.select.singleUpdater = { [weak modalInteractions] presentation in
         modalInteractions?.updateDone { button in
             button.isEnabled = !presentation.selected.isEmpty
+        }
+    }
+    
+    controller.afterTransaction = { [weak modalInteractions] _ in
+        modalInteractions?.updateDone { button in
+            let state = stateValue.with { $0 }
+            if let channels = state.channels {
+                button.isEnabled = channels.isEmpty || !arguments.select.presentation.selected.isEmpty
+                button.set(text: channels.isEmpty ? L10n.modalOK : L10n.inactiveChannelsOK, for: .Normal)
+            } else {
+                button.isEnabled = false
+            }
         }
     }
     
@@ -195,7 +201,7 @@ func InactiveChannelsController(context: AccountContext, inactive: [InactiveChan
         disposable.dispose()
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(350, 300))
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(400, 300))
     
     close = { [weak modalController] in
         modalController?.close()
@@ -205,10 +211,28 @@ func InactiveChannelsController(context: AccountContext, inactive: [InactiveChan
     
 }
 
+enum InactiveSource {
+    case join
+    case create
+    case upgrade
+    case invite
+    var localizedString: String {
+        switch self {
+        case .join:
+            return L10n.joinChannelsTooMuch
+        case .create:
+            return L10n.createChannelsTooMuch
+        case .upgrade:
+            return L10n.upgradeChannelsTooMuch
+        case .invite:
+            return L10n.inviteChannelsTooMuch
+        }
+    }
+    var header: String {
+        return L10n.inactiveChannelsBlockHeader
+    }
+}
 
-
-func showInactiveChannels(context: AccountContext) {
-    _ = showModalProgress(signal: inactiveChannelList(network: context.account.network), for: context.window).start(next: { inactive in
-        showModal(with: InactiveChannelsController(context: context, inactive: inactive), for: context.window)
-    })
+func showInactiveChannels(context: AccountContext, source: InactiveSource) {
+    showModal(with: InactiveChannelsController(context: context, source: source), for: context.window)
 }

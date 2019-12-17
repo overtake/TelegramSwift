@@ -1991,6 +1991,8 @@ internal final class L10n {
   internal static var crashOnLaunchMessage: String  { return L10n.tr("Localizable", "CrashOnLaunch.Message") }
   /// Log out
   internal static var crashOnLaunchOK: String  { return L10n.tr("Localizable", "CrashOnLaunch.OK") }
+  /// Sorry, you are a member of too many groups and channels. Please leave some before creating a new one.
+  internal static var createChannelsTooMuch: String  { return L10n.tr("Localizable", "Create.ChannelsTooMuch") }
   /// Group Name
   internal static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
   /// Night Mode
@@ -2723,7 +2725,9 @@ internal final class L10n {
   internal static var inAppLinksConfirmOpenExternalHeader: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.Header") }
   /// Open
   internal static var inAppLinksConfirmOpenExternalOK: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.OK") }
-  /// MOST INACTIVE
+  /// Too many groups and channels
+  internal static var inactiveChannelsBlockHeader: String  { return L10n.tr("Localizable", "InactiveChannels.BlockHeader") }
+  /// LEAST ACTIVE
   internal static var inactiveChannelsHeader: String  { return L10n.tr("Localizable", "InactiveChannels.Header") }
   /// %d
   internal static func inactiveChannelsInactiveMonthCountable(_ p1: Int) -> String {
@@ -2873,6 +2877,8 @@ internal final class L10n {
   internal static func instantPageRelatedArticleAuthorAndDateTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "InstantPage.RelatedArticleAuthorAndDateTitle", p1, p2)
   }
+  /// Sorry, the target user is a member of too many groups and channels. Please ask them to leave some first.
+  internal static var inviteChannelsTooMuch: String  { return L10n.tr("Localizable", "Invite.ChannelsTooMuch") }
   /// Sorry, you are a member of too many groups and channels. Please leave some before joining one.
   internal static var joinChannelsTooMuch: String  { return L10n.tr("Localizable", "Join.ChannelsTooMuch") }
   /// Inactive Chats
@@ -6283,6 +6289,8 @@ internal final class L10n {
   internal static func updatedYesterdayAt(_ p1: String) -> String {
     return L10n.tr("Localizable", "Updated.YesterdayAt", p1)
   }
+  /// Sorry, you are a member of too many groups and channels. For technical reasons, you need to leave some first before changing this setting in your groups.
+  internal static var upgradeChannelsTooMuch: String  { return L10n.tr("Localizable", "Upgrade.ChannelsTooMuch") }
   /// %@ is available
   internal static func usernameSettingsAvailable(_ p1: String) -> String {
     return L10n.tr("Localizable", "UsernameSettings.available", p1)

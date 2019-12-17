@@ -734,7 +734,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     var intensity: Int32? = 80
                                     var color: Int32? = nil
                                     
-                                    if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: bgcolor)?.rgb {
+                                    if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: "#\(bgcolor)")?.rgb {
                                         color = Int32(bitPattern: rgb)
                                     }
                                     if let intensityString = vars["intensity"] {
@@ -938,7 +938,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         var intensity: Int32? = 80
                         var color: Int32? = nil
                         
-                        if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: bgcolor)?.rgb {
+                        if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: "#\(bgcolor)")?.rgb {
                             color = Int32(bitPattern: rgb)
                         }
                         if let mode = vars["mode"] {

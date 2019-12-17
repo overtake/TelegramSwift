@@ -99,7 +99,7 @@ public enum TransformImageResizeMode {
 
 public enum TransformImageEmptyColor : Equatable {
     case color(NSColor)
-    case gradient(top: NSColor, bottom: NSColor, intensity: CGFloat)
+    case gradient(top: NSColor, bottom: NSColor)
 }
 
 public struct TransformImageArguments: Equatable {

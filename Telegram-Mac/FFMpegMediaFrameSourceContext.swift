@@ -101,12 +101,15 @@ private func readPacketCallback(userData: UnsafeMutableRawPointer?, buffer: Unsa
                 let semaphore = DispatchSemaphore(value: 0)
                 let _ = context.currentSemaphore.swap(semaphore)
                 var completedRequest = false
+                
                 let disposable = data.start(next: { data in
                     if data.count == readCount {
                         fetchedData = data
                         completedRequest = true
                         semaphore.signal()
                     }
+                }, completed: {
+                    semaphore.signal()
                 })
                 semaphore.wait()
                 let _ = context.currentSemaphore.swap(nil)

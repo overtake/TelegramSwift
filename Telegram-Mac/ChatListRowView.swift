@@ -221,6 +221,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 activitiesModel?.clean()
                 activitiesModel?.view?.removeFromSuperview()
                 activitiesModel = nil
+                hiddemMessage = false
             }
         }
     }

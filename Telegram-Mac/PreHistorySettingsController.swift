@@ -205,36 +205,45 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
                         let signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                             |> map(Optional.init)
-                            |> `catch` { _ -> Signal<PeerId?, NoError> in
-                                return .single(nil)
-                            }
-                            |> mapToSignal { upgradedPeerId -> Signal<PeerId?, NoError> in
+                            |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                 guard let upgradedPeerId = upgradedPeerId else {
                                     return .single(nil)
                                 }
                                 return updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: upgradedPeerId, historyAvailableForNewMembers: value)
-                                    |> `catch` { _ in return .complete() }
-                                    |> mapToSignal { _ -> Signal<PeerId?, NoError> in
+                                    |> mapError { _ in
+                                        return ConvertGroupToSupergroupError.generic
+                                    }
+                                    |> mapToSignal { _ -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                         return .complete()
                                     }
-                                    |> then(.single(upgradedPeerId))
+                                    |> then(.single(upgradedPeerId) |> mapError { ConvertGroupToSupergroupError.generic })
                             }
                             |> deliverOnMainQueue
                         
-                        self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
+                        _ = showModalProgress(signal: signal, for: context.window).start(next: { [weak self] peerId in
+                            self?.onComplete.set(.single(peerId))
+                        }, error: { error in
+                            switch error {
+                            case .tooManyChannels:
+                                showInactiveChannels(context: context, source: .upgrade)
+                            case .generic:
+                                alert(for: context.window, info: L10n.unknownError)
+                            }
+                        })
+                        
                     } else {
                         let signal: Signal<PeerId?, NoError> = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> `catch` { _ in return .complete() } |> map { _ in return nil }
                         
                         if let cachedData = cachedData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId, let peer = peer as? TelegramChannel {
                             confirm(for: context.window, information: L10n.preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
                                 if peer.adminRights == nil || !peer.hasPermission(.pinMessages) {
-                                    alert(for: mainWindow, info: L10n.channelErrorDontHavePermissions)
+                                    alert(for: context.window, info: L10n.channelErrorDontHavePermissions)
                                 } else {
                                     let signal = updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: linkedDiscussionPeerId, groupId: nil)
                                         |> `catch` { _ in return .complete() }
                                         |> map { _ -> PeerId? in return nil }
                                         |> then(signal)
-                                    self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
+                                    self?.onComplete.set(showModalProgress(signal: signal, for: context.window))
                                 }
                                 
                             })

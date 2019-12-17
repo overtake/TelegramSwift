@@ -105,22 +105,52 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                         if isPattern {
                             let image = generateImage(image.size, contextGenerator: { size, ctx in
                                 let imageRect = NSMakeRect(0, 0, size.width, size.height)
-                                var _patternColor: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+                                let colors:[NSColor]
+                                let color: NSColor
+                                var intensity: CGFloat = 0.5
                                 
-                                var patternIntensity: CGFloat = 0.5
-                                if let color = settings.color {
-                                    if let intensity = settings.intensity {
-                                        patternIntensity = CGFloat(intensity) / 100.0
+                                if let combinedColor = settings.color, settings.bottomColor == nil {
+                                    let combinedColor = NSColor(UInt32(combinedColor))
+                                    if let i = settings.intensity {
+                                        intensity = CGFloat(i) / 100.0
                                     }
-                                    _patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
+                                    color = combinedColor.withAlphaComponent(1.0)
+                                    intensity = combinedColor.alpha
+                                    colors = [color]
+                                } else if let t = settings.color, let b = settings.bottomColor {
+                                    let top = NSColor(UInt32(t))
+                                    let bottom = NSColor(UInt32(b))
+                                    color = top.withAlphaComponent(1.0)
+                                    intensity = top.alpha
+                                    colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
+                                } else {
+                                    colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
+                                    color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
                                 }
                                 
-                                let color = _patternColor.withAlphaComponent(1.0)
-                                let intensity = _patternColor.alpha
-                                
                                 ctx.setBlendMode(.copy)
-                                ctx.setFillColor(color.cgColor)
-                                ctx.fill(imageRect)
+                                if colors.count == 1 {
+                                    ctx.setFillColor(color.cgColor)
+                                    ctx.fill(imageRect)
+                                } else {
+                                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                                    
+                                    var locations: [CGFloat] = []
+                                    for i in 0 ..< colors.count {
+                                        locations.append(delta * CGFloat(i))
+                                    }
+                                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                    
+                                    ctx.saveGState()
+                                    ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                                    ctx.rotate(by: CGFloat(0) * CGFloat.pi / -180.0)
+                                    ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                                    
+                                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                                    ctx.restoreGState()
+                                }
                                 
                                 ctx.setBlendMode(.normal)
                                 ctx.interpolationQuality = .high

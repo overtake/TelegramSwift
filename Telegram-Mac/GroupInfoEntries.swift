@@ -391,7 +391,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                                 
                                                 return state.withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
                                             }
-                                        } |> `catch` { _ -> Signal<Void, NoError> in
+                                        } |> `catch` { error -> Signal<Void, NoError> in
                                             updateState { state in
                                                 var temporaryParticipants = state.temporaryParticipants
                                                 for i in 0 ..< temporaryParticipants.count {
@@ -405,12 +405,48 @@ final class GroupInfoArguments : PeerInfoArguments {
                                                 
                                                 return state.withUpdatedTemporaryParticipants(temporaryParticipants).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
                                             }
-                                            
                                             return .complete()
                                     }
                                     
                                 } else if peer.isSupergroup {
-                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: memberIds) |> `catch` { _ in return .complete() }
+                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: memberIds) |> deliverOnMainQueue |> `catch` { error in
+                                        let text: String
+                                        switch error {
+                                        case .limitExceeded:
+                                            text = L10n.channelErrorAddTooMuch
+                                        case .botDoesntSupportGroups:
+                                            text = L10n.channelBotDoesntSupportGroups
+                                        case .tooMuchBots:
+                                            text = L10n.channelTooMuchBots
+                                        case .tooMuchJoined:
+                                            text = L10n.inviteChannelsTooMuch
+                                        case .generic:
+                                            text = L10n.unknownError
+                                        case let .bot(memberId):
+                                            let _ = (context.account.postbox.transaction { transaction in
+                                                return transaction.getPeer(peerId)
+                                                }
+                                                |> deliverOnMainQueue).start(next: { peer in
+                                                    guard let peer = peer as? TelegramChannel else {
+                                                        alert(for: context.window, info: L10n.unknownError)
+                                                        return
+                                                    }
+                                                    if peer.hasPermission(.addAdmins) {
+                                                        confirm(for: context.window, information: L10n.channelAddBotErrorHaveRights, okTitle: L10n.channelAddBotAsAdmin, successHandler: { _ in
+                                                            showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _, f in f() }), for: context.window)
+                                                        })
+                                                    } else {
+                                                        alert(for: context.window, info: L10n.channelAddBotErrorHaveRights)
+                                                    }
+                                                })
+                                            return .complete()
+                                        case .restricted:
+                                            text = L10n.channelErrorAddBlocked
+                                        }
+                                        alert(for: context.window, info: text)
+                                        
+                                        return .complete()
+                                    }
                                 }
                             }
                             

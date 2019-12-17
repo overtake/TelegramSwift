@@ -430,6 +430,8 @@ final class ForwardMessagesObject : ShareObject {
                         if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == peerId {
                             controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds)})})
                         } else {
+                            (navigation.controller as? ChatController)?.chatInteraction.update({ $0.withoutSelectionState() })
+                            
                             var existed: Bool = false
                             navigation.enumerateControllers { controller, _ in
                                 if let controller = controller as? ChatController, controller.chatInteraction.peerId == peerId {

@@ -322,7 +322,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 case .tooMuchBots:
                     text = L10n.channelTooMuchBots
                 case .tooMuchJoined:
-                    text = L10n.channelErrorAddTooMuch
+                    text = L10n.inviteChannelsTooMuch
                 case .generic:
                     text = L10n.unknownError
                 case let .bot(memberId):
