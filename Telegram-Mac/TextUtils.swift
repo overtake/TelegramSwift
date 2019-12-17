@@ -100,7 +100,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
             _ = subAttr.append(string: L10n.chatListSecretChatExKeys, color: theme.chatList.grayTextColor, font: .normal(.text))
             case .active:
                 if message == nil {
-                    let title:String = renderedPeer.chatMainPeer?.compactDisplayTitle ?? L10n.peerDeletedUser
+                    let title:String = renderedPeer.chatMainPeer?.displayTitle ?? L10n.peerDeletedUser
                     switch peer.role {
                     case .creator:
                         _ = subAttr.append(string: L10n.chatListSecretChatJoined(title), color: theme.chatList.grayTextColor, font: .normal(.text))
@@ -138,7 +138,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
             }
             
             if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel {
-                let peerText: NSString = (author.id == account.peerId ? "\(L10n.chatListYou)" + (folder ? ": " : "\n") : author.compactDisplayTitle + (folder ? ": " : "\n")) as NSString
+                let peerText: NSString = (author.id == account.peerId ? "\(L10n.chatListYou)" + (folder ? ": " : "\n") : author.displayTitle + (folder ? ": " : "\n")) as NSString
                 
                 _ = attributedText.append(string: peerText as String, color: theme.chatList.peerTextColor, font: .normal(.text))
                 _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))

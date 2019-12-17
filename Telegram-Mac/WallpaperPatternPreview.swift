@@ -21,6 +21,11 @@ private class WallpaperPatternView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         //addSubview(emptyTextView)
+        
+        self.layer = CAGradientLayer()
+        self.layer?.disableActions()
+
+        
         addSubview(imageView)
         addSubview(checkbox)
         checkbox.image = theme.icons.chatGroupToggleSelected
@@ -38,19 +43,32 @@ private class WallpaperPatternView : Control {
         checkbox.setFrameOrigin(NSMakePoint(frame.width - checkbox.frame.width - 5, 5))
     }
     
-    func update(with pattern: Wallpaper?, isSelected: Bool, account: Account, color: NSColor) {
+    func update(with pattern: Wallpaper?, isSelected: Bool, account: Account, color: [NSColor]) {
         checkbox.isHidden = !isSelected
         self.pattern = pattern
-        backgroundColor = color
+        if color.count == 2 {
+            (self.layer as? CAGradientLayer)?.colors = color.map { $0.cgColor }
+        } else {
+            (self.layer as? CAGradientLayer)?.colors = nil
+        }
+        backgroundColor = color.first!
 
-        let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: color.brightnessAdjustedColor, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: color.first!.brightnessAdjustedColor, font: .normal(.title)))
         layout.measure(width: 80)
         emptyTextView.update(layout)
         
         if let pattern = pattern {
             emptyTextView.isHidden = true
             imageView.isHidden = false
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(400, 400)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: .color(color)))
+            
+            let emptyColor: TransformImageEmptyColor
+            if color.count == 2 {
+                emptyColor = .gradient(top: color.first!, bottom: color.last!)
+            } else {
+                emptyColor = .color(color.first!)
+            }
+            
+            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(400, 400)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor))
             switch pattern {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []
@@ -117,7 +135,7 @@ final class WallpaperPatternPreviewView: View {
         addSubview(borderView)
     }
     
-    func updateColor(_ color: NSColor, account: Account) {
+    func updateColor(_ color: [NSColor], account: Account) {
         self.color = color
         for subview in self.documentView.subviews {
             if let subview = (subview as? WallpaperPatternView) {
@@ -126,7 +144,7 @@ final class WallpaperPatternPreviewView: View {
         }
     }
     
-    fileprivate var color: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+    fileprivate var color: [NSColor] = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
     
     func updateSelected(_ pattern: Wallpaper?) {
         
@@ -189,7 +207,7 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     private let disposable = MetaDisposable()
     private let context: AccountContext
     
-    var color: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5) {
+    var color: [NSColor] = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)] {
         didSet {
             genericView.updateColor(color, account: context.account)
         }

@@ -868,7 +868,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         
         newView.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
-        newView.layer?.animateAlpha(from: newAlphaFrom, to: newAlphaTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        newView.layer?.animateAlpha(from: newAlphaFrom, to: newAlphaTo, duration: duration / 2, timingFunction: timingFunction, removeOnCompletion: false)
         
         
         newView.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)

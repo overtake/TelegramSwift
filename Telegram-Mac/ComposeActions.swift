@@ -61,7 +61,7 @@ func createGroup(with context: AccountContext) {
         case .tooMuchJoined:
             text = L10n.channelErrorAddTooMuch
         }
-        alert(for: mainWindow, info: text)
+        alert(for: context.window, info: text)
     })
 }
 

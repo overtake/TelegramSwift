@@ -13,11 +13,54 @@ import TelegramCore
 import SyncCore
 import Postbox
 
+private let randomColors = [NSColor(rgb: 0xe56cd5), NSColor(rgb: 0xf89440), NSColor(rgb: 0x9986ff), NSColor(rgb: 0x44b3f5), NSColor(rgb: 0x6dc139), NSColor(rgb: 0xff5d5a), NSColor(rgb: 0xf87aad), NSColor(rgb: 0x6e82b3), NSColor(rgb: 0xf5ba21)]
+
+private let venueColors: [String: NSColor] = [
+    "building/medical": NSColor(rgb: 0x43b3f4),
+    "building/gym": NSColor(rgb: 0x43b3f4),
+    "arts_entertainment": NSColor(rgb: 0xe56dd6),
+    "travel/bedandbreakfast": NSColor(rgb: 0x9987ff),
+    "travel/hotel": NSColor(rgb: 0x9987ff),
+    "travel/hostel": NSColor(rgb: 0x9987ff),
+    "travel/resort": NSColor(rgb: 0x9987ff),
+    "building": NSColor(rgb: 0x6e81b2),
+    "education": NSColor(rgb: 0xa57348),
+    "event": NSColor(rgb: 0x959595),
+    "food": NSColor(rgb: 0xf7943f),
+    "education/cafeteria": NSColor(rgb: 0xf7943f),
+    "nightlife": NSColor(rgb: 0xe56dd6),
+    "travel/hotel_bar": NSColor(rgb: 0xe56dd6),
+    "parks_outdoors": NSColor(rgb: 0x6cc039),
+    "shops": NSColor(rgb: 0xffb300),
+    "travel": NSColor(rgb: 0x1c9fff),
+    "work": NSColor(rgb: 0xad7854),
+    "home": NSColor(rgb: 0x00aeef)
+]
+
+func venueIconColor(type: String) -> NSColor {
+    if type.isEmpty {
+        return NSColor(rgb: 0x008df2)
+    }
+    if let color = venueColors[type] {
+        return color
+    }
+    let generalType = type.components(separatedBy: "/").first ?? type
+    if let color = venueColors[generalType] {
+        return color
+    }
+    
+    let index = Int(abs(persistentHash32(type)) % Int32(randomColors.count))
+    return randomColors[index]
+}
+
+
+
 class LocationPlaceSuggestionRowItem: GeneralRowItem {
     private let result: ChatContextResult
     fileprivate let textLayout: TextViewLayout
     fileprivate let image: TelegramMediaImage?
     fileprivate let account: Account
+    fileprivate let color: NSColor
     init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, result: ChatContextResult, action: @escaping()->Void) {
         self.result = result
         self.account = account
@@ -36,11 +79,11 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
                         let resource = HttpReferenceMediaResource(url: "https://ss3.4sqi.net/img/categories_v2/\(type)_88.png", size: nil)
                         let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 60, height: 60), resource: resource)
                         image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-
                     }
                 }
+                self.color = venueIconColor(type: media.venue?.type ?? "")
             default:
-                break
+                self.color = venueIconColor(type: "")
             }
             textLayout = TextViewLayout(attr, maximumNumberOfLines: 2)
         default:
@@ -91,8 +134,12 @@ private final class LocationPlaceSuggestionRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
+        
+        guard let item = item as? LocationPlaceSuggestionRowItem else {return}
+
+        
         textView.backgroundColor = theme.colors.background
-        thumbHolder.backgroundColor = theme.colors.grayBackground
+        thumbHolder.backgroundColor = item.color
     }
     
     override func set(item: TableRowItem, animated: Bool) {

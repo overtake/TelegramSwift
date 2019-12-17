@@ -738,7 +738,7 @@ class ChannelAdminController: TableModalViewController {
                         case .generic:
                             errorText = L10n.unknownError
                         case .tooMuchJoined:
-                            errorText = L10n.channelErrorAddTooMuch
+                            errorText = L10n.inviteChannelsTooMuch
                         case .authSessionTooFresh:
                             errorText = L10n.channelTransferOwnerErrorText
                         case .invalidPassword:
@@ -792,7 +792,12 @@ class ChannelAdminController: TableModalViewController {
                                         checkPassword(upgradedPeerId)
                                     })
                                 }, error: { error in
-                                    dismissImpl()
+                                    switch error {
+                                    case .tooManyChannels:
+                                        showInactiveChannels(context: context, source: .upgrade)
+                                    case .generic:
+                                        alert(for: context.window, info: L10n.unknownError)
+                                    }
                                 }))
                             } else {
                                checkPassword(peer.id)

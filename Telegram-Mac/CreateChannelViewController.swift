@@ -18,6 +18,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
 
     private var nameItem:GroupNameRowItem!
     private var descItem:InputDataRowItem!
+    private let disposable = MetaDisposable()
     private var picture: String? {
         didSet {
             nameItem.photo = picture
@@ -99,24 +100,45 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
             return
         }
         
-        onComplete.set(showModalProgress(signal: createChannel(account: context.account, title: nameItem.currentText, description: descItem.currentText), for: window!, disposeAfterComplete: false) |> map(Optional.init) |> `catch` { _ in return .single(nil) } |> mapToSignal { peerId in
-            if let peerId = peerId, let picture = picture {
+        let signal: Signal<(PeerId, Bool)?, CreateChannelError> = showModalProgress(signal: createChannel(account: context.account, title: nameItem.currentText, description: descItem.currentText), for: window!, disposeAfterComplete: false) |> mapToSignal { peerId in
+            if let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
-                let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                let signal:Signal<(PeerId, Bool)?, CreateChannelError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
                     return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
-                }) |> `catch` {_ in return .complete()} |> map { value in
+                }) |> mapError { _ in CreateChannelError.generic } |> map { value in
                     switch value {
                     case .complete:
-                        return (Optional(peerId), false)
+                        return (peerId, false)
                     default:
-                        return (nil, false)
+                        return nil
                     }
                 }
                 
                 return .single((peerId, true)) |> then(signal)
             }
             return .single((peerId, true))
-        })
+        } |> deliverOnMainQueue
+        
+        disposable.set(signal.start(next: { [weak self] value in
+            if let value = value {
+                self?.onComplete.set(.single((value.0, value.1)))
+            }
+        }, error: { error in
+            let text: String
+            switch error {
+            case .generic:
+                text = L10n.unknownError
+            case .tooMuchJoined:
+                showInactiveChannels(context: context, source: .create)
+                return
+            case let .serverProvided(t):
+                text = t
+            default:
+                text = L10n.unknownError
+            }
+            alert(for: context.window, info: text)
+        }))
+        
     }
     
     override var canBecomeResponder: Bool {
@@ -142,8 +164,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
     }
 
     deinit {
-        var bp:Int = 0
-        bp += 1
+        
     }
     
 }

@@ -2346,7 +2346,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .generic:
                         text = L10n.unknownError
                     case .tooMuchJoined:
-                        showInactiveChannels(context: context)
+                        showInactiveChannels(context: context, source: .join)
                         return
                     }
                     alert(for: context.window, info: text)
