@@ -9,5 +9,19 @@
       <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
       <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.17/circles-v0.0.17.zip" sparkle:version="181020" sparkle:shortVersionString="v0.0.17" length="47482336" type="application/octet-stream" sparkle:edSignature="YDRMfyPI5WsTUT9BCy4KuYIBL6pqd0Co8Gk93LIKH4gAurviG/atLk08oOKDdO0DXd3Z4aZMPfqDAjRjIXvqCw=="/>
     </item>
+    <item>
+      <description>&lt;h3&gt;Release Notes:&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Sent members update fix&lt;/li&gt;
+  &lt;li&gt;Missing global badge fix&lt;/li&gt;
+&lt;/ul&gt;</description>
+      <title>v0.0.18</title>
+      <pubDate>Tue, 17 Dec 2019 08:48:22 +0300</pubDate>
+      <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.18/circles-v0.0.18.zip" sparkle:version="181027" sparkle:shortVersionString="v0.0.18" length="47489223" type="application/octet-stream" sparkle:edSignature="x05m6lUTEygzriLfkKM7wR6IZ0VPQw61yTzy0cBn7fZkya7cR3y+IJkTbs6F0C88aW8zhmXFN/f8MADQ69nmAw=="/>
+      <sparkle:deltas>
+        <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.18/Circles%20for%20Telegram181027-181020.delta" sparkle:version="181027" sparkle:shortVersionString="v0.0.18" sparkle:deltaFrom="181020" length="3175938" type="application/octet-stream" sparkle:edSignature="exIPYwjG17zQh34uXfb2V+Lq4pf8QUuqny/3tvU0jMOECT4d2o3X3pBph4jPgD2k8nyCdCIXl9o7jb8YV8zvAw=="/>
+      </sparkle:deltas>
+    </item>
   </channel>
 </rss>
