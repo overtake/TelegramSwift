@@ -100,6 +100,8 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
         }
     }
     
+    private var copyOfSemaphore: Atomic<DispatchSemaphore?>?
+    
     init(queue: Queue, postbox: Postbox, resourceReference: MediaResourceReference, tempFilePath: String?, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, fetchAutomatically: Bool, maximumFetchSize: Int? = nil, stallDuration: Double = 1.0, lowWaterDuration: Double = 2.0, highWaterDuration: Double = 3.0) {
         self.queue = queue
         self.postbox = postbox
@@ -121,11 +123,17 @@ final class FFMpegMediaFrameSource: NSObject, MediaFrameSource {
         self.thread.start()
         
         super.init()
+        
+        performWithContext { [weak self] context in
+            let semaphore = context.currentSemaphore
+            queue.async { [weak self] in
+               self?.copyOfSemaphore = semaphore
+            }
+        }
     }
     
     deinit {
-        //assert(self.queue.isCurrent())
-        
+        self.copyOfSemaphore?.swap(nil)?.signal()
         self.taskQueue.terminate()
     }
     

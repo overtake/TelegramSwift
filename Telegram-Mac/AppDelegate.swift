@@ -413,7 +413,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings) as? LoggingSettings ?? LoggingSettings.defaultSettings)
             }
             |> mapToSignal { sharedApplicationContext, loggingSettings -> Signal<SharedApplicationContext, NoError> in
+                #if BETA || ALPHA
+                Logger.shared.logToFile = true
+                #else
                 Logger.shared.logToFile = loggingSettings.logToFile
+                #endif
                 Logger.shared.logToConsole = false//loggingSettings.logToConsole
                 Logger.shared.redactSensitiveData = true//loggingSettings.redactSensitiveData
                 return .single(sharedApplicationContext)

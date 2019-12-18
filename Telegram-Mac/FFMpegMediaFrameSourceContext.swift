@@ -659,6 +659,7 @@ final class FFMpegMediaFrameSourceContext: NSObject {
         }
     }
     
+    
     func close() {
         self.closed = true
     }
