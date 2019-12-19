@@ -1072,7 +1072,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
                                 return
                             }
                             
-                            let context = generate(TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(width: 280, height: 280), boundingSize: CGSize(width: 280, height: 280), intrinsicInsets: NSEdgeInsets()))
+                            let context = generate(TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(width: 280, height: 280), boundingSize: CGSize(width: 280, height: 280), intrinsicInsets: NSEdgeInsets(), scale: 2.0))
                             if let image = context?.generateImage() {
                                 strongSelf.qrTokenState = (state: .qr(image), animated: !strongSelf.isLoading.value)
                                 strongSelf.isLoading = (value: false, update: true)

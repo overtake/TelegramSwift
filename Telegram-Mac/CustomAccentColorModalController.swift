@@ -35,27 +35,39 @@ private final class CustomAccentColorView : View {
         tintedCheckbox.update(by: nil)
         tintedCheckbox.isSelected = theme.colors.tinted
         tintedCheckbox.isHidden = true//!theme.colors.tinted || !theme.bubbled
-//        colorPicker.colorPicker.colorChanged = { [weak self] color in
-//            guard let `self` = self else {return}
-//            self.colorPicker.textView.setString(color.hexString)
-//        }
-//
-//        tintedCheckbox.onChangedValue = { [weak self] value in
-//            self?.disableTint = !value
-//        }
-//
-//        colorPicker.colorChanged = { [weak self] color in
-//            guard let `self` = self else {return}
-//            self.colorPicker.colorPicker.color = color
-//            self.colorPicker.colorPicker.needsLayout = true
-//            let colors = theme.colors.withoutAccentColor().withAccentColor(color, disableTint: self.disableTint)
-//            let newTheme = theme.withUpdatedColors(colors)
-//            self.addTableItems(self.context, theme: newTheme)
-//            self.tableView.updateLocalizationAndTheme(theme: newTheme)
-//            self.controller?.updateLocalizationAndTheme(theme: newTheme)
-//            self.colorPicker.updateLocalizationAndTheme(theme: newTheme)
-//            self.tintedCheckbox.update(by: nil)
-//        }
+        colorPicker.colorPicker.colorChanged = { [weak self] color in
+            guard let `self` = self else {return}
+            self.colorPicker.updateMode(.single(color), animated: true)
+        }
+        
+        self.colorPicker.updateMode(.single(theme.colors.accent), animated: true)
+
+
+        tintedCheckbox.onChangedValue = { [weak self] value in
+            self?.disableTint = !value
+        }
+
+        colorPicker.colorChanged = { [weak self] color in
+            guard let `self` = self else {return}
+            
+            switch color {
+            case let .single(color):
+                self.colorPicker.colorPicker.color = color
+                self.colorPicker.colorPicker.needsLayout = true
+                let colors = theme.colors.withoutAccentColor().withAccentColor(color, disableTint: self.disableTint)
+                let newTheme = theme.withUpdatedColors(colors)
+                self.addTableItems(self.context, theme: newTheme)
+                self.tableView.updateLocalizationAndTheme(theme: newTheme)
+                self.controller?.updateLocalizationAndTheme(theme: newTheme)
+                self.colorPicker.updateLocalizationAndTheme(theme: newTheme)
+                self.tintedCheckbox.update(by: nil)
+                self.colorPicker.updateMode(.single(color), animated: true)
+            default:
+                break
+            }
+            
+           
+        }
         layout()
     }
     

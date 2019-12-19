@@ -424,7 +424,7 @@ final class WallpaperColorPickerContainerView : View {
         _ = addColorButton.sizeToFit()
     }
     
-    fileprivate func updateMode(_ mode: WallpaperColorSelectMode, animated: Bool) {
+    func updateMode(_ mode: WallpaperColorSelectMode, animated: Bool) {
         if self.mode != mode {
             self.mode = mode
             switch mode {
