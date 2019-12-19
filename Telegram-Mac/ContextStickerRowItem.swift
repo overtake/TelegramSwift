@@ -131,7 +131,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
                         let view = TransformImageView()
                         view.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
+                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
                             if let file = file {
                                 cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                             }

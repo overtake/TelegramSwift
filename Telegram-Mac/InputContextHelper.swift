@@ -822,7 +822,7 @@ class InputContextHelper: NSObject {
     
     func entries(for result:ChatPresentationInputQueryResult?, initialSize:NSSize, chatInteraction: ChatInteraction) -> Signal<[InputContextEntry], NoError> {
         if let result = result {
-            return Signal {(subscriber) in
+            return Signal { subscriber in
                 var entries:[InputContextEntry] = []
                 switch result {
                 case let .mentions(peers):
