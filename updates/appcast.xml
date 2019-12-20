@@ -23,5 +23,36 @@
         <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.18/Circles.for.Telegram181027-181020.delta" sparkle:version="181027" sparkle:shortVersionString="v0.0.18" sparkle:deltaFrom="181020" length="3175938" type="application/octet-stream" sparkle:edSignature="exIPYwjG17zQh34uXfb2V+Lq4pf8QUuqny/3tvU0jMOECT4d2o3X3pBph4jPgD2k8nyCdCIXl9o7jb8YV8zvAw=="/>
       </sparkle:deltas>
     </item>
+    <item>
+      <description>&lt;ul&gt;
+&lt;li&gt;Peer preloding&lt;/li&gt;
+&lt;li&gt;Groups fetching improvement&lt;/li&gt;
+&lt;li&gt;Stucked personal counter fix&lt;/li&gt;
+&lt;li&gt;Channel participants extraction&lt;/li&gt;
+&lt;li&gt;Peer group change prevention&lt;/li&gt;
+&lt;/ul&gt;</description>
+      <title>v0.0.19</title>
+      <pubDate>Fri, 20 Dec 2019 14:45:26 +0300</pubDate>
+      <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.19/circles-v0.0.19.zip" sparkle:version="181078" sparkle:shortVersionString="v0.0.19" length="47508025" type="application/octet-stream" sparkle:edSignature="9or+wESOWvtKu0FBO6aBl5io9uvXqP6Zaqt1ZtxMA52KLeHLXe5CuYPXbWYcrZY0WbYm5U3UBLpBKla879+QBA=="/>
+      <sparkle:deltas>
+        <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.19/Circles.for.Telegram181078-181027.delta" sparkle:version="181078" sparkle:shortVersionString="v0.0.19" sparkle:deltaFrom="181027" length="2963280" type="application/octet-stream" sparkle:edSignature="vzmMLh/oV8DJW8RDrUfl0OwhdlDkgi0tPREOi4i5F9bMBQjiaQACVEIgKc13xOXVrLAUSQweTdG1Tp3Ez5BqCg=="/>
+        <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.19/Circles.for.Telegram181078-181020.delta" sparkle:version="181078" sparkle:shortVersionString="v0.0.19" sparkle:deltaFrom="181020" length="3481606" type="application/octet-stream" sparkle:edSignature="OObC5Ig6Dlc8Igj18TuBqp81wd9EiQ9lOSETgGVLR23mArJFPY18o+Ivjw+RAcZk6g1rPzxwxSj1dtc4iwtsCQ=="/>
+      </sparkle:deltas>
+    </item>
+    <item>
+      <description>&lt;ul&gt;
+&lt;li&gt;Empty circles at cold start fix&lt;/li&gt;
+&lt;/ul&gt;</description>
+      <title>v0.0.20</title>
+      <pubDate>Fri, 20 Dec 2019 15:22:16 +0300</pubDate>
+      <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.20/circles-v0.0.20.zip" sparkle:version="181079" sparkle:shortVersionString="v0.0.20" length="47508356" type="application/octet-stream" sparkle:edSignature="BhwDLShgC1Qi0RkPBakdTikGzAXhfpolSFSCoinMZopg5na41atTBR9y4e3o71n1bzeoCfCFpU5DlUE8RmWKCg=="/>
+      <sparkle:deltas>
+        <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.20/Circles.for.Telegram181079-181078.delta" sparkle:version="181079" sparkle:shortVersionString="v0.0.20" sparkle:deltaFrom="181078" length="883861" type="application/octet-stream" sparkle:edSignature="tGMcASc8Cf1/xpJln0jvVJr3/9EN1VDexjVR7St4sc6iig1Eqa7/8XrsquHE3PGcntikdG38+VoV0iskzFPYBA=="/>
+        <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.20/Circles.for.Telegram181079-181027.delta" sparkle:version="181079" sparkle:shortVersionString="v0.0.20" sparkle:deltaFrom="181027" length="2999919" type="application/octet-stream" sparkle:edSignature="dORbukPL/hzLeZodP1ocTz40ILY0oWdzGy1jDzMfqjf1zJTaEWWlBouc2zaMD1r7BaMHE2iMLH42WqGSTywSBg=="/>
+        <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.20/Circles.for.Telegram181079-181020.delta" sparkle:version="181079" sparkle:shortVersionString="v0.0.20" sparkle:deltaFrom="181020" length="3531290" type="application/octet-stream" sparkle:edSignature="K3atNcB6THIFyv79vJTqO2TfMMsw4g6f2NxO3cf+Z/pkzHdWw4ZH5rBXVnMV1Zfebqptojd3W8QO6seookpxDA=="/>
+      </sparkle:deltas>
+    </item>
   </channel>
 </rss>
