@@ -60,7 +60,7 @@ do
   version=$(echo $info | cut -d';' -f3)
 
   DELTA_NAME="Circles for Telegram$to-$from.delta"
-  DELTA_NAME_ESCAPED="Circles%20for%20Telegram$to-$from.delta"
+  DELTA_NAME_ESCAPED="Circles.for.Telegram$to-$from.delta"
 
   xmlstarlet ed -L -u "/rss/channel/item/title[text()=\"$version\"]/../sparkle:deltas/enclosure[@sparkle:deltaFrom=\"$from\"]/@url" -v "https://github.com/Shimbo/TelegramSwift/releases/download/$version/$DELTA_NAME_ESCAPED" updates/appcast.xml
 

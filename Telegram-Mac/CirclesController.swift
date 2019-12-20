@@ -355,20 +355,23 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         
         let arguments = CirclesArguments(context: context)
         
-        let chatHistoryView: Signal<(ChatListView, ViewUpdateType), NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 500)
+        let chatHistoryView: Signal<(ChatListView, ViewUpdateType), NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 10)
+        
+        let unreadCountsKey = PostboxViewKey.unreadCounts(items: [.total(nil)])
         
         
         let transition: Signal<TableUpdateTransition, NoError> = combineLatest(
             Circles.settingsView(postbox: context.account.postbox),
             appearanceSignal,
             chatHistoryView,
-            appNotificationSettings(accountManager: context.sharedContext.accountManager))
-            
-        |> map { settings, appearance, chatHistory, inAppSettings in
+            appNotificationSettings(accountManager: context.sharedContext.accountManager),
+            context.account.postbox.combinedView(keys: [unreadCountsKey]))
+        |> map { settings, appearance, chatHistory, inAppSettings, _ in
             var unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary] = [:]
             for group in chatHistory.0.groupEntries {
                 unreadStates[group.groupId] = group.unreadState
             }
+            
             unreadStates[.root] = context.account.postbox.groupStats(.root)
             
             let entries = circlesControllerEntries(settings: settings, unreadStates: unreadStates, notificationSettings: inAppSettings)
