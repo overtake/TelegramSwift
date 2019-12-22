@@ -671,7 +671,7 @@ class ChatListRowItem: TableRowItem {
                 Circles.updateSettings(postbox: self.context.account.postbox) { old in
                     let newValue = Circles.defaultConfig
                     newValue.dev = old.dev
-                    newValue.botId = old.botId
+                    newValue.botPeerId = old.botPeerId
                     newValue.token = old.token
                     newValue.groupNames = old.groupNames
                     newValue.localInclusions = old.localInclusions
