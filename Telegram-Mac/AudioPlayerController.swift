@@ -168,12 +168,12 @@ class APSongItem : APItem {
                 if let t = t {
                     songName = t
                 } else {
-                    songName = tr(L10n.audioUntitledSong)
+                    songName = p != nil ? L10n.audioUntitledSong : ""
                 }
                 if let p = p {
                     performerName = p
                 } else {
-                    performerName = tr(L10n.audioUnknownArtist)
+                    performerName = file.fileName ?? L10n.audioUnknownArtist
                 }
             }
 

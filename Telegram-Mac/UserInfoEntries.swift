@@ -46,11 +46,13 @@ struct UserInfoEditingState: Equatable {
 final class UserInfoState : PeerInfoState {
     let editingState: UserInfoEditingState?
     let savingData: Bool
-    
+    fileprivate var commonGroups: [Peer] = []
     
     init(editingState: UserInfoEditingState?, savingData: Bool) {
         self.editingState = editingState
         self.savingData = savingData
+        
+        
     }
     
     override init() {
@@ -95,10 +97,27 @@ class UserInfoArguments : PeerInfoArguments {
     private let updatePeerNameDisposable = MetaDisposable()
     private let deletePeerContactDisposable = MetaDisposable()
     
+    private let commonGroupsDisposable = MetaDisposable()
+    
     func shareContact() {
         shareDisposable.set((context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
             if let context = self?.context, let peer = peer as? TelegramUser {
                 showModal(with: ShareModalController(ShareContactObject(context, user: peer)), for: context.window)
+            }
+        }))
+    }
+    
+    override init(context: AccountContext, peerId: PeerId, state: PeerInfoState, isAd: Bool, pushViewController: @escaping (ViewController) -> Void, pullNavigation: @escaping () -> NavigationViewController?) {
+        super.init(context: context, peerId: peerId, state: state, isAd: isAd, pushViewController: pushViewController, pullNavigation: pullNavigation)
+        
+        let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        
+        commonGroupsDisposable.set((groupsInCommon(account: context.account, peerId: peerId) |> deliverOnMainQueue).start(next: { groups in
+            updateState { state in
+                state.commonGroups = groups
+                return state
             }
         }))
     }
@@ -274,7 +293,7 @@ class UserInfoArguments : PeerInfoArguments {
     func updateBlocked(peer: Peer,_ blocked:Bool, _ isBot: Bool) {
         let context = self.context
         if blocked {
-            let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peerId) |> deliverOnMainQueue, for: context.window)
+            let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
             blockDisposable.set(signal.start(error: { error in
                 switch error {
                 case .generic:
@@ -284,7 +303,7 @@ class UserInfoArguments : PeerInfoArguments {
                 
             }))
         } else {
-            let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peerId) |> deliverOnMainQueue, for: context.window)
+            let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
             blockDisposable.set(signal.start(error: { error in
                 switch error {
                 case .generic:
@@ -296,7 +315,7 @@ class UserInfoArguments : PeerInfoArguments {
         }
         
         if !blocked && isBot {
-            pushViewController(ChatController(context: context, chatLocation: .peer(peerId), initialAction: ChatInitialAction.start(parameter: "", behavior: .automatic)))
+            pushViewController(ChatController(context: context, chatLocation: .peer(peer.id), initialAction: ChatInitialAction.start(parameter: "", behavior: .automatic)))
         }
 
     }
@@ -304,10 +323,10 @@ class UserInfoArguments : PeerInfoArguments {
     func deleteContact() {
         let context = self.context
         let peerId = self.peerId
-        deletePeerContactDisposable.set((confirmSignal(for: mainWindow, information: tr(L10n.peerInfoConfirmDeleteContact))
+        deletePeerContactDisposable.set((confirmSignal(for: context.window, information: tr(L10n.peerInfoConfirmDeleteContact))
             |> filter {$0}
             |> mapToSignal { _ in
-                showModalProgress(signal: deleteContactPeerInteractively(account: context.account, peerId: peerId) |> deliverOnMainQueue, for: mainWindow)
+                showModalProgress(signal: deleteContactPeerInteractively(account: context.account, peerId: peerId) |> deliverOnMainQueue, for: context.window)
             }).start(completed: { [weak self] in
                 self?.pullNavigation()?.back()
             }))
@@ -317,8 +336,9 @@ class UserInfoArguments : PeerInfoArguments {
         pushViewController(SecretChatKeyViewController(context, peerId: peerId))
     }
     
-    func groupInCommon() -> Void {
-        pushViewController(GroupsInCommonViewController(context, peerId: peerId))
+    func groupInCommon(_ peerId: PeerId) -> Void {
+        let commonGroups = (state as? UserInfoState)?.commonGroups ?? []
+        pushViewController(GroupsInCommonViewController(context, peerId: peerId, commonGroups: commonGroups))
     }
     
     deinit {
@@ -352,7 +372,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case startSecretChat(sectionId:Int, viewType: GeneralViewType)
     case sharedMedia(sectionId:Int, viewType: GeneralViewType)
     case notifications(sectionId:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
-    case groupInCommon(sectionId:Int, count:Int, viewType: GeneralViewType)
+    case groupInCommon(sectionId:Int, count:Int, peerId: PeerId, viewType: GeneralViewType)
     case block(sectionId:Int, peer: Peer, blocked: Bool, isBot: Bool, viewType: GeneralViewType)
     case deleteChat(sectionId: Int, viewType: GeneralViewType)
     case deleteContact(sectionId: Int, viewType: GeneralViewType)
@@ -379,7 +399,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .startSecretChat(sectionId, _): return .startSecretChat(sectionId: sectionId, viewType: viewType)
         case let .sharedMedia(sectionId, _): return .sharedMedia(sectionId: sectionId, viewType: viewType)
         case let .notifications(sectionId, settings, _): return .notifications(sectionId: sectionId, settings: settings, viewType: viewType)
-        case let .groupInCommon(sectionId, count, _): return .groupInCommon(sectionId: sectionId, count: count, viewType: viewType)
+        case let .groupInCommon(sectionId, count, peerId, _): return .groupInCommon(sectionId: sectionId, count: count, peerId: peerId, viewType: viewType)
         case let .block(sectionId, peer, blocked, isBot, _): return .block(sectionId: sectionId, peer: peer, blocked: blocked, isBot: isBot, viewType: viewType)
         case let .deleteChat(sectionId, _): return .deleteChat(sectionId: sectionId, viewType: viewType)
         case let .deleteContact(sectionId, _): return .deleteContact(sectionId: sectionId, viewType: viewType)
@@ -571,9 +591,9 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .groupInCommon(sectionId, count, viewType):
+        case let .groupInCommon(sectionId, count, peerId, viewType):
             switch entry {
-            case .groupInCommon(sectionId, count, viewType):
+            case .groupInCommon(sectionId, count, peerId, viewType):
                 return true
             default:
                 return false
@@ -698,7 +718,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .sharedMedia(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .groupInCommon(sectionId, _, _):
+        case let .groupInCommon(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .notifications(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -795,9 +815,9 @@ enum UserInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: {
                 arguments.sharedMedia()
             })
-        case let .groupInCommon(sectionId: _, count, viewType):
+        case let .groupInCommon(sectionId: _, count, peerId, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupsInCommon, type: .nextContext("\(count)"), viewType: viewType, action: {
-                arguments.groupInCommon()
+                arguments.groupInCommon(peerId)
             })
             
         case let .notifications(_, settings, viewType):
@@ -960,7 +980,8 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                 }
                 if let cachedData = view.cachedData as? CachedUserData, state.editingState == nil {
                     if cachedData.commonGroupCount > 0 {
-                        additionBlock.append(.groupInCommon(sectionId: sectionId, count: Int(cachedData.commonGroupCount), viewType: .singleItem))
+                        let p = peerViewMainPeer(view) ?? peer
+                        additionBlock.append(.groupInCommon(sectionId: sectionId, count: Int(cachedData.commonGroupCount), peerId: p.id, viewType: .singleItem))
                     }
                 }
             }
@@ -971,7 +992,8 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
             
             if let cachedData = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {
                 if state.editingState == nil {
-                    destructBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
+                    let p = peerViewMainPeer(view) ?? peer
+                    destructBlock.append(.block(sectionId: sectionId, peer: p, blocked: cachedData.isBlocked, isBot: p.isBot, viewType: .singleItem))
                 } else {
                     destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
                 }

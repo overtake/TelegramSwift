@@ -277,18 +277,16 @@ internal final class L10n {
   internal static var appearanceSettingsChatViewClassic: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatView.Classic") }
   /// CHAT VIEW
   internal static var appearanceSettingsChatViewHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatView.Header") }
-  /// Dark
-  internal static var appearanceSettingsColorThemeDark: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.dark") }
   /// Day
   internal static var appearanceSettingsColorThemeDay: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.day") }
   /// Day Classic
-  internal static var appearanceSettingsColorThemeDayClassic: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.day_classic") }
+  internal static var appearanceSettingsColorThemeDayClassic: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.dayClassic") }
   /// COLOR THEME
   internal static var appearanceSettingsColorThemeHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.Header") }
-  /// Dark Mojave
-  internal static var appearanceSettingsColorThemeMojave: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.mojave") }
-  /// Night Blue
-  internal static var appearanceSettingsColorThemeNightBlue: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.night_blue") }
+  /// Night Accent
+  internal static var appearanceSettingsColorThemeNightAccent: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.nightAccent") }
+  /// System
+  internal static var appearanceSettingsColorThemeSystem: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.system") }
   /// Select default dark palette which one will be used in dark system appearance mode.
   internal static var appearanceSettingsFollowSystemAppearanceDefaultDark: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance.DefaultDark") }
   /// Select default day palette which one will be used in light system appearance mode.

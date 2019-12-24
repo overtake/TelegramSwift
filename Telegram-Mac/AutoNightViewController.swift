@@ -21,7 +21,7 @@ fileprivate let _id_to = InputDataIdentifier("to")
 
 fileprivate let _id_sunrise = InputDataIdentifier("sunrise")
 
-fileprivate let _id_night_blue = InputDataIdentifier(tintedNightPalette.name)
+fileprivate let _id_night_blue = InputDataIdentifier(nightAccentPalette.name)
 fileprivate let _id_dark = InputDataIdentifier(darkPalette.name)
 fileprivate let _id_update = InputDataIdentifier("update")
 
@@ -165,7 +165,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
         }
         
          entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_list, equatable: InputDataEquatable(settings), item: { initialSize, stableId in
-            return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  [tintedNightPalette, systemPalette], cloudThemes: cloudThemes, viewType: .singleItem, togglePalette: arguments.selectTheme, menuItems: { source in
+            return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  [nightAccentPalette, systemPalette], cloudThemes: cloudThemes, viewType: .singleItem, togglePalette: arguments.selectTheme, menuItems: { source in
                 return []
             })
         }))

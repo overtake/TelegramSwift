@@ -92,7 +92,9 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                             thumbImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
    
                         }
-                        try? FileManager.default.removeItem(atPath: thumbedFile)
+                        if thumbedFile != resource?.localFilePath {
+                            try? FileManager.default.removeItem(atPath: thumbedFile)
+                        }
                         
                         if let image = thumbImage {
                             

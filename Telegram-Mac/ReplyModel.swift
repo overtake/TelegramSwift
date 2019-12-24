@@ -170,7 +170,7 @@ class ReplyModel: ChatAccessoryModel {
                         updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: true)
                     } else if let file = updatedMedia as? TelegramMediaFile {
                         if file.isVideo {
-                            updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: true)
+                            updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
                         } else if file.isAnimatedSticker {
                             updateImageSignal = chatMessageAnimatedSticker(postbox: self.account.postbox, file: file, small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize))
                         } else if file.isSticker {
@@ -194,7 +194,7 @@ class ReplyModel: ChatAccessoryModel {
                         }
                     })
                     
-                    if let media = media as? TelegramMediaImage, self.autodownload {
+                    if let media = media as? TelegramMediaImage {
                         self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
                     

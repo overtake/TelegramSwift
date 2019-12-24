@@ -358,7 +358,7 @@ func importPalette(_ path: String) -> ColorPalette? {
         var copyright: String = "Telegram"
         var wallpaper: PaletteWallpaper?
         var parent: TelegramBuiltinTheme = .dayClassic
-        var accentList:[NSColor] = []
+        var accentList:[PaletteAccentColor] = []
         var colors:[String: NSColor] = [:]
         
         /*

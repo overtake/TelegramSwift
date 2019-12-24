@@ -626,6 +626,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var emptyChecker: (([TableRowItem]) -> Bool)? = nil
     
+    
     public var emptyItem:TableRowItem? {
         didSet {
             emptyItem?.table = self

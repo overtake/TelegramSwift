@@ -150,6 +150,27 @@ struct ThemeWallpaper : PostboxCoding, Equatable {
     
 }
 
+extension PaletteAccentColor {
+    static func initWith(decoder: PostboxDecoder) -> PaletteAccentColor {
+        let accent = NSColor(UInt32(decoder.decodeInt32ForKey("c", orElse: 0)))
+        var bubble: NSColor? = nil
+        if let rawBubble = decoder.decodeOptionalInt32ForKey("b") {
+            bubble = NSColor(UInt32(rawBubble))
+        }
+        return PaletteAccentColor(accent, bubble)
+    }
+    
+    func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeInt32(Int32(self.accent.rgb), forKey: "c")
+        if let bubble = self.bubble {
+            encoder.encodeInt32(Int32(bubble.rgb), forKey: "b")
+        } else {
+            encoder.encodeNil(forKey: "b")
+        }
+    }
+
+}
+
 extension ColorPalette  {
     func encode(_ encoder: PostboxEncoder) {
         for child in Mirror(reflecting: self).children {
@@ -168,14 +189,17 @@ extension ColorPalette  {
         encoder.encodeBool(self.isDark, forKey: "dark")
         encoder.encodeBool(self.tinted, forKey: "tinted")
         encoder.encodeString(self.wallpaper.toString, forKey: "pw")
-        encoder.encodeString(self.accentList.map { $0.hexString }.joined(separator: ","), forKey: "accentList")
+        encoder.encodeObjectArrayWithEncoder(self.accentList, forKey: "accentList_1", encoder: { value, encoder in
+            return value.encode(encoder)
+        })
+       //encoder.encodeString(self.accentList.map { $0.hexString }.joined(separator: ","), forKey: "accentList")
     }
     
     static func initWith(decoder: PostboxDecoder) -> ColorPalette {
         let dark = decoder.decodeBoolForKey("dark", orElse: false)
         let tinted = decoder.decodeBoolForKey("tinted", orElse: false)
         
-        let parent: TelegramBuiltinTheme = TelegramBuiltinTheme(rawValue: decoder.decodeStringForKey("parent", orElse: TelegramBuiltinTheme.dayClassic.rawValue)) ?? (dark ? .tintedNight : .dayClassic)
+        let parent: TelegramBuiltinTheme = TelegramBuiltinTheme(rawValue: decoder.decodeStringForKey("parent", orElse: TelegramBuiltinTheme.dayClassic.rawValue)) ?? (dark ? .nightAccent : .dayClassic)
         let copyright = decoder.decodeStringForKey("copyright", orElse: "Telegram")
         
         let isNative = decoder.decodeBoolForKey("isNative", orElse: false)
@@ -184,7 +208,9 @@ extension ColorPalette  {
         let palette: ColorPalette = parent.palette
         let pw = PaletteWallpaper(decoder.decodeStringForKey("pw", orElse: "none"))
         
-        let accentList = decoder.decodeStringForKey("accentList", orElse: "").components(separatedBy: ",").compactMap { NSColor(hexString: $0) }
+        
+        
+        let accentList: [PaletteAccentColor] = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("accentList_1", decoder: { PaletteAccentColor.initWith(decoder: $0) })) ?? []
         
         return ColorPalette(isNative: isNative,
                                     isDark: dark,
@@ -399,9 +425,9 @@ struct LocalWallapper : Equatable, PostboxCoding {
 
 struct LocalAccentColor : Equatable, PostboxCoding {
     let name: TelegramBuiltinTheme
-    let color: NSColor
+    let color: PaletteAccentColor
     
-    init(name: TelegramBuiltinTheme, color: NSColor) {
+    init(name: TelegramBuiltinTheme, color: PaletteAccentColor) {
         self.name = name
         self.color = color
     }
@@ -409,15 +435,17 @@ struct LocalAccentColor : Equatable, PostboxCoding {
     init(decoder: PostboxDecoder) {
         self.name = TelegramBuiltinTheme(rawValue: decoder.decodeStringForKey("name", orElse: dayClassicPalette.name)) ?? .dayClassic
         if let hex = decoder.decodeOptionalStringForKey("color"), let color = NSColor(hexString: hex) {
-            self.color = color
+            self.color = PaletteAccentColor(color)
+        } else if let value = decoder.decodeAnyObjectForKey("pac", decoder: { PaletteAccentColor.initWith(decoder: $0) }) as? PaletteAccentColor {
+            self.color = value
         } else {
-            self.color = self.name.palette.basicAccent
+            self.color = PaletteAccentColor(self.name.palette.basicAccent)
         }
     }
     
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeString(self.name.rawValue, forKey: "name")
-        encoder.encodeString(self.color.hexString, forKey: "color")
+        encoder.encodeObjectWithEncoder(self.color, encoder: self.color.encode, forKey: "pac")
     }
 }
 
@@ -470,7 +498,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         self.bubbled = decoder.decodeBoolForKey("bubbled", orElse: false)
         self.fontSize = CGFloat(decoder.decodeDoubleForKey("fontSize", orElse: 13))
         
-        let defDark = DefaultTheme(local: .tintedNight, cloud: nil)
+        let defDark = DefaultTheme(local: .nightAccent, cloud: nil)
         let defDay = DefaultTheme(local: .dayClassic, cloud: nil)
 
         self.defaultDark = decoder.decodeObjectForKey("defaultDark_1", decoder: { DefaultTheme(decoder: $0) }) as? DefaultTheme ?? defDark
@@ -566,7 +594,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
     }
     
-    func saveDefaultAccent(color: NSColor) -> ThemePaletteSettings {
+    func saveDefaultAccent(color: PaletteAccentColor) -> ThemePaletteSettings {
         var accents = self.accents
         let local = LocalAccentColor(name: self.palette.parent, color: color)
         if let index = accents.firstIndex(where: { $0.name == palette.parent }) {
@@ -625,7 +653,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     }
     
     static var defaultTheme: ThemePaletteSettings {
-        let defDark = DefaultTheme(local: .tintedNight, cloud: nil)
+        let defDark = DefaultTheme(local: .nightAccent, cloud: nil)
         let defDay = DefaultTheme(local: .dayClassic, cloud: nil)
         return ThemePaletteSettings(palette: dayClassicPalette, bubbled: false, fontSize: 13, wallpaper: ThemeWallpaper(), defaultDark: defDark, defaultDay: defDay, defaultIsDark: false, wallpapers: [LocalWallapper(name: .dayClassic, wallpaper: AssociatedWallpaper(cloud: nil, wallpaper: .builtin), cloud: nil)], accents: [], cloudTheme: nil)
     }

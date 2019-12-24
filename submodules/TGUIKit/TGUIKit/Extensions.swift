@@ -551,8 +551,11 @@ public extension NSView {
                 presentY =  presentation.frame.minY
                 presentX = presentation.frame.minX
             }
-            
-            self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
+            if position == frame.origin {
+                 completion?(true)
+            } else {
+                self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
+            }
         } else {
             self.layer?.removeAnimation(forKey: "position")
         }

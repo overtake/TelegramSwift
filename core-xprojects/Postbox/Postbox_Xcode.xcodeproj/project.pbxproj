@@ -12,6 +12,7 @@
 		A701F925236B3350002ABF81 /* sqlcipher.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F924236B3350002ABF81 /* sqlcipher.framework */; };
 		A701F92C236C1B66002ABF81 /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F92B236C1B66002ABF81 /* SwiftSignalKit.framework */; };
 		A701F935236C1DC4002ABF81 /* Crc32.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F934236C1DC4002ABF81 /* Crc32.framework */; };
+		A7377E1923ACAE3A00AD3ADD /* FailedMessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */; };
 		A754972423A3A5540091F293 /* MessageHistoryFailedTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972323A3A5540091F293 /* MessageHistoryFailedTable.swift */; };
 		C20EB2A31F7179DC00DD3A57 /* PeerNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AE3EBB1F68261B0069BC90 /* PeerNotificationSettingsView.swift */; };
 		C25B56FE1F431C3300581D02 /* MessageHistoryTagsSummaryTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D070479F1F3CE16500F6A8D4 /* MessageHistoryTagsSummaryTable.swift */; };
@@ -205,6 +206,7 @@
 		A701F92D236C1D02002ABF81 /* crc32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = crc32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A701F934236C1DC4002ABF81 /* Crc32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Crc32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A72D451C236AF37F0052FA81 /* Postbox.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Postbox.xcconfig; path = "../../submodules/telegram-ios/submodules/Postbox/Sources/Config.xcconfig/Postbox.xcconfig"; sourceTree = "<group>"; };
+		A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailedMessagesView.swift; sourceTree = "<group>"; };
 		A754972323A3A5540091F293 /* MessageHistoryFailedTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageHistoryFailedTable.swift; sourceTree = "<group>"; };
 		D000CAD922006C6C0011B15D /* SharedAccountMediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedAccountMediaManager.swift; sourceTree = "<group>"; };
 		D001388520BD942B007C9721 /* PostboxUpgrade_16to17.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostboxUpgrade_16to17.swift; sourceTree = "<group>"; };
@@ -696,6 +698,7 @@
 				D06CA13122772DE40094E707 /* PeerNotificationSettingsBehaviorTimestampView.swift */,
 				D0E1199F229834BC008CAE3A /* MutablePeerChatInclusionView.swift */,
 				D0BFE51C22AFD5AF00143D08 /* MutableBasicPeerView.swift */,
+				A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -929,6 +932,7 @@
 				D0F7B1D91E045C6A007EB8A5 /* OrderStatisticTable.swift in Sources */,
 				D0FC194B201E8EAF00FEDBB2 /* MediaBoxFile.swift in Sources */,
 				D073CEA01DCBF3C1007511FD /* ItemCollectionsView.swift in Sources */,
+				A7377E1923ACAE3A00AD3ADD /* FailedMessagesView.swift in Sources */,
 				D0439B402289F6300067E026 /* AccountManagerAtomicState.swift in Sources */,
 				D0BE383A1E7C1FD4000079AF /* ItemCollectionInfoView.swift in Sources */,
 				D0B418491D7DFE20004562A4 /* ChatListView.swift in Sources */,

@@ -421,6 +421,23 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
     })!
 }
 
+private func generateChatFailed(backgroundColor: NSColor, border: NSColor, foregroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(38, 38), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        ctx.setLineWidth(1.0)
+        ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
+        ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        
+        let icon = NSImage(named: "Icon_DialogSendingError")!.precomposed(foregroundColor)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        
+        ctx.draw(icon, in: imageRect)
+    })!
+}
+
+
 private func generateSettingsIcon(_ icon: CGImage) -> CGImage {
     return generateImage(icon.backingSize, contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -1809,7 +1826,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                wallpaper_color_swap: { NSImage(named: "Icon_GradientSwap")!.precomposed(palette.grayIcon) },
                                                login_cap: { NSImage(named: "Icon_LoginCap")!.precomposed(palette.accentIcon) },
                                                login_qr_cap: { NSImage(named: "Icon_loginQRCap")!.precomposed(palette.accentIcon) },
-                                               login_qr_empty_cap: { generateLoginQrEmptyCap() }
+                                               login_qr_empty_cap: { generateLoginQrEmptyCap() },
+                                               chat_failed_scroller: { generateChatFailed(backgroundColor: palette.background, border: palette.redUI, foregroundColor: palette.redUI) },
+                                               chat_failed_scroller_active: { generateChatFailed(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) }
     )
 
 }
@@ -1861,9 +1880,9 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
         } else {
             palette = settings.palette
         }
-    case tintedNightPalette.name:
-        if settings.palette.accent == tintedNightPalette.accent {
-            palette = tintedNightPalette
+    case nightAccentPalette.name:
+        if settings.palette.accent == nightAccentPalette.accent {
+            palette = nightAccentPalette
         } else {
             palette = settings.palette
         }

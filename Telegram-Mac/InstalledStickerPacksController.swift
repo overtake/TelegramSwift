@@ -33,10 +33,10 @@ private final class InstalledStickerPacksControllerArguments {
     let removePack: (ItemCollectionId) -> Void
     let openStickersBot: () -> Void
     let openFeatured: () -> Void
-    let openArchived: () -> Void
+    let openArchived: ([ArchivedStickerPackItem]?) -> Void
     let openSuggestionOptions: () -> Void
     let toggleLoopAnimated: (Bool)->Void
-    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping () -> Void, openSuggestionOptions: @escaping() -> Void, toggleLoopAnimated: @escaping(Bool)->Void) {
+    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping ([ArchivedStickerPackItem]?) -> Void, openSuggestionOptions: @escaping() -> Void, toggleLoopAnimated: @escaping(Bool)->Void) {
         self.context = context
         self.openStickerPack = openStickerPack
         self.removePack = removePack
@@ -95,11 +95,36 @@ private enum InstalledStickerPacksEntryId: Hashable {
     }
 }
 
+private struct ArchivedListContainer : Equatable {
+    let archived: [ArchivedStickerPackItem]?
+    static func ==(lhs: ArchivedListContainer, rhs: ArchivedListContainer) -> Bool {
+        if let lhsItem = lhs.archived, let rhsItem = rhs.archived {
+            if lhsItem.count != rhsItem.count {
+                return false
+            } else {
+                for i in 0 ..< lhsItem.count {
+                    let lhs = lhsItem[i]
+                    let rhs = rhsItem[i]
+                    if lhs.info != rhs.info {
+                        return false
+                    }
+                    if lhs.topItems != rhs.topItems {
+                        return false
+                    }
+                }
+            }
+        } else if (lhs.archived != nil) != (rhs.archived != nil) {
+            return false
+        }
+        return true
+    }
+}
+
 private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     case section(sectionId:Int32)
     case suggestOptions(sectionId: Int32, String, GeneralViewType)
     case trending(sectionId:Int32, Int32, GeneralViewType)
-    case archived(sectionId:Int32, GeneralViewType)
+    case archived(sectionId:Int32, ArchivedListContainer, GeneralViewType)
     case loopAnimated(sectionId: Int32, Bool, GeneralViewType)
     case packsTitle(sectionId:Int32, String, GeneralViewType)
     case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, Bool, ItemListStickerPackItemEditing, GeneralViewType)
@@ -155,7 +180,7 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + stableIndex
         case let .trending(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .archived(sectionId, _):
+        case let .archived(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .loopAnimated(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -184,9 +209,9 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.installedStickersTranding, type: .context(count > 0 ? "\(count)" : ""), viewType: viewType, action: {
                 arguments.openFeatured()
             })
-        case let .archived(_, viewType):
+        case let .archived(_, archived, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.installedStickersArchived, type: .next, viewType: viewType, action: {
-                arguments.openArchived()
+                arguments.openArchived(archived.archived)
             })
         case let .loopAnimated(_, value, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.installedStickersLoopAnimated, type: .switchable(value), viewType: viewType, action: {
@@ -241,7 +266,7 @@ private struct InstalledStickerPacksControllerState: Equatable {
 }
 
 
-private func installedStickerPacksControllerEntries(state: InstalledStickerPacksControllerState, autoplayMedia: AutoplayMediaPreferences, stickerSettings: StickerSettings, view: CombinedView, featured: [FeaturedStickerPackItem]) -> [InstalledStickerPacksEntry] {
+private func installedStickerPacksControllerEntries(state: InstalledStickerPacksControllerState, autoplayMedia: AutoplayMediaPreferences, stickerSettings: StickerSettings, view: CombinedView, featured: [FeaturedStickerPackItem], archived: [ArchivedStickerPackItem]?) -> [InstalledStickerPacksEntry] {
     var entries: [InstalledStickerPacksEntry] = []
     
     var sectionId:Int32 = 1
@@ -269,7 +294,7 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
         }
         entries.append(.trending(sectionId: sectionId, unreadCount, .innerItem))
     }
-    entries.append(.archived(sectionId: sectionId, .innerItem))
+    entries.append(.archived(sectionId: sectionId, ArchivedListContainer(archived: archived), .innerItem))
     entries.append(.loopAnimated(sectionId: sectionId, autoplayMedia.loopAnimatedStickers, .lastItem))
     
     entries.append(.section(sectionId: sectionId))
@@ -339,6 +364,10 @@ class InstalledStickerPacksController: TableViewController {
             statePromise.set(stateValue.modify { f($0) })
         }
         
+        let archivedPromise = Promise<[ArchivedStickerPackItem]?>()
+        archivedPromise.set(.single(nil) |> then(archivedStickerPacks(account: context.account) |> map(Optional.init)))
+        
+
         
         let actionsDisposable = DisposableSet()
         
@@ -366,8 +395,10 @@ class InstalledStickerPacksController: TableViewController {
             }))
         }, openFeatured: { [weak self] in
             self?.navigationController?.push(FeaturedStickerPacksController(context))
-        }, openArchived: { [weak self] in
-            self?.navigationController?.push(ArchivedStickerPacksController(context))
+        }, openArchived: { [weak self] archived in
+            self?.navigationController?.push(ArchivedStickerPacksController(context, archived: archived, updatedPacks: { packs in
+                archivedPromise.set(.single(packs))
+            }))
         }, openSuggestionOptions: { [weak self] in
             self?.openSuggestionOptions()
         }, toggleLoopAnimated: { value in
@@ -388,8 +419,8 @@ class InstalledStickerPacksController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<InstalledStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks, featured, appearanceSignal, preferencesView)
-            |> map { state, view, featured, appearance, preferencesView -> TableUpdateTransition in
+        let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks, featured, archivedPromise.get(), appearanceSignal, preferencesView)
+            |> map { state, view, featured, archived, appearance, preferencesView -> TableUpdateTransition in
                 
                 var stickerSettings = StickerSettings.defaultSettings
                 if let view = preferencesView.views[preferencesKey] as? PreferencesView {
@@ -405,7 +436,7 @@ class InstalledStickerPacksController: TableViewController {
                     }
                 }
                 
-                let entries = installedStickerPacksControllerEntries(state: state, autoplayMedia: autoplayMedia, stickerSettings: stickerSettings, view: view, featured: featured).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = installedStickerPacksControllerEntries(state: state, autoplayMedia: autoplayMedia, stickerSettings: stickerSettings, view: view, featured: featured, archived: archived).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()

@@ -255,11 +255,26 @@ class InputContextView : TableView {
     }
 }
 
+private enum OverscrollState {
+    case small
+    case intermediate
+    case full
+}
+
+private final class OverscrollData {
+    var state:OverscrollState
+    init(state: OverscrollState) {
+        self.state = state
+    }
+}
+
 class InputContextViewController : GenericViewController<InputContextView>, TableViewDelegate {
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
         return nil
     }
+    
+    private let overscrollData: OverscrollData = OverscrollData(state: .small)
     
     fileprivate var markAsNeedShown: Bool = false
     
@@ -372,6 +387,8 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             }
             return .rejected
         }, with: self, for: .Escape, priority: .modal)
+        
+        
     }
     
     func invoke() -> KeyHandlerResult {

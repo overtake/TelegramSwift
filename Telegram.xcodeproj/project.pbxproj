@@ -202,6 +202,7 @@
 		A71DC8322386C845000EEDE2 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A71DC8342386D512000EEDE2 /* Signature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82E2386AADF000EEDE2 /* Signature.swift */; };
 		A71DC8352386D512000EEDE2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
+		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
 		A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
 		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
 		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
@@ -1227,6 +1228,7 @@
 		A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreSpotlight.framework; path = System/Library/Frameworks/CoreSpotlight.framework; sourceTree = SDKROOT; };
 		A71DC82C23858356000EEDE2 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		A71DC82E2386AADF000EEDE2 /* Signature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signature.swift; sourceTree = "<group>"; };
+		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
@@ -2607,6 +2609,7 @@
 				C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */,
 				C2DF47E81DE892E3003AA6C0 /* ChatToasterView.swift */,
 				C2E8694C1F43500D00BDD0A2 /* ChatNavigationMention.swift */,
+				A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -5465,6 +5468,7 @@
 				C27BAC7A20CFCE68007A7508 /* PassportSettingsHeaderItem.swift in Sources */,
 				D076F8702295B24D004F895A /* InlineAuthOptionRowItem.swift in Sources */,
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
+				A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
 				C2F9C44C1F95FE58002B2CBF /* Markdown.swift in Sources */,

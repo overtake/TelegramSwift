@@ -351,7 +351,7 @@ private func stickerSearchableItems(context: AccountContext, archivedStickerPack
         present(.push, FeaturedStickerPacksController(context))
     }))
     items.append(SettingsSearchableItem(id: .stickers(4), title: L10n.installedStickersArchived, alternate: synonyms(L10n.settingsSearchSynonymsStickersArchivedPacks), icon: icon, breadcrumbs: [L10n.accountSettingsStickers], present: { context, _, present in
-        present(.push, ArchivedStickerPacksController(context))
+        present(.push, ArchivedStickerPacksController(context, archived: nil, updatedPacks: { _ in }))
     }))
     return items
 }

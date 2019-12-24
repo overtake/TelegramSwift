@@ -34,7 +34,7 @@ private func generateDiscussIcon() -> CGImage {
     switch theme.colors.name {
     case systemPalette.name:
         image = NSImage(named: "DiscussDarkPreview")!.precomposed()
-    case tintedNightPalette.name:
+    case nightAccentPalette.name:
         image = NSImage(named: "DiscussDarkBluePreview")!.precomposed()
     default:
         if theme.colors.isDark {

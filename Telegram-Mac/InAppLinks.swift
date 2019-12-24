@@ -21,6 +21,11 @@ private let tgme:String = "tg://"
 
 
 
+enum InAppSettingsSection : String {
+    case themes
+    case devices
+}
+
 enum ChatInitialActionBehavior : Equatable {
     case none
     case automatic
@@ -245,7 +250,7 @@ func execute(inapp:inAppLink) {
                         }
                 }
                 
-                _ = showModalProgress(signal: peerSignal |> deliverOnMainQueue, for: mainWindow).start(next: { peer in
+                _ = showModalProgress(signal: peerSignal |> deliverOnMainQueue, for: context.window).start(next: { peer in
                     if let peer = peer {
                         let messageId:MessageId?
                         if let postId = postId {
@@ -255,17 +260,17 @@ func execute(inapp:inAppLink) {
                         }
                         if let peer = peer as? TelegramChannel {
                             if peer.participationStatus != .member {
-                                alert(for: mainWindow, info: L10n.alertPrivateChannelAccessError)
+                                alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
                                 return
                             }
                         }
                         callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                     } else {
-                        alert(for: mainWindow, info: L10n.alertPrivateChannelAccessError)
+                        alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
                     }
                 })
             } else {
-                alert(for: mainWindow, info: L10n.alertPrivateChannelAccessError)
+                alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
             }
         } else {
             let _ = showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
@@ -273,7 +278,7 @@ func execute(inapp:inAppLink) {
                     return context.account.postbox.loadedPeerWithId(peerId) |> map {Optional($0)}
                 }
                 return .single(nil)
-            } |> deliverOnMainQueue, for: mainWindow).start(next: { peer in
+            } |> deliverOnMainQueue, for: context.window).start(next: { peer in
                 if let peer = peer {
                     let messageId:MessageId?
                     if let postId = postId {
@@ -283,7 +288,7 @@ func execute(inapp:inAppLink) {
                     }
                     callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                 } else {
-                    alert(for: mainWindow, info: tr(L10n.alertUserDoesntExists))
+                    alert(for: context.window, info: tr(L10n.alertUserDoesntExists))
                 }
                     
             })
@@ -292,20 +297,20 @@ func execute(inapp:inAppLink) {
         
     case let .inviteBotToGroup(_, username, context, action, callback):
         
-        let _ = (showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: mainWindow) |> mapToSignal { memberId -> Signal<PeerId, NoError> in
+        let _ = (showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window) |> mapToSignal { memberId -> Signal<PeerId, NoError> in
             
             return selectModalPeers(context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
                     return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
-                        return confirmSignal(for: mainWindow, information: L10n.confirmAddBotToGroup(peer.displayTitle))
+                        return confirmSignal(for: context.window, information: L10n.confirmAddBotToGroup(peer.displayTitle))
                     }
                 }
                 return .single(false)
             }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { peerId -> Signal<PeerId, NoError> in
                 if peerId.namespace == Namespaces.Peer.CloudGroup {
-                    return showModalProgress(signal: addGroupMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map {peerId} |> `catch` {_ in return .complete()}
+                    return showModalProgress(signal: addGroupMember(account: context.account, peerId: peerId, memberId: memberId), for: context.window) |> map {peerId} |> `catch` {_ in return .complete()}
                 } else {
-                    return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId), for: mainWindow) |> map { _ in peerId }
+                    return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId), for: context.window) |> map { _ in peerId }
                 }
             }
             
@@ -317,7 +322,7 @@ func execute(inapp:inAppLink) {
     case let .hashtag(hashtag, interaction):
         interaction(hashtag)
     case let .joinchat(_, hash, context, interaction):
-        _ = showModalProgress(signal: joinLinkInformation(hash, account: context.account), for: mainWindow).start(next: { (result) in
+        _ = showModalProgress(signal: joinLinkInformation(hash, account: context.account), for: context.window).start(next: { (result) in
             switch result {
             case let .alreadyJoined(peerId):
                 interaction(peerId, true, nil, nil)
@@ -326,9 +331,9 @@ func execute(inapp:inAppLink) {
                     if let peerId = peerId {
                         interaction(peerId, true, nil, nil)
                     }
-                }), for: mainWindow)
+                }), for: context.window)
             case .invalidHash:
-                alert(for: mainWindow, info: tr(L10n.groupUnavailable))
+                alert(for: context.window, info: tr(L10n.groupUnavailable))
             }
         })
     case let .callback(param, interaction):
@@ -339,7 +344,7 @@ func execute(inapp:inAppLink) {
         interaction()
     case let .shareUrl(_, context, url):
         if !url.hasPrefix("@") {
-            showModal(with: ShareModalController(ShareLinkObject(context, link: url)), for: mainWindow)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: url)), for: context.window)
         }
     case let .wallpaper(_, context, preview):
         switch preview {
@@ -355,14 +360,14 @@ func execute(inapp:inAppLink) {
             }, error: { error in
                 switch error {
                 case .generic:
-                    alert(for: mainWindow, info: L10n.wallpaperPreviewDoesntExists)
+                    alert(for: context.window, info: L10n.wallpaperPreviewDoesntExists)
                 }
             })
         }
     case let .stickerPack(_, reference, context, peerId):
         showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
     case let .confirmPhone(_, context, phone, hash):
-        _ = showModalProgress(signal: requestCancelAccountResetData(network: context.account.network, hash: hash) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
+        _ = showModalProgress(signal: requestCancelAccountResetData(network: context.account.network, hash: hash) |> deliverOnMainQueue, for: context.window).start(next: { data in
             showModal(with: cancelResetAccountController(account: context.account, phone: phone, data: data), for: context.window)
         }, error: { error in
             switch error {
@@ -378,32 +383,32 @@ func execute(inapp:inAppLink) {
         break
     case let .requestSecureId(_, context, value):
         if value.nonce.isEmpty {
-            alert(for: mainWindow, info: value.isModern ? "nonce is empty" : "payload is empty")
+            alert(for: context.window, info: value.isModern ? "nonce is empty" : "payload is empty")
             return
         }
         _ = showModalProgress(signal: (requestSecureIdForm(postbox: context.account.postbox, network: context.account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
             return context.account.postbox.loadedPeerWithId(context.peerId) |> mapError {_ in return .generic} |> map { peer in
                 return (form, peer)
             }
-        } |> deliverOnMainQueue), for: mainWindow).start(next: { form, peer in
+        } |> deliverOnMainQueue), for: context.window).start(next: { form, peer in
             let passport = PassportWindowController(context: context, peer: peer, request: value, form: form)
             passport.show()
         }, error: { error in
             switch error {
             case .serverError(let text):
-                alert(for: mainWindow, info: text)
+                alert(for: context.window, info: text)
             case .generic:
-                alert(for: mainWindow, info: "An error occured")
+                alert(for: context.window, info: "An error occured")
             case .versionOutdated:
                 updateAppAsYouWish(text: L10n.secureIdAppVersionOutdated, updateApp: true)
             }
         })
     case let .applyLocalization(_, context, value):
-        _ = showModalProgress(signal: requestLocalizationPreview(network: context.account.network, identifier: value) |> deliverOnMainQueue, for: mainWindow).start(next: { info in
+        _ = showModalProgress(signal: requestLocalizationPreview(network: context.account.network, identifier: value) |> deliverOnMainQueue, for: context.window).start(next: { info in
             if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
-                alert(for: mainWindow, info: L10n.applyLanguageChangeLanguageAlreadyActive(info.title))
+                alert(for: context.window, info: L10n.applyLanguageChangeLanguageAlreadyActive(info.title))
             } else if info.totalStringCount == 0 {
-                confirm(for: mainWindow, header: L10n.applyLanguageUnsufficientDataTitle, information: L10n.applyLanguageUnsufficientDataText(info.title), cancelTitle: "", thridTitle: L10n.applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
+                confirm(for: context.window, header: L10n.applyLanguageUnsufficientDataTitle, information: L10n.applyLanguageUnsufficientDataText(info.title), cancelTitle: "", thridTitle: L10n.applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
                     switch result {
                     case .basic:
                         break
@@ -479,8 +484,17 @@ func execute(inapp:inAppLink) {
                 }
             })
         }
-    case let .instantView(link, webpage, anchor):
+    case .instantView:
         break
+    case let .settings(_, context, section):
+        let controller: ViewController
+        switch section {
+        case .themes:
+            controller = AppAppearanceViewController(context: context)
+        case .devices:
+            controller = RecentSessionsController(context)
+        }
+        context.sharedContext.bindings.rootNavigation().push(controller)
     }
     
 }
@@ -593,6 +607,7 @@ enum inAppLink {
     case theme(link: String, context: AccountContext, name: String)
     case tonTransfer(link: String, context: AccountContext, data: ParsedWalletUrl)
     case instantView(link: String, webpage: TelegramMediaWebpage, anchor: String?)
+    case settings(link: String, context: AccountContext, section: InAppSettingsSection)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -632,6 +647,8 @@ enum inAppLink {
             return link
         case let .instantView(link, _, _):
             return link
+        case let .settings(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -644,7 +661,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings"]
 
 let ton_scheme:String = "ton://"
 
@@ -970,6 +987,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[11]:
                     if let context = context, let value = vars["slug"] {
                         return .theme(link: urlString, context: context, name: value)
+                    }
+                case known_scheme[12]:
+                    if let context = context, let range = action.range(of: known_scheme[12] + "/") {
+                        let section = String(action[range.upperBound...])
+                        if let section = InAppSettingsSection(rawValue: section) {
+                            return .settings(link: urlString, context: context, section: section)
+                        }
                     }
                 default:
                     break

@@ -79,7 +79,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case recentlySearch(Peer, Int, SearchSecretChatWrapper?, PeerStatusStringResult, UnreadSearchBadge, Bool)
     case globalPeer(FoundPeer, Int)
     case savedMessages(Peer)
-    case message(Message, String,Int)
+    case message(Message, String, CombinedPeerReadState?, Int)
     case separator(text: String, index:Int, state:SeparatorBlockState)
     case topPeers(Int, articlesEnabled: Bool, unreadArticles: Int32, selfPeer: Peer, peers: [Peer], unread: [PeerId: UnreadSearchBadge], online: [PeerId : Bool])
     case emptySearch
@@ -92,7 +92,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .localPeerId(peer.id)
         case let .globalPeer(found, _):
             return .globalPeerId(found.peer.id)
-        case let .message(message, _, _):
+        case let .message(message, _, _, _):
             return .messageId(message.id)
         case .savedMessages:
             return .savedMessages
@@ -116,7 +116,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return index
         case let .globalPeer(_,index):
             return index
-        case let .message(_, _, index):
+        case let .message(_, _, _, index):
             return index
         case .savedMessages:
             return -1
@@ -157,15 +157,9 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .message(lhsMessage, lhsSearchText, lhsIndex):
-            if case let .message(rhsMessage, rhsSearchText, rhsIndex) = rhs {
-                
-                if lhsIndex != rhsIndex {
-                    return false
-                }
-                if lhsSearchText != rhsSearchText {
-                    return false
-                }
+        case let .message(lhsMessage, text, combinedState, index):
+            if case .message(let rhsMessage, text, combinedState, index) = rhs {
+
                 if lhsMessage.id != rhsMessage.id {
                     return false
                 }
@@ -247,14 +241,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
     
     let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
         switch entry.entry {
-        case let .message(message, query, _):
+        case let .message(message, query, combinedState, _):
             var peer = RenderedPeer(message: message)
             if let group = message.peers[message.id.peerId] as? TelegramGroup, let migrationReference = group.migrationReference {
                 if let channelPeer = message.peers[migrationReference.peerId] {
                     peer = RenderedPeer(peer: channelPeer)
                 }
             }
-            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, query: query, renderedPeer: peer)
+            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, query: query, renderedPeer: peer, readState: combinedState)
             return item
         case let .globalPeer(foundPeer,_):
             var status: String? = nil
@@ -559,7 +553,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             var entries: [ChatListSearchEntry] = []
                             var index = 20001
                             for message in result.0.messages {
-                                entries.append(.message(message, query, index))
+                                entries.append(.message(message, query, result.0.readStates[message.id.peerId], index))
                                 index += 1
                             }
                             
@@ -592,11 +586,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             
                             entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: state))
                             if !remoteMessages.0.isEmpty {
-                                if !isRevealed {
-                                    entries += peers.prefix(5)
-                                } else {
-                                    entries += peers
-                                }
+                                entries += peers.prefix(5)
+//                                if !isRevealed {
+//                                    entries += peers.prefix(5)
+//                                } else {
+//                                    entries += peers
+//                                }
                             } else {
                                 entries += peers
                             }
