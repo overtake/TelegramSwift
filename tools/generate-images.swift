@@ -428,6 +428,9 @@ func initialize() -> [String] {
 
     array.append("login_qr_empty_cap")
     
+    array.append("chat_failed_scroller")
+    array.append("chat_failed_scroller_active")
+
     return array
 }
 

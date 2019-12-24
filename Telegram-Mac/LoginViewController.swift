@@ -449,7 +449,18 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
         
         
-        textView.centerX(y: codeText.frame.maxY + 50 + (passwordEnabled ? inputPassword.frame.height : 0))
+        var topOffset: CGFloat = codeText.frame.minY
+        
+        if !codeText.isHidden {
+            topOffset += 50
+        }
+        if numberText.isHidden {
+            topOffset -= 50
+        }
+
+        
+        
+        textView.centerX(y: topOffset + 20 + (passwordEnabled ? inputPassword.frame.height : 0))
         delayView.centerX(y: textView.frame.maxY + 20)
         errorLabel.centerX(y: codeText.frame.maxY + 25 + (passwordEnabled ? inputPassword.frame.height : 0))
         
@@ -459,7 +470,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         inputPassword.input.setFrameSize(inputPassword.frame.width - inputPassword.passwordLabel.frame.minX, inputPassword.input.frame.height)
         inputPassword.input.centerY()
 
-        inputPassword.setFrameOrigin(0, 101)
+        
+        
+        inputPassword.setFrameOrigin(0, topOffset)
     }
     
     fileprivate func update(with type:SentAuthorizationCodeType, nextType:AuthorizationCodeNextType? = nil, timeout:Int32?) {
@@ -631,6 +644,11 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
     func showPasswordInput(_ hint:String, _ number:String, _ code:String, animated: Bool) {
         errorLabel.state.set(.single(.normal))
         self.passwordEnabled = true
+        
+        self.codeText.isHidden = code.isEmpty
+        self.numberText.isHidden = number.isEmpty
+        self.editControl.isHidden = number.isEmpty
+        
         self.numberText.stringValue = number
         self.codeText.stringValue = code
         if !hint.isEmpty {
@@ -660,9 +678,8 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         
         forgotPasswordView.isHidden = false
         
-       
-        
         needsLayout = true
+        needsDisplay = true
     }
     
     func controlTextDidChange(_ obj: Notification) {
@@ -688,8 +705,12 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         
         
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
-        ctx.fill(NSMakeRect(0, 100, frame.width, .borderSize))
+        if !self.numberText.isHidden {
+            ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
+        }
+        if !codeText.isHidden {
+            ctx.fill(NSMakeRect(0, 100, frame.width, .borderSize))
+        }
     }
     
     override func setFrameSize(_ newSize: NSSize) {

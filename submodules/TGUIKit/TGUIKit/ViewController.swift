@@ -17,6 +17,7 @@ open class BackgroundView: ImageView {
     public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         gradient.actions = [:]
+        
         self.layer = gradient
         self.layer?.disableActions()
         self.layer?.contentsGravity = .resizeAspectFill

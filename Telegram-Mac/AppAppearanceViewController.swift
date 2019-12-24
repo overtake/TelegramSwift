@@ -60,13 +60,13 @@ private final class AppAppearanceViewArguments {
     let togglePalette:(InstallThemeSource)->Void
     let toggleBubbles:(Bool)->Void
     let toggleFontSize:(CGFloat)->Void
-    let selectAccentColor:(NSColor?)->Void
+    let selectAccentColor:(PaletteAccentColor?)->Void
     let selectChatBackground:()->Void
     let openAutoNightSettings:()->Void
     let removeTheme:(TelegramTheme)->Void
     let editTheme:(TelegramTheme)->Void
     let shareTheme:(TelegramTheme)->Void
-    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(NSColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void) {
+    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(PaletteAccentColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void) {
         self.context = context
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
@@ -127,10 +127,10 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
             selected = .local(appearance.presentation.colors)
         }
         
-        var locals = [dayClassicPalette, whitePalette, tintedNightPalette, systemPalette]
+        var locals = [dayClassicPalette, whitePalette, nightAccentPalette, systemPalette]
         
         for (i, local) in locals.enumerated() {
-            if let accent = settings.accents.first(where: { $0.name == local.parent }) {
+            if let accent = settings.accents.first(where: { $0.name == local.parent }), accent.color.accent != local.basicAccent {
                 locals[i] = local.withAccentColor(accent.color)
             }
         }
@@ -299,11 +299,11 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
             return settings.withUpdatedFontSize(value)
         }).start())
     }, selectAccentColor: { value in
-        let updateColor:(NSColor)->Void = { color in
+        let updateColor:(PaletteAccentColor)->Void = { color in
             updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 let clearPalette = settings.palette.withoutAccentColor()
                 var settings = settings
-                if color == settings.palette.basicAccent {
+                if color.accent == settings.palette.basicAccent {
                     settings = settings.withUpdatedPalette(clearPalette)
                 } else {
                     settings = settings.withUpdatedPalette(clearPalette.withAccentColor(color))

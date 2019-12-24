@@ -91,7 +91,25 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
                     thumbnailData = data
                 }
             }
-            disposable.set(showModalProgress(signal: createTheme(account: context.account, title: name, resource: resource, thumbnailData: thumbnailData)
+            let baseTheme: TelegramBaseTheme?
+            switch palette.parent {
+            case .day:
+                baseTheme = .day
+            case .dayClassic:
+                baseTheme = .classic
+            case .nightAccent:
+                baseTheme = .night
+            default:
+                baseTheme = nil
+            }
+            let settings: TelegramThemeSettings?
+            if let baseTheme = baseTheme {
+                settings = .init(baseTheme: baseTheme, accentColor: Int32(palette.accent.rgb), messageColors: (top: Int32(palette.bubbleBackground_outgoing.rgb), Int32(palette.bubbleBackground_outgoing.rgb)), wallpaper: nil)
+            } else {
+                settings = nil
+            }
+            
+            disposable.set(showModalProgress(signal: createTheme(account: context.account, title: name, resource: resource, thumbnailData: thumbnailData, settings: settings)
                 |> filter { value in
                     switch value {
                     case .result:

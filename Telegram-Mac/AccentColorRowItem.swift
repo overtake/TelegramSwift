@@ -8,6 +8,21 @@
 
 import TGUIKit
 
+private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> CGImage {
+    return generateImage(CGSize(width: 42.0, height: 42.0), rotatedContext: { size, context in
+        let bounds = CGRect(origin: CGPoint(), size: size)
+        context.clear(bounds)
+
+        context.setFillColor(color.accent.cgColor)
+        context.fillEllipse(in: bounds)
+        
+        if let bubble = color.bubble, bubbled {
+            context.setFillColor(bubble.cgColor)
+            context.fillEllipse(in: bounds.focus(NSMakeSize(16, 16)))
+        }
+    })!
+}
+
 private func generateCustomSwatchImage() -> CGImage {
     return generateImage(CGSize(width: 42.0, height: 42.0), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
@@ -49,11 +64,11 @@ private func generateSelectedRing(backgroundColor: NSColor) -> CGImage {
 
 
 class AccentColorRowItem: GeneralRowItem {
-    let selectAccentColor:(NSColor?)->Void
-    let list: [NSColor]
+    let selectAccentColor:(PaletteAccentColor?)->Void
+    let list: [PaletteAccentColor]
     let isNative: Bool
     let theme: TelegramPresentationTheme
-    init(_ initialSize: NSSize, stableId: AnyHashable, list: [NSColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(NSColor?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, list: [PaletteAccentColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(PaletteAccentColor?)->Void) {
         self.selectAccentColor = selectAccentColor
         self.list = list
         self.theme = theme
@@ -159,7 +174,7 @@ final class AccentColorRowView : TableRowView {
         selectedImageView.image = generateSelectedRing(backgroundColor: theme.colors.background)
         selectedImageView.setFrameSize(NSMakeSize(32, 32))
         selectedImageView.removeFromSuperview()
-        let colorList: [NSColor] = item.list
+        let colorList: [PaletteAccentColor] = item.list
         
         borderView.isHidden = !item.viewType.hasBorder
         
@@ -171,13 +186,14 @@ final class AccentColorRowView : TableRowView {
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
             button.layer?.cornerRadius = button.frame.height / 2
-            button.set(background: colorList[i], for: .Normal)
-            button.set(background: colorList[i], for: .Hover)
-            button.set(background: colorList[i], for: .Highlight)
+            let icon = generateAccentColor(colorList[i], bubbled: theme.bubbled)
+            button.set(image: icon, for: .Normal)
+            button.set(image: icon, for: .Hover)
+            button.set(image: icon, for: .Highlight)
             button.set(handler: { _ in
                 item.selectAccentColor(colorList[i])
             }, for: .Click)
-            if colorList[i] == theme.colors.accent {
+            if colorList[i].accent == theme.colors.accent {
                 button.addSubview(selectedImageView)
                 selectedImageView.center()
             }
@@ -186,7 +202,7 @@ final class AccentColorRowView : TableRowView {
         }
         
        
-        if !colorList.contains(theme.colors.accent) {
+        if !colorList.contains(where: { $0.accent == theme.colors.accent }) {
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
             button.layer?.cornerRadius = button.frame.height / 2

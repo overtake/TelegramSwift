@@ -130,6 +130,7 @@ func ==(lhs:ChatHistoryState, rhs:ChatHistoryState) -> Bool {
 
 
 class ChatControllerView : View, ChatInputDelegate {
+
     
     let tableView:TableView
     let inputView:ChatInputView
@@ -138,6 +139,7 @@ class ChatControllerView : View, ChatInputDelegate {
     private var searchInteractions:ChatSearchInteractions!
     private let scroller:ChatNavigateScroller
     private var mentions:ChatNavigationMention?
+    private var failed:ChatNavigateFailed?
     private var progressView:ProgressIndicator?
     private let header:ChatHeaderController
     private var historyState:ChatHistoryState?
@@ -230,6 +232,13 @@ class ChatControllerView : View, ChatInputDelegate {
         if let mentions = mentions {
             mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: true )
         }
+        if let failed = failed {
+            var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
+            if let mentions = mentions {
+                offset += (mentions.frame.height + 6)
+            }
+            failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: true )
+        }
     }
     
     
@@ -268,11 +277,19 @@ class ChatControllerView : View, ChatInputDelegate {
             if let view = inputContextHelper.accessoryView {
                 view._change(pos: NSMakePoint(0, frame.height - inputView.frame.height - view.frame.height), animated: animated)
             }
+            
+            scroller.change(pos: NSMakePoint(frame.width - scroller.frame.width - 6, size.height - scroller.frame.height - 6), animated: animated)
+            
             if let mentions = mentions {
                 mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: animated )
             }
-            scroller.change(pos: NSMakePoint(frame.width - scroller.frame.width - 6, size.height - scroller.frame.height - 6), animated: animated)
-            
+            if let failed = failed {
+                var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
+                if let mentions = mentions {
+                    offset += (mentions.frame.height + 6)
+                }
+                failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: animated)
+            }
             
             previousHeight = height
 
@@ -330,6 +347,13 @@ class ChatControllerView : View, ChatInputDelegate {
         
         if let mentions = mentions {
             mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: false )
+        }
+        if let failed = failed {
+            var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
+            if let mentions = mentions {
+                offset += (mentions.frame.height + 6)
+            }
+            failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: false )
         }
     }
     
@@ -410,13 +434,65 @@ class ChatControllerView : View, ChatInputDelegate {
 
         
         if let mentions = mentions {
-            mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: animated )
+            mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: animated)
+        }
+        if let failed = failed {
+            var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
+            if let mentions = mentions {
+                offset += (mentions.frame.height + 6)
+            }
+            failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: animated)
         }
         
         if let view = inputContextHelper.accessoryView {
             view._change(pos: NSMakePoint(0, frame.height - view.frame.height - inputView.frame.height), animated: animated)
         }
         CATransaction.commit()
+    }
+    
+    private(set) fileprivate var failedIds: Set<MessageId> = Set()
+    private var hasOnScreen: Bool = false
+    func updateFailedIds(_ ids: Set<MessageId>, hasOnScreen: Bool, animated: Bool) {
+        if hasOnScreen != self.hasOnScreen || self.failedIds != ids {
+            self.failedIds = ids
+            self.hasOnScreen = hasOnScreen
+            if !ids.isEmpty && !hasOnScreen {
+                if failed == nil {
+                    failed = ChatNavigateFailed(chatInteraction.context)
+                    if let failed = failed {
+                        var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
+                        if let mentions = mentions {
+                            offset += (mentions.frame.height + 6)
+                        }
+                        failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: animated)
+                        addSubview(failed)
+                    }
+                    if animated {
+                        failed?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+                failed?.removeAllHandlers()
+                failed?.set(handler: { [weak self] _ in
+                    if let id = ids.min() {
+                        self?.chatInteraction.focusMessageId(nil, id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                    }
+                    }, for: .Click)
+            } else {
+                if animated {
+                    if let failed = self.failed {
+                        self.failed = nil
+                        failed.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak failed] _ in
+                            failed?.removeFromSuperview()
+                        })
+                    }
+                } else {
+                    failed?.removeFromSuperview()
+                    failed = nil
+                }
+                
+            }
+            needsLayout = true
+        }
     }
     
     func updateMentionsCount(_ count: Int32, animated: Bool) {
@@ -864,7 +940,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let failedMessageEventsDisposable = MetaDisposable()
     private let selectMessagePollOptionDisposables: DisposableDict<MessageId> = DisposableDict()
     private let updateReqctionsDisposable: DisposableDict<MessageId> = DisposableDict()
-
+    private let failedMessageIdsDisposable = MetaDisposable()
+    private let hasScheduledMessagesDisposable = MetaDisposable()
     private let onlineMemberCountDisposable = MetaDisposable()
     private let chatUndoDisposable = MetaDisposable()
     private let discussionDataLoadDisposable = MetaDisposable()
@@ -1982,18 +2059,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .single((nil, false))
                                 }
                             } |> take(until: { index in
-                                return SignalTakeAction(passthrough: true, complete: !index.1)
+                                return SignalTakeAction(passthrough: index.0 != nil, complete: !index.1)
                             }) |> map { $0.0 }
                         
                         strongSelf.chatInteraction.loadingMessage.set(.single(true) |> delay(0.2, queue: Queue.mainQueue()))
-                        strongSelf.messageIndexDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak strongSelf] message in
+                        strongSelf.messageIndexDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { [weak strongSelf] message in
                             self?.chatInteraction.loadingMessage.set(.single(false))
                             if let strongSelf = strongSelf, let message = message {
                                 let message = message
                                 let toIndex = MessageIndex(message)
                                 strongSelf.setLocation(.Scroll(index: MessageHistoryAnchorIndex.message(toIndex), anchorIndex: MessageHistoryAnchorIndex.message(toIndex), sourceIndex: MessageHistoryAnchorIndex.message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: strongSelf.requestCount, animated: state.animated))
                             }
-                            }, completed: {
+                        }, completed: {
                                 
                         }))
                         //  }
@@ -2540,12 +2617,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
                                     .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
-                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
+//                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present
                                     .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
+//                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 if let peer = present.peer as? TelegramChannel {
                                     switch peer.info {
                                     case let .group(info):
@@ -2572,7 +2649,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                                 present = present
                                     .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
-                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
+//                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else {
                                 present = present.withUpdatedPinnedMessageId(nil)
                             }
@@ -2670,13 +2747,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         .withUpdatedBlocked(cachedData.isBlocked)
                                         .withUpdatedPeerStatusSettings(contactStatus)
                                         .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
-                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages && !(present.peer is TelegramSecretChat))
+//                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages && !(present.peer is TelegramSecretChat))
                                 } else if let cachedData = peerView.cachedData as? CachedChannelData {
                                     present = present
                                         .withUpdatedPeerStatusSettings(contactStatus)
                                         .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
                                         .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
+//                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                     if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
                                         switch peer.info {
                                         case let .group(info):
@@ -2700,7 +2777,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     present = present
                                         .withUpdatedPeerStatusSettings(contactStatus)
                                         .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
-                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
+//                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 } else if let _ = peerView.cachedData as? CachedSecretChatData {
                                     present = present
                                         .withUpdatedPeerStatusSettings(contactStatus)
@@ -2907,7 +2984,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         })
         
-        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             guard let `self` = self else {return}
             self.updateInteractiveReading()
         }))
@@ -2927,6 +3004,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var messageIdsWithUnseenPersonalMention: [MessageId] = []
                 var unsupportedMessagesIds: [MessageId] = []
 
+                var hasFailed: Bool = false
                 
                 tableView.enumerateVisibleItems(with: { item in
                     if let item = item as? ChatRowItem {
@@ -2934,9 +3012,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             message = item.messages.last
                         }
                         
+                        if let message = message, message.flags.contains(.Failed) {
+                            hasFailed = true
+                        }
+                        
                         for message in item.messages {
                             var hasUncocumedMention: Bool = false
                             var hasUncosumedContent: Bool = false
+                            
+                            if !hasFailed, message.flags.contains(.Failed) {
+                                hasFailed = true
+                            }
                             
                             if message.tags.contains(.unseenPersonalMessage) {
                                 for attribute in message.attributes {
@@ -2973,7 +3059,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return true
                 })
                 
-              
+                strongSelf.genericView.updateFailedIds(strongSelf.genericView.failedIds, hasOnScreen: hasFailed, animated: true)
                 
                 if !messageIdsWithViewCount.isEmpty {
                     strongSelf.messageProcessingManager.add(messageIdsWithViewCount)
@@ -2994,8 +3080,61 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         })
         
+        let peerId = self.chatInteraction.peerId
+        switch self.mode {
+        case .history:
+            let failed = context.account.postbox.failedMessageIdsView(peerId: peerId) |> deliverOnMainQueue
+            
+            var failedAnimate: Bool = true
+            failedMessageIdsDisposable.set(failed.start(next: { [weak self] view in
+                var hasFailed: Bool = false
+                
+                self?.genericView.tableView.enumerateVisibleItems(with: { item in
+                    if let item = item as? ChatRowItem {
+                        if let message = item.message, message.flags.contains(.Failed) {
+                            hasFailed = true
+                        }
+                        for message in item.messages {
+                            if !hasFailed, message.flags.contains(.Failed) {
+                                hasFailed = true
+                            }
+                        }
+                    }
+                    return !hasFailed
+                })
+                
+                self?.genericView.updateFailedIds(view.ids, hasOnScreen: hasFailed, animated: !failedAnimate)
+                failedAnimate = true
+            }))
+            
+            
+            
+            let hasScheduledMessages = peerView.get()
+            |> take(1)
+            |> mapToSignal { view -> Signal<Bool, NoError> in
+                if let view = view as? PeerView, let peer = peerViewMainPeer(view) as? TelegramChannel, !peer.hasPermission(.sendMessages) {
+                    return .single(false)
+                } else {
+                    return context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId))
+                        |> map { view, _, _ in
+                            return !view.entries.isEmpty
+                    }
+                }
+            } |> deliverOnMainQueue
+            
+            hasScheduledMessagesDisposable.set(hasScheduledMessages.start(next: { [weak self] hasScheduledMessages in
+                self?.chatInteraction.update({
+                    $0.withUpdatedHasScheduled(hasScheduledMessages)
+                })
+            }))
+            
+        default:
+            break
+        }
         
-   
+        
+        
+       
         
         let undoSignals = combineLatest(queue: .mainQueue(), context.chatUndoManager.status(for: chatInteraction.peerId, type: .deleteChat), context.chatUndoManager.status(for: chatInteraction.peerId, type: .leftChat), context.chatUndoManager.status(for: chatInteraction.peerId, type: .leftChannel), context.chatUndoManager.status(for: chatInteraction.peerId, type: .deleteChannel))
         
@@ -3518,6 +3657,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         forwardMessagesDisposable.dispose()
         updateReqctionsDisposable.dispose()
         shiftSelectedDisposable.dispose()
+        failedMessageIdsDisposable.dispose()
+        hasScheduledMessagesDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false

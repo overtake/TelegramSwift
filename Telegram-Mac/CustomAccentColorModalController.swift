@@ -54,7 +54,7 @@ private final class CustomAccentColorView : View {
             case let .single(color):
                 self.colorPicker.colorPicker.color = color
                 self.colorPicker.colorPicker.needsLayout = true
-                let colors = theme.colors.withoutAccentColor().withAccentColor(color, disableTint: self.disableTint)
+                let colors = theme.colors.withoutAccentColor().withAccentColor(PaletteAccentColor(color), disableTint: self.disableTint)
                 let newTheme = theme.withUpdatedColors(colors)
                 self.addTableItems(self.context, theme: newTheme)
                 self.tableView.updateLocalizationAndTheme(theme: newTheme)
@@ -136,8 +136,8 @@ private final class CustomAccentColorView : View {
 class CustomAccentColorModalController: ModalViewController {
 
     private let context: AccountContext
-    private let updateColor: (NSColor)->Void
-    init(context: AccountContext, updateColor: @escaping(NSColor)->Void) {
+    private let updateColor: (PaletteAccentColor)->Void
+    init(context: AccountContext, updateColor: @escaping(PaletteAccentColor)->Void) {
         self.context = context
         self.updateColor = updateColor
         super.init(frame: NSMakeRect(0, 0, 350, 370))
@@ -169,7 +169,7 @@ class CustomAccentColorModalController: ModalViewController {
     
     private func saveAccent() {
         let color = genericView.colorPicker.colorPicker.color
-        self.updateColor(color)
+        self.updateColor(PaletteAccentColor(color))
         
         delay(0.1, closure: { [weak self] in
            self?.close()

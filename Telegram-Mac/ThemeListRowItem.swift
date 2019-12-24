@@ -53,7 +53,7 @@ private final class HorizontalThemeItem : GeneralRowItem {
         let attr: NSAttributedString
         switch themeType {
         case let .local(palette):
-            attr = .initialize(string: palette.name, color: selected ? theme.colors.accent : theme.colors.text, font: selected ? .medium(12) : .normal(12))
+            attr = .initialize(string: localizedString("AppearanceSettings.ColorTheme.\(palette.name)"), color: selected ? theme.colors.accent : theme.colors.text, font: selected ? .medium(12) : .normal(12))
         case let .cloud(cloud):
             attr = .initialize(string: cloud.title, color: selected ? theme.colors.accent : theme.colors.text, font: selected ? .medium(12) : .normal(12))
         }

@@ -430,6 +430,10 @@ class ChatGroupedItem: ChatRowItem {
         }
     }
     
+    override var instantlyResize: Bool {
+        return true
+    }
+    
     override func viewClass() -> AnyClass {
         return ChatGroupedView.self
     }
@@ -625,6 +629,8 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         assert(contents.count == item.layout.count)
         
         let approximateSynchronousValue = item.approximateSynchronousValue
+        
+        contentView.frame = self.contentFrame
         
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)

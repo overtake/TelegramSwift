@@ -123,6 +123,33 @@ class WPLayout: Equatable {
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true)
             
             let interactions = globalLinkExecutor
+            interactions.resolveLink = { link in
+                 if let link = link as? inAppLink {
+                    if case .external(let url, _) = link {
+                        switch wname {
+                        case "instagram":
+                            if url.hasPrefix("@") {
+                                return "https://instagram.com/\(url.nsstring.substring(from: 1))"
+                            }
+                            if url.hasPrefix("#") {
+                                return "https://instagram.com/explore/tags/\(url.nsstring.substring(from: 1))"
+                            }
+                        case "twitter":
+                            if url.hasPrefix("@") {
+                                return "https://twitter.com/\(url.nsstring.substring(from: 1))"
+                            }
+                            if url.hasPrefix("#") {
+                                return "https://twitter.com/hashtag/\(url.nsstring.substring(from: 1))"
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    return link.link
+                }
+                return nil
+                
+            }
             interactions.processURL = { link in
                 if let link = link as? inAppLink {
                     var link = link

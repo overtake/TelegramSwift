@@ -320,7 +320,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
                 
             }) |> mapError { _ in CreateThemeError.generic }
             |> mapToSignal {
-                updateTheme(account: context.account, accountManager: context.sharedContext.accountManager, theme: telegramTheme, title: state.name, slug: state.slug, resource: mediaResource, thumbnailData: thumbnailData)
+                updateTheme(account: context.account, accountManager: context.sharedContext.accountManager, theme: telegramTheme, title: state.name, slug: state.slug, resource: mediaResource, thumbnailData: thumbnailData, settings: nil)
                     |> filter {
                         switch $0 {
                         case .progress:
