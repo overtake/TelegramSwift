@@ -349,11 +349,7 @@ class ChatListController : PeersListController {
             var removeNextAnimation: Bool = false
             switch location {
             case let .Initial(count, st):
-                if groupId == .root || groupId.rawValue == 2 || groupId == Namespaces.PeerGroup.archive {
-                    signal = context.account.viewTracker.tailChatListView(groupId: groupId, count: count)
-                } else {
-                    signal = context.account.viewTracker.tailChatListView(groupId: groupId, count: 500)
-                }
+                signal = context.account.viewTracker.tailChatListView(groupId: groupId, count: 50)
                 
                 scroll = st
             case let .Index(index, st):
