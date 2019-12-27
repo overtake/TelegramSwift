@@ -135,7 +135,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 actionButton?.removeAllHandlers()
                 actionButton?.set(handler: { [weak item] _ in
                     item?.invokeAction()
-                    }, for: .Click)
+                }, for: .Click)
                 actionButton?.set(text: text, for: .Normal)
                 actionButton?.layer?.borderColor = item.wpPresentation.activity.cgColor
                 actionButton?.set(color: item.wpPresentation.activity, for: .Normal)

@@ -90,9 +90,23 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             
         }, for: .Click)
         
+        
         progressView.onUserChanged = { [weak self] progress in
             self?.controller?.set(trackProgress: progress)
             self?.progressView.set(progress: CGFloat(progress), animated: false)
+        }
+        
+        var paused: Bool = false
+        
+        progressView.startScrobbling = { [weak self]  in
+            self?.controller?.pause()
+            paused = true
+        }
+        
+        progressView.endScrobbling = { [weak self]  in
+            if paused {
+                self?.controller?.play()
+            }
         }
         
         progressView.set(handler: { [weak self] control in

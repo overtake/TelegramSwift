@@ -417,7 +417,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     private(set) public var header:NavigationHeader?
     private(set) public var callHeader:CallNavigationHeader?
     private(set) public var undoHeader: UndoNavigationHeader?
-    var containerView:BackgroundView = BackgroundView()
+    var containerView:BackgroundView = BackgroundView(frame: NSZeroRect)
     
     public var backgroundMode: TableBackgroundMode {
         get {

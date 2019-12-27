@@ -231,7 +231,12 @@ class StickerPackPreviewModalController: ModalViewController {
         }, addpack: { [weak self] info, items, installed in
             self?.close()
             self?.disposable.dispose()
-            _ = (!installed ? addStickerPackInteractively(postbox: context.account.postbox, info: info, items: items) : removeStickerPackInteractively(postbox: context.account.postbox, id: info.id, option: .archive)).start()
+            if !installed {
+                _ = addStickerPackInteractively(postbox: context.account.postbox, info: info, items: items).start()
+            } else {
+                _ = removeStickerPackInteractively(postbox: context.account.postbox, id: info.id, option: .archive).start()
+            }
+            
         }, share: { [weak self] link in
             self?.close()
             showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: mainWindow)

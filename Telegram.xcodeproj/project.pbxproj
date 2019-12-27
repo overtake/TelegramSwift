@@ -208,6 +208,8 @@
 		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
+		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
+		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
 		A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */; };
 		A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -1229,9 +1231,15 @@
 		A71DC82C23858356000EEDE2 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		A71DC82E2386AADF000EEDE2 /* Signature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signature.swift; sourceTree = "<group>"; };
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
+		A7377E2023B5DCBA00AD3ADD /* SVGKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SVGKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
+		A7B5030E23B62E0000C9838E /* nanosvg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanosvg.c; sourceTree = "<group>"; };
+		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
+		A7B5031123B62E1700C9838E /* Svg.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Svg.m; sourceTree = "<group>"; };
+		A7B5031223B62E1A00C9838E /* Svg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Svg.h; sourceTree = "<group>"; };
 		A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaPhotosController.swift; sourceTree = "<group>"; };
 		A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotosMonthItem.swift; sourceTree = "<group>"; };
 		A7D28204236C3C0B0000A9BF /* Postbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Postbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2448,6 +2456,17 @@
 			name = "api-credentials";
 			sourceTree = "<group>";
 		};
+		A7B5030D23B62DF200C9838E /* svg */ = {
+			isa = PBXGroup;
+			children = (
+				A7B5031223B62E1A00C9838E /* Svg.h */,
+				A7B5031123B62E1700C9838E /* Svg.m */,
+				A7B5030E23B62E0000C9838E /* nanosvg.c */,
+				A7B5030F23B62E0400C9838E /* nanosvg.h */,
+			);
+			path = svg;
+			sourceTree = "<group>";
+		};
 		A7C41DAF2358622F00CF9402 /* modern */ = {
 			isa = PBXGroup;
 			children = (
@@ -3401,6 +3420,7 @@
 		C253A9531D9164CE00CDC850 /* thrid-party */ = {
 			isa = PBXGroup;
 			children = (
+				A7B5030D23B62DF200C9838E /* svg */,
 				9FC4DA9F21DD1D6C003E2A62 /* libjpeg-turbo */,
 				9F8FDED3205A7AD5001A7A77 /* ffmpeg */,
 				9FA0E52720519DF8001E5649 /* Video Encoder */,
@@ -4511,6 +4531,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A7377E5B23B5E99500AD3ADD /* libxml2.tbd */,
+				A7377E2023B5DCBA00AD3ADD /* SVGKit.framework */,
 				A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */,
 				A74EB06F237961A1005F55AE /* AppCenter.framework */,
 				A74EB070237961A1005F55AE /* AppCenterCrashes.framework */,
@@ -5307,6 +5329,7 @@
 				C23BC37E1E9BB28F00D79F92 /* AddContactModalController.swift in Sources */,
 				9F3EAB4420A5ED2F003FE7E3 /* ocr.mm in Sources */,
 				C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */,
+				A7B5031323B62E1A00C9838E /* Svg.m in Sources */,
 				9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* ChatGIFContentView.swift in Sources */,
 				C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */,
@@ -5491,6 +5514,7 @@
 				D07B558423338B6B00F076A8 /* WalletSplashController.swift in Sources */,
 				C27AAFE91DE9DA61009B9629 /* CountryManager.swift in Sources */,
 				C253A9611D917ACD00CDC850 /* ChatStickerContentView.swift in Sources */,
+				A7B5031023B62E0400C9838E /* nanosvg.c in Sources */,
 				C2E6F3CF1F9F85260023653D /* ContextHashtagRowItem.swift in Sources */,
 				C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */,
 				C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */,
@@ -5732,7 +5756,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D GITHUB";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5877,7 +5901,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D APP_STORE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -6086,7 +6110,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D STABLE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -6238,7 +6262,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D ALPHA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -6441,7 +6465,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D BETA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -6513,7 +6537,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";

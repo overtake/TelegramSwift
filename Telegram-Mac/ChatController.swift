@@ -1451,17 +1451,44 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.jumpToDate = { [weak self] date in
-            if let window = self?.window, let peerId = self?.chatInteraction.peerId {
-                let signal = searchMessageIdByTimestamp(account: context.account, peerId: peerId, timestamp: Int32(date.timeIntervalSince1970) - Int32(NSTimeZone.local.secondsFromGMT()))
+            if let strongSelf = self, let window = self?.window, let peerId = self?.chatInteraction.peerId {
                 
-                self?.dateDisposable.set(showModalProgress(signal: signal, for: window).start(next: { messageId in
-                    if let messageId = messageId {
-                        self?.chatInteraction.focusMessageId(nil, messageId, .top(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
+                switch strongSelf.mode {
+                case .history:
+                    let signal = searchMessageIdByTimestamp(account: context.account, peerId: peerId, timestamp: Int32(date.timeIntervalSince1970) - Int32(NSTimeZone.local.secondsFromGMT()))
+                    
+                    self?.dateDisposable.set(showModalProgress(signal: signal, for: window).start(next: { messageId in
+                        if let messageId = messageId {
+                            self?.chatInteraction.focusMessageId(nil, messageId, .top(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
+                        }
+                    }))
+                case .scheduled:
+                    var previousItem: ChatRowItem?
+                    strongSelf.genericView.tableView.enumerateItems(with: { item -> Bool in
+                        
+                        if let item = item as? ChatDateStickItem {
+                            var calendar = NSCalendar.current
+                            
+                            calendar.timeZone = TimeZone(abbreviation: "UTC")!
+                            let date = Date(timeIntervalSince1970: TimeInterval(item.timestamp + 86400))
+                            let components = calendar.dateComponents([.year, .month, .day], from: date)
+                            
+                            if CalendarUtils.monthDay(components.day!, date: date) == date {
+                                return false
+                            }
+                        } else if let item = item as? ChatRowItem {
+                            previousItem = item
+                        }
+                        
+                        return true
+                    })
+                    
+                    if let previousItem = previousItem {
+                        self?.genericView.tableView.scroll(to: .top(id: previousItem.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
                     }
-                }, error: { error in
-                    var bp:Int = 0
-                    bp += 1
-                }))
+                }
+                
+                
             }
         }
        
@@ -1765,7 +1792,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     var signals:[Signal<Void, NoError>] = []
                                     
                                     if result[0] == .selected {
-                                        signals.append(deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: .forEveryone))
+                                        signals.append(deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: .forEveryone))
                                     }
                                     if result[1] == .selected {
                                         signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
@@ -1800,7 +1827,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             strongSelf.chatInteraction.update({$0.withoutEditMessage()})
                                         }
                                     }
-                                    _ = deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: type).start()
+                                    _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: type).start()
                                     strongSelf.chatInteraction.update({$0.withoutSelectionState()})
                                 })
                             }

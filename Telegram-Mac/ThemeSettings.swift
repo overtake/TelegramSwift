@@ -33,7 +33,7 @@ extension PaletteWallpaper {
         case .builtin:
             return .builtin
         case let .color(color):
-            return .color(Int32(color.rgb))
+            return .color(color.argb)
         default:
             return .none
         }
@@ -128,7 +128,7 @@ struct ThemeWallpaper : PostboxCoding, Equatable {
             }
             if isPattern {
                 if let pattern = settings.color {
-                    var color = NSColor(rgb: UInt32(bitPattern: pattern)).hexString.lowercased()
+                    var color = NSColor(argb: pattern).hexString.lowercased()
                     color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     options.append("bg_color=\(color)")
                 }
@@ -152,18 +152,18 @@ struct ThemeWallpaper : PostboxCoding, Equatable {
 
 extension PaletteAccentColor {
     static func initWith(decoder: PostboxDecoder) -> PaletteAccentColor {
-        let accent = NSColor(UInt32(decoder.decodeInt32ForKey("c", orElse: 0)))
+        let accent = NSColor(argb: UInt32(bitPattern: decoder.decodeInt32ForKey("c", orElse: 0)))
         var bubble: NSColor? = nil
         if let rawBubble = decoder.decodeOptionalInt32ForKey("b") {
-            bubble = NSColor(UInt32(rawBubble))
+            bubble = NSColor(argb: UInt32(bitPattern: rawBubble))
         }
         return PaletteAccentColor(accent, bubble)
     }
     
     func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(Int32(self.accent.rgb), forKey: "c")
+        encoder.encodeInt32(Int32(bitPattern: self.accent.argb), forKey: "c")
         if let bubble = self.bubble {
-            encoder.encodeInt32(Int32(bubble.rgb), forKey: "b")
+            encoder.encodeInt32(Int32(bitPattern: bubble.argb), forKey: "b")
         } else {
             encoder.encodeNil(forKey: "b")
         }

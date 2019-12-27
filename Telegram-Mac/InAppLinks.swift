@@ -348,11 +348,11 @@ func execute(inapp:inAppLink) {
         }
     case let .wallpaper(_, context, preview):
         switch preview {
-        case let .gradient(top, bottom):
-            let wallpaper: TelegramWallpaper = .gradient(Int32(top.rgb), Int32(bottom.rgb), WallpaperSettings())
+        case let .gradient(top, bottom, rotation):
+            let wallpaper: TelegramWallpaper = .gradient(top.argb, bottom.rgb, WallpaperSettings(rotation: rotation))
             showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .color(color):
-            let wallpaper: TelegramWallpaper = .color(Int32(color.rgb))
+            let wallpaper: TelegramWallpaper = .color(color.argb)
             showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .slug(slug, settings):
             _ = showModalProgress(signal: getWallpaper(account: context.account, slug: slug) |> deliverOnMainQueue, for: context.window).start(next: { wallpaper in
@@ -427,11 +427,13 @@ func execute(inapp:inAppLink) {
             }
         })
     case let .theme(_, context, name):
-        _ = showModalProgress(signal: getTheme(account: context.account, slug: name), for: context.window).start(next: { theme in
-            if theme.file == nil {
-                showEditThemeModalController(context: context, theme: theme)
+        _ = showModalProgress(signal: getTheme(account: context.account, slug: name), for: context.window).start(next: { value in
+            if value.file == nil, let _ = value.settings {
+                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(value)), for: context.window)
+            } else if value.file == nil {
+                showEditThemeModalController(context: context, theme: value)
             } else {
-                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(theme)), for: context.window)
+                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(value)), for: context.window)
             }
         }, error: { error in
             switch error {
@@ -581,7 +583,7 @@ struct inAppSecureIdRequest {
 enum WallpaperPreview {
     case color(NSColor)
     case slug(String, WallpaperSettings)
-    case gradient(NSColor, NSColor)
+    case gradient(NSColor, NSColor, Int32?)
 }
 
 enum inAppLink {
@@ -689,6 +691,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     let external = url
     let urlString = external as String
     let url = url.lowercased.nsstring
+    
+
+    
     for domain in telegram_me {
         let range = url.range(of: domain)
         if range.location != NSNotFound && (range.location == 0 || url.substring(from: range.location - 1).hasPrefix("/")) {
@@ -740,19 +745,41 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     return .wallpaper(link: urlString, context: context, preview: .color(color))
                                 } else {
                                     
-                                    let components = component.components(separatedBy: "-")
-                                    if components.count == 2, let topColor = NSColor(hexString: "#\(components[0])"), let bottomColor = NSColor(hexString: "#\(components[1])")  {
-                                        return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor))
-                                    }
-
-                                    
                                     let vars = urlVars(with: value)
+
+                                    var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
+                                    
+                                    if let r = rotation {
+                                        let available:[Int32] = [0, 45, 90, 135, 180, 225, 270, 310]
+                                        if !available.contains(r) {
+                                            rotation = nil
+                                        }
+                                    }
+                                    
+                                    let components = component.components(separatedBy: "?").first?.components(separatedBy: "-") ?? []
+                                    if components.count == 2, let topColor = NSColor(hexString: "#\(components[0])"), let bottomColor = NSColor(hexString: "#\(components[1])")  {
+                                        return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor, rotation))
+                                    }
+                                    
                                     var blur: Bool = false
                                     var intensity: Int32? = 80
-                                    var color: Int32? = nil
-                                    
-                                    if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: "#\(bgcolor)")?.rgb {
-                                        color = Int32(bitPattern: rgb)
+                                    var color: UInt32? = nil
+                                    var bottomColor: UInt32? = nil
+
+                                    if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
+                                        let components = bgcolor.components(separatedBy: "-")
+                                        if components.count == 2 {
+                                            if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
+                                                color = rgb
+                                            }
+                                            if let rgb = NSColor(hexString: "#\(components[1])")?.argb {
+                                                bottomColor = rgb
+                                            }
+                                        } else if components.count == 1 {
+                                            if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
+                                                color = rgb
+                                            }
+                                        }
                                     }
                                     if let intensityString = vars["intensity"] {
                                         intensity = Int32(intensityString)
@@ -761,7 +788,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                         blur = mode.contains("blur")
                                     }
                                     
-                                    let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, intensity: intensity)
+                                    let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, bottomColor: bottomColor, intensity: intensity, rotation: rotation)
                                     
                                     var slug = component
                                     if let index = component.range(of: "?") {
@@ -953,10 +980,33 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         
                         var blur: Bool = false
                         var intensity: Int32? = 80
-                        var color: Int32? = nil
+                        var color: UInt32? = nil
+                        var bottomColor: UInt32? = nil
                         
-                        if let bgcolor = vars["bg_color"], let rgb = NSColor(hexString: "#\(bgcolor)")?.rgb {
-                            color = Int32(bitPattern: rgb)
+                        var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
+                        
+                        if let r = rotation {
+                            let available:[Int32] = [0, 45, 90, 135, 180, 225, 270, 310]
+                            if !available.contains(r) {
+                                rotation = nil
+                            }
+                        }
+
+                        
+                        if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
+                            let components = bgcolor.components(separatedBy: "-")
+                            if components.count == 2 {
+                                if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
+                                    color = rgb
+                                }
+                                if let rgb = NSColor(hexString: "#\(components[1])")?.argb {
+                                    bottomColor = rgb
+                                }
+                            } else if components.count == 1 {
+                                if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
+                                    color = rgb
+                                }
+                            }
                         }
                         if let mode = vars["mode"] {
                             blur = mode.contains("blur")
@@ -965,16 +1015,26 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             intensity = Int32(intensityString)
                         }
                         
-                        let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, intensity: intensity)
+                        let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, bottomColor: bottomColor, intensity: intensity, rotation: rotation)
                         
                         return .wallpaper(link: urlString, context: context, preview: .slug(value, settings))
                     }
                     if let context = context, let value = vars["color"] {
                         return .wallpaper(link: urlString, context: context, preview: .slug(value, WallpaperSettings()))
                     } else if let context = context, let component = vars["gradient"] {
-                        let components = component.components(separatedBy: "-")
+                        
+                        var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
+                        
+                        if let r = rotation {
+                            let available:[Int32] = [0, 45, 90, 135, 180, 225, 270, 310]
+                            if !available.contains(r) {
+                                rotation = nil
+                            }
+                        }
+                        
+                        let components = component.components(separatedBy: "?").first?.components(separatedBy: "-") ?? []
                         if components.count == 2, let topColor = NSColor(hexString: "#\(components[0])"), let bottomColor = NSColor(hexString: "#\(components[1])")  {
-                            return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor))
+                            return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor, rotation))
                         }
                     }
                 case known_scheme[10]:

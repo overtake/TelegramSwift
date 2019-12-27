@@ -48,8 +48,21 @@ public extension NSColor {
         return 0.2126 * red + 0.7152 * green + 0.0722 * blue
     }
     
+    var hsb: (CGFloat, CGFloat, CGFloat) {
+        var hue: CGFloat = 0.0
+        var saturation: CGFloat = 0.0
+        var brightness: CGFloat = 0.0
+        self.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil)
+        return (hue, saturation, brightness)
+    }
+
+    
     var brightnessAdjustedColor: NSColor{
-        
+        if lightness > 0.7 {
+            return NSColor(0x000000)
+        } else {
+            return NSColor(0xffffff)
+        }
         var components = self.cgColor.components
         let alpha = components?.last
         components?.removeLast()

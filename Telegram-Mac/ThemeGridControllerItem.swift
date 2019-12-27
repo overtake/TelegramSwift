@@ -14,17 +14,14 @@ import SwiftSignalKit
 import Postbox
 
 
-final class SettingsThemeWallpaperView: View {
+final class SettingsThemeWallpaperView: BackgroundView {
     private var wallpaper: Wallpaper?
     let imageView = TransformImageView()
     private let fetchDisposable = MetaDisposable()
     var delete: (() -> Void)?
     private let label: TextView = TextView()
-    override init() {
-        super.init()
-        self.layer = CAGradientLayer()
-        self.layer?.disableActions()
-        backgroundColor = theme.chatBackground
+    init() {
+        super.init(frame: NSZeroRect)
         layer?.borderColor = theme.colors.border.cgColor
         layer?.borderWidth = .borderSize
         addSubview(label)
@@ -67,7 +64,7 @@ final class SettingsThemeWallpaperView: View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    required init(frame frameRect: NSRect) {
+    required override init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
@@ -75,10 +72,10 @@ final class SettingsThemeWallpaperView: View {
         self.imageView.frame = CGRect(origin: CGPoint(), size: size)
         
         
+        
         self.wallpaper = wallpaper
         switch wallpaper {
         case .builtin:
-            (self.layer as? CAGradientLayer)?.colors = nil
             self.label.isHidden = true
             self.imageView.isHidden = false
             
@@ -99,51 +96,60 @@ final class SettingsThemeWallpaperView: View {
         case let .color(color):
             self.imageView.isHidden = true
             self.label.isHidden = true
-            (self.layer as? CAGradientLayer)?.colors = nil
-            backgroundColor = NSColor(UInt32(color))
-        case let .gradient(t, b):
+            self.backgroundMode = .color(color: NSColor(UInt32(color)))
+          //  backgroundColor = NSColor(UInt32(color))
+        case let .gradient(t, b, r):
             self.imageView.isHidden = true
             self.label.isHidden = true
             let top = NSColor(UInt32(t))
             let bottom = NSColor(UInt32(b))
-            (self.layer as? CAGradientLayer)?.colors = [top.cgColor, bottom.cgColor]
+            self.backgroundMode = .gradient(top: top, bottom: bottom, rotation: r)
         case let .image(representations, _):
             self.label.isHidden = true
             self.imageView.isHidden = false
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, autoFetchFullSize: true, scale: backingScaleFactor))
+            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor))
             self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.size.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil))
-            
+            self.backgroundMode = .plain
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
         case let .file(_, file, settings, isPattern):
             self.label.isHidden = true
             self.imageView.isHidden = false
-            (self.layer as? CAGradientLayer)?.colors = nil
             var patternColor: TransformImageEmptyColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
 
-            if isPattern {
-                var patternIntensity: CGFloat = 0.5
-                if let color = settings.color {
-                    if let intensity = settings.intensity {
-                        patternIntensity = CGFloat(intensity) / 100.0
-                    }
-                    patternColor = .color(NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity))
-                }
-            }
-            
             var representations:[TelegramMediaImageRepresentation] = []
-            representations.append(contentsOf: file.previewRepresentations)
+//            representations.append(contentsOf: file.previewRepresentations)
             if let dimensions = file.dimensions {
                 representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource))
+            } else {
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(600, 600)), resource: file.resource))
             }
             
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, autoFetchFullSize: true, scale: backingScaleFactor))
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.size.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
+            let sz = largestImageRepresentation(representations)?.dimensions.size ?? size
             
+            if isPattern {
+                var patternIntensity: CGFloat = 0.5
+                if let intensity = settings.intensity {
+                    patternIntensity = CGFloat(intensity) / 100.0
+                }
+                if let color = settings.color, settings.bottomColor == nil {
+                    patternColor = .color(NSColor(rgb: color, alpha: patternIntensity))
+                } else if let t = settings.color, let b = settings.bottomColor {
+                    let top = NSColor(argb: t)
+                    let bottom = NSColor(argb: b)
+                    patternColor = .gradient(top: top.withAlphaComponent(patternIntensity), bottom: bottom.withAlphaComponent(patternIntensity), rotation: settings.rotation)
+                }
+            }
+            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor))
+
+            
+            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: sz.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
+
             
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
+            
+            self.backgroundMode = .plain
         default:
-            (self.layer as? CAGradientLayer)?.colors = nil
-
+            self.backgroundMode = .plain
         }
     }
     
@@ -189,7 +195,6 @@ final class ThemeGridControllerItemNode: GridItemNode {
     private let imageView: ImageView = ImageView()
     override init(_ grid: GridNode) {
         self.wallpaperView = SettingsThemeWallpaperView()
-        wallpaperView.userInteractionEnabled = false 
         
         super.init(grid)
         self.addSubview(self.wallpaperView)

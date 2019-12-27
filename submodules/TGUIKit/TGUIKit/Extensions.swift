@@ -557,7 +557,7 @@ public extension NSView {
                 self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
             }
         } else {
-            self.layer?.removeAnimation(forKey: "position")
+           // self.layer?.removeAnimation(forKey: "position")
         }
         if save {
             self.setFrameOrigin(position)
@@ -588,7 +588,7 @@ public extension NSView {
             self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
             
         } else {
-            self.layer?.removeAnimation(forKey: "bounds")
+           // self.layer?.removeAnimation(forKey: "bounds")
         }
         if save {
             self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)

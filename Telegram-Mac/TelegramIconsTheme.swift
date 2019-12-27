@@ -1030,6 +1030,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chatSaveEditedMessage: CGImage {
+      if let image = cached.with({ $0["chatSaveEditedMessage"] }) {
+          return image
+      } else {
+          let image = _chatSaveEditedMessage()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatSaveEditedMessage"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chatRecordVoice: CGImage {
       if let image = cached.with({ $0["chatRecordVoice"] }) {
           return image
@@ -5411,6 +5424,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var wallpaper_color_rotate: CGImage {
+      if let image = cached.with({ $0["wallpaper_color_rotate"] }) {
+          return image
+      } else {
+          let image = _wallpaper_color_rotate()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallpaper_color_rotate"] = image
+              return current
+          }
+          return image
+      }
+  }
   var login_cap: CGImage {
       if let image = cached.with({ $0["login_cap"] }) {
           return image
@@ -5556,6 +5582,7 @@ final class TelegramIconsTheme {
   private let _audioPlayerLockedNext: ()->CGImage
   private let _audioPlayerLockedPrev: ()->CGImage
   private let _chatSendMessage: ()->CGImage
+  private let _chatSaveEditedMessage: ()->CGImage
   private let _chatRecordVoice: ()->CGImage
   private let _chatEntertainment: ()->CGImage
   private let _chatInlineDismiss: ()->CGImage
@@ -5893,6 +5920,7 @@ final class TelegramIconsTheme {
   private let _wallpaper_color_close: ()->CGImage
   private let _wallpaper_color_add: ()->CGImage
   private let _wallpaper_color_swap: ()->CGImage
+  private let _wallpaper_color_rotate: ()->CGImage
   private let _login_cap: ()->CGImage
   private let _login_qr_cap: ()->CGImage
   private let _login_qr_empty_cap: ()->CGImage
@@ -5979,6 +6007,7 @@ final class TelegramIconsTheme {
       audioPlayerLockedNext: @escaping()->CGImage,
       audioPlayerLockedPrev: @escaping()->CGImage,
       chatSendMessage: @escaping()->CGImage,
+      chatSaveEditedMessage: @escaping()->CGImage,
       chatRecordVoice: @escaping()->CGImage,
       chatEntertainment: @escaping()->CGImage,
       chatInlineDismiss: @escaping()->CGImage,
@@ -6316,6 +6345,7 @@ final class TelegramIconsTheme {
       wallpaper_color_close: @escaping()->CGImage,
       wallpaper_color_add: @escaping()->CGImage,
       wallpaper_color_swap: @escaping()->CGImage,
+      wallpaper_color_rotate: @escaping()->CGImage,
       login_cap: @escaping()->CGImage,
       login_qr_cap: @escaping()->CGImage,
       login_qr_empty_cap: @escaping()->CGImage,
@@ -6401,6 +6431,7 @@ final class TelegramIconsTheme {
       self._audioPlayerLockedNext = audioPlayerLockedNext
       self._audioPlayerLockedPrev = audioPlayerLockedPrev
       self._chatSendMessage = chatSendMessage
+      self._chatSaveEditedMessage = chatSaveEditedMessage
       self._chatRecordVoice = chatRecordVoice
       self._chatEntertainment = chatEntertainment
       self._chatInlineDismiss = chatInlineDismiss
@@ -6738,6 +6769,7 @@ final class TelegramIconsTheme {
       self._wallpaper_color_close = wallpaper_color_close
       self._wallpaper_color_add = wallpaper_color_add
       self._wallpaper_color_swap = wallpaper_color_swap
+      self._wallpaper_color_rotate = wallpaper_color_rotate
       self._login_cap = login_cap
       self._login_qr_cap = login_qr_cap
       self._login_qr_empty_cap = login_qr_empty_cap

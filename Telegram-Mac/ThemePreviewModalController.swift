@@ -98,7 +98,7 @@ private final class ThemePreviewView : BackgroundView {
 }
 
 enum ThemePreviewSource {
-    case localTheme(TelegramPresentationTheme)
+    case localTheme(TelegramPresentationTheme, name: String?)
     case cloudTheme(TelegramTheme)
 }
 
@@ -133,7 +133,7 @@ class ThemePreviewModalController: ModalViewController {
             guard let `self` = self else {
                 return
             }
-            let newTheme = self.currentTheme.withUpdatedChatMode(bubbled)
+            let newTheme = self.currentTheme.withUpdatedChatMode(bubbled).withUpdatedBackgroundSize(NSMakeSize(350, 350))
             self.currentTheme = newTheme
             self.genericView.addTableItems(self.context, theme: newTheme)
             self.genericView.backgroundMode = newTheme.controllerBackgroundMode
@@ -148,14 +148,44 @@ class ThemePreviewModalController: ModalViewController {
         }))
         
         switch self.source {
-        case let .localTheme(theme):
+        case let .localTheme(theme, _):
             self.currentTheme = theme.withUpdatedChatMode(true)
             genericView.addTableItems(self.context, theme: theme)
             modal?.updateLocalizationAndTheme(theme: theme)
             genericView.backgroundMode = theme.controllerBackgroundMode
             self.readyOnce()
         case let .cloudTheme(theme):
-            if let file = theme.file {
+            if let settings = theme.settings {
+                let palette = settings.palette
+                let wallpaper: Wallpaper
+                let cloud = settings.wallpaper
+                if let cloud = cloud {
+                    wallpaper = Wallpaper(cloud)
+                } else {
+                    if settings.baseTheme == .classic {
+                        wallpaper = .builtin
+                    } else {
+                        wallpaper = .none
+                    }
+                }
+                self.disposable.set(showModalProgress(signal: moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper), for: context.window).start(next: { [weak self] wallpaper in
+                    guard let `self` = self else {
+                        return
+                    }
+                    let newTheme = self.currentTheme
+                        .withUpdatedColors(palette)
+                        .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper)))
+                        .withUpdatedChatMode(true)
+                        .withUpdatedBackgroundSize(NSMakeSize(350, 350))
+                    self.currentTheme = newTheme
+                    self.genericView.addTableItems(context, theme: newTheme)
+                    self.modal?.updateLocalizationAndTheme(theme: newTheme)
+                    self.genericView.backgroundMode = newTheme.controllerBackgroundMode
+                    self.readyOnce()
+                    
+                }))
+
+            } else if let file = theme.file {
                 let signal = loadCloudPaletteAndWallpaper(context: context, file: file)
                 disposable.set(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { [weak self] data in
                     guard let `self` = self else {
@@ -197,10 +227,10 @@ class ThemePreviewModalController: ModalViewController {
             }), center: ModalHeaderData(title: theme.title, subtitle: count > 0 ? countTitle : nil), right: ModalHeaderData(image: currentTheme.icons.modalShare, handler: { [weak self] in
                 self?.share()
             }))
-        case let .localTheme(theme):
+        case let .localTheme(theme, name):
             return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
                 self?.close()
-            }), center: ModalHeaderData(title: theme.colors.name), right: nil)
+            }), center: ModalHeaderData(title: name ?? localizedString("AppearanceSettings.ColorTheme.\(theme.colors.name)")), right: nil)
         }
         
     }
@@ -250,7 +280,7 @@ class ThemePreviewModalController: ModalViewController {
             } else {
                 settings = settings.withUpdatedDefaultDay(defaultTheme)
             }
-            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultWallpaper()
+            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultWallpaper().saveDefaultAccent(color: PaletteAccentColor(colors.accent, colors.bubbleBackground_outgoing))
             return settings
         }).start()
         
@@ -305,7 +335,7 @@ func loadCloudPaletteAndWallpaper(context: AccountContext, file: TelegramMediaFi
                 case .none:
                     return .single((palette, Wallpaper.none, nil))
                 case let .color(color):
-                    return .single((palette, Wallpaper.color(Int32(color.rgb)), nil))
+                    return .single((palette, Wallpaper.color(color.argb), nil))
                 case let .url(url):
                     let link = inApp(for: url as NSString, context: context)
                     switch link {

@@ -2204,9 +2204,11 @@ func clearCache(_ path: String, excludes: [(partial: String, complete: String)])
     } |> runOn(resourcesQueue)
 }
 
-func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blurred: Bool) -> Signal<String, NoError> {
+func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blurred: Bool, isPattern: Bool) -> Signal<String, NoError> {
     let resourceData: Signal<MediaResourceData, NoError>
-    if blurred {
+    if isPattern {
+        resourceData = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedPatternWallpaperMaskRepresentation(size: nil), complete: true)
+    } else if blurred {
         resourceData = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedBlurredWallpaperRepresentation(), complete: true)
     } else {
         resourceData = postbox.mediaBox.resourceData(resource)
@@ -2225,11 +2227,11 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blu
 func moveWallpaperToCache(postbox: Postbox, wallpaper: Wallpaper) -> Signal<Wallpaper, NoError> {
     switch wallpaper {
     case let .image(reps, settings):
-        return moveWallpaperToCache(postbox: postbox, resource: largestImageRepresentation(reps)!.resource, blurred: settings.blur) |> map { _ in return wallpaper}
+        return moveWallpaperToCache(postbox: postbox, resource: largestImageRepresentation(reps)!.resource, blurred: settings.blur, isPattern: false) |> map { _ in return wallpaper}
     case let .custom(representation, blurred):
-        return moveWallpaperToCache(postbox: postbox, resource: representation.resource, blurred: blurred) |> map { _ in return wallpaper}
+        return moveWallpaperToCache(postbox: postbox, resource: representation.resource, blurred: blurred, isPattern: false) |> map { _ in return wallpaper}
     case let .file(_, file, settings, isPattern):
-        return moveWallpaperToCache(postbox: postbox, resource: file.resource, blurred: settings.blur) |> map { _ in return wallpaper}
+        return moveWallpaperToCache(postbox: postbox, resource: file.resource, blurred: settings.blur, isPattern: isPattern) |> map { _ in return wallpaper}
     default:
        return .single(wallpaper)
     }
@@ -2243,8 +2245,10 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
         
         let out = wallpapers + "/" + resource.id.uniqueId + "\(blurred ? ":\(CachedBlurredWallpaperRepresentation.uniqueId)" : "")" + ".jpg"
         
-        try? FileManager.default.removeItem(atPath: out)
-        try? FileManager.default.copyItem(atPath: path, toPath: out)
+        if !FileManager.default.fileExists(atPath: out) {
+            try? FileManager.default.removeItem(atPath: out)
+            try? FileManager.default.copyItem(atPath: path, toPath: out)
+        }
         subscriber.putNext(out)
         
         subscriber.putCompletion()
@@ -2707,12 +2711,138 @@ extension TelegramMediaWebpageLoadedContent {
                 newUrl = self.url + "?t=\(timecode)"
             }
         }
-        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, files: self.files, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, attributes: self.attributes, instantPage: self.instantPage)
     }
     func withUpdatedFile(_ file: TelegramMediaFile) -> TelegramMediaWebpageLoadedContent {
-        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: file, files: self.files, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: file, attributes: self.attributes, instantPage: self.instantPage)
+    }
+    
+    var isCrossplatformTheme: Bool {
+        for attr in attributes {
+            switch attr {
+            case let .theme(theme):
+                var hasFile: Bool = false
+                for file in theme.files {
+                    if file.mimeType == "application/x-tgtheme-macos", !file.previewRepresentations.isEmpty {
+                        hasFile = true
+                    }
+                }
+                if let _ = theme.settings, !hasFile {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return false
+    }
+    
+    var crossplatformPalette: ColorPalette? {
+        for attr in attributes {
+            switch attr {
+            case let .theme(theme):
+                return theme.settings?.palette
+            default:
+                break
+            }
+        }
+        return nil
+    }
+    var crossplatformWallpaper: Wallpaper? {
+        for attr in attributes {
+            switch attr {
+            case let .theme(theme):
+                return theme.settings?.background?.uiWallpaper
+            default:
+                break
+            }
+        }
+        return nil
+    }
+    
+    var themeSettings: TelegramThemeSettings? {
+        for attr in attributes {
+            switch attr {
+            case let .theme(theme):
+                return theme.settings
+            default:
+                break
+            }
+        }
+        return nil
     }
 }
 
+extension TelegramBaseTheme {
+    var palette: ColorPalette {
+        switch self {
+        case .classic:
+            return dayClassicPalette
+        case .day:
+            return whitePalette
+        case .night:
+            return systemPalette
+        case .tinted:
+            return nightAccentPalette
+        }
+    }
+}
+extension TelegramThemeSettings {
+    var palette: ColorPalette {
+        return baseTheme.palette.withAccentColor(accent)
+    }
+    
+    var accent: PaletteAccentColor {
+        var bubbleColor: NSColor?
+        if let message = self.messageColors {
+            let top = NSColor(argb: UInt32(bitPattern: message.top))
+            let bottom = NSColor(argb: UInt32(bitPattern: message.bottom))
+            bubbleColor = top.blended(withFraction: 0.5, of: bottom)
+        } else {
+            bubbleColor = nil
+        }
+        return PaletteAccentColor(NSColor(rgb: UInt32.init(bitPattern: self.accentColor)), bubbleColor)
+    }
+    
+    var background: TelegramWallpaper? {
+        if let wallpaper = self.wallpaper {
+            return wallpaper
+        } else {
+            if self.baseTheme == .classic {
+                return .builtin(WallpaperSettings())
+            }
+        }
+        return nil
+    }
+    
+    var desc: String {
+        let wString: String
+        if let wallpaper = self.wallpaper {
+            wString = "\(wallpaper)"
+        } else {
+            wString = ""
+        }
+        return "\(self.accentColor)-\(self.baseTheme)-\(String(describing: self.messageColors?.top))-\(String(describing: self.messageColors?.bottom))-\(wString)"
+    }
+}
+
+extension TelegramWallpaper {
+    var uiWallpaper: Wallpaper {
+        let t: Wallpaper
+        switch self {
+        case .builtin:
+            t = .builtin
+        case let .color(color):
+            t = .color(color)
+        case let .file(values):
+            t = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
+        case let .gradient(top, bottom, settings):
+            t = .gradient(top, bottom, settings.rotation)
+        case let .image(reps, settings):
+            t = .image(reps, settings: settings)
+        }
+        return t
+    }
+}
 
 //

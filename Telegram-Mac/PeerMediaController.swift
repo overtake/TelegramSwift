@@ -501,7 +501,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
 
                                        var signals:[Signal<Void, NoError>] = []
                                        if result[0] == .selected {
-                                           signals.append(deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messages.map {$0.id}, type: .forEveryone))
+                                           signals.append(deleteMessagesInteractively(account: context.account, messageIds: messages.map {$0.id}, type: .forEveryone))
                                        }
                                        if result[1] == .selected {
                                         signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peer.id, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
@@ -528,7 +528,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                                     case .thrid:
                                         type = .forEveryone
                                     }
-                                    _ = deleteMessagesInteractively(postbox: strongSelf.context.account.postbox, messageIds: messageIds, type: type).start()
+                                    _ = deleteMessagesInteractively(account: strongSelf.context.account, messageIds: messageIds, type: type).start()
                                     strongSelf.interactions.update({$0.withoutSelectionState()})
                                 })
                             }
