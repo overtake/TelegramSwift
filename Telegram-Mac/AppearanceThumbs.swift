@@ -31,7 +31,7 @@ private func cloudThemeData(context: AccountContext, file: TelegramMediaFile) ->
                 case .builtin:
                     wallpaper = .single(.builtin(newSettings))
                 case let .color(color):
-                    wallpaper = .single(.color(Int32(color.rgb)))
+                    wallpaper = .single(.color(color.argb))
                 case let .url(string):
                     let link = inApp(for: string as NSString, context: context)
                     switch link {
@@ -90,9 +90,9 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                 case .builtin:
                     backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
                 case let.color(color):
-                    backgroundMode = .color(color: NSColor(UInt32(abs(color))))
-                case let .gradient(top, bottom):
-                    backgroundMode = .gradient(top: NSColor(UInt32(abs(top))), bottom: NSColor(UInt32(abs(bottom))))
+                    backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
+                case let .gradient(top, bottom, rotation):
+                    backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
                 case let .image(representation, settings):
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
                         backgroundMode = .background(image: image)

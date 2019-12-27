@@ -338,7 +338,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                 applyUIPCallResult(context.sharedContext, result)
             }))
             }, removeCalls: { [weak self] messageIds in
-                _ = deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
+                _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: .forLocalPeer).start()
                 updateState({$0.withAdditionalIgnoringIds(messageIds)})
                 
                 if let strongSelf = self {

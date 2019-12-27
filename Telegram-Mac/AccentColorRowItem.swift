@@ -64,11 +64,11 @@ private func generateSelectedRing(backgroundColor: NSColor) -> CGImage {
 
 
 class AccentColorRowItem: GeneralRowItem {
-    let selectAccentColor:(PaletteAccentColor?)->Void
-    let list: [PaletteAccentColor]
+    let selectAccentColor:(AppearanceAccentColor?)->Void
+    let list: [AppearanceAccentColor]
     let isNative: Bool
     let theme: TelegramPresentationTheme
-    init(_ initialSize: NSSize, stableId: AnyHashable, list: [PaletteAccentColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(PaletteAccentColor?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, list: [AppearanceAccentColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(AppearanceAccentColor?)->Void) {
         self.selectAccentColor = selectAccentColor
         self.list = list
         self.theme = theme
@@ -174,7 +174,7 @@ final class AccentColorRowView : TableRowView {
         selectedImageView.image = generateSelectedRing(backgroundColor: theme.colors.background)
         selectedImageView.setFrameSize(NSMakeSize(32, 32))
         selectedImageView.removeFromSuperview()
-        let colorList: [PaletteAccentColor] = item.list
+        let colorList: [AppearanceAccentColor] = item.list
         
         borderView.isHidden = !item.viewType.hasBorder
         
@@ -182,18 +182,19 @@ final class AccentColorRowView : TableRowView {
         
         var x: CGFloat = insetWidth
         
+       
         for i in 0 ..< colorList.count {
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
             button.layer?.cornerRadius = button.frame.height / 2
-            let icon = generateAccentColor(colorList[i], bubbled: theme.bubbled)
+            let icon = generateAccentColor(colorList[i].accent, bubbled: theme.bubbled)
             button.set(image: icon, for: .Normal)
             button.set(image: icon, for: .Hover)
             button.set(image: icon, for: .Highlight)
             button.set(handler: { _ in
                 item.selectAccentColor(colorList[i])
             }, for: .Click)
-            if colorList[i].accent == theme.colors.accent {
+            if colorList[i].accent.accent == theme.colors.accent {
                 button.addSubview(selectedImageView)
                 selectedImageView.center()
             }
@@ -202,7 +203,7 @@ final class AccentColorRowView : TableRowView {
         }
         
        
-        if !colorList.contains(where: { $0.accent == theme.colors.accent }) {
+        if !colorList.contains(where: { $0.accent.accent == theme.colors.accent }) {
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
             button.layer?.cornerRadius = button.frame.height / 2
@@ -212,6 +213,7 @@ final class AccentColorRowView : TableRowView {
             x += button.frame.width + insetWidth
             documentView.addSubview(button)
         }
+        
         if item.isNative {
             let custom = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             custom.autohighlight = false
@@ -224,7 +226,7 @@ final class AccentColorRowView : TableRowView {
             
             x += custom.frame.width
         }
-       
+        
         
         documentView.setFrameSize(NSMakeSize(x + insetWidth, frame.height))
     }

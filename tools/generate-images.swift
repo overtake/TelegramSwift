@@ -81,6 +81,7 @@ func initialize() -> [String] {
     array.append("audioPlayerLockedNext")
     array.append("audioPlayerLockedPrev")
     array.append("chatSendMessage")
+    array.append("chatSaveEditedMessage")
     array.append("chatRecordVoice")
     array.append("chatEntertainment")
     array.append("chatInlineDismiss")
@@ -422,6 +423,7 @@ func initialize() -> [String] {
     array.append("wallpaper_color_close")
     array.append("wallpaper_color_add")
     array.append("wallpaper_color_swap")
+    array.append("wallpaper_color_rotate")
     
     array.append("login_cap")
     array.append("login_qr_cap")

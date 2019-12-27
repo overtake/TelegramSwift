@@ -20,6 +20,23 @@ private func generateLoginQrEmptyCap() -> CGImage {
     })!
 }
 
+private func generateSendIcon(_ image: NSImage, _ color: NSColor) -> CGImage {
+    let image = image.precomposed(color)
+    if color.lightness > 0.7 {
+        return image
+    } else {
+        return generateImage(image.backingSize, contextGenerator: { size, ctx in
+            let rect = CGRect(origin: CGPoint(), size: size)
+            ctx.clear(rect)
+            
+            ctx.setFillColor(.white)
+            ctx.fillEllipse(in: rect.focus(NSMakeSize(rect.width - 8, rect.height - 8)))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    }
+}
+
 private func generatePollAddOption(_ color: NSColor) -> CGImage {
     let image = NSImage(named: "Icon_PollAddOption")!.precomposed(color)
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
@@ -42,15 +59,44 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         ctx.fill(rect)
         
         switch wallpaper {
-        case .builtin, .file, .color:
+        case .builtin, .file, .color, .gradient:
             switch backgroundMode {
             case let .background(image):
                 let imageSize = image.size.aspectFilled(size)
-                ctx.draw(image.precomposed(flipVertical: true), in: rect.focus(imageSize))
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.scaleBy(x: 1.0, y: -1.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+
+                ctx.draw(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: rect.focus(imageSize))
+                
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.scaleBy(x: 1.0, y: -1.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+
+                
                 break
             case let .color(color):
                 ctx.setFillColor(color.cgColor)
                 ctx.fill(rect)
+            case let .gradient(top, bottom, rotation):
+                let colors = [top, bottom].reversed()
+                
+                let gradientColors = colors.map { $0.cgColor } as CFArray
+                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                
+                var locations: [CGFloat] = []
+                for i in 0 ..< colors.count {
+                    locations.append(delta * CGFloat(i))
+                }
+                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                
+                ctx.saveGState()
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                ctx.restoreGState()
             default:
                 break
             }
@@ -829,7 +875,7 @@ extension WallpaperSettings {
     func withUpdatedBlur(_ blur: Bool) -> WallpaperSettings {
         return WallpaperSettings(blur: blur, motion: self.motion, color: self.color, intensity: self.intensity)
     }
-    func withUpdatedColor(_ color: Int32?) -> WallpaperSettings {
+    func withUpdatedColor(_ color: UInt32?) -> WallpaperSettings {
         return WallpaperSettings(blur: self.blur, motion: self.motion, color: color, intensity: self.intensity)
     }
     
@@ -840,8 +886,8 @@ extension WallpaperSettings {
 
 enum Wallpaper : Equatable, PostboxCoding {
     case builtin
-    case color(Int32)
-    case gradient(Int32, Int32)
+    case color(UInt32)
+    case gradient(UInt32, UInt32, Int32?)
     case image([TelegramMediaImageRepresentation], settings: WallpaperSettings)
     case file(slug: String, file: TelegramMediaFile, settings: WallpaperSettings, isPattern: Bool)
     case none
@@ -858,7 +904,7 @@ enum Wallpaper : Equatable, PostboxCoding {
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
         case let .gradient(top, bottom, settings):
-            self = .gradient(top, bottom)
+            self = .gradient(top, bottom, settings.rotation)
         }
     }
     
@@ -876,8 +922,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             } else {
                 return false
             }
-        case let .gradient(top, bottom):
-            if case .gradient(top, bottom) = rhs {
+        case let .gradient(top, bottom, rotation):
+            if case .gradient(top, bottom, rotation) = rhs {
                 return true
             } else {
                 return false
@@ -920,7 +966,7 @@ enum Wallpaper : Equatable, PostboxCoding {
             }
             if isPattern {
                 if let pattern = settings.color {
-                    var color = NSColor(rgb: UInt32(bitPattern: pattern)).hexString.lowercased()
+                    var color = NSColor(argb: pattern).withAlphaComponent(1.0).hexString.lowercased()
                     color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     options.append("bg_color=\(color)")
                 }
@@ -943,7 +989,7 @@ enum Wallpaper : Equatable, PostboxCoding {
         case 0:
             self = .builtin
         case 1:
-            self = .color(decoder.decodeInt32ForKey("c", orElse: 0))
+            self = .color(UInt32(bitPattern: decoder.decodeInt32ForKey("c", orElse: 0)))
         case 2:
             let settings = decoder.decodeObjectForKey("settings", decoder: { WallpaperSettings(decoder: $0) }) as? WallpaperSettings ?? WallpaperSettings()
             self = .image(decoder.decodeObjectArrayWithDecoderForKey("i"), settings: settings)
@@ -955,7 +1001,7 @@ enum Wallpaper : Equatable, PostboxCoding {
         case 5:
             self = .none
         case 6:
-            self = .gradient(decoder.decodeInt32ForKey("ct", orElse: 0), decoder.decodeInt32ForKey("cb", orElse: 0))
+            self = .gradient(UInt32(bitPattern: decoder.decodeInt32ForKey("ct", orElse: 0)), UInt32(bitPattern: decoder.decodeInt32ForKey("cb", orElse: 0)), decoder.decodeOptionalInt32ForKey("cr"))
 
         default:
             assertionFailure()
@@ -970,7 +1016,7 @@ enum Wallpaper : Equatable, PostboxCoding {
             encoder.encodeInt32(0, forKey: "v")
         case let .color(color):
             encoder.encodeInt32(1, forKey: "v")
-            encoder.encodeInt32(color, forKey: "c")
+            encoder.encodeInt32(Int32(bitPattern: color), forKey: "c")
         case let .image(representations, settings):
             encoder.encodeInt32(2, forKey: "v")
             encoder.encodeObjectArray(representations, forKey: "i")
@@ -987,10 +1033,15 @@ enum Wallpaper : Equatable, PostboxCoding {
             encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
         case .none:
             encoder.encodeInt32(5, forKey: "v")
-        case let .gradient(top, bottom):
+        case let .gradient(top, bottom, rotation):
             encoder.encodeInt32(6, forKey: "v")
-            encoder.encodeInt32(top, forKey: "ct")
-            encoder.encodeInt32(bottom, forKey: "cb")
+            encoder.encodeInt32(Int32(bitPattern: top), forKey: "ct")
+            encoder.encodeInt32(Int32(bitPattern: bottom), forKey: "cb")
+            if let rotation = rotation {
+                encoder.encodeInt32(rotation, forKey: "cr")
+            } else {
+                encoder.encodeNil(forKey: "cr")
+            }
         }
     }
     
@@ -1003,9 +1054,9 @@ enum Wallpaper : Equatable, PostboxCoding {
         case .gradient:
             return self
         case let .image(representations, settings):
-            return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, intensity: settings.intensity))
+            return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, bottomColor: settings.bottomColor, intensity: settings.intensity, rotation: settings.rotation))
         case let .file(values):
-            return .file(slug: values.slug, file: values.file, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, intensity: settings.intensity), isPattern: values.isPattern)
+            return .file(slug: values.slug, file: values.file, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, bottomColor: settings.bottomColor, intensity: settings.intensity, rotation: settings.rotation), isPattern: values.isPattern)
         case let .custom(path, _):
             return .custom(path, blurred: blurred)
         case .none:
@@ -1131,6 +1182,108 @@ private func getAverageColor(_ color: NSColor) -> NSColor {
     return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
 }
 
+func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSize: NSSize = NSMakeSize(1280, 1280)) -> TableBackgroundMode {
+    #if !SHARE
+    var backgroundMode: TableBackgroundMode
+    switch wallpaper {
+    case .builtin:
+        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+    case let.color(color):
+        backgroundMode = .color(color: NSColor(color))
+    case let .gradient(top, bottom, rotation):
+        backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
+    case let .image(representation, settings):
+        if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
+            backgroundMode = .background(image: image)
+        } else {
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        }
+        
+    case let .file(_, file, settings, isPattern):
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
+            let size = image.size.aspectFilled(maxSize)
+            if isPattern {
+                let image = generateImage(size, contextGenerator: { size, ctx in
+                    let imageRect = NSMakeRect(0, 0, size.width, size.height)
+                    
+                    let colors:[NSColor]
+                    let color: NSColor
+                    var intensity: CGFloat = 0.5
+                    
+                    if let combinedColor = settings.color, settings.bottomColor == nil {
+                        let combinedColor = NSColor(combinedColor)
+                        if let i = settings.intensity {
+                            intensity = CGFloat(i) / 100.0
+                        }
+                        color = combinedColor.withAlphaComponent(1.0)
+                        intensity = combinedColor.alpha
+                        colors = [color]
+                    } else if let t = settings.color, let b = settings.bottomColor {
+                        let top = NSColor(argb: t)
+                        let bottom = NSColor(argb: b)
+                        color = top.withAlphaComponent(1.0)
+                        intensity = top.alpha
+                        colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
+                    } else {
+                        colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
+                        color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+                    }
+                    
+                    ctx.setBlendMode(.copy)
+                    if colors.count == 1 {
+                        ctx.setFillColor(color.cgColor)
+                        ctx.fill(imageRect)
+                    } else {
+                        let gradientColors = colors.map { $0.cgColor } as CFArray
+                        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                        
+                        var locations: [CGFloat] = []
+                        for i in 0 ..< colors.count {
+                            locations.append(delta * CGFloat(i))
+                        }
+                        let colorSpace = CGColorSpaceCreateDeviceRGB()
+                        let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                        
+                        ctx.saveGState()
+                        ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                        ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                        ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                        
+                        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                        ctx.restoreGState()
+                    }
+                    
+                    
+                    
+                    ctx.setBlendMode(.normal)
+                    ctx.interpolationQuality = .high
+                    
+                    ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
+                    ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                    ctx.fill(imageRect)
+                })!
+                backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
+            } else {
+                backgroundMode = .background(image: image)
+            }
+        } else {
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        }
+    case .none:
+        backgroundMode = .color(color: palette.chatBackground)
+    case let .custom(representation, blurred):
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
+            backgroundMode = .background(image: image)
+        } else {
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        }
+    }
+    return backgroundMode
+    #else
+    return .plain
+    #endif
+}
+
 class TelegramPresentationTheme : PresentationTheme {
     let chatList:TelegramChatListTheme
     #if !SHARE
@@ -1159,7 +1312,7 @@ class TelegramPresentationTheme : PresentationTheme {
                     } else {
                         return color
                     }
-                case let .gradient(top, bottom):
+                case let .gradient(top, bottom, rotation):
                     if let blended = top.blended(withFraction: 0.5, of: bottom) {
                         return getAverageColor(blended)
                     } else {
@@ -1223,111 +1376,14 @@ class TelegramPresentationTheme : PresentationTheme {
         return self.colors.chatBackground
     }
     
+    var backgroundSize: NSSize = NSMakeSize(1280, 1280)
+    
     private var _backgroundMode: TableBackgroundMode?
     var backgroundMode: TableBackgroundMode {
         if let value = _backgroundMode {
             return value
         } else {
-            let backgroundMode: TableBackgroundMode
-            #if !SHARE
-            switch wallpaper.wallpaper {
-            case .builtin:
-                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-            case let.color(color):
-                backgroundMode = .color(color: NSColor(UInt32(abs(color))))
-            case let .gradient(top, bottom):
-                backgroundMode = .gradient(top: NSColor(UInt32(abs(top))), bottom: NSColor(UInt32(abs(bottom))))
-            case let .image(representation, settings):
-                if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
-                    backgroundMode = .background(image: image)
-                } else {
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-                
-            case let .file(_, file, settings, isPattern):
-                if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
-                    if isPattern {
-                        let image = generateImage(image.size, contextGenerator: { size, ctx in
-                            let imageRect = NSMakeRect(0, 0, size.width, size.height)
-                            
-                            
-                            
-                            
-                            let colors:[NSColor]
-                            let color: NSColor
-                            var intensity: CGFloat = 0.5
-                            
-                            if let combinedColor = settings.color, settings.bottomColor == nil {
-                                let combinedColor = NSColor(UInt32(combinedColor))
-                                if let i = settings.intensity {
-                                    intensity = CGFloat(i) / 100.0
-                                }
-                                color = combinedColor.withAlphaComponent(1.0)
-                                intensity = combinedColor.alpha
-                                colors = [color]
-                            } else if let t = settings.color, let b = settings.bottomColor {
-                                let top = NSColor(UInt32(t))
-                                let bottom = NSColor(UInt32(b))
-                                color = top.withAlphaComponent(1.0)
-                                intensity = top.alpha
-                                colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
-                            } else {
-                                colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
-                                color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
-                            }
-                            
-                            ctx.setBlendMode(.copy)
-                            if colors.count == 1 {
-                                ctx.setFillColor(color.cgColor)
-                                ctx.fill(imageRect)
-                            } else {
-                                let gradientColors = colors.map { $0.cgColor } as CFArray
-                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                                
-                                var locations: [CGFloat] = []
-                                for i in 0 ..< colors.count {
-                                    locations.append(delta * CGFloat(i))
-                                }
-                                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                                
-                                ctx.saveGState()
-                                ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
-                                ctx.rotate(by: CGFloat(0) * CGFloat.pi / -180.0)
-                                ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
-                                
-                                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                                ctx.restoreGState()
-                            }
-
-
-                            
-                            ctx.setBlendMode(.normal)
-                            ctx.interpolationQuality = .high
-                            
-                            ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
-                            ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
-                            ctx.fill(imageRect)
-                        })!
-                        backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
-                    } else {
-                        backgroundMode = .background(image: image)
-                    }
-                } else {
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-            case .none:
-                backgroundMode = .color(color: colors.chatBackground)
-            case let .custom(representation, blurred):
-                if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
-                    backgroundMode = .background(image: image)
-                } else {
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-            }
-            #else
-            backgroundMode = .plain
-            #endif
+            let backgroundMode: TableBackgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
             
             self._backgroundMode = backgroundMode
             return backgroundMode
@@ -1372,6 +1428,12 @@ class TelegramPresentationTheme : PresentationTheme {
     func withUpdatedChatMode(_ bubbled: Bool) -> TelegramPresentationTheme {
         return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: bubbled), bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper)
     }
+    
+    func withUpdatedBackgroundSize(_ size: NSSize) -> TelegramPresentationTheme {
+        self.backgroundSize = size
+        return self
+    }
+    
     func withUpdatedWallpaper(_ wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
         return TelegramPresentationTheme(colors: self.colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper)
     }
@@ -1486,7 +1548,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                audioPlayerLockedPlay: { #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.grayIcon) },
                                                audioPlayerLockedNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.grayIcon) },
                                                audioPlayerLockedPrev: { #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.grayIcon) },
-                                               chatSendMessage: { #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.accentIcon) },
+                                               chatSendMessage: { generateSendIcon(#imageLiteral(resourceName: "Icon_SendMessage"), palette.accentIcon) },
+                                               chatSaveEditedMessage: { generateSendIcon(NSImage(named: "Icon_SaveEditedMessage")!, palette.accentIcon) },
                                                chatRecordVoice: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
                                                chatEntertainment: { #imageLiteral(resourceName: "Icon_Entertainments").precomposed(palette.grayIcon) },
                                                chatInlineDismiss: { #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(palette.grayIcon) },
@@ -1824,6 +1887,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                wallpaper_color_close: { NSImage(named: "Icon_GradientClose")!.precomposed(palette.grayIcon) },
                                                wallpaper_color_add: { NSImage(named: "Icon_GradientAdd")!.precomposed(palette.grayIcon) },
                                                wallpaper_color_swap: { NSImage(named: "Icon_GradientSwap")!.precomposed(palette.grayIcon) },
+                                               wallpaper_color_rotate: { NSImage(named: "Icon_GradientRotate")!.precomposed(palette.grayIcon) },
                                                login_cap: { NSImage(named: "Icon_LoginCap")!.precomposed(palette.accentIcon) },
                                                login_qr_cap: { NSImage(named: "Icon_loginQRCap")!.precomposed(palette.accentIcon) },
                                                login_qr_empty_cap: { generateLoginQrEmptyCap() },
@@ -1832,7 +1896,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
     )
 
 }
-private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
+func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,

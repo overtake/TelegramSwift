@@ -930,10 +930,10 @@ class GalleryViewer: NSResponder {
                                 type = .forEveryone
                             }
                             
-                            _ = deleteMessagesInteractively(postbox: self.context.account.postbox, messageIds: messageIds, type: type).start()
+                            _ = deleteMessagesInteractively(account: self.context.account, messageIds: messageIds, type: type).start()
                         })
                     } else {
-                        _ = deleteMessagesInteractively(postbox: self.context.account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
+                        _ = deleteMessagesInteractively(account: self.context.account, messageIds: messageIds, type: .forLocalPeer).start()
                     }
                 }
             }))

@@ -48,7 +48,17 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
                 }
                 return fetchCachedBlurredWallpaperRepresentation(account: account, resource: resource, resourceData: data, representation: representation)
         }
+    } else if let representation = representation as? CachedPatternWallpaperMaskRepresentation {
+        return account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
+            |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                if !data.complete {
+                    return .complete()
+                }
+                return fetchCachedPatternWallpaperMaskRepresentation(resource: resource, resourceData: data, representation: representation)
+        }
     }
+
+
 
     return .never()
 }
@@ -58,6 +68,62 @@ public func fetchCachedSharedResourceRepresentation(accountManager: AccountManag
     fatalError()
 }
 
+
+private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResource, resourceData: MediaResourceData, representation: CachedPatternWallpaperMaskRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    return Signal({ subscriber in
+        if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+            let path = NSTemporaryDirectory() + "\(arc4random64())"
+            let url = URL(fileURLWithPath: path)
+            
+            if let data = TGGUnzipData(data, 8 * 1024 * 1024), data.count > 5, let string = String(data: data.subdata(in: 0 ..< 5), encoding: .utf8), string == "<?xml" {
+                let size = representation.size ?? CGSize(width: 1440.0, height: 2960.0)
+                
+                if let image = drawSvgImageNano(data, size)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                    if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                        CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
+                        
+                        let colorQuality: Float = 0.87
+                        
+                        let options = NSMutableDictionary()
+                        options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                        
+                        CGImageDestinationAddImage(alphaDestination, image, options as CFDictionary)
+                        if CGImageDestinationFinalize(alphaDestination) {
+                            subscriber.putNext(.temporaryPath(path))
+                            subscriber.putCompletion()
+                        }
+                    }
+                }
+            } else if let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                let size = representation.size.flatMap { image.backingSize.aspectFitted($0) } ?? image.size
+                
+                let alphaImage = generateImage(size, contextGenerator: { size, context in
+                    context.setFillColor(NSColor.black.cgColor)
+                    context.fill(CGRect(origin: CGPoint(), size: size))
+                    context.clip(to: CGRect(origin: CGPoint(), size: size), mask: image)
+                    context.setFillColor(NSColor.white.cgColor)
+                    context.fill(CGRect(origin: CGPoint(), size: size))
+                }, scale: representation.size != nil ? 2.0 : 1.0)
+                
+                if let alphaImage = alphaImage, let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                    CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
+                    
+                    let colorQuality: Float = 0.87
+                    
+                    let options = NSMutableDictionary()
+                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                    
+                    CGImageDestinationAddImage(alphaDestination, alphaImage, options as CFDictionary)
+                    if CGImageDestinationFinalize(alphaDestination) {
+                        subscriber.putNext(.temporaryPath(path))
+                        subscriber.putCompletion()
+                    }
+                }
+            }
+        }
+        return EmptyDisposable
+    }) |> runOn(Queue.concurrentDefaultQueue())
+}
 
 
 private func accountRecordIdPathName(_ id: AccountRecordId) -> String {

@@ -123,8 +123,8 @@ public struct PaletteAccentColor : Equatable {
     public let accent: NSColor
     public let bubble: NSColor?
     public init(_ accent: NSColor, _ bubble: NSColor? = nil) {
-        self.accent = accent
-        self.bubble = bubble
+        self.accent = accent.withAlphaComponent(1.0)
+        self.bubble = bubble?.withAlphaComponent(1.0)
     }
 }
 
@@ -1326,15 +1326,22 @@ public class ColorPalette : Equatable {
         }
         
         
-        let lightnessColor = color.bubble ?? color.accent
-
+        var lightnessColor = color.bubble ?? color.accent
         
-       
-        
-
+        if color.bubble == nil {
+            switch parent {
+            case .dayClassic:
+                let hsb = accentColor.hsb
+                lightnessColor = NSColor(hue: hsb.0, saturation: (hsb.1 > 0.0 && hsb.2 > 0.0) ? 0.14 : 0.0, brightness: 0.79 + hsb.2 * 0.21, alpha: 1.0)
+            default:
+                break
+            }
+        }
         
         let bubbleBackground_outgoing = lightnessColor
-        bubbleBackgroundHighlight_outgoing = accentColor.withMultiplied(hue: 1.024, saturation: 0.9, brightness: 0.9)
+        bubbleBackgroundHighlight_outgoing = lightnessColor.darker(amount: 0.1)
+
+        
         
         
         var textBubble_outgoing = self.textBubble_outgoing
@@ -1351,12 +1358,26 @@ public class ColorPalette : Equatable {
         var chatReplyTextDisabledBubble_outgoing = self.chatReplyTextDisabledBubble_outgoing
         var chatReplyTitleBubble_outgoing = self.chatReplyTitleBubble_outgoing
         
+        var waveformForegroundBubble_outgoing = self.waveformForegroundBubble_outgoing
+        var waveformBackgroundBubble_outgoing = self.waveformBackgroundBubble_outgoing
+        
+        let waveformForegroundBubble_incoming = color.accent
+        let waveformBackgroundBubble_incoming = self.grayIcon
+
+        
+        let fileActivityForegroundBubble_incoming = NSColor(0xffffff)
+        let fileActivityBackgroundBubble_incoming = color.accent
+
+        
+        var selectTextBubble_outgoing = self.selectTextBubble_outgoing
+
         
         if lightnessColor.lightness > 0.75 {
             let hueFactor: CGFloat = 0.75
             let saturationFactor: CGFloat = 1.1
             let outgoingPrimaryTextColor = NSColor(rgb: 0x000000)
             let outgoingSecondaryTextColor = lightnessColor.withMultiplied(hue: 1.344 * hueFactor, saturation: 4.554 * saturationFactor, brightness: 0.549).withAlphaComponent(0.8)
+            bubbleBackgroundHighlight_outgoing = lightnessColor.withMultiplied(hue: 1.024, saturation: 0.9, brightness: 0.9)
 
             textBubble_outgoing = outgoingPrimaryTextColor
             webPreviewActivityBubble_outgoing = outgoingSecondaryTextColor.withAlphaComponent(1.0)
@@ -1365,14 +1386,23 @@ public class ColorPalette : Equatable {
             grayTextBubble_outgoing = outgoingSecondaryTextColor
             grayIconBubble_outgoing = outgoingSecondaryTextColor
             accentIconBubble_outgoing = outgoingSecondaryTextColor
-            fileActivityForegroundBubble_outgoing = outgoingSecondaryTextColor.withAlphaComponent(1.0)
+            fileActivityForegroundBubble_outgoing = NSColor(0xffffff)
             fileActivityBackgroundBubble_outgoing = outgoingSecondaryTextColor.withAlphaComponent(1.0)
             linkBubble_outgoing = outgoingSecondaryTextColor
-            chatReplyTextEnabledBubble_outgoing = outgoingSecondaryTextColor
+            chatReplyTextEnabledBubble_outgoing = outgoingPrimaryTextColor
             chatReplyTextDisabledBubble_outgoing = outgoingSecondaryTextColor
             chatReplyTitleBubble_outgoing = outgoingSecondaryTextColor
+            
+            waveformBackgroundBubble_outgoing = outgoingSecondaryTextColor
+            waveformForegroundBubble_outgoing = NSColor(0xffffff)
+            
+            selectTextBubble_outgoing = lightnessColor.lighter(amount: 0.2)
+            
+            
+
         } else {
             textBubble_outgoing = NSColor(0xffffff)
+            bubbleBackgroundHighlight_outgoing = lightnessColor.withMultiplied(hue: 1.024, saturation: 0.9, brightness: 0.9)
             webPreviewActivityBubble_outgoing = NSColor(0xffffff)
             monospacedPreBubble_outgoing = NSColor(0xffffff)
             monospacedCodeBubble_outgoing = NSColor(0xffffff)
@@ -1385,6 +1415,7 @@ public class ColorPalette : Equatable {
             chatReplyTextEnabledBubble_outgoing = textBubble_outgoing.withMultiplied(hue: 0.956, saturation: 0.17, brightness: 1.0)
             chatReplyTextDisabledBubble_outgoing = textBubble_outgoing.withMultiplied(hue: 0.956, saturation: 0.17, brightness: 1.0)
             chatReplyTitleBubble_outgoing = textBubble_outgoing.withMultiplied(hue: 0.956, saturation: 0.17, brightness: 1.0)
+            
         }
         
         
@@ -1454,7 +1485,7 @@ public class ColorPalette : Equatable {
                             waveformForeground: color.accent,
                             waveformBackgroundBubble_incoming: waveformBackgroundBubble_incoming,
                             waveformBackgroundBubble_outgoing: waveformBackgroundBubble_outgoing,
-                            waveformForegroundBubble_incoming: color.accent,
+                            waveformForegroundBubble_incoming: waveformForegroundBubble_incoming,
                             waveformForegroundBubble_outgoing: waveformForegroundBubble_outgoing,
                             webPreviewActivity: color.accent,
                             webPreviewActivityBubble_incoming: webPreviewActivityBubble_incoming,

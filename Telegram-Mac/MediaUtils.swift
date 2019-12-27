@@ -2692,21 +2692,118 @@ enum PatternWallpaperDrawMode {
 }
 
 
-func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatWallpaperDatas(account: account, representations: representations, file: file, webpage: webpage, autoFetchFullSize: autoFetchFullSize, isBlurred: isBlurred, synchronousLoad: synchronousLoad)
+func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wallpaper, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper)
     
-    
-    var prominent = false
-    if case .thumbnail = mode {
-        prominent = false
+    return signal |> map { wallpaper in
+        return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
+            
+            let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: NSMakeSize(300, 300)))
+            
+            context.withContext { ctx in
+                ctx.draw(preview, in: arguments.drawingRect)
+            }
+            
+            addCorners(context, arguments: arguments, scale: arguments.scale)
+            
+            return context
+        })
     }
+}
+
+
+private func patternWallpaperDatas(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false) -> Signal<ImageRenderData, NoError> {
+    if let smallestRepresentation = smallestImageRepresentation(representations.map({ $0.representation })), let largestRepresentation = largestImageRepresentation(representations.map({ $0.representation })), let smallestIndex = representations.firstIndex(where: { $0.representation == smallestRepresentation }), let largestIndex = representations.firstIndex(where: { $0.representation == largestRepresentation }) {
+        
+        let size: CGSize?
+        switch mode {
+        case .thumbnail:
+            size = largestRepresentation.dimensions.size.fitted(CGSize(width: 640.0, height: 640.0))
+        default:
+            size = nil
+        }
+        let maybeFullSize = account.postbox.mediaBox.cachedResourceRepresentation(largestRepresentation.resource, representation: CachedPatternWallpaperMaskRepresentation(size: size), complete: false, fetch: false)
+        
+        let signal = maybeFullSize
+            |> take(1)
+            |> mapToSignal { maybeData -> Signal<ImageRenderData, NoError> in
+                if maybeData.complete {
+                    let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
+                    return .single(ImageRenderData(nil, loadedData, true))
+                } else {
+                    let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: representations[smallestIndex].reference)
+                    let fetchedFullSize = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: representations[largestIndex].reference)
+                    
+                    let thumbnailData = Signal<Data?, NoError> { subscriber in
+                        let fetchedDisposable = fetchedThumbnail.start()
+                        let thumbnailDisposable = account.postbox.mediaBox.cachedResourceRepresentation(representations[smallestIndex].representation.resource, representation: CachedPatternWallpaperMaskRepresentation(size: size), complete: false, fetch: true).start(next: { next in
+                            subscriber.putNext(next.size == 0 ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: []))
+                        }, error: subscriber.putError, completed: subscriber.putCompletion)
+                        
+                        return ActionDisposable {
+                            fetchedDisposable.dispose()
+                            thumbnailDisposable.dispose()
+                        }
+                    }
+                    
+                    let fullSizeData = Signal<(Data?, Bool), NoError> { subscriber in
+                        let fetchedFullSizeDisposable = fetchedFullSize.start()
+                        let fullSizeDisposable = account.postbox.mediaBox.cachedResourceRepresentation(representations[largestIndex].representation.resource, representation: CachedPatternWallpaperMaskRepresentation(size: size), complete: false, fetch: true).start(next: { next in
+                            subscriber.putNext((next.size == 0 ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: []), next.complete))
+                        }, error: subscriber.putError, completed: subscriber.putCompletion)
+                        
+                        return ActionDisposable {
+                            fetchedFullSizeDisposable.dispose()
+                            fullSizeDisposable.dispose()
+                        }
+                    }
+                    
+                    return thumbnailData |> mapToSignal { thumbnailData in
+                        return fullSizeData |> map { (fullSizeData, complete) in
+                            return ImageRenderData(thumbnailData, fullSizeData, complete)
+                        }
+                    }
+                }
+        }
+        
+        return signal
+    } else {
+        return .never()
+    }
+}
+
+
+
+
+private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, prominent: Bool, scale: CGFloat) -> Signal<ImageDataTransformation, NoError> {
+
     return signal |> map { data in
+        
+        var fullSizeImage: CGImage? = nil
+        if let fullSizeData = data.fullSizeData, data.fullSizeComplete {
+            
+            if prominent {
+                let options = NSMutableDictionary()
+                options.setValue(960 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+                if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
+                    fullSizeImage = image
+                }
+            } else {
+                let options = NSMutableDictionary()
+                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+                if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                    fullSizeImage = image
+                }
+            }
+        }
+
+        
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
             
-            let fullSizeData = data.fullSizeData
             let thumbnailData = data.thumbnailData
-            let fullSizeComplete = data.fullSizeComplete
             
             let drawingRect = arguments.drawingRect
             var fittedSize = arguments.imageSize
@@ -2718,31 +2815,12 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
             }
             
             let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
-            
-            var fullSizeImage: CGImage?
-            if let fullSizeData = fullSizeData {
-                if fullSizeComplete {
-                    let options = NSMutableDictionary()
-                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
-                        fullSizeImage = image
-                    }
-                } else {
-                    let imageSource = CGImageSourceCreateIncremental(nil)
-                    CGImageSourceUpdateData(imageSource, fullSizeData as CFData, fullSizeComplete)
-                    
-                    let options = NSMutableDictionary()
-                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                    if let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
-                        fullSizeImage = image
-                    }
-                }
-            }
+        
             
             var thumbnailImage: CGImage?
             let options = NSMutableDictionary()
             options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-
+            
             if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
@@ -2767,50 +2845,18 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
                 let colors:[NSColor]
                 let color: NSColor
                 let intensity: CGFloat
+                let rotation: Int32?
                 switch combinedColor {
                 case let .color(combinedColor):
                     color = combinedColor.withAlphaComponent(1.0)
                     intensity = combinedColor.alpha
                     colors = [color]
-                case let .gradient(top, bottom):
+                    rotation = nil
+                case let .gradient(top, bottom, r):
                     color = top.withAlphaComponent(1.0)
                     intensity = top.alpha
                     colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
-                }
-                
-                
-                if fullSizeImage == nil {
-                    let context = DrawingContext(size: arguments.drawingSize, scale: 1.0, clear: true)
-                    context.withFlippedContext { c in
-                        c.setBlendMode(.copy)
-                        if colors.count == 1 {
-                            c.setFillColor(color.cgColor)
-                            c.fill(arguments.drawingRect)
-                        } else {
-                            let gradientColors = colors.map { $0.cgColor } as CFArray
-                            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                            
-                            var locations: [CGFloat] = []
-                            for i in 0 ..< colors.count {
-                                locations.append(delta * CGFloat(i))
-                            }
-                            let colorSpace = CGColorSpaceCreateDeviceRGB()
-                            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                            
-                            c.saveGState()
-                            c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                            c.rotate(by: CGFloat(0) * CGFloat.pi / -180.0)
-                            c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
-                            
-                            c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                            c.restoreGState()
-                        }
-
-                    }
-                    
-                    addCorners(context, arguments: arguments, scale: scale)
-                    
-                    return context
+                    rotation = r
                 }
                 
                 let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
@@ -2832,7 +2878,7 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
                         
                         c.saveGState()
                         c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                        c.rotate(by: CGFloat(0) * CGFloat.pi / -180.0)
+                        c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
                         c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
                         
                         c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
@@ -2846,11 +2892,11 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
                         c.setFillColor(patternColor(for: color, intensity: intensity, prominent: prominent).cgColor)
                         c.fill(arguments.drawingRect)
                     }
+                    
                 }
-                
                 addCorners(context, arguments: arguments, scale: scale)
-                
                 return context
+               
             } else {
                 context.withFlippedContext(isHighQuality: fullSizeImage != nil, { c in
                     c.setBlendMode(.copy)
@@ -2878,6 +2924,37 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
             }
         })
     }
+}
+
+
+func patternWallpaperImage(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, scale: CGFloat = 2.0, autoFetchFullSize: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    var prominent = false
+    if case .thumbnail = mode {
+        prominent = false
+    }
+    return chatWallpaperInternal(patternWallpaperDatas(account: account, representations: representations, mode: mode, autoFetchFullSize: autoFetchFullSize), prominent: prominent, scale: scale)
+}
+
+
+func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, isPattern: Bool, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    var prominent = false
+    if case .thumbnail = mode {
+        prominent = false
+    }
+    let signal: Signal<ImageRenderData, NoError>
+    if isPattern {
+        let reps = representations.map { rep -> ImageRepresentationWithReference in
+            if let webpage = webpage, let file = file {
+                return ImageRepresentationWithReference(representation: rep, reference: MediaResourceReference.media(media: AnyMediaReference.webPage(webPage: WebpageReference(webpage), media: file), resource: rep.resource))
+            } else {
+                return ImageRepresentationWithReference(representation: rep, reference: MediaResourceReference.wallpaper(resource: rep.resource))
+            }
+        }
+        signal = patternWallpaperDatas(account: account, representations: reps, mode: mode, autoFetchFullSize: autoFetchFullSize)
+    } else {
+        signal = chatWallpaperDatas(account: account, representations: representations, file: file, webpage: webpage, autoFetchFullSize: autoFetchFullSize, isBlurred: isBlurred, synchronousLoad: synchronousLoad)
+    }
+    return chatWallpaperInternal(signal, prominent: prominent, scale: scale)
 }
 
 

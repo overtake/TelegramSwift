@@ -573,8 +573,19 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             let peers = localPeers + remotePeers.0
 
                             
+
+                            
+                            entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: .none))
+                            if !remoteMessages.0.isEmpty {
+                                entries += peers
+                            } else {
+                                entries += peers
+                            }
+                        }
+                        if !remotePeers.1.isEmpty {
+                            
                             let state: SeparatorBlockState
-                            if peers.count > 5 && !remoteMessages.0.isEmpty {
+                            if remotePeers.1.count > 5 {
                                 if isRevealed {
                                     state = .all
                                 } else {
@@ -583,22 +594,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             } else {
                                 state = .none
                             }
+
+                            entries.append(.separator(text: L10n.searchSeparatorGlobalPeers, index: 10000, state: state))
                             
-                            entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: state))
-                            if !remoteMessages.0.isEmpty {
-                                entries += peers.prefix(5)
-//                                if !isRevealed {
-//                                    entries += peers.prefix(5)
-//                                } else {
-//                                    entries += peers
-//                                }
+                            if !isRevealed {
+                                entries += remotePeers.1.prefix(5)
                             } else {
-                                entries += peers
+                                entries += remotePeers.1
                             }
-                        }
-                        if !remotePeers.1.isEmpty {
-                            entries.append(.separator(text: L10n.searchSeparatorGlobalPeers, index: 10000, state: .none))
-                            entries += remotePeers.1
                         }
                         if !remoteMessages.0.isEmpty {
                             entries.append(.separator(text: L10n.searchSeparatorMessages, index: 20000, state: .none))
@@ -955,7 +958,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
             peer = item.peer
         } else if let item = item as? SeparatorRowItem {
-            if item.stableId == AnyHashable(ChatListSearchEntryStableId.separator(0)) {
+            if item.stableId == AnyHashable(ChatListSearchEntryStableId.separator(10000)) {
                 switch item.state {
                 case .short:
                     self.isRevealed.set(true)

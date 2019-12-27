@@ -241,9 +241,9 @@ class ChatWallpaperModalController: ModalViewController {
                     entries.append(ThemeGridControllerEntry(index: index, wallpaper: theme.wallpaper.wallpaper, telegramWallapper: nil, selected: true))
                 default:
                     if theme.colors.accent != theme.colors.basicAccent {
-                        wallpaper  = .color(Int32(bitPattern: theme.colors.basicAccent.rgb))
+                        wallpaper = .color(theme.colors.basicAccent.argb)
                     } else {
-                        wallpaper = .color(Int32(bitPattern: theme.colors.basicAccent.lighter(amount: 0.25).rgb))
+                        wallpaper = .color(theme.colors.basicAccent.lighter(amount: 0.25).argb)
                     }
                     entries.append(ThemeGridControllerEntry(index: index, wallpaper: wallpaper, telegramWallapper: nil, selected: theme.wallpaper.wallpaper.isSemanticallyEqual(to: wallpaper)))
                 }

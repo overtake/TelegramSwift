@@ -14,6 +14,16 @@ import Postbox
 import TGUIKit
 import SyncCore
 
+
+struct AppearanceAccentColor {
+    let accent: PaletteAccentColor
+    let cloudTheme: TelegramTheme?
+    init(accent: PaletteAccentColor, cloudTheme: TelegramTheme?) {
+        self.accent = accent
+        self.cloudTheme = cloudTheme
+    }
+}
+
 enum ThemeSettingsEntryTag: ItemListItemTag {
     case fontSize
     case theme
@@ -60,13 +70,14 @@ private final class AppAppearanceViewArguments {
     let togglePalette:(InstallThemeSource)->Void
     let toggleBubbles:(Bool)->Void
     let toggleFontSize:(CGFloat)->Void
-    let selectAccentColor:(PaletteAccentColor?)->Void
+    let selectAccentColor:(AppearanceAccentColor?)->Void
     let selectChatBackground:()->Void
     let openAutoNightSettings:()->Void
     let removeTheme:(TelegramTheme)->Void
     let editTheme:(TelegramTheme)->Void
     let shareTheme:(TelegramTheme)->Void
-    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(PaletteAccentColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void) {
+    let shareLocal:(ColorPalette)->Void
+    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void, shareLocal:@escaping(ColorPalette)->Void) {
         self.context = context
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
@@ -77,6 +88,7 @@ private final class AppAppearanceViewArguments {
         self.removeTheme = removeTheme
         self.editTheme = editTheme
         self.shareTheme = shareTheme
+        self.shareLocal = shareLocal
     }
 }
 
@@ -105,7 +117,8 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         return ThemePreviewRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, viewType: .firstItem)
     }))
     
-    let accentList = appearance.presentation.cloudTheme == nil ? appearance.presentation.colors.accentList : []
+    var accentList = appearance.presentation.cloudTheme == nil ? appearance.presentation.colors.accentList.map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
+    
     
     var cloudThemes = cloudThemes
     if let cloud = appearance.presentation.cloudTheme {
@@ -113,6 +126,18 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
             cloudThemes.append(cloud)
         }
     }
+    if appearance.presentation.cloudTheme == nil {
+        let copy = cloudThemes
+        for cloudTheme in copy {
+            if let settings = cloudTheme.settings, settings.palette.parent == appearance.presentation.colors.parent {
+                accentList.append(AppearanceAccentColor(accent: settings.accent, cloudTheme: cloudTheme))
+            }
+        }
+    }
+    
+    cloudThemes.removeAll(where:{ $0.settings != nil })
+
+    
     
     struct ListEquatable : Equatable {
         let theme: TelegramPresentationTheme
@@ -136,9 +161,9 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         }
         
         return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  locals, cloudThemes: cloudThemes, viewType: accentList.isEmpty ? .lastItem : .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
+            var items:[ContextMenuItem] = []
             switch source {
             case let .cloud(cloud):
-                var items:[ContextMenuItem] = []
                 
                 if cloud.isCreator {
                     items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
@@ -152,10 +177,12 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
                     arguments.removeTheme(cloud)
                 }))
                 
-                return items
-            default:
-                return []
+            case let .local(palette):
+                items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                    arguments.shareLocal(palette)
+                }))
             }
+            return items
         })
     }))
     
@@ -224,52 +251,54 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     let applyCloudThemeDisposable = MetaDisposable()
     let updateDisposable = MetaDisposable()
     
-    let arguments = AppAppearanceViewArguments(context: context, togglePalette: { source in
-        
-        let nightSettings = autoNightSettings(accountManager: context.sharedContext.accountManager) |> take(1) |> deliverOnMainQueue
-        
-        let applyTheme:()->Void = {
-            switch source {
-            case let .local(palette):
+    
+    let applyTheme:(InstallThemeSource)->Void = { source in
+        switch source {
+        case let .local(palette):
+            updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                var settings = settings
+                settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
+                
+                let defaultTheme = DefaultTheme(local: palette.parent, cloud: nil)
+                if palette.isDark {
+                    settings = settings.withUpdatedDefaultDark(defaultTheme)
+                } else {
+                    settings = settings.withUpdatedDefaultDay(defaultTheme)
+                }
+                
+                return settings.installDefaultWallpaper().installDefaultAccent().withUpdatedDefaultIsDark(palette.isDark)
+            }).start())
+        case let .cloud(cloud, cached):
+            if let cached = cached {
                 updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                     var settings = settings
-                    settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(nil)
-                    
-                    let defaultTheme = DefaultTheme(local: palette.parent, cloud: nil)
-                    if palette.isDark {
+                    settings = settings.withUpdatedPalette(cached.palette)
+                    settings = settings.withUpdatedCloudTheme(cloud)
+                    settings = settings.updateWallpaper { _ in
+                        return ThemeWallpaper(wallpaper: cached.wallpaper, associated: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper))
+                    }
+                    let defaultTheme = DefaultTheme(local: settings.defaultDark.local, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
+                    if cached.palette.isDark {
                         settings = settings.withUpdatedDefaultDark(defaultTheme)
                     } else {
                         settings = settings.withUpdatedDefaultDay(defaultTheme)
                     }
-                    
-                    return settings.installDefaultWallpaper().installDefaultAccent().withUpdatedDefaultIsDark(palette.isDark)
+                    return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark)
                 }).start())
-            case let .cloud(cloud, cached):
-                if let cached = cached {
-                    updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                        var settings = settings
-                        settings = settings.withUpdatedPalette(cached.palette)
-                        settings = settings.withUpdatedCloudTheme(cloud)
-                        settings = settings.updateWallpaper { _ in
-                            return ThemeWallpaper(wallpaper: cached.wallpaper, associated: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper))
-                        }
-                        let defaultTheme = DefaultTheme(local: settings.defaultDark.local, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
-                        if cached.palette.isDark {
-                            settings = settings.withUpdatedDefaultDark(defaultTheme)
-                        } else {
-                            settings = settings.withUpdatedDefaultDay(defaultTheme)
-                        }
-                        return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark)
-                    }).start())
-                    
-                    applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start())
-                } else if let _ = cloud.file {
-                    applyCloudThemeDisposable.set(showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start())
-                } else {
-                    showEditThemeModalController(context: context, theme: cloud)
-                }
+                
+                applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start())
+            } else if cloud.file != nil || cloud.settings != nil {
+                applyCloudThemeDisposable.set(showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start())
+            } else {
+                showEditThemeModalController(context: context, theme: cloud)
             }
         }
+    }
+    
+    
+    let arguments = AppAppearanceViewArguments(context: context, togglePalette: { source in
+        
+        let nightSettings = autoNightSettings(accountManager: context.sharedContext.accountManager) |> take(1) |> deliverOnMainQueue
         
         _ = nightSettings.start(next: { settings in
             if settings.systemBased || settings.schedule != nil {
@@ -281,11 +310,11 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                         })
                     } |> deliverOnMainQueue
                     _ = disableNightMode.start(next: {
-                        applyTheme()
+                        applyTheme(source)
                     })
                 })
             } else {
-                applyTheme()
+                applyTheme(source)
             }
         })
         
@@ -299,22 +328,28 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
             return settings.withUpdatedFontSize(value)
         }).start())
     }, selectAccentColor: { value in
-        let updateColor:(PaletteAccentColor)->Void = { color in
-            updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                let clearPalette = settings.palette.withoutAccentColor()
-                var settings = settings
-                if color.accent == settings.palette.basicAccent {
-                    settings = settings.withUpdatedPalette(clearPalette)
-                } else {
-                    settings = settings.withUpdatedPalette(clearPalette.withAccentColor(color))
-                }
-                return settings.saveDefaultAccent(color: color)
-            }).start())
+        let updateColor:(AppearanceAccentColor)->Void = { color in
+            if let cloudTheme = color.cloudTheme {
+                applyTheme(.cloud(cloudTheme, nil))
+            } else {
+                updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    let clearPalette = settings.palette.withoutAccentColor()
+                    var settings = settings
+                    if color.accent.accent == settings.palette.basicAccent {
+                        settings = settings.withUpdatedPalette(clearPalette)
+                    } else {
+                        settings = settings.withUpdatedPalette(clearPalette.withAccentColor(color.accent))
+                    }
+                    return settings.saveDefaultAccent(color: color.accent)
+                }).start())
+            }
         }
         if let color = value {
            updateColor(color)
         } else {
-            showModal(with: CustomAccentColorModalController(context: context, updateColor: updateColor), for: context.window)
+            showModal(with: CustomAccentColorModalController(context: context, updateColor: { accent in
+                updateColor(AppearanceAccentColor(accent: accent, cloudTheme: nil))
+            }), for: context.window)
         }
     }, selectChatBackground: {
         showModal(with: ChatWallpaperModalController(context), for: context.window)
@@ -335,6 +370,8 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         showEditThemeModalController(context: context, theme: value)
     }, shareTheme: { value in
         showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(value.slug)")), for: context.window)
+    }, shareLocal: { palette in
+        
     })
     
     let cloudThemes = telegramThemes(postbox: context.account.postbox, network: context.account.network, accountManager: context.sharedContext.accountManager)

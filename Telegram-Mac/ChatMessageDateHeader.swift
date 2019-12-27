@@ -36,7 +36,7 @@ func mediaDateId(for timestamp:Int32) -> Int64 {
 class ChatDateStickItem : TableStickItem {
     
     private let entry:ChatHistoryEntry
-    fileprivate let timestamp:Int32
+    let timestamp:Int32
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout

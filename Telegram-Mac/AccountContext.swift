@@ -466,7 +466,81 @@ final class AccountContext {
 
 
 func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme, install: Bool = false) -> Signal<Never, Void> {
-    if let file = cloudTheme.file {
+    if let settings = cloudTheme.settings {
+        return Signal { subscriber in
+            #if !SHARE
+            let wallpaperDisposable = DisposableSet()
+            let palette = settings.palette
+            var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError>? = nil
+            let associated = theme.wallpaper.associated?.wallpaper
+            if let w = settings.wallpaper, theme.wallpaper.wallpaper == associated || install || (associated != nil && theme.wallpaper.wallpaper.isSemanticallyEqual(to: associated!)) {
+                wallpaper = .single(w)
+            }
+            
+            if let wallpaper = wallpaper {
+                wallpaperDisposable.add(wallpaper.start(next: { cloud in
+                    if let cloud = cloud {
+                        let wp = Wallpaper(cloud)
+                        wallpaperDisposable.add(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wp).start(next: { wallpaper in
+                            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                                var settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
+                                var updateDefault:DefaultTheme = palette.isDark ? settings.defaultDark : settings.defaultDay
+                                updateDefault = updateDefault.updateCloud { _ in
+                                    return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: AssociatedWallpaper(cloud: cloud, wallpaper: wp))
+                                }
+                                settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
+                                settings = settings.withUpdatedDefaultIsDark(palette.isDark)
+                                return settings.updateWallpaper { value in
+                                    return value.withUpdatedWallpaper(wallpaper)
+                                        .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))
+                                }.saveDefaultWallpaper()
+                            }).start()
+                            
+                            subscriber.putCompletion()
+                        }))
+                    } else {
+                        _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                            var settings = settings
+                            var updateDefault:DefaultTheme = palette.isDark ? settings.defaultDark : settings.defaultDay
+                            updateDefault = updateDefault.updateCloud { _ in
+                                return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: AssociatedWallpaper(cloud: cloud, wallpaper: .none))
+                            }
+                            settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
+                            settings = settings.withUpdatedDefaultIsDark(palette.isDark)
+                            
+                            return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme).updateWallpaper({ value in
+                                return value.withUpdatedWallpaper(.none)
+                                    .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: .none))
+                            }).saveDefaultWallpaper()
+                        }).start()
+                        subscriber.putCompletion()
+                    }
+                }, error: { _ in
+                    subscriber.putCompletion()
+                }))
+            } else {
+                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    var settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
+                    var updateDefault:DefaultTheme = palette.isDark ? settings.defaultDark : settings.defaultDay
+                    updateDefault = updateDefault.updateCloud { current in
+                        let associated = current?.wallpaper ?? AssociatedWallpaper(cloud: nil, wallpaper: palette.wallpaper.wallpaper)
+                        return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: associated)
+                    }
+                    settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
+                    return settings
+                }).start()
+                subscriber.putCompletion()
+            }
+            #endif
+            return ActionDisposable {
+                #if !SHARE
+                wallpaperDisposable.dispose()
+                #endif
+            }
+        }
+        |> runOn(.mainQueue())
+        |> deliverOnMainQueue
+    } else if let file = cloudTheme.file {
         return Signal { subscriber in
             let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
             let wallpaperDisposable = DisposableSet()
@@ -490,7 +564,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                         }
                     case let .color(color):
                         if theme.wallpaper.wallpaper == theme.wallpaper.associated?.wallpaper || install {
-                            wallpaper = .single(.color(Int32(color.rgb)))
+                            wallpaper = .single(.color(color.argb))
                         }
                     case let .url(string):
                         let link = inApp(for: string as NSString, context: context)
@@ -542,7 +616,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                                         return settings.updateWallpaper { value in
                                             return value.withUpdatedWallpaper(wallpaper)
                                                 .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))
-                                        }
+                                        }.saveDefaultWallpaper()
                                     }).start()
                                     
                                     subscriber.putCompletion()
@@ -560,7 +634,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                                     return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme).updateWallpaper({ value in
                                         return value.withUpdatedWallpaper(.none)
                                             .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: .none))
-                                    })
+                                    }).saveDefaultWallpaper()
                                 }).start()
                                 subscriber.putCompletion()
                             }
@@ -589,7 +663,9 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                 dataDisposable.dispose()
                 wallpaperDisposable.dispose()
             }
-            } |> runOn(.mainQueue()) |> deliverOnMainQueue
+        }
+        |> runOn(.mainQueue())
+        |> deliverOnMainQueue
     } else {
         return .complete()
     }

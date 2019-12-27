@@ -142,6 +142,34 @@ final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentati
     }
 }
 
+final class CachedPatternWallpaperMaskRepresentation: CachedMediaResourceRepresentation {
+    let keepDuration: CachedMediaRepresentationKeepDuration = .general
+    
+    let size: CGSize?
+    
+    var uniqueId: String {
+        if let size = self.size {
+            return "pattern-wallpaper-mask32-\(Int(size.width))x\(Int(size.height))"
+        } else {
+            return "pattern-wallpaper-mask32"
+        }
+    }
+    
+    init(size: CGSize?) {
+        self.size = size
+    }
+    
+    func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if let to = to as? CachedPatternWallpaperMaskRepresentation {
+            return self.size == to.size
+        } else {
+            return false
+        }
+    }
+}
+
+
+
 
 public enum EmojiFitzModifier: Int32, Equatable {
     case type12

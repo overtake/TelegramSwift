@@ -38,13 +38,19 @@ class WPArticleLayout: WPLayout {
         
         var content = content
         if content.type == "telegram_theme" {
-            if let files = content.files {
-                for file in files {
-                    if file.mimeType == "application/x-tgtheme-macos", !file.previewRepresentations.isEmpty {
-                        content = content.withUpdatedFile(file)
+            for attr in content.attributes {
+                switch attr {
+                case let .theme(theme):
+                    for file in theme.files {
+                        if file.mimeType == "application/x-tgtheme-macos", !file.previewRepresentations.isEmpty {
+                            content = content.withUpdatedFile(file)
+                        }
                     }
+                case .unsupported:
+                    break
                 }
             }
+            
         }
         
         self.downloadSettings = downloadSettings
@@ -109,6 +115,8 @@ class WPArticleLayout: WPLayout {
             } else if isTheme {
                 imageSize = NSMakeSize(200, 200)
             }
+        } else if isTheme {
+            imageSize = NSMakeSize(260, 260)
         }
         if let wallpaper = wallpaper {
             switch wallpaper {
@@ -185,7 +193,11 @@ class WPArticleLayout: WPLayout {
                             if let intensity = settings.intensity {
                                 patternIntensity = CGFloat(intensity) / 100.0
                             }
-                            emptyColor = .color(NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity))
+                            if let bottomColor = settings.bottomColor {
+                                emptyColor = .gradient(top: NSColor(argb: color), bottom: NSColor(rgb: bottomColor), rotation: settings.rotation)
+                            } else {
+                                emptyColor = .color(NSColor(argb: color))
+                            }
                         }
                     case .color:
                         isColor = true

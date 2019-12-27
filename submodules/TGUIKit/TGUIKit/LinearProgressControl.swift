@@ -43,7 +43,9 @@ public class LinearProgressControl: Control {
     
     public var onLiveScrobbling:((Float?)->Void)?
 
-    
+    public var startScrobbling:(()->Void)?
+    public var endScrobbling:(()->Void)?
+
     public var insets: NSEdgeInsets = NSEdgeInsets() {
         didSet {
             needsLayout = true
@@ -126,6 +128,7 @@ public class LinearProgressControl: Control {
     
     public override func mouseDown(with event: NSEvent) {
         scrubblingTempState = nil
+        self.startScrobbling?()
         if let _ = onUserChanged, !liveScrobbling, isEnabled {
             let location = containerView.convert(event.locationInWindow, from: nil)
             let progress = min(max(CGFloat(max(location.x, 0) / containerView.frame.width), 0), 1)
@@ -143,6 +146,7 @@ public class LinearProgressControl: Control {
 
     public override func mouseUp(with event: NSEvent) {
         scrubblingTempState = nil
+        self.endScrobbling?()
         if let onUserChanged = onUserChanged, isEnabled {
             let location = containerView.convert(event.locationInWindow, from: nil)
             let progress = min(max(Float(max(location.x, 0) / containerView.frame.width), 0), 1)

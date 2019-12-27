@@ -51,6 +51,7 @@ class ChatInputActionsView: View, Notifable {
         slowModeTimeout.isHidden = true
         voice.autohighlight = false
         muteChannelMessages.autohighlight = false
+        send.autohighlight = false
         
         voice.set(handler: { [weak self] _ in
             guard let `self` = self else { return }
@@ -107,7 +108,7 @@ class ChatInputActionsView: View, Notifable {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
-        send.set(image: theme.icons.chatSendMessage, for: .Normal)
+        send.set(image: self.chatInteraction.presentation.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
         _ = send.sizeToFit()
         voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
         _ = voice.sizeToFit()
@@ -267,6 +268,9 @@ class ChatInputActionsView: View, Notifable {
                 if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
                     size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
                 }
+                
+                send.set(image: value.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
+
               
                 if let peer = value.peer {
                     muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil

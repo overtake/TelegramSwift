@@ -194,6 +194,7 @@ fileprivate class PreviewSenderView : Control {
         headerView.addSubview(archiveButton)
         
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
+        sendButton.autohighlight = false
         _ = sendButton.sizeToFit()
         
         emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
