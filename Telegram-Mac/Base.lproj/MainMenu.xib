@@ -25,9 +25,9 @@
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
         <menu title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
             <items>
-                <menuItem title="TelegramMac" identifier="1Xt-HY-uBw" id="1Xt-HY-uBw" customClass="MMMenuItem" customModule="Circles_for_Telegram" customModuleProvider="target">
+                <menuItem title="Circles for Telegram" identifier="1Xt-HY-uBw" id="1Xt-HY-uBw" customClass="MMMenuItem" customModule="Circles_for_Telegram" customModuleProvider="target">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="TelegramMac" systemMenu="apple" identifier="uQy-DD-JDr" id="uQy-DD-JDr" customClass="MMMenu" customModule="Circles_for_Telegram" customModuleProvider="target">
+                    <menu key="submenu" title="Circles for Telegram" systemMenu="apple" identifier="uQy-DD-JDr" id="uQy-DD-JDr" customClass="MMMenu" customModule="Circles_for_Telegram" customModuleProvider="target">
                         <items>
                             <menuItem title="About Telegram" identifier="5kV-Vb-QxS" id="5kV-Vb-QxS" customClass="MMMenuItem" customModule="Circles_for_Telegram" customModuleProvider="target">
                                 <modifierMask key="keyEquivalentModifierMask"/>

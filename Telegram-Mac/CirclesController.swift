@@ -184,7 +184,6 @@ class CirclesRowView: TableRowView {
 }
 
 class CirclesRowItem: TableRowItem {
-    //let groupId: PeerGroupId
     public var title: TextViewLayout!
     public let groupId: PeerGroupId
     public let unread: Int

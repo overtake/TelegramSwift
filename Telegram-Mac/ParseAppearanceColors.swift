@@ -355,7 +355,7 @@ func importPalette(_ path: String) -> ColorPalette? {
         var isDark: Bool = false
         var tinted: Bool = false
         var paletteName: String? = nil
-        var copyright: String = "Telegram"
+        var copyright: String = "Circles for Telegram"
         var wallpaper: PaletteWallpaper?
         var parent: TelegramBuiltinTheme = .dayClassic
         var accentList:[PaletteAccentColor] = []
