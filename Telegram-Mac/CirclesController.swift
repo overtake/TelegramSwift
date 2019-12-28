@@ -99,7 +99,10 @@ private func circlesControllerEntries(settings: Circles,
     }
 
     
-    entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived", unread: unreadStates[Namespaces.PeerGroup.archive]?.count(countingCategory: .messages, mutedCategory: .all) ?? 0))
+    entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived", unread: 0))
+    if settings.botPeerId != nil {
+        entries.append(.group(groupId: PeerGroupId(rawValue: 2), title: "New Circle", unread: 0))
+    }
     return entries
 }
 
@@ -137,37 +140,67 @@ class CirclesRowView: TableRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? CirclesRowItem {
-            let icon:CGImage = {
-                switch item.groupId {
-                case .group(0),.group(2),.root:
-                    return #imageLiteral(resourceName: "Icon_CirclePersonal").precomposed()
-                case .group(1):
-                    return #imageLiteral(resourceName: "Icon_CircleArchived").precomposed()
-                default:
-                    return #imageLiteral(resourceName: "Icon_CircleCustom").precomposed()
+            if case .group(2) = item.groupId {
+                if let layer = iconView.layer  {
+                    let origImage = #imageLiteral(resourceName: "Icon_AddCircle").precomposed()
+                    
+                        let maskLayer = CALayer()
+                        maskLayer.frame = layer.bounds
+                        maskLayer.contents = origImage
+                        
+                        var plus = CAShapeLayer()
+                        plus.frame = iconView.bounds
+                        plus.backgroundColor = theme.colors.text.cgColor
+                        plus.mask = maskLayer
+                        layer.addSublayer(plus)
+                        
+                        var border = CAShapeLayer()
+                        border.strokeColor = theme.colors.grayIcon.cgColor
+                        border.lineDashPattern = [5, 5]
+                        border.frame = iconView.bounds
+                        border.fillColor = nil
+                        border.path = NSBezierPath(roundedRect: iconView.bounds, xRadius: 10.0, yRadius: 10.0).cgPath
+                        layer.addSublayer(border)
+                    
                 }
-            }()
-            iconView.image = icon
-            if item.isSelected {
-                iconView.layer?.backgroundColor = theme.colors.basicAccent.cgColor
-            } else {
-                iconView.layer?.backgroundColor = theme.colors.grayIcon.cgColor
-            }
-            titleTextView.update(item.title)
-            
-            if let badgeNode = item.badgeNode {
-                if badgeView == nil {
-                    badgeView = View()
-                    addSubview(badgeView!)
-                }
-                badgeView?.setFrameSize(badgeNode.size)
-                badgeNode.view = badgeView
-                self.badgeView?.setFrameOrigin(47, 2)
-                badgeNode.setNeedDisplay()
-            } else {
+                
                 badgeView?.removeFromSuperview()
                 badgeView = nil
+                
+            } else {
+                let icon:CGImage = {
+                    switch item.groupId {
+
+                    case .group(0),.root:
+                        return #imageLiteral(resourceName: "Icon_CirclePersonal").precomposed()
+                    case .group(1):
+                        return #imageLiteral(resourceName: "Icon_CircleArchived").precomposed()
+                    default:
+                        return #imageLiteral(resourceName: "Icon_CircleCustom").precomposed()
+                    }
+                }()
+                iconView.image = icon
+                if item.isSelected {
+                    iconView.layer?.backgroundColor = theme.colors.basicAccent.cgColor
+                } else {
+                    iconView.layer?.backgroundColor = theme.colors.grayIcon.cgColor
+                }
+                
+                if let badgeNode = item.badgeNode {
+                    if badgeView == nil {
+                        badgeView = View()
+                        addSubview(badgeView!)
+                    }
+                    badgeView?.setFrameSize(badgeNode.size)
+                    badgeNode.view = badgeView
+                    self.badgeView?.setFrameOrigin(47, 2)
+                    badgeNode.setNeedDisplay()
+                } else {
+                    badgeView?.removeFromSuperview()
+                    badgeView = nil
+                }
             }
+            titleTextView.update(item.title)
             
             needsLayout = true
         }
@@ -312,11 +345,31 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
     }
     func selectionDidChange(row: Int, item: TableRowItem, byClick: Bool, isNew: Bool) {
         if let item = item as? CirclesRowItem {
-            let controller = ChatListController(context, modal: false, groupId: item.groupId)
-            //self.chatListNavigationController.stackInsert(controller, at: 0)
-            self.tabController.select(index: 2)
-            self.chatListNavigationController.empty = controller
-            self.chatListNavigationController.gotoEmpty(true)
+            if item.groupId == PeerGroupId(rawValue: 2) {
+                
+                
+                
+                
+                let signal = Circles.getSettings(postbox: self.context.account.postbox)
+                |> deliverOnMainQueue
+                |> mapToSignal { settings -> Signal<Never, NoError> in
+                    if let botId = settings.botPeerId {
+                        let controller = ChatController(context: self.context, chatLocation: .peer(botId))
+                        self.context.sharedContext.bindings.rootNavigation().push(controller)
+                        
+                        return controller.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+                    }
+                    return .complete()
+                }
+                
+                signal.start()
+            } else {
+                let controller = ChatListController(context, modal: false, groupId: item.groupId)
+                //self.chatListNavigationController.stackInsert(controller, at: 0)
+                self.tabController.select(index: 2)
+                self.chatListNavigationController.empty = controller
+                self.chatListNavigationController.gotoEmpty(true)
+            }
 
         }
         return
