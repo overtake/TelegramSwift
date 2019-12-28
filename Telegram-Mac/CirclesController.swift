@@ -412,6 +412,48 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         let unreadCountsKey = PostboxViewKey.unreadCounts(items: [.total(nil)])
         
         
+        let initialTransition: Signal<TableUpdateTransition, NoError> = combineLatest(
+            Circles.getSettings(postbox: context.account.postbox),
+            appearanceSignal
+        ) |> map { settings, appearance in
+            var entries: [CirclesTableEntry] = []
+            entries.append(.sectionId)
+            entries.append(.group(
+                groupId: .root,
+                title: "Personal",
+                unread: 0
+            ))
+            
+            if settings.groupNames.keys.sorted() == settings.index.keys.sorted() {
+                for key in settings.groupNames.keys.sorted(by: {settings.index[$0]! < settings.index[$1]!})  {
+                    entries.append(.group(
+                        groupId: key,
+                        title: settings.groupNames[key]!,
+                        unread: 0
+                    ))
+                }
+            }
+
+            
+            entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived", unread: 0))
+            if settings.botPeerId != nil {
+                entries.append(.group(groupId: PeerGroupId(rawValue: 2), title: "New Circle", unread: 0))
+            }
+
+            let mappedEntries = entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            return prepareTransition(
+                left: previous.swap(mappedEntries),
+                right: mappedEntries,
+                initialSize: initialSize.modify({$0}),
+                arguments: arguments
+            )
+        } |> deliverOnMainQueue
+        initialTransition.start(next: { [weak self] transition in
+            self?.genericView.tableView.merge(with: transition)
+            self?.readyOnce()
+            self?.chatListNavigationController.callback?()
+        })
+        
         let transition: Signal<TableUpdateTransition, NoError> = combineLatest(
             Circles.settingsView(postbox: context.account.postbox),
             appearanceSignal,
