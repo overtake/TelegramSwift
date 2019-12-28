@@ -369,7 +369,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     
                     if let _ = item.mentionsCount {
                         let icon: CGImage
-                        if item.associatedGroupId == .root {
+                        if item.associatedGroupId != Namespaces.PeerGroup.archive {
                             icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
                         } else {
                             icon = highlighted ? theme.icons.chatListMentionArchivedActive : theme.icons.chatListMentionArchived
