@@ -65,16 +65,19 @@ private func generateSelectedRing(backgroundColor: NSColor) -> CGImage {
 
 class AccentColorRowItem: GeneralRowItem {
     let selectAccentColor:(AppearanceAccentColor?)->Void
+    let menuItems: (AppearanceAccentColor)->[ContextMenuItem]
     let list: [AppearanceAccentColor]
     let isNative: Bool
     let theme: TelegramPresentationTheme
-    init(_ initialSize: NSSize, stableId: AnyHashable, list: [AppearanceAccentColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(AppearanceAccentColor?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, list: [AppearanceAccentColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, menuItems: @escaping(AppearanceAccentColor)->[ContextMenuItem]) {
         self.selectAccentColor = selectAccentColor
         self.list = list
         self.theme = theme
         self.isNative = isNative
+        self.menuItems = menuItems
         super.init(initialSize, height: 36 + viewType.innerInset.top + viewType.innerInset.bottom, stableId: stableId, viewType: viewType)
     }
+    
     
     override func viewClass() -> AnyClass {
         return AccentColorRowView.self
@@ -158,6 +161,26 @@ final class AccentColorRowView : TableRowView {
         scrollView.frame = NSMakeRect(0, innerInset.top, item.blockWidth, containerView.frame.height - innerInset.top - innerInset.bottom)
     }
     
+    override func menu(for event: NSEvent) -> NSMenu? {
+        guard let item = item as? AccentColorRowItem else {
+            return nil
+        }
+        
+        let documentPoint = documentView.convert(event.locationInWindow, from: nil)
+        
+        for (_, subview) in documentView.subviews.enumerated() {
+            if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
+                let items = item.menuItems(accent)
+                let menu = ContextMenu()
+                menu.items = items
+                
+                return menu
+            }
+        }
+        
+        return nil
+    }
+    
     private let selectedImageView = ImageView()
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -174,7 +197,7 @@ final class AccentColorRowView : TableRowView {
         selectedImageView.image = generateSelectedRing(backgroundColor: theme.colors.background)
         selectedImageView.setFrameSize(NSMakeSize(32, 32))
         selectedImageView.removeFromSuperview()
-        let colorList: [AppearanceAccentColor] = item.list
+        var colorList: [AppearanceAccentColor] = item.list
         
         borderView.isHidden = !item.viewType.hasBorder
         
@@ -183,37 +206,6 @@ final class AccentColorRowView : TableRowView {
         var x: CGFloat = insetWidth
         
        
-        for i in 0 ..< colorList.count {
-            let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
-            button.autohighlight = false
-            button.layer?.cornerRadius = button.frame.height / 2
-            let icon = generateAccentColor(colorList[i].accent, bubbled: theme.bubbled)
-            button.set(image: icon, for: .Normal)
-            button.set(image: icon, for: .Hover)
-            button.set(image: icon, for: .Highlight)
-            button.set(handler: { _ in
-                item.selectAccentColor(colorList[i])
-            }, for: .Click)
-            if colorList[i].accent.accent == theme.colors.accent {
-                button.addSubview(selectedImageView)
-                selectedImageView.center()
-            }
-            documentView.addSubview(button)
-            x += button.frame.width + insetWidth
-        }
-        
-       
-        if !colorList.contains(where: { $0.accent.accent == theme.colors.accent }) {
-            let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
-            button.autohighlight = false
-            button.layer?.cornerRadius = button.frame.height / 2
-            button.set(background: theme.colors.accent, for: .Normal)
-            button.addSubview(selectedImageView)
-            selectedImageView.center()
-            x += button.frame.width + insetWidth
-            documentView.addSubview(button)
-        }
-        
         if item.isNative {
             let custom = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             custom.autohighlight = false
@@ -224,8 +216,47 @@ final class AccentColorRowView : TableRowView {
             }, for: .Click)
             documentView.addSubview(custom)
             
-            x += custom.frame.width
+            x += custom.frame.width + insetWidth
         }
+        
+        if !colorList.contains(where: { $0.accent.accent == theme.colors.accent && $0.cloudTheme?.id == theme.cloudTheme?.id }) {
+            let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
+            button.autohighlight = false
+            button.layer?.cornerRadius = button.frame.height / 2
+            button.set(background: theme.colors.accent, for: .Normal)
+            button.addSubview(selectedImageView)
+            selectedImageView.center()
+            x += button.frame.width + insetWidth
+            documentView.addSubview(button)
+        }
+        
+        
+        for i in 0 ..< colorList.count {
+            let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
+            button.autohighlight = false
+            button.layer?.cornerRadius = button.frame.height / 2
+            let icon = generateAccentColor(colorList[i].accent, bubbled: theme.bubbled)
+            button.contextObject = colorList[i]
+            button.set(image: icon, for: .Normal)
+            button.set(image: icon, for: .Hover)
+            button.set(image: icon, for: .Highlight)
+            button.set(handler: { _ in
+                item.selectAccentColor(colorList[i])
+            }, for: .Click)
+            if colorList[i].accent.accent == theme.colors.accent {
+                if colorList[i].cloudTheme?.id == theme.cloudTheme?.id {
+                    button.addSubview(selectedImageView)
+                    selectedImageView.center()
+                }
+            }
+            documentView.addSubview(button)
+            x += button.frame.width + insetWidth
+        }
+        
+       
+ 
+        
+      
         
         
         documentView.setFrameSize(NSMakeSize(x + insetWidth, frame.height))

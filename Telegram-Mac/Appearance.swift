@@ -1182,7 +1182,7 @@ private func getAverageColor(_ color: NSColor) -> NSColor {
     return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
 }
 
-func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSize: NSSize = NSMakeSize(1280, 1280)) -> TableBackgroundMode {
+func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSize: NSSize = NSMakeSize(1040, 1580)) -> TableBackgroundMode {
     #if !SHARE
     var backgroundMode: TableBackgroundMode
     switch wallpaper {
@@ -1200,6 +1200,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         }
         
     case let .file(_, file, settings, isPattern):
+        
         if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
             let size = image.size.aspectFilled(maxSize)
             if isPattern {
@@ -1222,7 +1223,9 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
                         let top = NSColor(argb: t)
                         let bottom = NSColor(argb: b)
                         color = top.withAlphaComponent(1.0)
-                        intensity = top.alpha
+                        if let i = settings.intensity {
+                            intensity = CGFloat(i) / 100.0
+                        }
                         colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
                     } else {
                         colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
@@ -1254,13 +1257,31 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
                     }
                     
                     
-                    
                     ctx.setBlendMode(.normal)
-                    ctx.interpolationQuality = .high
-                    
+                    ctx.interpolationQuality = .medium
                     ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
-                    ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
-                    ctx.fill(imageRect)
+                    
+                    if colors.count == 1 {
+                        ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                        ctx.fill(imageRect)
+                    } else {
+                        let gradientColors = colors.map { patternColor(for: $0, intensity: intensity).cgColor } as CFArray
+                        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                        
+                        var locations: [CGFloat] = []
+                        for i in 0 ..< colors.count {
+                            locations.append(delta * CGFloat(i))
+                        }
+                        let colorSpace = CGColorSpaceCreateDeviceRGB()
+                        let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                        
+                        ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                        ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                        ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                        
+                        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                    }
+                
                 })!
                 backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
             } else {
@@ -1376,7 +1397,7 @@ class TelegramPresentationTheme : PresentationTheme {
         return self.colors.chatBackground
     }
     
-    var backgroundSize: NSSize = NSMakeSize(1280, 1280)
+    var backgroundSize: NSSize = NSMakeSize(1040, 1580)
     
     private var _backgroundMode: TableBackgroundMode?
     var backgroundMode: TableBackgroundMode {
@@ -1468,13 +1489,13 @@ extension ColorPalette {
 private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> TelegramIconsTheme {
     return TelegramIconsTheme(dialogMuteImage: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.grayIcon) },
                               dialogMuteImageSelected: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.underSelectedColor) },
-                              outgoingMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.name == dayClassicPalette.name && bubbled ? palette.accentIconBubble_outgoing : palette.accentIcon, flipVertical:true) },
-                                               readMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.name == dayClassicPalette.name && bubbled ? palette.accentIconBubble_outgoing : palette.accentIcon, flipVertical:true) },
+                              outgoingMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.accentIcon, flipVertical:true) },
+                                               readMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.accentIcon, flipVertical:true) },
                                                outgoingMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                readMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                sendingImage: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.grayIcon, flipVertical:true) },
                                                sendingImageSelected: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.underSelectedColor, flipVertical:true) },
-                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(bubbled && palette.name == dayClassicPalette.name ? palette.accentIconBubble_outgoing : palette.accentIcon, flipVertical:true) },
+                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.accentIcon, flipVertical:true) },
                                                secretImageSelected:{  #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                pinnedImage: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true) },
                                                pinnedImageSelected: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.underSelectedColor, flipVertical:true) },

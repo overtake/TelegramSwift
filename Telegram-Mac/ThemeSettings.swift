@@ -399,17 +399,29 @@ struct LocalWallapper : Equatable, PostboxCoding {
     let name: TelegramBuiltinTheme
     let cloud: TelegramTheme?
     let wallpaper: AssociatedWallpaper
-    
-    init(name: TelegramBuiltinTheme, wallpaper: AssociatedWallpaper, cloud: TelegramTheme?) {
+    let accentColor: UInt32
+    init(name: TelegramBuiltinTheme, accentColor: UInt32, wallpaper: AssociatedWallpaper, cloud: TelegramTheme?) {
         self.name = name
+        self.accentColor = accentColor
         self.wallpaper = wallpaper
         self.cloud = cloud
+    }
+    
+    func isEqual(to other: ColorPalette) -> Bool {
+        if self.name != other.parent {
+            return false
+        }
+        if self.accentColor != 0 {
+            return self.accentColor == other.accent.argb
+        }
+        return self.cloud == nil
     }
     
     init(decoder: PostboxDecoder) {
         self.name = TelegramBuiltinTheme(rawValue: decoder.decodeStringForKey("name", orElse: dayClassicPalette.name)) ?? .dayClassic
         self.wallpaper = decoder.decodeObjectForKey("aw", decoder: { AssociatedWallpaper(decoder: $0) }) as! AssociatedWallpaper
         self.cloud = decoder.decodeObjectForKey("cloud", decoder: { TelegramTheme(decoder: $0) }) as? TelegramTheme
+        self.accentColor = UInt32(bitPattern: decoder.decodeInt32ForKey("ac", orElse: 0))
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -420,16 +432,18 @@ struct LocalWallapper : Equatable, PostboxCoding {
         } else {
             encoder.encodeNil(forKey: "cloud")
         }
+        encoder.encodeInt32(Int32(bitPattern: self.accentColor), forKey: "ac")
     }
 }
 
 struct LocalAccentColor : Equatable, PostboxCoding {
     let name: TelegramBuiltinTheme
     let color: PaletteAccentColor
-    
-    init(name: TelegramBuiltinTheme, color: PaletteAccentColor) {
+    let cloud: TelegramTheme?
+    init(name: TelegramBuiltinTheme, color: PaletteAccentColor, cloud: TelegramTheme?) {
         self.name = name
         self.color = color
+        self.cloud = cloud
     }
     
     init(decoder: PostboxDecoder) {
@@ -441,11 +455,17 @@ struct LocalAccentColor : Equatable, PostboxCoding {
         } else {
             self.color = PaletteAccentColor(self.name.palette.basicAccent)
         }
+        self.cloud = decoder.decodeObjectForKey("cloud") as? TelegramTheme
     }
     
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeString(self.name.rawValue, forKey: "name")
         encoder.encodeObjectWithEncoder(self.color, encoder: self.color.encode, forKey: "pac")
+        if let cloud = self.cloud {
+            encoder.encodeObject(cloud, forKey: "cloud")
+        } else {
+            encoder.encodeNil(forKey: "cloud")
+        }
     }
 }
 
@@ -456,6 +476,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     let fontSize: CGFloat
     let defaultDark: DefaultTheme
     let defaultDay: DefaultTheme
+    let associated:[DefaultTheme]
     let wallpapers: [LocalWallapper]
     let accents:[LocalAccentColor]
     let wallpaper: ThemeWallpaper
@@ -470,7 +491,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
          defaultIsDark: Bool,
          wallpapers: [LocalWallapper],
          accents: [LocalAccentColor],
-         cloudTheme: TelegramTheme?) {
+         cloudTheme: TelegramTheme?,
+         associated: [DefaultTheme]) {
         
         self.palette = palette
         self.bubbled = bubbled
@@ -482,6 +504,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         self.wallpapers = wallpapers
         self.accents = accents
         self.defaultIsDark = defaultIsDark
+        self.associated = associated.filter({$0.cloud?.cloud.settings != nil})
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -510,6 +533,9 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         self.accents = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("local_accents", decoder: { LocalAccentColor(decoder: $0) })) ?? []
         
         self.defaultIsDark = decoder.decodeBoolForKey("defaultIsDark", orElse: self.palette.isDark)
+        
+        self.associated = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("associated", decoder: { DefaultTheme(decoder: $0) })) ?? []
+        
     }
     
     public func encode(_ encoder: PostboxEncoder) {
@@ -523,6 +549,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         encoder.encodeObject(defaultDark, forKey: "defaultDark_1")
         encoder.encodeObjectArray(self.wallpapers, forKey: "local_wallpapers")
         encoder.encodeObjectArray(self.accents, forKey: "local_accents")
+        encoder.encodeObjectArray(self.associated, forKey: "associated")
 
         encoder.encodeBool(self.defaultIsDark, forKey: "defaultIsDark")
 
@@ -535,24 +562,24 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     }
     
     func withUpdatedPalette(_ palette: ColorPalette) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     func withUpdatedBubbled(_ bubbled: Bool) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     func withUpdatedFontSize(_ fontSize: CGFloat) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     
     func updateWallpaper(_ f:(ThemeWallpaper)->ThemeWallpaper) -> ThemePaletteSettings {
         let updated = f(self.wallpaper)
         
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: updated, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: updated, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     
     func saveDefaultWallpaper() -> ThemePaletteSettings {
         var wallpapers = self.wallpapers
-        let local = LocalWallapper(name: self.palette.parent, wallpaper: AssociatedWallpaper(cloud: self.wallpaper.associated?.cloud, wallpaper: self.wallpaper.wallpaper), cloud: self.cloudTheme)
+        let local = LocalWallapper(name: self.palette.parent, accentColor: self.palette.accent.argb, wallpaper: AssociatedWallpaper(cloud: self.wallpaper.associated?.cloud, wallpaper: self.wallpaper.wallpaper), cloud: self.cloudTheme)
         
         if let cloud = cloudTheme {
             if let index = wallpapers.firstIndex(where: { $0.cloud?.id == cloud.id }) {
@@ -561,70 +588,83 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
                 wallpapers.append(local)
             }
         } else {
-            if let index = wallpapers.firstIndex(where: { $0.name == palette.parent }) {
+            if let index = wallpapers.firstIndex(where: { $0.isEqual(to: self.palette) }) {
                 wallpapers[index] = local
             } else {
                 wallpapers.append(local)
             }
         }
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     
     func installDefaultWallpaper() -> ThemePaletteSettings {
         
         let wallpaper:ThemeWallpaper
-        if palette.isDark {
-            if let cloud = self.defaultDark.cloud {
-                let first = self.wallpapers.first(where: { $0.cloud?.id == cloud.cloud.id })
-                wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? .none, associated: cloud.wallpaper)
-            } else {
-                let first = self.wallpapers.first(where: { $0.name == self.palette.parent })
-                wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? .none, associated: nil)
-            }
+        if let cloud = self.cloudTheme {
+            let first = self.wallpapers.first(where: { $0.cloud?.id == cloud.id })
+            wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? self.palette.wallpaper.wallpaper, associated: first?.wallpaper)
         } else {
-            if let cloud = self.defaultDay.cloud {
-                let first = self.wallpapers.first(where: { $0.cloud?.id == cloud.cloud.id })
-                wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? .none, associated: cloud.wallpaper)
-            } else {
-                let first = self.wallpapers.first(where: { $0.name == self.palette.parent })
-                wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? .none, associated: nil)
-            }
+            let first = self.wallpapers.first(where: { $0.isEqual(to: self.palette) })
+            wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? self.palette.wallpaper.wallpaper, associated: nil)
         }
         
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     
     func saveDefaultAccent(color: PaletteAccentColor) -> ThemePaletteSettings {
         var accents = self.accents
-        let local = LocalAccentColor(name: self.palette.parent, color: color)
-        if let index = accents.firstIndex(where: { $0.name == palette.parent }) {
+        let local = LocalAccentColor(name: self.palette.parent, color: color, cloud: self.cloudTheme)
+        if let index = accents.firstIndex(where: { $0.name == palette.parent && $0.cloud?.id == self.cloudTheme?.id }) {
             accents[index] = local
         } else {
             accents.append(local)
         }
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     
+    
     func installDefaultAccent() -> ThemePaletteSettings {
-        let accent: LocalAccentColor? = self.accents.first(where: { $0.name == self.palette.parent })
+        let accent: LocalAccentColor? = self.accents.first(where: { $0.name == self.palette.parent && $0.cloud?.id == self.cloudTheme?.id })
         var palette: ColorPalette = self.palette.withoutAccentColor()
         if let accent = accent {
              palette = palette.withAccentColor(accent.color)
         }
-        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     
     func withUpdatedDefaultDay(_ defaultDay: DefaultTheme) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: self.defaultDark, defaultDay: defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: self.defaultDark, defaultDay: defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     func withUpdatedDefaultDark(_ defaultDark: DefaultTheme) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     func withUpdatedDefaultIsDark(_ defaultIsDark: Bool) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: self.associated)
     }
     func withUpdatedCloudTheme(_ cloudTheme: TelegramTheme?) -> ThemePaletteSettings {
-        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: defaultDark, defaultDay: defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: cloudTheme)
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: defaultDark, defaultDay: defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: cloudTheme, associated: self.associated)
+    }
+    
+    func withSavedAssociatedTheme() -> ThemePaletteSettings {
+        var associated = self.associated
+        if let cloudTheme = self.cloudTheme {
+            if cloudTheme.settings != nil {
+                let value = DefaultTheme(local: self.palette.parent, cloud: DefaultCloudTheme(cloud: cloudTheme, palette: self.palette, wallpaper: AssociatedWallpaper(cloud: self.wallpaper.associated?.cloud, wallpaper: self.wallpaper.wallpaper)))
+                if let index = associated.firstIndex(where: { $0.local == self.palette.parent }) {
+                    associated[index] = value
+                } else {
+                    associated.append(value)
+                }
+            } 
+        } else {
+            let value = DefaultTheme(local: self.palette.parent, cloud: nil)
+            if let index = associated.firstIndex(where: { $0.local == self.palette.parent }) {
+                associated[index] = value
+            } else {
+                associated.append(value)
+            }
+        }
+        return ThemePaletteSettings(palette: self.palette, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper, defaultDark: self.defaultDark, defaultDay: self.defaultDay, defaultIsDark: self.defaultIsDark, wallpapers: self.wallpapers, accents: self.accents, cloudTheme: self.cloudTheme, associated: associated)
     }
     
     
@@ -637,7 +677,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             } else {
                 return self.withUpdatedPalette(self.defaultDark.local.palette)
                     .withUpdatedCloudTheme(nil)
-                    .installDefaultWallpaper().installDefaultAccent()
+                    .installDefaultAccent()
+                    .installDefaultWallpaper()
             }
         } else {
             if let cloud = self.defaultDay.cloud, !onlyLocal {
@@ -647,7 +688,8 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
             } else {
                 return self.withUpdatedPalette(self.defaultDay.local.palette)
                     .withUpdatedCloudTheme(nil)
-                    .installDefaultWallpaper().installDefaultAccent()
+                    .installDefaultAccent()
+                    .installDefaultWallpaper()
             }
         }
     }
@@ -655,7 +697,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     static var defaultTheme: ThemePaletteSettings {
         let defDark = DefaultTheme(local: .nightAccent, cloud: nil)
         let defDay = DefaultTheme(local: .dayClassic, cloud: nil)
-        return ThemePaletteSettings(palette: dayClassicPalette, bubbled: false, fontSize: 13, wallpaper: ThemeWallpaper(), defaultDark: defDark, defaultDay: defDay, defaultIsDark: false, wallpapers: [LocalWallapper(name: .dayClassic, wallpaper: AssociatedWallpaper(cloud: nil, wallpaper: .builtin), cloud: nil)], accents: [], cloudTheme: nil)
+        return ThemePaletteSettings(palette: dayClassicPalette, bubbled: false, fontSize: 13, wallpaper: ThemeWallpaper(), defaultDark: defDark, defaultDay: defDay, defaultIsDark: false, wallpapers: [LocalWallapper(name: .dayClassic, accentColor: dayClassicPalette.accent.argb, wallpaper: AssociatedWallpaper(cloud: nil, wallpaper: .builtin), cloud: nil)], accents: [], cloudTheme: nil, associated: [])
     }
 }
 
@@ -669,7 +711,8 @@ func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
     lhs.cloudTheme == rhs.cloudTheme &&
     lhs.wallpapers == rhs.wallpapers &&
     lhs.accents == rhs.accents &&
-    lhs.defaultIsDark == rhs.defaultIsDark
+    lhs.defaultIsDark == rhs.defaultIsDark &&
+    lhs.associated == rhs.associated
 }
 
 

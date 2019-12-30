@@ -428,8 +428,15 @@ public extension NSView {
     }
     
     func removeAllSubviews() -> Void {
-        while (self.subviews.count > 0) {
-            self.subviews[0].removeFromSuperview();
+        var filtered = self.subviews.filter { view -> Bool in
+            if let view = view as? View {
+                return !view.noWayToRemoveFromSuperview
+            } else {
+                return true
+            }
+        }
+        while (filtered.count > 0) {
+            filtered.removeFirst().removeFromSuperview()
         }
     }
     

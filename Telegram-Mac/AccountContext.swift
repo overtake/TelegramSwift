@@ -466,15 +466,17 @@ final class AccountContext {
 
 
 func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme, install: Bool = false) -> Signal<Never, Void> {
-    if let settings = cloudTheme.settings {
+    if let cloudSettings = cloudTheme.settings {
         return Signal { subscriber in
             #if !SHARE
             let wallpaperDisposable = DisposableSet()
-            let palette = settings.palette
+            let palette = cloudSettings.palette
             var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError>? = nil
             let associated = theme.wallpaper.associated?.wallpaper
-            if let w = settings.wallpaper, theme.wallpaper.wallpaper == associated || install || (associated != nil && theme.wallpaper.wallpaper.isSemanticallyEqual(to: associated!)) {
+            if let w = cloudSettings.wallpaper, theme.wallpaper.wallpaper == associated || install || (associated != nil && theme.wallpaper.wallpaper.isSemanticallyEqual(to: associated!)) {
                 wallpaper = .single(w)
+            } else if install, let wrapper = palette.wallpaper.wallpaper.cloudWallpaper {
+                wallpaper = .single(wrapper)
             }
             
             if let wallpaper = wallpaper {
@@ -493,7 +495,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                                 return settings.updateWallpaper { value in
                                     return value.withUpdatedWallpaper(wallpaper)
                                         .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))
-                                }.saveDefaultWallpaper()
+                                }.saveDefaultWallpaper().withSavedAssociatedTheme().saveDefaultAccent(color: cloudSettings.accent)
                             }).start()
                             
                             subscriber.putCompletion()
@@ -511,7 +513,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                             return settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme).updateWallpaper({ value in
                                 return value.withUpdatedWallpaper(.none)
                                     .withUpdatedAssociated(AssociatedWallpaper(cloud: cloud, wallpaper: .none))
-                            }).saveDefaultWallpaper()
+                            }).saveDefaultWallpaper().withSavedAssociatedTheme().saveDefaultAccent(color: cloudSettings.accent)
                         }).start()
                         subscriber.putCompletion()
                     }
@@ -527,7 +529,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                         return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: associated)
                     }
                     settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
-                    return settings
+                    return settings.withSavedAssociatedTheme().saveDefaultAccent(color: cloudSettings.accent)
                 }).start()
                 subscriber.putCompletion()
             }
@@ -579,13 +581,13 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                                             if values.slug == values.slug && values.settings == settings {
                                                 wallpaper = .single(cloud)
                                             } else {
-                                                wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
+                                                wallpaper = getWallpaper(network: context.account.network, slug: slug) |> map(Optional.init)
                                             }
                                         default:
-                                            wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
+                                            wallpaper = getWallpaper(network: context.account.network, slug: slug) |> map(Optional.init)
                                         }
                                     } else {
-                                        wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
+                                        wallpaper = getWallpaper(network: context.account.network, slug: slug) |> map(Optional.init)
                                     }
                                 }
                                 newSettings = settings

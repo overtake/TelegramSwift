@@ -116,9 +116,9 @@ class ChatRightView: View {
             
             if let sendingView = sendingView {
                 if isReversed {
-                    sendingView.setFrameOrigin(frame.width - sendingView.frame.width - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 3 : 2))
+                    sendingView.setFrameOrigin(frame.width - sendingView.frame.width - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 2 : 1))
                 } else {
-                    sendingView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 3 : 2))
+                    sendingView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 2 : 1))
                 }
             }
 

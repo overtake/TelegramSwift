@@ -2204,7 +2204,7 @@ func clearCache(_ path: String, excludes: [(partial: String, complete: String)])
     } |> runOn(resourcesQueue)
 }
 
-func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blurred: Bool, isPattern: Bool) -> Signal<String, NoError> {
+func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, reference: WallpaperReference?, blurred: Bool, isPattern: Bool) -> Signal<String, NoError> {
     let resourceData: Signal<MediaResourceData, NoError>
     if isPattern {
         resourceData = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedPatternWallpaperMaskRepresentation(size: nil), complete: true)
@@ -2215,7 +2215,7 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blu
     }
     
    
-    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
+    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: reference, resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
         if data.complete {
             return moveWallpaperToCache(postbox: postbox, path: data.path, resource: resource, blurred: blurred)
         } else {
@@ -2227,11 +2227,11 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, blu
 func moveWallpaperToCache(postbox: Postbox, wallpaper: Wallpaper) -> Signal<Wallpaper, NoError> {
     switch wallpaper {
     case let .image(reps, settings):
-        return moveWallpaperToCache(postbox: postbox, resource: largestImageRepresentation(reps)!.resource, blurred: settings.blur, isPattern: false) |> map { _ in return wallpaper}
+        return moveWallpaperToCache(postbox: postbox, resource: largestImageRepresentation(reps)!.resource, reference: nil, blurred: settings.blur, isPattern: false) |> map { _ in return wallpaper}
     case let .custom(representation, blurred):
-        return moveWallpaperToCache(postbox: postbox, resource: representation.resource, blurred: blurred, isPattern: false) |> map { _ in return wallpaper}
-    case let .file(_, file, settings, isPattern):
-        return moveWallpaperToCache(postbox: postbox, resource: file.resource, blurred: settings.blur, isPattern: isPattern) |> map { _ in return wallpaper}
+        return moveWallpaperToCache(postbox: postbox, resource: representation.resource, reference: nil, blurred: blurred, isPattern: false) |> map { _ in return wallpaper}
+    case let .file(slug, file, settings, isPattern):
+        return moveWallpaperToCache(postbox: postbox, resource: file.resource, reference: .slug(slug), blurred: settings.blur, isPattern: isPattern) |> map { _ in return wallpaper}
     default:
        return .single(wallpaper)
     }
@@ -2842,6 +2842,22 @@ extension TelegramWallpaper {
             t = .image(reps, settings: settings)
         }
         return t
+    }
+}
+
+extension Wallpaper {
+    var cloudWallpaper: TelegramWallpaper? {
+        switch self {
+        case .builtin:
+            return .builtin(WallpaperSettings())
+        case let .color(color):
+            return .color(color)
+        case let .gradient(top, bottom, rotation):
+            return .gradient(top, bottom, WallpaperSettings(rotation: rotation))
+        default:
+            break
+        }
+        return nil
     }
 }
 

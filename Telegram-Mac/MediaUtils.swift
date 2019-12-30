@@ -2602,7 +2602,7 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
     }
 }
 
-private func chatWallpaperDatas(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, autoFetchFullSize: Bool = false, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageRenderData, NoError> {
+private func chatWallpaperDatas(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, slug: String? = nil, autoFetchFullSize: Bool = false, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageRenderData, NoError> {
     if let smallestRepresentation = smallestImageRepresentation(representations), let largestRepresentation = largestImageRepresentation(representations) {
         let maybeFullSize: Signal<MediaResourceData, NoError>
         if isBlurred {
@@ -2622,8 +2622,8 @@ private func chatWallpaperDatas(account: Account, representations: [TelegramMedi
                     smallReference = MediaResourceReference.media(media: AnyMediaReference.webPage(webPage: WebpageReference(webpage), media: file), resource: smallestRepresentation.resource)
                     fullReference = MediaResourceReference.media(media: AnyMediaReference.webPage(webPage: WebpageReference(webpage), media: file), resource: largestRepresentation.resource)
                 } else {
-                    smallReference = MediaResourceReference.wallpaper(resource: smallestRepresentation.resource)
-                    fullReference = MediaResourceReference.wallpaper(resource: largestRepresentation.resource)
+                    smallReference = MediaResourceReference.wallpaper(wallpaper: slug != nil ? .slug(slug!) : nil, resource: smallestRepresentation.resource)
+                    fullReference = MediaResourceReference.wallpaper(wallpaper: slug != nil ? .slug(slug!) : nil, resource: largestRepresentation.resource)
                 }
                 
                 let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: smallReference, statsCategory: .image)
@@ -2699,7 +2699,7 @@ func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wa
         return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
             
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
-            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: NSMakeSize(300, 300)))
+            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600))))
             
             context.withContext { ctx in
                 ctx.draw(preview, in: arguments.drawingRect)
@@ -2889,8 +2889,30 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                         c.setBlendMode(.normal)
                         c.interpolationQuality = .medium
                         c.clip(to: fittedRect, mask: fullSizeImage)
-                        c.setFillColor(patternColor(for: color, intensity: intensity, prominent: prominent).cgColor)
-                        c.fill(arguments.drawingRect)
+                        
+                        
+                        if colors.count == 1 {
+                            c.setFillColor(patternColor(for: color, intensity: intensity, prominent: prominent).cgColor)
+                            c.fill(arguments.drawingRect)
+                        } else {
+                            let gradientColors = colors.map { patternColor(for: $0, intensity: intensity, prominent: prominent).cgColor } as CFArray
+                            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                            
+                            var locations: [CGFloat] = []
+                            for i in 0 ..< colors.count {
+                                locations.append(delta * CGFloat(i))
+                            }
+                            let colorSpace = CGColorSpaceCreateDeviceRGB()
+                            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                            
+                            c.saveGState()
+                            c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
+                            c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
+                            c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
+                            
+                            c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                            c.restoreGState()
+                        }
                     }
                     
                 }
@@ -2936,7 +2958,7 @@ func patternWallpaperImage(account: Account, representations: [ImageRepresentati
 }
 
 
-func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, isPattern: Bool, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, slug: String? = nil, mode: PatternWallpaperDrawMode, isPattern: Bool, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
     var prominent = false
     if case .thumbnail = mode {
         prominent = false
@@ -2947,7 +2969,7 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
             if let webpage = webpage, let file = file {
                 return ImageRepresentationWithReference(representation: rep, reference: MediaResourceReference.media(media: AnyMediaReference.webPage(webPage: WebpageReference(webpage), media: file), resource: rep.resource))
             } else {
-                return ImageRepresentationWithReference(representation: rep, reference: MediaResourceReference.wallpaper(resource: rep.resource))
+                return ImageRepresentationWithReference(representation: rep, reference: MediaResourceReference.wallpaper(wallpaper: slug != nil ? .slug(slug!) : nil, resource: rep.resource))
             }
         }
         signal = patternWallpaperDatas(account: account, representations: reps, mode: mode, autoFetchFullSize: autoFetchFullSize)

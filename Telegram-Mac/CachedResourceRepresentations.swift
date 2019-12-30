@@ -149,9 +149,9 @@ final class CachedPatternWallpaperMaskRepresentation: CachedMediaResourceReprese
     
     var uniqueId: String {
         if let size = self.size {
-            return "pattern-wallpaper-mask32-\(Int(size.width))x\(Int(size.height))"
+            return "pattern-wallpaper-mask38-\(Int(size.width))x\(Int(size.height))"
         } else {
-            return "pattern-wallpaper-mask32"
+            return "pattern-wallpaper-mask38"
         }
     }
     
