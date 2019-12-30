@@ -117,7 +117,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         return ThemePreviewRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, viewType: .firstItem)
     }))
     
-    var accentList = appearance.presentation.cloudTheme == nil ? appearance.presentation.colors.accentList.map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
+    var accentList = appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil ? appearance.presentation.colors.accentList.map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
     
     
     var cloudThemes = cloudThemes
@@ -126,13 +126,15 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
             cloudThemes.append(cloud)
         }
     }
-    if appearance.presentation.cloudTheme == nil {
+    if appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil {
         let copy = cloudThemes
+        var cloudAccents:[AppearanceAccentColor] = []
         for cloudTheme in copy {
             if let settings = cloudTheme.settings, settings.palette.parent == appearance.presentation.colors.parent {
-                accentList.append(AppearanceAccentColor(accent: settings.accent, cloudTheme: cloudTheme))
+                cloudAccents.append(AppearanceAccentColor(accent: settings.accent, cloudTheme: cloudTheme))
             }
         }
+        accentList.insert(contentsOf: cloudAccents, at: 0)
     }
     
     cloudThemes.removeAll(where:{ $0.settings != nil })
@@ -147,24 +149,44 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         
         let selected: ThemeSource
         if let cloud = appearance.presentation.cloudTheme {
-            selected = .cloud(cloud)
+            if let _ = cloud.settings {
+               selected = .local(appearance.presentation.colors, cloud)
+            } else {
+                selected = .cloud(cloud)
+            }
         } else {
-            selected = .local(appearance.presentation.colors)
+            selected = .local(appearance.presentation.colors, nil)
         }
+                
+        let dayClassicCloud = settings.associated.first(where: { $0.local == dayClassicPalette.parent })?.cloud?.cloud
+        let dayCloud = settings.associated.first(where: { $0.local == whitePalette.parent })?.cloud?.cloud
+        let nightAccentCloud = settings.associated.first(where: { $0.local == nightAccentPalette.parent })?.cloud?.cloud
+
         
-        var locals = [dayClassicPalette, whitePalette, nightAccentPalette, systemPalette]
+        var locals: [LocalPaletteWithReference] = [LocalPaletteWithReference(palette: dayClassicPalette, cloud: dayClassicCloud),
+                                                   LocalPaletteWithReference(palette: whitePalette, cloud: dayCloud),
+                                                   LocalPaletteWithReference(palette: nightAccentPalette, cloud: nightAccentCloud),
+                                                   LocalPaletteWithReference(palette: systemPalette, cloud: nil)]
         
         for (i, local) in locals.enumerated() {
-            if let accent = settings.accents.first(where: { $0.name == local.parent }), accent.color.accent != local.basicAccent {
+            if let accent = settings.accents.first(where: { $0.name == local.palette.parent }), accent.color.accent != local.palette.basicAccent {
                 locals[i] = local.withAccentColor(accent.color)
             }
         }
         
-        return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  locals, cloudThemes: cloudThemes, viewType: accentList.isEmpty ? .lastItem : .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
+        
+        return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local: locals, cloudThemes: cloudThemes, viewType: accentList.isEmpty ? .lastItem : .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
             var items:[ContextMenuItem] = []
+            var cloud: TelegramTheme?
+            
             switch source {
-            case let .cloud(cloud):
-                
+            case let .cloud(c):
+                cloud = c
+            case let .local(_, c):
+                cloud = c
+            }
+            
+            if let cloud = cloud {
                 if cloud.isCreator {
                     items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
                         arguments.editTheme(cloud)
@@ -176,12 +198,8 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
                 items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
                     arguments.removeTheme(cloud)
                 }))
-                
-            case let .local(palette):
-                items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
-                    arguments.shareLocal(palette)
-                }))
             }
+            
             return items
         })
     }))
@@ -189,7 +207,18 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     
     if !accentList.isEmpty {
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(appearance), item: { initialSize, stableId in
-            return AccentColorRowItem(initialSize, stableId: stableId, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor)
+            return AccentColorRowItem(initialSize, stableId: stableId, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
+                var items:[ContextMenuItem] = []
+                if let cloud = accent.cloudTheme {
+                    items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                        arguments.shareTheme(cloud)
+                    }))
+                    items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+                        arguments.removeTheme(cloud)
+                    }))
+                }
+                return items
+            })
         }))
         index += 1
     }
@@ -265,8 +294,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                 } else {
                     settings = settings.withUpdatedDefaultDay(defaultTheme)
                 }
-                
-                return settings.installDefaultWallpaper().installDefaultAccent().withUpdatedDefaultIsDark(palette.isDark)
+                return settings.installDefaultWallpaper().installDefaultAccent().withUpdatedDefaultIsDark(palette.isDark).withSavedAssociatedTheme()
             }).start())
         case let .cloud(cloud, cached):
             if let cached = cached {
@@ -277,13 +305,13 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                     settings = settings.updateWallpaper { _ in
                         return ThemeWallpaper(wallpaper: cached.wallpaper, associated: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper))
                     }
-                    let defaultTheme = DefaultTheme(local: settings.defaultDark.local, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
+                    let defaultTheme = DefaultTheme(local: settings.palette.parent, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
                     if cached.palette.isDark {
                         settings = settings.withUpdatedDefaultDark(defaultTheme)
                     } else {
                         settings = settings.withUpdatedDefaultDay(defaultTheme)
                     }
-                    return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark)
+                    return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark).withSavedAssociatedTheme()
                 }).start())
                 
                 applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start())
@@ -340,7 +368,15 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                     } else {
                         settings = settings.withUpdatedPalette(clearPalette.withAccentColor(color.accent))
                     }
-                    return settings.saveDefaultAccent(color: color.accent)
+                    
+                    let defaultTheme = DefaultTheme(local: settings.palette.parent, cloud: nil)
+                    if settings.palette.isDark {
+                        settings = settings.withUpdatedDefaultDark(defaultTheme)
+                    } else {
+                        settings = settings.withUpdatedDefaultDay(defaultTheme)
+                    }
+                    
+                    return settings.withUpdatedCloudTheme(nil).saveDefaultAccent(color: color.accent).installDefaultWallpaper().withSavedAssociatedTheme()
                 }).start())
             }
         }
@@ -359,8 +395,17 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         confirm(for: context.window, header: L10n.appearanceConfirmRemoveTitle, information: L10n.appearanceConfirmRemoveText, successHandler: { _ in
             var signals:[Signal<Void, NoError>] = []
             if theme.cloudTheme?.id == cloudTheme.id {
-                signals.append(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: {
-                    return $0.withUpdatedCloudTheme(nil).withUpdatedToDefault(dark: $0.defaultIsDark, onlyLocal: true).installDefaultWallpaper()
+                signals.append(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    var settings = settings.withUpdatedCloudTheme(nil)
+                        .withUpdatedToDefault(dark: settings.defaultIsDark, onlyLocal: true)
+                    let defaultTheme = DefaultTheme(local: settings.palette.parent, cloud: nil)
+                    if settings.defaultIsDark {
+                        settings = settings.withUpdatedDefaultDark(defaultTheme)
+                    } else {
+                        settings = settings.withUpdatedDefaultDay(defaultTheme)
+                    }
+                    return settings.withSavedAssociatedTheme()
+                    
                 }))
             }
             signals.append(deleteThemeInteractively(account: context.account, accountManager: context.sharedContext.accountManager, theme: cloudTheme))

@@ -38,7 +38,7 @@ private func cloudThemeData(context: AccountContext, file: TelegramMediaFile) ->
                     case let .wallpaper(values):
                         switch values.preview {
                         case let .slug(slug, settings):
-                            wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
+                            wallpaper = getWallpaper(network: context.account.network, slug: slug) |> map(Optional.init)
                             newSettings = settings
                         default:
                             break
@@ -75,6 +75,16 @@ private func cloudThemeData(context: AccountContext, file: TelegramMediaFile) ->
 }
 
 
+private func cloudThemeCrossplatformData(context: AccountContext, settings: TelegramThemeSettings) -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?), NoError> {
+    
+    let palette = settings.palette
+    let wallpaper: Wallpaper = settings.wallpaper?.uiWallpaper ?? .none
+    let cloud = settings.wallpaper
+    return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper) |> map { wallpaper in
+        return (palette, wallpaper, cloud)
+    }
+}
+
 
 private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper) -> Signal<CGImage, NoError> {
     return Signal { subscriber in
@@ -103,7 +113,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                 case let .file(_, file, settings, isPattern):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
                         if isPattern {
-                            let image = generateImage(image.size, contextGenerator: { size, ctx in
+                            let image = generateImage(size, contextGenerator: { size, ctx in
                                 let imageRect = NSMakeRect(0, 0, size.width, size.height)
                                 let colors:[NSColor]
                                 let color: NSColor
@@ -121,7 +131,9 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                                     let top = NSColor(UInt32(t))
                                     let bottom = NSColor(UInt32(b))
                                     color = top.withAlphaComponent(1.0)
-                                    intensity = top.alpha
+                                    if let i = settings.intensity {
+                                        intensity = CGFloat(i) / 100.0
+                                    }
                                     colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
                                 } else {
                                     colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
@@ -153,11 +165,29 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                                 }
                                 
                                 ctx.setBlendMode(.normal)
-                                ctx.interpolationQuality = .high
+                                ctx.interpolationQuality = .low
                                 
-                                ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
-                                ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
-                                ctx.fill(imageRect)
+                                ctx.clip(to: imageRect.focus(image.size.aspectFilled(NSMakeSize(200, 200))), mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
+                                if colors.count == 2 {
+                                    ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                                    ctx.fill(imageRect)
+                                } else {
+                                    let gradientColors = colors.map { patternColor(for: $0, intensity: intensity).cgColor } as CFArray
+                                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                                    
+                                    var locations: [CGFloat] = []
+                                    for i in 0 ..< colors.count {
+                                        locations.append(delta * CGFloat(i))
+                                    }
+                                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                    
+                                    ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                                    ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                                    ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                                    
+                                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                                }
                             })!
                             backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
                         } else {
@@ -254,6 +284,27 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     ctx.fill(rect)
                     applyPlain()
                 }
+            case let .gradient(values):
+                if bubbled {
+                    let colors = [values.top, values.bottom].reversed()
+                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.saveGState()
+                    ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
+                    ctx.rotate(by: CGFloat(values.rotation ?? 0) * CGFloat.pi / -180.0)
+                    ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                    ctx.restoreGState()
+                    applyBubbles()
+                } else {
+                    applyPlain()
+                }
                 
             default:
                 break
@@ -281,9 +332,26 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
         } else {
             return .single((TransformImageResult(theme.icons.appearanceAddPlatformTheme, true), .cloud(cloud, nil)))
         }
-    case let .local(palette):
-        return generateThumb(palette: palette, bubbled: bubbled, wallpaper: palette.name == dayClassicPalette.name ? .builtin : .none) |> map { image in
-            return (TransformImageResult(image, true), .local(palette))
+    case let .local(palette, cloud):
+        let settings = themeSettingsView(accountManager: context.sharedContext.accountManager) |> take(1)
+        
+        return settings |> map { settings -> (Wallpaper, ColorPalette) in
+            let settings = settings
+                .withUpdatedPalette(palette)
+                .withUpdatedCloudTheme(cloud)
+                .installDefaultAccent()
+                .installDefaultWallpaper()
+            return (settings.wallpaper.wallpaper, settings.palette)
+        } |> mapToSignal { wallpaper, palette in
+            if let cloud = cloud {
+                return generateThumb(palette: palette, bubbled: bubbled, wallpaper: wallpaper) |> map { image in
+                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
+                }
+            } else {
+                return generateThumb(palette: palette, bubbled: bubbled, wallpaper: wallpaper) |> map { image in
+                    return (TransformImageResult(image, true), .local(palette))
+                }
+            }
         }
     }
 }

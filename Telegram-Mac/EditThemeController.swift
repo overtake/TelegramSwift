@@ -201,7 +201,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
                     case let .wallpaper(values):
                         switch values.preview {
                         case let .slug(slug, settings):
-                            let signal: Signal<(Wallpaper, TelegramWallpaper?), NoError> = getWallpaper(account: context.account, slug: slug)
+                            let signal: Signal<(Wallpaper, TelegramWallpaper?), NoError> = getWallpaper(network: context.account.network, slug: slug)
                                 |> mapToSignal { cloud in
                                     return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(cloud).withUpdatedSettings(settings)) |> map { wallpaper in
                                         return (wallpaper, cloud)

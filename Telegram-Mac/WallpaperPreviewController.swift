@@ -81,7 +81,7 @@ extension Wallpaper {
     }
 }
 
-private let WallpaperDimensions: NSSize = NSMakeSize(1040, 1580)
+let WallpaperDimensions: NSSize = NSMakeSize(1040, 1580)
 
 private final class blurCheckbox : View {
     
@@ -612,7 +612,12 @@ private final class WallpaperPreviewView: View {
             guard let `self` = self else { return }
             switch self.colorPicker.mode {
             case let .single(color):
-                self.wallpaper = .gradient(color.argb, color.darker(amount: 0.5).argb, nil)
+                switch self.wallpaper {
+                case let .file(_, _, settings, _):
+                    self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, color: color.argb, bottomColor: color.darker(amount: 0.3).argb, intensity: settings.intensity, rotation: settings.rotation))
+                default:
+                    self.wallpaper = .gradient(color.argb, color.darker(amount: 0.3).argb, nil)
+                }
                 self.colorPicker.updateMode(.gradient(top: color, bottom: color.darker(amount: 0.5), rotation: nil), animated: true)
             case .gradient:
                 fatalError()
@@ -1047,7 +1052,7 @@ private final class WallpaperPreviewView: View {
             self.imageSize = dimensions
 
             self.imageView.setSignal(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad), animate: true, synchronousLoad: synchronousLoad)
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets()))
+            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)), intrinsicInsets: NSEdgeInsets()))
             
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
             magnifyView.maxMagnify = 3.0
@@ -1242,52 +1247,51 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                 }
             }
         case let .file(slug, file, settings, isPattern):
-            if let dimensions = file.dimensions {
+            
+            let dimensions = file.dimensions?.size ?? WallpaperDimensions
+            if isPattern {
+                subscriber.putNext(wallpaper.withUpdatedSettings(settings))
+                subscriber.putCompletion()
+            } else {
                 if let path = account.postbox.mediaBox.completedResourcePath(file.resource), let image = NSImage(contentsOfFile: path)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                    if isPattern {
-                        subscriber.putNext(wallpaper.withUpdatedSettings(settings))
-                        subscriber.putCompletion()
-                    } else {
-                        let fittedImage = cropWallpaperImage(image, dimensions: dimensions.size, rect: rect, magnify: magnify, settings: isPattern ? settings : nil)
+                    let fittedImage = cropWallpaperImage(image, dimensions: dimensions, rect: rect, magnify: magnify, settings: isPattern ? settings : nil)
+                    
+                    let options = NSMutableDictionary()
+                    options.setValue(90 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
+                    var result: [TelegramMediaImageRepresentation] = []
+                    let colorQuality: Float = 0.1
+                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                    let mutableData: CFMutableData = NSMutableData() as CFMutableData
+                    
+                    if let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) {
+                        CGImageDestinationAddImage(colorDestination, fittedImage, options as CFDictionary)
+                        if CGImageDestinationFinalize(colorDestination) {
+                            let thumdResource = LocalFileMediaResource(fileId: arc4random64())
+                            account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource))
+                        }
+                    }
+                    
+                    let fittedDimensions = WallpaperDimensions.aspectFitted(dimensions)
+                    
+                    disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
+                        let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
                         
-                        let options = NSMutableDictionary()
-                        options.setValue(90 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
-                        var result: [TelegramMediaImageRepresentation] = []
-                        let colorQuality: Float = 0.1
-                        options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-                        let mutableData: CFMutableData = NSMutableData() as CFMutableData
-                        
-                        if let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) {
-                            CGImageDestinationAddImage(colorDestination, fittedImage, options as CFDictionary)
-                            if CGImageDestinationFinalize(colorDestination) {
-                                let thumdResource = LocalFileMediaResource(fileId: arc4random64())
-                                account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                                result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource))
+                        var attributes = file.attributes
+                        loop: for (i, attr) in attributes.enumerated() {
+                            switch attr {
+                            case .ImageSize:
+                                attributes[i] = .ImageSize(size: PixelDimensions(fittedDimensions))
+                                break loop
+                            default:
+                                break
                             }
                         }
                         
-                        let fittedDimensions = WallpaperDimensions.aspectFitted(dimensions.size)
-                        
-                        disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
-                            let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                            
-                            var attributes = file.attributes
-                            loop: for (i, attr) in attributes.enumerated() {
-                                switch attr {
-                                case .ImageSize:
-                                    attributes[i] = .ImageSize(size: PixelDimensions(fittedDimensions))
-                                    break loop
-                                default:
-                                    break
-                                }
-                            }
-                            
-                            let wallpaper: Wallpaper = .file(slug: slug, file: file.withUpdatedPreviewRepresentations(result).withUpdatedResource(resource).withUpdatedAttributes(attributes), settings: settings, isPattern: isPattern)
-                            subscriber.putNext(wallpaper)
-                            subscriber.putCompletion()
-                        }))
-                    }
-                    
+                        let wallpaper: Wallpaper = .file(slug: slug, file: file.withUpdatedPreviewRepresentations(result).withUpdatedResource(resource).withUpdatedAttributes(attributes), settings: settings, isPattern: isPattern)
+                        subscriber.putNext(wallpaper)
+                        subscriber.putCompletion()
+                    }))
                 }
             }
         default:
@@ -1463,7 +1467,7 @@ class WallpaperPreviewController: ModalViewController {
         
         _ = showModalProgress(signal: signal, for: context.window).start(next: { wallpaper in
             _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withUpdatedBubbled(true)
+                return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withSavedAssociatedTheme().withUpdatedBubbled(true)
             }) |> deliverOnMainQueue).start(completed: {
                 var stats:[Signal<Void, NoError>] = []
                 switch self.source {

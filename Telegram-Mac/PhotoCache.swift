@@ -15,7 +15,7 @@ import TGUIKit
 import SyncCore
 
 enum ThemeSource : Equatable {
-    case local(ColorPalette)
+    case local(ColorPalette, TelegramTheme?)
     case cloud(TelegramTheme)
 }
 
@@ -78,8 +78,16 @@ enum PhotoCacheKeyEntry : Hashable {
             return "messageId-\(stableId)-\(transform)-\(scale)-\(layout.rawValue)".nsstring
         case let .theme(source, bubbled):
             switch source {
-            case let .local(palette):
-                return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)".nsstring
+            case let .local(palette, cloud):
+                if let settings = cloud?.settings {
+                    #if !SHARE
+                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(settings.desc)".nsstring
+                    #else
+                    return ""
+                    #endif
+                }   else {
+                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(palette.accent.argb)".nsstring
+                }
             case let .cloud(cloud):
                 return "theme-remote-\(cloud.id)\(String(describing: cloud.file?.id))-bubbled\(bubbled ? 1 : 0)".nsstring
             }
@@ -202,7 +210,7 @@ private class PhotoCache {
 private let peerPhotoCache = PhotoCache(100)
 private let photosCache = PhotoCache(50)
 private let photoThumbsCache = PhotoCache(50)
-private let themeThums = PhotoCache(50)
+private let themeThums = PhotoCache(100)
 
 private let stickersCache = PhotoCache(500)
 
@@ -332,11 +340,16 @@ func cachedThemeThumb(source: ThemeSource, bubbled: Bool) -> Signal<TransformIma
     } else {
         value = themeThums.cachedImage(for: entry)
     }
+    if value == nil {
+        var bp:Int = 0
+        bp += 1
+    }
     return .single(TransformImageResult(value, full))
 }
 
 func cacheThemeThumb(_ result: TransformImageResult, source: ThemeSource, bubbled: Bool) -> Void {
     let entry:PhotoCacheKeyEntry = .theme(source, bubbled)
+    
     if let image = result.image {
         if !result.highQuality {
             themeThums.cacheImage(image, for: entry)

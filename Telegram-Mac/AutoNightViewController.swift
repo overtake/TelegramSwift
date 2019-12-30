@@ -155,7 +155,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
         if let theme = settings.theme.cloud {
             selected = .cloud(theme.cloud)
         } else {
-            selected = .local(settings.theme.local.palette)
+            selected = .local(settings.theme.local.palette, nil)
         }
         
         if let cloud = settings.theme.cloud?.cloud {
@@ -165,7 +165,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
         }
         
          entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_list, equatable: InputDataEquatable(settings), item: { initialSize, stableId in
-            return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  [nightAccentPalette, systemPalette], cloudThemes: cloudThemes, viewType: .singleItem, togglePalette: arguments.selectTheme, menuItems: { source in
+            return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  [LocalPaletteWithReference(palette: nightAccentPalette, cloud: nil), LocalPaletteWithReference(palette: systemPalette, cloud: nil)], cloudThemes: cloudThemes, viewType: .singleItem, togglePalette: arguments.selectTheme, menuItems: { source in
                 return []
             })
         }))

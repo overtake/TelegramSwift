@@ -12,13 +12,13 @@ import SwiftSignalKit
 private final class BackgroundGradientView : View {
     fileprivate var values:(top: NSColor, bottom: NSColor, rotation: Int32?)? {
         didSet {
-             needsDisplay = true
+            needsDisplay = true
         }
     }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.layerContentsRedrawPolicy = .duringViewResize
+        noWayToRemoveFromSuperview = true
     }
     
     required public init?(coder: NSCoder) {
@@ -30,10 +30,12 @@ private final class BackgroundGradientView : View {
     
     override func layout() {
         super.layout()
-        self.needsDisplay = true
+        let values = self.values
+        self.values = values
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
         if let values = self.values {
             
             let colors = [values.top, values.bottom].reversed()
@@ -119,9 +121,6 @@ open class BackgroundView: ImageView {
                 gradient.values = nil
             case let .gradient(top, bottom, rotation):
                 gradient.values = (top: top, bottom: bottom, rotation: rotation)
-//                if let rotation = rotation {
-//                    gradient.transform = CATransform3DMakeRotation(CGFloat.pi * CGFloat(rotation) / 180.0, 0, 0, 1)
-//                }
                 layer?.contents = nil
                 gradient.isHidden = false
             default:

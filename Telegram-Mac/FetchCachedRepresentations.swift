@@ -76,7 +76,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
             let url = URL(fileURLWithPath: path)
             
             if let data = TGGUnzipData(data, 8 * 1024 * 1024), data.count > 5, let string = String(data: data.subdata(in: 0 ..< 5), encoding: .utf8), string == "<?xml" {
-                let size = representation.size ?? CGSize(width: 1440.0, height: 2960.0)
+                let size = representation.size ?? CGSize(width: 1440.0, height: 2960.0).aspectFilled(NSMakeSize(800, 800))
                 
                 if let image = drawSvgImageNano(data, size)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                     if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
@@ -95,7 +95,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                     }
                 }
             } else if let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                let size = representation.size.flatMap { image.backingSize.aspectFitted($0) } ?? image.size
+                let size = representation.size.flatMap { image.backingSize.aspectFitted($0) } ?? image.size.aspectFilled(NSMakeSize(800, 800))
                 
                 let alphaImage = generateImage(size, contextGenerator: { size, context in
                     context.setFillColor(NSColor.black.cgColor)

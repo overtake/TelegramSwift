@@ -24,7 +24,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
         super.init(frame: NSZeroRect)
         layer?.borderColor = theme.colors.border.cgColor
         layer?.borderWidth = .borderSize
-        addSubview(label)
+        //addSubview(label)
         self.addSubview(self.imageView)
         label.isEventLess = true
         label.userInteractionEnabled = false
@@ -33,6 +33,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
         layout.measure(width: .greatestFiniteMagnitude)
         label.update(layout)
         label.backgroundColor = theme.chatBackground
+        label.disableBackgroundDrawing = true
     }
     
     deinit {
@@ -110,8 +111,8 @@ final class SettingsThemeWallpaperView: BackgroundView {
             self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor))
             self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.size.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil))
             self.backgroundMode = .plain
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
-        case let .file(_, file, settings, isPattern):
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: nil, resource: largestImageRepresentation(representations)!.resource)).start())
+        case let .file(slug, file, settings, isPattern):
             self.label.isHidden = true
             self.imageView.isHidden = false
             var patternColor: TransformImageEmptyColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
@@ -139,13 +140,21 @@ final class SettingsThemeWallpaperView: BackgroundView {
                     patternColor = .gradient(top: top.withAlphaComponent(patternIntensity), bottom: bottom.withAlphaComponent(patternIntensity), rotation: settings.rotation)
                 }
             }
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor))
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sz.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor)
+            
+
+            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
+            
+            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor), clearInstantly: false, cacheImage: { result in
+                cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+            })
+
+
+            self.imageView.set(arguments: arguments)
 
             
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: sz.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
-
-            
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(resource: largestImageRepresentation(representations)!.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: .slug(slug), resource: largestImageRepresentation(representations)!.resource)).start())
             
             self.backgroundMode = .plain
         default:

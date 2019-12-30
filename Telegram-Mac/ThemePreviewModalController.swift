@@ -176,7 +176,7 @@ class ThemePreviewModalController: ModalViewController {
                         .withUpdatedColors(palette)
                         .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper)))
                         .withUpdatedChatMode(true)
-                        .withUpdatedBackgroundSize(NSMakeSize(350, 350))
+                        .withUpdatedBackgroundSize(WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)))
                     self.currentTheme = newTheme
                     self.genericView.addTableItems(context, theme: newTheme)
                     self.modal?.updateLocalizationAndTheme(theme: newTheme)
@@ -270,7 +270,7 @@ class ThemePreviewModalController: ModalViewController {
             let defaultTheme: DefaultTheme
             
             if let cloudTheme = cloudTheme {
-                defaultTheme = DefaultTheme(local: colors.parent, cloud: DefaultCloudTheme(cloud: cloudTheme, palette: colors, wallpaper: currentTheme.wallpaper.associated ?? AssociatedWallpaper(cloud: nil, wallpaper: currentTheme.wallpaper.wallpaper)))
+                defaultTheme = DefaultTheme(local: colors.parent, cloud: DefaultCloudTheme(cloud: cloudTheme, palette: colors, wallpaper: currentTheme.wallpaper.associated ?? AssociatedWallpaper(cloud: currentTheme.wallpaper.associated?.cloud, wallpaper: currentTheme.wallpaper.wallpaper)))
             } else {
                 defaultTheme = DefaultTheme(local: colors.parent, cloud: nil)
             }
@@ -280,7 +280,7 @@ class ThemePreviewModalController: ModalViewController {
             } else {
                 settings = settings.withUpdatedDefaultDay(defaultTheme)
             }
-            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultWallpaper().saveDefaultAccent(color: PaletteAccentColor(colors.accent, colors.bubbleBackground_outgoing))
+            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultAccent(color: PaletteAccentColor(colors.accent, colors.bubbleBackground_outgoing)).saveDefaultWallpaper().withSavedAssociatedTheme()
             return settings
         }).start()
         
@@ -342,7 +342,7 @@ func loadCloudPaletteAndWallpaper(context: AccountContext, file: TelegramMediaFi
                     case let .wallpaper(values):
                         switch values.preview {
                         case let .slug(slug, settings):
-                            return getWallpaper(account: context.account, slug: slug)
+                            return getWallpaper(network: context.account.network, slug: slug)
                                 |> mapToSignal { cloud in
                                     return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(cloud).withUpdatedSettings(settings)) |> map { wallpaper in
                                         return (palette, wallpaper, cloud)

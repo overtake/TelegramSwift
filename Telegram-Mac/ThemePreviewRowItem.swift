@@ -19,7 +19,7 @@ class ThemePreviewRowItem: GeneralRowItem {
     fileprivate let theme: TelegramPresentationTheme
     fileprivate let items:[ChatRowItem]
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType) {
-        self.theme = theme
+        self.theme = theme.withUpdatedBackgroundSize(WallpaperDimensions.aspectFilled(NSMakeSize(200, 200)))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
@@ -79,9 +79,10 @@ class ThemePreviewRowItem: GeneralRowItem {
 
 private final class ThemePreviewRowView : TableRowView {
     private var containerView = GeneralRowContainerView(frame: NSZeroRect)
-    private let backgroundView = BackgroundView(frame: NSZeroRect)
+    private let backgroundView: BackgroundView
     private let borderView: View = View()
     required init(frame frameRect: NSRect) {
+        backgroundView = BackgroundView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         self.containerView.addSubview(self.backgroundView)
         self.containerView.addSubview(self.borderView)

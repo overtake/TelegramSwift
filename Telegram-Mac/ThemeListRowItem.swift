@@ -52,7 +52,7 @@ private final class HorizontalThemeItem : GeneralRowItem {
         self.context = context
         let attr: NSAttributedString
         switch themeType {
-        case let .local(palette):
+        case let .local(palette, _):
             attr = .initialize(string: localizedString("AppearanceSettings.ColorTheme.\(palette.name)"), color: selected ? theme.colors.accent : theme.colors.text, font: selected ? .medium(12) : .normal(12))
         case let .cloud(cloud):
             attr = .initialize(string: cloud.title, color: selected ? theme.colors.accent : theme.colors.text, font: selected ? .medium(12) : .normal(12))
@@ -69,6 +69,18 @@ private final class HorizontalThemeItem : GeneralRowItem {
     
     override var width: CGFloat {
         return 100
+    }
+}
+
+struct LocalPaletteWithReference {
+    let palette: ColorPalette
+    let cloud: TelegramTheme?
+    init(palette: ColorPalette, cloud: TelegramTheme?) {
+        self.palette = palette
+        self.cloud = cloud
+    }
+    func withAccentColor(_ color: PaletteAccentColor) -> LocalPaletteWithReference {
+        return LocalPaletteWithReference(palette: self.palette.withAccentColor(color), cloud: self.cloud)
     }
 }
 
@@ -127,9 +139,8 @@ private final class HorizontalThemeView : HorizontalRowView {
         
         let signal = themeAppearanceThumbAndData(context: item.context, bubbled: item.theme.bubbled, source: item.themeType) |> deliverOnMainQueue
         
-        self.imageView.setSignal(signal: cachedThemeThumb(source: item.themeType, bubbled: item.theme.bubbled), clearInstantly: true)
+        self.imageView.setSignal(signal: cachedThemeThumb(source: item.themeType, bubbled: item.theme.bubbled), clearInstantly: false)
 
-        
         var animated: Bool = !self.imageView.hasImage
         
         switch item.themeType {
@@ -144,19 +155,11 @@ private final class HorizontalThemeView : HorizontalRowView {
         
         disposable.set(signal.start(next: { [weak self] image, data in
             self?.imageView.setSignal(signal: .single(image), clearInstantly: true, animate: animated)
-            let source: ThemeSource
-            switch data {
-            case let .local(palette):
-                source = .local(palette)
-            case let .cloud(cloud, _):
-                source = .cloud(cloud)
-            }
             self?.progressIndicator.isHidden = true
-            cacheThemeThumb(image, source: source, bubbled: item.theme.bubbled)
-            cache.setObject(ThemeCachedItem(source: data), forKey: PhotoCacheKeyEntry.theme(source, item.theme.bubbled).stringValue)
+            cacheThemeThumb(image, source: item.themeType, bubbled: item.theme.bubbled)
+            cache.setObject(ThemeCachedItem(source: data), forKey: PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled).stringValue)
             cachedData = data
         }))
-        
         
         
         selectionView.layer?.borderWidth = item.selected ? 2 : 1
@@ -210,15 +213,16 @@ private final class HorizontalThemeView : HorizontalRowView {
 }
 
 
+
 class ThemeListRowItem: GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let theme: TelegramPresentationTheme
     fileprivate let cloudThemes:[TelegramTheme]
-    fileprivate let local:[ColorPalette]
+    fileprivate let local:[LocalPaletteWithReference]
     fileprivate let togglePalette: (InstallThemeSource)->Void
     fileprivate let menuItems: (ThemeSource)->[ContextMenuItem]
     fileprivate let selected: ThemeSource
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, theme: TelegramPresentationTheme, selected: ThemeSource, local:[ColorPalette], cloudThemes:[TelegramTheme], viewType: GeneralViewType, togglePalette: @escaping(InstallThemeSource)->Void, menuItems: @escaping(ThemeSource)->[ContextMenuItem]) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, theme: TelegramPresentationTheme, selected: ThemeSource, local:[LocalPaletteWithReference], cloudThemes:[TelegramTheme], viewType: GeneralViewType, togglePalette: @escaping(InstallThemeSource)->Void, menuItems: @escaping(ThemeSource)->[ContextMenuItem]) {
         self.context = context
         self.theme = theme
         self.local = local
@@ -311,17 +315,17 @@ private final class ThemeListRowView : TableRowView {
         tableView.removeAll(animation: reloadAnimated ? .effectFade : .none)
         _ = tableView.addItem(item: HorizontalThemeFirstItem(tableView.frame.size), animation: reloadAnimated ? .effectFade : .none)
         
-        let localPalettes:[ColorPalette] = item.local
+        let localPalettes:[LocalPaletteWithReference] = item.local
         var scrollItem:HorizontalThemeItem? = nil
         for palette in localPalettes {
             let selected: Bool
             switch item.selected {
-            case let .local(local):
-                selected = local.parent == palette.parent
+            case let .local(local, _):
+                selected = local.parent == palette.palette.parent
             default:
                 selected = false
             }
-            let item = HorizontalThemeItem(tableView.frame.size, stableId: palette.name, context: item.context, theme: item.theme, themeType: .local(palette), selected: selected, togglePalette: item.togglePalette, menuItems: item.menuItems)
+            let item = HorizontalThemeItem(tableView.frame.size, stableId: palette.palette.name, context: item.context, theme: item.theme, themeType: .local(palette.palette, palette.cloud), selected: selected, togglePalette: item.togglePalette, menuItems: item.menuItems)
             _ = tableView.addItem(item: item)
             if item.selected && scrollItem == nil {
                 scrollItem = item

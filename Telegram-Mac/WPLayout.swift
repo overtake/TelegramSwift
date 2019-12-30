@@ -201,6 +201,23 @@ class WPLayout: Equatable {
         return nil
     }
     
+    var wallpaperReference: WallpaperReference? {
+        if let wallpaper = wallpaper {
+            switch wallpaper {
+            case let .wallpaper(link, context, preview):
+                inner: switch preview {
+                case let .slug(slug, _):
+                    return .slug(slug)
+                default:
+                    break inner
+                }
+            default:
+                break
+            }
+        }
+        return nil
+    }
+    
     var themeLink: inAppLink? {
         if content.type == "telegram_theme" {
             return inApp(for: content.url as NSString, context: context)
