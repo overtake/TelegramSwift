@@ -163,7 +163,7 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
                 } else {
                     chatServiceItemColor = color
                 }
-            case let .gradient(top, bottom, rotation):
+            case let .gradient(top, bottom, _):
                 if let blended = top.blended(withFraction: 0.5, of: bottom) {
                     chatServiceItemColor = getAverageColor(blended)
                 } else {
