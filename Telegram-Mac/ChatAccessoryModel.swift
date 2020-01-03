@@ -157,11 +157,11 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
             ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: size.height - radius * 2 -  (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
             
             if  let header = header, let message = message {
-                header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0) + topOffset, header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
+                header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0) + topOffset, header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: presentation.background)
                 if headerAttr == nil {
-                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels(view.backingScaleFactor, topOffset + (size.height - topOffset - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
+                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels(view.backingScaleFactor, topOffset + (size.height - topOffset - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: presentation.background)
                 } else {
-                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), header.0.size.height + yInset + (isSideAccessory ? 5 : 0) + topOffset, message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: backgroundColor)
+                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), header.0.size.height + yInset + (isSideAccessory ? 5 : 0) + topOffset, message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: presentation.background)
                 }
             }
         }

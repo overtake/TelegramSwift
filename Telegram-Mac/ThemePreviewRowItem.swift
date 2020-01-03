@@ -117,6 +117,11 @@ private final class ThemePreviewRowView : TableRowView {
             let view = vz.init(frame:NSMakeRect(0, y, self.backgroundView.frame.width, item.height))
             view.set(item: item, animated: animated)
             self.backgroundView.addSubview(view)
+            
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: frame.size, inset: NSMakePoint(0, frame.height), animated: false)
+            }
+            
             y += item.height
         }
         

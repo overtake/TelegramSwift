@@ -46,7 +46,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private var forwardAccessory: ChatBubbleAccessoryForward? = nil
     private var viaAccessory: ChatBubbleViaAccessory? = nil
-    private var bubbleView: SImageView = SImageView()
+    
+    private var bubbleView = ChatMessageBubbleBackdrop()
     
     private var scamButton: ImageButton? = nil
     private var scamForwardButton: ImageButton? = nil
@@ -59,6 +60,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         super.addSubview(rowView)
         
+        
+        
         rowView.addSubview(bubbleView)
         rowView.addSubview(contentView)
         rowView.addSubview(rightView)
@@ -66,6 +69,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.displayDelegate = self
         
         super.addSubview(swipingRightView)
+        
         
     }
     
@@ -75,6 +79,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             rowView.setFrameSize(newSize)
         }
         
+    }
+    
+    func updateBackground(within size: NSSize, inset: NSPoint, animated: Bool) -> Void {
+        let size = NSMakeSize(size.width, size.height + 60)
+        let inset = size.height - inset.y + (frame.height - bubbleFrame.maxY) - 30
+        bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated)
     }
     
     var selectableTextViews: [TextView] {
@@ -219,9 +229,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else {return backdorColor}
         
         if item.hasBubble {
-            return isSelect || contextMenu != nil ? item.presentation.chat.backgoundSelectedColor(item.isIncoming, item.renderType == .bubble) : item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
+            return .clear//isSelect || contextMenu != nil ? item.presentation.chat.backgoundSelectedColor(item.isIncoming, item.renderType == .bubble) : item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
         } else {
-            return backdorColor
+            return .clear//backdorColor
         }
     }
 
@@ -234,7 +244,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
         contentView.backgroundColor = .clear
-        item.replyModel?.backgroundColor = item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
+        item.replyModel?.backgroundColor = contentColor//item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
         nameView?.backgroundColor = contentColor
         forwardName?.backgroundColor = contentColor
         captionView?.backgroundColor = contentColor
@@ -438,7 +448,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             if replyView == nil {
                 replyView = ChatAccessoryView()
-                replyView?.backgroundColor = contentColor
                 rowView.addSubview(replyView!)
             }
             
@@ -680,6 +689,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let item = item as? ChatRowItem {
             bubbleView.frame = bubbleFrame
             contentView.frame = contentFrameModifier
+            
+
             
             rowView.setFrameOrigin(rowPoint)
             
@@ -1016,9 +1027,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
-            bubbleView.data = isSelectedItem(item) || contextMenu != nil ? item.selectedBubbleImage : item.modernBubbleImage
+            bubbleView.setType(image: item.modernBubbleImage, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
         } else {
-            bubbleView.data = nil
+            bubbleView.setType(image: nil, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
         }
     }
     

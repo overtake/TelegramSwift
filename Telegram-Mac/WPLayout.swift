@@ -200,6 +200,9 @@ class WPLayout: Equatable {
         }
         return nil
     }
+    var isPatternWallpaper: Bool {
+        return content.file?.mimeType == "application/x-tgwallpattern"
+    }
     
     var wallpaperReference: WallpaperReference? {
         if let wallpaper = wallpaper {

@@ -774,15 +774,15 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = self.selectedItem {
             item.request()
             lockedTransition = true
-            if let oldView = from(item.stableId), let oldWindow = oldView.window {
+            if let oldView = from(item.stableId), let oldWindow = oldView.window, let oldScreen = oldWindow.screen {
                 selectedView.isHidden = true
                 
                 ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
                     
                     if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame, let oldView = oldView {
-                        let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
-                        let oldRect = oldWindow.convertToScreen(oldView.convert(oldView.bounds, to: nil))
-                        
+                        let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset: contentInset)
+                        var oldRect = oldWindow.convertToScreen(oldView.convert(oldView.bounds, to: nil))
+                        oldRect.origin = oldRect.origin.offsetBy(dx: -oldScreen.frame.minX, dy: -oldScreen.frame.minY)
                         selectedView?.contentSize = item.sizeValue.fitted(contentFrame.size)
                         if value.hasValue, let strongSelf = self {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
@@ -900,8 +900,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = selectedItem {
             selectedView.isHidden = true
             item.disappear(for: selectedView.contentView)
-            if let oldView = to(item.stableId), let window = oldView.window {
-                let newRect = window.convertToScreen(oldView.convert(oldView.bounds, to: nil))
+            if let oldView = to(item.stableId), let window = oldView.window, let screen = window.screen {
+                var newRect = window.convertToScreen(oldView.convert(oldView.bounds, to: nil))
+                newRect.origin = newRect.origin.offsetBy(dx: -screen.frame.minX, dy: -screen.frame.minY)
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
                 ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self] value in

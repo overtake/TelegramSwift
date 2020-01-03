@@ -558,13 +558,10 @@ public extension NSView {
                 presentY =  presentation.frame.minY
                 presentX = presentation.frame.minX
             }
-            if position == frame.origin {
-                 completion?(true)
-            } else {
-                self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
-            }
+            self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
+
         } else {
-           // self.layer?.removeAnimation(forKey: "position")
+            self.layer?.removeAnimation(forKey: "position")
         }
         if save {
             self.setFrameOrigin(position)
@@ -591,11 +588,11 @@ public extension NSView {
                 presentBounds.size.width = NSWidth(presentation.bounds)
                 presentBounds.size.height = NSHeight(presentation.bounds)
             }
-            
             self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+
             
         } else {
-           // self.layer?.removeAnimation(forKey: "bounds")
+            self.layer?.removeAnimation(forKey: "bounds")
         }
         if save {
             self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
@@ -770,7 +767,7 @@ public extension CGSize {
 
 public extension NSImage {
     
-    func precomposed(_ color:NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
         
         let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
         
@@ -786,12 +783,27 @@ public extension NSImage {
             var imageRect:CGRect = NSMakeRect(0, 0, image.size.width, image.size.height)
 
             let cimage = image.cgImage(forProposedRect: &imageRect, context: nil, hints: nil)
-            //CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithData(image.tiffRepresentation! as CFData, nil)!, 0, nil)
             
             if let color = color {
                 ctx.clip(to: rect, mask: cimage!)
-                ctx.setFillColor(color.cgColor)
-                ctx.fill(rect)
+                if let bottomColor = bottomColor {
+                    let colors = [color, bottomColor]
+                    let rect = NSMakeRect(0, 0, rect.width, rect.height)
+                    let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                } else {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
+                }
+             
             } else {
                 ctx.draw(cimage!, in: imageRect)
             }

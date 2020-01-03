@@ -362,8 +362,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         partDisposable.set(nil)
         
+        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
         
-        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!)
+        
+        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || versionUpdated
         if mediaUpdated {
             self.autoplayVideoView = nil
         }
@@ -484,7 +486,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
             if let updateImageSignal = updateImageSignal, !self.image.isFullyLoaded {
-                self.image.setSignal( updateImageSignal, animate: true, cacheImage: { [weak media] result in
+                self.image.setSignal( updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }

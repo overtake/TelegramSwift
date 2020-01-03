@@ -268,9 +268,9 @@ class ChatInputActionsView: View, Notifable {
                 if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
                     size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
                 }
-                
+                send.animates = false
                 send.set(image: value.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
-
+                send.animates = true
               
                 if let peer = value.peer {
                     muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil

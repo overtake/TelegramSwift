@@ -84,7 +84,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     fileprivate var logoutImpl:() -> Void = {}
     fileprivate var useTouchIdImpl:() -> Void = {}
     private let inputContainer: View = View()
-    private var fieldState: SearchFieldState = .None
+    private var fieldState: SearchFieldState = .Focus
     
     required init(frame frameRect: NSRect) {
         input = PasscodeField(frame: NSZeroRect)
@@ -157,7 +157,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         }, for: .SingleClick)
         
         updateLocalizationAndTheme(theme: theme)
-        change(state: .None, animated: false)
+        layout()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

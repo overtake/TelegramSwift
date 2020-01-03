@@ -16,9 +16,25 @@ private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> 
         context.setFillColor(color.accent.cgColor)
         context.fillEllipse(in: bounds)
         
-        if let bubble = color.bubble, bubbled {
-            context.setFillColor(bubble.cgColor)
-            context.fillEllipse(in: bounds.focus(NSMakeSize(16, 16)))
+        if let messages = color.messages, bubbled {
+            let imageSize = CGSize(width: 16, height: 16)
+            let image = generateImage(imageSize, contextGenerator: { size, ctx in
+                let rect = NSMakeRect(0, 0, size.width, size.height)
+                ctx.clear(rect)
+                ctx.round(size, size.height / 2)
+                let colors = [messages.top, messages.bottom].reversed()
+                let gradientColors = colors.map { $0.cgColor } as CFArray
+                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                var locations: [CGFloat] = []
+                for i in 0 ..< colors.count {
+                    locations.append(delta * CGFloat(i))
+                }
+                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            })!
+            
+            context.draw(image, in: bounds.focus(imageSize))
         }
     })!
 }
@@ -237,6 +253,7 @@ final class AccentColorRowView : TableRowView {
             button.layer?.cornerRadius = button.frame.height / 2
             let icon = generateAccentColor(colorList[i].accent, bubbled: theme.bubbled)
             button.contextObject = colorList[i]
+            button.setImageContentGravity(.resize)
             button.set(image: icon, for: .Normal)
             button.set(image: icon, for: .Hover)
             button.set(image: icon, for: .Highlight)
@@ -251,6 +268,10 @@ final class AccentColorRowView : TableRowView {
             }
             documentView.addSubview(button)
             x += button.frame.width + insetWidth
+            
+            if i == colorList.count - 1 {
+                x -= insetWidth
+            }
         }
         
        

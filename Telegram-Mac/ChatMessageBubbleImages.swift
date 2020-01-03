@@ -33,7 +33,7 @@ func messageSingleBubbleLikeImage(fillColor: NSColor, strokeColor: NSColor) -> C
 }
 
 
-func messageBubbleImageModern(incoming: Bool, fillColor: NSColor, strokeColor: NSColor, neighbors: MessageBubbleImageNeighbors) -> (CGImage, NSEdgeInsets) {
+func messageBubbleImageModern(incoming: Bool, fillColor: NSColor, strokeColor: NSColor, neighbors: MessageBubbleImageNeighbors, mask: Bool = false) -> (CGImage, NSEdgeInsets) {
     
     let diameter: CGFloat = 36.0
     let corner: CGFloat = 7.0
@@ -55,9 +55,16 @@ func messageBubbleImageModern(incoming: Bool, fillColor: NSColor, strokeColor: N
         
         let lineWidth: CGFloat = 1.0
         
-        context.setFillColor(fillColor.cgColor)
-        context.setLineWidth(lineWidth)
-        context.setStrokeColor(strokeColor.cgColor)
+        if mask {
+            context.setBlendMode(.copy)
+            context.setFillColor(NSColor.clear.cgColor)
+            context.setStrokeColor(NSColor.clear.cgColor)
+        } else {
+            context.setFillColor(fillColor.cgColor)
+            context.setLineWidth(lineWidth)
+            context.setStrokeColor(strokeColor.cgColor)
+        }
+       
         
         switch neighbors {
         case .none:

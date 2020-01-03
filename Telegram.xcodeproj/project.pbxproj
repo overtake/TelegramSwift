@@ -206,6 +206,7 @@
 		A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
 		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
 		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
+		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
@@ -1235,6 +1236,7 @@
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
+		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A7B5030E23B62E0000C9838E /* nanosvg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanosvg.c; sourceTree = "<group>"; };
 		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
@@ -2629,6 +2631,7 @@
 				C2DF47E81DE892E3003AA6C0 /* ChatToasterView.swift */,
 				C2E8694C1F43500D00BDD0A2 /* ChatNavigationMention.swift */,
 				A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */,
+				A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -5195,6 +5198,7 @@
 				C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */,
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
 				9F0AE6872191D29D00A8B53A /* ContextSearchMessageItem.swift in Sources */,
+				A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */,
 				9F0AE6BC2199BBB900A8B53A /* MediaPlayerView.swift in Sources */,
 				9F7D421F22203DB1007B68BB /* ChannelStatisticsController.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,

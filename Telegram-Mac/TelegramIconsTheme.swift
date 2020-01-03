@@ -510,6 +510,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chatGradientBubble_incoming: CGImage {
+      if let image = cached.with({ $0["chatGradientBubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chatGradientBubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatGradientBubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatGradientBubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chatGradientBubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chatGradientBubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatGradientBubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
   var composeNewChat: CGImage {
       if let image = cached.with({ $0["composeNewChat"] }) {
           return image
@@ -5542,6 +5568,8 @@ final class TelegramIconsTheme {
   private let _chatMusicPause: ()->CGImage
   private let _chatMusicPauseBubble_incoming: ()->CGImage
   private let _chatMusicPauseBubble_outgoing: ()->CGImage
+  private let _chatGradientBubble_incoming: ()->CGImage
+  private let _chatGradientBubble_outgoing: ()->CGImage
   private let _composeNewChat: ()->CGImage
   private let _composeNewChatActive: ()->CGImage
   private let _composeNewGroup: ()->CGImage
@@ -5967,6 +5995,8 @@ final class TelegramIconsTheme {
       chatMusicPause: @escaping()->CGImage,
       chatMusicPauseBubble_incoming: @escaping()->CGImage,
       chatMusicPauseBubble_outgoing: @escaping()->CGImage,
+      chatGradientBubble_incoming: @escaping()->CGImage,
+      chatGradientBubble_outgoing: @escaping()->CGImage,
       composeNewChat: @escaping()->CGImage,
       composeNewChatActive: @escaping()->CGImage,
       composeNewGroup: @escaping()->CGImage,
@@ -6391,6 +6421,8 @@ final class TelegramIconsTheme {
       self._chatMusicPause = chatMusicPause
       self._chatMusicPauseBubble_incoming = chatMusicPauseBubble_incoming
       self._chatMusicPauseBubble_outgoing = chatMusicPauseBubble_outgoing
+      self._chatGradientBubble_incoming = chatGradientBubble_incoming
+      self._chatGradientBubble_outgoing = chatGradientBubble_outgoing
       self._composeNewChat = composeNewChat
       self._composeNewChatActive = composeNewChatActive
       self._composeNewGroup = composeNewGroup

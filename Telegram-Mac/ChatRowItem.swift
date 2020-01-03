@@ -905,8 +905,8 @@ class ChatRowItem: TableRowItem {
                     isFull = false
                 }
                 
-                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
-                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgoundSelectedColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
+                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: .white, strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both, mask: false)
+                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: .white, strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both, mask: false)
             }
             
             self.itemType = itemType
@@ -1171,7 +1171,7 @@ class ChatRowItem: TableRowItem {
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId]  {
-                    let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?   presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
+                    let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
                     self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account: context.account, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
                         guard let `self` = self else {return}

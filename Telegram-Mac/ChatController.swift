@@ -144,6 +144,9 @@ class ChatControllerView : View, ChatInputDelegate {
     private let header:ChatHeaderController
     private var historyState:ChatHistoryState?
     private let chatInteraction: ChatInteraction
+    
+    private let gradientMaskView = BackgroundGradientView(frame: NSZeroRect)
+    
     var headerState: ChatHeaderState {
         return header.state
     }
@@ -214,6 +217,18 @@ class ChatControllerView : View, ChatInputDelegate {
         tableView.set(stickClass: ChatDateStickItem.self, handler: { stick in
             
         })
+        
+        tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            self.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(within: self.frame.size, inset: position.rect.origin, animated: false)
+                }
+            })
+        }))
+        
     }
     
     func updateScroller(_ historyState:ChatHistoryState) {
@@ -293,6 +308,11 @@ class ChatControllerView : View, ChatInputDelegate {
             
             previousHeight = height
 
+            self.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(within: self.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: animated)
+                }
+            })
         }
         
     }
@@ -317,6 +337,13 @@ class ChatControllerView : View, ChatInputDelegate {
             tableView.setFrameSize(NSMakeSize(newSize.width, newSize.height - inputView.frame.height))
         }
         inputView.setFrameSize(NSMakeSize(newSize.width, inputView.frame.height))
+        gradientMaskView.frame = tableView.frame
+        
+        self.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
+            }
+        })
         
         super.setFrameSize(newSize)
 
@@ -332,6 +359,7 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             tableView.setFrameOrigin(0, 0)
         }
+        gradientMaskView.frame = tableView.frame
         
         if let view = inputContextHelper.accessoryView {
             view.setFrameOrigin(0, frame.height - inputView.frame.height - view.frame.height)
@@ -355,6 +383,12 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: false )
         }
+        
+        self.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
+            }
+        })
     }
     
 

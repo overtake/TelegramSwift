@@ -27,6 +27,19 @@ private final class ThemePreviewView : BackgroundView {
         self.addSubview(tableView)
         segmentContainer.addSubview(segmentControl.view)
         self.addSubview(segmentContainer)
+        
+        
+        tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            self.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(within: self.tableView.frame.size, inset: position.rect.origin, animated: false)
+                }
+            })
+        }))
+        
         layout()
     }
     
@@ -35,6 +48,13 @@ private final class ThemePreviewView : BackgroundView {
         segmentContainer.frame = NSMakeRect(0, 0, frame.width, 50)
         self.segmentControl.view.center()
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
+        
+        
+        self.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.tableView.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
+            }
+        })
     }
     
     required init?(coder: NSCoder) {
@@ -54,6 +74,19 @@ private final class ThemePreviewView : BackgroundView {
                 return theme.chatBackground
             }
         }
+        
+        tableView.afterSetupItem = { [weak self] view, item in
+            guard let `self` = self else {
+                return
+            }
+            if let view = view as? ChatRowView {
+                let offset = self.tableView.scrollPosition().current.rect.origin
+                view.updateBackground(within: self.tableView.frame.size, inset: offset, animated: false)
+            }
+        }
+        
+        
+        
         segmentContainer.backgroundColor = theme.colors.background
         segmentContainer.borderColor = theme.colors.border
         segmentContainer.border = [.Bottom]
@@ -92,6 +125,9 @@ private final class ThemePreviewView : BackgroundView {
         
         _ = tableView.addItem(item: item2)
         _ = tableView.addItem(item: item1)
+        
+        
+
         
     }
     
@@ -280,7 +316,7 @@ class ThemePreviewModalController: ModalViewController {
             } else {
                 settings = settings.withUpdatedDefaultDay(defaultTheme)
             }
-            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultAccent(color: PaletteAccentColor(colors.accent, colors.bubbleBackground_outgoing)).saveDefaultWallpaper().withSavedAssociatedTheme()
+            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultAccent(color: PaletteAccentColor(colors.accent, (top: colors.bubbleBackgroundTop_outgoing, colors.bubbleBackgroundBottom_outgoing))).saveDefaultWallpaper().withSavedAssociatedTheme()
             return settings
         }).start()
         

@@ -189,15 +189,15 @@ class WPArticleLayout: WPLayout {
                     switch preview {
                     case let .slug(_, settings):
                         var patternIntensity: CGFloat = 0.5
-                        if let color = settings.color {
-                            if let intensity = settings.intensity {
-                                patternIntensity = CGFloat(intensity) / 100.0
-                            }
-                            if let bottomColor = settings.bottomColor {
-                                emptyColor = .gradient(top: NSColor(argb: color), bottom: NSColor(rgb: bottomColor), rotation: settings.rotation)
-                            } else {
-                                emptyColor = .color(NSColor(argb: color))
-                            }
+                        
+                        let color = settings.color ?? NSColor(rgb: 0xd6e2ee, alpha: 0.5).argb
+                        if let intensity = settings.intensity {
+                            patternIntensity = CGFloat(intensity) / 100.0
+                        }
+                        if let bottomColor = settings.bottomColor {
+                            emptyColor = .gradient(top: NSColor(argb: color).withAlphaComponent(patternIntensity), bottom: NSColor(rgb: bottomColor).withAlphaComponent(patternIntensity), rotation: settings.rotation)
+                        } else {
+                            emptyColor = .color(NSColor(argb: color))
                         }
                     case .color:
                         isColor = true

@@ -120,11 +120,15 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
 }
 
 public struct PaletteAccentColor : Equatable {
+    public static func == (lhs: PaletteAccentColor, rhs: PaletteAccentColor) -> Bool {
+        return lhs.accent == rhs.accent && lhs.messages?.top == rhs.messages?.top && lhs.messages?.bottom == rhs.messages?.bottom
+    }
+    
     public let accent: NSColor
-    public let bubble: NSColor?
-    public init(_ accent: NSColor, _ bubble: NSColor? = nil) {
+    public let messages: (top: NSColor, bottom: NSColor)?
+    public init(_ accent: NSColor, _ messages: (top: NSColor, bottom: NSColor)? = nil) {
         self.accent = accent.withAlphaComponent(1.0)
-        self.bubble = bubble?.withAlphaComponent(1.0)
+        self.messages = messages.map { (top: $0.top.withAlphaComponent(1.0), bottom: $0.bottom.withAlphaComponent(1.0)) }
     }
 }
 
@@ -268,10 +272,15 @@ public class ColorPalette : Equatable {
     public var bubbleBackground_incoming: NSColor {
         return self._bubbleBackground_incoming
     }
-    private let _bubbleBackground_outgoing: NSColor
-    public var bubbleBackground_outgoing: NSColor {
-        return self._bubbleBackground_outgoing
+    private let _bubbleBackgroundTop_outgoing: NSColor
+    public var bubbleBackgroundTop_outgoing: NSColor {
+        return self._bubbleBackgroundTop_outgoing
     }
+    private let _bubbleBackgroundBottom_outgoing: NSColor
+    public var bubbleBackgroundBottom_outgoing: NSColor {
+        return self._bubbleBackgroundBottom_outgoing
+    }
+    
     private let _bubbleBorder_incoming: NSColor
     public var bubbleBorder_incoming: NSColor {
         return self._bubbleBorder_incoming
@@ -705,7 +714,8 @@ public class ColorPalette : Equatable {
                 selectTextBubble_incoming: NSColor,
                 selectTextBubble_outgoing: NSColor,
                 bubbleBackground_incoming: NSColor,
-                bubbleBackground_outgoing: NSColor,
+                bubbleBackgroundTop_outgoing: NSColor,
+                bubbleBackgroundBottom_outgoing: NSColor,
                 bubbleBorder_incoming: NSColor,
                 bubbleBorder_outgoing: NSColor,
                 grayTextBubble_incoming: NSColor,
@@ -812,9 +822,13 @@ public class ColorPalette : Equatable {
         var accentIconBubble_outgoing: NSColor = accentIconBubble_outgoing
         
         let bubbleBackground_incoming = bubbleBackground_incoming.withAlphaComponent(1.0)
-        let bubbleBackground_outgoing = bubbleBackground_outgoing.withAlphaComponent(1.0)
+        let bubbleBackgroundTop_outgoing = bubbleBackgroundTop_outgoing.withAlphaComponent(1.0)
+        let bubbleBackgroundBottom_outgoing = bubbleBackgroundBottom_outgoing.withAlphaComponent(1.0)
         let linkBubble_incoming = linkBubble_incoming.withAlphaComponent(1.0)
         let linkBubble_outgoing = linkBubble_outgoing.withAlphaComponent(1.0)
+        
+        
+        let bubbleBackground_outgoing = bubbleBackgroundTop_outgoing.blended(withFraction: 0.5, of: bubbleBackgroundBottom_outgoing)!
         
         let chatBackground = chatBackground.withAlphaComponent(1.0)
         
@@ -903,7 +917,8 @@ public class ColorPalette : Equatable {
         self._selectTextBubble_incoming = selectTextBubble_incoming.withAlphaComponent(max(0.6, selectTextBubble_incoming.alpha))
         self._selectTextBubble_outgoing = selectTextBubble_outgoing.withAlphaComponent(max(0.6, selectTextBubble_outgoing.alpha))
         self._bubbleBackground_incoming = bubbleBackground_incoming.withAlphaComponent(max(0.6, bubbleBackground_incoming.alpha))
-        self._bubbleBackground_outgoing = bubbleBackground_outgoing.withAlphaComponent(max(0.6, bubbleBackground_outgoing.alpha))
+        self._bubbleBackgroundTop_outgoing = bubbleBackgroundTop_outgoing.withAlphaComponent(max(1.0, bubbleBackgroundTop_outgoing.alpha))
+        self._bubbleBackgroundBottom_outgoing = bubbleBackgroundBottom_outgoing.withAlphaComponent(max(1.0, bubbleBackgroundBottom_outgoing.alpha))
         self._bubbleBorder_incoming = bubbleBorder_incoming.withAlphaComponent(max(0.6, bubbleBorder_incoming.alpha))
         self._bubbleBorder_outgoing = bubbleBorder_outgoing.withAlphaComponent(max(0.6, bubbleBorder_outgoing.alpha))
         self._grayTextBubble_incoming = grayTextBubble_incoming.withAlphaComponent(max(0.6, grayTextBubble_incoming.alpha))
@@ -1072,9 +1087,10 @@ public class ColorPalette : Equatable {
                             selectTextBubble_incoming: selectTextBubble_incoming,
                             selectTextBubble_outgoing: selectTextBubble_outgoing,
                             bubbleBackground_incoming: bubbleBackground_incoming,
-                            bubbleBackground_outgoing: bubbleBackground_outgoing,
+                            bubbleBackgroundTop_outgoing: bubbleBackgroundTop_outgoing,
+                            bubbleBackgroundBottom_outgoing: bubbleBackgroundBottom_outgoing,
                             bubbleBorder_incoming: bubbleBorder_incoming,
-                            bubbleBorder_outgoing: bubbleBackground_outgoing,
+                            bubbleBorder_outgoing: bubbleBorder_outgoing,
                             grayTextBubble_incoming: grayTextBubble_incoming,
                             grayTextBubble_outgoing: grayTextBubble_outgoing,
                             grayIconBubble_incoming: grayIconBubble_incoming,
@@ -1200,9 +1216,10 @@ public class ColorPalette : Equatable {
                             selectTextBubble_incoming: selectTextBubble_incoming,
                             selectTextBubble_outgoing: selectTextBubble_outgoing,
                             bubbleBackground_incoming: bubbleBackground_incoming,
-                            bubbleBackground_outgoing: bubbleBackground_outgoing,
+                            bubbleBackgroundTop_outgoing: bubbleBackgroundTop_outgoing,
+                            bubbleBackgroundBottom_outgoing: bubbleBackgroundBottom_outgoing,
                             bubbleBorder_incoming: bubbleBorder_incoming,
-                            bubbleBorder_outgoing: bubbleBackground_outgoing,
+                            bubbleBorder_outgoing: bubbleBorder_outgoing,
                             grayTextBubble_incoming: grayTextBubble_incoming,
                             grayTextBubble_outgoing: grayTextBubble_outgoing,
                             grayIconBubble_incoming: grayIconBubble_incoming,
@@ -1326,9 +1343,9 @@ public class ColorPalette : Equatable {
         }
         
         
-        var lightnessColor = color.bubble ?? color.accent
+        var lightnessColor = color.messages?.top ?? color.accent
         
-        if color.bubble == nil {
+        if color.messages == nil {
             switch parent {
             case .dayClassic:
                 let hsb = accentColor.hsb
@@ -1336,9 +1353,15 @@ public class ColorPalette : Equatable {
             default:
                 break
             }
+        } else if let messages = color.messages {
+            lightnessColor = messages.top.blended(withFraction: 0.5, of: messages.bottom)!
         }
         
-        let bubbleBackground_outgoing = lightnessColor
+        
+        
+        let bubbleBackgroundTop_outgoing = color.messages?.top ?? lightnessColor
+        let bubbleBackgroundBottom_outgoing = color.messages?.bottom ?? lightnessColor
+
         bubbleBackgroundHighlight_outgoing = lightnessColor.darker(amount: 0.1)
 
         
@@ -1461,9 +1484,10 @@ public class ColorPalette : Equatable {
                             selectTextBubble_incoming: selectTextBubble_incoming,
                             selectTextBubble_outgoing: selectTextBubble_outgoing,
                             bubbleBackground_incoming: bubbleBackground_incoming,
-                            bubbleBackground_outgoing: bubbleBackground_outgoing,
+                            bubbleBackgroundTop_outgoing: bubbleBackgroundTop_outgoing,
+                            bubbleBackgroundBottom_outgoing: bubbleBackgroundBottom_outgoing,
                             bubbleBorder_incoming: bubbleBorder_incoming,
-                            bubbleBorder_outgoing: bubbleBackground_outgoing,
+                            bubbleBorder_outgoing: bubbleBorder_outgoing,
                             grayTextBubble_incoming: grayTextBubble_incoming,
                             grayTextBubble_outgoing: grayTextBubble_outgoing,
                             grayIconBubble_incoming: grayIconBubble_incoming,
@@ -1691,92 +1715,93 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
                                        selectTextBubble_incoming: NSColor(0xCCDDEA),
                                        selectTextBubble_outgoing: NSColor(0x6DA8D6),
                                        bubbleBackground_incoming: NSColor(0xF4F4F4),
-                                       bubbleBackground_outgoing: NSColor(0x4c91c7),//0x007ee5
-    bubbleBorder_incoming: NSColor(0xeaeaea),
-    bubbleBorder_outgoing: NSColor(0x4c91c7),
-    grayTextBubble_incoming: NSColor(0x999999),
-    grayTextBubble_outgoing: NSColor(0xEFFAFF, 0.8),
-    grayIconBubble_incoming: NSColor(0x999999),
-    grayIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
-    accentIconBubble_incoming: NSColor(0x999999),
-    accentIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
-    linkBubble_incoming: NSColor(0x2481cc),
-    linkBubble_outgoing: NSColor(0xffffff),
-    textBubble_incoming: NSColor(0x000000),
-    textBubble_outgoing: NSColor(0xffffff),
-    selectMessageBubble: NSColor(0xEDF4F9, 0.6),
-    fileActivityBackground: NSColor(0x4ba3e2),
-    fileActivityForeground: NSColor(0xffffff),
-    fileActivityBackgroundBubble_incoming: NSColor(0x4ba3e2),
-    fileActivityBackgroundBubble_outgoing: NSColor(0xffffff),
-    fileActivityForegroundBubble_incoming: NSColor(0xffffff),
-    fileActivityForegroundBubble_outgoing: NSColor(0x4c91c7),
-    waveformBackground: NSColor(0x9e9e9e, 0.7),
-    waveformForeground: NSColor(0x4ba3e2),
-    waveformBackgroundBubble_incoming: NSColor(0x999999),
-    waveformBackgroundBubble_outgoing: NSColor(0xffffff),
-    waveformForegroundBubble_incoming: NSColor(0x4ba3e2),
-    waveformForegroundBubble_outgoing: NSColor(0xEFFAFF),
-    webPreviewActivity: NSColor(0x2481cc),
-    webPreviewActivityBubble_incoming: NSColor(0x2481cc),
-    webPreviewActivityBubble_outgoing: NSColor(0xffffff),
-    redBubble_incoming:NSColor(0xff3b30),
-    redBubble_outgoing:NSColor(0xff3b30),
-    greenBubble_incoming:NSColor(0x63DA6E),
-    greenBubble_outgoing:NSColor(0x63DA6E),
-    chatReplyTitle: NSColor(0x2481cc),
-    chatReplyTextEnabled: NSColor(0x000000),
-    chatReplyTextDisabled: NSColor(0x999999),
-    chatReplyTitleBubble_incoming: NSColor(0x2481cc),
-    chatReplyTitleBubble_outgoing: NSColor(0xffffff),
-    chatReplyTextEnabledBubble_incoming: NSColor(0x000000),
-    chatReplyTextEnabledBubble_outgoing: NSColor(0xffffff),
-    chatReplyTextDisabledBubble_incoming: NSColor(0x999999),
-    chatReplyTextDisabledBubble_outgoing: NSColor(0xEFFAFF, 0.8),
-    groupPeerNameRed:NSColor(0xfc5c51),
-    groupPeerNameOrange:NSColor(0xfa790f),
-    groupPeerNameViolet:NSColor(0x895dd5),
-    groupPeerNameGreen:NSColor(0x0fb297),
-    groupPeerNameCyan:NSColor(0x00c1a6),
-    groupPeerNameLightBlue:NSColor(0x3ca5ec),
-    groupPeerNameBlue:NSColor(0x3d72ed),
-    peerAvatarRedTop: NSColor(0xff885e),
-    peerAvatarRedBottom: NSColor(0xff516a),
-    peerAvatarOrangeTop: NSColor(0xffcd6a),
-    peerAvatarOrangeBottom: NSColor(0xffa85c),
-    peerAvatarVioletTop: NSColor(0x82b1ff),
-    peerAvatarVioletBottom: NSColor(0x665fff),
-    peerAvatarGreenTop: NSColor(0xa0de7e),
-    peerAvatarGreenBottom: NSColor(0x54cb68),
-    peerAvatarCyanTop: NSColor(0x53edd6),
-    peerAvatarCyanBottom: NSColor(0x28c9b7),
-    peerAvatarBlueTop: NSColor(0x72d5fd),
-    peerAvatarBlueBottom: NSColor(0x2a9ef1),
-    peerAvatarPinkTop: NSColor(0xe0a2f3),
-    peerAvatarPinkBottom: NSColor(0xd669ed),
-    bubbleBackgroundHighlight_incoming: NSColor(0xeaeaea),
-    bubbleBackgroundHighlight_outgoing: NSColor(0x4b7bad),
-    chatDateActive: NSColor(0xffffff, 1.0),
-    chatDateText: NSColor(0x333333),
-    revealAction_neutral1_background: NSColor(0x4892f2),
-    revealAction_neutral1_foreground: NSColor(0xffffff),
-    revealAction_neutral2_background: NSColor(0xf09a37),
-    revealAction_neutral2_foreground: NSColor(0xffffff),
-    revealAction_destructive_background: NSColor(0xff3824),
-    revealAction_destructive_foreground: NSColor(0xffffff),
-    revealAction_constructive_background: NSColor(0x00c900),
-    revealAction_constructive_foreground: NSColor(0xffffff),
-    revealAction_accent_background: NSColor(0x2481cc),
-    revealAction_accent_foreground: NSColor(0xffffff),
-    revealAction_warning_background: NSColor(0xff9500),
-    revealAction_warning_foreground: NSColor(0xffffff),
-    revealAction_inactive_background: NSColor(0xbcbcc3),
-    revealAction_inactive_foreground: NSColor(0xffffff),
-    chatBackground: NSColor(0xffffff),
-    listBackground: NSColor(0xefeff3),
-    listGrayText: NSColor(0x6D6D71),
-    grayHighlight: NSColor(0xF8F8F8),
-    focusAnimationColor: NSColor(0x68A8E2)
+                                       bubbleBackgroundTop_outgoing: NSColor(0x4c91c7),//0x007ee5
+                                        bubbleBackgroundBottom_outgoing: NSColor(0x4c91c7),//0x007ee5
+                                        bubbleBorder_incoming: NSColor(0xeaeaea),
+                                        bubbleBorder_outgoing: NSColor(0x4c91c7),
+                                        grayTextBubble_incoming: NSColor(0x999999),
+                                        grayTextBubble_outgoing: NSColor(0xEFFAFF, 0.8),
+                                        grayIconBubble_incoming: NSColor(0x999999),
+                                        grayIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
+                                        accentIconBubble_incoming: NSColor(0x999999),
+                                        accentIconBubble_outgoing: NSColor(0xEFFAFF, 0.8),
+                                        linkBubble_incoming: NSColor(0x2481cc),
+                                        linkBubble_outgoing: NSColor(0xffffff),
+                                        textBubble_incoming: NSColor(0x000000),
+                                        textBubble_outgoing: NSColor(0xffffff),
+                                        selectMessageBubble: NSColor(0xEDF4F9, 0.6),
+                                        fileActivityBackground: NSColor(0x4ba3e2),
+                                        fileActivityForeground: NSColor(0xffffff),
+                                        fileActivityBackgroundBubble_incoming: NSColor(0x4ba3e2),
+                                        fileActivityBackgroundBubble_outgoing: NSColor(0xffffff),
+                                        fileActivityForegroundBubble_incoming: NSColor(0xffffff),
+                                        fileActivityForegroundBubble_outgoing: NSColor(0x4c91c7),
+                                        waveformBackground: NSColor(0x9e9e9e, 0.7),
+                                        waveformForeground: NSColor(0x4ba3e2),
+                                        waveformBackgroundBubble_incoming: NSColor(0x999999),
+                                        waveformBackgroundBubble_outgoing: NSColor(0xffffff),
+                                        waveformForegroundBubble_incoming: NSColor(0x4ba3e2),
+                                        waveformForegroundBubble_outgoing: NSColor(0xEFFAFF),
+                                        webPreviewActivity: NSColor(0x2481cc),
+                                        webPreviewActivityBubble_incoming: NSColor(0x2481cc),
+                                        webPreviewActivityBubble_outgoing: NSColor(0xffffff),
+                                        redBubble_incoming:NSColor(0xff3b30),
+                                        redBubble_outgoing:NSColor(0xff3b30),
+                                        greenBubble_incoming:NSColor(0x63DA6E),
+                                        greenBubble_outgoing:NSColor(0x63DA6E),
+                                        chatReplyTitle: NSColor(0x2481cc),
+                                        chatReplyTextEnabled: NSColor(0x000000),
+                                        chatReplyTextDisabled: NSColor(0x999999),
+                                        chatReplyTitleBubble_incoming: NSColor(0x2481cc),
+                                        chatReplyTitleBubble_outgoing: NSColor(0xffffff),
+                                        chatReplyTextEnabledBubble_incoming: NSColor(0x000000),
+                                        chatReplyTextEnabledBubble_outgoing: NSColor(0xffffff),
+                                        chatReplyTextDisabledBubble_incoming: NSColor(0x999999),
+                                        chatReplyTextDisabledBubble_outgoing: NSColor(0xEFFAFF, 0.8),
+                                        groupPeerNameRed:NSColor(0xfc5c51),
+                                        groupPeerNameOrange:NSColor(0xfa790f),
+                                        groupPeerNameViolet:NSColor(0x895dd5),
+                                        groupPeerNameGreen:NSColor(0x0fb297),
+                                        groupPeerNameCyan:NSColor(0x00c1a6),
+                                        groupPeerNameLightBlue:NSColor(0x3ca5ec),
+                                        groupPeerNameBlue:NSColor(0x3d72ed),
+                                        peerAvatarRedTop: NSColor(0xff885e),
+                                        peerAvatarRedBottom: NSColor(0xff516a),
+                                        peerAvatarOrangeTop: NSColor(0xffcd6a),
+                                        peerAvatarOrangeBottom: NSColor(0xffa85c),
+                                        peerAvatarVioletTop: NSColor(0x82b1ff),
+                                        peerAvatarVioletBottom: NSColor(0x665fff),
+                                        peerAvatarGreenTop: NSColor(0xa0de7e),
+                                        peerAvatarGreenBottom: NSColor(0x54cb68),
+                                        peerAvatarCyanTop: NSColor(0x53edd6),
+                                        peerAvatarCyanBottom: NSColor(0x28c9b7),
+                                        peerAvatarBlueTop: NSColor(0x72d5fd),
+                                        peerAvatarBlueBottom: NSColor(0x2a9ef1),
+                                        peerAvatarPinkTop: NSColor(0xe0a2f3),
+                                        peerAvatarPinkBottom: NSColor(0xd669ed),
+                                        bubbleBackgroundHighlight_incoming: NSColor(0xeaeaea),
+                                        bubbleBackgroundHighlight_outgoing: NSColor(0x4b7bad),
+                                        chatDateActive: NSColor(0xffffff, 1.0),
+                                        chatDateText: NSColor(0x333333),
+                                        revealAction_neutral1_background: NSColor(0x4892f2),
+                                        revealAction_neutral1_foreground: NSColor(0xffffff),
+                                        revealAction_neutral2_background: NSColor(0xf09a37),
+                                        revealAction_neutral2_foreground: NSColor(0xffffff),
+                                        revealAction_destructive_background: NSColor(0xff3824),
+                                        revealAction_destructive_foreground: NSColor(0xffffff),
+                                        revealAction_constructive_background: NSColor(0x00c900),
+                                        revealAction_constructive_foreground: NSColor(0xffffff),
+                                        revealAction_accent_background: NSColor(0x2481cc),
+                                        revealAction_accent_foreground: NSColor(0xffffff),
+                                        revealAction_warning_background: NSColor(0xff9500),
+                                        revealAction_warning_foreground: NSColor(0xffffff),
+                                        revealAction_inactive_background: NSColor(0xbcbcc3),
+                                        revealAction_inactive_foreground: NSColor(0xffffff),
+                                        chatBackground: NSColor(0xffffff),
+                                        listBackground: NSColor(0xefeff3),
+                                        listGrayText: NSColor(0x6D6D71),
+                                        grayHighlight: NSColor(0xF8F8F8),
+                                        focusAnimationColor: NSColor(0x68A8E2)
 )
 
 
@@ -1837,7 +1862,8 @@ public let nightAccentPalette = ColorPalette(isNative: true, isDark: true,
                                            selectTextBubble_incoming: NSColor(0x3e6b9b),
                                            selectTextBubble_outgoing: NSColor(0x355a80),
                                            bubbleBackground_incoming: NSColor(0x213040),
-                                           bubbleBackground_outgoing: NSColor(0x3d6a97),
+                                           bubbleBackgroundTop_outgoing: NSColor(0x3d6a97),
+                                           bubbleBackgroundBottom_outgoing: NSColor(0x3d6a97),
                                            bubbleBorder_incoming: NSColor(0x213040),
                                            bubbleBorder_outgoing: NSColor(0x3d6a97),
                                            grayTextBubble_incoming: NSColor(0xb1c3d5),
@@ -1931,13 +1957,13 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             parent: .dayClassic,
                                             wallpaper: .builtin,
                                             copyright: "Telegram",
-                                            accentList: [PaletteAccentColor(NSColor(0x2481cc), NSColor(0xdcf8c6)),
-                                                         PaletteAccentColor(NSColor(0x5a9e29), NSColor(0xdcf8c6)),
-                                                         PaletteAccentColor(NSColor(0xf55783), NSColor(0xd6f5ff)),
-                                                         PaletteAccentColor(NSColor(0x7e5fe5), NSColor(0xf5e2ff)),
-                                                         PaletteAccentColor(NSColor(0xff5fa9), NSColor(0xfff4d7)),
-                                                         PaletteAccentColor(NSColor(0x199972), NSColor(0xfffec7)),
-                                                         PaletteAccentColor(NSColor(0x009eee), NSColor(0x94fff9))],
+                                            accentList: [PaletteAccentColor(NSColor(0x2481cc), (top: NSColor(0xdcf8c6), bottom: NSColor(0xdcf8c6))),
+                                                         PaletteAccentColor(NSColor(0x5a9e29), (top: NSColor(0xdcf8c6), bottom: NSColor(0xdcf8c6))),
+                                                         PaletteAccentColor(NSColor(0xf55783), (top: NSColor(0xd6f5ff), bottom: NSColor(0xd6f5ff))),
+                                                         PaletteAccentColor(NSColor(0x7e5fe5), (top: NSColor(0xf5e2ff), bottom: NSColor(0xf5e2ff))),
+                                                         PaletteAccentColor(NSColor(0xff5fa9), (top: NSColor(0xfff4d7), bottom: NSColor(0xfff4d7))),
+                                                         PaletteAccentColor(NSColor(0x199972), (top: NSColor(0xfffec7), bottom: NSColor(0xfffec7))),
+                                                         PaletteAccentColor(NSColor(0x009eee), (top: NSColor(0x94fff9), bottom: NSColor(0x94fff9)))],
                                             basicAccent: NSColor(0x2481cc),
                                             background: NSColor(0xffffff),
                                             text: NSColor(0x000000),
@@ -1970,7 +1996,8 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             selectTextBubble_incoming: NSColor(0xCCDDEA),
                                             selectTextBubble_outgoing: NSColor(0xCCDDEA),
                                             bubbleBackground_incoming: NSColor(0xffffff),
-                                            bubbleBackground_outgoing: NSColor(0xE1FFC7),
+                                            bubbleBackgroundTop_outgoing: NSColor(0xE1FFC7),
+                                            bubbleBackgroundBottom_outgoing: NSColor(0xE1FFC7),
                                             bubbleBorder_incoming: NSColor(0x86A9C9,0.5),
                                             bubbleBorder_outgoing: NSColor(0x86A9C9,0.5),
                                             grayTextBubble_incoming: NSColor(0x999999),
@@ -2104,7 +2131,8 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       selectTextBubble_incoming: NSColor(0x8699a3),
                                       selectTextBubble_outgoing: NSColor(0x8699a3),
                                       bubbleBackground_incoming: NSColor(0x3d414d),
-                                      bubbleBackground_outgoing: NSColor(0x20889a),
+                                      bubbleBackgroundTop_outgoing: NSColor(0x20889a),
+                                      bubbleBackgroundBottom_outgoing: NSColor(0x20889a),
                                       bubbleBorder_incoming: NSColor(0x464a57),
                                       bubbleBorder_outgoing: NSColor(0x20889a),
                                       grayTextBubble_incoming: NSColor(0x8699a3),
@@ -2316,7 +2344,10 @@ private final class MojavePalette : ColorPalette {
     override var groupPeerNameOrange: NSColor {
         return NSColor.systemOrange.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
-    override var bubbleBackground_outgoing: NSColor {
+    override var bubbleBackgroundTop_outgoing: NSColor {
+        return controlAccentColor.darker(amount: 0.2)
+    }
+    override var bubbleBackgroundBottom_outgoing: NSColor {
         return controlAccentColor.darker(amount: 0.2)
     }
     override var bubbleBorder_outgoing: NSColor {
@@ -2401,7 +2432,8 @@ public let systemPalette: ColorPalette = {
                             selectTextBubble_incoming: NSColor(0x3e6b9b),
                             selectTextBubble_outgoing: NSColor(0x355a80),
                             bubbleBackground_incoming: NSColor(0x4e5058),
-                            bubbleBackground_outgoing: NSColor(0x3d6a97),
+                            bubbleBackgroundTop_outgoing: NSColor(0x3d6a97),
+                            bubbleBackgroundBottom_outgoing: NSColor(0x3d6a97),
                             bubbleBorder_incoming: NSColor(0x4e5058),
                             bubbleBorder_outgoing: NSColor(0x3d6a97),
                             grayTextBubble_incoming: NSColor(0xb1c3d5),

@@ -119,8 +119,10 @@ final class WallpaperPatternPreviewView: View {
         sliderView.userInteractionEnabled = true
         sliderView.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)
         sliderView.containerBackground = theme.colors.grayForeground
+        sliderView.liveScrobbling = false
         sliderView.onUserChanged = { [weak self] value in
             guard let `self` = self else {return}
+            self.sliderView.set(progress: CGFloat(value))
             self.updateIntensity?(value)
         }
         

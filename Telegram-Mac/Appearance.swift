@@ -14,6 +14,18 @@ import SwiftSignalKit
 import Postbox
 import SyncCore
 
+private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImage {
+    return generateImage(CGSize(width: 1.0, height: 512.0), opaque: true, scale: 1.0, rotatedContext: { size, context in
+        var locations: [CGFloat] = [0.0, 1.0]
+        let colors = [top.cgColor, bottom.cgColor] as NSArray
+        
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+    })!
+}
+
 private func generateLoginQrEmptyCap() -> CGImage {
     return generateImage(NSMakeSize(60, 60), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -137,9 +149,39 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         let micro = NSImage(named: "Icon_RecordVoice")!.precomposed(palette.grayIcon, flipVertical: true)
         ctx.draw(micro, in: NSMakeRect(rect.width - 20 - inputAttach.backingSize.width, (rect.height - 50 + (50 - micro.backingSize.height) / 2), micro.backingSize.width, micro.backingSize.height))
         
+        let chatServiceItemColor: NSColor
+        
+        
+        switch wallpaper {
+        case .builtin, .file, .color, .gradient:
+            switch backgroundMode {
+            case let .background(image):
+                chatServiceItemColor = getAverageColor(image)
+            case let .color(color):
+                if color != palette.background {
+                    chatServiceItemColor = getAverageColor(color)
+                } else {
+                    chatServiceItemColor = color
+                }
+            case let .gradient(top, bottom, rotation):
+                if let blended = top.blended(withFraction: 0.5, of: bottom) {
+                    chatServiceItemColor = getAverageColor(blended)
+                } else {
+                    chatServiceItemColor = getAverageColor(top)
+                }
+            case let .tiled(image):
+                chatServiceItemColor = getAverageColor(image)
+            case .plain:
+                chatServiceItemColor = palette.chatBackground
+            }
+        default:
+            chatServiceItemColor = getAverageColor(palette.chatBackground)
+        }
+        
+        
         
         //fill date
-        ctx.setFillColor(getAverageColor(palette.chatBackground).cgColor)
+        ctx.setFillColor(chatServiceItemColor.cgColor)
         let path = NSBezierPath(roundedRect: NSMakeRect(rect.width / 2 - 30, rect.height - 50 - 10 - 60 - 5 - 20 - 5, 60, 20), xRadius: 10, yRadius: 10)
         ctx.addPath(path.cgPath)
         ctx.closePath()
@@ -149,59 +191,90 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         //fill outgoing bubble
         CATransaction.begin()
         if true {
-            let data = messageBubbleImageModern(incoming: false, fillColor: palette.bubbleBackground_outgoing, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
             
-            let layer = CALayer()
-            layer.frame = NSMakeRect(0, 200, 150, 30)
-            layer.contentsScale = 2.0
-            let imageSize = data.0.backingSize
-            let insets = data.1
-            let halfPixelFudge: CGFloat = 0.49
-            let otherPixelFudge: CGFloat = 0.02
-            var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
-            if (insets.left > 0 || insets.right > 0) {
-                contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
-                contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
-            }
-            if (insets.top > 0 || insets.bottom > 0) {
-                contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
-                contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
-            }
-            layer.contentsGravity = .resize;
-            layer.contentsCenter = contentsCenter;
-            layer.contents = data.0
+            let image = generateImage(NSMakeSize(150, 30), rotatedContext: { size, ctx in
+                ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                
+                let data = messageBubbleImageModern(incoming: false, fillColor: palette.bubbleBackgroundTop_outgoing, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
+                
+                let layer = CALayer()
+                layer.frame = NSMakeRect(0, 0, 150, 30)
+                layer.contentsScale = 2.0
+                let imageSize = data.0.backingSize
+                let insets = data.1
+                let halfPixelFudge: CGFloat = 0.49
+                let otherPixelFudge: CGFloat = 0.02
+                var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
+                if (insets.left > 0 || insets.right > 0) {
+                    contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
+                    contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
+                }
+                if (insets.top > 0 || insets.bottom > 0) {
+                    contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
+                    contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
+                }
+                layer.contentsGravity = .resize;
+                layer.contentsCenter = contentsCenter;
+                layer.contents = data.0
+                
+                layer.render(in: ctx)
+            })!
             
-            ctx.translateBy(x: rect.width - 170, y: rect.height - 50 - 10)
-            ctx.scaleBy(x: 1.0, y: -1.0)
-            layer.render(in: ctx)
+            var bubble = image
+            if palette.bubbleBackgroundTop_outgoing != palette.bubbleBackgroundBottom_outgoing {
+                bubble = generateImage(NSMakeSize(150, 30), contextGenerator: { size, ctx in
+                    let colors = [palette.bubbleBackgroundTop_outgoing, palette.bubbleBackgroundBottom_outgoing]
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    ctx.clip(to: rect, mask: image)
+                    
+                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                })!
+            }
+            ctx.draw(bubble, in: NSMakeRect(160, 230, 150, 30))
+           
         }
         
         //fill incoming bubble
         if true {
-            let data = messageBubbleImageModern(incoming: true, fillColor: palette.bubbleBackground_incoming, strokeColor: palette.bubbleBorder_incoming, neighbors: .none)
+            let image = generateImage(NSMakeSize(150, 30), rotatedContext: { size, ctx in
+                ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                let data = messageBubbleImageModern(incoming: true, fillColor: palette.bubbleBackground_incoming, strokeColor: palette.bubbleBorder_incoming, neighbors: .none)
+                
+                let layer = CALayer()
+                layer.frame = NSMakeRect(0, 0, 150, 30)
+                layer.contentsScale = 2.0
+                let imageSize = data.0.backingSize
+                let insets = data.1
+                let halfPixelFudge: CGFloat = 0.49
+                let otherPixelFudge: CGFloat = 0.02
+                var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
+                if (insets.left > 0 || insets.right > 0) {
+                    contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
+                    contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
+                }
+                if (insets.top > 0 || insets.bottom > 0) {
+                    contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
+                    contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
+                }
+                layer.contentsGravity = .resize;
+                layer.contentsCenter = contentsCenter;
+                layer.contents = data.0
+                
+                layer.render(in: ctx)
+            })!
             
-            let layer = CALayer()
-            layer.frame = NSMakeRect(0, 200, 150, 30)
-            layer.contentsScale = 2.0
-            let imageSize = data.0.backingSize
-            let insets = data.1
-            let halfPixelFudge: CGFloat = 0.49
-            let otherPixelFudge: CGFloat = 0.02
-            var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
-            if (insets.left > 0 || insets.right > 0) {
-                contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
-                contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
-            }
-            if (insets.top > 0 || insets.bottom > 0) {
-                contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
-                contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
-            }
-            layer.contentsGravity = .resize;
-            layer.contentsCenter = contentsCenter;
-            layer.contents = data.0
-            
-            ctx.translateBy(x: -130, y: 35)
-            layer.render(in: ctx)
+            ctx.draw(image, in: NSMakeRect(10, 200, 150, 30))
+
         }
         CATransaction.commit()
         
@@ -1193,107 +1266,22 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
     case let .gradient(top, bottom, rotation):
         backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
     case let .image(representation, settings):
-        if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
+        if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
             backgroundMode = .background(image: image)
         } else {
             backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
         }
         
-    case let .file(_, file, settings, isPattern):
-        
-        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
-            let size = image.size.aspectFilled(maxSize)
-            if isPattern {
-                let image = generateImage(size, contextGenerator: { size, ctx in
-                    let imageRect = NSMakeRect(0, 0, size.width, size.height)
-                    
-                    let colors:[NSColor]
-                    let color: NSColor
-                    var intensity: CGFloat = 0.5
-                    
-                    if let combinedColor = settings.color, settings.bottomColor == nil {
-                        let combinedColor = NSColor(combinedColor)
-                        if let i = settings.intensity {
-                            intensity = CGFloat(i) / 100.0
-                        }
-                        color = combinedColor.withAlphaComponent(1.0)
-                        intensity = combinedColor.alpha
-                        colors = [color]
-                    } else if let t = settings.color, let b = settings.bottomColor {
-                        let top = NSColor(argb: t)
-                        let bottom = NSColor(argb: b)
-                        color = top.withAlphaComponent(1.0)
-                        if let i = settings.intensity {
-                            intensity = CGFloat(i) / 100.0
-                        }
-                        colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
-                    } else {
-                        colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
-                        color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
-                    }
-                    
-                    ctx.setBlendMode(.copy)
-                    if colors.count == 1 {
-                        ctx.setFillColor(color.cgColor)
-                        ctx.fill(imageRect)
-                    } else {
-                        let gradientColors = colors.map { $0.cgColor } as CFArray
-                        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                        
-                        var locations: [CGFloat] = []
-                        for i in 0 ..< colors.count {
-                            locations.append(delta * CGFloat(i))
-                        }
-                        let colorSpace = CGColorSpaceCreateDeviceRGB()
-                        let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                        
-                        ctx.saveGState()
-                        ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
-                        ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
-                        ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
-                        
-                        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                        ctx.restoreGState()
-                    }
-                    
-                    
-                    ctx.setBlendMode(.normal)
-                    ctx.interpolationQuality = .medium
-                    ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
-                    
-                    if colors.count == 1 {
-                        ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
-                        ctx.fill(imageRect)
-                    } else {
-                        let gradientColors = colors.map { patternColor(for: $0, intensity: intensity).cgColor } as CFArray
-                        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                        
-                        var locations: [CGFloat] = []
-                        for i in 0 ..< colors.count {
-                            locations.append(delta * CGFloat(i))
-                        }
-                        let colorSpace = CGColorSpaceCreateDeviceRGB()
-                        let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                        
-                        ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
-                        ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
-                        ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
-                        
-                        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                    }
-                
-                })!
-                backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
-            } else {
-                backgroundMode = .background(image: image)
-            }
+    case let .file(_, file, settings, _):
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
+            backgroundMode = .background(image: image)
         } else {
             backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
         }
     case .none:
         backgroundMode = .color(color: palette.chatBackground)
     case let .custom(representation, blurred):
-        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
             backgroundMode = .background(image: image)
         } else {
             backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
@@ -1527,6 +1515,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPause:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed() },
                                                chatMusicPauseBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPauseBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing) },
+                                               chatGradientBubble_incoming: { generateGradientBubble(palette.bubbleBackground_incoming, palette.bubbleBackground_incoming) },
+                                               chatGradientBubble_outgoing: { generateGradientBubble(palette.bubbleBackgroundTop_outgoing, palette.bubbleBackgroundBottom_outgoing) },
                                                composeNewChat: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.accentIcon) },
                                                composeNewChatActive: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.underSelectedColor) },
                                                composeNewGroup: { #imageLiteral(resourceName: "Icon_NewGroup").precomposed(palette.accentIcon) },

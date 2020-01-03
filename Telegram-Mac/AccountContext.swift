@@ -473,7 +473,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
             let palette = cloudSettings.palette
             var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError>? = nil
             let associated = theme.wallpaper.associated?.wallpaper
-            if let w = cloudSettings.wallpaper, theme.wallpaper.wallpaper == associated || install || (associated != nil && theme.wallpaper.wallpaper.isSemanticallyEqual(to: associated!)) {
+            if let w = cloudSettings.wallpaper, theme.wallpaper.wallpaper == associated || install {
                 wallpaper = .single(w)
             } else if install, let wrapper = palette.wallpaper.wallpaper.cloudWallpaper {
                 wallpaper = .single(wrapper)

@@ -288,6 +288,8 @@
 		D0CA3F85207391560042D2B6 /* SecureIdPadding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA3F83207391560042D2B6 /* SecureIdPadding.swift */; };
 		D0CA8E4C227209C4008A74C3 /* ManagedSynchronizeGroupMessageStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA8E4A227209C4008A74C3 /* ManagedSynchronizeGroupMessageStats.swift */; };
 		D0D376E722DCCFD600FA7D7C /* SlowMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D376E522DCCFD600FA7D7C /* SlowMode.swift */; };
+		D0D3CE4023BB3F1100864F3C /* PendingUpdateMessageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */; };
+		D0D3CE4423BB3FD200864F3C /* ChatUpdatingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */; };
 		D0D748031E7AE98B00F4B1F6 /* StickerPackInteractiveOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D748011E7AE98B00F4B1F6 /* StickerPackInteractiveOperations.swift */; };
 		D0DA1D331F7043D50034E892 /* ManagedPendingPeerNotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DA1D311F7043D50034E892 /* ManagedPendingPeerNotificationSettings.swift */; };
 		D0DB7F041F43030C00591D48 /* InstallInteractiveReadMessagesAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DB7F021F43030C00591D48 /* InstallInteractiveReadMessagesAction.swift */; };
@@ -716,6 +718,8 @@
 		D0CC4ADB22BA47280088F36D /* TelegramApiMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApiMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0D1026B2212FE52003ADA5E /* AccountSortOrderAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSortOrderAttribute.swift; sourceTree = "<group>"; };
 		D0D376E522DCCFD600FA7D7C /* SlowMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlowMode.swift; sourceTree = "<group>"; };
+		D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PendingUpdateMessageManager.swift; sourceTree = "<group>"; };
+		D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUpdatingMessageMedia.swift; sourceTree = "<group>"; };
 		D0D748011E7AE98B00F4B1F6 /* StickerPackInteractiveOperations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPackInteractiveOperations.swift; sourceTree = "<group>"; };
 		D0DA1D311F7043D50034E892 /* ManagedPendingPeerNotificationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedPendingPeerNotificationSettings.swift; sourceTree = "<group>"; };
 		D0DB7F021F43030C00591D48 /* InstallInteractiveReadMessagesAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstallInteractiveReadMessagesAction.swift; sourceTree = "<group>"; };
@@ -1165,6 +1169,8 @@
 		D03B0D6E1D631AA900955575 /* Messages */ = {
 			isa = PBXGroup;
 			children = (
+				D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */,
+				D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */,
 				D03B0D711D631ABA00955575 /* SearchMessages.swift */,
 				D0EC55992101ED0800D1992C /* DeleteMessages.swift */,
 				D01AC91C1DD5DA5E00E8160F /* RequestMessageActionCallback.swift */,
@@ -1714,6 +1720,7 @@
 				D0E35A141DE4C69C00BC6096 /* FetchHttpResource.swift in Sources */,
 				D0B8440D1DAB91CD005F29E1 /* ImageRepresentationsUtils.swift in Sources */,
 				D03C536A1DAD5CA9004C17B3 /* TelegramUser.swift in Sources */,
+				D0D3CE4023BB3F1100864F3C /* PendingUpdateMessageManager.swift in Sources */,
 				D001F3EA1E128A1C007A8C60 /* TelegramPeerNotificationSettings.swift in Sources */,
 				D0E412F5206B9BDC00BEE4A2 /* SecureIdVerificationDocumentReference.swift in Sources */,
 				A754972823A3A8C80091F293 /* InactiveChannels.swift in Sources */,
@@ -1863,6 +1870,7 @@
 				D0B844471DAB91FD005F29E1 /* ManagedServiceViews.swift in Sources */,
 				D0F3A8A91E82CD7D00B4C64C /* UpdatePeerChatInterfaceState.swift in Sources */,
 				D03C53691DAD5CA9004C17B3 /* PeerAccessRestrictionInfo.swift in Sources */,
+				D0D3CE4423BB3FD200864F3C /* ChatUpdatingMessageMedia.swift in Sources */,
 				C2FD33E21E680E9E008D13D4 /* RequestUserPhotos.swift in Sources */,
 				A7D281FB236C34670000A9BF /* SynchronizeInstalledStickerPacksOperation.swift in Sources */,
 				D0B8440E1DAB91CD005F29E1 /* MessageUtils.swift in Sources */,
