@@ -627,6 +627,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var emptyChecker: (([TableRowItem]) -> Bool)? = nil
     
     
+    public var beforeSetupItem:((TableRowView, TableRowItem)->Void)?
+    public var afterSetupItem:((TableRowView, TableRowItem)->Void)?
+
     public var emptyItem:TableRowItem? {
         didSet {
             emptyItem?.table = self
@@ -2101,7 +2104,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let view: TableRowView = self.rowView(item: item);
         
+        self.beforeSetupItem?(view, item)
+        
         view.set(item: item, animated: false)
+        
+        self.afterSetupItem?(view, item)
+
         
         return view
     }

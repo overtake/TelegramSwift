@@ -274,7 +274,7 @@ class WPArticleContentView: WPContentView {
                             isPattern = false
                         }
                     } else {
-                        isPattern = false
+                        isPattern = layout.isPatternWallpaper
                     }
                     updateImageSignal = chatWallpaper(account: layout.context.account, representations: image.representations, file: layout.content.file, webpage: layout.webPage, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false)
                 } else {

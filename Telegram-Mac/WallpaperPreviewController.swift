@@ -553,6 +553,7 @@ final class WallpaperColorPickerContainerView : View {
 
 
 private final class WallpaperPreviewView: View {
+    private let updateStateDisposable = MetaDisposable()
     private let backgroundView: BackgroundView = BackgroundView(frame: NSZeroRect)
     private let imageView: TransformImageView = TransformImageView()
     let magnifyView: MagnifyView
@@ -572,7 +573,10 @@ private final class WallpaperPreviewView: View {
     private(set) var wallpaper: Wallpaper {
         didSet {
             if oldValue != wallpaper {
-                updateState(synchronousLoad: false)
+                let signal = Signal<NoValue, NoError>.complete() |> delay(0.05, queue: .mainQueue())
+                updateStateDisposable.set(signal.start(completed: { [weak self] in
+                    self?.updateState(synchronousLoad: false)
+                }))
             }
         }
     }
@@ -774,11 +778,35 @@ private final class WallpaperPreviewView: View {
                 }
             }
         }
+        
+        tableView.afterSetupItem = { [weak self] view, item in
+            guard let `self` = self else {
+                return
+            }
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: false)
+            }
+        }
+        
+        
+        tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            self.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: false)
+                }
+            })
+        }))
+        
         self.layout()
         updateState(synchronousLoad: true)
     }
     
     private func addTableItems(_ context: AccountContext) {
+        
+        
         switch wallpaper {
         case .color:
             _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
@@ -842,6 +870,7 @@ private final class WallpaperPreviewView: View {
     }
     
     deinit {
+        updateStateDisposable.dispose()
         disposable.dispose()
     }
     
@@ -895,6 +924,12 @@ private final class WallpaperPreviewView: View {
         patternsController.view.setFrameSize(NSMakeSize(frame.width, 168))
         
         updateModifyState(self.previewState, animated: false)
+        
+        self.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: false)
+            }
+        })
     }
     
     
@@ -967,6 +1002,12 @@ private final class WallpaperPreviewView: View {
             updateBackground(wallpaper)
 
         }
+        
+        self.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: animated)
+            }
+        })
     }
     
     private func updateBackground(_ wallpaper: Wallpaper) {
@@ -1084,6 +1125,8 @@ private final class WallpaperPreviewView: View {
                     let top = NSColor(argb: t)
                     let bottom = NSColor(argb: b)
                     patternColor = .gradient(top: top.withAlphaComponent(patternIntensity), bottom: bottom.withAlphaComponent(patternIntensity), rotation: settings.rotation)
+                } else {
+                    patternColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
                 }
             }
             
@@ -1250,6 +1293,111 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
             
             let dimensions = file.dimensions?.size ?? WallpaperDimensions
             if isPattern {
+                
+                let path = account.postbox.mediaBox.cachedRepresentationCompletePath(file.resource.id, representation: CachedPatternWallpaperMaskRepresentation(size: nil))
+                
+                if let image = NSImage.init(contentsOf: URL(fileURLWithPath: path)) {
+                    let size = image.size.aspectFilled(WallpaperDimensions)
+                    
+                    let image = generateImage(size, contextGenerator: { size, ctx in
+                        let imageRect = NSMakeRect(0, 0, size.width, size.height)
+                        
+                        let colors:[NSColor]
+                        let color: NSColor
+                        var intensity: CGFloat = 0.5
+                        
+                        if let combinedColor = settings.color, settings.bottomColor == nil {
+                            let combinedColor = NSColor(combinedColor)
+                            if let i = settings.intensity {
+                                intensity = CGFloat(i) / 100.0
+                            }
+                            color = combinedColor.withAlphaComponent(1.0)
+                            intensity = combinedColor.alpha
+                            colors = [color]
+                        } else if let t = settings.color, let b = settings.bottomColor {
+                            let top = NSColor(argb: t)
+                            let bottom = NSColor(argb: b)
+                            color = top.withAlphaComponent(1.0)
+                            if let i = settings.intensity {
+                                intensity = CGFloat(i) / 100.0
+                            }
+                            colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
+                        } else {
+                            colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
+                            color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+                        }
+                        
+                        ctx.setBlendMode(.copy)
+                        if colors.count == 1 {
+                            ctx.setFillColor(color.cgColor)
+                            ctx.fill(imageRect)
+                        } else {
+                            let gradientColors = colors.map { $0.cgColor } as CFArray
+                            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                            
+                            var locations: [CGFloat] = []
+                            for i in 0 ..< colors.count {
+                                locations.append(delta * CGFloat(i))
+                            }
+                            let colorSpace = CGColorSpaceCreateDeviceRGB()
+                            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                            
+                            ctx.saveGState()
+                            ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                            ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                            ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                            
+                            ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                            ctx.restoreGState()
+                        }
+                        
+                        
+                        ctx.setBlendMode(.normal)
+                        ctx.interpolationQuality = .medium
+                        ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
+                        
+                        if colors.count == 1 {
+                            ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                            ctx.fill(imageRect)
+                        } else {
+                            let gradientColors = colors.map { patternColor(for: $0, intensity: intensity).cgColor } as CFArray
+                            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                            
+                            var locations: [CGFloat] = []
+                            for i in 0 ..< colors.count {
+                                locations.append(delta * CGFloat(i))
+                            }
+                            let colorSpace = CGColorSpaceCreateDeviceRGB()
+                            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                            
+                            ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                            ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                            ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                            
+                            ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                        }
+                        
+                    })!
+                    
+                    disposable.set(putToTemp(image: NSImage(cgImage: image, size: size), compress: false).start(next: { path in
+                        let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
+                        
+                        var attributes = file.attributes
+                        loop: for (i, attr) in attributes.enumerated() {
+                            switch attr {
+                            case .ImageSize:
+                                attributes[i] = .ImageSize(size: PixelDimensions(size))
+                                break loop
+                            default:
+                                break
+                            }
+                        }
+                        let wallpaper: Wallpaper = .file(slug: slug, file: file.withUpdatedResource(resource).withUpdatedAttributes(attributes), settings: settings, isPattern: isPattern)
+                        subscriber.putNext(wallpaper)
+                        subscriber.putCompletion()
+                    }))
+                }
+                
                 subscriber.putNext(wallpaper.withUpdatedSettings(settings))
                 subscriber.putCompletion()
             } else {
@@ -1428,6 +1576,9 @@ class WallpaperPreviewController: ModalViewController {
                 }
                 if let b = settings.bottomColor {
                     colors.append(NSColor(argb: b))
+                }
+                if colors.isEmpty {
+                    colors.append(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
                 }
                 genericView.patternsController.color = (colors, settings.rotation)
             }

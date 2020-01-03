@@ -72,6 +72,9 @@ public func fetchCachedSharedResourceRepresentation(accountManager: AccountManag
 private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResource, resourceData: MediaResourceData, representation: CachedPatternWallpaperMaskRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     return Signal({ subscriber in
         if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+            
+            var svgPath: String?
+            
             let path = NSTemporaryDirectory() + "\(arc4random64())"
             let url = URL(fileURLWithPath: path)
             
@@ -89,8 +92,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                         
                         CGImageDestinationAddImage(alphaDestination, image, options as CFDictionary)
                         if CGImageDestinationFinalize(alphaDestination) {
-                            subscriber.putNext(.temporaryPath(path))
-                            subscriber.putCompletion()
+                           svgPath = path
                         }
                     }
                 }
@@ -115,11 +117,116 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                     
                     CGImageDestinationAddImage(alphaDestination, alphaImage, options as CFDictionary)
                     if CGImageDestinationFinalize(alphaDestination) {
-                        subscriber.putNext(.temporaryPath(path))
-                        subscriber.putCompletion()
+                        svgPath = path
                     }
                 }
             }
+            
+            if let path = svgPath {
+                if let settings = representation.settings {
+                    if let image = NSImage(contentsOfFile: path)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                        let image = generateImage(image.size, contextGenerator: { size, ctx in
+                            let imageRect = NSMakeRect(0, 0, size.width, size.height)
+                            let colors:[NSColor]
+                            let color: NSColor
+                            var intensity: CGFloat = 0.5
+                            
+                            if let combinedColor = settings.color, settings.bottomColor == nil {
+                                let combinedColor = NSColor(UInt32(combinedColor))
+                                if let i = settings.intensity {
+                                    intensity = CGFloat(i) / 100.0
+                                }
+                                color = combinedColor.withAlphaComponent(1.0)
+                                intensity = combinedColor.alpha
+                                colors = [color]
+                            } else if let t = settings.color, let b = settings.bottomColor {
+                                let top = NSColor(UInt32(t))
+                                let bottom = NSColor(UInt32(b))
+                                color = top.withAlphaComponent(1.0)
+                                if let i = settings.intensity {
+                                    intensity = CGFloat(i) / 100.0
+                                }
+                                colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
+                            } else {
+                                colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
+                                color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+                            }
+                            
+                            ctx.setBlendMode(.copy)
+                            if colors.count == 1 {
+                                ctx.setFillColor(color.cgColor)
+                                ctx.fill(imageRect)
+                            } else {
+                                let gradientColors = colors.map { $0.cgColor } as CFArray
+                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                                
+                                var locations: [CGFloat] = []
+                                for i in 0 ..< colors.count {
+                                    locations.append(delta * CGFloat(i))
+                                }
+                                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                
+                                ctx.saveGState()
+                                ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                                ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                                ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                                
+                                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                                ctx.restoreGState()
+                            }
+                            
+                            ctx.setBlendMode(.normal)
+                            ctx.interpolationQuality = .medium
+                            
+                            ctx.clip(to: imageRect, mask: image)
+                            if colors.count == 1 {
+                                ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                                ctx.fill(imageRect)
+                            } else {
+                                let gradientColors = colors.map { patternColor(for: $0, intensity: intensity).cgColor } as CFArray
+                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                                
+                                var locations: [CGFloat] = []
+                                for i in 0 ..< colors.count {
+                                    locations.append(delta * CGFloat(i))
+                                }
+                                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                
+                                ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                                ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                                ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                                
+                                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                            }
+                        })!
+                        
+                        let finalPath = NSTemporaryDirectory() + "\(arc4random64())"
+                        let url = URL(fileURLWithPath: finalPath)
+                        
+                        if let dest = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                            CGImageDestinationSetProperties(dest, [:] as CFDictionary)
+                            
+                            let colorQuality: Float = 0.87
+                            
+                            let options = NSMutableDictionary()
+                            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                            
+                            CGImageDestinationAddImage(dest, image, options as CFDictionary)
+                            if CGImageDestinationFinalize(dest) {
+                                try? FileManager.default.removeItem(atPath: path)
+                                subscriber.putNext(.temporaryPath(finalPath))
+                                subscriber.putCompletion()
+                            }
+                        }
+                    }
+                } else {
+                    subscriber.putNext(.temporaryPath(path))
+                    subscriber.putCompletion()
+                }
+            }
+            
         }
         return EmptyDisposable
     }) |> runOn(Queue.concurrentDefaultQueue())

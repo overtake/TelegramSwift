@@ -153,19 +153,21 @@ struct ThemeWallpaper : PostboxCoding, Equatable {
 extension PaletteAccentColor {
     static func initWith(decoder: PostboxDecoder) -> PaletteAccentColor {
         let accent = NSColor(argb: UInt32(bitPattern: decoder.decodeInt32ForKey("c", orElse: 0)))
-        var bubble: NSColor? = nil
-        if let rawBubble = decoder.decodeOptionalInt32ForKey("b") {
-            bubble = NSColor(argb: UInt32(bitPattern: rawBubble))
+        var messages: (top: NSColor, bottom: NSColor)? = nil
+        if let rawTop = decoder.decodeOptionalInt32ForKey("bt"), let rawBottom = decoder.decodeOptionalInt32ForKey("bb") {
+            messages = (top: NSColor(argb: UInt32(bitPattern: rawTop)), bottom: NSColor(argb: UInt32(bitPattern: rawBottom)))
         }
-        return PaletteAccentColor(accent, bubble)
+        return PaletteAccentColor(accent, messages)
     }
     
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeInt32(Int32(bitPattern: self.accent.argb), forKey: "c")
-        if let bubble = self.bubble {
-            encoder.encodeInt32(Int32(bitPattern: bubble.argb), forKey: "b")
+        if let messages = self.messages {
+            encoder.encodeInt32(Int32(bitPattern: messages.top.argb), forKey: "bt")
+            encoder.encodeInt32(Int32(bitPattern: messages.bottom.argb), forKey: "bb")
         } else {
-            encoder.encodeNil(forKey: "b")
+            encoder.encodeNil(forKey: "bt")
+            encoder.encodeNil(forKey: "bb")
         }
     }
 
@@ -252,7 +254,8 @@ extension ColorPalette  {
                                     selectTextBubble_incoming: parseColor(decoder, "selectTextBubble_incoming") ?? palette.selectTextBubble_incoming,
                                     selectTextBubble_outgoing: parseColor(decoder, "selectTextBubble_outgoing") ?? palette.selectTextBubble_outgoing,
                                     bubbleBackground_incoming: parseColor(decoder, "bubbleBackground_incoming") ?? palette.bubbleBackground_incoming,
-                                    bubbleBackground_outgoing: parseColor(decoder, "bubbleBackground_outgoing") ?? palette.bubbleBackground_outgoing,
+                                    bubbleBackgroundTop_outgoing: parseColor(decoder, "bubbleBackgroundTop_outgoing") ?? palette.bubbleBackgroundTop_outgoing,
+                                    bubbleBackgroundBottom_outgoing: parseColor(decoder, "bubbleBackgroundBottom_outgoing") ?? palette.bubbleBackgroundTop_outgoing,
                                     bubbleBorder_incoming: parseColor(decoder, "bubbleBorder_incoming") ?? palette.bubbleBorder_incoming,
                                     bubbleBorder_outgoing: parseColor(decoder, "bubbleBorder_outgoing") ?? palette.bubbleBorder_outgoing,
                                     grayTextBubble_incoming: parseColor(decoder, "grayTextBubble_incoming") ?? palette.grayTextBubble_incoming,
@@ -399,12 +402,14 @@ struct LocalWallapper : Equatable, PostboxCoding {
     let name: TelegramBuiltinTheme
     let cloud: TelegramTheme?
     let wallpaper: AssociatedWallpaper
+    let associated: AssociatedWallpaper?
     let accentColor: UInt32
-    init(name: TelegramBuiltinTheme, accentColor: UInt32, wallpaper: AssociatedWallpaper, cloud: TelegramTheme?) {
+    init(name: TelegramBuiltinTheme, accentColor: UInt32, wallpaper: AssociatedWallpaper, associated: AssociatedWallpaper?, cloud: TelegramTheme?) {
         self.name = name
         self.accentColor = accentColor
         self.wallpaper = wallpaper
         self.cloud = cloud
+        self.associated = associated
     }
     
     func isEqual(to other: ColorPalette) -> Bool {
@@ -420,6 +425,7 @@ struct LocalWallapper : Equatable, PostboxCoding {
     init(decoder: PostboxDecoder) {
         self.name = TelegramBuiltinTheme(rawValue: decoder.decodeStringForKey("name", orElse: dayClassicPalette.name)) ?? .dayClassic
         self.wallpaper = decoder.decodeObjectForKey("aw", decoder: { AssociatedWallpaper(decoder: $0) }) as! AssociatedWallpaper
+        self.associated = decoder.decodeObjectForKey("as", decoder: { AssociatedWallpaper(decoder: $0) }) as? AssociatedWallpaper
         self.cloud = decoder.decodeObjectForKey("cloud", decoder: { TelegramTheme(decoder: $0) }) as? TelegramTheme
         self.accentColor = UInt32(bitPattern: decoder.decodeInt32ForKey("ac", orElse: 0))
     }
@@ -431,6 +437,11 @@ struct LocalWallapper : Equatable, PostboxCoding {
             encoder.encodeObject(cloud, forKey: "cloud")
         } else {
             encoder.encodeNil(forKey: "cloud")
+        }
+        if let associated = self.associated {
+            encoder.encodeObject(associated, forKey: "as")
+        } else {
+            encoder.encodeNil(forKey: "as")
         }
         encoder.encodeInt32(Int32(bitPattern: self.accentColor), forKey: "ac")
     }
@@ -579,7 +590,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     
     func saveDefaultWallpaper() -> ThemePaletteSettings {
         var wallpapers = self.wallpapers
-        let local = LocalWallapper(name: self.palette.parent, accentColor: self.palette.accent.argb, wallpaper: AssociatedWallpaper(cloud: self.wallpaper.associated?.cloud, wallpaper: self.wallpaper.wallpaper), cloud: self.cloudTheme)
+        let local = LocalWallapper(name: self.palette.parent, accentColor: self.palette.accent.argb, wallpaper: AssociatedWallpaper(cloud: self.wallpaper.associated?.cloud, wallpaper: self.wallpaper.wallpaper), associated: self.wallpaper.associated, cloud: self.cloudTheme)
         
         if let cloud = cloudTheme {
             if let index = wallpapers.firstIndex(where: { $0.cloud?.id == cloud.id }) {
@@ -602,7 +613,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         let wallpaper:ThemeWallpaper
         if let cloud = self.cloudTheme {
             let first = self.wallpapers.first(where: { $0.cloud?.id == cloud.id })
-            wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? self.palette.wallpaper.wallpaper, associated: first?.wallpaper)
+            wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? self.palette.wallpaper.wallpaper, associated: first?.associated)
         } else {
             let first = self.wallpapers.first(where: { $0.isEqual(to: self.palette) })
             wallpaper = ThemeWallpaper(wallpaper: first?.wallpaper.wallpaper ?? self.palette.wallpaper.wallpaper, associated: nil)
@@ -697,7 +708,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
     static var defaultTheme: ThemePaletteSettings {
         let defDark = DefaultTheme(local: .nightAccent, cloud: nil)
         let defDay = DefaultTheme(local: .dayClassic, cloud: nil)
-        return ThemePaletteSettings(palette: dayClassicPalette, bubbled: false, fontSize: 13, wallpaper: ThemeWallpaper(), defaultDark: defDark, defaultDay: defDay, defaultIsDark: false, wallpapers: [LocalWallapper(name: .dayClassic, accentColor: dayClassicPalette.accent.argb, wallpaper: AssociatedWallpaper(cloud: nil, wallpaper: .builtin), cloud: nil)], accents: [], cloudTheme: nil, associated: [])
+        return ThemePaletteSettings(palette: dayClassicPalette, bubbled: false, fontSize: 13, wallpaper: ThemeWallpaper(), defaultDark: defDark, defaultDay: defDay, defaultIsDark: false, wallpapers: [LocalWallapper(name: .dayClassic, accentColor: dayClassicPalette.accent.argb, wallpaper: AssociatedWallpaper(cloud: nil, wallpaper: .builtin), associated: nil, cloud: nil)], accents: [], cloudTheme: nil, associated: [])
     }
 }
 

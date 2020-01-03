@@ -249,7 +249,7 @@ final class TelegramChatColors {
     }
     
     func backgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.bubbleBackground_incoming : palette.bubbleBackground_outgoing : palette.chatBackground
+        return bubbled ? incoming ? .clear : .clear : palette.chatBackground
     }
     
     func backgoundSelectedColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {

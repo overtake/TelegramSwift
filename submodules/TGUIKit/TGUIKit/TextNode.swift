@@ -249,8 +249,8 @@ public class TextNode: NSObject {
        
         
         if backingScaleFactor == 1.0 {
-            ctx.setFillColor(backgroundColor.cgColor)
-            ctx.fill(dirtyRect)
+//            ctx.setFillColor(backgroundColor.cgColor)
+//            ctx.fill(dirtyRect)
         }
         
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort

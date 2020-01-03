@@ -9,14 +9,14 @@
 import Foundation
 import SwiftSignalKit
 
-private final class BackgroundGradientView : View {
-    fileprivate var values:(top: NSColor, bottom: NSColor, rotation: Int32?)? {
+public final class BackgroundGradientView : View {
+    public var values:(top: NSColor, bottom: NSColor, rotation: Int32?)? {
         didSet {
             needsDisplay = true
         }
     }
     
-    required init(frame frameRect: NSRect) {
+    public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         noWayToRemoveFromSuperview = true
     }
@@ -24,17 +24,17 @@ private final class BackgroundGradientView : View {
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    override var isFlipped: Bool {
+    override public var isFlipped: Bool {
         return false
     }
     
-    override func layout() {
+    override public func layout() {
         super.layout()
         let values = self.values
         self.values = values
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
+    override public func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         if let values = self.values {
             

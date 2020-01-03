@@ -146,22 +146,30 @@ final class CachedPatternWallpaperMaskRepresentation: CachedMediaResourceReprese
     let keepDuration: CachedMediaRepresentationKeepDuration = .general
     
     let size: CGSize?
-    
+    let settings: WallpaperSettings?
     var uniqueId: String {
+        
+        var color:String = ""
+        
+        if let settings = settings {
+            color += settings.stringValue
+        }
+        
         if let size = self.size {
-            return "pattern-wallpaper-mask38-\(Int(size.width))x\(Int(size.height))"
+            return "pattern-wallpaper-mask----\(Int(size.width))x\(Int(size.height))" + color
         } else {
-            return "pattern-wallpaper-mask38"
+            return "pattern-wallpaper-mask----" + color
         }
     }
     
-    init(size: CGSize?) {
+    init(size: CGSize? = nil, settings: WallpaperSettings? = nil) {
         self.size = size
+        self.settings = settings
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedPatternWallpaperMaskRepresentation {
-            return self.size == to.size
+            return self.size == to.size && self.settings == to.settings
         } else {
             return false
         }

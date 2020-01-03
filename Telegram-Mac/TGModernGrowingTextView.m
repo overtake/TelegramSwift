@@ -918,7 +918,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
-    BOOL animated = self.animates;
+    BOOL animated = self.animates && ![self.window inLiveResize];
     
     
     if(_last_height != newSize.height) {

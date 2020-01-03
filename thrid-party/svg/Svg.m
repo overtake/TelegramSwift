@@ -120,7 +120,7 @@ NSImage * _Nullable drawSvgImageNano(NSData * _Nonnull data, CGSize size) {
     
     NSImage *result = [[NSImage alloc] initWithSize:size];
     
-    NSBitmapImageRep  *rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nil pixelsWide: size.width pixelsHigh: size.height bitsPerSample: 8 samplesPerPixel: 4 hasAlpha: false isPlanar: false  colorSpaceName: NSCalibratedRGBColorSpace bytesPerRow: 0 bitsPerPixel: 0];
+    NSBitmapImageRep  *rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nil pixelsWide: size.width pixelsHigh: size.height bitsPerSample: 8 samplesPerPixel: 4 hasAlpha: false isPlanar: true  colorSpaceName: NSCalibratedRGBColorSpace bytesPerRow: 0 bitsPerPixel: 0];
     [result addRepresentation:rep];
     
     [result lockFocus];

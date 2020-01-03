@@ -41,6 +41,8 @@ func initialize() -> [String] {
     array.append("chatMusicPause")
     array.append("chatMusicPauseBubble_incoming")
     array.append("chatMusicPauseBubble_outgoing")
+    array.append("chatGradientBubble_incoming")
+    array.append("chatGradientBubble_outgoing")
     array.append("composeNewChat")
     array.append("composeNewChatActive")
     array.append("composeNewGroup")
