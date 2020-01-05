@@ -2292,10 +2292,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             showModal(with: LocationModalController(self.chatInteraction), for: context.window)
         }
         
-        chatInteraction.sendAppFile = { [weak self] file in
+        chatInteraction.sendAppFile = { [weak self] file, silent in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage {
                 func apply(_ controller: ChatController, atDate: Date?) {
-                    let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
                 }
                 switch strongSelf.mode {

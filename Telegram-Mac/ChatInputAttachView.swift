@@ -90,6 +90,9 @@ class ChatInputAttachView: ImageButton, Notifable {
                             canAttachPoll = true
                         }
                     }
+                    if canAttachPoll && permissionText(from: peer, for: .banSendPolls) != nil {
+                        canAttachPoll = false
+                    }
                    
                     if canAttachPoll {
                         items.append(SPopoverItem(L10n.inputAttachPopoverPoll, { [weak self] in

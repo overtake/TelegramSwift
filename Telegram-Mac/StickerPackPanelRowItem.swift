@@ -143,6 +143,20 @@ class StickerPackPanelRowItem: TableRowItem {
                         }))
                     }
                 }
+                
+                items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak self] in
+                    guard let `self` = self else {
+                        return
+                    }
+                    let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                        return view.media?.isEqual(to: file) ?? false
+                    })
+                    
+                    if let contentView = contentView {
+                        self.arguments.sendMedia(file, contentView, true)
+                    }
+                }))
+                
                 break
             }
         }
@@ -242,7 +256,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                                 if !item.packInfo.installed, let reference = item.packReference {
                                     item.arguments.showPack(reference)
                                 } else {
-                                    item.arguments.sendMedia(media, contentView)
+                                    item.arguments.sendMedia(media, contentView, false)
                                 }
                             }
                             return

@@ -68,6 +68,28 @@ private final class CustomAccentColorView : View {
             
            
         }
+        
+        tableView.afterSetupItem = { [weak self] view, item in
+            guard let `self` = self else {
+                return
+            }
+            if let view = view as? ChatRowView {
+                let offset = self.tableView.scrollPosition().current.rect.origin
+                view.updateBackground(within: self.tableView.frame.size, inset: offset, animated: false)
+            }
+        }
+        
+        tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            self.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(within: self.tableView.frame.size, inset: position.rect.origin, animated: false)
+                }
+            })
+        }))
+        
         layout()
     }
     

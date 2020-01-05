@@ -14,7 +14,7 @@ private let maskInset: CGFloat = 1.0
 
 final class ChatMessageBubbleBackdrop: NSView {
     private let backgroundContent: NSView
-    
+    private let borderView: SImageView = SImageView()
     private var currentMaskMode: Bool?
     
     private var maskView: SImageView?
@@ -39,6 +39,7 @@ final class ChatMessageBubbleBackdrop: NSView {
         self.layer?.masksToBounds = true
         self.maskView?.wantsLayer = true
         self.addSubview(self.backgroundContent)
+        self.addSubview(self.borderView)
     }
     
     required init?(coder decoder: NSCoder) {
@@ -46,7 +47,7 @@ final class ChatMessageBubbleBackdrop: NSView {
     }
     
     
-    func setType(image: (CGImage, NSEdgeInsets)?, background: CGImage) {
+    func setType(image: (CGImage, NSEdgeInsets)?, border: (CGImage, NSEdgeInsets)?, background: CGImage) {
         if let _ = image {
             let maskView: SImageView
             if let current = self.maskView {
@@ -63,6 +64,7 @@ final class ChatMessageBubbleBackdrop: NSView {
                 self.maskView = nil
             }
         }
+        self.borderView.data = border
         self.backgroundContent.layer?.contents = background
         if let maskView = self.maskView {
             maskView.data = image
@@ -70,6 +72,10 @@ final class ChatMessageBubbleBackdrop: NSView {
         self.backgroundContent.isHidden = image == nil
     }
     
+    override func layout() {
+        super.layout()
+        self.borderView.frame = bounds
+    }
 
     func update(rect: CGRect, within containerSize: CGSize, animated: Bool) {
         self.backgroundContent.frame = CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize)

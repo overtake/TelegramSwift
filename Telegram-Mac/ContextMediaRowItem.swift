@@ -15,9 +15,9 @@ import Postbox
 
 final class ContextMediaArguments {
     let sendResult: (ChatContextResult, NSView) -> Void
-    let menuItems: (TelegramMediaFile) -> Signal<[ContextMenuItem], NoError>
+    let menuItems: (TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError>
     
-    init(sendResult: @escaping(ChatContextResult, NSView) -> Void, menuItems: @escaping(TelegramMediaFile) -> Signal<[ContextMenuItem], NoError> = { _ in return .single([]) }) {
+    init(sendResult: @escaping(ChatContextResult, NSView) -> Void, menuItems: @escaping(TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }) {
         self.sendResult = sendResult
         self.menuItems = menuItems
     }
@@ -62,8 +62,8 @@ class ContextMediaRowItem: TableRowItem {
             if location.x > inset && location.x < inset + size.width {
                 switch result.results[i] {
                 case let .internalReference(_, _, _, _, _, _, file, _):
-                    if let file = file {
-                        let items = arguments.menuItems(file)
+                    if let file = file, let view = self.view {
+                        let items = arguments.menuItems(file, view.subviews[i])
                         return items
                     }
                 default:

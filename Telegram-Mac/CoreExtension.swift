@@ -2801,7 +2801,7 @@ extension TelegramBaseTheme {
         case .day:
             return whitePalette
         case .night:
-            return systemPalette
+            return darkPalette
         case .tinted:
             return nightAccentPalette
         }

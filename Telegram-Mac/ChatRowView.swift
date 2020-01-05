@@ -244,7 +244,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
         contentView.backgroundColor = .clear
-        item.replyModel?.backgroundColor = contentColor//item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
+        item.replyModel?.backgroundColor = item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
         nameView?.backgroundColor = contentColor
         forwardName?.backgroundColor = contentColor
         captionView?.backgroundColor = contentColor
@@ -1027,9 +1027,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
-            bubbleView.setType(image: item.modernBubbleImage, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
+            bubbleView.setType(image: item.bubbleImage, border: item.bubbleBorderImage, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
         } else {
-            bubbleView.setType(image: nil, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
+            bubbleView.setType(image: nil, border: nil, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
         }
     }
     

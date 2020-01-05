@@ -3171,6 +3171,8 @@ internal final class L10n {
   internal static var messageContextConfirmNotifyPin: String  { return L10n.tr("Localizable", "Message.Context.Confirm.NotifyPin") }
   /// Would you like to pin this message?
   internal static var messageContextConfirmPin1: String  { return L10n.tr("Localizable", "Message.Context.Confirm.Pin1") }
+  /// Thank you! Your report will be reviewed by our team very soon.
+  internal static var messageContextReportAlertOK: String  { return L10n.tr("Localizable", "Message.Context.Report.AlertOK") }
   /// archived folder
   internal static var messageStatusArchived: String  { return L10n.tr("Localizable", "Message.Status.Archived") }
   /// preparing archive
