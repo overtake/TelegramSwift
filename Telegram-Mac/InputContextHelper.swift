@@ -441,7 +441,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                 }
             } else if let selectedItem = selectedItem as? ContextStickerRowItem, let index = selectedItem.selectedIndex {
-                chatInteraction.sendAppFile(selectedItem.result.results[index].file)
+                chatInteraction.sendAppFile(selectedItem.result.results[index].file, false)
                 chatInteraction.clearInput()
             } else if let selectedItem = selectedItem as? ContextSearchMessageItem {
                 chatInteraction.focusMessageId(nil, selectedItem.message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))

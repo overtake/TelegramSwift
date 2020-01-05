@@ -24,27 +24,31 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     switch result {
                     case let .internalReference(_, _, _, _, _, _, file, _):
                         if let file = file {
-                            chatInteraction?.sendAppFile(file, view)
+                            chatInteraction?.sendAppFile(file, view, false)
                         }
                     default:
                         break
                     }
                 }
-            }, menuItems: { file in
+            }, menuItems: { file, view in
                 return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
+                    var items: [ContextMenuItem] = []
                     if let mediaId = file.id {
                         let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
                         if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
-                            return [ContextMenuItem(L10n.messageContextRemoveGif, handler: {
+                            items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                                 let _ = removeSavedGif(postbox: context.account.postbox, mediaId: mediaId).start()
-                            })]
+                            }))
                         } else {
-                            return [ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                            items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
                                 let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.savedGif(media: file)).start()
-                            })]
+                            }))
                         }
+                        items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: {
+                            chatInteraction?.sendAppFile(file, view, true)
+                        }))
                     }
-                    return []
+                    return items
                 }
             }))
         default:
@@ -77,7 +81,7 @@ private func gifEntries(for collection: ChatContextResultCollection?, initialSiz
 
 final class RecentGifsArguments {
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult, NSView) -> Void = { _,_,_  in}
-    var sendAppFile:(TelegramMediaFile, NSView) -> Void = { _,_ in}
+    var sendAppFile:(TelegramMediaFile, NSView, Bool) -> Void = { _,_,_ in}
 }
 
 final class TableContainer : View {
@@ -261,11 +265,11 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         _ = atomicSize.swap(_frameRect.size)
         let arguments = RecentGifsArguments()
         
-        arguments.sendAppFile = { [weak self] file, view in
+        arguments.sendAppFile = { [weak self] file, view, silent in
             if let slowMode = self?.chatInteraction?.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else {
-                self?.chatInteraction?.sendAppFile(file)
+                self?.chatInteraction?.sendAppFile(file, silent)
                 self?.makeSearchCommand?(.close)
                 self?.context.sharedContext.bindings.entertainment().closePopover()
             }

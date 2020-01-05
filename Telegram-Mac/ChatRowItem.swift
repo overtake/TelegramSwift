@@ -765,8 +765,8 @@ class ChatRowItem: TableRowItem {
     }
     
     let renderType: ChatItemRenderType
-    var modernBubbleImage:(CGImage, NSEdgeInsets)? = nil
-    var selectedBubbleImage:(CGImage, NSEdgeInsets)? = nil
+    var bubbleImage:(CGImage, NSEdgeInsets)? = nil
+    var bubbleBorderImage:(CGImage, NSEdgeInsets)? = nil
     
     private let downloadSettings: AutomaticMediaDownloadSettings
     
@@ -904,9 +904,10 @@ class ChatRowItem: TableRowItem {
                 } else {
                     isFull = false
                 }
-                
-                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: .white, strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both, mask: false)
-                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: .white, strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both, mask: false)
+                let icons = presentation.icons
+                let neighbors: MessageBubbleImageNeighbors = isFull && !message.isHasInlineKeyboard ? .none : .both
+                bubbleImage = isIncoming ? (neighbors == .none ? icons.chatBubble_none_incoming_withInset : icons.chatBubble_both_incoming_withInset) : (neighbors == .none ? icons.chatBubble_none_outgoing_withInset : icons.chatBubble_both_outgoing_withInset)
+                bubbleBorderImage = isIncoming ? (neighbors == .none ? icons.chatBubbleBorder_none_incoming_withInset : icons.chatBubbleBorder_both_incoming_withInset) : (neighbors == .none ? icons.chatBubbleBorder_none_outgoing_withInset : icons.chatBubbleBorder_both_outgoing_withInset)
             }
             
             self.itemType = itemType
@@ -1904,7 +1905,9 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         if canReportMessage(message, account) {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
                 _ = reportReasonSelector(context: context).start(next: { reason in
-                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start()
+                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start(completed: {
+                        alert(for: context.window, info: L10n.messageContextReportAlertOK)
+                    })
                 })
             }))
         }

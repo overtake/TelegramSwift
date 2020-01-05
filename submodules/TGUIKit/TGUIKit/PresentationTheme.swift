@@ -1320,6 +1320,7 @@ public class ColorPalette : Equatable {
         var grayForeground = self.grayForeground
         var bubbleBackground_incoming = self.bubbleBackground_incoming
         var bubbleBorder_incoming = self.bubbleBorder_incoming
+        var bubbleBorder_outgoing = self.bubbleBorder_outgoing
         var bubbleBackgroundHighlight_incoming = self.bubbleBackgroundHighlight_incoming
         var bubbleBackgroundHighlight_outgoing = self.bubbleBackgroundHighlight_outgoing
         var chatBackground = self.chatBackground
@@ -1383,9 +1384,8 @@ public class ColorPalette : Equatable {
         
         var waveformForegroundBubble_outgoing = self.waveformForegroundBubble_outgoing
         var waveformBackgroundBubble_outgoing = self.waveformBackgroundBubble_outgoing
-        
-        let waveformForegroundBubble_incoming = color.accent
-        let waveformBackgroundBubble_incoming = self.grayIcon
+        var waveformForegroundBubble_incoming = self.waveformForegroundBubble_outgoing
+        var waveformBackgroundBubble_incoming = self.waveformBackgroundBubble_incoming
 
         
         let fileActivityForegroundBubble_incoming = NSColor(0xffffff)
@@ -1394,6 +1394,8 @@ public class ColorPalette : Equatable {
         
         var selectTextBubble_outgoing = self.selectTextBubble_outgoing
 
+        
+        bubbleBorder_outgoing = lightnessColor.withAlphaComponent(0.7)
         
         if lightnessColor.lightness > 0.75 {
             let hueFactor: CGFloat = 0.75
@@ -1416,14 +1418,17 @@ public class ColorPalette : Equatable {
             chatReplyTextDisabledBubble_outgoing = outgoingSecondaryTextColor
             chatReplyTitleBubble_outgoing = outgoingSecondaryTextColor
             
-            waveformBackgroundBubble_outgoing = outgoingSecondaryTextColor
-            waveformForegroundBubble_outgoing = NSColor(0xffffff)
+            waveformBackgroundBubble_outgoing = lightnessColor.withMultiplied(hue: 1.344 * hueFactor, saturation: 4.554 * saturationFactor, brightness: 0.549).withAlphaComponent(0.4)
+            waveformForegroundBubble_outgoing = lightnessColor.withMultiplied(hue: 1.344 * hueFactor, saturation: 4.554 * saturationFactor, brightness: 0.549).withAlphaComponent(0.8)
             
             selectTextBubble_outgoing = lightnessColor.lighter(amount: 0.2)
             
-            
 
         } else {
+            
+            waveformBackgroundBubble_outgoing = NSColor(0xffffff, 0)
+            waveformForegroundBubble_outgoing = NSColor(0xffffff, 0)
+
             textBubble_outgoing = NSColor(0xffffff)
             bubbleBackgroundHighlight_outgoing = lightnessColor.withMultiplied(hue: 1.024, saturation: 0.9, brightness: 0.9)
             webPreviewActivityBubble_outgoing = NSColor(0xffffff)

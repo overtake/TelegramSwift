@@ -2,6 +2,7 @@ import SwiftSignalKit
 
 final class TelegramIconsTheme {
   private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])
+  private var cachedWithInset:Atomic<[String: (CGImage, NSEdgeInsets)]> = Atomic(value: [:])
 
   var dialogMuteImage: CGImage {
       if let image = cached.with({ $0["dialogMuteImage"] }) {
@@ -531,6 +532,110 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["chatGradientBubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_none_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_none_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_none_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_none_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_none_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_none_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_none_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_none_outgoing_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_none_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_none_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_none_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_none_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_none_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_none_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_none_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_none_outgoing_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_both_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_both_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_both_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_both_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_both_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_both_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_both_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_both_outgoing_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_both_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_both_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_both_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_both_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_both_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_both_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_both_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_both_outgoing_withInset"] = image
               return current
           }
           return image
@@ -5570,6 +5675,14 @@ final class TelegramIconsTheme {
   private let _chatMusicPauseBubble_outgoing: ()->CGImage
   private let _chatGradientBubble_incoming: ()->CGImage
   private let _chatGradientBubble_outgoing: ()->CGImage
+  private let _chatBubble_none_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubble_none_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_none_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_none_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubble_both_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubble_both_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_both_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_both_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
   private let _composeNewChat: ()->CGImage
   private let _composeNewChatActive: ()->CGImage
   private let _composeNewGroup: ()->CGImage
@@ -5997,6 +6110,14 @@ final class TelegramIconsTheme {
       chatMusicPauseBubble_outgoing: @escaping()->CGImage,
       chatGradientBubble_incoming: @escaping()->CGImage,
       chatGradientBubble_outgoing: @escaping()->CGImage,
+      chatBubble_none_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubble_none_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_none_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_none_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubble_both_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubble_both_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_both_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_both_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
       composeNewChat: @escaping()->CGImage,
       composeNewChatActive: @escaping()->CGImage,
       composeNewGroup: @escaping()->CGImage,
@@ -6423,6 +6544,14 @@ final class TelegramIconsTheme {
       self._chatMusicPauseBubble_outgoing = chatMusicPauseBubble_outgoing
       self._chatGradientBubble_incoming = chatGradientBubble_incoming
       self._chatGradientBubble_outgoing = chatGradientBubble_outgoing
+      self._chatBubble_none_incoming_withInset = chatBubble_none_incoming_withInset
+      self._chatBubble_none_outgoing_withInset = chatBubble_none_outgoing_withInset
+      self._chatBubbleBorder_none_incoming_withInset = chatBubbleBorder_none_incoming_withInset
+      self._chatBubbleBorder_none_outgoing_withInset = chatBubbleBorder_none_outgoing_withInset
+      self._chatBubble_both_incoming_withInset = chatBubble_both_incoming_withInset
+      self._chatBubble_both_outgoing_withInset = chatBubble_both_outgoing_withInset
+      self._chatBubbleBorder_both_incoming_withInset = chatBubbleBorder_both_incoming_withInset
+      self._chatBubbleBorder_both_outgoing_withInset = chatBubbleBorder_both_outgoing_withInset
       self._composeNewChat = composeNewChat
       self._composeNewChatActive = composeNewChatActive
       self._composeNewGroup = composeNewGroup

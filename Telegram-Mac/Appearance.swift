@@ -1517,6 +1517,25 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPauseBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing) },
                                                chatGradientBubble_incoming: { generateGradientBubble(palette.bubbleBackground_incoming, palette.bubbleBackground_incoming) },
                                                chatGradientBubble_outgoing: { generateGradientBubble(palette.bubbleBackgroundTop_outgoing, palette.bubbleBackgroundBottom_outgoing) },
+                                               chatBubble_none_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .black, strokeColor: .clear, neighbors: .none) },
+                                               chatBubble_none_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .black, strokeColor: .clear, neighbors: .none) },
+                                               chatBubbleBorder_none_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .clear, strokeColor: palette.bubbleBorder_incoming, neighbors: .none) },
+                                               chatBubbleBorder_none_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .clear, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none) },
+                                               chatBubble_both_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .black, strokeColor: .clear, neighbors: .both) },
+                                               chatBubble_both_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .black, strokeColor: .clear, neighbors: .both) },
+                                               chatBubbleBorder_both_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .clear, strokeColor: palette.bubbleBorder_incoming, neighbors: .both) },
+                                               chatBubbleBorder_both_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .clear, strokeColor: palette.bubbleBorder_outgoing, neighbors: .both) },
+                                               /*
+         array.append("chatBubble_none_incoming")
+         array.append("chatBubble_none_outgoing")
+         array.append("chatBubbleBorder_none_incoming")
+         array.append("chatBubbleBorder_none_outgoing")
+         array.append("chatBubble_both_incoming")
+         array.append("chatBubble_both_outgoing")
+         array.append("chatBubbleBorder_both_incoming")
+         array.append("chatBubbleBorder_both_outgoing")
+ */
+                                               
                                                composeNewChat: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.accentIcon) },
                                                composeNewChatActive: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.underSelectedColor) },
                                                composeNewGroup: { #imageLiteral(resourceName: "Icon_NewGroup").precomposed(palette.accentIcon) },
@@ -1559,7 +1578,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                audioPlayerLockedPlay: { #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.grayIcon) },
                                                audioPlayerLockedNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.grayIcon) },
                                                audioPlayerLockedPrev: { #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.grayIcon) },
-                                               chatSendMessage: { generateSendIcon(#imageLiteral(resourceName: "Icon_SendMessage"), palette.accentIcon) },
+                                               chatSendMessage: { #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.accentIcon) },
                                                chatSaveEditedMessage: { generateSendIcon(NSImage(named: "Icon_SaveEditedMessage")!, palette.accentIcon) },
                                                chatRecordVoice: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
                                                chatEntertainment: { #imageLiteral(resourceName: "Icon_Entertainments").precomposed(palette.grayIcon) },
