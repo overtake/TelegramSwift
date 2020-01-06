@@ -79,6 +79,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             if let file = reference?.0.fileReference?.media {
                 menu.addItem(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak item] in
                     item?.chatInteraction.sendAppFile(file, true)
+                    item?.chatInteraction.clearInput()
                 }))
             }
           

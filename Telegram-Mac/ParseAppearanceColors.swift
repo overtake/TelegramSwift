@@ -448,7 +448,7 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 monospacedCodeBubble_outgoing: colors["monospacedCodeBubble_outgoing"] ?? parent.palette.monospacedCodeBubble_outgoing,
                                 selectTextBubble_incoming: colors["selectTextBubble_incoming"] ?? parent.palette.selectTextBubble_incoming,
                                 selectTextBubble_outgoing: colors["selectTextBubble_outgoing"] ?? parent.palette.selectTextBubble_outgoing,
-                                bubbleBackground_incoming: colors["bubbleBackgroundTop_incoming"] ?? parent.palette.bubbleBackground_incoming,
+                                bubbleBackground_incoming: colors["bubbleBackground_incoming"] ?? parent.palette.bubbleBackground_incoming,
                                 bubbleBackgroundTop_outgoing: colors["bubbleBackgroundBottom_outgoing"] ?? colors["bubbleBackground_outgoing"] ?? parent.palette.bubbleBackgroundTop_outgoing,
                                 bubbleBackgroundBottom_outgoing: colors["bubbleBackgroundBottom_outgoing"] ?? colors["bubbleBackground_outgoing"] ?? parent.palette.bubbleBackgroundTop_outgoing,
                                 bubbleBorder_incoming: colors["bubbleBorder_incoming"] ?? parent.palette.bubbleBorder_incoming,

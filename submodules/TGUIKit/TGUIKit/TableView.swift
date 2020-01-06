@@ -1671,6 +1671,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updating = false
         updateScroll(visibleRows())
         self.previousScroll = nil
+        
     //    CATransaction.commit()
     }
     
@@ -2181,10 +2182,36 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private var first:Bool = true
     
+    private var queuedTransitions: [TableUpdateTransition] = []
+    private func enqueueTransitions() {
+        if !isSetTransitionToQueue() {
+            if !updating {
+                while !queuedTransitions.isEmpty {
+                    self.merge(with: queuedTransitions.removeFirst(), forceApply: true)
+                }
+            }
+        }
+    }
+    
+    private func isSetTransitionToQueue() -> Bool {
+        return clipView.layer?.animation(forKey: "bounds") != nil
+    }
+    
     public func merge(with transition:TableUpdateTransition) -> Void {
+        self.merge(with: transition, forceApply: false)
+        enqueueTransitions()
+    }
+    
+    private func merge(with transition:TableUpdateTransition, forceApply: Bool) -> Void {
         
         assertOnMainThread()
         assert(!updating)
+        
+        if isSetTransitionToQueue() || (!self.queuedTransitions.isEmpty && !forceApply) {
+            self.queuedTransitions.append(transition)
+            enqueueTransitions()
+            return
+        }
         
         let oldEmpty = self.isEmpty
         
@@ -2385,6 +2412,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         //reflectScrolledClipView(clipView)
      //   self.tableView.endUpdates()
         self.endUpdates()
+        
         
 //        for subview in self.tableView.subviews.reversed() {
 //            if self.tableView.row(for: subview) == -1 {
@@ -2616,7 +2644,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     presentBounds.size.height -= y
                 }
                 
-                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: { [weak self] completed in
+                    completion?(completed)
+                    self?.enqueueTransitions()
+                })
                 CATransaction.commit()
             } else {
                 super.change(size: size, animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
@@ -2624,7 +2655,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         self.setFrameSize(size)
-        updateStickAfterScroll(animated)
+        self.updateStickAfterScroll(animated)
+        self.enqueueTransitions()
     }
     
     
@@ -2730,6 +2762,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         focus.action?(view.interactableView)
                     }
                     completion(true)
+                    enqueueTransitions()
                     return
                 }
             }
@@ -2774,6 +2807,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             scrollListener.handler(self.scrollPosition().current)
                             self.removeScroll(listener: scrollListener)
                             completion(completed)
+                            self.enqueueTransitions()
                         }
                         
                     })
@@ -2781,15 +2815,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     self.contentView.scroll(to: bounds.origin)
                     reflectScrolledClipView(clipView)
                     removeScroll(listener: scrollListener)
+                    enqueueTransitions()
                 }
                
             } else {
                 let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
-//                self.removeScroll(listener: scrollListener)
                 clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self] completed in
                     self?.removeScroll(listener: scrollListener)
                     completion(completed)
+                    self?.enqueueTransitions()
                 })
+
             }
         } else {
             if let item = item, focus.focus {

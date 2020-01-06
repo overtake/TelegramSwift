@@ -119,7 +119,7 @@ final class WallpaperPatternPreviewView: View {
         sliderView.userInteractionEnabled = true
         sliderView.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)
         sliderView.containerBackground = theme.colors.grayForeground
-        sliderView.liveScrobbling = false
+        sliderView.liveScrobbling = true
         sliderView.onUserChanged = { [weak self] value in
             guard let `self` = self else {return}
             self.sliderView.set(progress: CGFloat(value))
@@ -161,6 +161,14 @@ final class WallpaperPatternPreviewView: View {
                 }
             }
         }
+        
+        let selectedView = self.documentView.subviews.first { view -> Bool in
+            return !(view as! WallpaperPatternView).checkbox.isHidden
+        }
+        if let selectedView = selectedView {
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: true)
+        }
+        
         if let pattern = pattern {
             intensityContainerView.isHidden = false
             if let intensity = pattern.settings.intensity {
@@ -186,6 +194,7 @@ final class WallpaperPatternPreviewView: View {
             x += patternView.frame.width + 10
         }
         documentView.setFrameSize(NSMakeSize(x, 100))
+        
     }
     
     override func layout() {
@@ -238,11 +247,12 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
                 case .file:
                     genericView.updateSelected(pattern)
                 default:
-                    genericView.updateSelected(nil)
+                    break
                 }
             }
         }
     }
+    
     
     init(context: AccountContext) {
         self.context = context
@@ -274,6 +284,7 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
             self.genericView.update(with: [nil] + patterns, selected: nil, account: self.context.account, select: { [weak self] wallpaper in
                 self?.selected?(wallpaper)
             })
+            self.pattern = patterns.first
         }))
         
     }

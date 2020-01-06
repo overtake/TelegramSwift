@@ -567,13 +567,19 @@ class ChatRowItem: TableRowItem {
         if let peer = peer {
             peers.append(peer)
         }
+        
+        guard let message = message else {
+            return false
+        }
+        
         if authorIsChannel {
             return false
         }
-        if let message = message, message.isScheduledMessage {
+        if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) {
             return false
         }
-        if let info = message?.forwardInfo {
+        
+        if let info = message.forwardInfo {
             if let author = info.author {
                 peers.append(author)
             }

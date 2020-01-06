@@ -7,6 +7,8 @@
 //
 
 import TGUIKit
+import SwiftSignalKit
+
 
 private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> CGImage {
     return generateImage(CGSize(width: 42.0, height: 42.0), rotatedContext: { size, context in
@@ -85,12 +87,14 @@ class AccentColorRowItem: GeneralRowItem {
     let list: [AppearanceAccentColor]
     let isNative: Bool
     let theme: TelegramPresentationTheme
-    init(_ initialSize: NSSize, stableId: AnyHashable, list: [AppearanceAccentColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, menuItems: @escaping(AppearanceAccentColor)->[ContextMenuItem]) {
+    let context: AccountContext
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, list: [AppearanceAccentColor], isNative: Bool, theme: TelegramPresentationTheme, viewType: GeneralViewType = .legacy, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, menuItems: @escaping(AppearanceAccentColor)->[ContextMenuItem]) {
         self.selectAccentColor = selectAccentColor
         self.list = list
         self.theme = theme
         self.isNative = isNative
         self.menuItems = menuItems
+        self.context = context
         super.init(initialSize, height: 36 + viewType.innerInset.top + viewType.innerInset.bottom, stableId: stableId, viewType: viewType)
     }
     
@@ -134,6 +138,9 @@ final class AccentColorRowView : TableRowView {
     private let scrollView: AccentScrollView = AccentScrollView()
     private let borderView:View = View()
     private let documentView: View = View()
+    
+    private let disposable = MetaDisposable()
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         containerView.addSubview(scrollView)
@@ -246,22 +253,38 @@ final class AccentColorRowView : TableRowView {
             documentView.addSubview(button)
         }
         
+        let disposableSet = DisposableSet()
         
         for i in 0 ..< colorList.count {
+            
+            var accent = colorList[i]
+            
+            if let cloudTheme = accent.cloudTheme, let settings = cloudTheme.settings {
+                let signal = themeAppearanceThumbAndData(context: item.context, bubbled: false, source: .local(settings.palette, cloudTheme)) |> deliverOnMainQueue
+                disposableSet.add(signal.start(next: { result in
+                    switch result.1 {
+                    case let .cloud(_, cachedData):
+                        accent = accent.withUpdatedCachedTheme(cachedData)
+                    default:
+                        break
+                    }
+                }))
+            }
+            
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
             button.layer?.cornerRadius = button.frame.height / 2
-            let icon = generateAccentColor(colorList[i].accent, bubbled: theme.bubbled)
+            let icon = generateAccentColor(accent.accent, bubbled: theme.bubbled)
             button.contextObject = colorList[i]
             button.setImageContentGravity(.resize)
             button.set(image: icon, for: .Normal)
             button.set(image: icon, for: .Hover)
             button.set(image: icon, for: .Highlight)
             button.set(handler: { _ in
-                item.selectAccentColor(colorList[i])
+                item.selectAccentColor(accent)
             }, for: .Click)
-            if colorList[i].accent.accent == theme.colors.accent {
-                if colorList[i].cloudTheme?.id == theme.cloudTheme?.id {
+            if accent.accent.accent == theme.colors.accent {
+                if accent.cloudTheme?.id == theme.cloudTheme?.id {
                     button.addSubview(selectedImageView)
                     selectedImageView.center()
                 }
@@ -275,12 +298,16 @@ final class AccentColorRowView : TableRowView {
         }
         
        
- 
+        disposable.set(disposableSet)
         
       
         
         
         documentView.setFrameSize(NSMakeSize(x + insetWidth, frame.height))
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     required init?(coder: NSCoder) {

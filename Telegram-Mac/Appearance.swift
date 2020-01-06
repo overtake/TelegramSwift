@@ -1181,6 +1181,10 @@ enum Wallpaper : Equatable, PostboxCoding {
             return settings
         case let .file(values):
             return values.settings
+        case let .color(t):
+            return WallpaperSettings(color: t)
+        case let .gradient(t, b, r):
+            return WallpaperSettings(color: t, bottomColor: b, rotation: r)
         default:
             return WallpaperSettings()
         }
@@ -1637,7 +1641,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                stickerBackgroundActive: { generateStickerBackground(NSMakeSize(83, 83), palette.grayBackground) },
                                                stickersTabRecent: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon) },
                                                stickersTabGIF: { #imageLiteral(resourceName: "Icon_GifToggle").precomposed(palette.grayIcon) },
-                                               chatSendingInFrame_incoming: { generateClockMinImage(palette.grayIconBubble_incoming) },
+                                               chatSendingInFrame_incoming: { generateSendingFrame(palette.grayIconBubble_incoming) },
                                                chatSendingInHour_incoming: { generateClockMinImage(palette.grayIconBubble_incoming) },
                                                chatSendingInMin_incoming: { generateClockMinImage(palette.grayIconBubble_incoming) },
                                                chatSendingInFrame_outgoing: { generateSendingFrame(palette.grayIconBubble_outgoing) },

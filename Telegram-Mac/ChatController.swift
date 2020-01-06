@@ -2114,9 +2114,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             return .single((entry.message, false))
                                         }
                                     }
-                                    //                                if case let .index(index) = ChatHistoryInitialSearchLocation.id(toId) {
-                                    //                                    return .single((index, false))
-                                    //                                }
                                     return .single((nil, false))
                                 }
                             } |> take(until: { index in

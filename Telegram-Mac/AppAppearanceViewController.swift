@@ -15,12 +15,17 @@ import TGUIKit
 import SyncCore
 
 
-struct AppearanceAccentColor {
+struct AppearanceAccentColor : Equatable {
     let accent: PaletteAccentColor
     let cloudTheme: TelegramTheme?
-    init(accent: PaletteAccentColor, cloudTheme: TelegramTheme?) {
+    let cachedTheme: InstallCloudThemeCachedData?
+    init(accent: PaletteAccentColor, cloudTheme: TelegramTheme?, cachedTheme: InstallCloudThemeCachedData? = nil) {
         self.accent = accent
         self.cloudTheme = cloudTheme
+        self.cachedTheme = cachedTheme
+    }
+    func withUpdatedCachedTheme(_ cachedTheme: InstallCloudThemeCachedData?) -> AppearanceAccentColor {
+        return .init(accent: self.accent, cloudTheme: self.cloudTheme, cachedTheme: cachedTheme)
     }
 }
 
@@ -55,12 +60,12 @@ enum ThemeSettingsEntryTag: ItemListItemTag {
 }
 
 
-struct InstallCloudThemeCachedData {
+struct InstallCloudThemeCachedData : Equatable {
     let palette: ColorPalette
     let wallpaper: Wallpaper
     let cloudWallpaper: TelegramWallpaper?
 }
-enum InstallThemeSource {
+enum InstallThemeSource : Equatable {
     case local(ColorPalette)
     case cloud(TelegramTheme, InstallCloudThemeCachedData?)
 }
@@ -206,8 +211,13 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     
     
     if !accentList.isEmpty {
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(appearance), item: { initialSize, stableId in
-            return AccentColorRowItem(initialSize, stableId: stableId, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
+        
+        struct ALEquatable : Equatable {
+            let accentList: [AppearanceAccentColor]
+        }
+        
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(accentList: accentList)), item: { initialSize, stableId in
+            return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
                 var items:[ContextMenuItem] = []
                 if let cloud = accent.cloudTheme {
                     items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
@@ -358,7 +368,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     }, selectAccentColor: { value in
         let updateColor:(AppearanceAccentColor)->Void = { color in
             if let cloudTheme = color.cloudTheme {
-                applyTheme(.cloud(cloudTheme, nil))
+                applyTheme(.cloud(cloudTheme, color.cachedTheme))
             } else {
                 updateDisposable.set(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                     let clearPalette = settings.palette.withoutAccentColor()
@@ -392,7 +402,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     }, openAutoNightSettings: {
         context.sharedContext.bindings.rootNavigation().push(AutoNightSettingsController(context: context))
     }, removeTheme: { cloudTheme in
-        confirm(for: context.window, header: L10n.appearanceConfirmRemoveTitle, information: L10n.appearanceConfirmRemoveText, successHandler: { _ in
+        confirm(for: context.window, header: L10n.appearanceConfirmRemoveTitle, information: L10n.appearanceConfirmRemoveText, okTitle: L10n.appearanceConfirmRemoveOK, successHandler: { _ in
             var signals:[Signal<Void, NoError>] = []
             if theme.cloudTheme?.id == cloudTheme.id {
                 signals.append(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
@@ -448,6 +458,17 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                         showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(cloudTheme.slug)")), for: context.window)
                     }))
                 }
+                
+                if theme.cloudTheme != nil || theme.colors.accent != theme.colors.basicAccent {
+                    items.append(SPopoverItem(L10n.appearanceReset, {
+                         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                            return settings.withUpdatedToDefault(dark: settings.defaultIsDark, onlyLocal: true).updateWallpaper({ _ -> ThemeWallpaper in
+                                return ThemeWallpaper(wallpaper: settings.palette.wallpaper.wallpaper, associated: nil)
+                            })
+                         }).start()
+                    }))
+                }
+                
                 showPopover(for: control, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-50))
             }
         }, for: .Click)
