@@ -867,7 +867,7 @@ func canPinMessage(_ message:Message, for peer:Peer, account:Account) -> Bool {
 }
 
 func canReportMessage(_ message: Message, _ account: Account) -> Bool {
-    if message.isScheduledMessage {
+    if message.isScheduledMessage || message.flags.contains(.Failed) || message.flags.contains(.Sending) {
         return false
     }
     if let peer = messageMainPeer(message), message.author?.id != account.peerId {

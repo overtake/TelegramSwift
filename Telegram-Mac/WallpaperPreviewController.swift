@@ -923,13 +923,39 @@ private final class WallpaperPreviewView: View {
         colorPicker.setFrameSize(NSMakeSize(frame.width, 168))
         patternsController.view.setFrameSize(NSMakeSize(frame.width, 168))
         
-        updateModifyState(self.previewState, animated: false)
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
                 view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: false)
             }
         })
+        
+        
+        switch self.previewState  {
+        case .color:
+            backgroundView.setFrameSize(NSMakeSize(frame.width, frame.height - colorPicker.frame.height))
+        default:
+            backgroundView.setFrameSize(NSMakeSize(frame.width, frame.height))
+        }
+        
+        switch previewState {
+        case .color:
+            colorPicker.setFrameOrigin(NSMakePoint(0, frame.height - colorPicker.frame.height))
+            documentView.setFrameOrigin(NSMakePoint(0, frame.height - colorPicker.frame.height - tableView.listHeight))
+            checkboxContainer.setFrameOrigin(NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - colorPicker.frame.height - checkboxContainer.frame.height - 10))
+            patternsController.view.setFrameOrigin(NSMakePoint(0, frame.height))
+        case .normal:
+            checkboxContainer.setFrameOrigin(NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - checkboxContainer.frame.height - 10))
+            documentView.setFrameOrigin(NSMakePoint(0, frame.height - tableView.listHeight))
+            colorPicker.setFrameOrigin(NSMakePoint(0, frame.height))
+            patternsController.view.setFrameOrigin(NSMakePoint(0, frame.height))
+        case .pattern:
+            colorPicker.setFrameOrigin(NSMakePoint(0, frame.height))
+            documentView.setFrameOrigin(NSMakePoint(0, frame.height - patternsController.view.frame.height - tableView.listHeight))
+            checkboxContainer.setFrameOrigin(NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - patternsController.view.frame.height - checkboxContainer.frame.height - 10))
+            patternsController.view.setFrameOrigin(NSMakePoint(0, frame.height - patternsController.view.frame.height))
+        }
+        
     }
     
     
@@ -989,8 +1015,16 @@ private final class WallpaperPreviewView: View {
             patternsController.view._change(pos: NSMakePoint(0, frame.height), animated: animated)
             updateBackground(wallpaper)
         case .pattern:
-
-            patternsController.pattern = wallpaper
+            
+            if let selected = patternsController.pattern {
+                self.wallpaper = selected.withUpdatedSettings(self.wallpaper.settings)
+            }
+            
+//            if let pattern = patternsController.pattern {
+//                patternsController.pattern?.withUpdatedSettings(wallpaper.s)
+//            } else {
+//                patternsController.pattern = wallpaper
+//            }
             patternCheckbox.isSelected = true
             colorCheckbox.isSelected = false
             colorPicker.change(pos: NSMakePoint(0, frame.height), animated: animated)

@@ -237,8 +237,12 @@ internal final class L10n {
   internal static var appearanceExportTheme: String  { return L10n.tr("Localizable", "Appearance.ExportTheme") }
   /// New Theme
   internal static var appearanceNewTheme: String  { return L10n.tr("Localizable", "Appearance.NewTheme") }
+  /// Reset to Defaults
+  internal static var appearanceReset: String  { return L10n.tr("Localizable", "Appearance.Reset") }
   /// Incompatible with macOS, click to edit
   internal static var appearanceCloudThemeUnsupported: String  { return L10n.tr("Localizable", "Appearance.CloudTheme.Unsupported") }
+  /// Remove?
+  internal static var appearanceConfirmRemoveOK: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveOK") }
   /// Are you sure you want to remove this theme?
   internal static var appearanceConfirmRemoveText: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveText") }
   /// Theme

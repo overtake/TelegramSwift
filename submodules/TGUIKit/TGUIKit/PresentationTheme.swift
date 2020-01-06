@@ -1384,8 +1384,8 @@ public class ColorPalette : Equatable {
         
         var waveformForegroundBubble_outgoing = self.waveformForegroundBubble_outgoing
         var waveformBackgroundBubble_outgoing = self.waveformBackgroundBubble_outgoing
-        var waveformForegroundBubble_incoming = self.waveformForegroundBubble_outgoing
-        var waveformBackgroundBubble_incoming = self.waveformBackgroundBubble_incoming
+        let waveformForegroundBubble_incoming = color.accent
+        let waveformBackgroundBubble_incoming = color.accent.withAlphaComponent(0.6)
 
         
         let fileActivityForegroundBubble_incoming = NSColor(0xffffff)

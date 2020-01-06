@@ -407,6 +407,30 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
         modalController?.close()
     })
     
+    controller.didLoaded = { controller, _ in
+        controller.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak controller] position in
+            guard let controller = controller else {
+                return
+            }
+            controller.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(within: controller.tableView.frame.size, inset: position.rect.origin, animated: false)
+                }
+            })
+        }))
+        
+        controller.tableView.afterSetupItem = { [weak controller] view, item in
+            guard let controller = controller else {
+                return
+            }
+            if let view = view as? ChatRowView {
+                let offset = controller.tableView.scrollPosition().current.rect.origin
+                view.updateBackground(within: controller.tableView.frame.size, inset: offset, animated: false)
+            }
+        }
+        
+    }
+    
     close = { [weak modalController] in
         modalController?.modal?.close()
     }

@@ -40,6 +40,17 @@ private final class ThemePreviewView : BackgroundView {
             })
         }))
         
+        tableView.afterSetupItem = { [weak self] view, item in
+            guard let `self` = self else {
+                return
+            }
+            if let view = view as? ChatRowView {
+                let offset = self.tableView.scrollPosition().current.rect.origin
+                view.updateBackground(within: self.tableView.frame.size, inset: offset, animated: false)
+            }
+        }
+        
+        
         layout()
     }
     
@@ -75,16 +86,7 @@ private final class ThemePreviewView : BackgroundView {
             }
         }
         
-        tableView.afterSetupItem = { [weak self] view, item in
-            guard let `self` = self else {
-                return
-            }
-            if let view = view as? ChatRowView {
-                let offset = self.tableView.scrollPosition().current.rect.origin
-                view.updateBackground(within: self.tableView.frame.size, inset: offset, animated: false)
-            }
-        }
-        
+       
         
         
         segmentContainer.backgroundColor = theme.colors.background

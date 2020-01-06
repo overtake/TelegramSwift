@@ -198,7 +198,7 @@ private class MediaCell : Control {
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 arguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: layout.frame.size, intrinsicInsets: NSEdgeInsets())
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
-                signal = mediaGridMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor)
+                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor) //mediaGridMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor)
             } else {
                 return
             }
@@ -290,6 +290,7 @@ private final class MediaVideoCell : MediaCell {
     private var status:MediaResourceStatus?
     private let statusDisposable = MetaDisposable()
     private let fetchingDisposable = MetaDisposable()
+    private let partDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.addSubview(self.videoAccessory)
@@ -331,6 +332,19 @@ private final class MediaVideoCell : MediaCell {
             }
         }
         return .nothing
+    }
+    
+    func preloadStreamblePart() {
+        if let layoutItem = self.layoutItem {
+            let context = layoutItem.chatInteraction.context
+            if context.autoplayMedia.preloadVideos {
+                if let media = layoutItem.message.media.first as? TelegramMediaFile, let fileSize = media.size {
+                    let reference = FileMediaReference.message(message: MessageReference(layoutItem.message), media: media)
+                    let preload = combineLatest(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference.resourceReference(media.resource), range: (0 ..< Int(2.0 * 1024 * 1024), .default), statsCategory: .video), fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference.resourceReference(media.resource), range: (max(0, fileSize - Int(256 * 1024)) ..< Int(Int32.max), .default), statsCategory: .video))
+                    partDisposable.set(preload.start())
+                }
+            }
+        }
     }
     
     private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile, animated: Bool) {
@@ -382,7 +396,9 @@ private final class MediaVideoCell : MediaCell {
            case .Local:
                self.progressView.state = .Play
            }
-       }))
+        }))
+        partDisposable.set(nil)
+        self.preloadStreamblePart()
     }
     
     override func addAccesoryOnCopiedView(view: NSView) {
@@ -410,6 +426,7 @@ private final class MediaVideoCell : MediaCell {
     deinit {
         statusDisposable.dispose()
         fetchingDisposable.dispose()
+        partDisposable.dispose()
     }
 }
 
