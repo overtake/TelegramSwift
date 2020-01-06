@@ -2209,7 +2209,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         if isSetTransitionToQueue() || (!self.queuedTransitions.isEmpty && !forceApply) {
             self.queuedTransitions.append(transition)
-            enqueueTransitions()
             return
         }
         
