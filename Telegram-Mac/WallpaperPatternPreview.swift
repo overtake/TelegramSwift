@@ -63,7 +63,7 @@ private class WallpaperPatternView : Control {
             
             let emptyColor: TransformImageEmptyColor
             if color.count == 2 {
-                emptyColor = .gradient(top: color.first!, bottom: color.last!, rotation: rotation)
+                emptyColor = .gradient(top: color.first!.withAlphaComponent(color.first!.alpha == 0 ? 0.5 : color.first!.alpha), bottom: color.last!.withAlphaComponent(color.last!.alpha == 0 ? 0.5 : color.last!.alpha), rotation: rotation)
             } else {
                 emptyColor = .color(color.first!)
             }
@@ -140,6 +140,7 @@ final class WallpaperPatternPreviewView: View {
     
     func updateColor(_ color: [NSColor], rotation: Int32?, account: Account) {
         self.color = color
+        self.rotation = rotation
         for subview in self.documentView.subviews {
             if let subview = (subview as? WallpaperPatternView) {
                 subview.update(with: subview.pattern, isSelected: !subview.checkbox.isHidden, account: account, color: color, rotation: rotation)

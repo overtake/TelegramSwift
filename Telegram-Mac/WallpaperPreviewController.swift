@@ -757,9 +757,9 @@ private final class WallpaperPreviewView: View {
                 case let .color(color):
                      self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: color, intensity: self.patternsController.intensity))
                 case let .gradient(t, b, r):
-                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: t, bottomColor: b, intensity: self.patternsController.intensity, rotation: r))
+                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: NSColor(argb: t).withAlphaComponent(1.0).argb, bottomColor: NSColor(argb: b).withAlphaComponent(1.0).argb, intensity: self.patternsController.intensity, rotation: r))
                 case let .file(_, _, settings, _):
-                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: settings.color, bottomColor: settings.bottomColor, intensity: self.patternsController.intensity))
+                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: settings.color, bottomColor: settings.bottomColor, intensity: self.patternsController.intensity, rotation: settings.rotation))
                 default:
                     break
                 }

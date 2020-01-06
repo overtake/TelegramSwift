@@ -116,11 +116,11 @@ open class BackgroundView: ImageView {
                 layer?.contents = image
                 gradient.isHidden = true
             case let .color(color):
-                layer?.backgroundColor = color.cgColor
+                layer?.backgroundColor = color.withAlphaComponent(1.0).cgColor
                 layer?.contents = nil
                 gradient.values = nil
             case let .gradient(top, bottom, rotation):
-                gradient.values = (top: top, bottom: bottom, rotation: rotation)
+                gradient.values = (top: top.withAlphaComponent(1.0), bottom: bottom.withAlphaComponent(1.0), rotation: rotation)
                 layer?.contents = nil
                 gradient.isHidden = false
             default:
