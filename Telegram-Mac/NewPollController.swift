@@ -23,15 +23,71 @@ private func _id_input_option() -> InputDataIdentifier {
 }
 private let _id_input_title = InputDataIdentifier("_id_input_title")
 private let _id_input_add_option = InputDataIdentifier("_id_input_add_option")
+
+private let _id_anonymous = InputDataIdentifier("_id_anonymous")
+private let _id_multiple_choice = InputDataIdentifier("_id_multiple_choice")
+private let _id_quiz = InputDataIdentifier("_id_quiz")
+
+
+
 private struct NewPollOption : Equatable {
     let identifier: InputDataIdentifier
     let text: String
-    init(identifier: InputDataIdentifier, text: String) {
+    let selected: Bool
+    init(identifier: InputDataIdentifier, text: String, selected: Bool) {
         self.identifier = identifier
         self.text = text
+        self.selected = selected
     }
     func withUpdatedText(_ text: String) -> NewPollOption {
-        return NewPollOption(identifier: self.identifier, text: text)
+        return NewPollOption(identifier: self.identifier, text: text, selected: self.selected)
+    }
+    func withUpdatedSelected(_ selected: Bool) -> NewPollOption {
+        return NewPollOption(identifier: self.identifier, text: self.text, selected: selected)
+    }
+}
+
+private enum NewPollMode : Equatable {
+    case normal(anonymous: Bool)
+    case quiz(anonymous: Bool)
+    case multiple(anonymous: Bool)
+    
+    var isAnonymous: Bool {
+        switch self {
+        case let .normal(anonymous):
+            return anonymous
+        case let .quiz(anonymous):
+            return anonymous
+        case let .multiple(anonymous):
+            return anonymous
+        }
+    }
+    func withUpdatedIsAnonymous(_ anonymous: Bool) -> NewPollMode {
+        switch self {
+        case .normal:
+            return .normal(anonymous: anonymous)
+        case .quiz:
+            return .quiz(anonymous: anonymous)
+        case .multiple:
+            return .multiple(anonymous: anonymous)
+        }
+    }
+    
+    var isQuiz: Bool {
+        switch self {
+        case .quiz:
+            return true
+        default:
+            return false
+        }
+    }
+    var isMultiple: Bool {
+        switch self {
+        case .multiple:
+            return true
+        default:
+            return false
+        }
     }
 }
 
@@ -39,19 +95,25 @@ private struct NewPollState : Equatable {
     let title: String
     let options: [NewPollOption]
     private let random: UInt32
-    init(title: String, options: [NewPollOption], random: UInt32) {
+    let mode: NewPollMode
+    init(title: String, options: [NewPollOption], random: UInt32, mode: NewPollMode) {
         self.title = title
         self.options = options
         self.random = random
+        self.mode = mode
     }
     
     func withUpdatedTitle(_ title: String) -> NewPollState {
-        return NewPollState(title: title, options: self.options, random: self.random)
+        return NewPollState(title: title, options: self.options, random: self.random, mode: self.mode)
     }
     func withDeleteOption(_ identifier: InputDataIdentifier) -> NewPollState {
         var options = self.options
         options.removeAll(where: {$0.identifier == identifier})
-        return NewPollState(title: title, options: options, random: self.random)
+        return NewPollState(title: title, options: options, random: self.random, mode: self.mode)
+    }
+    
+    func withUnselectItems() -> NewPollState {
+        return NewPollState(title: self.title, options: self.options.map { $0.withUpdatedSelected(false) }, random: self.random, mode: self.mode)
     }
     
     func withUpdatedOption(_ f:(NewPollOption) -> NewPollOption, forKey identifier: InputDataIdentifier) -> NewPollState {
@@ -59,7 +121,7 @@ private struct NewPollState : Equatable {
         if let index = options.firstIndex(where: {$0.identifier == identifier}) {
             options[index] = f(options[index])
         }
-        return NewPollState(title: self.title, options: options, random: self.random)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode)
     }
     
     func withUpdatedOptions(_ data:[InputDataIdentifier : InputDataValue]) -> NewPollState {
@@ -69,18 +131,18 @@ private struct NewPollState : Equatable {
                 options[index] = options[index].withUpdatedText(value.stringValue ?? options[index].text)
             }
         }
-        return NewPollState(title: self.title, options: options, random: self.random)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode)
     }
     
     func withAddedOption(_ option: NewPollOption) -> NewPollState {
         var options = self.options
         options.append(option)
-        return NewPollState(title: self.title, options: options, random: self.random)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode)
     }
     func withUpdatedPos(_ previous: Int, _ current: Int) -> NewPollState {
         var options = self.options
         options.move(at: previous, to: current)
-        return NewPollState(title: self.title, options: options, random: self.random)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode)
     }
     
     func indexOf(_ identifier: InputDataIdentifier) -> Int? {
@@ -88,11 +150,20 @@ private struct NewPollState : Equatable {
     }
     
     func withUpdatedState() -> NewPollState {
-         return NewPollState(title: self.title, options: self.options, random: arc4random())
+         return NewPollState(title: self.title, options: self.options, random: arc4random(), mode: self.mode)
+    }
+    func withUpdatedMode(_ mode: NewPollMode) -> NewPollState {
+        return NewPollState(title: self.title, options: self.options, random: self.random, mode: mode)
     }
     
     var isEnabled: Bool {
-        return !title.trimmed.isEmpty && options.filter({!$0.text.trimmed.isEmpty}).count >= 2
+        let isEnabled = !title.trimmed.isEmpty && options.filter({!$0.text.trimmed.isEmpty}).count >= 2
+        switch self.mode {
+        case .quiz:
+            return isEnabled && self.options.contains(where: { $0.selected })
+        default:
+            return isEnabled
+        }
     }
     
     var media: TelegramMediaPoll {
@@ -106,7 +177,7 @@ private struct NewPollState : Equatable {
     }
 }
 
-private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputDataIdentifier) -> Void) -> [InputDataEntry] {
+private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputDataIdentifier) -> Void, updateQuizSelected:@escaping(InputDataIdentifier) -> Void, updateMode: @escaping(NewPollMode)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -158,10 +229,27 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
                 viewType = .innerItem
             }
         }
+        let placeholder: InputDataInputPlaceholder?
+        switch state.mode {
+        case .multiple:
+            placeholder = nil
+        case .normal:
+            placeholder = nil
+        case .quiz:
+            
+
+            
+            placeholder = InputDataInputPlaceholder(nil, icon: option.selected ? theme.icons.chatToggleSelected : theme.icons.poll_quiz_unselected, drawBorderAfterPlaceholder: true, hasLimitationText: true, action: {
+                updateQuizSelected(option.identifier)
+                //deleteOption(option.identifier)
+            })
+        }
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(viewType: viewType, rightItem: .action(theme.icons.resort, .resort)), placeholder: InputDataInputPlaceholder(nil, icon: theme.icons.pollDeleteOption, drawBorderAfterPlaceholder: true, hasLimitationText: true, action: {
+        
+        
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(viewType: viewType, rightItem: .action(theme.icons.recentDismiss, .custom({
             deleteOption(option.identifier)
-        }), inputPlaceholder: L10n.newPollOptionsPlaceholder, filter: { text in
+        }))), placeholder: placeholder, inputPlaceholder: L10n.newPollOptionsPlaceholder, filter: { text in
             return text.trimmingCharacters(in: CharacterSet.newlines)
         }, limit: maxOptionLength))
         index += 1
@@ -180,6 +268,36 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
+
+
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: .firstItem, justUpdate: arc4random64(), action: {
+        updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
+    })))
+    index += 1
+    
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: .innerItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
+        if state.mode.isMultiple {
+            updateMode(.normal(anonymous: state.mode.isAnonymous))
+        } else {
+            updateMode(.multiple(anonymous: state.mode.isAnonymous))
+        }
+    })))
+    index += 1
+    
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: L10n.newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
+        if state.mode.isQuiz {
+            updateMode(.normal(anonymous: state.mode.isAnonymous))
+        } else {
+            updateMode(.quiz(anonymous: state.mode.isAnonymous))
+        }
+    })))
+    index += 1
+    
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
     return entries
 }
@@ -187,7 +305,7 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
 func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalController {
     
     
-    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: ""), NewPollOption(identifier: _id_input_option(), text: "")], random: arc4random())
+    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: "", selected: false), NewPollOption(identifier: _id_input_option(), text: "", selected: false)], random: arc4random(), mode: .normal(anonymous: true))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -207,8 +325,23 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         }
         shouldMakeNearResponderAfterTransition = (identifier, state.indexOf(identifier)!)
     }
+    let updateQuizSelected:(InputDataIdentifier)-> Void = { identifier in
+        updateState { state in
+            return state.withUnselectItems().withUpdatedOption({ option -> NewPollOption in
+                return option.withUpdatedSelected(true)
+            }, forKey: identifier)
+        }
+    }
+    
+    
+    let updateMode:(NewPollMode)->Void = { mode in
+        updateState {
+            $0.withUnselectItems().withUpdatedMode(mode)
+        }
+    }
+    
     let addOption:(Bool)-> InputDataValidation = { byClick in
-        let option = NewPollOption(identifier: _id_input_option(), text: "")
+        let option = NewPollOption(identifier: _id_input_option(), text: "", selected: false)
         updateState { state in
             if state.options.count < optionsLimit {
                 return state.withAddedOption(option)
@@ -243,7 +376,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     
     
     let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> map { value in
-        return InputDataSignalValue(entries: newPollEntries(value, deleteOption: deleteOption), animated: animated.swap(true))
+        return InputDataSignalValue(entries: newPollEntries(value, deleteOption: deleteOption, updateQuizSelected: updateQuizSelected, updateMode: updateMode), animated: animated.swap(true))
     }
     
     
@@ -284,7 +417,7 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
                 var state = state
                 if fails.isEmpty {
                     if state.options.count < 2 {
-                        state = state.withAddedOption(NewPollOption(identifier: _id_input_option(), text: ""))
+                        state = state.withAddedOption(NewPollOption(identifier: _id_input_option(), text: "", selected: false))
                         if addedOptions == nil {
                             addedOptions = state.options.count - 1
                         }
@@ -367,43 +500,43 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
             return true
         })
         
-        
-        let resort = TableResortController(resortRange: range, startTimeout: 0.1, start: { _ in
-            
-        }, resort: { _ in
-            
-        }, complete: { [weak controller] previous, current in
-            if previous != current {
-                _ = animated.swap(false)
-                
-                updateState { state in
-                    return state.withUpdatedPos(previous - range.location, current - range.location)
-                }
-            } else {
-                updateState { state in
-                    return state.withUpdatedState()
-                }
-            }
-            if let identifier = controller?.currentFirstResponderIdentifier {
-                shouldMakeNextResponderAfterTransition = (identifier, false, nil, false)
-            }
-
-        }, updateItems: { currentView, items in
-            
-//            let items = items.compactMap { $0 as? GeneralRowItem }.filter({ $0.view?.identifier != NSUserInterfaceItemIdentifier("-1")})
-//            for (i, item) in items.enumerated() {
-//                NSLog("\(item.view)")
-//                item.updateViewType(bestGeneralViewType(items, for: i))
-//                item.view?.set(item: item, animated: true)
+//
+//        let resort = TableResortController(resortRange: range, startTimeout: 0.1, start: { _ in
+//
+//        }, resort: { _ in
+//
+//        }, complete: { [weak controller] previous, current in
+//            if previous != current {
+//                _ = animated.swap(false)
+//
+//                updateState { state in
+//                    return state.withUpdatedPos(previous - range.location, current - range.location)
+//                }
+//            } else {
+//                updateState { state in
+//                    return state.withUpdatedState()
+//                }
 //            }
-//            if let item = currentView?.item as? GeneralRowItem {
-//                //item.updateViewType(.singleItem)
-//                currentView?.set(item: item, animated: true)
+//            if let identifier = controller?.currentFirstResponderIdentifier {
+//                shouldMakeNextResponderAfterTransition = (identifier, false, nil, false)
 //            }
-            
-        })
-        controller.tableView.resortController = resort
-        
+//
+//        }, updateItems: { currentView, items in
+//
+////            let items = items.compactMap { $0 as? GeneralRowItem }.filter({ $0.view?.identifier != NSUserInterfaceItemIdentifier("-1")})
+////            for (i, item) in items.enumerated() {
+////                NSLog("\(item.view)")
+////                item.updateViewType(bestGeneralViewType(items, for: i))
+////                item.view?.set(item: item, animated: true)
+////            }
+////            if let item = currentView?.item as? GeneralRowItem {
+////                //item.updateViewType(.singleItem)
+////                currentView?.set(item: item, animated: true)
+////            }
+//
+//        })
+//        controller.tableView.resortController = resort
+//
         interactions.updateDone { done in
             done.isEnabled = state.isEnabled
         }
