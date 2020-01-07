@@ -188,16 +188,18 @@ struct InputDataInputPlaceholder : Equatable {
     let icon: CGImage?
     let action: (()-> Void)?
     let hasLimitationText: Bool
-    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, action: (()-> Void)? = nil) {
+    let insets: NSEdgeInsets
+    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(), action: (()-> Void)? = nil) {
         self.drawBorderAfterPlaceholder = drawBorderAfterPlaceholder
         self.hasLimitationText = hasLimitationText
         self.placeholder = placeholder
         self.icon = icon
         self.action = action
+        self.insets = insets
     }
     
     static func ==(lhs: InputDataInputPlaceholder, rhs: InputDataInputPlaceholder) -> Bool {
-        return lhs.placeholder == rhs.placeholder && lhs.icon === rhs.icon && lhs.drawBorderAfterPlaceholder == rhs.drawBorderAfterPlaceholder
+        return lhs.placeholder == rhs.placeholder && lhs.icon === rhs.icon && lhs.drawBorderAfterPlaceholder == rhs.drawBorderAfterPlaceholder && lhs.insets == rhs.insets
     }
 }
 
@@ -211,7 +213,8 @@ final class InputDataGeneralData : Equatable {
     let description: String?
     let action: (()->Void)?
     let enabled: Bool
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, action: (()->Void)? = nil) {
+    let justUpdate: Int64?
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
@@ -220,10 +223,11 @@ final class InputDataGeneralData : Equatable {
         self.description = description
         self.action = action
         self.enabled = enabled
+        self.justUpdate = justUpdate
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
-        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled
+        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate
     }
 }
 

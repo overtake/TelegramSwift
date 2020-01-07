@@ -5633,6 +5633,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var poll_quiz_unselected: CGImage {
+      if let image = cached.with({ $0["poll_quiz_unselected"] }) {
+          return image
+      } else {
+          let image = _poll_quiz_unselected()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_quiz_unselected"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6067,6 +6080,7 @@ final class TelegramIconsTheme {
   private let _login_qr_empty_cap: ()->CGImage
   private let _chat_failed_scroller: ()->CGImage
   private let _chat_failed_scroller_active: ()->CGImage
+  private let _poll_quiz_unselected: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -6501,7 +6515,8 @@ final class TelegramIconsTheme {
       login_qr_cap: @escaping()->CGImage,
       login_qr_empty_cap: @escaping()->CGImage,
       chat_failed_scroller: @escaping()->CGImage,
-      chat_failed_scroller_active: @escaping()->CGImage
+      chat_failed_scroller_active: @escaping()->CGImage,
+      poll_quiz_unselected: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6936,5 +6951,6 @@ final class TelegramIconsTheme {
       self._login_qr_empty_cap = login_qr_empty_cap
       self._chat_failed_scroller = chat_failed_scroller
       self._chat_failed_scroller_active = chat_failed_scroller_active
+      self._poll_quiz_unselected = poll_quiz_unselected
   }
 }

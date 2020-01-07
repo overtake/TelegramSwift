@@ -202,6 +202,7 @@
 		A71DC8322386C845000EEDE2 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A71DC8342386D512000EEDE2 /* Signature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82E2386AADF000EEDE2 /* Signature.swift */; };
 		A71DC8352386D512000EEDE2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
+		A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72D7AE823C471A7005BAC59 /* PollResultController.swift */; };
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
 		A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
 		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
@@ -1231,6 +1232,7 @@
 		A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreSpotlight.framework; path = System/Library/Frameworks/CoreSpotlight.framework; sourceTree = SDKROOT; };
 		A71DC82C23858356000EEDE2 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		A71DC82E2386AADF000EEDE2 /* Signature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signature.swift; sourceTree = "<group>"; };
+		A72D7AE823C471A7005BAC59 /* PollResultController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultController.swift; sourceTree = "<group>"; };
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
 		A7377E2023B5DCBA00AD3ADD /* SVGKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SVGKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
@@ -2458,6 +2460,14 @@
 			name = "api-credentials";
 			sourceTree = "<group>";
 		};
+		A72D7AE723C4718C005BAC59 /* polls */ = {
+			isa = PBXGroup;
+			children = (
+				A72D7AE823C471A7005BAC59 /* PollResultController.swift */,
+			);
+			name = polls;
+			sourceTree = "<group>";
+		};
 		A7B5030D23B62DF200C9838E /* svg */ = {
 			isa = PBXGroup;
 			children = (
@@ -2505,6 +2515,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
+				A72D7AE723C4718C005BAC59 /* polls */,
 				9F13EE152100AFDC00562E53 /* contacts */,
 				C22467591FA8544200F03E27 /* photo-grouping */,
 				C21656E61EE576650041A6BA /* popover */,
@@ -5505,6 +5516,7 @@
 				C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */,
 				C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */,
 				C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */,
+				A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */,
 				C2DE5D361F3CACCF0081EC1E /* InstantPageLayoutSpacings.swift in Sources */,
 				C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */,
 				C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */,
