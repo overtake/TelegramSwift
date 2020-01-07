@@ -256,6 +256,9 @@ public class TextNode: NSObject {
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort
         let context:CGContext = ctx //unsafeBitCast(contextPtr, to: CGContext.self)
         
+        ctx.setAllowsFontSubpixelPositioning(true)
+        ctx.setShouldSubpixelPositionFonts(true)
+        
         ctx.setAllowsAntialiasing(true)
         ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
         ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
