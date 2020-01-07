@@ -2184,13 +2184,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private var queuedTransitions: [TableUpdateTransition] = []
     private func enqueueTransitions() {
-        if !isSetTransitionToQueue() {
-            if !updating {
-                while !queuedTransitions.isEmpty {
-                    self.merge(with: queuedTransitions.removeFirst(), forceApply: true)
-                }
+        while !queuedTransitions.isEmpty {
+            if !isSetTransitionToQueue() && !updating {
+                self.merge(with: queuedTransitions.removeFirst(), forceApply: true)
+            } else {
+                break
             }
         }
+        
     }
     
     private func isSetTransitionToQueue() -> Bool {
@@ -2655,7 +2656,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         self.setFrameSize(size)
         self.updateStickAfterScroll(animated)
-        self.enqueueTransitions()
     }
     
     

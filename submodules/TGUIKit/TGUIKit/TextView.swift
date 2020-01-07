@@ -1093,6 +1093,7 @@ public class TextView: Control, NSViewToolTipOwner {
             //}
             
             ctx.setAllowsAntialiasing(true)
+            ctx.setShouldAntialias(true)
             
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
