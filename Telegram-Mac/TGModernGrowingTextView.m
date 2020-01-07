@@ -633,10 +633,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     return [self.superview menuForEvent:event];
 }
 
--(void)setHidden:(BOOL)hidden {
-    [super setHidden:hidden];
-}
-
 @end
 
 
@@ -1070,7 +1066,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             if(presentLayer && [_placeholder.layer animationForKey:@"opacity"]) {
                 presentOpacity = [[presentLayer valueForKeyPath:@"opacity"] floatValue];
             }
-            [_placeholder setHidden:NO];
+            [self addSubview:_placeholder];
             
             CABasicAnimation *oAnim = [CABasicAnimation animationWithKeyPath:@"opacity"];
             oAnim.fromValue = @(presentOpacity);
@@ -1101,7 +1097,11 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             
         } else {
             if (_placeholder.layer.animationKeys.count == 0) {
-                [_placeholder setHidden:!self._needShowPlaceholder];
+                if (self._needShowPlaceholder) {
+                    [self addSubview:_placeholder];
+                } else {
+                    [_placeholder removeFromSuperview];
+                }
             }
         }
         
@@ -1125,7 +1125,15 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
     
 -(void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag {
-    [_placeholder setHidden:!self._needShowPlaceholder];
+    if (self._needShowPlaceholder) {
+        [self addSubview:_placeholder];
+    } else {
+        [_placeholder removeFromSuperview];
+    }
+}
+
+-(void)addSubview:(NSView *)view {
+    [super addSubview:view];
 }
 
 -(void)setLinkColor:(NSColor *)linkColor {
