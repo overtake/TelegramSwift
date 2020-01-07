@@ -260,6 +260,8 @@ public class TextNode: NSObject {
         ctx.setShouldSubpixelPositionFonts(true)
         
         ctx.setAllowsAntialiasing(true)
+        ctx.setShouldAntialias(true)
+        
         ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
         ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
         
@@ -273,7 +275,7 @@ public class TextNode: NSObject {
         if #available(OSX 10.11, *) {
             
         } else {
-            context.setBlendMode(.hardLight)
+           // context.setBlendMode(.hardLight)
         }
         
         if let layout = self.currentLayout {
