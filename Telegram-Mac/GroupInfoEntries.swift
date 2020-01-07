@@ -1276,7 +1276,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 applyBlock(infoBlock)
                 
-                entries.append(GroupInfoEntry.groupDescriptionSetup(section: GroupInfoSection.desc.rawValue, text: editingState.editingDescriptionText, viewType: .singleItem))
+               // entries.append(GroupInfoEntry.groupDescriptionSetup(section: GroupInfoSection.desc.rawValue, text: editingState.editingDescriptionText, viewType: .singleItem))
                 entries.append(GroupInfoEntry.groupAboutDescription(section:  GroupInfoSection.desc.rawValue, viewType: .textBottomItem))
             } else {
                 applyBlock(infoBlock)
@@ -1286,7 +1286,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             if let group = view.peers[view.peerId] as? TelegramGroup, let cachedGroupData = view.cachedData as? CachedGroupData {
                 if case .creator = group.role {
                     if cachedGroupData.flags.contains(.canChangeUsername) {
-                        entries.append(GroupInfoEntry.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
+                  //      entries.append(GroupInfoEntry.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
                         entries.append(GroupInfoEntry.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
                     }
                     
