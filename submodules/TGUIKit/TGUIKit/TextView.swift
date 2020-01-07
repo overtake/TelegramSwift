@@ -1087,10 +1087,10 @@ public class TextView: Control, NSViewToolTipOwner {
 
         if let layout = layout {
             
-            if backingScaleFactor != 1.0 || !disableBackgroundDrawing {
+            //if backingScaleFactor != 1.0 || !disableBackgroundDrawing {
                 ctx.setAllowsFontSubpixelPositioning(true)
                 ctx.setShouldSubpixelPositionFonts(true)
-            }
+            //}
             
             ctx.setAllowsAntialiasing(true)
             
