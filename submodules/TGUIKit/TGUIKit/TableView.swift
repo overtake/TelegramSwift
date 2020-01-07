@@ -2183,7 +2183,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var first:Bool = true
     
     private var queuedTransitions: [TableUpdateTransition] = []
+    private var isAlreadyEnqued: Bool = false
     private func enqueueTransitions() {
+        
+        guard !isAlreadyEnqued else {
+            return
+        }
+        
+        isAlreadyEnqued = true
         while !queuedTransitions.isEmpty {
             if !isSetTransitionToQueue() && !updating {
                 self.merge(with: queuedTransitions.removeFirst(), forceApply: true)
@@ -2191,11 +2198,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 break
             }
         }
-        
+        isAlreadyEnqued = false
     }
     
     private func isSetTransitionToQueue() -> Bool {
-        return clipView.layer?.animation(forKey: "bounds") != nil
+        return clipView.layer?.animation(forKey: "bounds") != nil || clipView.isAnimateScrolling
     }
     
     public func merge(with transition:TableUpdateTransition) -> Void {
@@ -2761,7 +2768,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         focus.action?(view.interactableView)
                     }
                     completion(true)
-                    enqueueTransitions()
                     return
                 }
             }
@@ -2814,7 +2820,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     self.contentView.scroll(to: bounds.origin)
                     reflectScrolledClipView(clipView)
                     removeScroll(listener: scrollListener)
-                    enqueueTransitions()
                 }
                
             } else {
