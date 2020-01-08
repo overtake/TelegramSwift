@@ -271,7 +271,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 
                 _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                     let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                    showModal(with: controller, for: mainWindow)
+                    showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
                     
                     let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
                         return LocalFileReferenceMediaResource(localFilePath: path.path, randomId: arc4random64())

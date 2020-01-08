@@ -518,6 +518,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         }
     }
     
+    override func layout() {
+        super.layout()
+    }
+    
     
     override func mouseUp(with event: NSEvent) {
         longDisposable.set(nil)
@@ -1548,6 +1552,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         if(redraw) {
             self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
+            self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: at))
         }
         
         return true;

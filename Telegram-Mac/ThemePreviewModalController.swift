@@ -29,13 +29,16 @@ private final class ThemePreviewView : BackgroundView {
         self.addSubview(segmentContainer)
         
         
+        layout()
+
+        
         tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             guard let `self` = self else {
                 return
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(within: self.tableView.frame.size, inset: position.rect.origin, animated: false)
+                    view.updateBackground(within: NSMakeSize(350, 400), inset: position.rect.origin, animated: false)
                 }
             })
         }))
@@ -46,12 +49,11 @@ private final class ThemePreviewView : BackgroundView {
             }
             if let view = view as? ChatRowView {
                 let offset = self.tableView.scrollPosition().current.rect.origin
-                view.updateBackground(within: self.tableView.frame.size, inset: offset, animated: false)
+                view.updateBackground(within: NSMakeSize(350, 400), inset: offset, animated: false)
             }
         }
         
         
-        layout()
     }
     
     override func layout() {
@@ -61,11 +63,6 @@ private final class ThemePreviewView : BackgroundView {
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
         
         
-        self.tableView.enumerateVisibleViews(with: { view in
-            if let view = view as? ChatRowView {
-                view.updateBackground(within: self.tableView.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
-            }
-        })
     }
     
     required init?(coder: NSCoder) {
@@ -106,31 +103,48 @@ private final class ThemePreviewView : BackgroundView {
         let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
         
-        let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
-        
-        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
+        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 18 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreview1, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
         let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
+
         
-        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+        
+        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreview2), attributes: [ReplyMessageAttribute(messageId: firstMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [])
         
         let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
+        
+        let thridMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreview3, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+        
+        let thridEntry: ChatHistoryEntry = .MessageEntry(thridMessage, MessageIndex(thridMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
         
         
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
         let item2 = ChatRowItem.item(frame.size, from: secondEntry, interaction: chatInteraction, theme: theme)
+        let item3 = ChatRowItem.item(frame.size, from: thridEntry, interaction: chatInteraction, theme: theme)
         
         
-        _ = item1.makeSize(frame.width, oldWidth: 0)
         _ = item2.makeSize(frame.width, oldWidth: 0)
+        _ = item3.makeSize(frame.width, oldWidth: 0)
+        _ = item1.makeSize(frame.width, oldWidth: 0)
         
+        
+        tableView.beginTableUpdates()
+        _ = tableView.addItem(item: item3)
         _ = tableView.addItem(item: item2)
         _ = tableView.addItem(item: item1)
+        tableView.endTableUpdates()
         
         
-
-        
+        self.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: NSMakeSize(350, 400), inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
+            }
+        })
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
     }
     
 }
@@ -187,11 +201,11 @@ class ThemePreviewModalController: ModalViewController {
         
         switch self.source {
         case let .localTheme(theme, _):
+            self.readyOnce()
             self.currentTheme = theme.withUpdatedChatMode(true)
             genericView.addTableItems(self.context, theme: theme)
             modal?.updateLocalizationAndTheme(theme: theme)
             genericView.backgroundMode = theme.controllerBackgroundMode
-            self.readyOnce()
         case let .cloudTheme(theme):
             if let settings = theme.settings {
                 let palette = settings.palette
@@ -210,6 +224,7 @@ class ThemePreviewModalController: ModalViewController {
                     guard let `self` = self else {
                         return
                     }
+                    self.readyOnce()
                     let newTheme = self.currentTheme
                         .withUpdatedColors(palette)
                         .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper)))
@@ -219,7 +234,6 @@ class ThemePreviewModalController: ModalViewController {
                     self.genericView.addTableItems(context, theme: newTheme)
                     self.modal?.updateLocalizationAndTheme(theme: newTheme)
                     self.genericView.backgroundMode = newTheme.controllerBackgroundMode
-                    self.readyOnce()
                     
                 }))
 
@@ -230,6 +244,7 @@ class ThemePreviewModalController: ModalViewController {
                         return
                     }
                     if let (palette, wallpaper, cloud) = data {
+                        self.readyOnce()
                         let newTheme = self.currentTheme
                             .withUpdatedColors(palette)
                             .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper)))
@@ -238,7 +253,6 @@ class ThemePreviewModalController: ModalViewController {
                         self.genericView.addTableItems(context, theme: newTheme)
                         self.modal?.updateLocalizationAndTheme(theme: newTheme)
                         self.genericView.backgroundMode = newTheme.controllerBackgroundMode
-                        self.readyOnce()
                     } else {
                         self.close()
                         alert(for: context.window, info: L10n.unknownError)
@@ -280,6 +294,10 @@ class ThemePreviewModalController: ModalViewController {
         default:
             break
         }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
     }
     
     private func saveAccent() {

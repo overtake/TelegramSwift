@@ -15,7 +15,7 @@ import Postbox
 import SyncCore
 
 private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImage {
-    return generateImage(CGSize(width: 1.0, height: 512.0), opaque: true, scale: 1.0, rotatedContext: { size, context in
+    return generateImage(CGSize(width: 1.0, height: 100), opaque: true, scale: 1.0, rotatedContext: { size, context in
         var locations: [CGFloat] = [0.0, 1.0]
         let colors = [top.cgColor, bottom.cgColor] as NSArray
         
@@ -47,6 +47,17 @@ private func generateSendIcon(_ image: NSImage, _ color: NSColor) -> CGImage {
             ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
         })!
     }
+}
+
+private func generateUnslectedCap(_ color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(22, 22), contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.setStrokeColor(color.withAlphaComponent(0.7).cgColor)
+        ctx.setLineWidth(1.0)
+        ctx.strokeEllipse(in: NSMakeRect(1, 1, size.width - 2, size.height - 2))
+    })!
 }
 
 private func generatePollAddOption(_ color: NSColor) -> CGImage {
@@ -1926,7 +1937,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                login_qr_cap: { NSImage(named: "Icon_loginQRCap")!.precomposed(palette.accentIcon) },
                                                login_qr_empty_cap: { generateLoginQrEmptyCap() },
                                                chat_failed_scroller: { generateChatFailed(backgroundColor: palette.background, border: palette.redUI, foregroundColor: palette.redUI) },
-                                               chat_failed_scroller_active: { generateChatFailed(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) }
+                                               chat_failed_scroller_active: { generateChatFailed(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
+                                               poll_quiz_unselected: { generateUnslectedCap(palette.grayText) }
     )
 
 }
