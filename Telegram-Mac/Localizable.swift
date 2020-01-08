@@ -263,6 +263,12 @@ internal final class L10n {
   internal static var appearanceThemeShare: String  { return L10n.tr("Localizable", "Appearance.Theme.Share") }
   /// Follow System Appearance
   internal static var appearanceSettingsFollowSystemAppearance: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance") }
+  /// Good morning! 👋
+  internal static var appearanceSettingsChatPreview1: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.1") }
+  /// Do you know what time it is?
+  internal static var appearanceSettingsChatPreview2: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.2") }
+  /// It's morning in Tokyo 😎
+  internal static var appearanceSettingsChatPreview3: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.3") }
   /// Ah, you kids today with techno music! You should enjoy the classics, like Hasselhoff!
   internal static var appearanceSettingsChatPreviewFirstText: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.FirstText") }
   /// CHAT PREVIEW
@@ -3285,10 +3291,14 @@ internal final class L10n {
   internal static func newContactPhoneHiddenText(_ p1: String) -> String {
     return L10n.tr("Localizable", "NewContact.Phone.Hidden.Text", p1)
   }
+  /// Anonymous Votes
+  internal static var newPollAnonymous: String  { return L10n.tr("Localizable", "NewPoll.Anonymous") }
   /// Are you sure you want to discard this poll?
   internal static var newPollDisacardConfirm: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm") }
   /// Poll
   internal static var newPollDisacardConfirmHeader: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirmHeader") }
+  /// Multiple Choice
+  internal static var newPollMultipleChoice: String  { return L10n.tr("Localizable", "NewPoll.MultipleChoice") }
   /// Add an Option
   internal static var newPollOptionsAddOption: String  { return L10n.tr("Localizable", "NewPoll.OptionsAddOption") }
   /// %d
@@ -3361,6 +3371,10 @@ internal final class L10n {
   }
   /// Ask a question
   internal static var newPollQuestionPlaceholder: String  { return L10n.tr("Localizable", "NewPoll.QuestionPlaceholder") }
+  /// Quiz Mode
+  internal static var newPollQuiz: String  { return L10n.tr("Localizable", "NewPoll.Quiz") }
+  /// Quiz has only one right answer. You can't revoke their votes.
+  internal static var newPollQuizDesc: String  { return L10n.tr("Localizable", "NewPoll.QuizDesc") }
   /// New Poll
   internal static var newPollTitle: String  { return L10n.tr("Localizable", "NewPoll.Title") }
   /// No

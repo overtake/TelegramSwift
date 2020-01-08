@@ -443,6 +443,8 @@ func initialize() -> [String] {
     array.append("chat_failed_scroller")
     array.append("chat_failed_scroller_active")
 
+    array.append("poll_quiz_unselected")
+    
     return array
 }
 

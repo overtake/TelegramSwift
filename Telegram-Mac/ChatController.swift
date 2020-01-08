@@ -2032,7 +2032,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         
                     }))
-                    showModal(with: controller, for: context.window)
+                    showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 })
             }
         }
