@@ -1108,7 +1108,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             let data = editedData[url]
             let editor = EditImageModalController(data?.originalUrl ?? url, defaultData: data)
-            showModal(with: editor, for: mainWindow)
+            showModal(with: editor, for: mainWindow, animationType: .scaleCenter)
             self.editorDisposable.set((editor.result |> deliverOnMainQueue).start(next: { [weak self] new, editedData in
                 guard let `self` = self else {return}
                 if let index = self.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {

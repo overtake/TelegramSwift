@@ -124,7 +124,6 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     
     var accentList = appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil ? appearance.presentation.colors.accentList.map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
     
-    
     var cloudThemes = cloudThemes
     if let cloud = appearance.presentation.cloudTheme {
         if !cloudThemes.contains(where: {$0.id == cloud.id}) {
@@ -143,8 +142,6 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     }
     
     cloudThemes.removeAll(where:{ $0.settings != nil })
-
-    
     
     struct ListEquatable : Equatable {
         let theme: TelegramPresentationTheme
@@ -166,7 +163,6 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         let dayClassicCloud = settings.associated.first(where: { $0.local == dayClassicPalette.parent })?.cloud?.cloud
         let dayCloud = settings.associated.first(where: { $0.local == whitePalette.parent })?.cloud?.cloud
         let nightAccentCloud = settings.associated.first(where: { $0.local == nightAccentPalette.parent })?.cloud?.cloud
-
         
         var locals: [LocalPaletteWithReference] = [LocalPaletteWithReference(palette: dayClassicPalette, cloud: dayClassicCloud),
                                                    LocalPaletteWithReference(palette: whitePalette, cloud: dayCloud),
@@ -178,7 +174,6 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
                 locals[i] = local.withAccentColor(accent.color)
             }
         }
-        
         
         return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local: locals, cloudThemes: cloudThemes, viewType: accentList.isEmpty ? .lastItem : .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
             var items:[ContextMenuItem] = []

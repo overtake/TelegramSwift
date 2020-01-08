@@ -89,6 +89,17 @@ private enum NewPollMode : Equatable {
             return false
         }
     }
+    
+    func isModeEqual(to mode: NewPollMode) -> Bool {
+        switch self {
+        case .normal:
+            return !mode.isQuiz && !mode.isMultiple
+        case .quiz:
+            return mode.isQuiz
+        case .multiple:
+            return mode.isMultiple
+        }
+    }
 }
 
 private struct NewPollState : Equatable {
@@ -266,35 +277,35 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
     index += 1
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-
-
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: .firstItem, justUpdate: arc4random64(), action: {
-        updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
-    })))
-    index += 1
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: .innerItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
-        if state.mode.isMultiple {
-            updateMode(.normal(anonymous: state.mode.isAnonymous))
-        } else {
-            updateMode(.multiple(anonymous: state.mode.isAnonymous))
-        }
-    })))
-    index += 1
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: L10n.newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
-        if state.mode.isQuiz {
-            updateMode(.normal(anonymous: state.mode.isAnonymous))
-        } else {
-            updateMode(.quiz(anonymous: state.mode.isAnonymous))
-        }
-    })))
-    index += 1
-    
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
+//
+//
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: .firstItem, justUpdate: arc4random64(), action: {
+//        updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
+//    })))
+//    index += 1
+//    
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: .innerItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
+//        if state.mode.isMultiple {
+//            updateMode(.normal(anonymous: state.mode.isAnonymous))
+//        } else {
+//            updateMode(.multiple(anonymous: state.mode.isAnonymous))
+//        }
+//    })))
+//    index += 1
+//    
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: L10n.newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
+//        if state.mode.isQuiz {
+//            updateMode(.normal(anonymous: state.mode.isAnonymous))
+//        } else {
+//            updateMode(.quiz(anonymous: state.mode.isAnonymous))
+//        }
+//    })))
+//    index += 1
+//    
+//    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+//    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -335,8 +346,12 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     
     
     let updateMode:(NewPollMode)->Void = { mode in
-        updateState {
-            $0.withUnselectItems().withUpdatedMode(mode)
+        updateState { state in
+            if state.mode.isModeEqual(to: mode) {
+                return state.withUpdatedMode(mode)
+            } else {
+                return state.withUnselectItems().withUpdatedMode(mode)
+            }
         }
     }
     
