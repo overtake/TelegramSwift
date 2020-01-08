@@ -6,8 +6,8 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>6N38VWS5BX.ru.keepcoder.Telegram.TelegramShare</string>
-		<string>6N38VWS5BX.ru.keepcoder.Telegram</string>
+		<string>WDEGJM2L33.com.circlescollective.circlesfortelegram</string>
+		<string>WDEGJM2L33.com.circlescollective.circlesfortelegram.TelegramShare</string>
 	</array>
 	<key>com.apple.security.files.user-selected.read-only</key>
 	<true/>

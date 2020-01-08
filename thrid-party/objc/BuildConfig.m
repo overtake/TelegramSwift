@@ -114,7 +114,7 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
 
 
 + (NSString * _Nullable)bundleSeedId {
-    return @"6N38VWS5BX";
+    return @"WDEGJM2L33";
 }
 
 + (NSData * _Nonnull)applicationSecretTag:(bool)isCheckKey {

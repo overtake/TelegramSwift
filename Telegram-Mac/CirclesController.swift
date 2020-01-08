@@ -73,8 +73,16 @@ private func circlesControllerEntries(settings: Circles,
     
     let unreadCountDisplayCategory = notificationSettings.totalUnreadCountDisplayCategory
     
-    func getUnread(_ groupId: PeerGroupId) -> Int32 {
-        if let unread = unreadStates[groupId]?.count(countingCategory: unreadCountDisplayCategory == .chats ? .chats : .messages, mutedCategory: .all) {
+    let type: PeerGroupUnreadCountersCombinedSummary.MuteCategory
+    switch notificationSettings.totalUnreadCountDisplayStyle {
+        case .raw:
+            type = .all
+        case .filtered:
+            type = .filtered
+    }
+
+    func getUnread(_ groupId: PeerGroupId, type: PeerGroupUnreadCountersCombinedSummary.MuteCategory) -> Int32 {
+        if let unread = unreadStates[groupId]?.count(countingCategory: unreadCountDisplayCategory == .chats ? .chats : .messages, mutedCategory: type) {
             return unread
         } else {
             return 0
@@ -144,29 +152,30 @@ class CirclesRowView: TableRowView {
                 if let layer = iconView.layer  {
                     let origImage = #imageLiteral(resourceName: "Icon_AddCircle").precomposed()
                     
-                        let maskLayer = CALayer()
-                        maskLayer.frame = layer.bounds
-                        maskLayer.contents = origImage
-                        
-                        var plus = CAShapeLayer()
-                        plus.frame = iconView.bounds
-                        plus.backgroundColor = theme.colors.text.cgColor
-                        plus.mask = maskLayer
-                        layer.addSublayer(plus)
-                        
-                        var border = CAShapeLayer()
-                        border.strokeColor = theme.colors.grayIcon.cgColor
-                        border.lineDashPattern = [5, 5]
-                        border.frame = iconView.bounds
-                        border.fillColor = nil
-                        border.path = NSBezierPath(roundedRect: iconView.bounds, xRadius: 10.0, yRadius: 10.0).cgPath
-                        layer.addSublayer(border)
+                    let maskLayer = CALayer()
+                    maskLayer.frame = layer.bounds
+                    maskLayer.contents = origImage
                     
+                    var plus = CAShapeLayer()
+                    plus.frame = iconView.bounds
+                    plus.backgroundColor = theme.colors.text.cgColor
+                    plus.mask = maskLayer
+                    layer.addSublayer(plus)
+                    
+                    var border = CAShapeLayer()
+                    border.strokeColor = theme.colors.grayIcon.cgColor
+                    border.lineDashPattern = [5, 5]
+                    border.frame = iconView.bounds
+                    border.fillColor = nil
+                    border.path = NSBezierPath(roundedRect: iconView.bounds, xRadius: 10.0, yRadius: 10.0).cgPath
+                    layer.addSublayer(border)
                 }
                 
                 badgeView?.removeFromSuperview()
                 badgeView = nil
                 
+                iconView.layer?.backgroundColor = NSColor.clear.cgColor
+                iconView.image = nil
             } else {
                 let icon:CGImage = {
                     switch item.groupId {
@@ -402,20 +411,15 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         genericView.tableView.delegate = self
         let context = self.context
         
-        let previous:Atomic<[AppearanceWrapperEntry<CirclesTableEntry>]> = Atomic(value: [])
+        var previous:Atomic<[AppearanceWrapperEntry<CirclesTableEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
         
         let arguments = CirclesArguments(context: context)
         
-        let chatHistoryView: Signal<(ChatListView, ViewUpdateType), NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 10)
-        
-        let unreadCountsKey = PostboxViewKey.unreadCounts(items: [.total(nil)])
-        
-        
         let initialTransition: Signal<TableUpdateTransition, NoError> = combineLatest(
             Circles.getSettings(postbox: context.account.postbox),
             appearanceSignal
-        ) |> map { settings, appearance in
+        ) |> take(1) |> map { settings, appearance in
             var entries: [CirclesTableEntry] = []
             entries.append(.sectionId)
             entries.append(.group(
@@ -434,15 +438,16 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
                 }
             }
 
-            
             entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived", unread: 0))
             if settings.botPeerId != nil {
                 entries.append(.group(groupId: PeerGroupId(rawValue: 2), title: "New Circle", unread: 0))
             }
 
             let mappedEntries = entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            previous = Atomic(value: mappedEntries)
+            var initial:Atomic<[AppearanceWrapperEntry<CirclesTableEntry>]> = Atomic(value: [])
             return prepareTransition(
-                left: previous.swap(mappedEntries),
+                left: initial.swap(mappedEntries),
                 right: mappedEntries,
                 initialSize: initialSize.modify({$0}),
                 arguments: arguments
@@ -452,39 +457,49 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
             self?.genericView.tableView.merge(with: transition)
             self?.readyOnce()
             self?.chatListNavigationController.callback?()
-        })
-        
-        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(
-            Circles.settingsView(postbox: context.account.postbox),
-            appearanceSignal,
-            chatHistoryView,
-            appNotificationSettings(accountManager: context.sharedContext.accountManager),
-            context.account.postbox.combinedView(keys: [unreadCountsKey]))
-        |> map { settings, appearance, chatHistory, inAppSettings, _ in
-            var unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary] = [:]
-            for group in chatHistory.0.groupEntries {
-                unreadStates[group.groupId] = group.unreadState
+            
+            let unreadCountsKey = PostboxViewKey.unreadCounts(items: [.total(nil)])
+            let counterSignal: Signal<Void, NoError> = context.account.postbox.combinedView(keys: [unreadCountsKey])
+            |> mapToSignal { _ in
+                return context.account.postbox.transaction { transaction in
+                    transaction.recalculateChatListGroupStats(groupId: .root)
+                }
             }
             
-            unreadStates[.root] = context.account.postbox.groupStats(.root)
+            let chatHistoryView: Signal<(ChatListView, ViewUpdateType), NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 10)
             
-            let entries = circlesControllerEntries(settings: settings, unreadStates: unreadStates, notificationSettings: inAppSettings)
-                .map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let transition: Signal<TableUpdateTransition, NoError> = combineLatest(
+                Circles.settingsView(postbox: context.account.postbox),
+                appearanceSignal,
+                chatHistoryView,
+                appNotificationSettings(accountManager: context.sharedContext.accountManager),
+                counterSignal)
+            |> map { settings, appearance, chatHistory, inAppSettings, _ in
+                var unreadStates:[PeerGroupId:PeerGroupUnreadCountersCombinedSummary] = [:]
+                for group in chatHistory.0.groupEntries {
+                    unreadStates[group.groupId] = group.unreadState
+                }
+                
+                unreadStates[.root] = context.account.postbox.groupStats(.root)
+                
+                let entries = circlesControllerEntries(settings: settings, unreadStates: unreadStates, notificationSettings: inAppSettings)
+                    .map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                
+                return prepareTransition(
+                    left: previous.swap(entries),
+                    right: entries,
+                    initialSize: initialSize.modify({$0}),
+                    arguments: arguments
+                )
+                
+            } |> deliverOnMainQueue
             
-            return prepareTransition(
-                left: previous.swap(entries),
-                right: entries,
-                initialSize: initialSize.modify({$0}),
-                arguments: arguments
-            )
-            
-        } |> deliverOnMainQueue
-        
-        disposable.set(transition.start(next: { [weak self] transition in
-            self?.genericView.tableView.merge(with: transition)
-            self?.readyOnce()
-            self?.chatListNavigationController.callback?()
-        }))
+            transition.start(next: { [weak self] transition in
+                self?.genericView.tableView.merge(with: transition)
+                self?.readyOnce()
+                self?.chatListNavigationController.callback?()
+            })
+        })
     }
 }
 

@@ -197,7 +197,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
     config.enableNS = true;
     config.enableAGC = true;
     
-    config.logFilePath = [[@"~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/voip.log" stringByExpandingTildeInPath] UTF8String];
+    config.logFilePath = [[@"~/Library/Group Containers/WDEGJM2L33.com.circlescollective.circlesfortelegram/voip.log" stringByExpandingTildeInPath] UTF8String];
     
   //  strncpy(config.logFilePath, [[@"~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram/voip.log" stringByExpandingTildeInPath] UTF8String], sizeof(config.logFilePath));    //memset(config.logFilePath, 0, sizeof(config.logFilePath));
     
