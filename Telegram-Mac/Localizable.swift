@@ -263,6 +263,12 @@ internal final class L10n {
   internal static var appearanceThemeShare: String  { return L10n.tr("Localizable", "Appearance.Theme.Share") }
   /// Follow System Appearance
   internal static var appearanceSettingsFollowSystemAppearance: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance") }
+  /// Good morning! 👋
+  internal static var appearanceSettingsChatPreview1: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.1") }
+  /// Do you know what time it is?
+  internal static var appearanceSettingsChatPreview2: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.2") }
+  /// It's morning in Tokyo 😎
+  internal static var appearanceSettingsChatPreview3: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.3") }
   /// Ah, you kids today with techno music! You should enjoy the classics, like Hasselhoff!
   internal static var appearanceSettingsChatPreviewFirstText: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.FirstText") }
   /// CHAT PREVIEW

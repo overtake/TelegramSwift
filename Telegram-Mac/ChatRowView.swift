@@ -81,10 +81,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
     }
     
-    func updateBackground(within size: NSSize, inset: NSPoint, animated: Bool) -> Void {
+    func updateBackground(within size: NSSize, inset: NSPoint, animated: Bool, rotated: Bool = false) -> Void {
         let size = NSMakeSize(size.width, size.height + 60)
         let inset = size.height - inset.y + (frame.height - bubbleFrame.maxY) - 30
-        bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated)
+        bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
     }
     
     var selectableTextViews: [TextView] {

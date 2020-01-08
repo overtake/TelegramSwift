@@ -77,7 +77,12 @@ final class ChatMessageBubbleBackdrop: NSView {
         self.borderView.frame = bounds
     }
 
-    func update(rect: CGRect, within containerSize: CGSize, animated: Bool) {
+    func update(rect: CGRect, within containerSize: CGSize, animated: Bool, rotated: Bool = false) {
         self.backgroundContent.frame = CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize)
+        if rotated {
+            backgroundContent.rotate(byDegrees: 180)
+        } else {
+            backgroundContent.rotate(byDegrees: 0)
+        }
     }
 }
