@@ -322,7 +322,7 @@ private func newPollEntries(_ state: NewPollState, canBePublic: Bool, deleteOpti
     }
 
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: .innerItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: canBePublic ? .innerItem : .firstItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
         if state.mode.isMultiple {
             updateMode(.normal(anonymous: state.mode.isAnonymous))
         } else {
