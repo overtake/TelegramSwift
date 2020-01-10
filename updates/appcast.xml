@@ -184,11 +184,5 @@
         <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.30/Circles.for.Telegram181210-181080.delta" sparkle:version="181210" sparkle:shortVersionString="v0.0.30" sparkle:deltaFrom="181080" length="4241870" type="application/octet-stream" sparkle:edSignature="MEig8Lzk4zvqwE45pN1lBrSrWaU6vJslEYAzOuAB2hofoq3GuUJZG5PQM05WzEdfwnf+VP3GFX0Fcllt3yQFCA=="/>
       </sparkle:deltas>
     </item>
-    <item>
-      <title>v0.0.31</title>
-      <pubDate>Fri, 10 Jan 2020 17:52:30 +0800</pubDate>
-      <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
-      <enclosure url="https://raw.githubusercontent.com/Shimbo/TelegramSwift/circles/updates/circles-v0.0.31.zip" sparkle:version="181213" sparkle:shortVersionString="v0.0.30" length="39894510" type="application/octet-stream"/>
-    </item>
   </channel>
 </rss>
