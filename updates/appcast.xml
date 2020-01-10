@@ -1,5 +1,4 @@
-<?xml version="1.0" standalone="yes"?>
-<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+<?xml version="1.0" standalone="yes"?><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
   <channel>
     <title>Circles for Telegram</title>
     <item>
@@ -186,10 +185,10 @@
       </sparkle:deltas>
     </item>
     <item>
-      <title>v0.0.30</title>
+      <title>v0.0.31</title>
       <pubDate>Fri, 10 Jan 2020 17:52:30 +0800</pubDate>
       <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
-      <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.30/circles-v0.0.30.zip" sparkle:version="181213" sparkle:shortVersionString="v0.0.30" length="39894510" type="application/octet-stream"/>
+      <enclosure url="https://raw.githubusercontent.com/Shimbo/TelegramSwift/circles/updates/circles-v0.0.31.zip" sparkle:version="181213" sparkle:shortVersionString="v0.0.30" length="39894510" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>
