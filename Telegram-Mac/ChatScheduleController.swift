@@ -32,7 +32,7 @@ class ChatScheduleController: ChatController {
             alert(for: context.window, info: L10n.chatScheduledInlineButtonError)
         }
         
-        chatInteraction.vote = { _, _ in
+        chatInteraction.vote = { _, _, _ in
             alert(for: context.window, info: L10n.chatScheduledInlineButtonError)
         }
     }

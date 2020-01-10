@@ -134,7 +134,7 @@ final class ChatInteraction : InterfaceObserver  {
     var removeChatInteractively:()->Void = { }
     var updateSearchRequest: (SearchMessagesResultState)->Void = { _ in }
     var searchPeerMessages: (Peer) -> Void = { _ in }
-    var vote:(MessageId, Data?) -> Void = { _, _ in }
+    var vote:(MessageId, [Data], Bool) -> Void = { _, _, _ in }
     var closePoll:(MessageId) -> Void = { _ in }
     var openDiscussion:()->Void = { }
     var addContact:()->Void = {}

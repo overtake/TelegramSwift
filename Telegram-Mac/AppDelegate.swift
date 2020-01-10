@@ -215,6 +215,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private func launchInterface() {
         initializeAccountManagement()
         
+        
         let rootPath = containerUrl!
         let window = self.window!
         

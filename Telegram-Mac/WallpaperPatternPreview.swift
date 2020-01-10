@@ -283,6 +283,7 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
         disposable.set(signal.start(next: { [weak self] patterns in
             guard let `self` = self else {return}
             self.genericView.update(with: [nil] + patterns, selected: nil, account: self.context.account, select: { [weak self] wallpaper in
+                self?.pattern = wallpaper
                 self?.selected?(wallpaper)
             })
             self.pattern = patterns.first

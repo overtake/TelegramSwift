@@ -1331,31 +1331,33 @@ internal final class L10n {
   }
   /// Stop Poll
   internal static var chatPollStop: String  { return L10n.tr("Localizable", "Chat.Poll.Stop") }
+  /// Submit Vote
+  internal static var chatPollSubmitVote: String  { return L10n.tr("Localizable", "Chat.Poll.SubmitVote") }
   /// %d
   internal static func chatPollTotalVotesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.TotalVotes_countable", p1)
   }
-  /// %d voted
+  /// %d users voted
   internal static func chatPollTotalVotesFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.TotalVotes_few", p1)
   }
-  /// %d voted
+  /// %d users voted
   internal static func chatPollTotalVotesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.TotalVotes_many", p1)
   }
-  /// %d voted
+  /// %d user voted
   internal static func chatPollTotalVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.TotalVotes_one", p1)
   }
-  /// %d voted
+  /// %d users voted
   internal static func chatPollTotalVotesOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.TotalVotes_other", p1)
   }
-  /// %d voted
+  /// %d users voted
   internal static func chatPollTotalVotesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.TotalVotes_two", p1)
   }
-  /// %d voted
+  /// %d user voted
   internal static func chatPollTotalVotesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.TotalVotes_zero", p1)
   }
@@ -1365,6 +1367,8 @@ internal final class L10n {
   internal static var chatPollTotalVotesResultEmpty: String  { return L10n.tr("Localizable", "Chat.Poll.TotalVotesResultEmpty") }
   /// Retract Vote
   internal static var chatPollUnvote: String  { return L10n.tr("Localizable", "Chat.Poll.Unvote") }
+  /// View Results
+  internal static var chatPollViewResults: String  { return L10n.tr("Localizable", "Chat.Poll.ViewResults") }
   /// Stop Poll?
   internal static var chatPollStopConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Poll.Stop.Confirm.Header") }
   /// If you stop this poll now, nobody will be able to vote in it anymore. This action cannot be undone.
@@ -1401,8 +1405,14 @@ internal final class L10n {
   }
   /// Anonymous Poll
   internal static var chatPollTypeAnonymous: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Anonymous") }
+  /// Anonymous Quiz
+  internal static var chatPollTypeAnonymousQuiz: String  { return L10n.tr("Localizable", "Chat.Poll.Type.AnonymousQuiz") }
   /// Final Results
   internal static var chatPollTypeClosed: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Closed") }
+  /// Poll
+  internal static var chatPollTypePublic: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Public") }
+  /// Quiz
+  internal static var chatPollTypeQuiz: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Quiz") }
   /// Proxy Sponsor
   internal static var chatProxySponsoredAlertHeader: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.AlertHeader") }
   /// Settings
@@ -1413,6 +1423,44 @@ internal final class L10n {
   internal static var chatProxySponsoredCapDesc: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.CapDesc") }
   /// Proxy Sponsor
   internal static var chatProxySponsoredCapTitle: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.CapTitle") }
+  /// Stop Quiz
+  internal static var chatQuizStop: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop") }
+  /// %d
+  internal static func chatQuizTotalVotesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_countable", p1)
+  }
+  /// %d users answered
+  internal static func chatQuizTotalVotesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_few", p1)
+  }
+  /// %d users answered
+  internal static func chatQuizTotalVotesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_many", p1)
+  }
+  /// %d user answered
+  internal static func chatQuizTotalVotesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_one", p1)
+  }
+  /// %d users answered
+  internal static func chatQuizTotalVotesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_other", p1)
+  }
+  /// %d users answered
+  internal static func chatQuizTotalVotesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_two", p1)
+  }
+  /// %d user answered
+  internal static func chatQuizTotalVotesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_zero", p1)
+  }
+  /// No answers yet
+  internal static var chatQuizTotalVotesEmpty: String  { return L10n.tr("Localizable", "Chat.Quiz.TotalVotesEmpty") }
+  /// No answers
+  internal static var chatQuizTotalVotesResultEmpty: String  { return L10n.tr("Localizable", "Chat.Quiz.TotalVotesResultEmpty") }
+  /// Stop Quiz?
+  internal static var chatQuizStopConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Header") }
+  /// If you stop this quiz now, nobody will be able to answer in it anymore. This action cannot be undone.
+  internal static var chatQuizStopConfirmText: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Text") }
   /// Are you sure you want to cancel recording?
   internal static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
   /// Reminder
@@ -3375,6 +3423,8 @@ internal final class L10n {
   internal static var newPollQuiz: String  { return L10n.tr("Localizable", "NewPoll.Quiz") }
   /// Quiz has only one right answer. You can't revoke their votes.
   internal static var newPollQuizDesc: String  { return L10n.tr("Localizable", "NewPoll.QuizDesc") }
+  /// Select the correct option
+  internal static var newPollQuizTooltip: String  { return L10n.tr("Localizable", "NewPoll.QuizTooltip") }
   /// New Poll
   internal static var newPollTitle: String  { return L10n.tr("Localizable", "NewPoll.Title") }
   /// No
@@ -4107,6 +4157,8 @@ internal final class L10n {
   internal static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
   /// Invite to Group via Link
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
+  /// Poll Results
+  internal static var pollResultsTitle: String  { return L10n.tr("Localizable", "PollResults.Title") }
   /// Warning, this will unlink the group from "%@"
   internal static func preHistoryConfirmUnlink(_ p1: String) -> String {
     return L10n.tr("Localizable", "PreHistory.Confirm.Unlink", p1)

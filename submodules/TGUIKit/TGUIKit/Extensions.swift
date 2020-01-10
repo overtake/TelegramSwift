@@ -572,12 +572,14 @@ public extension NSView {
       
     }
     
-    func shake() {
+    func shake(beep: Bool = true) {
         let a:CGFloat = 3
         if let layer = layer {
             self.layer?.shake(0.04, from:NSMakePoint(-a + layer.position.x,layer.position.y), to:NSMakePoint(a + layer.position.x, layer.position.y))
         }
-        NSSound.beep()
+        if beep {
+            NSSound.beep()
+        }
     }
     
     func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {

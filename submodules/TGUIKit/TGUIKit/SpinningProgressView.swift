@@ -83,7 +83,7 @@ public class SpinningProgressView: View {
         
         currentPosition = 0
         
-        animationTimer = SwiftSignalKit.Timer(timeout: 0.05, repeat: true, completion: { [weak self] in
+        animationTimer = SwiftSignalKit.Timer(timeout: 0.04, repeat: true, completion: { [weak self] in
             self?.updateTimer()
         }, queue: .mainQueue())
         

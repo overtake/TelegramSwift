@@ -17,10 +17,13 @@ public enum TitleButtonImageDirection {
 class TextLayerExt: CATextLayer {
     
     override func draw(in ctx: CGContext) {
+        ctx.setAllowsFontSubpixelPositioning(true)
+        ctx.setShouldSubpixelPositionFonts(true)
         ctx.setAllowsAntialiasing(true)
         ctx.setShouldAntialias(true)
-        ctx.setShouldSmoothFonts(false)
-        ctx.setAllowsFontSmoothing(false)
+        ctx.setAllowsFontSmoothing(System.backingScale == 1.0)
+        ctx.setShouldSmoothFonts(System.backingScale == 1.0)
+        
         super.draw(in: ctx)
     }
     

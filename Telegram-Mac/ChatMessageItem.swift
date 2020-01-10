@@ -284,7 +284,7 @@ class ChatMessageItem: ChatRowItem {
             textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false)
             textLayout.mayBlocked = entry.renderType != .bubble
             
-            if let highlightFoundText = entry.additionalData?.highlightFoundText {
+            if let highlightFoundText = entry.additionalData.highlightFoundText {
                 if highlightFoundText.isMessage {
                     if let range = rangeOfSearch(highlightFoundText.query, in: copy.string) {
                         textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
@@ -553,6 +553,9 @@ class ChatMessageItem: ChatRowItem {
             return rightSize.height + 3
         }
         if isForceRightLine {
+            return rightSize.height
+        }
+        if unsupported {
             return rightSize.height
         }
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {

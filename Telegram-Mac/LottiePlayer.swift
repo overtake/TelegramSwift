@@ -611,6 +611,14 @@ final class LottieAnimation : Equatable {
     }
     
     var size: NSSize {
+        var size = key.size
+        while (size.width / 16) != round(size.width / 16) {
+            size.width += 1
+            size.height += 1
+        }
+        return size
+    }
+    var viewSize: NSSize {
         return key.size
     }
     var backingScale: Int {
@@ -798,7 +806,7 @@ private final class MetalRenderer: View {
         
         self.texture = context.device.makeTexture(descriptor: textureDesc)!
         
-        super.init(frame: NSMakeRect(0, 0, animation.size.width, animation.size.height))
+        super.init(frame: NSMakeRect(0, 0, animation.viewSize.width, animation.viewSize.height))
         
         self.metalLayer.device = context.device
         self.metalLayer.framebufferOnly = true
@@ -806,9 +814,13 @@ private final class MetalRenderer: View {
         self.metalLayer.contentsScale = backingScaleFactor
         self.wantsLayer = true
         self.layer?.addSublayer(metalLayer)
-        metalLayer.frame = CGRect(origin: CGPoint(), size: animation.size)
-        
+        metalLayer.frame = CGRect(origin: CGPoint(), size: animation.viewSize)
         holder?.incrementUseCount()
+    }
+    
+    override func layout() {
+        super.layout()
+        metalLayer.frame = self.bounds
     }
     
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -942,7 +954,8 @@ class LottiePlayerView : NSView {
                 } else {
                     let fallback = LottieFallbackView()
                     fallback.wantsLayer = true
-                    fallback.setFrameSize(animation.size)
+                    fallback.frame = CGRect(origin: CGPoint(), size: animation.viewSize)
+                    fallback.layer?.contentsGravity = .resize
                     self.addSubview(fallback)
                     let layer = Unmanaged.passRetained(fallback)
                     

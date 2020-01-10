@@ -985,13 +985,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let shiftSelectedDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
-    private let pollAnswersLoading: ValuePromise<[MessageId : Data]> = ValuePromise([:], ignoreRepeated: true)
-    private let pollAnswersLoadingValue: Atomic<[MessageId : Data]> = Atomic(value: [:])
+    private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
+    private let pollAnswersLoadingValue: Atomic<[MessageId : ChatPollStateData]> = Atomic(value: [:])
 
-    private var pollAnswersLoadingSignal: Signal<[MessageId : Data], NoError> {
+    private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
         return pollAnswersLoading.get()
     }
-    private func update(_ f:([MessageId : Data])-> [MessageId : Data]) -> Void {
+    private func update(_ f:([MessageId : ChatPollStateData])-> [MessageId : ChatPollStateData]) -> Void {
         pollAnswersLoading.set(pollAnswersLoadingValue.modify(f))
     }
     
@@ -1033,6 +1033,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     
     let layoutDisposable:MetaDisposable = MetaDisposable()
+    
+    private var afterNextTransaction:(()->Void)?
     
     
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()
@@ -2141,49 +2143,58 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         }
         
-        chatInteraction.vote = { [weak self] messageId, opaqueIdentifier in
+        chatInteraction.vote = { [weak self] messageId, opaqueIdentifiers, submit in
             guard let `self` = self else {return}
             
-            self.update { data -> [MessageId : Data] in
+            self.update { data -> [MessageId : ChatPollStateData] in
                 var data = data
-                if opaqueIdentifier == nil {
-                    data.removeValue(forKey: messageId)
-                } else {
-                    data[messageId] = opaqueIdentifier
-                }
+                data[messageId] = ChatPollStateData(identifiers: opaqueIdentifiers, isLoading: submit && !opaqueIdentifiers.isEmpty)
                 return data
             }
             
             let signal:Signal<Never, RequestMessageSelectPollOptionError>
 
-            
-            if opaqueIdentifier == nil {
-                signal = showModalProgress(signal: (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifier: opaqueIdentifier) |> deliverOnMainQueue), for: context.window)
-            } else {
-                signal = (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifier: opaqueIdentifier) |> deliverOnMainQueue)
+            if submit {
+                if opaqueIdentifiers.isEmpty {
+                    signal = showModalProgress(signal: (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifiers: []) |> deliverOnMainQueue), for: context.window)
+                } else {
+                    signal = (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifiers: opaqueIdentifiers) |> deliverOnMainQueue)
+                }
+                
+                self.selectMessagePollOptionDisposables.set(signal.start(error: { [weak self] error in
+                    switch error {
+                    case .generic:
+                        alert(for: context.window, info: L10n.unknownError)
+                    }
+                    self?.update { data -> [MessageId : ChatPollStateData] in
+                        var data = data
+                        data.removeValue(forKey: messageId)
+                        return data
+                    }
+                    
+                }, completed: { [weak self] in
+                    self?.update { data -> [MessageId : ChatPollStateData] in
+                        var data = data
+                        data.removeValue(forKey: messageId)
+                        return data
+                    }
+                    self?.afterNextTransaction = { [weak self] in
+                        if let tableView = self?.genericView.tableView {
+                            tableView.enumerateVisibleItems(with: { item -> Bool in
+                                if let item = item as? ChatRowItem, item.message?.id == messageId {
+                                    let view = item.view as? ChatPollItemView
+                                    view?.doAfterAnswer()
+                                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+                                    return false
+                                }
+                                return true
+                            })
+                        }
+                    }
+                    
+                }), forKey: messageId)
             }
             
-            self.selectMessagePollOptionDisposables.set(signal.start(error: { error in
-                switch error {
-                case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
-                }
-            }, completed: { [weak self] in
-                 self?.update { data -> [MessageId : Data] in
-                    var data = data
-                    data.removeValue(forKey: messageId)
-                    return data
-                }
-                if let tableView = self?.genericView.tableView {
-                    tableView.enumerateVisibleItems(with: { item -> Bool in
-                        if let item = item as? ChatRowItem, item.message?.id == messageId {
-                            NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
-                            return false
-                        }
-                        return true
-                    })
-                }
-            }), forKey: messageId)
         }
         chatInteraction.closePoll = { [weak self] messageId in
             guard let `self` = self else {return}
@@ -3314,6 +3325,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.notifyScrollHandlers()
         
+        if !transition.isEmpty, let afterNextTransaction = self.afterNextTransaction {
+            delay(0.1, closure: afterNextTransaction)
+            self.afterNextTransaction = nil
+        }
         
         
         if let view = view, !view.entries.isEmpty {

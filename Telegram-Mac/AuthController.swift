@@ -774,6 +774,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         
         #if !APP_STORE
             addSubview(updateController.view)
+        
             updateController.frame = NSMakeRect(0, frame.height - 60, frame.width, 60)
         #endif
         

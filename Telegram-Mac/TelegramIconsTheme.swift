@@ -5646,6 +5646,123 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var poll_selected: CGImage {
+      if let image = cached.with({ $0["poll_selected"] }) {
+          return image
+      } else {
+          let image = _poll_selected()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_correct: CGImage {
+      if let image = cached.with({ $0["poll_selected_correct"] }) {
+          return image
+      } else {
+          let image = _poll_selected_correct()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_correct"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incorrect: CGImage {
+      if let image = cached.with({ $0["poll_selected_incorrect"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incorrect()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incorrect"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incoming: CGImage {
+      if let image = cached.with({ $0["poll_selected_incoming"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_correct_incoming: CGImage {
+      if let image = cached.with({ $0["poll_selected_correct_incoming"] }) {
+          return image
+      } else {
+          let image = _poll_selected_correct_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_correct_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incorrect_incoming: CGImage {
+      if let image = cached.with({ $0["poll_selected_incorrect_incoming"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incorrect_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incorrect_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_outgoing: CGImage {
+      if let image = cached.with({ $0["poll_selected_outgoing"] }) {
+          return image
+      } else {
+          let image = _poll_selected_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_correct_outgoing: CGImage {
+      if let image = cached.with({ $0["poll_selected_correct_outgoing"] }) {
+          return image
+      } else {
+          let image = _poll_selected_correct_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_correct_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incorrect_outgoing: CGImage {
+      if let image = cached.with({ $0["poll_selected_incorrect_outgoing"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incorrect_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incorrect_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6081,6 +6198,15 @@ final class TelegramIconsTheme {
   private let _chat_failed_scroller: ()->CGImage
   private let _chat_failed_scroller_active: ()->CGImage
   private let _poll_quiz_unselected: ()->CGImage
+  private let _poll_selected: ()->CGImage
+  private let _poll_selected_correct: ()->CGImage
+  private let _poll_selected_incorrect: ()->CGImage
+  private let _poll_selected_incoming: ()->CGImage
+  private let _poll_selected_correct_incoming: ()->CGImage
+  private let _poll_selected_incorrect_incoming: ()->CGImage
+  private let _poll_selected_outgoing: ()->CGImage
+  private let _poll_selected_correct_outgoing: ()->CGImage
+  private let _poll_selected_incorrect_outgoing: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -6516,7 +6642,16 @@ final class TelegramIconsTheme {
       login_qr_empty_cap: @escaping()->CGImage,
       chat_failed_scroller: @escaping()->CGImage,
       chat_failed_scroller_active: @escaping()->CGImage,
-      poll_quiz_unselected: @escaping()->CGImage
+      poll_quiz_unselected: @escaping()->CGImage,
+      poll_selected: @escaping()->CGImage,
+      poll_selected_correct: @escaping()->CGImage,
+      poll_selected_incorrect: @escaping()->CGImage,
+      poll_selected_incoming: @escaping()->CGImage,
+      poll_selected_correct_incoming: @escaping()->CGImage,
+      poll_selected_incorrect_incoming: @escaping()->CGImage,
+      poll_selected_outgoing: @escaping()->CGImage,
+      poll_selected_correct_outgoing: @escaping()->CGImage,
+      poll_selected_incorrect_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6952,5 +7087,14 @@ final class TelegramIconsTheme {
       self._chat_failed_scroller = chat_failed_scroller
       self._chat_failed_scroller_active = chat_failed_scroller_active
       self._poll_quiz_unselected = poll_quiz_unselected
+      self._poll_selected = poll_selected
+      self._poll_selected_correct = poll_selected_correct
+      self._poll_selected_incorrect = poll_selected_incorrect
+      self._poll_selected_incoming = poll_selected_incoming
+      self._poll_selected_correct_incoming = poll_selected_correct_incoming
+      self._poll_selected_incorrect_incoming = poll_selected_incorrect_incoming
+      self._poll_selected_outgoing = poll_selected_outgoing
+      self._poll_selected_correct_outgoing = poll_selected_correct_outgoing
+      self._poll_selected_incorrect_outgoing = poll_selected_incorrect_outgoing
   }
 }
