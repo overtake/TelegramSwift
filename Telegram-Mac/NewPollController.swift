@@ -100,6 +100,24 @@ private enum NewPollMode : Equatable {
             return mode.isMultiple
         }
     }
+    
+    var publicity: TelegramMediaPollPublicity {
+        if isAnonymous {
+            return .anonymous
+        } else {
+            return .public
+        }
+    }
+    var kind: TelegramMediaPollKind {
+        switch self {
+        case .normal:
+            return .poll(multipleAnswers: false)
+        case .multiple:
+            return .poll(multipleAnswers: true)
+        case .quiz:
+            return .quiz
+        }
+    }
 }
 
 private struct NewPollState : Equatable {
@@ -171,24 +189,38 @@ private struct NewPollState : Equatable {
         let isEnabled = !title.trimmed.isEmpty && options.filter({!$0.text.trimmed.isEmpty}).count >= 2
         switch self.mode {
         case .quiz:
-            return isEnabled && self.options.contains(where: { $0.selected })
+            if let option = self.options.first(where: {$0.selected }) {
+                if option.text.trimmed.isEmpty {
+                    return false
+                }
+            }
+            return isEnabled
         default:
             return isEnabled
         }
     }
     
+    var shouldShowTooltipForQuiz: Bool {
+        return self.mode.isQuiz && !self.options.contains(where: { $0.selected })
+    }
+    
     var media: TelegramMediaPoll {
         var options: [TelegramMediaPollOption] = []
+        var answers: [Data]?
         for (i, option) in self.options.enumerated() {
             if !option.text.trimmed.isEmpty {
                 options.append(TelegramMediaPollOption(text: option.text.trimmed, opaqueIdentifier: "\(i)".data(using: .utf8)!))
+                if option.selected {
+                    answers = [options.last!.opaqueIdentifier]
+                }
             }
         }
-        return TelegramMediaPoll(pollId: MediaId(namespace: Namespaces.Media.LocalPoll, id: arc4random64()), text: title.trimmed, options: options, results: TelegramMediaPollResults(voters: nil, totalVoters: nil), isClosed: false)
+        
+        return TelegramMediaPoll(pollId: MediaId(namespace: Namespaces.Media.LocalPoll, id: arc4random64()), publicity: mode.publicity, kind: mode.kind, text: title.trimmed, options: options, correctAnswers: answers, results: TelegramMediaPollResults(voters: nil, totalVoters: nil, recentVoters: []), isClosed: false)
     }
 }
 
-private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputDataIdentifier) -> Void, updateQuizSelected:@escaping(InputDataIdentifier) -> Void, updateMode: @escaping(NewPollMode)->Void) -> [InputDataEntry] {
+private func newPollEntries(_ state: NewPollState, canBePublic: Bool, deleteOption:@escaping(InputDataIdentifier) -> Void, updateQuizSelected:@escaping(InputDataIdentifier) -> Void, updateMode: @escaping(NewPollMode)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -273,39 +305,43 @@ private func newPollEntries(_ state: NewPollState, deleteOption:@escaping(InputD
 
     index = 50
     
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.options.count < 2 ? L10n.newPollOptionsDescriptionMinimumCountable(2) : optionsLimit == state.options.count ? L10n.newPollOptionsDescriptionLimitReached : L10n.newPollOptionsDescriptionCountable(optionsLimit - state.options.count)), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
     
     
-//    entries.append(.sectionId(sectionId, type: .normal))
-//    sectionId += 1
-//
-//
-//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: .firstItem, justUpdate: arc4random64(), action: {
-//        updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
-//    })))
-//    index += 1
-//    
-//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: .innerItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
-//        if state.mode.isMultiple {
-//            updateMode(.normal(anonymous: state.mode.isAnonymous))
-//        } else {
-//            updateMode(.multiple(anonymous: state.mode.isAnonymous))
-//        }
-//    })))
-//    index += 1
-//    
-//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: L10n.newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
-//        if state.mode.isQuiz {
-//            updateMode(.normal(anonymous: state.mode.isAnonymous))
-//        } else {
-//            updateMode(.quiz(anonymous: state.mode.isAnonymous))
-//        }
-//    })))
-//    index += 1
-//    
-//    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-//    index += 1
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
+    
+    if canBePublic {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: .firstItem, justUpdate: arc4random64(), action: {
+            updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
+        })))
+        index += 1
+    }
+
+    
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: .innerItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
+        if state.mode.isMultiple {
+            updateMode(.normal(anonymous: state.mode.isAnonymous))
+        } else {
+            updateMode(.multiple(anonymous: state.mode.isAnonymous))
+        }
+    })))
+    index += 1
+    
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: L10n.newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
+        if state.mode.isQuiz {
+            updateMode(.normal(anonymous: state.mode.isAnonymous))
+        } else {
+            updateMode(.quiz(anonymous: state.mode.isAnonymous))
+        }
+    })))
+    index += 1
+    
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -372,12 +408,16 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     var close: (() -> Void)? = nil
     
     
+    var showTooltipForQuiz:(()->Void)? = nil
+    
     let checkAndSend:() -> Void = {
         let state = stateValue.with { $0 }
     
-        if state.isEnabled {
+        if state.isEnabled && !state.shouldShowTooltipForQuiz {
             chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil, false, nil)
             close?()
+        } else if state.shouldShowTooltipForQuiz {
+            showTooltipForQuiz?()
         }
     }
     
@@ -387,11 +427,16 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     }, drawBorder: true, height: 50, singleButton: true)
     
     
-   
+    let canBePublic: Bool
+    if let peer = chatInteraction.presentation.mainPeer {
+        canBePublic = !peer.isChannel
+    } else {
+        canBePublic = true
+    }
     
     
     let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> map { value in
-        return InputDataSignalValue(entries: newPollEntries(value, deleteOption: deleteOption, updateQuizSelected: updateQuizSelected, updateMode: updateMode), animated: animated.swap(true))
+        return InputDataSignalValue(entries: newPollEntries(value, canBePublic: canBePublic, deleteOption: deleteOption, updateQuizSelected: updateQuizSelected, updateMode: updateMode), animated: animated.swap(true))
     }
     
     
@@ -621,6 +666,15 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     
     close = { [weak modalController] in
         modalController?.modal?.close()
+    }
+    
+    showTooltipForQuiz = { [weak controller] in
+        let firstOption = stateValue.with({ $0.options.first })
+        if let option = firstOption {
+            let view = controller?.tableView.item(stableId: InputDataEntryId.input(option.identifier))?.view as? InputDataRowView
+            view?.showPlaceholderActionTooltip(L10n.newPollQuizTooltip)
+        }
+        
     }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: close)

@@ -26,6 +26,27 @@ private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImag
     })!
 }
 
+private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        
+        ctx.setBlendMode(.copy)
+        ctx.round(size, size.height / 2)
+        ctx.setFillColor(backgound.cgColor)
+        ctx.fill(rect)
+        
+        ctx.setBlendMode(.normal)
+        let image = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+        if backgound == NSColor(0xffffff) {
+            ctx.clip(to: rect, mask: image)
+            ctx.clear(rect)
+        } else {
+            ctx.draw(image, in: rect.focus(image.backingSize))
+        }
+    })!
+}
+
 private func generateLoginQrEmptyCap() -> CGImage {
     return generateImage(NSMakeSize(60, 60), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -1498,7 +1519,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                readMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                sendingImage: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.grayIcon, flipVertical:true) },
                                                sendingImageSelected: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.underSelectedColor, flipVertical:true) },
-                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.accentIcon, flipVertical:true) },
+                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.accent, flipVertical:true) },
                                                secretImageSelected:{  #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                pinnedImage: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true) },
                                                pinnedImageSelected: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.underSelectedColor, flipVertical:true) },
@@ -1938,7 +1959,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                login_qr_empty_cap: { generateLoginQrEmptyCap() },
                                                chat_failed_scroller: { generateChatFailed(backgroundColor: palette.background, border: palette.redUI, foregroundColor: palette.redUI) },
                                                chat_failed_scroller_active: { generateChatFailed(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
-                                               poll_quiz_unselected: { generateUnslectedCap(palette.grayText) }
+                                               poll_quiz_unselected: { generateUnslectedCap(palette.grayText) },
+                                               poll_selected: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity) },
+                                               poll_selected_correct: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenUI) },
+                                               poll_selected_incorrect: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redUI) },
+                                               poll_selected_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming) },
+                                               poll_selected_correct_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_incoming) },
+                                               poll_selected_incorrect_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_incoming) },
+                                               poll_selected_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
+                                               poll_selected_correct_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_outgoing) },
+                                               poll_selected_incorrect_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_outgoing) }
     )
 
 }
@@ -1951,7 +1981,7 @@ func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: B
                                          contextMenuBackgroundColor: palette.background,
                                          textColor: palette.text,
                                          grayTextColor: palette.grayText,
-                                         secretChatTextColor: bubbled && palette.name == dayClassicPalette.name ? palette.accentIconBubble_outgoing : palette.accent,
+                                         secretChatTextColor: palette.accent,
                                          peerTextColor: palette.text,
                                          activityColor: palette.accent,
                                          activitySelectedColor: palette.underSelectedColor,
@@ -2047,5 +2077,4 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
 func setDefaultTheme(for window: Window? = nil) {
     telegramUpdateTheme(generateTheme(palette: dayClassicPalette, cloudTheme: nil, bubbled: false, fontSize: 13.0, wallpaper: ThemeWallpaper()), window: window, animated: false)
 }
-
 

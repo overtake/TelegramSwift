@@ -47,7 +47,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var forwardAccessory: ChatBubbleAccessoryForward? = nil
     private var viaAccessory: ChatBubbleViaAccessory? = nil
     
-    private var bubbleView = ChatMessageBubbleBackdrop()
+    let bubbleView = ChatMessageBubbleBackdrop()
     
     private var scamButton: ImageButton? = nil
     private var scamForwardButton: ImageButton? = nil

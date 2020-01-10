@@ -657,6 +657,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         return super.firstResponder
     }
     
+    func showPlaceholderActionTooltip(_ text: String) -> Void {
+        if let placeholderAction = placeholderAction {
+            tooltip(for: placeholderAction, text: text)
+        }
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         
         guard let item = item as? InputDataRowItem else {return}

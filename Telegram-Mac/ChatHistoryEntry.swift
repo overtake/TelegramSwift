@@ -97,11 +97,20 @@ enum ChatHistoryEntryId : Hashable {
 
 }
 
+struct ChatPollStateData : Equatable {
+    let identifiers: [Data]
+    let isLoading: Bool
+    init(identifiers: [Data] = [], isLoading: Bool = false) {
+        self.identifiers = identifiers
+        self.isLoading = isLoading
+    }
+}
+
 struct MessageEntryAdditionalData : Equatable {
-    let opaqueIdentifier: Data?
+    let pollStateData: ChatPollStateData
     let highlightFoundText: HighlightFoundText?
-    init(opaqueIdentifier: Data?, highlightFoundText: HighlightFoundText?) {
-        self.opaqueIdentifier = opaqueIdentifier
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil) {
+        self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
     }
 }
@@ -117,9 +126,9 @@ struct HighlightFoundText : Equatable {
 
 final class ChatHistoryEntryData : Equatable {
     let location: MessageHistoryEntryLocation?
-    let additionData: MessageEntryAdditionalData?
+    let additionData: MessageEntryAdditionalData
     let autoPlay: AutoplayMediaPreferences?
-    init(_ location: MessageHistoryEntryLocation?, _ additionData: MessageEntryAdditionalData?, _ autoPlay: AutoplayMediaPreferences?) {
+    init(_ location: MessageHistoryEntryLocation?, _ additionData: MessageEntryAdditionalData, _ autoPlay: AutoplayMediaPreferences?) {
         self.location = location
         self.additionData = additionData
         self.autoPlay = autoPlay
@@ -180,12 +189,12 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     }
     
     
-    var additionalData: MessageEntryAdditionalData? {
+    var additionalData: MessageEntryAdditionalData {
         switch self {
         case let .MessageEntry(_,_,_,_,_,_,data):
             return data.additionData
         default:
-            return nil
+            return MessageEntryAdditionalData()
         }
     }
     
@@ -366,7 +375,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:]) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:]) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -597,7 +606,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
         }
         
-        let additionalData: MessageEntryAdditionalData?
+        let additionalData: MessageEntryAdditionalData
         var highlightFoundText: HighlightFoundText? = nil
         
         
@@ -606,10 +615,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         
-        if let opaqueData = pollAnswersLoading[message.id] {
-            additionalData = MessageEntryAdditionalData(opaqueIdentifier: opaqueData, highlightFoundText: highlightFoundText)
+        if let data = pollAnswersLoading[message.id] {
+            additionalData = MessageEntryAdditionalData(pollStateData: data, highlightFoundText: highlightFoundText)
         } else {
-            additionalData = MessageEntryAdditionalData(opaqueIdentifier: nil, highlightFoundText: highlightFoundText)
+            additionalData = MessageEntryAdditionalData(pollStateData: ChatPollStateData(), highlightFoundText: highlightFoundText)
         }
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, data)

@@ -575,7 +575,7 @@ class ChatRowItem: TableRowItem {
         if authorIsChannel {
             return false
         }
-        if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) {
+        if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
             return false
         }
         

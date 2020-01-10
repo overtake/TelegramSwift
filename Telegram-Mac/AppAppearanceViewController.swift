@@ -209,9 +209,10 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         
         struct ALEquatable : Equatable {
             let accentList: [AppearanceAccentColor]
+            let theme: TelegramPresentationTheme
         }
         
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(accentList: accentList)), item: { initialSize, stableId in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(accentList: accentList, theme: appearance.presentation)), item: { initialSize, stableId in
             return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
                 var items:[ContextMenuItem] = []
                 if let cloud = accent.cloudTheme {

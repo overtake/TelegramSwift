@@ -210,6 +210,11 @@
 		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
+		A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2923C75F1100DD307B /* Confetti.swift */; };
+		A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC2D23C77AD800DD307B /* confetti.mp3 */; };
+		A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2F23C8985300DD307B /* SoundEffects.swift */; };
+		A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */; };
+		A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC3223C8988300DD307B /* quiz-correct.mp3 */; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
 		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
@@ -1240,6 +1245,11 @@
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
+		A778DC2923C75F1100DD307B /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
+		A778DC2D23C77AD800DD307B /* confetti.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = confetti.mp3; sourceTree = "<group>"; };
+		A778DC2F23C8985300DD307B /* SoundEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffects.swift; sourceTree = "<group>"; };
+		A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-incorrect.mp3"; sourceTree = "<group>"; };
+		A778DC3223C8988300DD307B /* quiz-correct.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-correct.mp3"; sourceTree = "<group>"; };
 		A7B5030E23B62E0000C9838E /* nanosvg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanosvg.c; sourceTree = "<group>"; };
 		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
 		A7B5031123B62E1700C9838E /* Svg.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Svg.m; sourceTree = "<group>"; };
@@ -2468,6 +2478,16 @@
 			name = polls;
 			sourceTree = "<group>";
 		};
+		A778DC2C23C77ACB00DD307B /* sounds */ = {
+			isa = PBXGroup;
+			children = (
+				A778DC3223C8988300DD307B /* quiz-correct.mp3 */,
+				A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */,
+				A778DC2D23C77AD800DD307B /* confetti.mp3 */,
+			);
+			path = sounds;
+			sourceTree = "<group>";
+		};
 		A7B5030D23B62DF200C9838E /* svg */ = {
 			isa = PBXGroup;
 			children = (
@@ -3131,6 +3151,8 @@
 			children = (
 				C2B9BE881EFC5E7000D6B96F /* Appearance.swift */,
 				D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */,
+				A778DC2923C75F1100DD307B /* Confetti.swift */,
+				A778DC2F23C8985300DD307B /* SoundEffects.swift */,
 			);
 			name = appearance;
 			sourceTree = "<group>";
@@ -3401,6 +3423,7 @@
 		C252532B1DF043D800ADBC98 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				A778DC2C23C77ACB00DD307B /* sounds */,
 				D07450DB233D617B00769D7F /* wallet */,
 				9F0367E622707B6400456348 /* lottie */,
 				9F0AE6B42199904400A8B53A /* sound_a.caf */,
@@ -4782,6 +4805,7 @@
 				C2057FA71EBBCEA7000423DC /* voip_fail.caf in Resources */,
 				C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */,
 				9F0AE6B52199904400A8B53A /* sound_a.caf in Resources */,
+				A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */,
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
@@ -4827,7 +4851,9 @@
 				D07450E6233D61B800769D7F /* brilliant_static.tgs in Resources */,
 				9F03681522771A9700456348 /* anim_hide.json in Resources */,
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
+				A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */,
 				9F03681022771A9700456348 /* anim_ungroup.json in Resources */,
+				A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */,
 				D07450EC233D61B800769D7F /* swap_money.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
@@ -5114,6 +5140,7 @@
 				C234A7FB1ED7112400EBBECE /* LocalizableExtension.swift in Sources */,
 				9FDA713420E65D49001ED8ED /* PeerMediaPlayerAnimationView.swift in Sources */,
 				C225524B1F7BE7000007944D /* VideoRecorderModalController.swift in Sources */,
+				A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */,
 				C253E2361DE398580022A29F /* AudioPlayer.swift in Sources */,
 				C2B648901EB25B1700BA574B /* MediaResources.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
@@ -5193,6 +5220,7 @@
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
 				9F77B3982211979B003B65B8 /* AutoplayPreferences.swift in Sources */,
 				C2DF47BE1DE79574003AA6C0 /* opus_header.c in Sources */,
+				A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */,
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
 				C256A9161FB9E1490043D497 /* AdditionalSettings.swift in Sources */,
 				C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */,

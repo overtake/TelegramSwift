@@ -389,7 +389,7 @@ class ChatMediaItem: ChatRowItem {
             captionLayout?.interactions = interactions
             
             if let textLayout = self.captionLayout {
-                if let highlightFoundText = entry.additionalData?.highlightFoundText {
+                if let highlightFoundText = entry.additionalData.highlightFoundText {
                     if highlightFoundText.isMessage {
                         if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
                             textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
