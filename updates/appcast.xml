@@ -193,5 +193,13 @@
       <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
       <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.31/circles-v0.0.31.zip" sparkle:version="181217" sparkle:shortVersionString="v0.0.31" length="39894444" type="application/octet-stream"/>
     </item>
+    <item>
+      <description>&lt;h3&gt;Release Notes:&lt;/h3&gt;
+&lt;ul&gt;&lt;li&gt;Minor bugfixes&lt;/li&gt;&lt;/ul&gt;</description>
+      <title>v0.0.32</title>
+      <pubDate>Sat, 11 Jan 2020 11:22:38 +0800</pubDate>
+      <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.32/circles-v0.0.32.zip" sparkle:version="181218" sparkle:shortVersionString="v0.0.32" length="39894333" type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
