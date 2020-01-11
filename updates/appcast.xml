@@ -1,4 +1,5 @@
-<?xml version="1.0" standalone="yes"?><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
   <channel>
     <title>Circles for Telegram</title>
     <item>
@@ -183,6 +184,14 @@
         <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.30/Circles.for.Telegram181210-181088.delta" sparkle:version="181210" sparkle:shortVersionString="v0.0.30" sparkle:deltaFrom="181088" length="4214676" type="application/octet-stream" sparkle:edSignature="7WYP3izExLGk2XcaPnx5QQBDNN0USyrZyAC5jd1tbGmoOVv3kQD5LFxpwaclfws8OSH+qVLIwaNBzDOIew2IAw=="/>
         <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.30/Circles.for.Telegram181210-181080.delta" sparkle:version="181210" sparkle:shortVersionString="v0.0.30" sparkle:deltaFrom="181080" length="4241870" type="application/octet-stream" sparkle:edSignature="MEig8Lzk4zvqwE45pN1lBrSrWaU6vJslEYAzOuAB2hofoq3GuUJZG5PQM05WzEdfwnf+VP3GFX0Fcllt3yQFCA=="/>
       </sparkle:deltas>
+    </item>
+    <item>
+      <description>&lt;h3&gt;Release Notes:&lt;/h3&gt;
+&lt;ul&gt;&lt;li&gt;Sign app with production certs&lt;/li&gt;&lt;/ul&gt;</description>
+      <title>v0.0.31</title>
+      <pubDate>Fri, 10 Jan 2020 19:24:58 +0800</pubDate>
+      <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.31/circles-v0.0.31.zip" sparkle:version="181217" sparkle:shortVersionString="v0.0.31" length="39894444" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>
