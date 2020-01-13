@@ -18,14 +18,8 @@ import SyncCore
 private enum PeerAvatarReference : Equatable {
     static func == (lhs: PeerAvatarReference, rhs: PeerAvatarReference) -> Bool {
         switch lhs {
-        case let .letters(peerId, letters):
-            if case .letters(peerId, letters) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .image(ref, lhsPeer, rep):
-            if case .image(ref, let rhsPeer, rep) = rhs {
+        case let .image(lhsPeer, rep):
+            if case .image(let rhsPeer, rep) = rhs {
                 return lhsPeer.isEqual(rhsPeer)
             } else {
                 return false
@@ -33,16 +27,11 @@ private enum PeerAvatarReference : Equatable {
         }
     }
     
-    case letters(PeerId, [String])
-    case image(PeerReference, Peer, TelegramMediaImageRepresentation)
+    case image(Peer, TelegramMediaImageRepresentation?)
     
-    
-    
-    var peerId: PeerId {
+        var peerId: PeerId {
         switch self {
-        case let .letters(value, _):
-            return value
-        case let .image(value, _, _):
+        case let .image(value, _):
             return value.id
         }
     }
@@ -50,11 +39,7 @@ private enum PeerAvatarReference : Equatable {
 
 private extension PeerAvatarReference {
     init(peer: Peer) {
-        if let photo = peer.smallProfileImage, let peerReference = PeerReference(peer) {
-            self = .image(peerReference, peer, photo)
-        } else {
-            self = .letters(peer.id, peer.displayLetters)
-        }
+        self = .image(peer, peer.smallProfileImage)
     }
 }
 
@@ -77,10 +62,8 @@ private final class MergedAvatarsView: Control {
     }
     
     func update(context: AccountContext, peers: [Peer], message: Message?, synchronousLoad: Bool) {
-        var filteredPeers = peers.map(PeerAvatarReference.init)
-        if filteredPeers.count > 3 {
-            filteredPeers.dropLast(filteredPeers.count - 3)
-        }
+        var filteredPeers = Array(peers.map(PeerAvatarReference.init).prefix(3))
+
         if filteredPeers != self.peers {
             self.peers = filteredPeers
             
@@ -112,7 +95,7 @@ private final class MergedAvatarsView: Control {
             }
             for peer in filteredPeers {
                 switch peer {
-                case let .image(peerReference, peer, representation):
+                case let .image(peer, representation):
                     if self.disposables[peer.id] == nil {
                         let signal = peerAvatarImage(account: context.account, photo: PeerPhoto.peer(peer, representation, peer.displayLetters, message), displayDimensions: NSMakeSize(20, 20), scale: backingScaleFactor, font: avatarFont, synchronousLoad: synchronousLoad)
                         let disposable = (signal
@@ -127,8 +110,6 @@ private final class MergedAvatarsView: Control {
                             })
                         self.disposables[peer.id] = disposable
                     }
-                case .letters:
-                    break
                 }
             }
             self.setNeedsDisplay()
@@ -158,17 +139,13 @@ private final class MergedAvatarsView: Control {
             context.setFillColor(NSColor.clear.cgColor)
             context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
             
-            switch self.peers[i] {
-            case let .image(reference):
-                if let image = self.images[self.peers[i].peerId] {
-                    context.draw(image, in: imageRect)
-                } else {
-                    context.setFillColor(NSColor.gray.cgColor)
-                    context.fillEllipse(in: imageRect)
-                }
-            default:
-                break
+            if let image = self.images[self.peers[i].peerId] {
+                context.draw(image, in: imageRect)
+            } else {
+                context.setFillColor(NSColor.gray.cgColor)
+                context.fillEllipse(in: imageRect)
             }
+            
             currentX -= mergedImageSpacing
             context.restoreGState()
         }

@@ -476,7 +476,6 @@ class SharedAccountContext {
         
         #if !SHARE
         var spotlights:[AccountRecordId : SpotlightContext] = [:]
-        #endif
         
         _ = signal.start(next: { (primary, accounts, photos) in
             self.activeAccountsInfoValue = (primary, accounts)
@@ -490,6 +489,7 @@ class SharedAccountContext {
             }
             #endif
         })
+        #endif
     }
     
     public func beginNewAuth(testingEnvironment: Bool) {

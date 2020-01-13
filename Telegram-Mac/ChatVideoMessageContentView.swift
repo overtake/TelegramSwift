@@ -77,7 +77,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     private let fetchDisposable = MetaDisposable()
     private let playerDisposable = MetaDisposable()
     private let updateMouseDisposable = MetaDisposable()
-    private  weak var inlinePlayer: APController?
     
     private var durationView:ChatMessageAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
     private let videoCorner: VideoMessageCorner = VideoMessageCorner()
@@ -149,11 +148,10 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 } else {
                     let controller:APController
                     if parameters.isWebpage, let wrapper = singleWrapper {
-                        controller = APSingleResourceController(account: context.account, wrapper: wrapper, streamable: false, initialTimebase: inlinePlayer?.timebase)
+                        controller = APSingleResourceController(account: context.account, wrapper: wrapper, streamable: false)
                       //  controller.set(trackProgress: controller.c)
                     } else {
-                        controller = APChatVoiceController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent), initialTimebase: inlinePlayer?.timebase)
-                      //  controller.timebase = inlinePlayer?.timebase
+                        controller = APChatVoiceController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
                     }
                     
                     parameters.showPlayer(controller)
@@ -277,20 +275,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         let timebase:CMTimebase? = globalAudio?.currentSong?.stableId == parent?.chatStableId ? globalAudio?.timebase : nil
         player.set(data: acceptVisibility ? data : nil, timebase: timebase)
         
-        if mouseInside(), let context = context, let singleWrapper = singleWrapper {
-            if globalAudio == nil, fetchStatus == .Local, parameters?.soundOnHover == true, !hasPictureInPicture {
-                let player = APSingleResourceController(account: context.account, wrapper: singleWrapper, streamable: false)
-                player.add(listener: self)
-                player.start()
-                self.inlinePlayer = globalAudio
-            }
-        } else {
-            if let inlinePlayer = inlinePlayer {
-                inlinePlayer.complete()
-                inlinePlayer.remove(listener: self)
-            }
-            
-        }
     }
     
     func updateListeners() {
@@ -312,10 +296,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         player.set(data: nil)
         updateMouseDisposable.dispose()
         
-        if let inlinePlayer = inlinePlayer {
-            inlinePlayer.complete()
-            inlinePlayer.remove(listener: self)
-        }
     }
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
@@ -324,9 +304,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
-        if mediaUpdated {
-            self.inlinePlayer = nil
-        }
         
         updateListeners()
         
