@@ -365,6 +365,9 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         
         context.window.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self {
+                if strongSelf.window?.firstResponder?.className == "TGUIKit.SearchTextField" {
+                    return .rejected
+                }
                 return strongSelf.invoke()
             }
             return .invokeNext
