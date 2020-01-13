@@ -48,7 +48,7 @@ class ShareViewController: NSViewController {
         let deviceSpecificEncryptionParameters = BuildConfig.deviceSpecificEncryptionParameters(rootPath, baseAppBundleId: Bundle.main.bundleIdentifier!)
         let encryptionParameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
 
-        
+        NSLog("shareExtensionStep: 1")
         
         
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
@@ -62,7 +62,7 @@ class ShareViewController: NSViewController {
         Logger.setSharedLogger(logger)
         
         
-        
+        NSLog("shareExtensionStep: 2")
         
         
         let themeSemaphore = DispatchSemaphore(value: 0)
@@ -73,6 +73,7 @@ class ShareViewController: NSViewController {
         })
         themeSemaphore.wait()
         
+        NSLog("shareExtensionStep: 3")
         
         var localization: LocalizationSettings? = nil
         let localizationSemaphore = DispatchSemaphore(value: 0)
@@ -82,16 +83,21 @@ class ShareViewController: NSViewController {
         }).start()
         localizationSemaphore.wait()
         
+        NSLog("shareExtensionStep: 4")
+        
         if let localization = localization {
             applyShareUILocalization(localization)
         }
         
+        NSLog("shareExtensionStep: 5")
+        
         updateTheme(with: themeSettings)
         
-        
+        NSLog("shareExtensionStep: 6")
         
         let extensionContext = self.extensionContext!
         
+        NSLog("shareExtensionStep: 7")
 
         initializeAccountManagement()
         
@@ -133,6 +139,7 @@ class ShareViewController: NSViewController {
             
             passlock.view.frame = self.view.bounds
             self.view.addSubview(passlock.view)
+            NSLog("shareExtensionStep: 8")
         default:
             break
         }
@@ -143,7 +150,9 @@ class ShareViewController: NSViewController {
             
         } |> deliverOnMainQueue).start(next: { context in
                 assert(Queue.mainQueue().isCurrent())
-                
+            
+            NSLog("shareExtensionStep: 9")
+            
                 if let context = context {
                     context.rootController.view.frame = self.view.bounds
                     
