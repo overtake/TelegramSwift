@@ -2152,7 +2152,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return data
             }
             
-            let signal:Signal<Never, RequestMessageSelectPollOptionError>
+            let signal:Signal<TelegramMediaPoll?, RequestMessageSelectPollOptionError>
 
             if submit {
                 if opaqueIdentifiers.isEmpty {
@@ -2161,7 +2161,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     signal = (requestMessageSelectPollOption(account: context.account, messageId: messageId, opaqueIdentifiers: opaqueIdentifiers) |> deliverOnMainQueue)
                 }
                 
-                self.selectMessagePollOptionDisposables.set(signal.start(error: { [weak self] error in
+                self.selectMessagePollOptionDisposables.set(signal.start(next: { [weak self] poll in
+                    if let poll = poll {
+                        self?.update { data -> [MessageId : ChatPollStateData] in
+                            var data = data
+                            data.removeValue(forKey: messageId)
+                            return data
+                        }
+                        self?.afterNextTransaction = { [weak self] in
+                            if let tableView = self?.genericView.tableView {
+                                tableView.enumerateVisibleItems(with: { item -> Bool in
+                                    if let item = item as? ChatRowItem, item.message?.id == messageId {
+                                        let view = item.view as? ChatPollItemView
+                                        view?.doAfterAnswer()
+                                        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+                                        return false
+                                    }
+                                    return true
+                                })
+                            }
+                        }
+                    }
+                }, error: { [weak self] error in
                     switch error {
                     case .generic:
                         alert(for: context.window, info: L10n.unknownError)
@@ -2170,26 +2191,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         var data = data
                         data.removeValue(forKey: messageId)
                         return data
-                    }
-                    
-                }, completed: { [weak self] in
-                    self?.update { data -> [MessageId : ChatPollStateData] in
-                        var data = data
-                        data.removeValue(forKey: messageId)
-                        return data
-                    }
-                    self?.afterNextTransaction = { [weak self] in
-                        if let tableView = self?.genericView.tableView {
-                            tableView.enumerateVisibleItems(with: { item -> Bool in
-                                if let item = item as? ChatRowItem, item.message?.id == messageId {
-                                    let view = item.view as? ChatPollItemView
-                                    view?.doAfterAnswer()
-                                    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
-                                    return false
-                                }
-                                return true
-                            })
-                        }
                     }
                     
                 }), forKey: messageId)

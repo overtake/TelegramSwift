@@ -16,21 +16,32 @@ import SyncCore
 
 private struct PollResultState : Equatable {
     let results: PollResultsState?
+    let shouldLoadMore: Data?
     let poll: TelegramMediaPoll
-    init(results: PollResultsState?, poll: TelegramMediaPoll) {
+    init(results: PollResultsState?, poll: TelegramMediaPoll, shouldLoadMore: Data?) {
         self.results = results
         self.poll = poll
+        self.shouldLoadMore = nil
     }
     func withUpdatedResults(_ results: PollResultsState?) -> PollResultState {
-        return PollResultState(results: results, poll: self.poll)
+        return PollResultState(results: results, poll: self.poll, shouldLoadMore: self.shouldLoadMore)
+    }
+    func withUpdatedShouldLoadMore(_ shouldLoadMore: Data?) -> PollResultState {
+        return PollResultState(results: self.results, poll: self.poll, shouldLoadMore: shouldLoadMore)
     }
 }
 private func _id_option(_ identifier: Data, _ peerId: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_option_\(identifier.base64EncodedString())_\(peerId.toInt64())")
 }
+private func _id_load_more(_ identifier: Data) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_load_more_\(identifier.base64EncodedString())")
+}
+private func _id_loading_for(_ identifier: Data) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_loading_for_\(identifier.base64EncodedString())")
+}
 private let _id_loading = InputDataIdentifier("_id_loading")
 
-private func pollResultEntries(_ state: PollResultState, context: AccountContext, openProfile:@escaping(PeerId)->Void) -> [InputDataEntry] {
+private func pollResultEntries(_ state: PollResultState, context: AccountContext, openProfile:@escaping(PeerId)->Void, loadMore: @escaping(Data)->Void) -> [InputDataEntry] {
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
@@ -90,13 +101,36 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
             
             for (i, voter) in option.voters.peers.enumerated() {
                 if let peer = voter.peer {
+                    var viewType = bestGeneralViewType(option.voters.peers, for: i)
+                    if i == option.voters.peers.count - 1, option.voters.canLoadMore {
+                        viewType = .innerItem
+                    }
                     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: bestGeneralViewType(option.voters.peers, for: i), action: {
+                        return ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {
                             openProfile(peer.id)
                         })
                     }))
                     index += 1
                 }
+            }
+            
+            if option.voters.canLoadMore {
+                
+                if option.voters.isLoadingMore {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: nil, item: { initialSize, stableId in
+                        return LoadingTableItem(initialSize, height: 41, stableId: stableId, viewType: .lastItem)
+                    }))
+                    index += 1
+                } else {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: nil, item: { initialSize, stableId in
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMore, nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                            loadMore(option.option.opaqueIdentifier)
+                        }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                    }))
+                    index += 1
+                }
+                
+               
             }
         }
     }
@@ -115,7 +149,7 @@ func PollResultController(context: AccountContext, message: Message) -> InputDat
     
     let resultsContext: PollResultsContext = PollResultsContext(account: context.account, messageId: message.id, poll: poll)
 
-    let initialState = PollResultState(results: nil, poll: poll)
+    let initialState = PollResultState(results: nil, poll: poll, shouldLoadMore: nil)
     
     let disposable = MetaDisposable()
     
@@ -136,6 +170,11 @@ func PollResultController(context: AccountContext, message: Message) -> InputDat
     let signal = statePromise.get() |> map {
         pollResultEntries($0, context: context, openProfile: { peerId in
             openProfile?(peerId)
+        }, loadMore: { opaqueIdentifier in
+            updateState {
+                $0.withUpdatedShouldLoadMore(opaqueIdentifier)
+            }
+            resultsContext.loadMore(optionOpaqueIdentifier: opaqueIdentifier)
         })
     } |> map {
         InputDataSignalValue(entries: $0, animated: true)
@@ -162,6 +201,22 @@ func PollResultController(context: AccountContext, message: Message) -> InputDat
         context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
         modalController?.close()
     }
+    
+//    controller.didLoaded = { controller, _ in
+//        controller.tableView.setScrollHandler { position in
+//            switch position.direction {
+//            case .bottom:
+//                let shouldLoadMore = stateValue.with { $0.shouldLoadMore }
+//                if let shouldLoadMore = shouldLoadMore {
+//                    resultsContext.loadMore(optionOpaqueIdentifier: shouldLoadMore)
+//                }
+//               break
+//            default:
+//                break
+//            }
+//        }
+//    }
+    
 
     
     return modalController

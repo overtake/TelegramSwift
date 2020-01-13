@@ -121,11 +121,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     private var appcastItem: SUAppcastItem? {
         didSet {
             
-            #if DEBUG
-            genericView.isHidden = false
-            #else
             genericView.isHidden = appcastItem == nil
-            #endif
             
             
             var state = self.state
@@ -202,9 +198,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
             genericView.centerX(y: layout == .minimisize ? 10 : 60)
             
             var shakeDelay: Double = 60 * 60
-            #if DEBUG
-                shakeDelay = 5.0
-            #endif
+           
             
             let signal = Signal<Void, NoError>.single(Void()) |> delay(shakeDelay, queue: .mainQueue()) |> then(.single(Void()) |> delay(shakeDelay, queue: .mainQueue()) |> restart)
             self.shakeDisposable.set(signal.start(next: { [weak self] in
