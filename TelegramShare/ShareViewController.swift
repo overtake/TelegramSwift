@@ -48,7 +48,6 @@ class ShareViewController: NSViewController {
         let deviceSpecificEncryptionParameters = BuildConfig.deviceSpecificEncryptionParameters(rootPath, baseAppBundleId: Bundle.main.bundleIdentifier!)
         let encryptionParameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
 
-        NSLog("shareExtensionStep: 1")
         
         
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
@@ -62,8 +61,6 @@ class ShareViewController: NSViewController {
         Logger.setSharedLogger(logger)
         
         
-        NSLog("shareExtensionStep: 2")
-        
         
         let themeSemaphore = DispatchSemaphore(value: 0)
         var themeSettings: ThemePaletteSettings = ThemePaletteSettings.defaultTheme
@@ -73,8 +70,6 @@ class ShareViewController: NSViewController {
         })
         themeSemaphore.wait()
         
-        NSLog("shareExtensionStep: 3")
-        
         var localization: LocalizationSettings? = nil
         let localizationSemaphore = DispatchSemaphore(value: 0)
         _ = (accountManager.transaction { transaction in
@@ -83,22 +78,14 @@ class ShareViewController: NSViewController {
         }).start()
         localizationSemaphore.wait()
         
-        NSLog("shareExtensionStep: 4")
-        
         if let localization = localization {
             applyShareUILocalization(localization)
         }
         
-        NSLog("shareExtensionStep: 5")
-        
         updateTheme(with: themeSettings)
-        
-        NSLog("shareExtensionStep: 6")
         
         let extensionContext = self.extensionContext!
         
-        NSLog("shareExtensionStep: 7")
-
         initializeAccountManagement()
         
         let rawAccounts = sharedContext.activeAccounts
@@ -119,36 +106,24 @@ class ShareViewController: NSViewController {
         }).start()
         accessSemaphore.wait()
         
-        NSLog("shareExtensionStep: 8")
-        
         switch access {
         case .numericalPassword, .plaintextPassword:
-            NSLog("shareExtensionStep: 9")
-
             let passlock = SEPasslockController(sharedContext, cancelImpl: {
                 let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
                 extensionContext.cancelRequest(withError: cancelError)
             })
-            NSLog("shareExtensionStep: 10")
-
             self.passlock = passlock
             
             let passlockView = passlock.view
-            NSLog("shareExtensionStep: 11")
-
             _ = (passlock.doneValue |> filter { $0 } |> take(1)).start(next: { [weak passlockView] _ in
-                NSLog("shareExtensionStep: remove passcode")
                 passlockView?._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { _ in
                     passlockView?.removeFromSuperview()
                     self.passlock = nil
                 })
             })
-            NSLog("shareExtensionStep: 12")
             passlock.view.frame = self.view.bounds
             self.view.addSubview(passlock.view)
-            NSLog("shareExtensionStep: 13")
         default:
-            NSLog("shareExtensionStep: no passcode there")
             break
         }
         
@@ -159,21 +134,15 @@ class ShareViewController: NSViewController {
         } |> deliverOnMainQueue).start(next: { context in
                 assert(Queue.mainQueue().isCurrent())
             
-            NSLog("shareExtensionStep: 14")
-            
                 if let context = context {
-                    NSLog("shareExtensionStep: 15")
-
                     context.rootController.view.frame = self.view.bounds
                     
                     readyDisposable.set((context.rootController.ready.get() |> take(1)).start(next: { [weak context] _ in
-                        NSLog("shareExtensionStep: 15")
                         guard let context = context else { return }
                         if let contextValue = self.contextValue {
                             contextValue.rootController.view.removeFromSuperview()
                         }
                         self.contextValue = context
-                        NSLog("shareExtensionStep: 17")
                         self.view.addSubview(context.rootController.view, positioned: .below, relativeTo: self.view.subviews.first)
                         
                     }))

@@ -7,7 +7,7 @@ final class ApiEnvironment {
     }
     
     static var bundleId: String {
-        return Bundle.main.bundleIdentifier!
+        return "ru.keepcoder.Telegram"
     }
     static var teamId: String {
         return "6N38VWS5BX"
