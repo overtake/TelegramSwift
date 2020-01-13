@@ -612,10 +612,10 @@ final class LottieAnimation : Equatable {
     
     var size: NSSize {
         var size = key.size
-        while (size.width / 16) != round(size.width / 16) {
-            size.width += 1
-            size.height += 1
-        }
+//        while (size.width / 16) != round(size.width / 16) {
+//            size.width += 1
+//            size.height += 1
+//        }
         return size
     }
     var viewSize: NSSize {

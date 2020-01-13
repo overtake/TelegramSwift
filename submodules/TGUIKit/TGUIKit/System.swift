@@ -34,6 +34,14 @@ public struct System {
             return true
         }
     }
+    
+    public static var supportsTransparentFontDrawing: Bool {
+        if #available(OSX 10.13, *) {
+            return true
+        } else {
+            return false
+        }
+    }
  
 }
 

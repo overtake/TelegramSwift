@@ -364,7 +364,7 @@ private func addProxyController(accountManager: AccountManager, network: Network
                                 .withUpdatedActiveServer(server)
                                 .withUpdatedEnabled(true)
                         }
-                    }) |> deliverOnMainQueue).start(next: {
+                    }) |> deliverOnMainQueue).start(next: { _ in 
                         f(.success(.navigationBack))
                     }))
                     return current

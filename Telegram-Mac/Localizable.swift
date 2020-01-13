@@ -241,9 +241,9 @@ internal final class L10n {
   internal static var appearanceReset: String  { return L10n.tr("Localizable", "Appearance.Reset") }
   /// Incompatible with macOS, click to edit
   internal static var appearanceCloudThemeUnsupported: String  { return L10n.tr("Localizable", "Appearance.CloudTheme.Unsupported") }
-  /// Remove?
+  /// Remove
   internal static var appearanceConfirmRemoveOK: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveOK") }
-  /// Are you sure you want to remove this theme?
+  /// Are you sure you want to delete this theme?
   internal static var appearanceConfirmRemoveText: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveText") }
   /// Theme
   internal static var appearanceConfirmRemoveTitle: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveTitle") }
@@ -1334,32 +1334,32 @@ internal final class L10n {
   /// Submit Vote
   internal static var chatPollSubmitVote: String  { return L10n.tr("Localizable", "Chat.Poll.SubmitVote") }
   /// %d
-  internal static func chatPollTotalVotesCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_countable", p1)
+  internal static func chatPollTotalVotes1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_countable", p1)
   }
-  /// %d users voted
-  internal static func chatPollTotalVotesFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_few", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Few(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_few", p1)
   }
-  /// %d users voted
-  internal static func chatPollTotalVotesMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_many", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Many(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_many", p1)
   }
-  /// %d user voted
-  internal static func chatPollTotalVotesOne(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_one", p1)
+  /// %d vote
+  internal static func chatPollTotalVotes1One(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_one", p1)
   }
-  /// %d users voted
-  internal static func chatPollTotalVotesOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_other", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Other(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_other", p1)
   }
-  /// %d users voted
-  internal static func chatPollTotalVotesTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_two", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Two(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_two", p1)
   }
-  /// %d user voted
-  internal static func chatPollTotalVotesZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_zero", p1)
+  /// %d vote
+  internal static func chatPollTotalVotes1Zero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_zero", p1)
   }
   /// No votes yet
   internal static var chatPollTotalVotesEmpty: String  { return L10n.tr("Localizable", "Chat.Poll.TotalVotesEmpty") }
@@ -1429,27 +1429,27 @@ internal final class L10n {
   internal static func chatQuizTotalVotesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_countable", p1)
   }
-  /// %d users answered
+  /// %d answers
   internal static func chatQuizTotalVotesFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_few", p1)
   }
-  /// %d users answered
+  /// %d answers
   internal static func chatQuizTotalVotesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_many", p1)
   }
-  /// %d user answered
+  /// %d answer
   internal static func chatQuizTotalVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_one", p1)
   }
-  /// %d users answered
+  /// %d answers
   internal static func chatQuizTotalVotesOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_other", p1)
   }
-  /// %d users answered
+  /// %d answers
   internal static func chatQuizTotalVotesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_two", p1)
   }
-  /// %d user answered
+  /// %d answer
   internal static func chatQuizTotalVotesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_zero", p1)
   }
@@ -4157,6 +4157,10 @@ internal final class L10n {
   internal static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
   /// Invite to Group via Link
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
+  /// Sorry, public polls can’t be forwarded to channels.
+  internal static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
+  /// Show More
+  internal static var pollResultsLoadMore: String  { return L10n.tr("Localizable", "PollResults.LoadMore") }
   /// Poll Results
   internal static var pollResultsTitle: String  { return L10n.tr("Localizable", "PollResults.Title") }
   /// Warning, this will unlink the group from "%@"

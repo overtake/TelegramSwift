@@ -492,6 +492,13 @@ public extension Message {
         return self.flags.contains(.WasScheduled)
     }
     
+    var isPublicPoll: Bool {
+        if let media = self.media.first as? TelegramMediaPoll {
+            return media.publicity == .public
+        }
+        return false
+    }
+    
     var isHasInlineKeyboard: Bool {
         return replyMarkup?.flags.contains(.inline) ?? false
     }

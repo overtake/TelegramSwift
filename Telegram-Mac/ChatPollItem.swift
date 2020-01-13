@@ -64,7 +64,7 @@ private let mergedImageSpacing: CGFloat = 15.0
 
 private let avatarFont = NSFont.avatar(8.0)
 
-private final class MergedAvatarsView: View {
+private final class MergedAvatarsView: Control {
     private var peers: [PeerAvatarReference] = []
     private var images: [PeerId: CGImage] = [:]
     private var disposables: [PeerId: Disposable] = [:]
@@ -402,6 +402,15 @@ class ChatPollItem: ChatRowItem {
         return nil
     }
     
+    var actionButtonIsEnabled: Bool {
+        let hasSelected = options.contains(where: { $0.isMultipleSelected }) || options.contains(where: { $0.isSelected })
+        if poll.isMultiple {
+            return hasSelected
+        } else {
+            return true
+        }
+    }
+    
     var isClosed: Bool {
         return poll.isClosed
     }
@@ -468,7 +477,7 @@ class ChatPollItem: ChatRowItem {
 
         let totalCount = poll.results.totalVoters ?? 0
         
-        var totalText = poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(totalCount)) : L10n.chatPollTotalVotesCountable(Int(totalCount))
+        var totalText = poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(totalCount)) : L10n.chatPollTotalVotes1Countable(Int(totalCount))
         totalText = totalText.replacingOccurrences(of: "\(totalCount)", with: Int(totalCount).separatedNumber)
         
         if actionButtonText == nil {
@@ -491,6 +500,10 @@ class ChatPollItem: ChatRowItem {
         
         self.titleText = TextViewLayout(.initialize(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text)), alwaysStaticItems: true)
         self.titleTypeText = TextViewLayout(.initialize(string: poll.title, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+    }
+    
+    override var isForceRightLine: Bool {
+        return true
     }
     
     override var isFixedRightPosition: Bool {
@@ -1140,6 +1153,8 @@ private final class PollView : Control {
                 return
             }
             
+            actionButton.isEnabled = item.actionButtonIsEnabled
+            
             actionButton.removeAllHandlers()
             actionButton.set(handler: { [weak item] _ in
                 item?.invokeAction()
@@ -1174,6 +1189,13 @@ private final class PollView : Control {
             self.mergedAvatarsView?.update(context: item.context, peers: avatarPeers, message: message, synchronousLoad: false)
             
             self.mergedAvatarsView?.setFrameOrigin(NSMakePoint(typeView.frame.maxX + 6, typeView.frame.minY))
+            self.mergedAvatarsView?.removeAllHandlers()
+            
+            self.mergedAvatarsView?.set(handler: { [weak item] _ in
+                if item?.actionButtonText == L10n.chatPollViewResults, item?.actionButtonIsEnabled == true {
+                    item?.invokeAction()
+                }
+            }, for: .Click)
         } else {
             self.mergedAvatarsView?.removeFromSuperview()
             self.mergedAvatarsView = nil

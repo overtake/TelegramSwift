@@ -253,7 +253,7 @@ class ShareObject {
     }
 
     
-    func perform(to entries:[PeerId], comment: String? = nil) -> Signal<Never, NoError> {
+    func perform(to entries:[PeerId], comment: String? = nil) -> Signal<Never, String> {
         return .complete()
     }
     
@@ -285,7 +285,7 @@ class ShareLinkObject : ShareObject {
         copyToClipboard(link)
     }
     
-    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, NoError> {
+    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
             
             if let comment = comment?.trimmed, !comment.isEmpty {
@@ -309,7 +309,7 @@ class ShareContactObject : ShareObject {
         super.init(context)
     }
     
-    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, NoError> {
+    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
             _ = Sender.shareContact(context: context, peerId: peerId, contact: user).start()
         }
@@ -325,8 +325,8 @@ class ShareCallbackObject : ShareObject {
         super.init(context)
     }
     
-    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, NoError> {
-        return callback(peerIds)
+    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, String> {
+        return callback(peerIds) |> mapError { _ in return String() }
     }
     
 }
@@ -379,7 +379,7 @@ class ShareMessageObject : ShareObject {
         exportLinkDisposable.dispose()
     }
 
-    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, NoError> {
+    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
             if let comment = comment?.trimmed, !comment.isEmpty {
                 _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil), context: context, peerId: peerId).start()
@@ -410,13 +410,34 @@ final class ForwardMessagesObject : ShareObject {
         return false
     }
     
-    override func perform(to peerIds: [PeerId], comment: String?) -> Signal<Never, NoError> {
+    override func perform(to peerIds: [PeerId], comment: String?) -> Signal<Never, String> {
         let comment = comment != nil && !comment!.isEmpty ? comment : nil
         let context = self.context
-        return context.account.postbox.messagesAtIds(messageIds)
-            |> map { $0.map { $0.id } }
+        
+        let peers = context.account.postbox.transaction { transaction -> Peer? in
+            for peerId in peerIds {
+                if let peer = transaction.getPeer(peerId) {
+                    return peer
+                }
+            }
+            return nil
+        }
+        
+        return combineLatest(context.account.postbox.messagesAtIds(messageIds), peers)
             |> deliverOnMainQueue
-            |> mapToSignal {  messageIds in
+            |> mapError { _ in return String() }
+            |> mapToSignal {  messages, peer in
+                
+                let messageIds = messages.map { $0.id }
+                
+                if let peer = peer, peer.isChannel {
+                    for message in messages {
+                        if message.isPublicPoll {
+                            return .fail(L10n.pollForwardError)
+                        }
+                    }
+                }
+                
                 let navigation = self.context.sharedContext.bindings.rootNavigation()
                 if let peerId = peerIds.first {
                     if peerId == context.peerId {
@@ -448,7 +469,7 @@ final class ForwardMessagesObject : ShareObject {
                             }
                             navigation.push(newone)
                             
-                            return newone.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+                            return newone.ready.get() |> filter {$0} |> take(1) |> ignoreValues |> mapError { _ in return String() }
                         }
                     }
                 } else {
@@ -789,7 +810,9 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         selectInteraction.action = { [weak self] peerId in
             guard let `self` = self else { return }
-            _ = share.perform(to: [peerId], comment: self.genericView.textView.string()).start(completed: { [weak self] in
+            _ = share.perform(to: [peerId], comment: self.genericView.textView.string()).start(error: { error in
+               alert(for: context.window, info: error)
+            }, completed: { [weak self] in
                 self?.close()
             })
         }

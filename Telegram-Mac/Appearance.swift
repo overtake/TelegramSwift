@@ -15,6 +15,12 @@ import Postbox
 import SyncCore
 
 private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImage {
+    
+    var bottom = bottom
+    if !System.supportsTransparentFontDrawing {
+        bottom = top.blended(withFraction: 0.5, of: bottom)!
+    }
+    
     return generateImage(CGSize(width: 1.0, height: 100), opaque: true, scale: 1.0, rotatedContext: { size, context in
         var locations: [CGFloat] = [0.0, 1.0]
         let colors = [top.cgColor, bottom.cgColor] as NSArray
