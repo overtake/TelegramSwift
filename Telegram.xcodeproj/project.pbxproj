@@ -215,6 +215,8 @@
 		A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2F23C8985300DD307B /* SoundEffects.swift */; };
 		A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */; };
 		A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC3223C8988300DD307B /* quiz-correct.mp3 */; };
+		A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */; };
+		A778DC4323CDBB6600DD307B /* WalletCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
 		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
@@ -242,7 +244,6 @@
 		A7D28230236C549B0000A9BF /* SyncCoreExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D2822E236C549B0000A9BF /* SyncCoreExtension.swift */; };
 		A7D28232236C57DD0000A9BF /* libphonenumber.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28231236C57DD0000A9BF /* libphonenumber.framework */; };
 		A7D28237236C5B2C0000A9BF /* PhoneNumberUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D28236236C5B2C0000A9BF /* PhoneNumberUtils.swift */; };
-		A7D28258236C6FA20000A9BF /* WalletCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7D28259236C70A50000A9BF /* SSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D2823B236C69070000A9BF /* SSignalKit.framework */; };
 		A7DF1B6C237415AD00ACC01F /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7DF1B6B237415AD00ACC01F /* Zip.framework */; };
 		A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
@@ -871,7 +872,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A7D28258236C6FA20000A9BF /* WalletCore.framework in Copy Files */,
+				A778DC4323CDBB6600DD307B /* WalletCore.framework in Copy Files */,
 				A7D28212236C3D3E0000A9BF /* SyncCore.framework in Copy Files */,
 				A7D2820F236C3C3B0000A9BF /* Postbox.framework in Copy Files */,
 				A7D2820E236C3C330000A9BF /* SwiftSignalKit.framework in Copy Files */,
@@ -1250,6 +1251,7 @@
 		A778DC2F23C8985300DD307B /* SoundEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffects.swift; sourceTree = "<group>"; };
 		A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-incorrect.mp3"; sourceTree = "<group>"; };
 		A778DC3223C8988300DD307B /* quiz-correct.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-correct.mp3"; sourceTree = "<group>"; };
+		A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSettingsEmptyItem.swift; sourceTree = "<group>"; };
 		A7B5030E23B62E0000C9838E /* nanosvg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanosvg.c; sourceTree = "<group>"; };
 		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
 		A7B5031123B62E1700C9838E /* Svg.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Svg.m; sourceTree = "<group>"; };
@@ -2515,6 +2517,7 @@
 				A7F283012395185B00742C20 /* SettingsSearchableItems.swift */,
 				A7F2830523954E1B00742C20 /* CachedFaqInstantPage.swift */,
 				A7F283092395570400742C20 /* SearchSettingsController.swift */,
+				A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */,
 			);
 			name = "settings-search";
 			sourceTree = "<group>";
@@ -5247,6 +5250,7 @@
 				C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */,
 				C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */,
 				C2B1B1201E5F170A00895E0D /* ValidateAddressNameInteractive.swift in Sources */,
+				A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */,
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
