@@ -231,6 +231,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
     }
     
+    
     func updateScroller(_ historyState:ChatHistoryState) {
         self.historyState = historyState
         let isHidden = (tableView.documentOffset.y < 150 && historyState.isDownOfHistory) || tableView.isEmpty
@@ -1100,6 +1101,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         
         
         self.undoTooltipControl.getYInset = { [weak self] in
@@ -3383,6 +3385,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.centerBarView.animates = true
         
         self.chatInteraction.invokeInitialAction(includeAuto: true, animated: false)
+        
+        
+        genericView.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.frame.size, inset: self.genericView.tableView.scrollPosition().current.rect.origin, animated: transition.animated)
+            }
+        })
+        
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
@@ -4557,6 +4567,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override public var isOpaque: Bool {
         return false
+    }
+    
+    override func updateController() {
+        genericView.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(within: self.frame.size, inset: self.genericView.tableView.scrollPosition().current.rect.origin, animated: false)
+            }
+        })
     }
 
     override open func backSettings() -> (String,CGImage?) {

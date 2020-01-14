@@ -404,6 +404,14 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var visibleRect: NSRect {
+        let visibleRect = super.visibleRect
+        guard let table = self.table else {
+            return visibleRect
+        }
+        return NSMakeRect(table.documentOffset.x, table.documentOffset.y, table.frame.width, table.frame.height)
+    }
+    
     override var isFlipped: Bool {
         return flip
     }
@@ -1940,7 +1948,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
-        return self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
+        return self.tableView.rows(in: NSMakeRect(self.documentOffset.x, self.documentOffset.y, self.frame.width, self.frame.height + insetHeight))
     }
     
     public var listHeight:CGFloat {
@@ -2920,7 +2928,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func enumerateVisibleViews(with callback:(TableRowView)->Void) {
         let visibleRows = self.visibleRows()
         for index in visibleRows.location ..< visibleRows.location + visibleRows.length {
-            if let view = viewNecessary(at: index) {
+            if let view = viewNecessary(at: index, makeIfNecessary: true) {
                 callback(view)
             }
         }

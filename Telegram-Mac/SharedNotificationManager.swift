@@ -45,8 +45,10 @@ struct LockNotificationsData : Equatable {
 
 final class SharedNotificationBindings {
     let navigateToChat:(Account, PeerId) -> Void
-    init(navigateToChat: @escaping(Account, PeerId) -> Void) {
+    let updateCurrectController:()->Void
+    init(navigateToChat: @escaping(Account, PeerId) -> Void, updateCurrectController: @escaping()->Void) {
         self.navigateToChat = navigateToChat
+        self.updateCurrectController = updateCurrectController
     }
 }
 
@@ -91,7 +93,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             if show {
                 let controller = PasscodeLockController(accountManager, useTouchId: settings.useTouchId, logoutImpl: {
                     return self.logout()
-                })
+                }, updateCurrectController: bindings.updateCurrectController)
                 closeAllModals()
                 closeInstantView()
                 closeGalleryViewer(false)

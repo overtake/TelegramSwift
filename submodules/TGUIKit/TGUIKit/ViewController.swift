@@ -448,6 +448,10 @@ open class ViewController : NSObject {
         }
     }
     
+    open func updateController() {
+        
+    }
+    
     open func viewDidResized(_ size:NSSize) {
         _ = atomicSize.swap(size)
     }
