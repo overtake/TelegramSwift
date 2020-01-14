@@ -821,8 +821,8 @@ private final class PollOptionView : Control {
     private var option: PollOption?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        //nameView.userInteractionEnabled = false
-        //nameView.isSelectable = false
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
         progressView.hasMinumimVisibility = true
         addSubview(nameView)
         addSubview(progressView)

@@ -200,6 +200,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     
     private var contentViews:[Optional<ChatMediaContentView>] = []
     private let packNameView = TextView()
+    private var clearRecentButton: ImageButton?
     private var addButton:TitleButton?
     private let longDisposable = MetaDisposable()
     
@@ -287,6 +288,9 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             return
         }
         packNameView.setFrameOrigin(item.namePoint)
+        
+        self.clearRecentButton?.setFrameOrigin(frame.width - 34, item.namePoint.y - 10)
+
         updateVisibleItems()
     }
     
@@ -375,7 +379,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             view.removeFromSuperview()
         }
         
-        self.subviews = (self.addButton != nil ? [self.addButton!] : []) + [self.packNameView] + self.contentViews.compactMap { $0 }
+        self.subviews = (self.clearRecentButton != nil ? [self.clearRecentButton!] : []) + (self.addButton != nil ? [self.addButton!] : []) + [self.packNameView] + self.contentViews.compactMap { $0 }
                 
         CATransaction.commit()
         
@@ -399,6 +403,25 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }
         
         packNameView.update(item.packNameLayout)
+        
+        switch item.packInfo {
+        case .recent:
+            if self.clearRecentButton == nil {
+                self.clearRecentButton = ImageButton()
+                addSubview(self.clearRecentButton!)
+            }
+            self.clearRecentButton?.set(image: theme.icons.wallpaper_color_close, for: .Normal)
+            _ = self.clearRecentButton?.sizeToFit(NSMakeSize(5, 5), thatFit: false)
+            
+            self.clearRecentButton?.removeAllHandlers()
+            
+            self.clearRecentButton?.set(handler: { [weak item] _ in
+                item?.arguments.clearRecent()
+            }, for: .Click)
+        default:
+            self.clearRecentButton?.removeFromSuperview()
+            self.clearRecentButton = nil
+        }
         
         self.previousRange = (0, 0)
         
