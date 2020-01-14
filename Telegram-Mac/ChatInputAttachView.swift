@@ -85,6 +85,10 @@ class ChatInputAttachView: ImageButton, Notifable {
                     if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup {
                         canAttachPoll = true
                     }
+                    if let peer = chatInteraction.presentation.mainPeer, peer.id == chatInteraction.context.peerId || peer.isBot {
+                        canAttachPoll = true
+                    }
+                    
                     if let peer = chatInteraction.presentation.peer as? TelegramChannel {
                         if peer.hasPermission(.sendMessages) {
                             canAttachPoll = true

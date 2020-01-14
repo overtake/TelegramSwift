@@ -275,12 +275,10 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         let placeholder: InputDataInputPlaceholder?
         switch state.mode {
         case .multiple:
-            placeholder = nil
+            placeholder = InputDataInputPlaceholder(hasLimitationText: true)
         case .normal:
-            placeholder = nil
+            placeholder = InputDataInputPlaceholder(hasLimitationText: true)
         case .quiz:
-            
-
             
             placeholder = InputDataInputPlaceholder(nil, icon: option.selected ? theme.icons.chatToggleSelected : theme.icons.poll_quiz_unselected, drawBorderAfterPlaceholder: true, hasLimitationText: true, action: {
                 updateQuizSelected(option.identifier)

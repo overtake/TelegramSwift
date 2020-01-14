@@ -19,12 +19,14 @@ final class StickerPanelArguments {
     let showPack:(StickerPackReference)->Void
     let navigate:(ItemCollectionViewEntryIndex)->Void
     let addPack: (StickerPackReference)->Void
-    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void) {
+    let clearRecent:()->Void
+    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void) {
         self.context = context
         self.sendMedia = sendMedia
         self.showPack = showPack
         self.addPack = addPack
         self.navigate = navigate
+        self.clearRecent = clearRecent
     }
 }
 
@@ -709,6 +711,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 })
         }, navigate: { [weak self] index in
             self?.position.set(.navigate(index: .sticker(index)))
+        }, clearRecent: {
+            _ = context.account.postbox.transaction({ transaction in
+                clearRecentlyUsedStickers(transaction: transaction)
+            }).start()
         })
         
         let specificPackData: Signal<Tuple2<PeerSpecificStickerPackData, Peer>?, NoError> = self.specificPeerId.get() |> mapToSignal { peerId -> Signal<Peer, NoError> in
