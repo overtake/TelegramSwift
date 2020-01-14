@@ -103,7 +103,11 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 if let peer = voter.peer {
                     var viewType = bestGeneralViewType(option.voters.peers, for: i)
                     if i == option.voters.peers.count - 1, option.voters.canLoadMore {
-                        viewType = .innerItem
+                        if option.voters.peers.count == 1 {
+                            viewType = .firstItem
+                        } else {
+                            viewType = .innerItem
+                        }
                     }
                     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), item: { initialSize, stableId in
                         return ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {

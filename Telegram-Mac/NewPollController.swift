@@ -220,7 +220,7 @@ private struct NewPollState : Equatable {
     }
 }
 
-private func newPollEntries(_ state: NewPollState, canBePublic: Bool, deleteOption:@escaping(InputDataIdentifier) -> Void, updateQuizSelected:@escaping(InputDataIdentifier) -> Void, updateMode: @escaping(NewPollMode)->Void) -> [InputDataEntry] {
+private func newPollEntries(_ state: NewPollState, context: AccountContext, canBePublic: Bool, deleteOption:@escaping(InputDataIdentifier) -> Void, updateQuizSelected:@escaping(InputDataIdentifier) -> Void, updateMode: @escaping(NewPollMode)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -328,6 +328,8 @@ private func newPollEntries(_ state: NewPollState, canBePublic: Bool, deleteOpti
         } else {
             updateMode(.multiple(anonymous: state.mode.isAnonymous))
         }
+    }, disabledAction: {
+        alert(for: context.window, info: L10n.newPollQuizMultipleError)
     })))
     index += 1
     
@@ -381,13 +383,21 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     }
     
     
+    var showTooltipForQuiz:(()->Void)? = nil
+
+    
     let updateMode:(NewPollMode)->Void = { mode in
+        let oldMode = stateValue.with { $0.mode }
+
         updateState { state in
             if state.mode.isModeEqual(to: mode) {
                 return state.withUpdatedMode(mode)
             } else {
                 return state.withUnselectItems().withUpdatedMode(mode)
             }
+        }
+        if mode.isQuiz && !oldMode.isQuiz {
+            showTooltipForQuiz?()
         }
     }
     
@@ -408,7 +418,6 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
     var close: (() -> Void)? = nil
     
     
-    var showTooltipForQuiz:(()->Void)? = nil
     
     let checkAndSend:() -> Void = {
         let state = stateValue.with { $0 }
@@ -434,9 +443,10 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         canBePublic = true
     }
     
+    let context = chatInteraction.context
     
     let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> map { value in
-        return InputDataSignalValue(entries: newPollEntries(value, canBePublic: canBePublic, deleteOption: deleteOption, updateQuizSelected: updateQuizSelected, updateMode: updateMode), animated: animated.swap(true))
+        return InputDataSignalValue(entries: newPollEntries(value, context: context, canBePublic: canBePublic, deleteOption: deleteOption, updateQuizSelected: updateQuizSelected, updateMode: updateMode), animated: animated.swap(true))
     }
     
     
@@ -672,7 +682,9 @@ func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalContro
         let firstOption = stateValue.with({ $0.options.first })
         if let option = firstOption {
             let view = controller?.tableView.item(stableId: InputDataEntryId.input(option.identifier))?.view as? InputDataRowView
-            view?.showPlaceholderActionTooltip(L10n.newPollQuizTooltip)
+            delay(0.2, closure: { [weak view] in
+                view?.showPlaceholderActionTooltip(L10n.newPollQuizTooltip)
+            })
         }
         
     }

@@ -637,9 +637,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var emptyItem:TableRowItem? {
         didSet {
             emptyItem?.table = self
-            if let _ = emptyView {
-                updateEmpties()
-            }
+            updateEmpties()
         }
     }
     private var emptyView:TableRowView?

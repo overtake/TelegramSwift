@@ -358,6 +358,9 @@ class ChatPollItem: ChatRowItem {
     fileprivate let poll: TelegramMediaPoll
     
     var actionButtonText: String? {
+        if poll.isClosed {
+            return nil
+        }
         let hasSelected = options.contains(where: { $0.isSelected })
         if poll.isMultiple {
             if !hasSelected {
@@ -380,6 +383,12 @@ class ChatPollItem: ChatRowItem {
     }
     
     var actionButtonIsEnabled: Bool {
+        guard let message = message else {
+            return false
+        }
+        if message.flags.contains(.Failed) || message.flags.contains(.Sending) || message.flags.contains(.Unsent) {
+            return false
+        }
         let hasSelected = options.contains(where: { $0.isMultipleSelected }) || options.contains(where: { $0.isSelected })
         if poll.isMultiple {
             return hasSelected
@@ -812,8 +821,8 @@ private final class PollOptionView : Control {
     private var option: PollOption?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        nameView.userInteractionEnabled = false
-        nameView.isSelectable = false
+        //nameView.userInteractionEnabled = false
+        //nameView.isSelectable = false
         progressView.hasMinumimVisibility = true
         addSubview(nameView)
         addSubview(progressView)

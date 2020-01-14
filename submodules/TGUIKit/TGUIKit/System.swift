@@ -36,7 +36,7 @@ public struct System {
     }
     
     public static var supportsTransparentFontDrawing: Bool {
-        if #available(OSX 10.13, *) {
+        if #available(OSX 10.14, *) {
             return true
         } else {
             return false
