@@ -2635,7 +2635,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 CATransaction.begin()
                 var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
                 let presentation = self.layer?.presentation()
-                if let presentation = presentation, self.layer?.animation(forKey:"bounds_resize") != nil {
+                if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
                     presentBounds = presentation.bounds
                 }
                 
@@ -2643,7 +2643,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 let y = (size.height - presentBounds.height)
                 
                 presentBounds = contentView.layer?.bounds ?? contentView.bounds
-                if let presentation = contentView.layer?.presentation(), contentView.layer?.animation(forKey:"bounds_resize") != nil {
+                if let presentation = contentView.layer?.presentation(), contentView.layer?.animation(forKey:"bounds") != nil {
                     presentBounds = presentation.bounds
                 }
                 
@@ -2655,7 +2655,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     presentBounds.size.height -= y
                 }
                 
-                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, forKey: "bounds_resize", completion: { [weak self] completed in
+                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, forKey: "bounds", completion: { [weak self] completed in
                     completion?(completed)
                     self?.enqueueTransitions()
                 })
