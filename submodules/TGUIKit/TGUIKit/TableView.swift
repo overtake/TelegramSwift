@@ -404,13 +404,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override var visibleRect: NSRect {
-        let visibleRect = super.visibleRect
-        guard let table = self.table else {
-            return visibleRect
-        }
-        return NSMakeRect(table.documentOffset.x, table.documentOffset.y, table.frame.width, table.frame.height)
-    }
     
     override var isFlipped: Bool {
         return flip
@@ -2642,7 +2635,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 CATransaction.begin()
                 var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
                 let presentation = self.layer?.presentation()
-                if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
+                if let presentation = presentation, self.layer?.animation(forKey:"bounds_resize") != nil {
                     presentBounds = presentation.bounds
                 }
                 
@@ -2650,7 +2643,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 let y = (size.height - presentBounds.height)
                 
                 presentBounds = contentView.layer?.bounds ?? contentView.bounds
-                if let presentation = contentView.layer?.presentation(), contentView.layer?.animation(forKey:"bounds") != nil {
+                if let presentation = contentView.layer?.presentation(), contentView.layer?.animation(forKey:"bounds_resize") != nil {
                     presentBounds = presentation.bounds
                 }
                 
@@ -2662,7 +2655,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     presentBounds.size.height -= y
                 }
                 
-                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: { [weak self] completed in
+                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, forKey: "bounds_resize", completion: { [weak self] completed in
                     completion?(completed)
                     self?.enqueueTransitions()
                 })
@@ -2925,10 +2918,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    public func enumerateVisibleViews(with callback:(TableRowView)->Void) {
+    public func enumerateVisibleViews(with callback:(TableRowView)->Void, force: Bool = false) {
         let visibleRows = self.visibleRows()
         for index in visibleRows.location ..< visibleRows.location + visibleRows.length {
-            if let view = viewNecessary(at: index, makeIfNecessary: true) {
+            if let view = viewNecessary(at: index, makeIfNecessary: force) {
                 callback(view)
             }
         }

@@ -4574,7 +4574,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let view = view as? ChatRowView {
                 view.updateBackground(within: self.frame.size, inset: self.genericView.tableView.scrollPosition().current.rect.origin, animated: false)
             }
-        })
+        }, force: true)
     }
 
     override open func backSettings() -> (String,CGImage?) {
