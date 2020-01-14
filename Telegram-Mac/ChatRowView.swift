@@ -1305,4 +1305,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return self.rightView
     }
     
+    override func removeFromSuperview() {
+        super.removeFromSuperview()
+    }
+    
 }

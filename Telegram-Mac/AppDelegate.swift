@@ -402,6 +402,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
                 NSApp.activate(ignoringOtherApps: true)
                 window.deminiaturize(nil)
+            }, updateCurrectController: {
+                if let contextValue = self.contextValue {
+                    contextValue.context.sharedContext.bindings.rootNavigation().controller.updateController()
+                }
             })
             
             let sharedNotificationManager = SharedNotificationManager(activeAccounts: sharedContext.activeAccounts |> map { ($0.0, $0.1.map { ($0.0, $0.1) }) }, accountManager: accountManager, window: window, bindings: notificationsBindings)
