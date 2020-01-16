@@ -567,7 +567,7 @@ class ChatPollItem: ChatRowItem {
             }
             chatInteraction.vote(message.id, identifiers, !self.poll.isMultiple)
         } else {
-            if poll.isQuiz, self.options.contains(where: { $0.isSelected }) {
+            if self.options.contains(where: { $0.isSelected }), self.poll.publicity == .public {
                 guard let message = message else {
                     return
                 }
