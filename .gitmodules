@@ -24,4 +24,4 @@ url=https://github.com/overtake/Sparkle
 	url = https://github.com/overtake/Zip
 [submodule "submodules/lottie-ios"]
 	path = submodules/lottie-ios
-	url = https://github.com/airbnb/lottie-ios
+	url = https://github.com/overtake/lottie-ios.git
