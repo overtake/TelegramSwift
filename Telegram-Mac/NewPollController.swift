@@ -349,10 +349,17 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     return entries
 }
 
-func NewPollController(chatInteraction: ChatInteraction) -> InputDataModalController {
+func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) -> InputDataModalController {
     
     
-    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: "", selected: false), NewPollOption(identifier: _id_input_option(), text: "", selected: false)], random: arc4random(), mode: .normal(anonymous: true))
+    let mode: NewPollMode
+    if let isQuiz = isQuiz, isQuiz {
+        mode = .quiz(anonymous: true)
+    } else {
+        mode = .normal(anonymous: true)
+    }
+    
+    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: "", selected: false), NewPollOption(identifier: _id_input_option(), text: "", selected: false)], random: arc4random(), mode: mode)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

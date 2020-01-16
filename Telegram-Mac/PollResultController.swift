@@ -39,6 +39,9 @@ private func _id_load_more(_ identifier: Data) -> InputDataIdentifier {
 private func _id_loading_for(_ identifier: Data) -> InputDataIdentifier {
     return InputDataIdentifier("_id_loading_for_\(identifier.base64EncodedString())")
 }
+private func _id_option_header(_ identifier: Data) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_option_header_\(identifier.base64EncodedString())")
+}
 private let _id_loading = InputDataIdentifier("_id_loading")
 
 private func pollResultEntries(_ state: PollResultState, context: AccountContext, openProfile:@escaping(PeerId)->Void, loadMore: @escaping(Data)->Void) -> [InputDataEntry] {
@@ -72,13 +75,15 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
         let option: TelegramMediaPollOption
         let percent: Int
         let voters:PollResultsOptionState
+        let votesCount: Int
     }
     
     
     var options:[Option] = []
     for (i, option) in poll.options.enumerated() {
         if let voters = state.results?.options[option.opaqueIdentifier], !voters.peers.isEmpty {
-            options.append(Option(option: option, percent: percents[i], voters: voters))
+            let votesCount = Int(poll.results.voters?.first(where: {$0.opaqueIdentifier == option.opaqueIdentifier})?.count ?? 0)
+            options.append(Option(option: option, percent: percents[i], voters: voters, votesCount: votesCount))
         }
     }
     
@@ -96,7 +101,12 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 sectionId += 1
             }
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(option.option.text), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: "\(option.percent)%", color: theme.colors.listGrayText, font: .normal(11.5))))))
+            
+            let text = "\(option.option.text) — \(option.percent) %"
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_header(option.option.opaqueIdentifier), equatable: InputDataEquatable(text), item: { initialSize, stableId in
+                return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(text), detectBold: false, textColor: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(option.votesCount) : L10n.chatPollTotalVotes1Countable(option.votesCount), color: theme.colors.listGrayText, font: .normal(11.5))), fontSize: 11.5)
+            }))
             index += 1
             
             for (i, voter) in option.voters.peers.enumerated() {
@@ -118,16 +128,16 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 }
             }
             
-            if option.voters.canLoadMore {
+            if option.voters.canLoadMore, option.votesCount > option.voters.peers.count {
                 
                 if option.voters.isLoadingMore {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: nil, item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
                         return LoadingTableItem(initialSize, height: 41, stableId: stableId, viewType: .lastItem)
                     }))
                     index += 1
                 } else {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: nil, item: { initialSize, stableId in
-                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMore, nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(min(50, option.votesCount - option.voters.peers.count)), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                             loadMore(option.option.opaqueIdentifier)
                         }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
                     }))
@@ -147,9 +157,11 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
     return entries
 }
 
-func PollResultController(context: AccountContext, message: Message) -> InputDataModalController {
+func PollResultController(context: AccountContext, message: Message, scrollToOption: Data? = nil) -> InputDataModalController {
 
     let poll = message.media[0] as! TelegramMediaPoll
+    
+    var scrollToOption = scrollToOption
     
     let resultsContext: PollResultsContext = PollResultsContext(account: context.account, messageId: message.id, poll: poll)
 
@@ -184,7 +196,7 @@ func PollResultController(context: AccountContext, message: Message) -> InputDat
         InputDataSignalValue(entries: $0, animated: true)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.pollResultsTitle)
+    let controller = InputDataController(dataSignal: signal, title: !poll.isQuiz ? L10n.pollResultsTitlePoll : L10n.pollResultsTitleQuiz)
     
     controller.getBackgroundColor = {
         theme.colors.background
@@ -197,6 +209,9 @@ func PollResultController(context: AccountContext, message: Message) -> InputDat
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
+    controller.centerModalHeader = ModalHeaderData(title: controller.defaultBarTitle, subtitle: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(poll.results.totalVoters ?? 0)) : L10n.chatPollTotalVotes1Countable(Int(poll.results.totalVoters ?? 0)))
+    
     controller.getBackgroundColor = {
         theme.colors.listBackground
     }
@@ -205,6 +220,17 @@ func PollResultController(context: AccountContext, message: Message) -> InputDat
         context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
         modalController?.close()
     }
+    controller.afterTransaction = { controller in
+        if let scroll = scrollToOption {
+            let item = controller.tableView.item(stableId: InputDataEntryId.custom(_id_option_header(scroll)))
+            
+            if let item = item {
+                controller.tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: -10))
+                scrollToOption = nil
+            }
+        }
+    }
+    
     
 //    controller.didLoaded = { controller, _ in
 //        controller.tableView.setScrollHandler { position in

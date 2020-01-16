@@ -4161,10 +4161,38 @@ internal final class L10n {
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// Sorry, public polls can’t be forwarded to channels.
   internal static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
-  /// Show More
-  internal static var pollResultsLoadMore: String  { return L10n.tr("Localizable", "PollResults.LoadMore") }
+  /// %d
+  internal static func pollResultsLoadMoreCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_countable", p1)
+  }
+  /// Show %d More
+  internal static func pollResultsLoadMoreFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_few", p1)
+  }
+  /// Show %d More
+  internal static func pollResultsLoadMoreMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_many", p1)
+  }
+  /// Show %d More
+  internal static func pollResultsLoadMoreOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_one", p1)
+  }
+  /// Show %d More
+  internal static func pollResultsLoadMoreOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_other", p1)
+  }
+  /// Show %d More
+  internal static func pollResultsLoadMoreTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_two", p1)
+  }
+  /// Show %d More
+  internal static func pollResultsLoadMoreZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_zero", p1)
+  }
   /// Poll Results
-  internal static var pollResultsTitle: String  { return L10n.tr("Localizable", "PollResults.Title") }
+  internal static var pollResultsTitlePoll: String  { return L10n.tr("Localizable", "PollResults.Title.Poll") }
+  /// Quiz Results
+  internal static var pollResultsTitleQuiz: String  { return L10n.tr("Localizable", "PollResults.Title.Quiz") }
   /// Warning, this will unlink the group from "%@"
   internal static func preHistoryConfirmUnlink(_ p1: String) -> String {
     return L10n.tr("Localizable", "PreHistory.Confirm.Unlink", p1)

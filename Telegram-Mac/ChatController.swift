@@ -3050,6 +3050,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 if let messageIndex = messageIndex {
                     let location: ChatHistoryLocation = .Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 100, side: scroll.direction == .bottom ? .upper : .lower)
+                    guard location != self.locationValue else {
+                        return
+                    }
                     self.setLocation(location)
                 }
             }

@@ -36,7 +36,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>189012</string>
+	<string>189090</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>
@@ -64,5 +64,9 @@
 	<string>${SFEED_URL}</string>
 	<key>SUPublicDSAKeyFile</key>
 	<string>${DSA_PEM_FILE}</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>SFCompactRounded-Semibold.otf</string>
+	</array>
 </dict>
 </plist>

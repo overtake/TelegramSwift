@@ -467,10 +467,40 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let groupId: PeerGroupId = self.groupId
         let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?), NoError> in
             if let query = query, !query.isEmpty {
+                
+
                 var ids:[PeerId:PeerId] = [:]
                 
-                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(context.account.postbox.searchPeers(query: query.lowercased()), context.account.postbox.loadedPeerWithId(context.peerId))
-                    |> map { peers, accountPeer -> [ChatListSearchEntry] in
+                let foundQueryPeers: Promise<Peer?> = Promise()
+                
+                let callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void = { peerId, _, _, _ in
+                    foundQueryPeers.set(context.account.postbox.transaction {
+                        $0.getPeer(peerId)
+                    })
+                }
+                
+                let link = inApp(for: query as NSString, context: context, peerId: nil, openInfo: callback, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                
+                switch link {
+                case .followResolvedName:
+                    execute(inapp: link)
+                default:
+                    foundQueryPeers.set(.single(nil))
+                }
+                
+                var all = query.transformKeyboard
+                all.insert(query.lowercased(), at: 0)
+                all = all.uniqueElements
+                let localPeers:Signal<[RenderedPeer], NoError> = combineLatest(all.map {
+                    return context.account.postbox.searchPeers(query: $0)
+                }) |> map { result in
+                    return Array(result.joined())
+                }
+                
+                
+                
+                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(localPeers, context.account.postbox.loadedPeerWithId(context.peerId), foundQueryPeers.get())
+                    |> map { peers, accountPeer, inLinkPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
                         
                         
@@ -480,6 +510,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         }
                         
                         var index = 1
+                        
+                        if let peer = inLinkPeer {
+                            if ids[peer.id] == nil {
+                                entries.append(.localPeer(peer, index, nil, true))
+                                index += 1
+                            }
+                        }
+                        
                         for rendered in peers {
                             if ids[rendered.peerId] == nil {
                                 ids[rendered.peerId] = rendered.peerId

@@ -287,10 +287,10 @@ private final class PollOption : Equatable {
     let presentation: TelegramPresentationTheme
     let contentSize: NSSize
     let vote:()-> Void
-    let isCorrect: Bool
+    let isCorrect: Bool?
     let isQuiz: Bool
     let isMultipleSelected: Bool
-    init(option:TelegramMediaPollOption, nameText: TextViewLayout, percent: Float?, realPercent: Float, voteCount: Int32, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, voted: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, isCorrect: Bool, isQuiz: Bool, isMultipleSelected: Bool, vote: @escaping()->Void = {}, contentSize: NSSize = NSZeroSize) {
+    init(option:TelegramMediaPollOption, nameText: TextViewLayout, percent: Float?, realPercent: Float, voteCount: Int32, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, voted: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, isCorrect: Bool?, isQuiz: Bool, isMultipleSelected: Bool, vote: @escaping()->Void = {}, contentSize: NSSize = NSZeroSize) {
         self.option = option
         self.nameText = nameText
         self.percent = percent
@@ -431,7 +431,7 @@ class ChatPollItem: ChatRowItem {
             let percent: Float?
             let realPercent: Float
             let isSelected: Bool
-            let isCorrect: Bool
+            let isCorrect: Bool?
             let voted = poll.results.voters?.first(where: {$0.selected}) != nil
             
             var votedCount: Int32 = 0
@@ -440,12 +440,16 @@ class ChatPollItem: ChatRowItem {
                 realPercent = totalVoters == 0 ? 0 : Float(percents[i])
                 isSelected = vote.selected
                 votedCount = vote.count
-                isCorrect = poll.kind == .quiz ? vote.isCorrect : true
+                if poll.kind == .quiz {
+                    isCorrect = vote.isCorrect
+                } else {
+                   isCorrect = nil
+                }
             } else {
                 percent = poll.results.totalVoters == nil || poll.results.totalVoters == 0 ? nil : voted ? 0 : nil
                 realPercent = 0
                 isSelected = false
-                isCorrect = true
+                isCorrect = nil
             }
             
             let nameFont: NSFont = .normal(.text)//voted && isSelected ? .bold(.text) : .normal(.text)
@@ -490,6 +494,9 @@ class ChatPollItem: ChatRowItem {
     
     override var isForceRightLine: Bool {
         return true
+    }
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        return 20
     }
     
     override var isFixedRightPosition: Bool {
@@ -559,6 +566,16 @@ class ChatPollItem: ChatRowItem {
                 identifiers.append(option.opaqueIdentifier)
             }
             chatInteraction.vote(message.id, identifiers, !self.poll.isMultiple)
+        } else {
+            if poll.isQuiz, self.options.contains(where: { $0.isSelected }) {
+                guard let message = message else {
+                    return
+                }
+                if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) || self.options.contains(where: { $0.isLoading }) {
+                    return
+                }
+                self.invokeAction(fromOption: option.opaqueIdentifier)
+            }
         }
     }
     
@@ -579,7 +596,7 @@ class ChatPollItem: ChatRowItem {
         return true
     }
     
-    fileprivate func invokeAction() {
+    fileprivate func invokeAction(fromOption: Data? = nil) {
         
         guard let message = message else { return }
         let hasSelected = self.options.contains(where: { $0.isSelected })
@@ -587,7 +604,7 @@ class ChatPollItem: ChatRowItem {
             let identifiers = self.entry.additionalData.pollStateData.identifiers
             chatInteraction.vote(message.id, identifiers, true)
         } else {
-            showModal(with: PollResultController(context: context, message: message), for: context.window)
+            showModal(with: PollResultController(context: context, message: message, scrollToOption: fromOption), for: context.window)
         }
     }
     
@@ -675,10 +692,12 @@ final class ChatPollItemView : ChatRowView {
         
         if let selected = selected {
             if item.poll.kind == .quiz {
-                if selected.isCorrect {
-                    doWhenCorrectAnswer()
-                } else {
-                    doWhenIncorrectAnswer()
+                if let isCorrect = selected.isCorrect {
+                    if isCorrect {
+                        doWhenCorrectAnswer()
+                    } else {
+                       doWhenIncorrectAnswer()
+                    }
                 }
             }
         }
@@ -831,6 +850,8 @@ private final class PollOptionView : Control {
         progressView.userInteractionEnabled = false
         progressView.roundCorners = true
         
+        progressView.isEventLess = true
+        
         set(handler: { [weak self] _ in
             self?.option?.vote()
         }, for: .Click)
@@ -874,8 +895,8 @@ private final class PollOptionView : Control {
                 return
             }
             
-            if option.isQuiz {
-                if option.isCorrect {
+            if option.isQuiz, let isCorrect = option.isCorrect {
+                if isCorrect {
                     selectedImageView.image = option.presentation.chat.pollSelectedCorrect(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
                 } else {
                     selectedImageView.image = option.presentation.chat.pollSelectedIncorrect(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
@@ -892,22 +913,49 @@ private final class PollOptionView : Control {
                 selectedImageView.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
             }
         } else {
-            if let selectedImageView = self.selectedImageView {
-                self.selectedImageView = nil
-                if animated {
-                    selectedImageView.layer?.animateScaleSpring(from: 1, to: 0.2, duration: duration, removeOnCompletion: false)
-                    selectedImageView.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak selectedImageView] _ in
-                        selectedImageView?.removeFromSuperview()
-                    })
-                } else {
-                    selectedImageView.removeFromSuperview()
+            if option.isQuiz, let isCorrect = option.isCorrect, isCorrect {
+                var justAdded = false
+                if self.selectedImageView == nil {
+                    self.selectedImageView = ImageView()
+                    addSubview(self.selectedImageView!)
+                    justAdded = true
+                }
+                
+                guard let selectedImageView = self.selectedImageView else {
+                    return
+                }
+                
+                selectedImageView.image = option.presentation.chat.pollSelected(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
+
+                selectedImageView.setFrameSize(NSMakeSize(12, 12))
+                
+                selectedImageView.setFrameOrigin(NSMakePoint(progressView.frame.minX - selectedImageView.frame.width - 4, floorToScreenPixels(backingScaleFactor, progressView.frame.midY - selectedImageView.frame.height / 2)))
+                
+                if justAdded && animated {
+                    selectedImageView.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
+                    selectedImageView.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
+                }
+                
+            } else {
+                if let selectedImageView = self.selectedImageView {
+                    self.selectedImageView = nil
+                    if animated {
+                        selectedImageView.layer?.animateScaleSpring(from: 1, to: 0.2, duration: duration, removeOnCompletion: false)
+                        selectedImageView.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak selectedImageView] _ in
+                            selectedImageView?.removeFromSuperview()
+                        })
+                    } else {
+                        selectedImageView.removeFromSuperview()
+                    }
                 }
             }
             
+            
+            
         }
         
-        if option.isSelected && option.isQuiz {
-            votedColor = option.isCorrect ? option.presentation.chat.greenUI(option.isIncoming, option.isBubbled) : option.presentation.chat.redUI(option.isIncoming, option.isBubbled)
+        if option.isSelected, let isCorrect = option.isCorrect {
+            votedColor = isCorrect ? option.presentation.chat.greenUI(option.isIncoming, option.isBubbled) : option.presentation.chat.redUI(option.isIncoming, option.isBubbled)
         } else {
             votedColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
         }

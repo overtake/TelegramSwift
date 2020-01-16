@@ -281,15 +281,6 @@ private final class PlayerRenderer {
             data = self.animation.compressed
         }
         if let data = data, !data.isEmpty {
-            if let postbox = self.animation.postbox, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String : Any] {
-                if let soundEffect = json["soundEffect"] as? [String : Any] {
-                    if let base64String = soundEffect["data"] as? String {
-                        if let data = Data(base64Encoded: base64String) {
-                            self.soundEffect = LottieSoundEffect(data: data, animation: self.animation, postbox: postbox, triggerOn: soundEffect["triggerOn"] as? Int32)
-                        }
-                    }
-                }
-            }
             let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
             if let json = String(data: modified, encoding: .utf8) {
                 if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
