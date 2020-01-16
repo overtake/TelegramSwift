@@ -548,8 +548,8 @@ public extension NSView {
     }
     
     
-    func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
-        if animated {
+    func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, forceAnimateIfHasAnimation: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
+        if animated || (forceAnimateIfHasAnimation && self.layer?.animation(forKey:"position") != nil) {
             
             var presentX = NSMinX(self.frame)
             var presentY = NSMinY(self.frame)
@@ -605,6 +605,10 @@ public extension NSView {
         
         if save {
             self.bounds = to
+        }
+        if from == to {
+            completion?(true)
+            return
         }
         
         if animated {
@@ -1468,6 +1472,27 @@ public extension String {
             return new
         }
         return String(stringLiteral: self)
+    }
+    
+    var transformKeyboard:[String] {
+        let russianQwerty = "йцукенгшщзфывапролдячсмить".map { String($0) }
+        let englishQwerty = "qwertyuiopasdfghjklzxcvbnm".map { String($0) }
+
+        
+        let value = self.lowercased()
+        
+        var russian: [String] = value.map { String($0) }
+        var english: [String] = value.map { String($0) }
+        
+        for (i, char) in value.enumerated() {
+            if let index = russianQwerty.firstIndex(of: String(char)) {
+                english[i] = englishQwerty[index]
+            }
+            if let index = englishQwerty.firstIndex(of: String(char)) {
+                russian[i] = russianQwerty[index]
+            }
+        }
+        return [english.joined(), russian.joined()]
     }
     
     func fromSuffix(_ by:Int) -> String {

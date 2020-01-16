@@ -433,7 +433,7 @@
 		C23BC37E1E9BB28F00D79F92 /* AddContactModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23BC37D1E9BB28F00D79F92 /* AddContactModalController.swift */; };
 		C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C5AE01E1136D1005903E1 /* GroupNameRowItem.swift */; };
 		C23D0D7A1F1A609300AF5151 /* SFCompactRounded-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
-		C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Fonts */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
+		C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
 		C23D0D7D1F1A692100AF5151 /* SFCompactRounded-Semibold.otf in CopyFiles */ = {isa = PBXBuildFile; fileRef = C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */; };
 		C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23EEC881FCC47C1001371CD /* PeerMediaDateItem.swift */; };
 		C241025D1FD5702D00DB8625 /* ChatMessageBubbleImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */; };
@@ -911,7 +911,6 @@
 			dstPath = fonts;
 			dstSubfolderSpec = 7;
 			files = (
-				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Fonts */,
 			);
 			name = Fonts;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4860,6 +4859,7 @@
 				D07450EC233D61B800769D7F /* swap_money.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
+				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

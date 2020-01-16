@@ -397,7 +397,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             let textX = innerInsets.left + item.textFieldLeftInset - 3
             
             placeholderTextView.setFrameOrigin(NSMakePoint(innerInsets.left, innerInsets.top))
-            placeholderAction?.setFrameOrigin(NSMakePoint(innerInsets.left, innerInsets.top))
+            placeholderAction?.setFrameOrigin(NSMakePoint(innerInsets.left, innerInsets.top - 1))
             
             separator.frame = separatorFrame
         

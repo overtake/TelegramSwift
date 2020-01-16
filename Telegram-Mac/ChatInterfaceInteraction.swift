@@ -379,6 +379,8 @@ final class ChatInteraction : InterfaceObserver  {
                                 }), for: context.window)
                             }
                         })
+                    case let .setupPoll(isQuiz):
+                        showModal(with: NewPollController(chatInteraction: strongSelf, isQuiz: isQuiz), for: strongSelf.context.window)
                     default:
                         break
                     }

@@ -361,6 +361,10 @@ public class LinearProgressControl: Control {
         
         userInteractionEnabled = false
         
+        
+        progressView.isEventLess = true
+        containerView.isEventLess = true
+        fetchingView.isEventLess = true
     }
     
     

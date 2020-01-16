@@ -2187,6 +2187,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var first:Bool = true
     
     private var queuedTransitions: [TableUpdateTransition] = []
+    private var areSuspended = false
     private var isAlreadyEnqued: Bool = false
     private func enqueueTransitions() {
         
@@ -2206,7 +2207,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     private func isSetTransitionToQueue() -> Bool {
-        return clipView.layer?.animation(forKey: "bounds") != nil || clipView.isAnimateScrolling
+        return areSuspended
     }
     
     public func merge(with transition:TableUpdateTransition) -> Void {
@@ -2655,9 +2656,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     presentBounds.size.height -= y
                 }
                 
-                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, forKey: "bounds", completion: { [weak self] completed in
+                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, forKey: "bounds", completion: { completed in
                     completion?(completed)
-                    self?.enqueueTransitions()
                 })
                 CATransaction.commit()
             } else {
@@ -2805,17 +2805,27 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
             
+            let shouldSuspend: Bool
+            switch state {
+            case .down, .up:
+                shouldSuspend = false
+            default:
+                shouldSuspend = true
+            }
+            
 //            clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
 //                self?.removeScroll(listener: scrollListener)
 //            })
             
             if abs(bounds.minY - clipView.bounds.minY) < height {
                 if animate {
+                    areSuspended = shouldSuspend
                     clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
                         if let `self` = self {
                             scrollListener.handler(self.scrollPosition().current)
                             self.removeScroll(listener: scrollListener)
                             completion(completed)
+                            self.areSuspended = false
                             self.enqueueTransitions()
                         }
                         
@@ -2827,10 +2837,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
                
             } else {
+               
+                areSuspended = shouldSuspend
                 let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
                 clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self] completed in
                     self?.removeScroll(listener: scrollListener)
                     completion(completed)
+                    self?.areSuspended = false
                     self?.enqueueTransitions()
                 })
 

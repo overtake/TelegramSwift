@@ -73,12 +73,13 @@ public extension NSFont {
     }
     
     static func avatar(_ size: FontSize) -> NSFont {
-        
-        if let font = NSFont(name: ".SFCompactRounded-Semibold", size: size) {
-            return font
-        } else {
-            return .medium(size)
-        }
+        return .systemFont(ofSize: size, weight: .heavy)
+//
+//        if let font = NSFont(name: ".SFCompactRounded-Semibold", size: size) {
+//            return font
+//        } else {
+//            return .systemFont(ofSize: size, weight: .heavy)
+//        }
     }
     
     static func medium(_ size:FontSize) ->NSFont {
