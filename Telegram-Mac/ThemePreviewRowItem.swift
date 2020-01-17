@@ -23,6 +23,8 @@ class ThemePreviewRowItem: GeneralRowItem {
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
+      
+        
         let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
         let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
@@ -52,6 +54,14 @@ class ThemePreviewRowItem: GeneralRowItem {
         self.items = [item1, item2, item3]
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
+        
+        chatInteraction.getGradientOffsetRect = { [weak self] in
+            guard let `self` = self else {
+                return .zero
+            }
+            return CGRect(origin: NSMakePoint(0, self.height), size: NSMakeSize(self.width, 400))
+        }
+        
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
@@ -126,7 +136,7 @@ private final class ThemePreviewRowView : TableRowView {
             self.backgroundView.addSubview(view)
             
             if let view = view as? ChatRowView {
-                view.updateBackground(within: NSMakeSize(frame.width, 400), inset: NSMakePoint(0, frame.height), animated: false, rotated: true)
+                view.updateBackground(animated: false, rotated: true)
             }
             
             y += item.height

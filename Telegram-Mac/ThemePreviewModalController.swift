@@ -38,7 +38,7 @@ private final class ThemePreviewView : BackgroundView {
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(within: NSMakeSize(350, 400), inset: position.rect.origin, animated: false)
+                    view.updateBackground(animated: false)
                 }
             })
         }))
@@ -48,8 +48,7 @@ private final class ThemePreviewView : BackgroundView {
                 return
             }
             if let view = view as? ChatRowView {
-                let offset = self.tableView.scrollPosition().current.rect.origin
-                view.updateBackground(within: NSMakeSize(350, 400), inset: offset, animated: false)
+                view.updateBackground(animated: false)
             }
         }
         
@@ -98,6 +97,15 @@ private final class ThemePreviewView : BackgroundView {
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
+        
+        chatInteraction.getGradientOffsetRect = { [weak self] in
+            guard let `self` = self else {
+                return .zero
+            }
+            let offset = self.tableView.scrollPosition().current.rect.origin
+            return CGRect(origin: offset, size: NSMakeSize(350, 400))
+        }
+        
         let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
         let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
@@ -138,7 +146,7 @@ private final class ThemePreviewView : BackgroundView {
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(within: NSMakeSize(350, 400), inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
+                view.updateBackground(animated: false)
             }
         })
     }

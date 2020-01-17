@@ -3433,6 +3433,8 @@ internal final class L10n {
   internal static var newPollDisacardConfirmYes: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.Yes") }
   /// A quiz has one correct answer.
   internal static var newPollQuizMultipleError: String  { return L10n.tr("Localizable", "NewPoll.QuizMultiple.Error") }
+  /// New Quiz
+  internal static var newPollTitleQuiz: String  { return L10n.tr("Localizable", "NewPoll.Title.Quiz") }
   /// Create
   internal static var newThemeCreate: String  { return L10n.tr("Localizable", "NewTheme.Create") }
   /// This theme will be based on your current theme.

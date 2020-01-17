@@ -81,10 +81,27 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
     }
     
-    func updateBackground(within size: NSSize, inset: NSPoint, animated: Bool, rotated: Bool = false) -> Void {
-        let size = NSMakeSize(size.width, size.height + 60)
-        let inset = size.height - inset.y + (frame.height - bubbleFrame.maxY) - 30
-        bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        let oldOrigin = self.frame.origin
+        super.setFrameOrigin(newOrigin)
+        
+        if oldOrigin != newOrigin, oldOrigin == .zero {
+            updateBackground(animated: false)
+        }
+    }
+    
+    func updateBackground(animated: Bool, rotated: Bool = false) -> Void {
+        
+        guard let item = self.item as? ChatRowItem else {
+            return
+        }
+        let gradientRect = item.chatInteraction.getGradientOffsetRect()
+        let size = NSMakeSize(gradientRect.width, gradientRect.height + 30)
+        
+        let inset = size.height - gradientRect.minY + (frame.height - bubbleFrame.maxY) - 30
+       // if visibleRect.height > 0 {
+            bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
+      //  }
     }
     
     var selectableTextViews: [TextView] {
@@ -1028,6 +1045,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
             bubbleView.setType(image: item.bubbleImage, border: item.bubbleBorderImage, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
+            bubbleView.background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
+           // updateBackground(animated: animated, item: item)
         } else {
             bubbleView.setType(image: nil, border: nil, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
         }

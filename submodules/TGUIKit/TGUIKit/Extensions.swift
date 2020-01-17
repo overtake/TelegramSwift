@@ -603,9 +603,11 @@ public extension NSView {
     
     func _changeBounds(from: NSRect, to: NSRect, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         
+       
         if save {
             self.bounds = to
         }
+        
         if from == to {
             completion?(true)
             return

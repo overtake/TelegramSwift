@@ -232,7 +232,7 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        layout.measure(NSMakeSize(min(width, 420), min(width, 320)), spacing: hasBubble ? 2 : 4)
+        layout.measure(NSMakeSize(min(width, 360), min(width, 320)), spacing: hasBubble ? 2 : 4)
         return layout.dimensions
     }
     

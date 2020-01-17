@@ -123,7 +123,7 @@ public class TitleButton: ImageButton {
             font = NSFont(name: _font.fontName, size: text.fontSize)
         }
         font = font ?? .normal(text.fontSize)
-        let size:NSSize = self.size(with: self.text.string as! String?, font: font)
+        let size:NSSize = TitleButton.size(with: self.text.string as! String?, font: font)
         
         var msize:NSSize = size
         
@@ -199,7 +199,7 @@ public class TitleButton: ImageButton {
     }
     
     
-     func size(with string: String?, font: NSFont?) -> NSSize {
+     public static func size(with string: String?, font: NSFont?) -> NSSize {
         if font == nil || string == nil {
             return NSZeroSize
         }

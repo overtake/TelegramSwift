@@ -224,7 +224,7 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(within: self.frame.size, inset: position.rect.origin, animated: false)
+                    view.updateBackground(animated: false)
                 }
             })
         }))
@@ -311,7 +311,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(within: self.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: animated)
+                    view.updateBackground(animated: animated)
                 }
             })
         }
@@ -342,7 +342,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(within: self.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
+                view.updateBackground(animated: false)
             }
         })
         
@@ -387,7 +387,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(within: self.frame.size, inset: self.tableView.scrollPosition().current.rect.origin, animated: false)
+                view.updateBackground(animated: false)
             }
         })
     }
@@ -2673,6 +2673,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
         }
+        
+        chatInteraction.getGradientOffsetRect = { [weak self] in
+            guard let `self` = self else {
+                return .zero
+            }
+            let point = self.genericView.tableView.scrollPosition().current.rect.origin
+            return CGRect(origin: point, size: self.frame.size)
+        }
 
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in
             
@@ -3392,7 +3400,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(within: self.frame.size, inset: self.genericView.tableView.scrollPosition().current.rect.origin, animated: transition.animated)
+                view.updateBackground(animated: transition.animated)
             }
         })
         
@@ -4575,7 +4583,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func updateController() {
         genericView.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(within: self.frame.size, inset: self.genericView.tableView.scrollPosition().current.rect.origin, animated: false)
+                view.updateBackground(animated: false)
             }
         }, force: true)
     }

@@ -141,6 +141,8 @@ final class ChatInteraction : InterfaceObserver  {
     var blockContact: ()->Void = {}
     var openScheduledMessages: ()->Void = {}
     
+    var getGradientOffsetRect:()->NSRect = {  return .zero }
+
     var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
     
     let loadingMessage: Promise<Bool> = Promise()

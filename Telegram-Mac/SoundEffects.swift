@@ -38,7 +38,7 @@ func playSoundEffect(_ sound: SoundEffect) {
         var sound:NSSound?
         if let p = p {
             sound = NSSound(contentsOfFile: p, byReference: true)
-            sound?.volume = 0.3
+            sound?.volume = 0.1
         }
         
         return sound

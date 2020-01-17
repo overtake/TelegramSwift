@@ -122,7 +122,13 @@ class GeneralTextRowItem: GeneralRowItem {
         case .legacy:
             layout.measure(width: width - inset.left - inset.right)
         case let .modern(_, insets):
-            layout.measure(width: self.blockWidth - insets.left - insets.right)
+            var addition: CGFloat = 0
+            if let text = rightItem.text {
+                let layout = TextViewLayout(text)
+                layout.measure(width: .greatestFiniteMagnitude)
+                addition += layout.layoutSize.width + 20
+            }
+            layout.measure(width: self.blockWidth - insets.left - insets.right - addition)
         }
 
         return success
@@ -271,7 +277,7 @@ class GeneralTextRowView : GeneralRowView {
                         progressView.progressColor = item.textColor
                     }
                     if let rightTextView = self.rightTextView {
-                        rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, item.inset.top + insets.top))
+                        rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, frame.height - insets.bottom - rightTextView.frame.height))
                         
                         if let layout = rightTextView.layout {
                             var animatedRange: NSRange? = nil
