@@ -492,12 +492,25 @@ class ChatPollItem: ChatRowItem {
         self.titleTypeText = TextViewLayout(.initialize(string: poll.title, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
     }
     
-    override var isForceRightLine: Bool {
-        return true
-    }
     override var additionalLineForDateInBubbleState: CGFloat? {
-        return 20
+        var size: NSSize = .zero
+        if let action = self.actionButtonText {
+            size = TitleButton.size(with: action, font: .normal(.text))
+        } else if let totalVotesText = self.totalVotesText {
+            size = totalVotesText.layoutSize
+        }
+        
+        if size.width > 0 {
+            let dif = contentSize.width - (contentSize.width / 2 + size.width / 2)
+            if dif < (rightSize.width + insetBetweenContentAndDate) {
+                return 20
+            }
+            
+        }
+        
+        return super.additionalLineForDateInBubbleState
     }
+
     
     override var isFixedRightPosition: Bool {
         return true
@@ -619,6 +632,7 @@ class ChatPollItem: ChatRowItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         
         let width = min(width, 320)
+        
         
         titleText.measure(width: width - bubbleContentInset)
         titleTypeText.measure(width: width - bubbleContentInset)
@@ -1220,9 +1234,8 @@ private final class PollView : Control {
                 self.mergedAvatarsView = MergedAvatarsView(frame: NSMakeRect(0, 0, mergedImageSpacing * CGFloat(avatarPeers.count) + 2, mergedImageSize))
                 addSubview(self.mergedAvatarsView!)
             }
+            self.mergedAvatarsView?.frame = CGRect(origin: NSMakePoint(typeView.frame.maxX + 6, typeView.frame.minY), size: NSMakeSize(mergedImageSpacing * CGFloat(avatarPeers.count) + 2, mergedImageSize))
             self.mergedAvatarsView?.update(context: item.context, peers: avatarPeers, message: message, synchronousLoad: false)
-            
-            self.mergedAvatarsView?.setFrameOrigin(NSMakePoint(typeView.frame.maxX + 6, typeView.frame.minY))
             self.mergedAvatarsView?.removeAllHandlers()
             
             self.mergedAvatarsView?.set(handler: { [weak item] _ in

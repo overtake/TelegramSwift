@@ -85,7 +85,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup {
                         canAttachPoll = true
                     }
-                    if let peer = chatInteraction.presentation.mainPeer, peer.id == chatInteraction.context.peerId || peer.isBot {
+                    if let peer = chatInteraction.presentation.mainPeer, peer.isBot {
                         canAttachPoll = true
                     }
                     

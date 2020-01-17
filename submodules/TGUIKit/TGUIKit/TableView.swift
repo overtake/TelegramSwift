@@ -2183,6 +2183,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         mergePromise.set(transition |> deliverOnMainQueue)
     }
     
+    public var isBoundsAnimated: Bool {
+        return contentView.layer?.animation(forKey: "bounds") != nil
+    }
     
     private var first:Bool = true
     

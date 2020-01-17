@@ -197,16 +197,18 @@ final class ConfettiView: View {
     
     private var localTime: Float = 0.0
     
+    
     required init(frame: CGRect) {
         super.init(frame: frame)
         
+        self.isEventLess = true
         
         let colors: [NSColor] = ([
             0x56CE6B,
             0xCD89D0,
             0x1E9AFF,
             0xFF8724
-        ] as [UInt32]).map(NSColor.init(rgb:))
+            ] as [UInt32]).map(NSColor.init(rgb:))
         let imageSize = CGSize(width: 8.0, height: 8.0)
         var images: [(CGImage, CGSize)] = []
         for imageType in 0 ..< 2 {

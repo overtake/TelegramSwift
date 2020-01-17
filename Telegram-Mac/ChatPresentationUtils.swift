@@ -260,6 +260,9 @@ final class TelegramChatColors {
     func bubbleBorderColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return incoming ? palette.bubbleBorder_incoming : palette.bubbleBorder_outgoing//.clear//palette.bubbleBorder_outgoing
     }
+    func bubbleBackgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
+        return incoming ? palette.bubbleBackground_incoming : palette.bubbleBackgroundTop_outgoing//.clear//palette.bubbleBorder_outgoing
+    }
     
     func textColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.textBubble_incoming : palette.textBubble_outgoing : palette.text

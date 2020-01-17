@@ -69,15 +69,7 @@ private final class CustomAccentColorView : View {
            
         }
         
-        tableView.afterSetupItem = { [weak self] view, item in
-            guard let `self` = self else {
-                return
-            }
-            if let view = view as? ChatRowView {
-                let offset = self.tableView.scrollPosition().current.rect.origin
-                view.updateBackground(within: self.tableView.frame.size, inset: offset, animated: false)
-            }
-        }
+
         
         tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             guard let `self` = self else {
@@ -85,7 +77,7 @@ private final class CustomAccentColorView : View {
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(within: self.tableView.frame.size, inset: position.rect.origin, animated: false)
+                    view.updateBackground(animated: false)
                 }
             })
         }))
@@ -118,6 +110,14 @@ private final class CustomAccentColorView : View {
         _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random(), backgroundColor: theme.chatBackground))
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
+        
+        chatInteraction.getGradientOffsetRect = { [weak self] in
+            guard let `self` = self else {
+                return .zero
+            }
+            let offset = self.tableView.scrollPosition().current.rect.origin
+            return CGRect(origin: offset, size: self.tableView.frame.size)
+        }
         
         let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         

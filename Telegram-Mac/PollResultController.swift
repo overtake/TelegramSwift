@@ -42,6 +42,14 @@ private func _id_loading_for(_ identifier: Data) -> InputDataIdentifier {
 private func _id_option_header(_ identifier: Data) -> InputDataIdentifier {
     return InputDataIdentifier("_id_option_header_\(identifier.base64EncodedString())")
 }
+private func _id_option_empty(_ index: Int) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_option_empty_\(index)")
+}
+
+private let collapsedResultCount: Int = 10
+private let collapsedInitialLimit: Int = 14
+
+
 private let _id_loading = InputDataIdentifier("_id_loading")
 
 private func pollResultEntries(_ state: PollResultState, context: AccountContext, openProfile:@escaping(PeerId)->Void, loadMore: @escaping(Data)->Void) -> [InputDataEntry] {
@@ -74,7 +82,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
     struct Option : Equatable {
         let option: TelegramMediaPollOption
         let percent: Int
-        let voters:PollResultsOptionState
+        let voters:PollResultsOptionState?
         let votesCount: Int
     }
     
@@ -84,15 +92,26 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
         if let voters = state.results?.options[option.opaqueIdentifier], !voters.peers.isEmpty {
             let votesCount = Int(poll.results.voters?.first(where: {$0.opaqueIdentifier == option.opaqueIdentifier})?.count ?? 0)
             options.append(Option(option: option, percent: percents[i], voters: voters, votesCount: votesCount))
+        } else {
+            let votesCount = Int(poll.results.voters?.first(where: {$0.opaqueIdentifier == option.opaqueIdentifier})?.count ?? 0)
+            options.append(Option(option: option, percent: percents[i], voters: nil, votesCount: votesCount))
         }
     }
     
-    if options.isEmpty {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, item: { initialSize, stableId in
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: "", alignment: .center, additionLoading: true, viewType: .innerItem)
-        }))
-    } else {
-        for option in options {
+    
+    var isEmpty = false
+    if let resultsState = state.results {
+        for (_, optionState) in resultsState.options {
+            if !optionState.hasLoadedOnce {
+                isEmpty = true
+                break
+            }
+        }
+    }
+   
+
+    for option in options {
+        if option.votesCount > 0 {
             if option == options.first {
                 entries.append(.sectionId(sectionId, type: .customModern(16)))
                 sectionId += 1
@@ -101,7 +120,6 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 sectionId += 1
             }
             
-            
             let text = "\(option.option.text) — \(option.percent) %"
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_header(option.option.opaqueIdentifier), equatable: InputDataEquatable(text), item: { initialSize, stableId in
@@ -109,44 +127,86 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
             }))
             index += 1
             
-            for (i, voter) in option.voters.peers.enumerated() {
-                if let peer = voter.peer {
-                    var viewType = bestGeneralViewType(option.voters.peers, for: i)
-                    if i == option.voters.peers.count - 1, option.voters.canLoadMore {
-                        if option.voters.peers.count == 1 {
+            if let voters = option.voters {
+                for (i, voter) in voters.peers.enumerated() {
+                    if let peer = voter.peer {
+                        var viewType = bestGeneralViewType(voters.peers, for: i)
+                        if i == voters.peers.count - 1, voters.canLoadMore {
+                            if voters.peers.count == 1 {
+                                viewType = .firstItem
+                            } else {
+                                viewType = .innerItem
+                            }
+                        }
+                        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {
+                                openProfile(peer.id)
+                            })
+                        }))
+                        index += 1
+                    }
+                }
+                
+                if voters.canLoadMore, option.votesCount > voters.peers.count {
+                    if voters.isLoadingMore {
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                            return LoadingTableItem(initialSize, height: 41, stableId: stableId, viewType: .lastItem)
+                        }))
+                        index += 1
+                    } else {
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(option.votesCount - voters.peers.count), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                                loadMore(option.option.opaqueIdentifier)
+                            }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                        }))
+                        index += 1
+                    }
+                }
+            } else {
+                let displayCount: Int
+                let voterCount = option.votesCount
+                if voterCount > collapsedInitialLimit {
+                    displayCount = collapsedResultCount
+                } else {
+                    displayCount = voterCount
+                }
+                let remainingCount: Int?
+                if displayCount < voterCount {
+                    remainingCount = voterCount - displayCount
+                } else {
+                    remainingCount = nil
+                }
+                
+                var display:[Int] = []
+                for peerIndex in 0 ..< displayCount {
+                    display.append(peerIndex)
+                }
+                
+                for peerIndex in display {
+                    var viewType = bestGeneralViewType(display, for: peerIndex)
+                    if peerIndex == displayCount - 1, remainingCount != nil {
+                        if displayCount == 1 {
                             viewType = .firstItem
                         } else {
                             viewType = .innerItem
                         }
                     }
-                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {
-                            openProfile(peer.id)
-                        })
+                    
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_empty(Int(index)), equatable: nil, item: { initialSize, stableId in
+                        return PeerEmptyHolderItem(initialSize, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), viewType: viewType)
                     }))
                     index += 1
                 }
-            }
-            
-            if option.voters.canLoadMore, option.votesCount > option.voters.peers.count {
-                
-                if option.voters.isLoadingMore {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-                        return LoadingTableItem(initialSize, height: 41, stableId: stableId, viewType: .lastItem)
-                    }))
-                    index += 1
-                } else {
+                if let remainingCount = remainingCount {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(min(50, option.votesCount - option.voters.peers.count)), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
-                            loadMore(option.option.opaqueIdentifier)
-                        }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUpDisabled, textInset: 52, thumbInset: 4), enabled: false)
                     }))
                     index += 1
                 }
-                
-               
             }
         }
+        
+        
     }
     
     
@@ -225,7 +285,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
             let item = controller.tableView.item(stableId: InputDataEntryId.custom(_id_option_header(scroll)))
             
             if let item = item {
-                controller.tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: -10))
+                controller.tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: -10))
                 scrollToOption = nil
             }
         }

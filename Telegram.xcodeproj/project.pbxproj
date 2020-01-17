@@ -219,6 +219,7 @@
 		A778DC4323CDBB6600DD307B /* WalletCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
 		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
+		A7C1377D23D1A62800803ED3 /* PeerEmptyHolderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C1377C23D1A62700803ED3 /* PeerEmptyHolderItem.swift */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
 		A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */; };
 		A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -1255,6 +1256,7 @@
 		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
 		A7B5031123B62E1700C9838E /* Svg.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Svg.m; sourceTree = "<group>"; };
 		A7B5031223B62E1A00C9838E /* Svg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Svg.h; sourceTree = "<group>"; };
+		A7C1377C23D1A62700803ED3 /* PeerEmptyHolderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerEmptyHolderItem.swift; sourceTree = "<group>"; };
 		A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaPhotosController.swift; sourceTree = "<group>"; };
 		A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotosMonthItem.swift; sourceTree = "<group>"; };
 		A7D28204236C3C0B0000A9BF /* Postbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Postbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2884,6 +2886,7 @@
 				C2FF145F1E532C0A007B7B14 /* SearchEmptyRowItem.swift */,
 				C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */,
 				C234D4111EEDE6990017DC25 /* LoadingTableItem.swift */,
+				A7C1377C23D1A62700803ED3 /* PeerEmptyHolderItem.swift */,
 			);
 			name = "table-elements";
 			sourceTree = "<group>";
@@ -5250,6 +5253,7 @@
 				C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */,
 				C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */,
 				C2B1B1201E5F170A00895E0D /* ValidateAddressNameInteractive.swift in Sources */,
+				A7C1377D23D1A62800803ED3 /* PeerEmptyHolderItem.swift in Sources */,
 				A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */,
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,

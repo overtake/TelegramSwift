@@ -464,7 +464,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         if let item = item as? InputDataRowItem, let pasteFilter = item.pasteFilter {
-            if let string = pasteboard.string(forType: .string) {
+            if let string = pasteboard.string(forType: .string)?.trimmed {
                 let value = pasteFilter(string)
                 let updatedText = item.filter(value.1)
                 if value.0 {

@@ -24,7 +24,7 @@ enum UpdateButtonState {
 final class UpdateTabView : Control {
     let textView: TextView = TextView()
     let imageView: ImageView = ImageView()
-    let progressView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 30, 30))
+    let progressView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
     
     var isInstalling: Bool = false {
         didSet {

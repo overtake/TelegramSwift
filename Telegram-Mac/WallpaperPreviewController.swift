@@ -779,23 +779,14 @@ private final class WallpaperPreviewView: View {
             }
         }
         
-        tableView.afterSetupItem = { [weak self] view, item in
-            guard let `self` = self else {
-                return
-            }
-            if let view = view as? ChatRowView {
-                view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: false)
-            }
-        }
-        
-        
+    
         tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             guard let `self` = self else {
                 return
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: false)
+                    view.updateBackground(animated: false)
                 }
             })
         }))
@@ -817,6 +808,15 @@ private final class WallpaperPreviewView: View {
         }
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
+        
+        chatInteraction.getGradientOffsetRect = { [weak self] in
+            guard let `self` = self else {
+                return .zero
+            }
+            return CGRect(origin: NSMakePoint(0, self.documentView.frame.height), size: self.documentView.frame.size)
+        }
+        
+        
         let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
@@ -926,7 +926,7 @@ private final class WallpaperPreviewView: View {
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: false)
+                view.updateBackground(animated: false)
             }
         })
         
@@ -1039,7 +1039,7 @@ private final class WallpaperPreviewView: View {
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(within: self.documentView.frame.size, inset: NSMakePoint(0, self.documentView.frame.height), animated: animated)
+                view.updateBackground(animated: animated)
             }
         })
     }

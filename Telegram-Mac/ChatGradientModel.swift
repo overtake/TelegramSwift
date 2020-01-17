@@ -34,12 +34,14 @@ final class ChatMessageBubbleBackdrop: NSView {
         self.backgroundContent = NSView()
         
         super.init(frame: NSZeroRect)
+        autoresizingMask = []
+        autoresizesSubviews = false
         self.backgroundContent.wantsLayer = true
         wantsLayer = true
         self.layer?.masksToBounds = true
-        self.maskView?.wantsLayer = true
         self.addSubview(self.backgroundContent)
         self.addSubview(self.borderView)
+        self.layer?.disableActions()
     }
     
     required init?(coder decoder: NSCoder) {
@@ -55,6 +57,7 @@ final class ChatMessageBubbleBackdrop: NSView {
             } else {
                 maskView = SImageView()
                 maskView.frame = self.bounds
+                self.maskView?.layer?.disableActions()
                 self.maskView = maskView
                 self.layer?.mask = maskView.layer
             }

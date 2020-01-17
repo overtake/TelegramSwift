@@ -1773,7 +1773,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                modalShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
                                                modalClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                ivChannelJoined: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
-                                               chatListMention: { generateBadgeMention(backgroundColor: palette.accent, foregroundColor: palette.background) },
+                                               chatListMention: { generateBadgeMention(backgroundColor: palette.badge, foregroundColor: palette.background) },
                                                chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.accentSelect) },
                                                chatListMentionArchived: { generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
                                                chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },

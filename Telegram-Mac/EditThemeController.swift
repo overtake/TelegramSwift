@@ -68,7 +68,7 @@ private final class EditThemeArguments {
     }
 }
 
-private func editThemeEntries(state: EditThemeState, arguments: EditThemeArguments) -> [InputDataEntry] {
+private func editThemeEntries(state: EditThemeState, chatInteraction: ChatInteraction, arguments: EditThemeArguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -89,7 +89,8 @@ private func editThemeEntries(state: EditThemeState, arguments: EditThemeArgumen
     
     let previewTheme = state.presentation
     
-    let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: arguments.context, disableSelectAbility: true)
+
+    
     let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
     let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
@@ -155,6 +156,9 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
     let updateState: ((EditThemeState) -> EditThemeState) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
+    
     
     
     let slugDisposable = MetaDisposable()
@@ -258,7 +262,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
     var close: (() -> Void)? = nil
     
     let signal = statePromise.get() |> map { state in
-        return InputDataSignalValue(entries: editThemeEntries(state: state, arguments: arguments))
+        return InputDataSignalValue(entries: editThemeEntries(state: state, chatInteraction: chatInteraction, arguments: arguments))
     }
     
     
@@ -397,6 +401,14 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
     })
     
     
+    chatInteraction.getGradientOffsetRect = { [weak controller] in
+        guard let controller = controller else {
+            return .zero
+        }
+        let offset = controller.tableView.scrollPosition().current.rect.origin
+        return CGRect(origin: offset, size: controller.tableView.frame.size)
+    }
+    
     let modalInteractions = ModalInteractions(acceptTitle: L10n.editThemeEdit, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
@@ -414,7 +426,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }
             controller.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(within: controller.tableView.frame.size, inset: position.rect.origin, animated: false)
+                    view.updateBackground(animated: false)
                 }
             })
         }))
@@ -425,7 +437,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }
             if let view = view as? ChatRowView {
                 let offset = controller.tableView.scrollPosition().current.rect.origin
-                view.updateBackground(within: controller.tableView.frame.size, inset: offset, animated: false)
+                view.updateBackground(animated: false)
             }
         }
         
