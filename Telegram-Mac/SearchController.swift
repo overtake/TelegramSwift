@@ -704,7 +704,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                 } |> deliverOnPrepareQueue
                 
-                return combineLatest(context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnPrepareQueue, top, recently, statePromise |> deliverOnPrepareQueue) |> map { user, top, recent, state -> ([ChatListSearchEntry], Bool) in
+                return combineLatest(queue: prepareQueue, context.account.postbox.loadedPeerWithId(context.peerId), top, recently, statePromise) |> map { user, top, recent, state -> ([ChatListSearchEntry], Bool) in
                     var entries:[ChatListSearchEntry] = []
                     var i:Int = 0
                     var ids:[PeerId:PeerId] = [:]
@@ -747,7 +747,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }
         
         
-        let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.globalPeerHandler.get() |> deliverOnPrepareQueue |> distinctUntilChanged, pinnedPromise.get() |> deliverOnPrepareQueue) |> map { value, appearance, location, pinnedItems in
+        let transition = combineLatest(queue: prepareQueue, searchItems, appearanceSignal, context.globalPeerHandler.get() |> distinctUntilChanged, pinnedPromise.get()) |> map { value, appearance, location, pinnedItems in
             return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2, pinnedItems, value.3)
         }
         |> map { entries, loading, location, animated, pinnedItems, searchMessagesState -> (TableUpdateTransition, Bool, ChatLocation?, SearchMessagesState?) in
@@ -802,6 +802,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         isLoading.set(.single(false))
+        context.isInGlobalSearch = true
         self.window?.remove(object: self, for: .UpArrow)
         self.window?.remove(object: self, for: .DownArrow)
         openPeerDisposable.set(nil)
@@ -899,6 +900,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        context.isInGlobalSearch = true
         request(with: nil)
     }
     

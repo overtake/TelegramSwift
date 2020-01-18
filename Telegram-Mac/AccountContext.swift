@@ -272,7 +272,9 @@ final class AccountContext {
     var autoplayMedia: AutoplayMediaPreferences {
         return _autoplayMedia.with { $0 }
     }
+    
 
+    var isInGlobalSearch: Bool = false
     
     private let _contentSettings: Atomic<ContentSettings> = Atomic(value: ContentSettings.default)
     
