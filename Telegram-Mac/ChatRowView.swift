@@ -1049,6 +1049,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
            // updateBackground(animated: animated, item: item)
         } else {
             bubbleView.setType(image: nil, border: nil, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
+            bubbleView.background = .clear
         }
     }
     

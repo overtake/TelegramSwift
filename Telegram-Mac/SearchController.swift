@@ -473,17 +473,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 let foundQueryPeers: Promise<Peer?> = Promise()
                 
-                let callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void = { peerId, _, _, _ in
-                    foundQueryPeers.set(context.account.postbox.transaction {
-                        $0.getPeer(peerId)
-                    })
-                }
+                let callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void = { peerId, _, _, _ in }
                 
                 let link = inApp(for: query as NSString, context: context, peerId: nil, openInfo: callback, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                 
                 switch link {
-                case .followResolvedName:
-                    execute(inapp: link)
+                case let .followResolvedName(_, username, _, context, _, _):
+                    foundQueryPeers.set(resolveUsername(username: username, context: context))
                 default:
                     foundQueryPeers.set(.single(nil))
                 }

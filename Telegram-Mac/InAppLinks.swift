@@ -21,6 +21,45 @@ private let tgme:String = "tg://"
 
 
 
+func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?, NoError> {
+    if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
+        if let channelId = Int32(username[range.upperBound...]) {
+            let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: channelId)
+            
+            let peerSignal: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
+                return transaction.getPeer(peerId)
+                } |> mapToSignal { peer in
+                    if let peer = peer {
+                        return .single(peer)
+                    } else {
+                        return findChannelById(postbox: context.account.postbox, network: context.account.network, channelId: peerId.id)
+                    }
+            }
+            
+            return peerSignal |> deliverOnMainQueue |> map { peer in
+                if let peer = peer {
+                    if let peer = peer as? TelegramChannel {
+                        if peer.participationStatus != .member {
+                            return nil
+                        }
+                    }
+                }
+                return peer
+            }
+        } else {
+            return .single(nil)
+        }
+    } else {
+        return resolvePeerByName(account: context.account, name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
+            if let peerId = peerId {
+                return context.account.postbox.loadedPeerWithId(peerId) |> map(Optional.init)
+            }
+            return .single(nil)
+        } |> deliverOnMainQueue
+    }
+    
+}
+
 enum InAppSettingsSection : String {
     case themes
     case devices
