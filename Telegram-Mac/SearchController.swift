@@ -802,7 +802,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         isLoading.set(.single(false))
-        context.isInGlobalSearch = true
+        context.isInGlobalSearch = false
         self.window?.remove(object: self, for: .UpArrow)
         self.window?.remove(object: self, for: .DownArrow)
         openPeerDisposable.set(nil)
