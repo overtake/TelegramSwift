@@ -422,7 +422,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let notificationsBindings = SharedNotificationBindings(navigateToChat: { account, peerId in
                 
                 if let contextValue = self.contextValue, contextValue.context.account.id == account.id {
-                    contextValue.context.sharedContext.bindings.rootNavigation().push(ChatController(context: contextValue.context, chatLocation: .peer(peerId)))
+                    contextValue.context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: contextValue.context, chatLocation: .peer(peerId)))
                 } else {
                     sharedContext.switchToAccount(id: account.id, action: .chat(peerId, necessary: true))
                 }
