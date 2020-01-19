@@ -1059,7 +1059,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             chatInteraction.focusMessageId(nil, reply, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
             historyState = historyState.withRemovingReplies(max: reply)
         } else {
-            if previousView.with({$0})?.originalView?.laterId != nil {
+            let laterId = previousView.with({$0?.originalView?.laterId })
+            if laterId != nil {
                 setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .down(true), count: requestCount, animated: true))
             } else {
                 genericView.tableView.scroll(to: .down(true))
