@@ -84,7 +84,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     fileprivate var logoutImpl:() -> Void = {}
     fileprivate var useTouchIdImpl:() -> Void = {}
     private let inputContainer: View = View()
-    private var fieldState: SearchFieldState = .None
+    private var fieldState: SearchFieldState = .Focus
     
     required init(frame frameRect: NSRect) {
         input = PasscodeField(frame: NSZeroRect)
@@ -157,14 +157,15 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         }, for: .SingleClick)
         
         updateLocalizationAndTheme(theme: theme)
-        change(state: .None, animated: false)
+        layout()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundColor = .clear
+        backgroundColor = theme.colors.background
         logoutTextView.backgroundColor = theme.colors.background
         input.backgroundColor = theme.colors.background
+        inputContainer.background = theme.colors.grayBackground
         nameView.backgroundColor = theme.colors.background
     }
     
@@ -284,12 +285,13 @@ class PasscodeLockController: ModalViewController {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
     }
-    
+    private let updateCurrectController: ()->Void
     private let logoutImpl:() -> Signal<Never, NoError>
-    init(_ accountManager: AccountManager, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }) {
+    init(_ accountManager: AccountManager, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }, updateCurrectController: @escaping()->Void) {
         self.accountManager = accountManager
         self.logoutImpl = logoutImpl
         self.useTouchId = useTouchId
+        self.updateCurrectController = updateCurrectController
         super.init(frame: NSMakeRect(0, 0, 350, 350))
         self.bar = .init(height: 0)
     }
@@ -314,8 +316,9 @@ class PasscodeLockController: ModalViewController {
     
     private func checkNextValue(_ passcode: String, _ current:String?) {
         if current == passcode {
-            _doneValue.set(.single(true))
-            close()
+            self._doneValue.set(.single(true))
+            self.close()
+            
         } else {
             genericView.input.shake()
         }
@@ -351,6 +354,12 @@ class PasscodeLockController: ModalViewController {
     
     func invalidateTouchId() {
         laContext.invalidate()
+    }
+    
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.updateCurrectController()
     }
     
     

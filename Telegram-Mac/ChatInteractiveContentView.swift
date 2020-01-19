@@ -239,7 +239,16 @@ class ChatInteractiveContentView: ChatMediaContentView {
         timableProgressView?.center()
         videoAccessory?.setFrameOrigin(8, 8)
         self.image.setFrameSize(frame.size)
-        self.autoplayVideoView?.view.setFrameSize(frame.size)
+        
+        if let file = media as? TelegramMediaFile {
+            let dimensions = file.dimensions?.size ?? frame.size
+            let size = blurBackground ? dimensions.aspectFitted(frame.size) : frame.size
+            self.autoplayVideoView?.view.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - size.width) / 2), floorToScreenPixels(backingScaleFactor, (frame.height - size.height) / 2), size.width, size.height)
+            let positionFlags = self.autoplayVideoView?.view.positionFlags
+            self.autoplayVideoView?.view.positionFlags = positionFlags
+
+        }
+        
     }
     
     private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile, mediaPlayerStatus: MediaPlayerStatus? = nil, animated: Bool = false) {
@@ -343,13 +352,20 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         return false
     }
+    
+    var blurBackground: Bool {
+        return (parent != nil && parent?.groupingKey == nil)
+    }
+
 
     override func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         partDisposable.set(nil)
         
+        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
         
-        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!)
+        
+        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || versionUpdated
         if mediaUpdated {
             self.autoplayVideoView = nil
         }
@@ -387,7 +403,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         var updatedStatusSignal: Signal<(MediaResourceStatus, MediaResourceStatus), NoError>?
         
-        if true /*mediaUpdated*/ {
+        if mediaUpdated /*mediaUpdated*/ {
             
             var dimensions: NSSize = size
             
@@ -464,15 +480,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let blurBackground: Bool = media is TelegramMediaImage && (parent != nil && parent?.groupingKey == nil)
-            
-            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.fitted(NSMakeSize(320, 320)) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
             
             
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
             if let updateImageSignal = updateImageSignal, !self.image.isFullyLoaded {
-                self.image.setSignal( updateImageSignal, animate: true, cacheImage: { [weak media] result in
+                self.image.setSignal( updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
@@ -519,7 +533,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
                             
                             strongSelf.autoplayVideoView = autoplay
-                            if parent == nil {
+                            if !strongSelf.blurBackground {
                                 strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resizeAspectFill)
                             } else {
                                 strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resize)
@@ -527,15 +541,18 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             strongSelf.updatePlayerIfNeeded()
                         }
                         if let autoplay = strongSelf.autoplayVideoView {
-                            autoplay.view.frame = NSMakeRect(0, 0, size.width, size.height)
+                            let dimensions = (file.dimensions?.size ?? size)
+                            let value = strongSelf.blurBackground ? dimensions.aspectFitted(size) : size
+                            
+                            autoplay.view.frame = NSMakeRect(0, 0, value.width, value.height)
                             if let positionFlags = positionFlags {
                                 autoplay.view.positionFlags = positionFlags
                             } else {
                                 autoplay.view.layer?.cornerRadius = .cornerRadius
                             }
                             strongSelf.addSubview(autoplay.view, positioned: .above, relativeTo: strongSelf.image)
-                            
                             autoplay.mediaPlayer.attachPlayerView(autoplay.view)
+                            autoplay.view.center()
                         }
                         
                     } else {

@@ -60,7 +60,7 @@ public class DatePicker<T>: Control where T: Equatable {
     public override func layout() {
         super.layout()
         self.updateSelected(animated: false)
-        self.borderView.frame = NSMakeRect(1, 1, bounds.width - 2, bounds.height - 2)
+        self.borderView.frame = bounds
         self.activeBorderView.frame = bounds
         self.selectedText.center()
     }

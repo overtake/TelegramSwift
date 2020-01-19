@@ -202,6 +202,13 @@ private func prepareTransition(left:[AppearanceWrapperEntry<ArchivedStickerPacks
 
 class ArchivedStickerPacksController: TableViewController {
     private let disposable = MetaDisposable()
+    private let archived: [ArchivedStickerPackItem]?
+    private let updatedPacks: ([ArchivedStickerPackItem]?) -> Void
+    init(_ context: AccountContext, archived: [ArchivedStickerPackItem]?, updatedPacks: @escaping ([ArchivedStickerPackItem]?) -> Void) {
+        self.archived = archived
+        self.updatedPacks = updatedPacks
+        super.init(context)
+    }
     
     deinit {
         disposable.dispose()
@@ -217,8 +224,10 @@ class ArchivedStickerPacksController: TableViewController {
             statePromise.set(stateValue.modify { f($0) })
         }
         
-        let actionsDisposable = DisposableSet()
+        let updatedPacks = self.updatedPacks
         
+        let actionsDisposable = DisposableSet()
+       
         let resolveDisposable = MetaDisposable()
         actionsDisposable.add(resolveDisposable)
         
@@ -226,15 +235,21 @@ class ArchivedStickerPacksController: TableViewController {
         actionsDisposable.add(removePackDisposables)
         
         let stickerPacks = Promise<[ArchivedStickerPackItem]?>()
-        stickerPacks.set(.single(nil) |> then(archivedStickerPacks(account: context.account) |> map { Optional($0) }))
+        stickerPacks.set(.single(archived) |> then(archivedStickerPacks(account: context.account) |> map { Optional($0) }))
         
         let installedStickerPacks = Promise<CombinedView>()
         installedStickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
         
+        
+        actionsDisposable.add(stickerPacks.get().start(next: { packs in
+            updatedPacks(packs)
+        }))
+        
+        
         let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
           showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { info in
-            confirm(for: mainWindow, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
+            confirm(for: context.window, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
                 var remove = false
                 updateState { state in
                     var removingPackIds = state.removingPackIds
@@ -278,7 +293,7 @@ class ArchivedStickerPacksController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<ArchivedStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
         
-        let signal = combineLatest(queue: self.queue, statePromise.get(), stickerPacks.get(), installedStickerPacks.get(), appearanceSignal)
+        let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks.get(), installedStickerPacks.get(), appearanceSignal)
             |> map { state, packs, installedView, appearance -> TableUpdateTransition in
                 
                 let entries = archivedStickerPacksControllerEntries(state: state, packs: packs, installedView: installedView).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}

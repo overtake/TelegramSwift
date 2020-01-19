@@ -24,12 +24,17 @@ private final class AuthModalController : ModalController {
 }
 
 
+
+
+
 final class UnauthorizedApplicationContext {
     let account: UnauthorizedAccount
     let rootController: MajorNavigationController
     let window:Window
     let modal: ModalController
     let sharedContext: SharedAccountContext
+    
+    private let updatesDisposable: DisposableSet = DisposableSet()
     
     var rootView: NSView {
         return rootController.view
@@ -41,6 +46,8 @@ final class UnauthorizedApplicationContext {
         window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
         window.minSize = NSMakeSize(380, 500)
         
+        
+        updatesDisposable.add(managedAppConfigurationUpdates(accountManager: sharedContext.accountManager, network: account.network).start())
         
         if !window.initFromSaver {
             window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
@@ -70,6 +77,7 @@ final class UnauthorizedApplicationContext {
     
     deinit {
         account.shouldBeServiceTaskMaster.set(.single(.never))
+        updatesDisposable.dispose()
         NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
     
@@ -115,6 +123,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let clearReadNotifiesDisposable = MetaDisposable()
     private let chatUndoManagerDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
+    private let updatesDisposable = MetaDisposable()
     
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
@@ -174,6 +183,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         super.init()
         
+        
+        updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
         
         context.sharedContext.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
@@ -344,19 +355,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .option])
         
         #if DEBUG
-//        window.set(handler: { [weak self] () -> KeyHandlerResult in
-//            var items: [ValuesSelectorValue<String>] = []
-//            for i in 0 ..< 100 {
-//                items.append(ValuesSelectorValue(localized: "value: \(i)", value: "\(i)"))
-//            }
-//            
-//            let controller = ValuesSelectorModalController(values: items, selected: items[0], title: "test", onComplete: { value in
-//                
-//            })
-//            
-//            showModal(with: controller, for: window)
-//            return .invoked
-//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            PlayConfetti(for: window)
+            playSoundEffect(.confetti)
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
         
         
@@ -586,6 +589,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         clearReadNotifiesDisposable.dispose()
         chatUndoManagerDisposable.dispose()
         appUpdateDisposable.dispose()
+        updatesDisposable.dispose()
         context.cleanup()
         NotificationCenter.default.removeObserver(self)
     }

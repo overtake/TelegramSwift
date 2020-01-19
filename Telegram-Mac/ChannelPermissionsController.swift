@@ -379,8 +379,8 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
         entries.append(.permissionsHeader(sectionId, index, L10n.groupInfoPermissionsSectionTitle, .textTopItem))
         index += 1
         
-        for rights in allGroupPermissionList {
-            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights), !effectiveRightsFlags.contains(rights), rights, true, .singleItem))
+        for (i, rights) in allGroupPermissionList.enumerated() {
+            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights), !effectiveRightsFlags.contains(rights), rights, true, bestGeneralViewType(allGroupPermissionList, for: i)))
             index += 1
         }
         
@@ -469,41 +469,45 @@ final class ChannelPermissionsController : TableViewController {
                 case let .member(memberId, _, _, _, _):
                     
                     
-                    let signal: Signal<PeerId?, NoError>
+                    let signal: Signal<PeerId?, ConvertGroupToSupergroupError>
                     
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
                         stopMerging = true
                         signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                             |> map(Optional.init)
-                            |> `catch` { _ -> Signal<PeerId?, NoError> in
-                                return .single(nil)
-                            }
-                            |> mapToSignal { upgradedPeerId -> Signal<PeerId?, NoError> in
+                            |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                 guard let upgradedPeerId = upgradedPeerId else {
                                     return .single(nil)
                                 }
                                 return context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: upgradedPeerId, memberId: memberId, bannedRights: updatedRights)
-                                    |> mapToSignal { _ -> Signal<PeerId?, NoError> in
+                                    |> castError(ConvertGroupToSupergroupError.self)
+                                    |> mapToSignal { _ -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                         return .complete()
                                     }
-                                    |> then(.single(upgradedPeerId))
+                                    |> then(.single(upgradedPeerId) |> castError(ConvertGroupToSupergroupError.self))
                             }
                             |> deliverOnMainQueue
                     } else {
-                        signal = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: updatedRights) |> map {_ in return nil}
+                        signal = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: updatedRights)
+                            |> map {_ in return nil}
+                            |> castError(ConvertGroupToSupergroupError.self)
                             |> deliverOnMainQueue
                     }
                     
-                    updateBannedDisposable.set((showModalProgress(signal: signal, for: context.window) |> then(showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0) |> mapToSignal { _ in return .complete()})).start(next: { upgradedPeerId in
+                    updateBannedDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { upgradedPeerId in
                         if let upgradedPeerId = upgradedPeerId {
                             upgradedToSupergroup(upgradedPeerId, {
                                 
                             })
                         }
-                    }, completed: {
-                        
+                    }, error: { error in
+                        switch error {
+                        case .tooManyChannels:
+                            showInactiveChannels(context: context, source: .upgrade)
+                        case .generic:
+                            alert(for: context.window, info: L10n.unknownError)
+                        }
                     }))
-                    
                 default:
                     break
                 }
@@ -664,28 +668,27 @@ final class ChannelPermissionsController : TableViewController {
         }, presentRestrictedPublicGroupPermissionsAlert: {
                 alert(for: mainWindow, info: L10n.groupPermissionNotAvailableInPublicGroups)
         }, updateSlowMode: { value in
-            let signal: Signal<PeerId?, UpdateChannelSlowModeError>
+            let signal: Signal<PeerId?, ConvertGroupToSupergroupError>
             
             if peerId.namespace == Namespaces.Peer.CloudGroup {
                 stopMerging = true
                 signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                     |> map(Optional.init)
-                    |> mapError { _ in
-                        return UpdateChannelSlowModeError.generic
-                    }
-                    |> mapToSignal { upgradedPeerId -> Signal<PeerId?, UpdateChannelSlowModeError> in
+                    |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                         guard let upgradedPeerId = upgradedPeerId else {
                             return .fail(.generic)
                         }
                         return updateChannelSlowModeInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: upgradedPeerId, timeout: value)
                             |> map { _ in return Optional(upgradedPeerId) }
-                            |> `catch` { _ in
-                                return .single(Optional(upgradedPeerId))
+                            |> mapError { _ in
+                                return ConvertGroupToSupergroupError.generic
                             }
                     }
                 
             } else {
-                signal = updateChannelSlowModeInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, timeout: value)  |> map { _ in return nil }
+                signal = updateChannelSlowModeInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, timeout: value)
+                    |> mapError { _ in return ConvertGroupToSupergroupError.generic }
+                    |> map { _ in return nil }
             }
             
             _ = showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { upgradedPeerId in
@@ -696,6 +699,8 @@ final class ChannelPermissionsController : TableViewController {
                 }
             }, error: { error in
                 switch error {
+                case .tooManyChannels:
+                    showInactiveChannels(context: context, source: .upgrade)
                 case .generic:
                     alert(for: context.window, info: L10n.unknownError)
                 }

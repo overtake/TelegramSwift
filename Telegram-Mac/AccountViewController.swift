@@ -14,6 +14,34 @@ import Postbox
 import SwiftSignalKit
 
 
+private final class AccountSearchBarView: TitledBarView {
+    fileprivate let searchView = SearchView(frame: NSMakeRect(0, 0, 100, 30))
+    init(controller: ViewController) {
+        super.init(controller: controller)
+        addSubview(searchView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        searchView.updateLocalizationAndTheme(theme: theme)
+    }
+    
+    override func layout() {
+        super.layout()
+        searchView.setFrameSize(NSMakeSize(frame.width, 30))
+        searchView.center()
+    }
+    
+}
+
 
 fileprivate final class AccountInfoArguments {
     let context: AccountContext
@@ -595,12 +623,91 @@ private func prepareEntries(left: [AppearanceWrapperEntry<AccountInfoEntry>], ri
 class LayoutAccountController : TableViewController {
     private let disposable = MetaDisposable()
     
+    private var searchController: InputDataController?
+    private let searchState: ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     var navigation:NavigationViewController? {
         return context.sharedContext.bindings.rootNavigation()
     }
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
+        self.searchController?.view.frame = bounds
+    }
+    
+    override func getCenterBarViewOnce() -> TitledBarView {
+        let searchBar = AccountSearchBarView(controller: self)
+        
+        searchBar.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+            guard let `self` = self else {return}
+            self.searchState.set(state)
+            switch state.state {
+            case .Focus:
+                self.showSearchController(animated: animated)
+            case .None:
+                self.hideSearchController(animated: animated)
+            }
+            
+        }, { [weak self] state in
+            self?.searchState.set(state)
+        })
+        
+        return searchBar
+    }
+    
+    private func showSearchController(animated: Bool) {
+        if searchController == nil {
+            let rect = genericView.bounds
+            let searchController = SearchSettingsController(context: context, searchQuery: self.searchState.get(), archivedStickerPacks: .single(nil), privacySettings: self.settings.get() |> map { $0.0 })
+            searchController.bar = .init(height: 0)
+            searchController._frameRect = rect
+            searchController.tableView.border = [.Right]
+            self.searchController = searchController
+            searchController.navigationController = self.navigationController
+            searchController.viewWillAppear(true)
+            if animated {
+                searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
+                    if complete {
+                        self?.searchController?.viewDidAppear(animated)
+                    }
+                })
+            } else {
+                searchController.viewDidAppear(animated)
+            }
+            
+            self.addSubview(searchController.view)
+        }
+    }
+    
+    
+    
+    private func hideSearchController(animated: Bool) {
+        if let searchController = self.searchController {
+            searchController.viewWillDisappear(animated)
+            searchController.view.layer?.opacity = animated ? 1.0 : 0.0
+            searchController.viewDidDisappear(true)
+            self.searchController = nil
+            let view = searchController.view
+            
+            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
+                view?.removeFromSuperview()
+            })
+        }
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        guard context.sharedContext.layout != .minimisize else {
+            return .invoked
+        }
+        let searchView = (self.centerBarView as? AccountSearchBarView)?.searchView
+        if let searchView = searchView {
+            if searchView.state == .None {
+                return searchView.changeResponder() ? .invoked : .rejected
+            } else if searchView.state == .Focus && searchView.query.length > 0 {
+                searchView.change(state: .None,  true)
+                return .invoked
+            }
+        }
+        return .rejected
     }
     
     override func getRightBarViewOnce() -> BarView {
@@ -635,7 +742,7 @@ class LayoutAccountController : TableViewController {
     private let syncLocalizations = MetaDisposable()
     fileprivate let passportPromise: Promise<Bool> = Promise(false)
     fileprivate let hasWallet: Promise<Bool> = Promise(false)
-
+    
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -698,7 +805,7 @@ class LayoutAccountController : TableViewController {
         #endif
         
         
-        let apply = combineLatest(queue: queue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet -> TableUpdateTransition in
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet -> TableUpdateTransition in
             let entries = accountInfoEntries(peerView: peerView, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
@@ -791,11 +898,19 @@ class LayoutAccountController : TableViewController {
         })
         
         updateLocalizationAndTheme(theme: theme)
+        
+        
+        context.window.set(handler: { [weak self] in
+            if let strongSelf = self {
+                return strongSelf.escapeKeyAction()
+            }
+            return .invokeNext
+        }, with: self, for: .Escape, priority:.low)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        window?.remove(object: self, for: .P)
+        window?.removeAllHandlers(for: self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -813,7 +928,7 @@ class LayoutAccountController : TableViewController {
     }
     
     override func getLeftBarViewOnce() -> BarView {
-        return BarView(controller: self)
+        return BarView(10, controller: self)
     }
     
     override init(_ context: AccountContext) {
@@ -825,9 +940,20 @@ class LayoutAccountController : TableViewController {
         super.updateLocalizationAndTheme(theme: theme)
         navigationController?.updateLocalizationAndTheme(theme: theme)
     }
+    
+    override func firstResponder() -> NSResponder? {
+        return nil
+    }
 
     
     override func scrollup() {
+        
+        if searchController != nil {
+            let searchView = (self.centerBarView as? AccountSearchBarView)?.searchView
+            searchView?.cancel(true)
+            return
+        }
+        
         if let currentEvent = NSApp.currentEvent, currentEvent.clickCount == 5 {
             context.sharedContext.bindings.rootNavigation().push(DeveloperViewController(context: context))
         }

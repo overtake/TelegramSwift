@@ -786,7 +786,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             if url.lowercased().contains("youtube"),  url.lowercased().contains("embed/") {
                 url = url.replacingOccurrences(of: "embed/", with: "watch?v=")
             }
-            let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: PixelDimensions(size), duration: nil, author: nil, image: image, file: nil, files: nil, instantPage: nil)
+            let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: PixelDimensions(size), duration: nil, author: nil, image: image, file: nil, attributes: [], instantPage: nil)
             let content = TelegramMediaWebpageContent.Loaded(loadedContent)
             
             item = InstantPageImageItem(frame: frame, webPage: webpage, media: InstantPageMedia(index: embedIndex, media: TelegramMediaWebpage(webpageId: MediaId(namespace: Namespaces.Media.LocalWebpage, id: -1), content: content), webpage: webpage, url: nil, caption: nil, credit: nil), attributes: [], interactive: false, roundCorners: false, fit: false)

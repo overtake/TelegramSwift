@@ -49,3 +49,16 @@ appstore:
         - bash ./buildbox/internal.sh appstore
     environment:
         name: appstore
+
+release:
+    tags:
+        - release
+    stage: deploy
+    only:
+        - release
+    except:
+        - tags
+    script:
+        - bash ./buildbox/internal.sh release
+    environment:
+        name: release

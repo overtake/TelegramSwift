@@ -277,14 +277,19 @@ class ChatMessageItem: ChatRowItem {
             }
             
             self.containsBigEmoji = containsBigEmoji
+            
+            if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
+                copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)
+            }
            
             self.messageText = copy
+           
            
             
             textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false)
             textLayout.mayBlocked = entry.renderType != .bubble
             
-            if let highlightFoundText = entry.additionalData?.highlightFoundText {
+            if let highlightFoundText = entry.additionalData.highlightFoundText {
                 if highlightFoundText.isMessage {
                     if let range = rangeOfSearch(highlightFoundText.query, in: copy.string) {
                         textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
@@ -316,7 +321,7 @@ class ChatMessageItem: ChatRowItem {
             
             var media = message.media.first
             if let game = media as? TelegramMediaGame {
-                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, files: nil, instantPage: nil)))
+                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
             }
             
             self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
@@ -440,19 +445,30 @@ class ChatMessageItem: ChatRowItem {
                     let text: String
                     if let type = type {
                         text = copyContextText(from: type)
-                    } else {
-                        text = layout.selectedRange.hasSelectText ? tr(L10n.chatCopySelectedText) : tr(L10n.textCopy)
+                        items.append(ContextMenuItem(text, handler: {
+                            if let strongSelf = self {
+                                let pb = NSPasteboard.general
+                                pb.declareTypes([.string], owner: strongSelf)
+                                var effectiveRange = strongSelf.textLayout.selectedRange.range
+                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
+                                let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                if let attribute = attribute as? inAppLink {
+                                    pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                } else {
+                                    pb.setString(selectedText.string, forType: .string)
+                                }
+                            }
+                        }))
+                        
                     }
                     
-                    
-                    items.append(ContextMenuItem(text, handler: { [weak strongSelf] in
-                        let result = strongSelf?.textLayout.interactions.copy?()
-                        if let result = result, let strongSelf = strongSelf, !result {
+                    items.append(ContextMenuItem(layout.selectedRange.hasSelectText ? L10n.chatCopySelectedText : L10n.textCopy, handler: {
+                        let result = self?.textLayout.interactions.copy?()
+                        if let result = result, let strongSelf = self, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
                                 let pb = NSPasteboard.general
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
-                                
                                 let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
                                 let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
                                 if !isCopied {
@@ -468,6 +484,7 @@ class ChatMessageItem: ChatRowItem {
                             
                         }
                     }))
+                   
                     
                     if strongSelf.textLayout.selectedRange.hasSelectText {
                         var effectiveRange: NSRange = NSMakeRange(NSNotFound, 0)
@@ -541,6 +558,9 @@ class ChatMessageItem: ChatRowItem {
             return rightSize.height + 3
         }
         if isForceRightLine {
+            return rightSize.height
+        }
+        if unsupported {
             return rightSize.height
         }
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {

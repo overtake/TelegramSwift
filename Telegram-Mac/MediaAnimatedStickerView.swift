@@ -126,6 +126,13 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
     }
     
+    var chatLoopAnimated: Bool {
+        if let context = self.context {
+            return context.autoplayMedia.loopAnimatedStickers
+        }
+        return true
+    }
+    
     func updateListeners() {
         if let window = window {
             NotificationCenter.default.removeObserver(self)
@@ -210,14 +217,15 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             }
             return nil
         } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
-            if let data = data, let file = file {
+            if let data = data, let file = file, let `self` = self {
                 let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
-                let playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker ? .once : .loop)
+                let playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
+                                
                 let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? 30 : 60
-                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.thumb) : self?.parent != nil ? .temporaryLZ4(.chat) : .none)
+                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
-                self?.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps)
-                self?.fetchStatus = .Local
+                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, postbox: self.context?.account.postbox)
+                self.fetchStatus = .Local
             } else {
                 self?.sticker = nil
                 self?.fetchStatus = .Remote

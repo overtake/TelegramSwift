@@ -175,6 +175,6 @@ open class TableRowItem: NSObject {
     }
     
     internal var heightValue: CGFloat {
-        return _isAutohidden ? 0 : self.height
+        return _isAutohidden ? 1.0 : self.height
     }
 }

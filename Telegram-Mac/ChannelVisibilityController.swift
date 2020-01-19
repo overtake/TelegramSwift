@@ -682,7 +682,6 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         
         
         peersDisablingAddressNameAssignment.set(.single(nil) |> then(channelAddressNameAssignmentAvailability(account: context.account, peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
-            
             if case .addressNameLimitReached = result {
                 return adminedPublicChannels(account: context.account)
                     |> map { Optional($0) }
@@ -726,7 +725,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                 return state.withUpdatedRevokingPeerId(peerId)
             }
             
-            self?.revokeAddressNameDisposable.set((confirmSignal(for: mainWindow, information: L10n.channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+            self?.revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: L10n.channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
                 if !result {
                     return .fail(.generic)
                 } else {
@@ -807,13 +806,13 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                 return state.withUpdatedUpdatingAddressName(true)
                             }
                             
-                            let signal: Signal<PeerId?, UpdateAddressNameError>
+                            let signal: Signal<PeerId?, ConvertGroupToSupergroupError>
                             
                             if peer.isGroup {
                                 signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
-                                    |> mapError {_ in return UpdateAddressNameError.generic}
-                                    |> mapToSignal { upgradedPeerId -> Signal<PeerId?, UpdateAddressNameError> in
+                                    |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                         return updateAddressName(account: context.account, domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
+                                        |> mapError {_ in return ConvertGroupToSupergroupError.generic}
                                         |> mapToSignal { _ in
                                             return .single(Optional(upgradedPeerId))
                                         }
@@ -824,11 +823,20 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                     |> mapToSignal { _ in
                                         return .single(nil)
                                     }
+                                    |> mapError {_ in
+                                        return ConvertGroupToSupergroupError.generic
+                                    }
                             }
                             
-                            self?.updateAddressNameDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { updatedPeerId in
+                            self?.updateAddressNameDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { updatedPeerId in
                                 self?.onComplete.set(.single(updatedPeerId))
-                            }, error: { _ in
+                            }, error: { error in
+                                switch error {
+                                case .tooManyChannels:
+                                    showInactiveChannels(context: context, source: .upgrade)
+                                case .generic:
+                                    alert(for: context.window, info: L10n.unknownError)
+                                }
                                 updateState { state in
                                     return state.withUpdatedUpdatingAddressName(false)
                                 }

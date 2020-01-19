@@ -51,3 +51,14 @@ lane :appstore do
       output_directory: "./output"
     )
 end
+
+lane :release do
+    sh("rm -rf ./output")
+    sh("mkdir ./output")
+    gym(
+      scheme: "Release",
+      clean: true,
+      silent: true,
+      output_directory: "./output"
+    )
+end

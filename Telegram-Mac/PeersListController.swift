@@ -594,21 +594,21 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func hideSearchController(animated: Bool) {
-           if let searchController = self.searchController {
-               searchController.viewWillDisappear(animated)
-               searchController.view.layer?.opacity = animated ? 1.0 : 0.0
-               
-               searchController.viewDidDisappear(true)
-               self.searchController = nil
-               self.genericView.tableView.isHidden = false
-               self.genericView.tableView.change(opacity: 1, animated: animated)
-               let view = searchController.view
-               
-               searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
-                   view?.removeFromSuperview()
-               })
-           }
-       }
+        if let searchController = self.searchController {
+            searchController.viewWillDisappear(animated)
+            searchController.view.layer?.opacity = animated ? 1.0 : 0.0
+        
+            searchController.viewDidDisappear(true)
+            self.searchController = nil
+            self.genericView.tableView.isHidden = false
+            self.genericView.tableView.change(opacity: 1, animated: animated)
+            let view = searchController.view
+        
+            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
+                view?.removeFromSuperview()
+            })
+        }
+    }
     
     override func focusSearch(animated: Bool) {
         genericView.searchView.change(state: .Focus, animated)
@@ -754,6 +754,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         
     }
+    
+
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

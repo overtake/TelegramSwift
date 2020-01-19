@@ -83,7 +83,7 @@ fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry]
     let (removed,inserted,updated) = proccessEntriesWithoutReverse(from, right: to) { entry -> TableRowItem in
         switch entry {
         case let .message(message):
-            return ChatListMessageRowItem(initialSize, context: context, message: message, query: "", renderedPeer: RenderedPeer(message: message))
+            return ChatListMessageRowItem(initialSize, context: context, message: message, query: "", renderedPeer: RenderedPeer(message: message), readState: nil)
         }
     }
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated)

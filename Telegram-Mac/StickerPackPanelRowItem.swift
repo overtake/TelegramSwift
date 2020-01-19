@@ -122,15 +122,9 @@ class StickerPackPanelRowItem: TableRowItem {
                 inner: switch packInfo {
                 case .saved, .recent:
                     if let reference = file.stickerReference {
-                        inner2: switch reference {
-                        case let .id(id, _):
-                            items.append(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
-                                self?.arguments.navigate(ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 0, collectionId: ItemCollectionId.init(namespace: Namespaces.ItemCollection.CloudStickerPacks, id: id)))
-                            }))
-                        default:
-                            break inner2
-                        }
-                        
+                        items.append(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
+                            self?.arguments.showPack(reference)
+                        }))
                     }
                 default:
                     break inner
@@ -149,6 +143,20 @@ class StickerPackPanelRowItem: TableRowItem {
                         }))
                     }
                 }
+                
+                items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak self] in
+                    guard let `self` = self else {
+                        return
+                    }
+                    let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                        return view.media?.isEqual(to: file) ?? false
+                    })
+                    
+                    if let contentView = contentView {
+                        self.arguments.sendMedia(file, contentView, true)
+                    }
+                }))
+                
                 break
             }
         }
@@ -192,6 +200,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     
     private var contentViews:[Optional<ChatMediaContentView>] = []
     private let packNameView = TextView()
+    private var clearRecentButton: ImageButton?
     private var addButton:TitleButton?
     private let longDisposable = MetaDisposable()
     
@@ -248,7 +257,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                                 if !item.packInfo.installed, let reference = item.packReference {
                                     item.arguments.showPack(reference)
                                 } else {
-                                    item.arguments.sendMedia(media, contentView)
+                                    item.arguments.sendMedia(media, contentView, false)
                                 }
                             }
                             return
@@ -279,6 +288,9 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             return
         }
         packNameView.setFrameOrigin(item.namePoint)
+        
+        self.clearRecentButton?.setFrameOrigin(frame.width - 34, item.namePoint.y - 10)
+
         updateVisibleItems()
     }
     
@@ -367,7 +379,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             view.removeFromSuperview()
         }
         
-        self.subviews = (self.addButton != nil ? [self.addButton!] : []) + [self.packNameView] + self.contentViews.compactMap { $0 }
+        self.subviews = (self.clearRecentButton != nil ? [self.clearRecentButton!] : []) + (self.addButton != nil ? [self.addButton!] : []) + [self.packNameView] + self.contentViews.compactMap { $0 }
                 
         CATransaction.commit()
         
@@ -391,6 +403,25 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }
         
         packNameView.update(item.packNameLayout)
+        
+        switch item.packInfo {
+        case .recent:
+            if self.clearRecentButton == nil {
+                self.clearRecentButton = ImageButton()
+                addSubview(self.clearRecentButton!)
+            }
+            self.clearRecentButton?.set(image: theme.icons.wallpaper_color_close, for: .Normal)
+            _ = self.clearRecentButton?.sizeToFit(NSMakeSize(5, 5), thatFit: false)
+            
+            self.clearRecentButton?.removeAllHandlers()
+            
+            self.clearRecentButton?.set(handler: { [weak item] _ in
+                item?.arguments.clearRecent()
+            }, for: .Click)
+        default:
+            self.clearRecentButton?.removeFromSuperview()
+            self.clearRecentButton = nil
+        }
         
         self.previousRange = (0, 0)
         

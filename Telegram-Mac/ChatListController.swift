@@ -15,9 +15,6 @@ import SyncCore
 
 
 
-
-
-
 enum UIChatListEntryId : Hashable {
     case chatId(PeerId)
     case groupId(PeerGroupId)
@@ -122,14 +119,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 switch inner {
                 case let .HoleEntry(hole):
                     return ChatListHoleRowItem(initialSize, context, hole)
-                case let .MessageEntry(index, message, readState, notifySettings,embeddedState, renderedPeer, peerPresence, summaryInfo):
+                case let .MessageEntry(index, message, readState, notifySettings,embeddedState, renderedPeer, peerPresence, summaryInfo, hasFailed):
                     var pinnedType: ChatListPinnedType = .some
                     if isSponsored {
                         pinnedType = .ad
                     } else if index.pinningIndex == nil {
                         pinnedType = .none
                     }
-                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: groupId)
+                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: groupId, hasFailed: hasFailed)
                 }
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
                 return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
@@ -348,9 +345,8 @@ class ChatListController : PeersListController {
             return signal |> map { ($0.0, $0.1, removeNextAnimation)}
         }
         
-        let queue = self.queue
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: queue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings -> Signal<TableUpdateTransition, NoError> in
                     
             var removeNextAnimation = value.2
             
@@ -398,8 +394,14 @@ class ChatListController : PeersListController {
                         if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel]) {
                             return nil
                         } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.clearHistory]) {
-                            let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6, values.7)
+                            let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6, values.7, values.8)
                             return AppearanceWrapperEntry(entry: .chat(entry, activities, isSponsored: isSponsored), appearance: appearance)
+                        } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.archiveChat]) {
+                            if groupId == .root {
+                                return nil
+                            } else {
+                                return AppearanceWrapperEntry(entry: entry, appearance: appearance)
+                            }
                         } else {
                             return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                         }
@@ -736,20 +738,6 @@ class ChatListController : PeersListController {
         }, with: self, for: .leftMouseDown, priority: .high)
         
         
-        
-        
-//        self.window?.set(responder: { [weak self] () -> NSResponder? in
-//
-//            guard let `self` = self else {return nil}
-//            switch self.genericView.searchView.state {
-//            case .None:
-//                return self.genericView.searchView.input
-//            default:
-//                break
-//            }
-//            return nil
-//        }, with: self, priority: .low)
-        
         context.window.add(swipe: { [weak self] direction -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window else {return .failed}
             let swipeState: SwipeState?
@@ -790,8 +778,6 @@ class ChatListController : PeersListController {
             
             
             guard let state = swipeState, self.context.sharedContext.layout != .minimisize else {return .failed}
-            
-            
             
             switch state {
             case .start:
@@ -838,7 +824,6 @@ class ChatListController : PeersListController {
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController
                 guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
-                
                 
                 var direction = direction
                 

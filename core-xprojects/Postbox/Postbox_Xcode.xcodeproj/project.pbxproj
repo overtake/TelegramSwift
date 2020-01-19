@@ -12,6 +12,8 @@
 		A701F925236B3350002ABF81 /* sqlcipher.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F924236B3350002ABF81 /* sqlcipher.framework */; };
 		A701F92C236C1B66002ABF81 /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F92B236C1B66002ABF81 /* SwiftSignalKit.framework */; };
 		A701F935236C1DC4002ABF81 /* Crc32.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F934236C1DC4002ABF81 /* Crc32.framework */; };
+		A7377E1923ACAE3A00AD3ADD /* FailedMessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */; };
+		A754972423A3A5540091F293 /* MessageHistoryFailedTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972323A3A5540091F293 /* MessageHistoryFailedTable.swift */; };
 		C20EB2A31F7179DC00DD3A57 /* PeerNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AE3EBB1F68261B0069BC90 /* PeerNotificationSettingsView.swift */; };
 		C25B56FE1F431C3300581D02 /* MessageHistoryTagsSummaryTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D070479F1F3CE16500F6A8D4 /* MessageHistoryTagsSummaryTable.swift */; };
 		C2A315BC1E2E730400D89000 /* PeerOperationLogTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AD23261E194D1C00A7089A /* PeerOperationLogTable.swift */; };
@@ -204,6 +206,8 @@
 		A701F92D236C1D02002ABF81 /* crc32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = crc32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A701F934236C1DC4002ABF81 /* Crc32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Crc32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A72D451C236AF37F0052FA81 /* Postbox.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Postbox.xcconfig; path = "../../submodules/telegram-ios/submodules/Postbox/Sources/Config.xcconfig/Postbox.xcconfig"; sourceTree = "<group>"; };
+		A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailedMessagesView.swift; sourceTree = "<group>"; };
+		A754972323A3A5540091F293 /* MessageHistoryFailedTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageHistoryFailedTable.swift; sourceTree = "<group>"; };
 		D000CAD922006C6C0011B15D /* SharedAccountMediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedAccountMediaManager.swift; sourceTree = "<group>"; };
 		D001388520BD942B007C9721 /* PostboxUpgrade_16to17.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostboxUpgrade_16to17.swift; sourceTree = "<group>"; };
 		D003E4E51B38DBDB00C22CBC /* MessageHistoryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageHistoryView.swift; sourceTree = "<group>"; };
@@ -527,6 +531,7 @@
 		D0E1DE161C5EB06000C7826E /* Tables */ = {
 			isa = PBXGroup;
 			children = (
+				A754972323A3A5540091F293 /* MessageHistoryFailedTable.swift */,
 				D03BCCF71C73561C0097A291 /* Table.swift */,
 				D019B1CE1E2E770700F80DB3 /* MessageGloballyUniqueIdTable.swift */,
 				D0F9E8721C5A1EE500037222 /* GlobalMessageIdsTable.swift */,
@@ -693,6 +698,7 @@
 				D06CA13122772DE40094E707 /* PeerNotificationSettingsBehaviorTimestampView.swift */,
 				D0E1199F229834BC008CAE3A /* MutablePeerChatInclusionView.swift */,
 				D0BFE51C22AFD5AF00143D08 /* MutableBasicPeerView.swift */,
+				A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -926,6 +932,7 @@
 				D0F7B1D91E045C6A007EB8A5 /* OrderStatisticTable.swift in Sources */,
 				D0FC194B201E8EAF00FEDBB2 /* MediaBoxFile.swift in Sources */,
 				D073CEA01DCBF3C1007511FD /* ItemCollectionsView.swift in Sources */,
+				A7377E1923ACAE3A00AD3ADD /* FailedMessagesView.swift in Sources */,
 				D0439B402289F6300067E026 /* AccountManagerAtomicState.swift in Sources */,
 				D0BE383A1E7C1FD4000079AF /* ItemCollectionInfoView.swift in Sources */,
 				D0B418491D7DFE20004562A4 /* ChatListView.swift in Sources */,
@@ -952,6 +959,7 @@
 				D0F7B1DA1E045C6A007EB8A5 /* RatingTable.swift in Sources */,
 				D0BEAF711E54BC1E00BD963D /* AccountRecordsView.swift in Sources */,
 				D073CE9F1DCBF3C1007511FD /* InitialMessageHistoryData.swift in Sources */,
+				A754972423A3A5540091F293 /* MessageHistoryFailedTable.swift in Sources */,
 				D0A352F61F5488E9001423DC /* InvalidatedMessageHistoryTagsSummaryTable.swift in Sources */,
 				D0BC38731E409E670044D6FE /* RenderedPeer.swift in Sources */,
 				D0F7B1DE1E045C6A007EB8A5 /* PeerChatTopIndexableMessageIds.swift in Sources */,
@@ -1023,6 +1031,96 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		A7F282D8238EAB3C00742C20 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Github;
+		};
+		A7F282D9238EAB3C00742C20 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_OPTIMIZATION_LEVEL = s;
+				INFOPLIST_FILE = Postbox/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/Postbox/Sources/module.private.modulemap";
+				OTHER_CFLAGS = (
+					"-DSQLITE_HAS_CODEC=1",
+					"-DSQLCIPHER_CRYPTO_CC=1",
+					"-DSQLITE_ENABLE_FTS5",
+					"-DSQLITE_DEFAULT_MEMSTATUS=0",
+					"-DNDEBUG",
+				);
+				OTHER_SWIFT_FLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.PostboxMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Github;
+		};
 		C22069C81E8EB4BF00E82730 /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1184,12 +1282,12 @@
 					"-DSQLITE_DEFAULT_MEMSTATUS=0",
 					"-DNDEBUG",
 				);
-				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.PostboxMac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1358,12 +1456,12 @@
 					"-DSQLITE_DEFAULT_MEMSTATUS=0",
 					"-DNDEBUG",
 				);
-				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.PostboxMac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1465,6 +1563,7 @@
 				D0B418181D7DFAF3004562A4 /* DebugHockeyapp */,
 				D0364D5422B3E385002A6EF0 /* HockeyappMacAlpha */,
 				D079FD0F1F06BE070038FADE /* DebugAppStore */,
+				A7F282D9238EAB3C00742C20 /* Github */,
 				C22069CB1E8EB4BF00E82730 /* ReleaseHockeyapp */,
 				D0B4181A1D7DFAF3004562A4 /* ReleaseAppStore */,
 			);
@@ -1477,6 +1576,7 @@
 				D0E3A75E1B28A7E300A402D9 /* DebugHockeyapp */,
 				D0364D5122B3E385002A6EF0 /* HockeyappMacAlpha */,
 				D079FD0C1F06BE070038FADE /* DebugAppStore */,
+				A7F282D8238EAB3C00742C20 /* Github */,
 				C22069C81E8EB4BF00E82730 /* ReleaseHockeyapp */,
 				D086A5711CC0116A00F08284 /* ReleaseAppStore */,
 			);

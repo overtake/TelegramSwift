@@ -3,8 +3,6 @@ set -x
 set -e
 
 
-BUILD_TELEGRAM_VERSION="1"
-
 MACOS_VERSION="10.15"
 XCODE_VERSION="10.3"
 GUEST_SHELL="bash"
@@ -27,7 +25,6 @@ prlctl clone "$VM_BASE_NAME" --linked --name "$VM_NAME"
 prlctl start "$VM_NAME"
 
 
-SOURCE_DIR=$(basename "$BASE_DIR")
 rm -f "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
 tar cf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" --exclude "$BUILDBOX_DIR" --exclude ".git" --exclude "./submodules/telegram-ios/.git" --exclude "./submodules/rlottie/.git" --exclude "./submodules/Sparkle/.git" --exclude "./submodules/ton/.git" --exclude "./submodules/Zip/.git"  --exclude "./submodules/libtgvoip/.git" --exclude "build" "."
 

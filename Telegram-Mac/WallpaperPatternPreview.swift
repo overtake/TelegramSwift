@@ -14,13 +14,18 @@ import Postbox
 import SwiftSignalKit
 
 private class WallpaperPatternView : Control {
+    private let backgroundView: BackgroundView
     let imageView = TransformImageView()
     let checkbox: ImageView = ImageView()
     private let emptyTextView = TextView()
     fileprivate var pattern: Wallpaper?
     required init(frame frameRect: NSRect) {
+        backgroundView = BackgroundView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
-        //addSubview(emptyTextView)
+        
+        addSubview(backgroundView)
+
+        
         addSubview(imageView)
         addSubview(checkbox)
         checkbox.image = theme.icons.chatGroupToggleSelected
@@ -36,33 +41,47 @@ private class WallpaperPatternView : Control {
         imageView.frame = bounds
         emptyTextView.center()
         checkbox.setFrameOrigin(NSMakePoint(frame.width - checkbox.frame.width - 5, 5))
+        backgroundView.frame = bounds
     }
     
-    func update(with pattern: Wallpaper?, isSelected: Bool, account: Account, color: NSColor) {
+    func update(with pattern: Wallpaper?, isSelected: Bool, account: Account, color: [NSColor], rotation: Int32?) {
         checkbox.isHidden = !isSelected
         self.pattern = pattern
-        
-        let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: color.brightnessAdjustedColor, font: .normal(.title)))
+        if color.count == 2 {
+            backgroundView.backgroundMode = .gradient(top: color[0], bottom: color[1], rotation: rotation)
+        } else {
+            backgroundView.backgroundMode = .color(color: color[0])
+        }
+
+        let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: color.first!.brightnessAdjustedColor, font: .normal(.title)))
         layout.measure(width: 80)
         emptyTextView.update(layout)
         
         if let pattern = pattern {
             emptyTextView.isHidden = true
             imageView.isHidden = false
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(400, 400)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: color))
+            
+            let emptyColor: TransformImageEmptyColor
+            if color.count == 2 {
+                emptyColor = .gradient(top: color.first!.withAlphaComponent(color.first!.alpha == 0 ? 0.5 : color.first!.alpha), bottom: color.last!.withAlphaComponent(color.last!.alpha == 0 ? 0.5 : color.last!.alpha), rotation: rotation)
+            } else {
+                emptyColor = .color(color.first!)
+            }
+            
+            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor))
             switch pattern {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []
-                representations.append(contentsOf: file.previewRepresentations)
                 if let dimensions = file.dimensions {
                     representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource))
+                } else {
+                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 300, height: 300), resource: file.resource))
                 }
-                imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .screen, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false), animate: false, synchronousLoad: false)
+                imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false), animate: false, synchronousLoad: false)
             default:
                 break
             }
         } else {
-            backgroundColor = color
             emptyTextView.isHidden = false
             imageView.isHidden = true
         }
@@ -76,7 +95,7 @@ private class WallpaperPatternView : Control {
 
 final class WallpaperPatternPreviewView: View {
     private let documentView: View = View()
-    private let scrollView = NSScrollView()
+    private let scrollView = HorizontalScrollView()
     private let sliderView = LinearProgressControl(progressHeight: 5)
     private let intensityTextView = TextView()
     private let intensityContainerView = View()
@@ -100,8 +119,10 @@ final class WallpaperPatternPreviewView: View {
         sliderView.userInteractionEnabled = true
         sliderView.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)
         sliderView.containerBackground = theme.colors.grayForeground
+        sliderView.liveScrobbling = true
         sliderView.onUserChanged = { [weak self] value in
             guard let `self` = self else {return}
+            self.sliderView.set(progress: CGFloat(value))
             self.updateIntensity?(value)
         }
         
@@ -117,16 +138,18 @@ final class WallpaperPatternPreviewView: View {
         addSubview(borderView)
     }
     
-    func updateColor(_ color: NSColor, account: Account) {
+    func updateColor(_ color: [NSColor], rotation: Int32?, account: Account) {
         self.color = color
+        self.rotation = rotation
         for subview in self.documentView.subviews {
             if let subview = (subview as? WallpaperPatternView) {
-                subview.update(with: subview.pattern, isSelected: !subview.checkbox.isHidden, account: account, color: color)
+                subview.update(with: subview.pattern, isSelected: !subview.checkbox.isHidden, account: account, color: color, rotation: rotation)
             }
         }
     }
     
-    fileprivate var color: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+    fileprivate var color: [NSColor] = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
+    fileprivate var rotation: Int32? = nil
     
     func updateSelected(_ pattern: Wallpaper?) {
         
@@ -139,6 +162,14 @@ final class WallpaperPatternPreviewView: View {
                 }
             }
         }
+        
+        let selectedView = self.documentView.subviews.first { view -> Bool in
+            return !(view as! WallpaperPatternView).checkbox.isHidden
+        }
+        if let selectedView = selectedView {
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: true)
+        }
+        
         if let pattern = pattern {
             intensityContainerView.isHidden = false
             if let intensity = pattern.settings.intensity {
@@ -154,7 +185,7 @@ final class WallpaperPatternPreviewView: View {
         var x: CGFloat = 10
         for pattern in patterns {
             let patternView = WallpaperPatternView(frame: NSMakeRect(x, 10, 80, 80))
-            patternView.update(with: pattern, isSelected: pattern == selected, account: account, color: self.color)
+            patternView.update(with: pattern, isSelected: pattern == selected, account: account, color: self.color, rotation: self.rotation)
             patternView.set(handler: { [weak self] _ in
                 guard let `self` = self else {return}
                 select(pattern)
@@ -164,6 +195,7 @@ final class WallpaperPatternPreviewView: View {
             x += patternView.frame.width + 10
         }
         documentView.setFrameSize(NSMakeSize(x, 100))
+        
     }
     
     override func layout() {
@@ -189,17 +221,20 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     private let disposable = MetaDisposable()
     private let context: AccountContext
     
-    var color: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5) {
+    var color: ([NSColor], Int32?) = ([NSColor(rgb: 0xd6e2ee, alpha: 0.5)], nil) {
         didSet {
-            genericView.updateColor(color, account: context.account)
+            genericView.updateColor(color.0, rotation: color.1, account: context.account)
         }
     }
+
     
     var selected:((Wallpaper?) -> Void)?
     
     var intensity: Int32? = nil {
         didSet {
-            self.selected?(pattern?.withUpdatedSettings(WallpaperSettings(color: pattern?.settings.color, intensity: intensity)))
+            if oldValue != nil, oldValue != intensity {
+                self.selected?(pattern?.withUpdatedSettings(WallpaperSettings(color: pattern?.settings.color, intensity: intensity)))
+            }
         }
     }
     
@@ -213,11 +248,12 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
                 case .file:
                     genericView.updateSelected(pattern)
                 default:
-                    genericView.updateSelected(nil)
+                    break
                 }
             }
         }
     }
+    
     
     init(context: AccountContext) {
         self.context = context
@@ -226,6 +262,7 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         
         genericView.updateIntensity = { [weak self] intensity in
             guard let `self` = self else {return}
@@ -246,8 +283,10 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
         disposable.set(signal.start(next: { [weak self] patterns in
             guard let `self` = self else {return}
             self.genericView.update(with: [nil] + patterns, selected: nil, account: self.context.account, select: { [weak self] wallpaper in
+                self?.pattern = wallpaper
                 self?.selected?(wallpaper)
             })
+            self.pattern = patterns.first
         }))
         
     }

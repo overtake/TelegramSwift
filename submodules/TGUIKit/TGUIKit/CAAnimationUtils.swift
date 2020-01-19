@@ -92,7 +92,7 @@ public func makeSpringBounceAnimation(_ path:String, _ initialVelocity:CGFloat, 
 
 
 public extension CALayer {
-    func animate(from: AnyObject, to: AnyObject, keyPath: String, timingFunction: CAMediaTimingFunctionName, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+    func animate(from: AnyObject, to: AnyObject, keyPath: String, timingFunction: CAMediaTimingFunctionName, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil, forKey: String? = nil) {
         if timingFunction == CAMediaTimingFunctionName.spring {
             let animation = makeSpringAnimation(keyPath)
             animation.fromValue = from
@@ -133,7 +133,7 @@ public extension CALayer {
                 animation.delegate = CALayerAnimationDelegate(completion: completion)
             }
             
-            self.add(animation, forKey: keyPath)
+            self.add(animation, forKey: forKey ?? keyPath)
         }
     }
     
@@ -342,14 +342,14 @@ public extension CALayer {
         self.animate(from: NSValue(point: from), to: NSValue(point: to), keyPath: "position", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
     }
     
-    func animateBounds(from: NSRect, to: NSRect, duration: Double, timingFunction: CAMediaTimingFunctionName, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+    func animateBounds(from: NSRect, to: NSRect, duration: Double, timingFunction: CAMediaTimingFunctionName, removeOnCompletion: Bool = true, additive: Bool = false, forKey: String? = nil, completion: ((Bool) -> Void)? = nil) {
         if from == to {
             if let completion = completion {
                 completion(true)
             }
             return
         }
-        self.animate(from: NSValue(rect: from), to: NSValue(rect: to), keyPath: "bounds", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
+        self.animate(from: NSValue(rect: from), to: NSValue(rect: to), keyPath: "bounds", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion, forKey: forKey)
     }
     
     func animateBoundsOriginYAdditive(from: CGFloat, to: CGFloat, duration: Double) {
@@ -379,6 +379,8 @@ public extension CALayer {
         
         self.add(animation, forKey: "position")
     }
+    
+    
     
     /*
      + (CAAnimation *)shakeWithDuration:(float)duration fromValue:(CGPoint)fromValue toValue:(CGPoint)toValue {

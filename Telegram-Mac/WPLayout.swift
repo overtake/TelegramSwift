@@ -70,7 +70,7 @@ class WPLayout: Equatable {
     
     var webPage: TelegramMediaWebpage {
         if let game = parent.media.first as? TelegramMediaGame {
-            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, files: nil, instantPage: nil)))
+            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
         }
         return parent.media.first as! TelegramMediaWebpage
     }
@@ -123,6 +123,33 @@ class WPLayout: Equatable {
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true)
             
             let interactions = globalLinkExecutor
+            interactions.resolveLink = { link in
+                 if let link = link as? inAppLink {
+                    if case .external(let url, _) = link {
+                        switch wname {
+                        case "instagram":
+                            if url.hasPrefix("@") {
+                                return "https://instagram.com/\(url.nsstring.substring(from: 1))"
+                            }
+                            if url.hasPrefix("#") {
+                                return "https://instagram.com/explore/tags/\(url.nsstring.substring(from: 1))"
+                            }
+                        case "twitter":
+                            if url.hasPrefix("@") {
+                                return "https://twitter.com/\(url.nsstring.substring(from: 1))"
+                            }
+                            if url.hasPrefix("#") {
+                                return "https://twitter.com/hashtag/\(url.nsstring.substring(from: 1))"
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    return link.link
+                }
+                return nil
+                
+            }
             interactions.processURL = { link in
                 if let link = link as? inAppLink {
                     var link = link
@@ -173,6 +200,26 @@ class WPLayout: Equatable {
         }
         return nil
     }
+    var isPatternWallpaper: Bool {
+        return content.file?.mimeType == "application/x-tgwallpattern"
+    }
+    
+    var wallpaperReference: WallpaperReference? {
+        if let wallpaper = wallpaper {
+            switch wallpaper {
+            case let .wallpaper(link, context, preview):
+                inner: switch preview {
+                case let .slug(slug, _):
+                    return .slug(slug)
+                default:
+                    break inner
+                }
+            default:
+                break
+            }
+        }
+        return nil
+    }
     
     var themeLink: inAppLink? {
         if content.type == "telegram_theme" {
@@ -182,7 +229,7 @@ class WPLayout: Equatable {
     }
     
     var isTheme: Bool {
-        return content.type == "telegram_theme" && content.file != nil
+        return content.type == "telegram_theme" && (content.file != nil || content.isCrossplatformTheme)
     }
     
     func viewClass() -> AnyClass {

@@ -67,7 +67,6 @@ fileprivate class GMagnifyView : MagnifyView  {
         }
         
         progressView?.userInteractionEnabled = status != .Local
-        hideOrShowControls(hasPrev: false, hasNext: false, animated: false)
     }
     
     override func mouseInside() -> Bool {
@@ -242,7 +241,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         cache.countLimit = 10
         captionView.isSelectable = false
-        captionView.userInteractionEnabled = false
+        captionView.userInteractionEnabled = true
         
         var dragged: NSPoint? = nil
         
@@ -266,7 +265,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }
             dragged = nil
             
-            if self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
+            let point = self.controller.view.convert(event.locationInWindow, from: nil)
+            
+            if NSPointInRect(point, self.captionView.frame), self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
                 self.captionView.mouseUp(with: event)
                 return .invoked
             } else if self.captionView.mouseInside() {
@@ -773,15 +774,15 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = self.selectedItem {
             item.request()
             lockedTransition = true
-            if let oldView = from(item.stableId), let oldWindow = oldView.window {
+            if let oldView = from(item.stableId), let oldWindow = oldView.window, let oldScreen = oldWindow.screen {
                 selectedView.isHidden = true
                 
                 ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
                     
                     if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame, let oldView = oldView {
-                        let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
-                        let oldRect = oldWindow.convertToScreen(oldView.convert(oldView.bounds, to: nil))
-                        
+                        let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset: contentInset)
+                        var oldRect = oldWindow.convertToScreen(oldView.convert(oldView.bounds, to: nil))
+                        oldRect.origin = oldRect.origin.offsetBy(dx: -oldScreen.frame.minX, dy: -oldScreen.frame.minY)
                         selectedView?.contentSize = item.sizeValue.fitted(contentFrame.size)
                         if value.hasValue, let strongSelf = self {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
@@ -846,16 +847,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             newView.frame = newRect
         }
         
-     //   newView.layer?.backgroundColor = NSColor.red.cgColor//self.selectedItem is MGalleryVideoItem ? .black : theme.colors.transparentBackground.cgColor
-        
         
         let copyView = oldView.copy() as! NSView
         addAccesoryOnCopiedView?((stableId, copyView))
 
         copyView.frame = NSMakeRect(oldRect.minX, oldRect.minY, oldAlphaFrom == 0 ? newRect.width : oldRect.width, oldAlphaFrom == 0 ? newRect.height : oldRect.height)
         copyView.wantsLayer = true
-       // copyView.layer?.contents = nil
-      //  copyView.layer?.backgroundColor = NSColor.blue.cgColor
         view.addSubview(newView)
         view.addSubview(copyView)
         
@@ -871,7 +868,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         
         newView.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
-        newView.layer?.animateAlpha(from: newAlphaFrom, to: newAlphaTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        newView.layer?.animateAlpha(from: newAlphaFrom, to: newAlphaTo, duration: duration / 2, timingFunction: timingFunction, removeOnCompletion: false)
         
         
         newView.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
@@ -882,11 +879,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         copyView.layer?.animateScaleX(from: oldAlphaFrom == 0 ? oldRect.width / newRect.width : 1, to: oldAlphaFrom != 0 ? newRect.width / oldRect.width : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         copyView.layer?.animateScaleY(from: oldAlphaFrom == 0 ? oldRect.height / newRect.height : 1, to: oldAlphaFrom != 0 ? newRect.height / oldRect.height : 1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
 
-        
-        
-        //.animateBounds(from: NSMakeRect(0, 0, oldRect.width, oldRect.height), to: NSMakeRect(0, 0, newRect.width, newRect.height), duration: duration, timingFunction: CAMediaTimingFunctionName.spring, removeOnCompletion: false)
-
-     //   copyView._change(size: newRect.size, animated: true, false, removeOnCompletion: false, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
         copyView.layer?.animateAlpha(from: oldAlphaFrom , to: oldAlphaTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak self, weak copyView, weak newView] _ in
             completion()
             self?.lockedTransition = false
@@ -908,8 +900,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = selectedItem {
             selectedView.isHidden = true
             item.disappear(for: selectedView.contentView)
-            if let oldView = to(item.stableId), let window = oldView.window {
-                let newRect = window.convertToScreen(oldView.convert(oldView.bounds, to: nil))
+            if let oldView = to(item.stableId), let window = oldView.window, let screen = window.screen {
+                var newRect = window.convertToScreen(oldView.convert(oldView.bounds, to: nil))
+                newRect.origin = newRect.origin.offsetBy(dx: -screen.frame.minX, dy: -screen.frame.minY)
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
                 ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self] value in

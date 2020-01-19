@@ -101,7 +101,7 @@ private class PhoneCallWindowView : View {
         textNameView.font = .medium(18.0)
         textNameView.drawsBackground = false
         textNameView.backgroundColor = .clear
-        textNameView.textColor = tintedNightPalette.text
+        textNameView.textColor = nightAccentPalette.text
         textNameView.isSelectable = false
         textNameView.isEditable = false
         textNameView.isBordered = false
@@ -113,7 +113,7 @@ private class PhoneCallWindowView : View {
         statusTextView.font = .normal(.header)
         statusTextView.drawsBackground = false
         statusTextView.backgroundColor = .clear
-        statusTextView.textColor = tintedNightPalette.text
+        statusTextView.textColor = nightAccentPalette.text
         statusTextView.isSelectable = false
         statusTextView.isEditable = false
         statusTextView.isBordered = false
@@ -537,7 +537,7 @@ class PhoneCallWindowController {
     
     private func updatePeerUI(_ user:TelegramUser) {
         
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         
 
         if let dimension = user.profileImageRepresentations.last?.dimensions.size {

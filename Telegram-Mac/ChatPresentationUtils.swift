@@ -102,10 +102,12 @@ private func generatePercentageImage(color: NSColor, value: Int, font: NSFont) -
             context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, layout.penFlush, Double(size.width))) + line.frame.minX
             
+            context.setAllowsFontSubpixelPositioning(true)
+            context.setShouldSubpixelPositionFonts(true)
             context.setAllowsAntialiasing(true)
             context.setShouldAntialias(true)
-            context.setShouldSmoothFonts(false)
-            context.setAllowsFontSmoothing(false)
+            context.setAllowsFontSmoothing(System.backingScale == 1.0)
+            context.setShouldSmoothFonts(System.backingScale == 1.0)
             
             context.textPosition = CGPoint(x: penOffset, y: line.frame.minY)
 
@@ -204,12 +206,12 @@ final class TelegramChatColors {
         self.palette = palette
     }
     
-    func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, selected: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {
+    func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {
         let minimumFrameDuration = 1.0 / 60
         let numberOfFrames = max(1, Int(duration / minimumFrameDuration))
         var images: [CGImage] = []
         
-        let generated = bubbled ? incoming ? (selected ? generatedPercentageAnimationImagesIncomingBubbled : generatedPercentageAnimationImagesIncomingBubbledPlain) : (selected ? generatedPercentageAnimationImagesOutgoingBubbled : generatedPercentageAnimationImagesOutgoingBubbledPlain) : (selected ? generatedPercentageAnimationImages : generatedPercentageAnimationImagesPlain)
+        let generated = bubbled ? incoming ? generatedPercentageAnimationImagesIncomingBubbledPlain : generatedPercentageAnimationImagesOutgoingBubbledPlain : generatedPercentageAnimationImagesPlain
         
         for i in 0 ..< numberOfFrames {
             let t = CGFloat(i) / CGFloat(numberOfFrames)
@@ -219,8 +221,8 @@ final class TelegramChatColors {
         return images
     }
     
-    func pollPercentAnimatedIcon(_ incoming: Bool, _ bubbled: Bool, selected: Bool, value: Int) -> CGImage {
-        let generated = bubbled ? incoming ? (selected ? generatedPercentageAnimationImagesIncomingBubbled : generatedPercentageAnimationImagesIncomingBubbledPlain) : (selected ? generatedPercentageAnimationImagesOutgoingBubbled : generatedPercentageAnimationImagesOutgoingBubbledPlain) : (selected ? generatedPercentageAnimationImages : generatedPercentageAnimationImagesPlain)
+    func pollPercentAnimatedIcon(_ incoming: Bool, _ bubbled: Bool, value: Int) -> CGImage {
+        let generated = bubbled ? incoming ? generatedPercentageAnimationImagesIncomingBubbledPlain : generatedPercentageAnimationImagesOutgoingBubbledPlain : generatedPercentageAnimationImagesPlain
         return generated[max(min(generated.count - 1, value), 0)]
     }
     
@@ -240,7 +242,6 @@ final class TelegramChatColors {
     func pollOptionUnselectedImage(_ incoming: Bool, _ bubbled: Bool) -> CGImage {
         return bubbled ? incoming ? theme.icons.chatPollVoteUnselectedBubble_incoming :  theme.icons.chatPollVoteUnselectedBubble_outgoing : theme.icons.chatPollVoteUnselected
     }
-    
     func waveformBackground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.waveformBackgroundBubble_incoming : palette.waveformBackgroundBubble_outgoing : palette.waveformBackground
     }
@@ -249,7 +250,7 @@ final class TelegramChatColors {
     }
     
     func backgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.bubbleBackground_incoming : palette.bubbleBackground_outgoing : palette.chatBackground
+        return bubbled ? incoming ? .clear : .clear : palette.chatBackground
     }
     
     func backgoundSelectedColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
@@ -258,6 +259,9 @@ final class TelegramChatColors {
     
     func bubbleBorderColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return incoming ? palette.bubbleBorder_incoming : palette.bubbleBorder_outgoing//.clear//palette.bubbleBorder_outgoing
+    }
+    func bubbleBackgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
+        return incoming ? palette.bubbleBackground_incoming : palette.bubbleBackgroundTop_outgoing//.clear//palette.bubbleBorder_outgoing
     }
     
     func textColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
@@ -278,9 +282,24 @@ final class TelegramChatColors {
     func grayText(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.grayTextBubble_incoming : palette.grayTextBubble_outgoing : palette.grayText
     }
-    
+    func redUI(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
+        return bubbled ? incoming ? palette.redBubble_incoming : palette.redBubble_outgoing : palette.redUI
+    }
+    func greenUI(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
+        return bubbled ? incoming ? palette.greenBubble_incoming : palette.greenBubble_outgoing : palette.greenUI
+    }
     func linkColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.linkBubble_incoming : palette.linkBubble_outgoing : palette.accent
+    }
+    
+    func pollSelected(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.poll_selected_incoming : icons.poll_selected_outgoing : icons.poll_selected
+    }
+    func pollSelectedCorrect(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.poll_selected_correct_incoming : icons.poll_selected_correct_outgoing : icons.poll_selected_correct
+    }
+    func pollSelectedIncorrect(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.poll_selected_incorrect_incoming : icons.poll_selected_incorrect_outgoing : icons.poll_selected_incorrect
     }
     
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {

@@ -13,6 +13,31 @@ import SyncCore
 import SwiftSignalKit
 import Postbox
 
+
+enum PrivacyAndSecurityEntryTag: ItemListItemTag {
+    case accountTimeout
+    case topPeers
+    case cloudDraft
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? PrivacyAndSecurityEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    fileprivate var stableId: AnyHashable {
+        switch self {
+        case .accountTimeout:
+            return 13
+        case .topPeers:
+            return 19
+        case .cloudDraft:
+            return 22
+        }
+    }
+}
+
 private final class PrivacyAndSecurityControllerArguments {
     let context: AccountContext
     let openBlockedUsers: () -> Void
@@ -30,7 +55,8 @@ private final class PrivacyAndSecurityControllerArguments {
     let openProxySettings:() ->Void
     let togglePeerSuggestions:(Bool)->Void
     let clearCloudDrafts: () -> Void
-    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void) {
+    let toggleSensitiveContent:(Bool)->Void
+    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void) {
         self.context = context
         self.openBlockedUsers = openBlockedUsers
         self.openLastSeenPrivacy = openLastSeenPrivacy
@@ -47,6 +73,7 @@ private final class PrivacyAndSecurityControllerArguments {
         self.openProfilePhotoPrivacy = openProfilePhotoPrivacy
         self.openForwardPrivacy = openForwardPrivacy
         self.openPhoneNumberPrivacy = openPhoneNumberPrivacy
+        self.toggleSensitiveContent = toggleSensitiveContent
     }
 }
 
@@ -73,7 +100,9 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case proxySettings(sectionId:Int, String, viewType: GeneralViewType)
     case togglePeerSuggestions(sectionId: Int, enabled: Bool, viewType: GeneralViewType)
     case togglePeerSuggestionsDesc(sectionId: Int)
-
+    case sensitiveContentHeader(sectionId: Int)
+    case sensitiveContentToggle(sectionId: Int, value: Bool?, viewType: GeneralViewType)
+    case sensitiveContentDesc(sectionId: Int)
     case clearCloudDraftsHeader(sectionId: Int)
     case clearCloudDrafts(sectionId: Int, viewType: GeneralViewType)
 
@@ -115,8 +144,6 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return sectionId
         case let .accountInfo(sectionId):
             return sectionId
-        case let .proxySettings(sectionId, _, _):
-            return sectionId
         case let .togglePeerSuggestions(sectionId, _, _):
             return sectionId
         case let .togglePeerSuggestionsDesc(sectionId):
@@ -126,6 +153,14 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case let .clearCloudDrafts(sectionId, _):
             return sectionId
         case let .proxyHeader(sectionId):
+            return sectionId
+        case let .proxySettings(sectionId, _, _):
+            return sectionId
+        case let .sensitiveContentHeader(sectionId):
+            return sectionId
+        case let .sensitiveContentToggle(sectionId, _, _):
+            return sectionId
+        case let .sensitiveContentDesc(sectionId):
             return sectionId
         case let .section(sectionId):
             return sectionId
@@ -180,6 +215,12 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return 21
         case .clearCloudDrafts:
             return 22
+        case .sensitiveContentHeader:
+            return 23
+        case .sensitiveContentToggle:
+            return 24
+        case .sensitiveContentDesc:
+            return 25
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -301,6 +342,16 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecurityClearCloudDrafts, type: .none, viewType: viewType, action: {
                 arguments.clearCloudDrafts()
             })
+        case .sensitiveContentHeader:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveHeader, viewType: .textTopItem)
+        case let .sensitiveContentToggle(_, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecuritySensitiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+                if let enabled = enabled {
+                    arguments.toggleSensitiveContent(!enabled)
+                }
+            }, autoswitch: true)
+        case .sensitiveContentDesc:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveDesc, viewType: .textBottomItem)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -376,7 +427,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PrivacyAndSecuri
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: [RecentAccountSession]?, passcodeData: PostboxAccessChallengeData) -> [PrivacyAndSecurityEntry] {
+private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, contentConfiguration: ContentSettingsConfiguration?, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: [RecentAccountSession]?, passcodeData: PostboxAccessChallengeData) -> [PrivacyAndSecurityEntry] {
     var entries: [PrivacyAndSecurityEntry] = []
 
     var sectionId:Int = 1
@@ -421,25 +472,6 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
 
-
-    entries.append(.proxyHeader(sectionId: sectionId))
-    let text: String
-    if let active = proxy.activeServer, proxy.enabled {
-        switch active.connection {
-        case .socks5:
-            text = L10n.proxySettingsSocks5
-        case .mtp:
-            text = L10n.proxySettingsMTP
-        }
-    } else {
-        text = L10n.proxySettingsDisabled
-    }
-    entries.append(.proxySettings(sectionId: sectionId, text, viewType: .singleItem))
-
-
-    entries.append(.section(sectionId: sectionId))
-    sectionId += 1
-
     entries.append(.accountHeader(sectionId: sectionId))
 
 
@@ -460,7 +492,18 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
-
+    
+    if let contentConfiguration = contentConfiguration, contentConfiguration.canAdjustSensitiveContent {
+        #if !APP_STORE
+        entries.append(.sensitiveContentHeader(sectionId: sectionId))
+        entries.append(.sensitiveContentToggle(sectionId: sectionId, value: contentConfiguration.sensitiveContentEnabled, viewType: .singleItem))
+        entries.append(.sensitiveContentDesc(sectionId: sectionId))
+        
+        entries.append(.section(sectionId: sectionId))
+        sectionId += 1
+        #endif
+    }
+    
 
     let enabled: Bool
     switch recentPeers {
@@ -500,10 +543,6 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 
 class PrivacyAndSecurityViewController: TableViewController {
     private let privacySettingsPromise = Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)>()
-
-//    override var removeAfterDisapper: Bool {
-//        return true
-//    }
 
 
     override func viewWillAppear(_ animated: Bool) {
@@ -707,7 +746,7 @@ class PrivacyAndSecurityViewController: TableViewController {
             }
         }, openActiveSessions: { [weak self] sessions in
             if let context = self?.context {
-                self?.navigationController?.push(RecentSessionsController(context, activeSessions: sessions))
+                self?.navigationController?.push(RecentSessionsController(context))
             }
         }, openWebAuthorizations: {
 
@@ -815,29 +854,46 @@ class PrivacyAndSecurityViewController: TableViewController {
             _ = (updateRecentPeersEnabled(postbox: context.account.postbox, network: context.account.network, enabled: enabled) |> then(enabled ? managedUpdatedRecentPeers(accountPeerId: context.account.peerId, postbox: context.account.postbox, network: context.account.network) : Signal<Void, NoError>.complete())).start()
         }, clearCloudDrafts: {
             confirm(for: context.window, information: L10n.privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
-                _ = showModalProgress(signal: clearCloudDraftsInteractively(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId), for: mainWindow).start()
+                _ = showModalProgress(signal: clearCloudDraftsInteractively(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId), for: context.window).start()
             })
+        }, toggleSensitiveContent: { value in
+            _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: value).start()
         })
 
 
         let previous:Atomic<[AppearanceWrapperEntry<PrivacyAndSecurityEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
 
+        let contentConfiguration: Signal<ContentSettingsConfiguration?, NoError> = .single(nil) |> then(contentSettingsConfiguration(network: context.account.network) |> map(Optional.init))
 
-        genericView.merge(with: combineLatest(queue: .mainQueue(), statePromise.get(), appearanceSignal, settings, privacySettingsPromise.get(), combineLatest(queue: .mainQueue(), recentPeers(account: context.account), twoStepAccessConfiguration.get(), activeSessions.get(), context.sharedContext.accountManager.accessChallengeData()), context.blockedPeersContext.state)
-            |> map { state, appearance, proxy, values, additional, blockedState -> TableUpdateTransition in
-                let entries = privacyAndSecurityControllerEntries(state: state, privacySettings: values.0, webSessions: values.1, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-                return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments)
-            } |> beforeNext { [weak self] _ in
-                self?.readyOnce()
-            } |> afterDisposed {
-                actionsDisposable.dispose()
-            })
-
+        
+        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), contentConfiguration, appearanceSignal, settings, privacySettingsPromise.get(), combineLatest(queue: .mainQueue(), recentPeers(account: context.account), twoStepAccessConfiguration.get(), activeSessions.get(), context.sharedContext.accountManager.accessChallengeData()), context.blockedPeersContext.state)
+        |> map { state, contentConfiguration, appearance, proxy, values, additional, blockedState -> TableUpdateTransition in
+            let entries = privacyAndSecurityControllerEntries(state: state, contentConfiguration: contentConfiguration, privacySettings: values.0, webSessions: values.1, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments)
+        } |> afterDisposed {
+            actionsDisposable.dispose()
+        } |> deliverOnMainQueue
+        
+        disposable.set(signal.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+            self?.readyOnce()
+            if let focusOnItemTag = self?.focusOnItemTag {
+                self?.genericView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
+                self?.focusOnItemTag = nil
+            }
+        }))
+        
     }
     
-
-    init(_ context: AccountContext, initialSettings: (AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)) {
+    deinit {
+        disposable.dispose()
+    }
+    
+    private var focusOnItemTag: PrivacyAndSecurityEntryTag?
+    private let disposable = MetaDisposable()
+    init(_ context: AccountContext, initialSettings: (AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), focusOnItemTag: PrivacyAndSecurityEntryTag? = nil) {
+        self.focusOnItemTag = focusOnItemTag
         super.init(context)
         self.privacySettingsPromise.set(.single(initialSettings))
     }

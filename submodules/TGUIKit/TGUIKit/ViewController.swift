@@ -9,14 +9,97 @@
 import Foundation
 import SwiftSignalKit
 
+public final class BackgroundGradientView : View {
+    public var values:(top: NSColor, bottom: NSColor, rotation: Int32?)? {
+        didSet {
+            needsDisplay = true
+        }
+    }
+    
+    public required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        noWayToRemoveFromSuperview = true
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    override public var isFlipped: Bool {
+        return false
+    }
+    
+    override public func layout() {
+        super.layout()
+        let values = self.values
+        self.values = values
+    }
+    
+    override public func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        if let values = self.values {
+            
+            let colors = [values.top, values.bottom].reversed()
+            
+            let gradientColors = colors.map { $0.cgColor } as CFArray
+            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+            
+            var locations: [CGFloat] = []
+            for i in 0 ..< colors.count {
+                locations.append(delta * CGFloat(i))
+            }
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+            
+            ctx.saveGState()
+            ctx.translateBy(x: frame.width / 2.0, y: frame.height / 2.0)
+            ctx.rotate(by: CGFloat(values.rotation ?? 0) * CGFloat.pi / -180.0)
+            ctx.translateBy(x: -frame.width / 2.0, y: -frame.height / 2.0)
+            ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: frame.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            ctx.restoreGState()
+        }
+        
+    }
+}
 
 
 open class BackgroundView: ImageView {
-    
+    private let gradient: BackgroundGradientView
+
     public override init(frame frameRect: NSRect) {
+        gradient = BackgroundGradientView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
+        addSubview(gradient)
+//        gradient.actions = [:]
+//
+//        gradient.bounds = NSMakeRect(0, 0, max(bounds.width, bounds.height), max(bounds.width, bounds.height))
+//        gradient.anchorPoint = NSMakePoint(0.5, 0.5)
+//        gradient.position = NSMakePoint(bounds.width / 2, bounds.height / 2)
+//        layer?.addSublayer(gradient)
+      //  self.layer?.disableActions()
         self.layer?.contentsGravity = .resizeAspectFill
     }
+    
+    open override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
+        super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        gradient.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
+    }
+    
+    init() {
+        fatalError("not supported")
+    }
+    
+    open override func layout() {
+        super.layout()
+        gradient.frame = bounds
+//        gradient.bounds = NSMakeRect(0, 0, max(frame.width, frame.height) * 2, max(frame.width, frame.height) * 2)
+//        gradient.position = NSMakePoint(frame.width / 2, frame.height / 2)
+    }
+    
+    
+    open override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+    }
+    
     open override var isFlipped: Bool {
         return true
     }
@@ -31,10 +114,18 @@ open class BackgroundView: ImageView {
             case let .background(image):
                 layer?.backgroundColor = .clear
                 layer?.contents = image
+                gradient.isHidden = true
             case let .color(color):
-                layer?.backgroundColor = color.cgColor
+                layer?.backgroundColor = color.withAlphaComponent(1.0).cgColor
                 layer?.contents = nil
+                gradient.values = nil
+            case let .gradient(top, bottom, rotation):
+                gradient.values = (top: top.withAlphaComponent(1.0), bottom: bottom.withAlphaComponent(1.0), rotation: rotation)
+                layer?.contents = nil
+                gradient.isHidden = false
             default:
+                gradient.isHidden = true
+                gradient.values = nil
                 layer?.backgroundColor = presentation.colors.background.cgColor
                 layer?.contents = nil
             }
@@ -348,13 +439,17 @@ open class ViewController : NSObject {
     
     public func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
         switch backgroundMode {
-        case .background:
+        case .background, .gradient:
             backgroundColor = .clear
         case let .color(color):
             backgroundColor = color
         default:
             backgroundColor = presentation.colors.background
         }
+    }
+    
+    open func updateController() {
+        
     }
     
     open func viewDidResized(_ size:NSSize) {

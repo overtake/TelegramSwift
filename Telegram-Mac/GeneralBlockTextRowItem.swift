@@ -9,34 +9,59 @@
 import Cocoa
 import TGUIKit
 
+struct GeneralBlockTextHeader {
+    let text: String
+    let icon: CGImage?
+    init(text: String, icon: CGImage?) {
+        self.text = text
+        self.icon = icon
+    }
+}
+
 class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont) {
+    fileprivate let header: GeneralBlockTextHeader?
+    fileprivate let headerLayout: TextViewLayout?
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, header: GeneralBlockTextHeader? = nil) {
         self.textLayout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: font), alwaysStaticItems: false)
+        self.header = header
+        if let header = header {
+            self.headerLayout = TextViewLayout(.initialize(string: header.text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 3)
+        } else {
+            self.headerLayout = nil
+        }
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        textLayout.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right)
-        
+        self.textLayout.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        self.headerLayout?.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right)
         return true
     }
     
     override func viewClass() -> AnyClass {
-        return WalletAddressRowView.self
+        return GeneralBlockTextRowView.self
     }
     
     override var height: CGFloat {
-        return viewType.innerInset.top + viewType.innerInset.bottom + textLayout.layoutSize.height
+        var height: CGFloat = textLayout.layoutSize.height + viewType.innerInset.bottom + viewType.innerInset.top
+    
+        if let headerLayout = self.headerLayout {
+            height += (headerLayout.layoutSize.height + 4)
+        }
+        
+        return height
     }
 }
 
 
-private final class WalletAddressRowView : TableRowView {
+private final class GeneralBlockTextRowView : TableRowView {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let textView = TextView()
+    private var headerView: TextView?
+    private var headerImageView : ImageView?
     private let separator: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -67,7 +92,18 @@ private final class WalletAddressRowView : TableRowView {
         self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
         self.containerView.setCorners(item.viewType.corners)
         
-        textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top))
+        if let headerView = headerView {
+            var inset: CGFloat = 0
+            if let headerImageView = headerImageView {
+                headerImageView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top + 2))
+                inset += headerImageView.frame.width + 4
+            }
+            headerView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left + inset, item.viewType.innerInset.top))
+            textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, headerView.frame.maxY + 4))
+        } else {
+            textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top))
+        }
+        
         
         separator.frame = NSMakeRect(item.viewType.innerInset.left, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, .borderSize)
     }
@@ -78,6 +114,29 @@ private final class WalletAddressRowView : TableRowView {
         guard let item = item as? GeneralBlockTextRowItem else {
             return
         }
+        
+        if let headerLayout = item.headerLayout {
+            if headerView == nil {
+                self.headerView = TextView()
+                self.headerView?.userInteractionEnabled = false
+                self.headerView?.isSelectable = false
+                containerView.addSubview(self.headerView!)
+            }
+            headerView?.update(headerLayout)
+            
+            if let image = item.header?.icon {
+                if headerImageView == nil {
+                    self.headerImageView = ImageView()
+                    containerView.addSubview(self.headerImageView!)
+                }
+                headerImageView?.image = image
+                headerImageView?.sizeToFit()
+            }
+        } else {
+            self.headerView?.removeFromSuperview()
+            self.headerView = nil
+        }
+        
         textView.update(item.textLayout)
         self.separator.isHidden = !item.viewType.hasBorder
         needsLayout = true

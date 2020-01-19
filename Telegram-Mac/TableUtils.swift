@@ -18,3 +18,7 @@ protocol TableItemListNodeEntry: Comparable, Identifiable {
     func item(_ arguments: ItemGenerationArguments, initialSize: NSSize) -> TableRowItem
 }
 
+protocol ItemListItemTag {
+    func isEqual(to other: ItemListItemTag) -> Bool
+}
+

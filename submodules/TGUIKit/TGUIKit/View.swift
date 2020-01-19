@@ -91,6 +91,9 @@ public var viewEnableTouchBar: Bool = true
 
 open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
+    
+    public var noWayToRemoveFromSuperview: Bool = false
+    
     public static let chagedEffectiveAppearance: NSNotification.Name = NSNotification.Name(rawValue: "ViewChagedEffectiveAppearanceNotification")
     
     public var userInteractionEnabled:Bool = true {
@@ -419,6 +422,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return copy
     }
     
+    
+    open override func removeFromSuperview() {
+        super.removeFromSuperview()
+    }
  
     
     open var kitWindow: Window? {

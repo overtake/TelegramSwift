@@ -2,6 +2,7 @@ import SwiftSignalKit
 
 final class TelegramIconsTheme {
   private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])
+  private var cachedWithInset:Atomic<[String: (CGImage, NSEdgeInsets)]> = Atomic(value: [:])
 
   var dialogMuteImage: CGImage {
       if let image = cached.with({ $0["dialogMuteImage"] }) {
@@ -505,6 +506,136 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["chatMusicPauseBubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatGradientBubble_incoming: CGImage {
+      if let image = cached.with({ $0["chatGradientBubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chatGradientBubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatGradientBubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatGradientBubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chatGradientBubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chatGradientBubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatGradientBubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_none_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_none_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_none_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_none_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_none_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_none_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_none_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_none_outgoing_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_none_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_none_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_none_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_none_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_none_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_none_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_none_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_none_outgoing_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_both_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_both_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_both_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_both_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubble_both_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubble_both_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubble_both_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubble_both_outgoing_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_both_incoming_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_both_incoming_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_both_incoming_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_both_incoming_withInset"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatBubbleBorder_both_outgoing_withInset: (CGImage, NSEdgeInsets) {
+      if let image = cachedWithInset.with({ $0["chatBubbleBorder_both_outgoing_withInset"] }) {
+          return image
+      } else {
+          let image = _chatBubbleBorder_both_outgoing_withInset()
+          _ = cachedWithInset.modify { current in 
+              var current = current
+              current["chatBubbleBorder_both_outgoing_withInset"] = image
               return current
           }
           return image
@@ -1025,6 +1156,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["chatSendMessage"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatSaveEditedMessage: CGImage {
+      if let image = cached.with({ $0["chatSaveEditedMessage"] }) {
+          return image
+      } else {
+          let image = _chatSaveEditedMessage()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatSaveEditedMessage"] = image
               return current
           }
           return image
@@ -3157,6 +3301,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["settingsUpdateActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var settingsProfile: CGImage {
+      if let image = cached.with({ $0["settingsProfile"] }) {
+          return image
+      } else {
+          let image = _settingsProfile()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsProfile"] = image
               return current
           }
           return image
@@ -5359,6 +5516,253 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var wallpaper_color_close: CGImage {
+      if let image = cached.with({ $0["wallpaper_color_close"] }) {
+          return image
+      } else {
+          let image = _wallpaper_color_close()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallpaper_color_close"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallpaper_color_add: CGImage {
+      if let image = cached.with({ $0["wallpaper_color_add"] }) {
+          return image
+      } else {
+          let image = _wallpaper_color_add()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallpaper_color_add"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallpaper_color_swap: CGImage {
+      if let image = cached.with({ $0["wallpaper_color_swap"] }) {
+          return image
+      } else {
+          let image = _wallpaper_color_swap()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallpaper_color_swap"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var wallpaper_color_rotate: CGImage {
+      if let image = cached.with({ $0["wallpaper_color_rotate"] }) {
+          return image
+      } else {
+          let image = _wallpaper_color_rotate()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallpaper_color_rotate"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var login_cap: CGImage {
+      if let image = cached.with({ $0["login_cap"] }) {
+          return image
+      } else {
+          let image = _login_cap()
+          _ = cached.modify { current in 
+              var current = current
+              current["login_cap"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var login_qr_cap: CGImage {
+      if let image = cached.with({ $0["login_qr_cap"] }) {
+          return image
+      } else {
+          let image = _login_qr_cap()
+          _ = cached.modify { current in 
+              var current = current
+              current["login_qr_cap"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var login_qr_empty_cap: CGImage {
+      if let image = cached.with({ $0["login_qr_empty_cap"] }) {
+          return image
+      } else {
+          let image = _login_qr_empty_cap()
+          _ = cached.modify { current in 
+              var current = current
+              current["login_qr_empty_cap"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_failed_scroller: CGImage {
+      if let image = cached.with({ $0["chat_failed_scroller"] }) {
+          return image
+      } else {
+          let image = _chat_failed_scroller()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_failed_scroller"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_failed_scroller_active: CGImage {
+      if let image = cached.with({ $0["chat_failed_scroller_active"] }) {
+          return image
+      } else {
+          let image = _chat_failed_scroller_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_failed_scroller_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_quiz_unselected: CGImage {
+      if let image = cached.with({ $0["poll_quiz_unselected"] }) {
+          return image
+      } else {
+          let image = _poll_quiz_unselected()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_quiz_unselected"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected: CGImage {
+      if let image = cached.with({ $0["poll_selected"] }) {
+          return image
+      } else {
+          let image = _poll_selected()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_correct: CGImage {
+      if let image = cached.with({ $0["poll_selected_correct"] }) {
+          return image
+      } else {
+          let image = _poll_selected_correct()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_correct"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incorrect: CGImage {
+      if let image = cached.with({ $0["poll_selected_incorrect"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incorrect()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incorrect"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incoming: CGImage {
+      if let image = cached.with({ $0["poll_selected_incoming"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_correct_incoming: CGImage {
+      if let image = cached.with({ $0["poll_selected_correct_incoming"] }) {
+          return image
+      } else {
+          let image = _poll_selected_correct_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_correct_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incorrect_incoming: CGImage {
+      if let image = cached.with({ $0["poll_selected_incorrect_incoming"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incorrect_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incorrect_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_outgoing: CGImage {
+      if let image = cached.with({ $0["poll_selected_outgoing"] }) {
+          return image
+      } else {
+          let image = _poll_selected_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_correct_outgoing: CGImage {
+      if let image = cached.with({ $0["poll_selected_correct_outgoing"] }) {
+          return image
+      } else {
+          let image = _poll_selected_correct_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_correct_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selected_incorrect_outgoing: CGImage {
+      if let image = cached.with({ $0["poll_selected_incorrect_outgoing"] }) {
+          return image
+      } else {
+          let image = _poll_selected_incorrect_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selected_incorrect_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -5399,6 +5803,16 @@ final class TelegramIconsTheme {
   private let _chatMusicPause: ()->CGImage
   private let _chatMusicPauseBubble_incoming: ()->CGImage
   private let _chatMusicPauseBubble_outgoing: ()->CGImage
+  private let _chatGradientBubble_incoming: ()->CGImage
+  private let _chatGradientBubble_outgoing: ()->CGImage
+  private let _chatBubble_none_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubble_none_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_none_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_none_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubble_both_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubble_both_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_both_incoming_withInset: ()->(CGImage, NSEdgeInsets)
+  private let _chatBubbleBorder_both_outgoing_withInset: ()->(CGImage, NSEdgeInsets)
   private let _composeNewChat: ()->CGImage
   private let _composeNewChatActive: ()->CGImage
   private let _composeNewGroup: ()->CGImage
@@ -5439,6 +5853,7 @@ final class TelegramIconsTheme {
   private let _audioPlayerLockedNext: ()->CGImage
   private let _audioPlayerLockedPrev: ()->CGImage
   private let _chatSendMessage: ()->CGImage
+  private let _chatSaveEditedMessage: ()->CGImage
   private let _chatRecordVoice: ()->CGImage
   private let _chatEntertainment: ()->CGImage
   private let _chatInlineDismiss: ()->CGImage
@@ -5603,6 +6018,7 @@ final class TelegramIconsTheme {
   private let _settingsPassportActive: ()->CGImage
   private let _settingsWalletActive: ()->CGImage
   private let _settingsUpdateActive: ()->CGImage
+  private let _settingsProfile: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
   private let _settingsLogout: ()->CGImage
@@ -5772,6 +6188,25 @@ final class TelegramIconsTheme {
   private let _wallet_update: ()->CGImage
   private let _wallet_passcode_visible: ()->CGImage
   private let _wallet_passcode_hidden: ()->CGImage
+  private let _wallpaper_color_close: ()->CGImage
+  private let _wallpaper_color_add: ()->CGImage
+  private let _wallpaper_color_swap: ()->CGImage
+  private let _wallpaper_color_rotate: ()->CGImage
+  private let _login_cap: ()->CGImage
+  private let _login_qr_cap: ()->CGImage
+  private let _login_qr_empty_cap: ()->CGImage
+  private let _chat_failed_scroller: ()->CGImage
+  private let _chat_failed_scroller_active: ()->CGImage
+  private let _poll_quiz_unselected: ()->CGImage
+  private let _poll_selected: ()->CGImage
+  private let _poll_selected_correct: ()->CGImage
+  private let _poll_selected_incorrect: ()->CGImage
+  private let _poll_selected_incoming: ()->CGImage
+  private let _poll_selected_correct_incoming: ()->CGImage
+  private let _poll_selected_incorrect_incoming: ()->CGImage
+  private let _poll_selected_outgoing: ()->CGImage
+  private let _poll_selected_correct_outgoing: ()->CGImage
+  private let _poll_selected_incorrect_outgoing: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -5813,6 +6248,16 @@ final class TelegramIconsTheme {
       chatMusicPause: @escaping()->CGImage,
       chatMusicPauseBubble_incoming: @escaping()->CGImage,
       chatMusicPauseBubble_outgoing: @escaping()->CGImage,
+      chatGradientBubble_incoming: @escaping()->CGImage,
+      chatGradientBubble_outgoing: @escaping()->CGImage,
+      chatBubble_none_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubble_none_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_none_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_none_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubble_both_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubble_both_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_both_incoming_withInset: @escaping()->(CGImage, NSEdgeInsets),
+      chatBubbleBorder_both_outgoing_withInset: @escaping()->(CGImage, NSEdgeInsets),
       composeNewChat: @escaping()->CGImage,
       composeNewChatActive: @escaping()->CGImage,
       composeNewGroup: @escaping()->CGImage,
@@ -5853,6 +6298,7 @@ final class TelegramIconsTheme {
       audioPlayerLockedNext: @escaping()->CGImage,
       audioPlayerLockedPrev: @escaping()->CGImage,
       chatSendMessage: @escaping()->CGImage,
+      chatSaveEditedMessage: @escaping()->CGImage,
       chatRecordVoice: @escaping()->CGImage,
       chatEntertainment: @escaping()->CGImage,
       chatInlineDismiss: @escaping()->CGImage,
@@ -6017,6 +6463,7 @@ final class TelegramIconsTheme {
       settingsPassportActive: @escaping()->CGImage,
       settingsWalletActive: @escaping()->CGImage,
       settingsUpdateActive: @escaping()->CGImage,
+      settingsProfile: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
       settingsLogout: @escaping()->CGImage,
@@ -6185,7 +6632,26 @@ final class TelegramIconsTheme {
       wallet_settings: @escaping()->CGImage,
       wallet_update: @escaping()->CGImage,
       wallet_passcode_visible: @escaping()->CGImage,
-      wallet_passcode_hidden: @escaping()->CGImage
+      wallet_passcode_hidden: @escaping()->CGImage,
+      wallpaper_color_close: @escaping()->CGImage,
+      wallpaper_color_add: @escaping()->CGImage,
+      wallpaper_color_swap: @escaping()->CGImage,
+      wallpaper_color_rotate: @escaping()->CGImage,
+      login_cap: @escaping()->CGImage,
+      login_qr_cap: @escaping()->CGImage,
+      login_qr_empty_cap: @escaping()->CGImage,
+      chat_failed_scroller: @escaping()->CGImage,
+      chat_failed_scroller_active: @escaping()->CGImage,
+      poll_quiz_unselected: @escaping()->CGImage,
+      poll_selected: @escaping()->CGImage,
+      poll_selected_correct: @escaping()->CGImage,
+      poll_selected_incorrect: @escaping()->CGImage,
+      poll_selected_incoming: @escaping()->CGImage,
+      poll_selected_correct_incoming: @escaping()->CGImage,
+      poll_selected_incorrect_incoming: @escaping()->CGImage,
+      poll_selected_outgoing: @escaping()->CGImage,
+      poll_selected_correct_outgoing: @escaping()->CGImage,
+      poll_selected_incorrect_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6226,6 +6692,16 @@ final class TelegramIconsTheme {
       self._chatMusicPause = chatMusicPause
       self._chatMusicPauseBubble_incoming = chatMusicPauseBubble_incoming
       self._chatMusicPauseBubble_outgoing = chatMusicPauseBubble_outgoing
+      self._chatGradientBubble_incoming = chatGradientBubble_incoming
+      self._chatGradientBubble_outgoing = chatGradientBubble_outgoing
+      self._chatBubble_none_incoming_withInset = chatBubble_none_incoming_withInset
+      self._chatBubble_none_outgoing_withInset = chatBubble_none_outgoing_withInset
+      self._chatBubbleBorder_none_incoming_withInset = chatBubbleBorder_none_incoming_withInset
+      self._chatBubbleBorder_none_outgoing_withInset = chatBubbleBorder_none_outgoing_withInset
+      self._chatBubble_both_incoming_withInset = chatBubble_both_incoming_withInset
+      self._chatBubble_both_outgoing_withInset = chatBubble_both_outgoing_withInset
+      self._chatBubbleBorder_both_incoming_withInset = chatBubbleBorder_both_incoming_withInset
+      self._chatBubbleBorder_both_outgoing_withInset = chatBubbleBorder_both_outgoing_withInset
       self._composeNewChat = composeNewChat
       self._composeNewChatActive = composeNewChatActive
       self._composeNewGroup = composeNewGroup
@@ -6266,6 +6742,7 @@ final class TelegramIconsTheme {
       self._audioPlayerLockedNext = audioPlayerLockedNext
       self._audioPlayerLockedPrev = audioPlayerLockedPrev
       self._chatSendMessage = chatSendMessage
+      self._chatSaveEditedMessage = chatSaveEditedMessage
       self._chatRecordVoice = chatRecordVoice
       self._chatEntertainment = chatEntertainment
       self._chatInlineDismiss = chatInlineDismiss
@@ -6430,6 +6907,7 @@ final class TelegramIconsTheme {
       self._settingsPassportActive = settingsPassportActive
       self._settingsWalletActive = settingsWalletActive
       self._settingsUpdateActive = settingsUpdateActive
+      self._settingsProfile = settingsProfile
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
       self._settingsLogout = settingsLogout
@@ -6599,11 +7077,24 @@ final class TelegramIconsTheme {
       self._wallet_update = wallet_update
       self._wallet_passcode_visible = wallet_passcode_visible
       self._wallet_passcode_hidden = wallet_passcode_hidden
+      self._wallpaper_color_close = wallpaper_color_close
+      self._wallpaper_color_add = wallpaper_color_add
+      self._wallpaper_color_swap = wallpaper_color_swap
+      self._wallpaper_color_rotate = wallpaper_color_rotate
+      self._login_cap = login_cap
+      self._login_qr_cap = login_qr_cap
+      self._login_qr_empty_cap = login_qr_empty_cap
+      self._chat_failed_scroller = chat_failed_scroller
+      self._chat_failed_scroller_active = chat_failed_scroller_active
+      self._poll_quiz_unselected = poll_quiz_unselected
+      self._poll_selected = poll_selected
+      self._poll_selected_correct = poll_selected_correct
+      self._poll_selected_incorrect = poll_selected_incorrect
+      self._poll_selected_incoming = poll_selected_incoming
+      self._poll_selected_correct_incoming = poll_selected_correct_incoming
+      self._poll_selected_incorrect_incoming = poll_selected_incorrect_incoming
+      self._poll_selected_outgoing = poll_selected_outgoing
+      self._poll_selected_correct_outgoing = poll_selected_correct_outgoing
+      self._poll_selected_incorrect_outgoing = poll_selected_incorrect_outgoing
   }
-
-  deinit {
-      var bp:Int = 0
-      bp += 1
-  }
-
 }

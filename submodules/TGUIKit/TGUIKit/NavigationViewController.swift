@@ -417,7 +417,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     private(set) public var header:NavigationHeader?
     private(set) public var callHeader:CallNavigationHeader?
     private(set) public var undoHeader: UndoNavigationHeader?
-    var containerView:BackgroundView = BackgroundView()
+    var containerView:BackgroundView = BackgroundView(frame: NSZeroRect)
     
     public var backgroundMode: TableBackgroundMode {
         get {
@@ -1040,9 +1040,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     //   CATransaction.begin()
                     let animationStyle = previous.animationStyle
                     self.controller.view._change(pos: NSMakePoint(0, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
-                    self.containerView.subviews[0]._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self, weak previous] completed in
+                    self.containerView.subviews[1]._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), self.containerView.subviews[1].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self, weak previous] completed in
                         if completed {
-                            self?.containerView.subviews[0].removeFromSuperview()
+                            self?.containerView.subviews[1].removeFromSuperview()
                             self?.controller.removeBackgroundCap()
                             previous?.removeBackgroundCap()
                         }
@@ -1114,7 +1114,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     
                     
                     _new?.view._change(pos: NSMakePoint(self.containerView.frame.width, self.controller.frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function)
-                    self.containerView.subviews[0]._change(pos: NSMakePoint(0, self.containerView.subviews[0].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new, weak self] completed in
+                    self.containerView.subviews[1]._change(pos: NSMakePoint(0, self.containerView.subviews[1].frame.minY), animated: true, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new, weak self] completed in
                         self?.controller.removeBackgroundCap()
                         new?.view.removeFromSuperview()
                         _new = nil

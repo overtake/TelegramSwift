@@ -377,15 +377,27 @@ private func generateUploadFileAnimatedImage(_ animationValue:CGFloat, backgroun
        // let round: CGFloat = 1.25
         var dotsColor = NSColor(backgroundColor)
         context.setFillColor(dotsColor.cgColor)
-        context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
+        context.addPath(CGPath(roundedRect: CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight), cornerWidth: 2, cornerHeight: 2, transform: nil))
+        context.closePath()
+        context.fillPath()
+     //   context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
         dotsColor = NSColor(foregroundColor, 0.3)
         context.setFillColor(dotsColor.cgColor)
-        context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
+        
+        context.addPath(CGPath(roundedRect: CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight), cornerWidth: 2, cornerHeight: 2, transform: nil))
+        context.closePath()
+        context.fillPath()
+        
+//        context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
         progress = interpolate(from: 0.0, to: progressWidth * 2.0, value: animationValue)
         dotsColor = NSColor(foregroundColor, 1.0)
         context.setFillColor(dotsColor.cgColor)
         context.setBlendMode(.sourceIn)
-        context.fill(CGRect(x: CGFloat(leftPadding - progressWidth + progress), y: topPadding, width: progressWidth, height: progressHeight))
+      //  context.fill(CGRect(x: CGFloat(leftPadding - progressWidth + progress), y: topPadding, width: progressWidth, height: progressHeight))
+        context.addPath(CGPath(roundedRect: CGRect(x: CGFloat(leftPadding - progressWidth + progress), y: topPadding, width: progressWidth, height: progressHeight), cornerWidth: 2, cornerHeight: 2, transform: nil))
+        context.closePath()
+        context.fillPath()
+
         
     })!
     

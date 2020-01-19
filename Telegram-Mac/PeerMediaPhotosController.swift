@@ -323,7 +323,7 @@ class PeerMediaPhotosController: TableViewController {
         
         let previous = self.previous
         
-        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(queue: queue, state.get(), appearanceSignal) |> mapToSignal { state, appearance in
+        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, state.get(), appearanceSignal) |> mapToSignal { state, appearance in
             let entries = mediaEntires(state: state, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return .single(prepareTransition(left: previous.swap(entries), right: entries, animated: true, initialSize: initialSize.with { $0 }, arguments: arguments))
         } |> deliverOnMainQueue

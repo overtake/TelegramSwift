@@ -34,7 +34,7 @@ private func generateDiscussIcon() -> CGImage {
     switch theme.colors.name {
     case systemPalette.name:
         image = NSImage(named: "DiscussDarkPreview")!.precomposed()
-    case tintedNightPalette.name:
+    case nightAccentPalette.name:
         image = NSImage(named: "DiscussDarkBluePreview")!.precomposed()
     default:
         if theme.colors.isDark {
@@ -325,28 +325,30 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     let actionsDisposable = DisposableSet()
 
     func setup(_ channelId: PeerId, _ groupId: PeerId?, updatePreHistory: Bool = false) -> Void {
-        let signal: Signal<Bool, ChannelDiscussionGroupError>
+        let signal: Signal<Bool, (ConvertGroupToSupergroupError?, ChannelDiscussionGroupError?)>
         
         if let groupId = groupId, groupId.namespace == Namespaces.Peer.CloudGroup {
             signal = convertGroupToSupergroup(account: context.account, peerId: groupId)
-                |> mapError { _ in return ChannelDiscussionGroupError.generic }
+                |> mapError { value in
+                    return (value, nil)
+                }
                 |> mapToSignal { upgradedPeerId in
-                return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: upgradedPeerId)
-            }
+                    return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: upgradedPeerId) |> mapError { value in return (nil, value) }
+                }
         } else if updatePreHistory, let groupId = groupId {
             signal = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: groupId, historyAvailableForNewMembers: true)
-                |> mapError { error -> ChannelDiscussionGroupError in
+                |> mapError { error -> (ConvertGroupToSupergroupError?, ChannelDiscussionGroupError?) in
                     switch error {
                     case .generic:
-                        return .generic
+                        return (nil, .generic)
                     case .hasNotPermissions:
-                        return .hasNotPermissions
+                        return (nil, .hasNotPermissions)
                     }
                 } |> mapToSignal { _ in
-                return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId)
+                return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId) |> mapError { value in return (nil, value) }
             }
         } else {
-            signal = updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId)
+            signal = updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId) |> mapError { value in return (nil, value) }
         }
         
         actionsDisposable.add(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { result in
@@ -356,17 +358,27 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
             updateSearchValue { current in
                 return .none
             }
-        }, error: { error in
-            switch error {
-            case .groupHistoryIsCurrentlyPrivate:
-                confirm(for: context.window, information: L10n.discussionControllerErrorPreHistory, okTitle: L10n.discussionControllerErrorOK, successHandler: { _ in
-                    setup(channelId, groupId, updatePreHistory: true)
-                })
-            case .hasNotPermissions:
-                alert(for: context.window, info: L10n.channelErrorDontHavePermissions)
-            default:
-                alert(for: context.window, info: L10n.unknownError)
+        }, error: { upgradeError, discussError in
+            if let error = upgradeError {
+                switch error {
+                case .tooManyChannels:
+                    showInactiveChannels(context: context, source: .upgrade)
+                case .generic:
+                    alert(for: context.window, info: L10n.unknownError)
+                }
+            } else if let error = discussError {
+                switch error {
+                case .groupHistoryIsCurrentlyPrivate:
+                    confirm(for: context.window, information: L10n.discussionControllerErrorPreHistory, okTitle: L10n.discussionControllerErrorOK, successHandler: { _ in
+                        setup(channelId, groupId, updatePreHistory: true)
+                    })
+                case .hasNotPermissions:
+                    alert(for: context.window, info: L10n.channelErrorDontHavePermissions)
+                default:
+                    alert(for: context.window, info: L10n.unknownError)
+                }
             }
+            
         }))
     }
     

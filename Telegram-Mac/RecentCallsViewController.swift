@@ -270,7 +270,6 @@ private func makeEntries(from: [CallListViewEntry], state: RecentCallsController
             let outgoing: Bool = !message.flags.contains(.Incoming)
             if let action = message.media.first as? TelegramMediaAction {
                 if case .phoneCall(_, let discardReason, _) = action.action {
-                    
                     var missed: Bool = false
                     if let reason = discardReason {
                         switch reason {
@@ -281,7 +280,6 @@ private func makeEntries(from: [CallListViewEntry], state: RecentCallsController
                         }
                     }
                     failed = !outgoing && missed
-
                 }
             }
             entries.append(.calls( message, messages, state.editing, failed))
@@ -340,7 +338,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                 applyUIPCallResult(context.sharedContext, result)
             }))
             }, removeCalls: { [weak self] messageIds in
-                _ = deleteMessagesInteractively(postbox: context.account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
+                _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: .forLocalPeer).start()
                 updateState({$0.withAdditionalIgnoringIds(messageIds)})
                 
                 if let strongSelf = self {
@@ -358,10 +356,10 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         
         let first:Atomic<Bool> = Atomic(value: true)
         let signal: Signal<CallListView, NoError> = location.get() |> distinctUntilChanged |> mapToSignal { index in
-            return context.account.viewTracker.callListView(type: .all, index: index, count: 200)
+            return context.account.viewTracker.callListView(type: .all, index: index, count: 100)
         }
         
-        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: queue, signal, statePromise.get(), appearanceSignal) |> map { result in
+        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, signal, statePromise.get(), appearanceSignal) |> map { result in
             _ = callListView.swap(result.0)
             let entries = makeEntries(from: result.0.entries, state: result.1).map({AppearanceWrapperEntry(entry: $0, appearance: result.2)})
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false))
