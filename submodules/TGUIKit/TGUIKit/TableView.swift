@@ -23,6 +23,10 @@ struct RevealAction {
     
 }
 
+public class RowAnimateView: View {
+    public var stableId:AnyHashable?
+}
+
 public final class RevealTableItemController : ViewController  {
     public let item: TableRowItem
     public init(item: TableRowItem)  {
@@ -49,6 +53,7 @@ public protocol RevealTableView {
 public enum TableBackgroundMode {
     case plain
     case color(color: NSColor)
+    case gradient(top: NSColor, bottom: NSColor, rotation: Int32?)
     case background(image: NSImage)
     case tiled(image: NSImage)
     
@@ -399,6 +404,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
+    
     override var isFlipped: Bool {
         return flip
     }
@@ -513,6 +519,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         }
     }
     
+    override func layout() {
+        super.layout()
+    }
+    
     
     override func mouseUp(with event: NSEvent) {
         longDisposable.set(nil)
@@ -621,12 +631,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var emptyChecker: (([TableRowItem]) -> Bool)? = nil
     
+    
+    public var beforeSetupItem:((TableRowView, TableRowItem)->Void)?
+    public var afterSetupItem:((TableRowView, TableRowItem)->Void)?
+
     public var emptyItem:TableRowItem? {
         didSet {
             emptyItem?.table = self
-            if let _ = emptyView {
-                updateEmpties()
-            }
+            updateEmpties()
         }
     }
     private var emptyView:TableRowView?
@@ -863,8 +875,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     open func scrollDidChangedBounds() {
-        
-        
         if let autohide = autohide, let item = autohide.item, autohide.hideUntilOverscroll, let _ = liveScrollStartPosition {
             let rect = self.rectOf(item: item)
             
@@ -1541,6 +1551,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         if(redraw) {
             self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
+            self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: at))
         }
         
         return true;
@@ -1664,6 +1675,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updating = false
         updateScroll(visibleRows())
         self.previousScroll = nil
+        
     //    CATransaction.commit()
     }
     
@@ -1929,7 +1941,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
-        return self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
+        return self.tableView.rows(in: NSMakeRect(self.documentOffset.x, self.documentOffset.y, self.frame.width, self.frame.height + insetHeight))
     }
     
     public var listHeight:CGFloat {
@@ -2097,7 +2109,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let view: TableRowView = self.rowView(item: item);
         
+        self.beforeSetupItem?(view, item)
+        
         view.set(item: item, animated: false)
+        
+        self.afterSetupItem?(view, item)
+
         
         return view
     }
@@ -2166,13 +2183,50 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         mergePromise.set(transition |> deliverOnMainQueue)
     }
     
+    public var isBoundsAnimated: Bool {
+        return contentView.layer?.animation(forKey: "bounds") != nil
+    }
     
     private var first:Bool = true
     
+    private var queuedTransitions: [TableUpdateTransition] = []
+    private var areSuspended = false
+    private var isAlreadyEnqued: Bool = false
+    private func enqueueTransitions() {
+        
+        guard !isAlreadyEnqued else {
+            return
+        }
+        
+        isAlreadyEnqued = true
+        while !queuedTransitions.isEmpty {
+            if !isSetTransitionToQueue() && !updating {
+                self.merge(with: queuedTransitions.removeFirst(), forceApply: true)
+            } else {
+                break
+            }
+        }
+        isAlreadyEnqued = false
+    }
+    
+    private func isSetTransitionToQueue() -> Bool {
+        return areSuspended
+    }
+    
     public func merge(with transition:TableUpdateTransition) -> Void {
+        self.merge(with: transition, forceApply: false)
+        enqueueTransitions()
+    }
+    
+    private func merge(with transition:TableUpdateTransition, forceApply: Bool) -> Void {
         
         assertOnMainThread()
         assert(!updating)
+        
+        if isSetTransitionToQueue() || (!self.queuedTransitions.isEmpty && !forceApply) {
+            self.queuedTransitions.append(transition)
+            return
+        }
         
         let oldEmpty = self.isEmpty
         
@@ -2373,6 +2427,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         //reflectScrolledClipView(clipView)
      //   self.tableView.endUpdates()
         self.endUpdates()
+        
         
 //        for subview in self.tableView.subviews.reversed() {
 //            if self.tableView.row(for: subview) == -1 {
@@ -2604,7 +2659,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     presentBounds.size.height -= y
                 }
                 
-                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, forKey: "bounds", completion: { completed in
+                    completion?(completed)
+                })
                 CATransaction.commit()
             } else {
                 super.change(size: size, animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
@@ -2612,7 +2669,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         self.setFrameSize(size)
-        updateStickAfterScroll(animated)
+        self.updateStickAfterScroll(animated)
     }
     
     
@@ -2727,11 +2784,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             var applied = false
             let scrollListener = TableScrollListener({ [weak self, weak item] position in
-                if let item = item, !applied, let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
-                    applied = true
-                    if focus.focus {
-                        view.focusAnimation(innerId)
-                        focus.action?(view.interactableView)
+                if let item = item, !applied {
+                    if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
+                        applied = true
+                        if focus.focus {
+                            view.focusAnimation(innerId)
+                            focus.action?(view.interactableView)
+                        }
                     }
                 }
             })
@@ -2749,17 +2808,28 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
             
+            let shouldSuspend: Bool
+            switch state {
+            case .down, .up:
+                shouldSuspend = false
+            default:
+                shouldSuspend = true
+            }
+            
 //            clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
 //                self?.removeScroll(listener: scrollListener)
 //            })
             
             if abs(bounds.minY - clipView.bounds.minY) < height {
                 if animate {
+                    areSuspended = shouldSuspend
                     clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
                         if let `self` = self {
                             scrollListener.handler(self.scrollPosition().current)
                             self.removeScroll(listener: scrollListener)
                             completion(completed)
+                            self.areSuspended = false
+                            self.enqueueTransitions()
                         }
                         
                     })
@@ -2770,12 +2840,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
                
             } else {
+               
+                areSuspended = shouldSuspend
                 let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
-//                self.removeScroll(listener: scrollListener)
                 clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self] completed in
                     self?.removeScroll(listener: scrollListener)
                     completion(completed)
+                    self?.areSuspended = false
+                    self?.enqueueTransitions()
                 })
+
             }
         } else {
             if let item = item, focus.focus {
@@ -2860,10 +2934,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    public func enumerateVisibleViews(with callback:(TableRowView)->Void) {
+    public func enumerateVisibleViews(with callback:(TableRowView)->Void, force: Bool = false) {
         let visibleRows = self.visibleRows()
         for index in visibleRows.location ..< visibleRows.location + visibleRows.length {
-            if let view = viewNecessary(at: index) {
+            if let view = viewNecessary(at: index, makeIfNecessary: force) {
                 callback(view)
             }
         }

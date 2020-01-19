@@ -385,7 +385,7 @@ extension Modal : ObservableViewDelegate {
 
 public class Modal: NSObject {
     private let visualEffectView: NSVisualEffectView?
-    private var background:ModalBackground
+    fileprivate let background:ModalBackground
     fileprivate var controller:ModalViewController?
     private var container:ModalContainerView!
     public let window:Window
@@ -456,11 +456,7 @@ public class Modal: NSObject {
             container.addSubview(interactionsView)
         }
         
-        
-//        if isOverlay {
-//            (window.contentView as? ObervableView)?.add(listener: self)
-//        }
-        
+
         background.addSubview(container)
         
         background.userInteractionEnabled = controller.handleEvents
@@ -517,7 +513,6 @@ public class Modal: NSObject {
                 self?.controller?.measure(size: size)
             }
         }
-        
         
         activeModals.append(WeakReference(value: self))
     }
@@ -610,6 +605,8 @@ public class Modal: NSObject {
             }
         }
         
+        let animateBackground = !unhideModalIfNeeded() || self.controller?.containerBackground == .clear
+        
         if callAcceptInteraction, let interactionsView = interactionsView {
             interactionsView.interactions.accept?()
         }
@@ -625,16 +622,25 @@ public class Modal: NSObject {
             })
         }
         
-        
-        background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self, weak background] (complete) in
-            if let stongSelf = self {
-                background?.removeFromSuperview()
-                stongSelf.controller?.view.removeFromSuperview()
-                stongSelf.controller?.viewDidDisappear(true)
-                stongSelf.controller?.modal = nil
-                stongSelf.controller = nil
-            }
-        })
+        if animateBackground {
+            background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self, weak background] complete in
+                if let stongSelf = self {
+                    background?.removeFromSuperview()
+                    stongSelf.controller?.view.removeFromSuperview()
+                    stongSelf.controller?.viewDidDisappear(true)
+                    stongSelf.controller?.modal = nil
+                    stongSelf.controller = nil
+                }
+            })
+        } else if let lastActive = activeModals.last?.value {
+            background.removeFromSuperview()
+            self.controller?.view.removeFromSuperview()
+            self.controller?.viewDidDisappear(true)
+            self.controller?.modal = nil
+            self.controller = nil
+            lastActive.containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        }
+       
        
         switch animationType {
         case .common:
@@ -787,13 +793,16 @@ public class Modal: NSObject {
                         _ = strongSelf.window.makeFirstResponder(nil)
                     }
                     
-                    if strongSelf.animated {
+                    let animatedBackground = strongSelf.animated && !hideBelowModalsIfNeeded(except: strongSelf)
+                    
+                    if animatedBackground {
                         strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.15, completion:{[weak strongSelf] (completed) in
                             strongSelf?.controller?.viewDidAppear(true)
                         })
                     } else {
                         strongSelf.controller?.viewDidAppear(false)
-                    }                    
+                    }
+                    
                 }
             }))
         }
@@ -877,6 +886,26 @@ public func showModal(with controller: NavigationViewController, for window:Wind
     
     controller.modal = Modal(controller: ModalController(controller), for: window, animated: animated, isOverlay: isOverlay, animationType: animationType)
     controller.modal?.show()
+    
 }
 
 
+private func hideBelowModalsIfNeeded(except: Modal) -> Bool {
+//    var hided: Bool = false
+//    if let exceptController = except.controller, exceptController.containerBackground != .clear {
+//        for modal in activeModals {
+//            if modal.value != except, let controller = modal.value?.controller, !controller.isFullScreen {
+//                modal.value?.background.isHidden = true
+//                hided = true
+//            }
+//        }
+//    }
+//
+//    return hided
+    return false
+}
+
+private func unhideModalIfNeeded() -> Bool {
+//    activeModals.last?.value?.background.isHidden = false
+    return false
+}

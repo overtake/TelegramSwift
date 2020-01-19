@@ -23,8 +23,8 @@ See [this repository’s contributors graph](https://github.com/overtake/Telegra
 ### Translations
 You can help translate Telegram for macOS on [Telegram’s translations platform](https://translations.telegram.org). Pick your language, then look for the macOS translation set.
 
-### Third-party libraries
-See [LIBRARIES](https://github.com/overtake/TelegramSwift/blob/master/LIBRARIES.md).
+<!--### Third-party libraries-->
+<!--See [LIBRARIES](https://github.com/overtake/TelegramSwift/blob/master/LIBRARIES.md).-->
 
 ## Permissions
 Telegram strives to protect your privacy.  This app asks for as few permissions as possible:

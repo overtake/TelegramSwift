@@ -14,6 +14,111 @@ import SwiftSignalKit
 import Postbox
 import SyncCore
 
+func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: NSColor? = nil, strokeWidth: CGFloat? = nil, backgroundColor: NSColor? = nil) -> CGImage {
+    return generateImage(CGSize(width: diameter, height: diameter), contextGenerator: { size, context in
+        context.clear(CGRect(origin: CGPoint(), size: size))
+        if let backgroundColor = backgroundColor {
+            context.setFillColor(backgroundColor.cgColor)
+            context.fill(CGRect(origin: CGPoint(), size: size))
+        }
+        
+        if let strokeColor = strokeColor, let strokeWidth = strokeWidth {
+            context.setFillColor(strokeColor.cgColor)
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+            
+            if let color = color {
+                context.setFillColor(color.cgColor)
+            } else {
+                context.setFillColor(NSColor.clear.cgColor)
+                context.setBlendMode(.copy)
+            }
+            context.fillEllipse(in: CGRect(origin: CGPoint(x: strokeWidth, y: strokeWidth), size: CGSize(width: size.width - strokeWidth * 2.0, height: size.height - strokeWidth * 2.0)))
+        } else {
+            if let color = color {
+                context.setFillColor(color.cgColor)
+            } else {
+                context.setFillColor(NSColor.clear.cgColor)
+                context.setBlendMode(.copy)
+            }
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+        }
+    })!
+}
+
+
+private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImage {
+    
+    var bottom = bottom
+    if !System.supportsTransparentFontDrawing {
+        bottom = top.blended(withFraction: 0.5, of: bottom)!
+    }
+    
+    return generateImage(CGSize(width: 1.0, height: 100), opaque: true, scale: 1.0, rotatedContext: { size, context in
+        var locations: [CGFloat] = [0.0, 1.0]
+        let colors = [top.cgColor, bottom.cgColor] as NSArray
+        
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+    })!
+}
+
+private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        
+        ctx.setBlendMode(.copy)
+        ctx.round(size, size.height / 2)
+        ctx.setFillColor(backgound.cgColor)
+        ctx.fill(rect)
+        
+        ctx.setBlendMode(.normal)
+        let image = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+        if backgound == NSColor(0xffffff) {
+            ctx.clip(to: rect, mask: image)
+            ctx.clear(rect)
+        } else {
+            ctx.draw(image, in: rect.focus(image.backingSize))
+        }
+    })!
+}
+
+private func generateLoginQrEmptyCap() -> CGImage {
+    return generateImage(NSMakeSize(60, 60), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+    })!
+}
+
+private func generateSendIcon(_ image: NSImage, _ color: NSColor) -> CGImage {
+    let image = image.precomposed(color)
+    if color.lightness > 0.7 {
+        return image
+    } else {
+        return generateImage(image.backingSize, contextGenerator: { size, ctx in
+            let rect = CGRect(origin: CGPoint(), size: size)
+            ctx.clear(rect)
+            
+            ctx.setFillColor(.white)
+            ctx.fillEllipse(in: rect.focus(NSMakeSize(rect.width - 8, rect.height - 8)))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    }
+}
+
+private func generateUnslectedCap(_ color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(22, 22), contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.setStrokeColor(color.withAlphaComponent(0.7).cgColor)
+        ctx.setLineWidth(1.0)
+        ctx.strokeEllipse(in: NSMakeRect(1, 1, size.width - 2, size.height - 2))
+    })!
+}
+
 private func generatePollAddOption(_ color: NSColor) -> CGImage {
     let image = NSImage(named: "Icon_PollAddOption")!.precomposed(color)
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
@@ -36,15 +141,44 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         ctx.fill(rect)
         
         switch wallpaper {
-        case .builtin, .file, .color:
+        case .builtin, .file, .color, .gradient:
             switch backgroundMode {
             case let .background(image):
                 let imageSize = image.size.aspectFilled(size)
-                ctx.draw(image.precomposed(flipVertical: true), in: rect.focus(imageSize))
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.scaleBy(x: 1.0, y: -1.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+
+                ctx.draw(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: rect.focus(imageSize))
+                
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.scaleBy(x: 1.0, y: -1.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+
+                
                 break
             case let .color(color):
                 ctx.setFillColor(color.cgColor)
                 ctx.fill(rect)
+            case let .gradient(top, bottom, rotation):
+                let colors = [top, bottom].reversed()
+                
+                let gradientColors = colors.map { $0.cgColor } as CFArray
+                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                
+                var locations: [CGFloat] = []
+                for i in 0 ..< colors.count {
+                    locations.append(delta * CGFloat(i))
+                }
+                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                
+                ctx.saveGState()
+                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
+                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                ctx.restoreGState()
             default:
                 break
             }
@@ -85,9 +219,39 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         let micro = NSImage(named: "Icon_RecordVoice")!.precomposed(palette.grayIcon, flipVertical: true)
         ctx.draw(micro, in: NSMakeRect(rect.width - 20 - inputAttach.backingSize.width, (rect.height - 50 + (50 - micro.backingSize.height) / 2), micro.backingSize.width, micro.backingSize.height))
         
+        let chatServiceItemColor: NSColor
+        
+        
+        switch wallpaper {
+        case .builtin, .file, .color, .gradient:
+            switch backgroundMode {
+            case let .background(image):
+                chatServiceItemColor = getAverageColor(image)
+            case let .color(color):
+                if color != palette.background {
+                    chatServiceItemColor = getAverageColor(color)
+                } else {
+                    chatServiceItemColor = color
+                }
+            case let .gradient(top, bottom, _):
+                if let blended = top.blended(withFraction: 0.5, of: bottom) {
+                    chatServiceItemColor = getAverageColor(blended)
+                } else {
+                    chatServiceItemColor = getAverageColor(top)
+                }
+            case let .tiled(image):
+                chatServiceItemColor = getAverageColor(image)
+            case .plain:
+                chatServiceItemColor = palette.chatBackground
+            }
+        default:
+            chatServiceItemColor = getAverageColor(palette.chatBackground)
+        }
+        
+        
         
         //fill date
-        ctx.setFillColor(getAverageColor(palette.chatBackground).cgColor)
+        ctx.setFillColor(chatServiceItemColor.cgColor)
         let path = NSBezierPath(roundedRect: NSMakeRect(rect.width / 2 - 30, rect.height - 50 - 10 - 60 - 5 - 20 - 5, 60, 20), xRadius: 10, yRadius: 10)
         ctx.addPath(path.cgPath)
         ctx.closePath()
@@ -97,59 +261,90 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         //fill outgoing bubble
         CATransaction.begin()
         if true {
-            let data = messageBubbleImageModern(incoming: false, fillColor: palette.bubbleBackground_outgoing, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
             
-            let layer = CALayer()
-            layer.frame = NSMakeRect(0, 200, 150, 30)
-            layer.contentsScale = 2.0
-            let imageSize = data.0.backingSize
-            let insets = data.1
-            let halfPixelFudge: CGFloat = 0.49
-            let otherPixelFudge: CGFloat = 0.02
-            var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
-            if (insets.left > 0 || insets.right > 0) {
-                contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
-                contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
-            }
-            if (insets.top > 0 || insets.bottom > 0) {
-                contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
-                contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
-            }
-            layer.contentsGravity = .resize;
-            layer.contentsCenter = contentsCenter;
-            layer.contents = data.0
+            let image = generateImage(NSMakeSize(150, 30), rotatedContext: { size, ctx in
+                ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                
+                let data = messageBubbleImageModern(incoming: false, fillColor: palette.bubbleBackgroundTop_outgoing, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
+                
+                let layer = CALayer()
+                layer.frame = NSMakeRect(0, 0, 150, 30)
+                layer.contentsScale = 2.0
+                let imageSize = data.0.backingSize
+                let insets = data.1
+                let halfPixelFudge: CGFloat = 0.49
+                let otherPixelFudge: CGFloat = 0.02
+                var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
+                if (insets.left > 0 || insets.right > 0) {
+                    contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
+                    contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
+                }
+                if (insets.top > 0 || insets.bottom > 0) {
+                    contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
+                    contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
+                }
+                layer.contentsGravity = .resize;
+                layer.contentsCenter = contentsCenter;
+                layer.contents = data.0
+                
+                layer.render(in: ctx)
+            })!
             
-            ctx.translateBy(x: rect.width - 170, y: rect.height - 50 - 10)
-            ctx.scaleBy(x: 1.0, y: -1.0)
-            layer.render(in: ctx)
+            var bubble = image
+            if palette.bubbleBackgroundTop_outgoing != palette.bubbleBackgroundBottom_outgoing {
+                bubble = generateImage(NSMakeSize(150, 30), contextGenerator: { size, ctx in
+                    let colors = [palette.bubbleBackgroundTop_outgoing, palette.bubbleBackgroundBottom_outgoing]
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    ctx.clip(to: rect, mask: image)
+                    
+                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                })!
+            }
+            ctx.draw(bubble, in: NSMakeRect(160, 230, 150, 30))
+           
         }
         
         //fill incoming bubble
         if true {
-            let data = messageBubbleImageModern(incoming: true, fillColor: palette.bubbleBackground_incoming, strokeColor: palette.bubbleBorder_incoming, neighbors: .none)
+            let image = generateImage(NSMakeSize(150, 30), rotatedContext: { size, ctx in
+                ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                let data = messageBubbleImageModern(incoming: true, fillColor: palette.bubbleBackground_incoming, strokeColor: palette.bubbleBorder_incoming, neighbors: .none)
+                
+                let layer = CALayer()
+                layer.frame = NSMakeRect(0, 0, 150, 30)
+                layer.contentsScale = 2.0
+                let imageSize = data.0.backingSize
+                let insets = data.1
+                let halfPixelFudge: CGFloat = 0.49
+                let otherPixelFudge: CGFloat = 0.02
+                var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
+                if (insets.left > 0 || insets.right > 0) {
+                    contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
+                    contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
+                }
+                if (insets.top > 0 || insets.bottom > 0) {
+                    contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
+                    contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
+                }
+                layer.contentsGravity = .resize;
+                layer.contentsCenter = contentsCenter;
+                layer.contents = data.0
+                
+                layer.render(in: ctx)
+            })!
             
-            let layer = CALayer()
-            layer.frame = NSMakeRect(0, 200, 150, 30)
-            layer.contentsScale = 2.0
-            let imageSize = data.0.backingSize
-            let insets = data.1
-            let halfPixelFudge: CGFloat = 0.49
-            let otherPixelFudge: CGFloat = 0.02
-            var contentsCenter: CGRect  = NSMakeRect(0.0, 0.0, 1.0, 1.0);
-            if (insets.left > 0 || insets.right > 0) {
-                contentsCenter.origin.x = ((insets.left + halfPixelFudge) / imageSize.width);
-                contentsCenter.size.width = (imageSize.width - (insets.left + insets.right + 1.0) + otherPixelFudge) / imageSize.width;
-            }
-            if (insets.top > 0 || insets.bottom > 0) {
-                contentsCenter.origin.y = ((insets.top + halfPixelFudge) / imageSize.height);
-                contentsCenter.size.height = (imageSize.height - (insets.top + insets.bottom + 1.0) + otherPixelFudge) / imageSize.height;
-            }
-            layer.contentsGravity = .resize;
-            layer.contentsCenter = contentsCenter;
-            layer.contents = data.0
-            
-            ctx.translateBy(x: -130, y: 35)
-            layer.render(in: ctx)
+            ctx.draw(image, in: NSMakeRect(10, 200, 150, 30))
+
         }
         CATransaction.commit()
         
@@ -414,6 +609,23 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
         ctx.draw(icon, in: imageRect)
     })!
 }
+
+private func generateChatFailed(backgroundColor: NSColor, border: NSColor, foregroundColor: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(38, 38), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        ctx.setLineWidth(1.0)
+        ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
+        ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        
+        let icon = NSImage(named: "Icon_DialogSendingError")!.precomposed(foregroundColor)
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        
+        ctx.draw(icon, in: imageRect)
+    })!
+}
+
 
 private func generateSettingsIcon(_ icon: CGImage) -> CGImage {
     return generateImage(icon.backingSize, contextGenerator: { size, ctx in
@@ -806,7 +1018,7 @@ extension WallpaperSettings {
     func withUpdatedBlur(_ blur: Bool) -> WallpaperSettings {
         return WallpaperSettings(blur: blur, motion: self.motion, color: self.color, intensity: self.intensity)
     }
-    func withUpdatedColor(_ color: Int32?) -> WallpaperSettings {
+    func withUpdatedColor(_ color: UInt32?) -> WallpaperSettings {
         return WallpaperSettings(blur: self.blur, motion: self.motion, color: color, intensity: self.intensity)
     }
     
@@ -817,7 +1029,8 @@ extension WallpaperSettings {
 
 enum Wallpaper : Equatable, PostboxCoding {
     case builtin
-    case color(Int32)
+    case color(UInt32)
+    case gradient(UInt32, UInt32, Int32?)
     case image([TelegramMediaImageRepresentation], settings: WallpaperSettings)
     case file(slug: String, file: TelegramMediaFile, settings: WallpaperSettings, isPattern: Bool)
     case none
@@ -833,6 +1046,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .image(image, settings: settings)
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
+        case let .gradient(top, bottom, settings):
+            self = .gradient(top, bottom, settings.rotation)
         }
     }
     
@@ -846,6 +1061,12 @@ enum Wallpaper : Equatable, PostboxCoding {
             }
         case let .color(value):
             if case .color(value) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .gradient(top, bottom, rotation):
+            if case .gradient(top, bottom, rotation) = rhs {
                 return true
             } else {
                 return false
@@ -888,7 +1109,7 @@ enum Wallpaper : Equatable, PostboxCoding {
             }
             if isPattern {
                 if let pattern = settings.color {
-                    var color = NSColor(rgb: UInt32(bitPattern: pattern)).hexString.lowercased()
+                    var color = NSColor(argb: pattern).withAlphaComponent(1.0).hexString.lowercased()
                     color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     options.append("bg_color=\(color)")
                 }
@@ -911,7 +1132,7 @@ enum Wallpaper : Equatable, PostboxCoding {
         case 0:
             self = .builtin
         case 1:
-            self = .color(decoder.decodeInt32ForKey("c", orElse: 0))
+            self = .color(UInt32(bitPattern: decoder.decodeInt32ForKey("c", orElse: 0)))
         case 2:
             let settings = decoder.decodeObjectForKey("settings", decoder: { WallpaperSettings(decoder: $0) }) as? WallpaperSettings ?? WallpaperSettings()
             self = .image(decoder.decodeObjectArrayWithDecoderForKey("i"), settings: settings)
@@ -922,6 +1143,9 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .custom(decoder.decodeObjectForKey("rep", decoder: { TelegramMediaImageRepresentation(decoder: $0) }) as! TelegramMediaImageRepresentation, blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
         case 5:
             self = .none
+        case 6:
+            self = .gradient(UInt32(bitPattern: decoder.decodeInt32ForKey("ct", orElse: 0)), UInt32(bitPattern: decoder.decodeInt32ForKey("cb", orElse: 0)), decoder.decodeOptionalInt32ForKey("cr"))
+
         default:
             assertionFailure()
             self = .color(0xffffff)
@@ -935,7 +1159,7 @@ enum Wallpaper : Equatable, PostboxCoding {
             encoder.encodeInt32(0, forKey: "v")
         case let .color(color):
             encoder.encodeInt32(1, forKey: "v")
-            encoder.encodeInt32(color, forKey: "c")
+            encoder.encodeInt32(Int32(bitPattern: color), forKey: "c")
         case let .image(representations, settings):
             encoder.encodeInt32(2, forKey: "v")
             encoder.encodeObjectArray(representations, forKey: "i")
@@ -952,6 +1176,15 @@ enum Wallpaper : Equatable, PostboxCoding {
             encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
         case .none:
             encoder.encodeInt32(5, forKey: "v")
+        case let .gradient(top, bottom, rotation):
+            encoder.encodeInt32(6, forKey: "v")
+            encoder.encodeInt32(Int32(bitPattern: top), forKey: "ct")
+            encoder.encodeInt32(Int32(bitPattern: bottom), forKey: "cb")
+            if let rotation = rotation {
+                encoder.encodeInt32(rotation, forKey: "cr")
+            } else {
+                encoder.encodeNil(forKey: "cr")
+            }
         }
     }
     
@@ -961,10 +1194,12 @@ enum Wallpaper : Equatable, PostboxCoding {
             return self
         case .color:
             return self
+        case .gradient:
+            return self
         case let .image(representations, settings):
-            return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, intensity: settings.intensity))
+            return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, bottomColor: settings.bottomColor, intensity: settings.intensity, rotation: settings.rotation))
         case let .file(values):
-            return .file(slug: values.slug, file: values.file, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, intensity: settings.intensity), isPattern: values.isPattern)
+            return .file(slug: values.slug, file: values.file, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, bottomColor: settings.bottomColor, intensity: settings.intensity, rotation: settings.rotation), isPattern: values.isPattern)
         case let .custom(path, _):
             return .custom(path, blurred: blurred)
         case .none:
@@ -977,6 +1212,8 @@ enum Wallpaper : Equatable, PostboxCoding {
         case .builtin:
             return self
         case .color:
+            return self
+        case .gradient:
             return self
         case let .image(representations, _):
             return .image(representations, settings: settings)
@@ -995,6 +1232,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             return false
         case .color:
             return false
+        case .gradient:
+            return false
         case let .image(_, settings):
             return settings.blur
         case let .file(values):
@@ -1012,6 +1251,10 @@ enum Wallpaper : Equatable, PostboxCoding {
             return settings
         case let .file(values):
             return values.settings
+        case let .color(t):
+            return WallpaperSettings(color: t)
+        case let .gradient(t, b, r):
+            return WallpaperSettings(color: t, bottomColor: b, rotation: r)
         default:
             return WallpaperSettings()
         }
@@ -1024,6 +1267,8 @@ enum Wallpaper : Equatable, PostboxCoding {
         case .builtin:
             return other == self
         case .color:
+            return other == self
+        case .gradient:
             return other == self
         case let .custom(resource, _):
             if case .custom(resource, _) = other {
@@ -1084,6 +1329,44 @@ private func getAverageColor(_ color: NSColor) -> NSColor {
     return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
 }
 
+func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSize: NSSize = NSMakeSize(1040, 1580)) -> TableBackgroundMode {
+    #if !SHARE
+    var backgroundMode: TableBackgroundMode
+    switch wallpaper {
+    case .builtin:
+        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+    case let.color(color):
+        backgroundMode = .color(color: NSColor(color))
+    case let .gradient(top, bottom, rotation):
+        backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
+    case let .image(representation, settings):
+        if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
+            backgroundMode = .background(image: image)
+        } else {
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        }
+        
+    case let .file(_, file, settings, _):
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
+            backgroundMode = .background(image: image)
+        } else {
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        }
+    case .none:
+        backgroundMode = .color(color: palette.chatBackground)
+    case let .custom(representation, blurred):
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
+            backgroundMode = .background(image: image)
+        } else {
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        }
+    }
+    return backgroundMode
+    #else
+    return .plain
+    #endif
+}
+
 class TelegramPresentationTheme : PresentationTheme {
     let chatList:TelegramChatListTheme
     #if !SHARE
@@ -1111,6 +1394,12 @@ class TelegramPresentationTheme : PresentationTheme {
                         return getAverageColor(color)
                     } else {
                         return color
+                    }
+                case let .gradient(top, bottom, rotation):
+                    if let blended = top.blended(withFraction: 0.5, of: bottom) {
+                        return getAverageColor(blended)
+                    } else {
+                        return getAverageColor(top)
                     }
                 case let .tiled(image):
                     chatServiceItemColor = getAverageColor(image)
@@ -1141,6 +1430,8 @@ class TelegramPresentationTheme : PresentationTheme {
                     } else {
                         chatServiceItemTextColor = colors.grayText
                     }
+                case .gradient:
+                    chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
                 case .tiled:
                     chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
                 case .plain:
@@ -1168,73 +1459,14 @@ class TelegramPresentationTheme : PresentationTheme {
         return self.colors.chatBackground
     }
     
+    var backgroundSize: NSSize = NSMakeSize(1040, 1580)
+    
     private var _backgroundMode: TableBackgroundMode?
     var backgroundMode: TableBackgroundMode {
         if let value = _backgroundMode {
             return value
         } else {
-            let backgroundMode: TableBackgroundMode
-            #if !SHARE
-            switch wallpaper.wallpaper {
-            case .builtin:
-                backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-            case let.color(color):
-                backgroundMode = .color(color: NSColor(UInt32(abs(color))))
-            case let .image(representation, settings):
-                if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
-                    backgroundMode = .background(image: image)
-                } else {
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-                
-            case let .file(_, file, settings, isPattern):
-                if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
-                    if isPattern {
-                        let image = generateImage(image.size, contextGenerator: { size, ctx in
-                            let imageRect = NSMakeRect(0, 0, size.width, size.height)
-                            var _patternColor: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
-                            
-                            var patternIntensity: CGFloat = 0.5
-                            if let color = settings.color {
-                                if let intensity = settings.intensity {
-                                    patternIntensity = CGFloat(intensity) / 100.0
-                                }
-                                _patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
-                            }
-                            
-                            let color = _patternColor.withAlphaComponent(1.0)
-                            let intensity = _patternColor.alpha
-                            
-                            ctx.setBlendMode(.copy)
-                            ctx.setFillColor(color.cgColor)
-                            ctx.fill(imageRect)
-                            
-                            ctx.setBlendMode(.normal)
-                            ctx.interpolationQuality = .high
-                            
-                            ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
-                            ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
-                            ctx.fill(imageRect)
-                        })!
-                        backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
-                    } else {
-                        backgroundMode = .background(image: image)
-                    }
-                } else {
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-            case .none:
-                backgroundMode = .color(color: colors.chatBackground)
-            case let .custom(representation, blurred):
-                if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
-                    backgroundMode = .background(image: image)
-                } else {
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
-                }
-            }
-            #else
-            backgroundMode = .plain
-            #endif
+            let backgroundMode: TableBackgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
             
             self._backgroundMode = backgroundMode
             return backgroundMode
@@ -1279,6 +1511,12 @@ class TelegramPresentationTheme : PresentationTheme {
     func withUpdatedChatMode(_ bubbled: Bool) -> TelegramPresentationTheme {
         return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: bubbled), bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper)
     }
+    
+    func withUpdatedBackgroundSize(_ size: NSSize) -> TelegramPresentationTheme {
+        self.backgroundSize = size
+        return self
+    }
+    
     func withUpdatedWallpaper(_ wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
         return TelegramPresentationTheme(colors: self.colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: self.bubbled), bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: wallpaper)
     }
@@ -1313,13 +1551,13 @@ extension ColorPalette {
 private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> TelegramIconsTheme {
     return TelegramIconsTheme(dialogMuteImage: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.grayIcon) },
                               dialogMuteImageSelected: { #imageLiteral(resourceName: "Icon_DialogMute").precomposed(palette.underSelectedColor) },
-                              outgoingMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.name == dayClassicPalette.name && bubbled ? palette.accentIconBubble_outgoing : palette.accentIcon, flipVertical:true) },
-                                               readMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.name == dayClassicPalette.name && bubbled ? palette.accentIconBubble_outgoing : palette.accentIcon, flipVertical:true) },
+                              outgoingMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.accentIcon, flipVertical:true) },
+                                               readMessageImage: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.accentIcon, flipVertical:true) },
                                                outgoingMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                readMessageImageSelected: { #imageLiteral(resourceName: "Icon_MessageCheckmark2").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                sendingImage: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.grayIcon, flipVertical:true) },
                                                sendingImageSelected: { #imageLiteral(resourceName: "Icon_ChatStateSending").precomposed(palette.underSelectedColor, flipVertical:true) },
-                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(bubbled && palette.name == dayClassicPalette.name ? palette.accentIconBubble_outgoing : palette.accentIcon, flipVertical:true) },
+                                               secretImage: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.accent, flipVertical:true) },
                                                secretImageSelected:{  #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                pinnedImage: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true) },
                                                pinnedImageSelected: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.underSelectedColor, flipVertical:true) },
@@ -1351,6 +1589,27 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPause:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed() },
                                                chatMusicPauseBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPauseBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing) },
+                                               chatGradientBubble_incoming: { generateGradientBubble(palette.bubbleBackground_incoming, palette.bubbleBackground_incoming) },
+                                               chatGradientBubble_outgoing: { generateGradientBubble(palette.bubbleBackgroundTop_outgoing, palette.bubbleBackgroundBottom_outgoing) },
+                                               chatBubble_none_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .black, strokeColor: .clear, neighbors: .none) },
+                                               chatBubble_none_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .black, strokeColor: .clear, neighbors: .none) },
+                                               chatBubbleBorder_none_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .clear, strokeColor: palette.bubbleBorder_incoming, neighbors: .none) },
+                                               chatBubbleBorder_none_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .clear, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none) },
+                                               chatBubble_both_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .black, strokeColor: .clear, neighbors: .both) },
+                                               chatBubble_both_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .black, strokeColor: .clear, neighbors: .both) },
+                                               chatBubbleBorder_both_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .clear, strokeColor: palette.bubbleBorder_incoming, neighbors: .both) },
+                                               chatBubbleBorder_both_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .clear, strokeColor: palette.bubbleBorder_outgoing, neighbors: .both) },
+                                               /*
+         array.append("chatBubble_none_incoming")
+         array.append("chatBubble_none_outgoing")
+         array.append("chatBubbleBorder_none_incoming")
+         array.append("chatBubbleBorder_none_outgoing")
+         array.append("chatBubble_both_incoming")
+         array.append("chatBubble_both_outgoing")
+         array.append("chatBubbleBorder_both_incoming")
+         array.append("chatBubbleBorder_both_outgoing")
+ */
+                                               
                                                composeNewChat: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.accentIcon) },
                                                composeNewChatActive: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.underSelectedColor) },
                                                composeNewGroup: { #imageLiteral(resourceName: "Icon_NewGroup").precomposed(palette.accentIcon) },
@@ -1394,6 +1653,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                audioPlayerLockedNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.grayIcon) },
                                                audioPlayerLockedPrev: { #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.grayIcon) },
                                                chatSendMessage: { #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.accentIcon) },
+                                               chatSaveEditedMessage: { generateSendIcon(NSImage(named: "Icon_SaveEditedMessage")!, palette.accentIcon) },
                                                chatRecordVoice: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
                                                chatEntertainment: { #imageLiteral(resourceName: "Icon_Entertainments").precomposed(palette.grayIcon) },
                                                chatInlineDismiss: { #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(palette.grayIcon) },
@@ -1451,7 +1711,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                stickerBackgroundActive: { generateStickerBackground(NSMakeSize(83, 83), palette.grayBackground) },
                                                stickersTabRecent: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon) },
                                                stickersTabGIF: { #imageLiteral(resourceName: "Icon_GifToggle").precomposed(palette.grayIcon) },
-                                               chatSendingInFrame_incoming: { generateClockMinImage(palette.grayIconBubble_incoming) },
+                                               chatSendingInFrame_incoming: { generateSendingFrame(palette.grayIconBubble_incoming) },
                                                chatSendingInHour_incoming: { generateClockMinImage(palette.grayIconBubble_incoming) },
                                                chatSendingInMin_incoming: { generateClockMinImage(palette.grayIconBubble_incoming) },
                                                chatSendingInFrame_outgoing: { generateSendingFrame(palette.grayIconBubble_outgoing) },
@@ -1487,7 +1747,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                callOutgoing: { #imageLiteral(resourceName: "Icon_CallOutgoing").precomposed(palette.grayIcon, flipVertical: true) },
                                                recentDismiss: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon) },
                                                recentDismissActive: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(.white) },
-                                               webgameShare: { #imageLiteral(resourceName: "Icon_ShareExternal").precomposed(palette.accentIcon) },
+                                               webgameShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
                                                chatSearchCancel: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                chatSearchFrom: { #imageLiteral(resourceName: "Icon_ChatSearchFrom").precomposed(palette.accentIcon) },
                                                callWindowDecline: { #imageLiteral(resourceName: "Icon_CallDecline_Window").precomposed() },
@@ -1513,7 +1773,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                modalShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
                                                modalClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                ivChannelJoined: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
-                                               chatListMention: { generateBadgeMention(backgroundColor: palette.accent, foregroundColor: palette.background) },
+                                               chatListMention: { generateBadgeMention(backgroundColor: palette.badge, foregroundColor: palette.background) },
                                                chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.accentSelect) },
                                                chatListMentionArchived: { generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
                                                chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
@@ -1558,6 +1818,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsWalletActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsProfile: { generateSettingsIcon(NSImage(named: "Icon_SettingsProfile")!.precomposed(flipVertical: true)) },
                                                generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.accentIcon) },
                                                settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.accentIcon) },
                                                settingsLogout: { #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI) },
@@ -1726,12 +1987,30 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                wallet_settings: { NSImage(named: "Icon_WalletSettings")!.precomposed(palette.accentIcon) },
                                                wallet_update: { NSImage(named: "Icon_WalletUpdate")!.precomposed(palette.grayIcon) },
                                                wallet_passcode_visible: { NSImage(named: "Icon_WalletPasscodeVisible")!.precomposed(palette.grayIcon) },
-                                               wallet_passcode_hidden: { NSImage(named: "Icon_WalletPasscodeHidden")!.precomposed(palette.grayIcon) }
-                                               
+                                               wallet_passcode_hidden: { NSImage(named: "Icon_WalletPasscodeHidden")!.precomposed(palette.grayIcon) },
+                                               wallpaper_color_close: { NSImage(named: "Icon_GradientClose")!.precomposed(palette.grayIcon) },
+                                               wallpaper_color_add: { NSImage(named: "Icon_GradientAdd")!.precomposed(palette.grayIcon) },
+                                               wallpaper_color_swap: { NSImage(named: "Icon_GradientSwap")!.precomposed(palette.grayIcon) },
+                                               wallpaper_color_rotate: { NSImage(named: "Icon_GradientRotate")!.precomposed(palette.grayIcon) },
+                                               login_cap: { NSImage(named: "Icon_LoginCap")!.precomposed(palette.accentIcon) },
+                                               login_qr_cap: { NSImage(named: "Icon_loginQRCap")!.precomposed(palette.accentIcon) },
+                                               login_qr_empty_cap: { generateLoginQrEmptyCap() },
+                                               chat_failed_scroller: { generateChatFailed(backgroundColor: palette.background, border: palette.redUI, foregroundColor: palette.redUI) },
+                                               chat_failed_scroller_active: { generateChatFailed(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
+                                               poll_quiz_unselected: { generateUnslectedCap(palette.grayText) },
+                                               poll_selected: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity) },
+                                               poll_selected_correct: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenUI) },
+                                               poll_selected_incorrect: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redUI) },
+                                               poll_selected_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming) },
+                                               poll_selected_correct_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_incoming) },
+                                               poll_selected_incorrect_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_incoming) },
+                                               poll_selected_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
+                                               poll_selected_correct_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_outgoing) },
+                                               poll_selected_incorrect_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_outgoing) }
     )
 
 }
-private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
+func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,
                                          singleLayoutSelectedBackgroundColor: palette.grayBackground,
@@ -1740,7 +2019,7 @@ private func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bu
                                          contextMenuBackgroundColor: palette.background,
                                          textColor: palette.text,
                                          grayTextColor: palette.grayText,
-                                         secretChatTextColor: bubbled && palette.name == dayClassicPalette.name ? palette.accentIconBubble_outgoing : palette.accent,
+                                         secretChatTextColor: palette.accent,
                                          peerTextColor: palette.text,
                                          activityColor: palette.accent,
                                          activitySelectedColor: palette.underSelectedColor,
@@ -1779,9 +2058,9 @@ func updateTheme(with settings: ThemePaletteSettings, for window: Window? = nil,
         } else {
             palette = settings.palette
         }
-    case tintedNightPalette.name:
-        if settings.palette.accent == tintedNightPalette.accent {
-            palette = tintedNightPalette
+    case nightAccentPalette.name:
+        if settings.palette.accent == nightAccentPalette.accent {
+            palette = nightAccentPalette
         } else {
             palette = settings.palette
         }
@@ -1836,5 +2115,4 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
 func setDefaultTheme(for window: Window? = nil) {
     telegramUpdateTheme(generateTheme(palette: dayClassicPalette, cloudTheme: nil, bubbled: false, fontSize: 13.0, wallpaper: ThemeWallpaper()), window: window, animated: false)
 }
-
 

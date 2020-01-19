@@ -345,7 +345,7 @@ class ChatReportView : Control {
         _ = self.dismiss.sizeToFit()
         
         report.set(handler: { _ in
-            chatInteraction.reportSpamAndClose()
+            chatInteraction.blockContact()
         }, for: .SingleClick)
         
         dismiss.set(handler: { _ in
@@ -766,15 +766,45 @@ class ChatSearchHeader : View, Notifable {
                     calendar.isHidden = !calendarAbility
                     needsLayout = true
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
-                    inputInteraction.update(animated: animated, { state in
-                        return state.updatedInputQueryResult { previousResult in
-                            
-                            let result = state.searchState.responder ? state.messages : ([], nil)
-                            return .searchMessages((result.0, result.1, { searchMessagesState in
-                                stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
-                            }), state.searchState.request)
-                        }.updatedPeerId(nil)
-                    })
+                    
+                    if peer.isSupergroup || peer.isGroup {
+                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: value.searchState.request, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
+                            self.contextQueryState?.1.dispose()
+                            self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in
+                                if let strongSelf = self {
+                                    strongSelf.inputInteraction.update(animated: animated, { state in
+                                        return state.updatedInputQueryResult { previousResult in
+                                            let messages = state.searchState.responder ? state.messages : ([], nil)
+                                            var suggestedPeers:[Peer] = []
+                                            let inputQueryResult = result(previousResult)
+                                            if let inputQueryResult = inputQueryResult, state.searchState.responder, !state.searchState.request.isEmpty, messages.1 != nil {
+                                                switch inputQueryResult {
+                                                case let .mentions(mentions):
+                                                    suggestedPeers = mentions
+                                                default:
+                                                    break
+                                                }
+                                            }
+                                            return .searchMessages((messages.0, messages.1, { searchMessagesState in
+                                                stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
+                                            }), suggestedPeers, state.searchState.request)
+                                        }
+                                    })
+                                }
+                            }))
+                        }
+                    } else {
+                        inputInteraction.update(animated: animated, { state in
+                            return state.updatedInputQueryResult { previousResult in
+                                let result = state.searchState.responder ? state.messages : ([], nil)
+                                return .searchMessages((result.0, result.1, { searchMessagesState in
+                                    stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
+                                }), [], state.searchState.request)
+                            }
+                        })
+                    }
+                    
+                    
                 case let .from(query, complete):
                     from.isHidden = true
                     calendar.isHidden = true
@@ -786,7 +816,7 @@ class ChatSearchHeader : View, Notifable {
                                 let result = state.searchState.responder ? state.messages : ([], nil)
                                 return .searchMessages((result.0, result.1, { searchMessagesState in
                                     stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
-                                }), state.searchState.request)
+                                }), [], state.searchState.request)
                             }
                         })
                     } else {

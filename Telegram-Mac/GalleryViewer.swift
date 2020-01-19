@@ -435,7 +435,7 @@ class GalleryViewer: NSResponder {
                 }
                 
                 if image == nil {
-                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil)
+                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                 }
                 
                 _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0), pagerSize))], updated: []))
@@ -645,7 +645,7 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))]
+                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))]
                     let previous = previous.swap(entries)
                     
                     var inserted: [(Int, MGalleryItem)] = []
@@ -695,7 +695,7 @@ class GalleryViewer: NSResponder {
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
-                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings)))
+                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)))
                         }
                         let previous = previous.with {$0}
                         return prepareEntries(from: previous, to: entries, context: context, pagerSize: pagerSize) |> map { transition in
@@ -930,10 +930,10 @@ class GalleryViewer: NSResponder {
                                 type = .forEveryone
                             }
                             
-                            _ = deleteMessagesInteractively(postbox: self.context.account.postbox, messageIds: messageIds, type: type).start()
+                            _ = deleteMessagesInteractively(account: self.context.account, messageIds: messageIds, type: type).start()
                         })
                     } else {
-                        _ = deleteMessagesInteractively(postbox: self.context.account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
+                        _ = deleteMessagesInteractively(account: self.context.account, messageIds: messageIds, type: .forLocalPeer).start()
                     }
                 }
             }))
@@ -1183,7 +1183,7 @@ class GalleryViewer: NSResponder {
         mainWindow.resignFirstResponder()
         //window.makeFirstResponder(self)
         //closePipVideo()
-        backgroundView.alphaValue = 0
+       // backgroundView.alphaValue = 0
         backgroundView._change(opacity: 0, animated: false)
         self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
             if let strongSelf = self {
@@ -1194,7 +1194,7 @@ class GalleryViewer: NSResponder {
                     }
                 }
                 
-                strongSelf.backgroundView._change(opacity: 1, animated: animated)
+                strongSelf.backgroundView._change(opacity: 1, animated: false)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
                         if let ignore = ignoreStableId?.base as? Int, ignore == innerIndex {
@@ -1209,7 +1209,7 @@ class GalleryViewer: NSResponder {
 
                     return nil
                 }, completion:{ [weak strongSelf] in
-                    strongSelf?.backgroundView.alphaValue = 1.0
+                    //strongSelf?.backgroundView.alphaValue = 1.0
                     strongSelf?.controls.animateIn()
                 }, addAccesoryOnCopiedView: { stableId, view in
                     if let stableId = stableId {
@@ -1230,7 +1230,7 @@ class GalleryViewer: NSResponder {
         didSetReady = false
         NotificationCenter.default.removeObserver(self)
         if animated {
-            backgroundView._change(opacity: 0, animated: animated)
+            backgroundView._change(opacity: 0, animated: false)
             controls.animateOut()
             self.pager.animateOut(to: { [weak self] stableId in
                 if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {

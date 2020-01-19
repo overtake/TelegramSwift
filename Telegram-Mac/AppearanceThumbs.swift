@@ -31,14 +31,14 @@ private func cloudThemeData(context: AccountContext, file: TelegramMediaFile) ->
                 case .builtin:
                     wallpaper = .single(.builtin(newSettings))
                 case let .color(color):
-                    wallpaper = .single(.color(Int32(color.rgb)))
+                    wallpaper = .single(.color(color.argb))
                 case let .url(string):
                     let link = inApp(for: string as NSString, context: context)
                     switch link {
                     case let .wallpaper(values):
                         switch values.preview {
                         case let .slug(slug, settings):
-                            wallpaper = getWallpaper(account: context.account, slug: slug) |> map(Optional.init)
+                            wallpaper = getWallpaper(network: context.account.network, slug: slug) |> map(Optional.init)
                             newSettings = settings
                         default:
                             break
@@ -75,6 +75,16 @@ private func cloudThemeData(context: AccountContext, file: TelegramMediaFile) ->
 }
 
 
+private func cloudThemeCrossplatformData(context: AccountContext, settings: TelegramThemeSettings) -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?), NoError> {
+    
+    let palette = settings.palette
+    let wallpaper: Wallpaper = settings.wallpaper?.uiWallpaper ?? .none
+    let cloud = settings.wallpaper
+    return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper) |> map { wallpaper in
+        return (palette, wallpaper, cloud)
+    }
+}
+
 
 private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper) -> Signal<CGImage, NoError> {
     return Signal { subscriber in
@@ -90,54 +100,26 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                 case .builtin:
                     backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
                 case let.color(color):
-                    backgroundMode = .color(color: NSColor(UInt32(abs(color))))
+                    backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
+                case let .gradient(top, bottom, rotation):
+                    backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
                 case let .image(representation, settings):
-                    if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, blurred: settings.blur))) {
+                    if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
                         backgroundMode = .background(image: image)
                     } else {
                         backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
                     }
                     
                 case let .file(_, file, settings, isPattern):
-                    if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, blurred: settings.blur))) {
-                        if isPattern {
-                            let image = generateImage(image.size, contextGenerator: { size, ctx in
-                                let imageRect = NSMakeRect(0, 0, size.width, size.height)
-                                var _patternColor: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
-                                
-                                var patternIntensity: CGFloat = 0.5
-                                if let color = settings.color {
-                                    if let intensity = settings.intensity {
-                                        patternIntensity = CGFloat(intensity) / 100.0
-                                    }
-                                    _patternColor = NSColor(rgb: UInt32(bitPattern: color), alpha: patternIntensity)
-                                }
-                                
-                                let color = _patternColor.withAlphaComponent(1.0)
-                                let intensity = _patternColor.alpha
-                                
-                                ctx.setBlendMode(.copy)
-                                ctx.setFillColor(color.cgColor)
-                                ctx.fill(imageRect)
-                                
-                                ctx.setBlendMode(.normal)
-                                ctx.interpolationQuality = .high
-                                
-                                ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
-                                ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
-                                ctx.fill(imageRect)
-                            })!
-                            backgroundMode = .background(image: NSImage(cgImage: image, size: image.size))
-                        } else {
-                            backgroundMode = .background(image: image)
-                        }
+                    if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
+                        backgroundMode = .background(image: image)
                     } else {
                         backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
                     }
                 case .none:
                     backgroundMode = .color(color: palette.chatBackground)
                 case let .custom(representation, blurred):
-                    if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, blurred: blurred))) {
+                    if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
                         backgroundMode = .background(image: image)
                     } else {
                         backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
@@ -149,11 +131,11 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
             
             func applyBubbles() {
                 let bubbleImage = NSImage(named: "Icon_ThemeBubble")
-                if let outgoing = bubbleImage?.precomposed(palette.bubbleBackground_incoming, flipVertical: true) {
-                    ctx.draw(outgoing, in: NSMakeRect(7, 9, 48, 16))
+                if let incoming = bubbleImage?.precomposed(palette.bubbleBackground_incoming, flipVertical: true) {
+                    ctx.draw(incoming, in: NSMakeRect(7, 9, 48, 16))
                 }
-                if let incoming = bubbleImage?.precomposed(palette.bubbleBackground_outgoing, flipVertical: true, flipHorizontal: true) {
-                    ctx.draw(incoming, in: NSMakeRect(size.width - 57, size.height - 24, 48, 16))
+                if let outgoing = bubbleImage?.precomposed(palette.bubbleBackgroundTop_outgoing, bottomColor: palette.bubbleBackgroundBottom_outgoing, flipVertical: true, flipHorizontal: true) {
+                    ctx.draw(outgoing, in: NSMakeRect(size.width - 57, size.height - 24, 48, 16))
                 }
             }
             
@@ -209,8 +191,11 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
             
             switch backgroundMode {
             case let .background(image):
-                let imageSize = image.size.aspectFilled(size)
-                ctx.draw(image.precomposed(flipVertical: true), in: rect.focus(imageSize))
+                let imageSize = image.size.aspectFilled(NSMakeSize(300, 300))
+                ctx.saveGState()
+                ctx.translateBy(x: 1, y: -1)
+                ctx.draw(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: rect.focus(imageSize))
+                ctx.restoreGState()
                 applyBubbles()
             case let .color(color):
                 if bubbled {
@@ -220,6 +205,27 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                 } else {
                     ctx.setFillColor(color.cgColor)
                     ctx.fill(rect)
+                    applyPlain()
+                }
+            case let .gradient(values):
+                if bubbled {
+                    let colors = [values.top, values.bottom].reversed()
+                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.saveGState()
+                    ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
+                    ctx.rotate(by: CGFloat(values.rotation ?? 0) * CGFloat.pi / -180.0)
+                    ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                    ctx.restoreGState()
+                    applyBubbles()
+                } else {
                     applyPlain()
                 }
                 
@@ -249,9 +255,26 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
         } else {
             return .single((TransformImageResult(theme.icons.appearanceAddPlatformTheme, true), .cloud(cloud, nil)))
         }
-    case let .local(palette):
-        return generateThumb(palette: palette, bubbled: bubbled, wallpaper: palette.name == dayClassicPalette.name ? .builtin : .none) |> map { image in
-            return (TransformImageResult(image, true), .local(palette))
+    case let .local(palette, cloud):
+        let settings = themeSettingsView(accountManager: context.sharedContext.accountManager) |> take(1)
+        
+        return settings |> map { settings -> (Wallpaper, ColorPalette) in
+            let settings = settings
+                .withUpdatedPalette(palette)
+                .withUpdatedCloudTheme(cloud)
+                .installDefaultAccent()
+                .installDefaultWallpaper()
+            return (settings.wallpaper.wallpaper, settings.palette)
+        } |> mapToSignal { wallpaper, palette in
+            if let cloud = cloud {
+                return generateThumb(palette: palette, bubbled: bubbled, wallpaper: wallpaper) |> map { image in
+                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
+                }
+            } else {
+                return generateThumb(palette: palette, bubbled: bubbled, wallpaper: wallpaper) |> map { image in
+                    return (TransformImageResult(image, true), .local(palette))
+                }
+            }
         }
     }
 }

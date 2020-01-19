@@ -474,11 +474,22 @@ class SharedAccountContext {
             
         } |> deliverOnMainQueue
         
+        #if !SHARE
+        var spotlights:[AccountRecordId : SpotlightContext] = [:]
+        
         _ = signal.start(next: { (primary, accounts, photos) in
             self.activeAccountsInfoValue = (primary, accounts)
             self.accountPhotos = photos
             self.updateStatusBarMenuItem()
+            
+            #if !SHARE
+            spotlights.removeAll()
+            for info in accounts {
+                spotlights[info.account.id] = SpotlightContext(account: info.account)
+            }
+            #endif
         })
+        #endif
     }
     
     public func beginNewAuth(testingEnvironment: Bool) {

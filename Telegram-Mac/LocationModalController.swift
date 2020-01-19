@@ -663,8 +663,6 @@ class LocationModalController: ModalViewController {
             self.readyOnce()
         }))
         
-        
-        
     }
     
     deinit {

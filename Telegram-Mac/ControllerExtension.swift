@@ -16,7 +16,6 @@ import TGUIKit
 class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView {
 
     let context:AccountContext
-    let queue: Queue = Queue(name: "Controller Interface Queue", qos: DispatchQoS.default)
     private let languageDisposable:MetaDisposable = MetaDisposable()
     init(_ context:AccountContext) {
         self.context = context

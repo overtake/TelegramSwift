@@ -11,8 +11,10 @@ import TGUIKit
 
 
 class GeneralInteractedRowView: GeneralRowView {
+        
     private let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
+    private(set) var progressView: ProgressIndicator?
     private(set) var textView:TextView?
     private(set) var descriptionView: TextView?
     private var nextView:ImageView = ImageView()
@@ -108,8 +110,19 @@ class GeneralInteractedRowView: GeneralRowView {
             switch item.viewType {
             case .legacy:
                 containerView.setCorners([], animated: false)
-            case let .modern:
+            case .modern:
                 containerView.setCorners(item.viewType.corners, animated: animated)
+            }
+            
+            switch item.type {
+            case .loading:
+                if progressView == nil {
+                    self.progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 20, 20))
+                    containerView.addSubview(self.progressView!)
+                }
+            default:
+                self.progressView?.removeFromSuperview()
+                self.progressView = nil
             }
 
 
@@ -128,11 +141,12 @@ class GeneralInteractedRowView: GeneralRowView {
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
-            let highlighted = item.viewType.isPlainMode ? self.backdorColor : theme.colors.grayHighlight
-            descriptionView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
-            textView?.backgroundColor = containerView.controlState == .Highlight ? .clear : self.backdorColor
+            let highlighted = isSelect ? self.backdorColor : theme.colors.grayHighlight
+            descriptionView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
+            textView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
             containerView.set(background: self.backdorColor, for: .Normal)
             containerView.set(background: highlighted, for: .Highlight)
+            progressView?.progressColor = theme.colors.grayIcon
         }
         containerView.needsDisplay = true
     }
@@ -226,6 +240,8 @@ class GeneralInteractedRowView: GeneralRowView {
         
     }
     
+   
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -312,6 +328,9 @@ class GeneralInteractedRowView: GeneralRowView {
                     }
                 }
                 nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
+                if let progressView = progressView {
+                    progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width)
+                }
             case let .modern(_, innerInsets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), insets.top, item.blockWidth, frame.height - insets.bottom - insets.top)
                 self.containerView.setCorners(item.viewType.corners)
@@ -336,6 +355,9 @@ class GeneralInteractedRowView: GeneralRowView {
                     }
                 }
                 nextView.centerY(x: containerView.frame.width - innerInsets.right - nextView.frame.width)
+                if let progressView = progressView {
+                    progressView.centerY(x: containerView.frame.width - innerInsets.right - progressView.frame.width)
+                }
             }
         }
         

@@ -750,7 +750,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
 
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _):
+                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _):
                             if let peer = renderedPeer.chatMainPeer, peer.canSendMessage, peer.canInviteUsers, peer.isSupergroup || peer.isGroup {
                                 entries.append(peer)
                             }
@@ -819,7 +819,7 @@ class SelectUsersAndGroupsBehavior : SelectPeersBehavior {
                     var presences:[PeerId : PeerPresence] = [:]
                     for entry in entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, peer, presence, _):
+                        case let .MessageEntry(_, _, _, _, _, peer, presence, _, _):
                             if let peer = peer.chatMainPeer, !peer.isChannel && !peer.isBot {
                                 peers.append(peer)
                                 if let presence = presence {
@@ -1316,12 +1316,12 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, max(genericView.tableView.listHeight, 350))), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 120, max(genericView.tableView.listHeight, 350))), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, max(genericView.tableView.listHeight, 350))), animated: animated)
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 120, max(genericView.tableView.listHeight, 350))), animated: animated)
         }
     }
     
@@ -1399,8 +1399,8 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition in
-            self?.readyOnce()
             self?.genericView.tableView.merge(with: transition)
+            self?.readyOnce()
         }))
     }
     
@@ -1477,7 +1477,7 @@ func selectModalPeers(context: AccountContext, title:String , settings:SelectPee
     
     let modal = SelectPeersModalController(context: context, title: title, settings: settings, excludePeerIds: excludePeerIds, limit: limit, confirmation: confirmation, behavior: behavior, linkInvation: linkInvation)
     
-    showModal(with: modal, for: mainWindow)
+    showModal(with: modal, for: context.window)
     
     
     return modal.onComplete.get() |> take(1)

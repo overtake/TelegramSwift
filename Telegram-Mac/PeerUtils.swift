@@ -113,6 +113,33 @@ extension Peer {
         }
     }
     
+    var rawDisplayTitle: String {
+        switch self {
+        case let user as TelegramUser:
+            if user.firstName == nil && user.lastName == nil {
+                return ""
+            } else {
+                var name: String = ""
+                if let firstName = user.firstName {
+                    name += firstName
+                }
+                if let lastName = user.lastName {
+                    if user.firstName != nil {
+                        name += " "
+                    }
+                    name += lastName
+                }
+                return name
+            }
+        case let group as TelegramGroup:
+            return group.title
+        case let channel as TelegramChannel:
+            return channel.title
+        default:
+            return ""
+        }
+    }
+    
     public var compactDisplayTitle: String {
         switch self {
         case let user as TelegramUser:

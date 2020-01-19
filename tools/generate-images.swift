@@ -41,6 +41,16 @@ func initialize() -> [String] {
     array.append("chatMusicPause")
     array.append("chatMusicPauseBubble_incoming")
     array.append("chatMusicPauseBubble_outgoing")
+    array.append("chatGradientBubble_incoming")
+    array.append("chatGradientBubble_outgoing")
+    array.append("chatBubble_none_incoming_withInset")
+    array.append("chatBubble_none_outgoing_withInset")
+    array.append("chatBubbleBorder_none_incoming_withInset")
+    array.append("chatBubbleBorder_none_outgoing_withInset")
+    array.append("chatBubble_both_incoming_withInset")
+    array.append("chatBubble_both_outgoing_withInset")
+    array.append("chatBubbleBorder_both_incoming_withInset")
+    array.append("chatBubbleBorder_both_outgoing_withInset")
     array.append("composeNewChat")
     array.append("composeNewChatActive")
     array.append("composeNewGroup")
@@ -81,6 +91,7 @@ func initialize() -> [String] {
     array.append("audioPlayerLockedNext")
     array.append("audioPlayerLockedPrev")
     array.append("chatSendMessage")
+    array.append("chatSaveEditedMessage")
     array.append("chatRecordVoice")
     array.append("chatEntertainment")
     array.append("chatInlineDismiss")
@@ -245,6 +256,7 @@ func initialize() -> [String] {
     array.append("settingsPassportActive")
     array.append("settingsWalletActive")
     array.append("settingsUpdateActive")
+    array.append("settingsProfile")
     array.append("generalCheck")
     array.append("settingsAbout")
     array.append("settingsLogout")
@@ -418,6 +430,34 @@ func initialize() -> [String] {
     array.append("wallet_passcode_hidden")
     
 
+    array.append("wallpaper_color_close")
+    array.append("wallpaper_color_add")
+    array.append("wallpaper_color_swap")
+    array.append("wallpaper_color_rotate")
+    
+    array.append("login_cap")
+    array.append("login_qr_cap")
+
+    array.append("login_qr_empty_cap")
+    
+    array.append("chat_failed_scroller")
+    array.append("chat_failed_scroller_active")
+
+    array.append("poll_quiz_unselected")
+    
+    array.append("poll_selected")
+    array.append("poll_selected_correct")
+    array.append("poll_selected_incorrect")
+
+    
+    array.append("poll_selected_incoming")
+    array.append("poll_selected_correct_incoming")
+    array.append("poll_selected_incorrect_incoming")
+
+    array.append("poll_selected_outgoing")
+    array.append("poll_selected_correct_outgoing")
+    array.append("poll_selected_incorrect_outgoing")
+    
     return array
 }
 
@@ -428,34 +468,58 @@ func generateClass() -> String {
     let items = initialize()
     
     var lines:[String] = []
-    lines.append("import SwiftSignalKitMac")
+    lines.append("import SwiftSignalKit")
     lines.append("")
 
     lines.append("final class TelegramIconsTheme {")
     
     lines.append("  private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])")
+    lines.append("  private var cachedWithInset:Atomic<[String: (CGImage, NSEdgeInsets)]> = Atomic(value: [:])")
     lines.append("")
     for item in items {
-        lines.append("  var \(item): CGImage {")
-        lines.append("      if let image = cached.with({ $0[\"\(item)\"] }) {")
-        lines.append("          return image")
-        lines.append("      } else {")
-        lines.append("          let image = _\(item)()")
-        lines.append("          _ = cached.modify { current in ")
-        lines.append("              var current = current")
-        lines.append("              current[\"\(item)\"] = image")
-        lines.append("              return current")
-        lines.append("          }")
+        if item.hasSuffix("_withInset") {
+            lines.append("  var \(item): (CGImage, NSEdgeInsets) {")
+            lines.append("      if let image = cachedWithInset.with({ $0[\"\(item)\"] }) {")
+            lines.append("          return image")
+            lines.append("      } else {")
+            lines.append("          let image = _\(item)()")
+            lines.append("          _ = cachedWithInset.modify { current in ")
+            lines.append("              var current = current")
+            lines.append("              current[\"\(item)\"] = image")
+            lines.append("              return current")
+            lines.append("          }")
 
+            
+            lines.append("          return image")
+            lines.append("      }")
+            lines.append("  }")
+        } else {
+            lines.append("  var \(item): CGImage {")
+            lines.append("      if let image = cached.with({ $0[\"\(item)\"] }) {")
+            lines.append("          return image")
+            lines.append("      } else {")
+            lines.append("          let image = _\(item)()")
+            lines.append("          _ = cached.modify { current in ")
+            lines.append("              var current = current")
+            lines.append("              current[\"\(item)\"] = image")
+            lines.append("              return current")
+            lines.append("          }")
+
+            
+            lines.append("          return image")
+            lines.append("      }")
+            lines.append("  }")
+        }
         
-        lines.append("          return image")
-        lines.append("      }")
-        lines.append("  }")
     }
     lines.append("")
     
     for item in items {
-        lines.append("  private let _\(item): ()->CGImage")
+        if item.hasSuffix("_withInset") {
+            lines.append("  private let _\(item): ()->(CGImage, NSEdgeInsets)")
+        } else {
+            lines.append("  private let _\(item): ()->CGImage")
+        }
     }
     
     lines.append("")
@@ -463,9 +527,17 @@ func generateClass() -> String {
     lines.append("  init(")
     for item in items {
         if item != items.last {
-            lines.append("      \(item): @escaping()->CGImage,")
+            if item.hasSuffix("_withInset") {
+                lines.append("      \(item): @escaping()->(CGImage, NSEdgeInsets),")
+            } else {
+                lines.append("      \(item): @escaping()->CGImage,")
+            }
         } else {
-            lines.append("      \(item): @escaping()->CGImage")
+            if item.hasSuffix("_withInset") {
+                lines.append("      \(item): @escaping()->(CGImage, NSEdgeInsets)")
+            } else {
+                lines.append("      \(item): @escaping()->CGImage")
+            }
         }
     }
     lines.append("  ) {")
@@ -476,13 +548,6 @@ func generateClass() -> String {
     
     lines.append("  }")
     
-    lines.append("")
-    lines.append("  deinit {")
-    lines.append("      var bp:Int = 0")
-    lines.append("      bp += 1")
-    lines.append("  }")
-    lines.append("")
-
     
     lines.append("}")
     
@@ -493,5 +558,5 @@ func generateClass() -> String {
     return result
 }
 
-
-try? generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)
+print(FileManager.default.currentDirectoryPath)
+try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)

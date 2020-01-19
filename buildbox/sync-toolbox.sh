@@ -15,5 +15,3 @@ else
     git pull origin master
     cd ..
 fi
-
-cp ./deploy/Config.swift $MAIN_REPOSITORY/Telegram-Mac

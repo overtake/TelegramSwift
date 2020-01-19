@@ -65,6 +65,9 @@ import SyncCore
     private func hideCurrentIfNeeded(animated: Bool = true) {
         if let current = self.current {
             self.current = nil
+            if !current.cancelled {
+                context.chatUndoManager.invokeAll()
+            }
             let view = current.view
             if animated {
                 view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, view.frame.maxY), duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
@@ -146,7 +149,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
             self.self.secondsUntilFinish = value
             
             let textView = TextView()
-            let layout = TextViewLayout.init(.initialize(string: "\(value)", color: theme.colors.text, font: .medium(12)))
+            let layout = TextViewLayout.init(.initialize(string: "\(value)", color: .white, font: .medium(12)))
             layout.measure(width: .greatestFiniteMagnitude)
             
             
@@ -199,7 +202,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
                 timer?.start()
             }
             
-            let layout = TextViewLayout(.initialize(string: statuses.activeDescription, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 10)
+            let layout = TextViewLayout(.initialize(string: statuses.activeDescription, color: .white, font: .medium(.text)), maximumNumberOfLines: 10)
             textView.update(layout)
             
             progressValue = min(max(newValue, 0), 1.0)
@@ -220,17 +223,16 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
     }
     
     func updateLocalizationAndTheme(theme: PresentationTheme) {
-        let theme = (theme as! TelegramPresentationTheme)
         
-        self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.text, lineWidth: 2, clockwise: false)
+        self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, lineWidth: 2, clockwise: false)
         
         let attributed = textView.layout?.attributedString.mutableCopy() as? NSMutableAttributedString
         if let attributed = attributed {
-            attributed.addAttribute(.foregroundColor, value: theme.colors.text, range: attributed.range)
+            attributed.addAttribute(.foregroundColor, value: NSColor.white, range: attributed.range)
             self.textView.update(TextViewLayout(attributed, maximumNumberOfLines: 1))
         }
         undoButton.set(text: L10n.chatUndoManagerUndo, for: .Normal)
-        undoButton.set(color: theme.colors.accent, for: .Normal)
+        undoButton.set(color: .white, for: .Normal)
         
         _ = undoButton.sizeToFit()
     }
@@ -265,7 +267,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
 class UndoTooltipController: TelegramGenericViewController<UndoTooltipView> {
     private let undoManager: ChatUndoManager
     private weak var controller: ViewController?
-    
+    private(set) var cancelled: Bool = false
     init(_ context: AccountContext, controller: ViewController, undoManager: ChatUndoManager) {
         self.undoManager = undoManager
         self.controller = controller
@@ -281,7 +283,8 @@ class UndoTooltipController: TelegramGenericViewController<UndoTooltipView> {
     override func initializer() -> UndoTooltipView {
         return UndoTooltipView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), undoManager: undoManager, undo: { [weak self] in
             if let `self` = self {
-               self.undoManager.cancelAll()
+                self.undoManager.cancelAll()
+                self.cancelled = true
             }
         })
     }

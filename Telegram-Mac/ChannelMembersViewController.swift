@@ -322,7 +322,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 case .tooMuchBots:
                     text = L10n.channelTooMuchBots
                 case .tooMuchJoined:
-                    text = L10n.channelErrorAddTooMuch
+                    text = L10n.inviteChannelsTooMuch
                 case .generic:
                     text = L10n.unknownError
                 case let .bot(memberId):
@@ -420,7 +420,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
-        return PeerInfoTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+        return SearchTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
             self?.searchChannelUsers()
         })
     }

@@ -89,7 +89,7 @@ final class ChatInteraction : InterfaceObserver  {
     //
     var focusMessageId: (MessageId?, MessageId, TableScrollState) -> Void = {_,_,_  in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
-    var sendAppFile:(TelegramMediaFile) -> Void = {_ in}
+    var sendAppFile:(TelegramMediaFile, Bool) -> Void = { _,_ in}
     var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?) -> Void = {_,_,_,_,_,_ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
@@ -134,13 +134,15 @@ final class ChatInteraction : InterfaceObserver  {
     var removeChatInteractively:()->Void = { }
     var updateSearchRequest: (SearchMessagesResultState)->Void = { _ in }
     var searchPeerMessages: (Peer) -> Void = { _ in }
-    var vote:(MessageId, Data?) -> Void = { _, _ in }
+    var vote:(MessageId, [Data], Bool) -> Void = { _, _, _ in }
     var closePoll:(MessageId) -> Void = { _ in }
     var openDiscussion:()->Void = { }
     var addContact:()->Void = {}
     var blockContact: ()->Void = {}
     var openScheduledMessages: ()->Void = {}
     
+    var getGradientOffsetRect:()->NSRect = {  return .zero }
+
     var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
     
     let loadingMessage: Promise<Bool> = Promise()
@@ -379,6 +381,8 @@ final class ChatInteraction : InterfaceObserver  {
                                 }), for: context.window)
                             }
                         })
+                    case let .setupPoll(isQuiz):
+                        showModal(with: NewPollController(chatInteraction: strongSelf, isQuiz: isQuiz), for: strongSelf.context.window)
                     default:
                         break
                     }

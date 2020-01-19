@@ -36,7 +36,7 @@ func mediaDateId(for timestamp:Int32) -> Int64 {
 class ChatDateStickItem : TableStickItem {
     
     private let entry:ChatHistoryEntry
-    fileprivate let timestamp:Int32
+    let timestamp:Int32
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout
@@ -83,7 +83,11 @@ class ChatDateStickItem : TableStickItem {
             let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
             switch interaction.mode {
             case .scheduled:
-                text = L10n.chatDateScheduledFor(dateString)
+                if timestamp == 2147457600 {
+                    text = L10n.chatDateScheduledUntilOnline
+                } else {
+                    text = L10n.chatDateScheduledFor(dateString)
+                }
             default:
                 text = dateString
             }

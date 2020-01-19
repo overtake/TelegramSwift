@@ -27,7 +27,32 @@ private final class ThemePreviewView : BackgroundView {
         self.addSubview(tableView)
         segmentContainer.addSubview(segmentControl.view)
         self.addSubview(segmentContainer)
+        
+        
         layout()
+
+        
+        tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            self.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(animated: false)
+                }
+            })
+        }))
+        
+        tableView.afterSetupItem = { [weak self] view, item in
+            guard let `self` = self else {
+                return
+            }
+            if let view = view as? ChatRowView {
+                view.updateBackground(animated: false)
+            }
+        }
+        
+        
     }
     
     override func layout() {
@@ -35,6 +60,8 @@ private final class ThemePreviewView : BackgroundView {
         segmentContainer.frame = NSMakeRect(0, 0, frame.width, 50)
         self.segmentControl.view.center()
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
+        
+        
     }
     
     required init?(coder: NSCoder) {
@@ -54,6 +81,10 @@ private final class ThemePreviewView : BackgroundView {
                 return theme.chatBackground
             }
         }
+        
+       
+        
+        
         segmentContainer.backgroundColor = theme.colors.background
         segmentContainer.borderColor = theme.colors.border
         segmentContainer.border = [.Bottom]
@@ -66,39 +97,68 @@ private final class ThemePreviewView : BackgroundView {
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
+        
+        chatInteraction.getGradientOffsetRect = { [weak self] in
+            guard let `self` = self else {
+                return .zero
+            }
+            let offset = self.tableView.scrollPosition().current.rect.origin
+            return CGRect(origin: offset, size: NSMakeSize(350, 400))
+        }
+        
         let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
         let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
         
-        let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+        
+        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 18 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreview1, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+        
+        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
+
         
         
-        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
+        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreview2), attributes: [ReplyMessageAttribute(messageId: firstMessage.id)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [])
         
-        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
+        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
         
-        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+        let thridMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreview3, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
-        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, nil, AutoplayMediaPreferences.defaultSettings))
+        let thridEntry: ChatHistoryEntry = .MessageEntry(thridMessage, MessageIndex(thridMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
         
         
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
         let item2 = ChatRowItem.item(frame.size, from: secondEntry, interaction: chatInteraction, theme: theme)
+        let item3 = ChatRowItem.item(frame.size, from: thridEntry, interaction: chatInteraction, theme: theme)
         
         
-        _ = item1.makeSize(frame.width, oldWidth: 0)
         _ = item2.makeSize(frame.width, oldWidth: 0)
+        _ = item3.makeSize(frame.width, oldWidth: 0)
+        _ = item1.makeSize(frame.width, oldWidth: 0)
         
+        
+        tableView.beginTableUpdates()
+        _ = tableView.addItem(item: item3)
         _ = tableView.addItem(item: item2)
         _ = tableView.addItem(item: item1)
+        tableView.endTableUpdates()
         
+        
+        self.tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(animated: false)
+            }
+        })
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
     }
     
 }
 
 enum ThemePreviewSource {
-    case localTheme(TelegramPresentationTheme)
+    case localTheme(TelegramPresentationTheme, name: String?)
     case cloudTheme(TelegramTheme)
 }
 
@@ -133,7 +193,7 @@ class ThemePreviewModalController: ModalViewController {
             guard let `self` = self else {
                 return
             }
-            let newTheme = self.currentTheme.withUpdatedChatMode(bubbled)
+            let newTheme = self.currentTheme.withUpdatedChatMode(bubbled).withUpdatedBackgroundSize(NSMakeSize(350, 350))
             self.currentTheme = newTheme
             self.genericView.addTableItems(self.context, theme: newTheme)
             self.genericView.backgroundMode = newTheme.controllerBackgroundMode
@@ -148,20 +208,51 @@ class ThemePreviewModalController: ModalViewController {
         }))
         
         switch self.source {
-        case let .localTheme(theme):
+        case let .localTheme(theme, _):
+            self.readyOnce()
             self.currentTheme = theme.withUpdatedChatMode(true)
             genericView.addTableItems(self.context, theme: theme)
             modal?.updateLocalizationAndTheme(theme: theme)
             genericView.backgroundMode = theme.controllerBackgroundMode
-            self.readyOnce()
         case let .cloudTheme(theme):
-            if let file = theme.file {
+            if let settings = theme.settings {
+                let palette = settings.palette
+                let wallpaper: Wallpaper
+                let cloud = settings.wallpaper
+                if let cloud = cloud {
+                    wallpaper = Wallpaper(cloud)
+                } else {
+                    if settings.baseTheme == .classic {
+                        wallpaper = .builtin
+                    } else {
+                        wallpaper = .none
+                    }
+                }
+                self.disposable.set(showModalProgress(signal: moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper), for: context.window).start(next: { [weak self] wallpaper in
+                    guard let `self` = self else {
+                        return
+                    }
+                    self.readyOnce()
+                    let newTheme = self.currentTheme
+                        .withUpdatedColors(palette)
+                        .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper)))
+                        .withUpdatedChatMode(true)
+                        .withUpdatedBackgroundSize(WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)))
+                    self.currentTheme = newTheme
+                    self.genericView.addTableItems(context, theme: newTheme)
+                    self.modal?.updateLocalizationAndTheme(theme: newTheme)
+                    self.genericView.backgroundMode = newTheme.controllerBackgroundMode
+                    
+                }))
+
+            } else if let file = theme.file {
                 let signal = loadCloudPaletteAndWallpaper(context: context, file: file)
                 disposable.set(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { [weak self] data in
                     guard let `self` = self else {
                         return
                     }
                     if let (palette, wallpaper, cloud) = data {
+                        self.readyOnce()
                         let newTheme = self.currentTheme
                             .withUpdatedColors(palette)
                             .withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper)))
@@ -170,7 +261,6 @@ class ThemePreviewModalController: ModalViewController {
                         self.genericView.addTableItems(context, theme: newTheme)
                         self.modal?.updateLocalizationAndTheme(theme: newTheme)
                         self.genericView.backgroundMode = newTheme.controllerBackgroundMode
-                        self.readyOnce()
                     } else {
                         self.close()
                         alert(for: context.window, info: L10n.unknownError)
@@ -197,10 +287,10 @@ class ThemePreviewModalController: ModalViewController {
             }), center: ModalHeaderData(title: theme.title, subtitle: count > 0 ? countTitle : nil), right: ModalHeaderData(image: currentTheme.icons.modalShare, handler: { [weak self] in
                 self?.share()
             }))
-        case let .localTheme(theme):
+        case let .localTheme(theme, name):
             return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
                 self?.close()
-            }), center: ModalHeaderData(title: theme.colors.name), right: nil)
+            }), center: ModalHeaderData(title: name ?? localizedString("AppearanceSettings.ColorTheme.\(theme.colors.name)")), right: nil)
         }
         
     }
@@ -212,6 +302,10 @@ class ThemePreviewModalController: ModalViewController {
         default:
             break
         }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
     }
     
     private func saveAccent() {
@@ -240,7 +334,7 @@ class ThemePreviewModalController: ModalViewController {
             let defaultTheme: DefaultTheme
             
             if let cloudTheme = cloudTheme {
-                defaultTheme = DefaultTheme(local: colors.parent, cloud: DefaultCloudTheme(cloud: cloudTheme, palette: colors, wallpaper: currentTheme.wallpaper.associated ?? AssociatedWallpaper(cloud: nil, wallpaper: currentTheme.wallpaper.wallpaper)))
+                defaultTheme = DefaultTheme(local: colors.parent, cloud: DefaultCloudTheme(cloud: cloudTheme, palette: colors, wallpaper: currentTheme.wallpaper.associated ?? AssociatedWallpaper(cloud: currentTheme.wallpaper.associated?.cloud, wallpaper: currentTheme.wallpaper.wallpaper)))
             } else {
                 defaultTheme = DefaultTheme(local: colors.parent, cloud: nil)
             }
@@ -250,7 +344,7 @@ class ThemePreviewModalController: ModalViewController {
             } else {
                 settings = settings.withUpdatedDefaultDay(defaultTheme)
             }
-            settings = settings.withUpdatedDefaultIsDark(colors.isDark)
+            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultAccent(color: PaletteAccentColor(colors.accent, (top: colors.bubbleBackgroundTop_outgoing, colors.bubbleBackgroundBottom_outgoing))).saveDefaultWallpaper().withSavedAssociatedTheme()
             return settings
         }).start()
         
@@ -305,14 +399,14 @@ func loadCloudPaletteAndWallpaper(context: AccountContext, file: TelegramMediaFi
                 case .none:
                     return .single((palette, Wallpaper.none, nil))
                 case let .color(color):
-                    return .single((palette, Wallpaper.color(Int32(color.rgb)), nil))
+                    return .single((palette, Wallpaper.color(color.argb), nil))
                 case let .url(url):
                     let link = inApp(for: url as NSString, context: context)
                     switch link {
                     case let .wallpaper(values):
                         switch values.preview {
                         case let .slug(slug, settings):
-                            return getWallpaper(account: context.account, slug: slug)
+                            return getWallpaper(network: context.account.network, slug: slug)
                                 |> mapToSignal { cloud in
                                     return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: Wallpaper(cloud).withUpdatedSettings(settings)) |> map { wallpaper in
                                         return (palette, wallpaper, cloud)

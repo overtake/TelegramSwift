@@ -21,7 +21,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>5.8.1</string>
+	<string>5.9</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -36,7 +36,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>185787</string>
+	<string>189222</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>
@@ -64,5 +64,9 @@
 	<string>${SFEED_URL}</string>
 	<key>SUPublicDSAKeyFile</key>
 	<string>${DSA_PEM_FILE}</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>SFCompactRounded-Semibold.otf</string>
+	</array>
 </dict>
 </plist>

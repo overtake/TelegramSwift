@@ -16,15 +16,17 @@ class AutoplayMediaPreferences : PreferencesEntry, Equatable {
     let videos: Bool
     let soundOnHover: Bool
     let preloadVideos: Bool
-    init(gifs: Bool, videos: Bool, soundOnHover: Bool, preloadVideos: Bool) {
+    let loopAnimatedStickers: Bool
+    init(gifs: Bool, videos: Bool, soundOnHover: Bool, preloadVideos: Bool, loopAnimatedStickers: Bool ) {
         self.gifs = gifs
         self.videos = videos
         self.soundOnHover = soundOnHover
         self.preloadVideos = preloadVideos
+        self.loopAnimatedStickers = loopAnimatedStickers
     }
     
     static var defaultSettings: AutoplayMediaPreferences {
-        return AutoplayMediaPreferences(gifs: true, videos: true, soundOnHover: true, preloadVideos: true)
+        return AutoplayMediaPreferences(gifs: true, videos: true, soundOnHover: true, preloadVideos: true, loopAnimatedStickers: true)
     }
     
     required init(decoder: PostboxDecoder) {
@@ -32,6 +34,7 @@ class AutoplayMediaPreferences : PreferencesEntry, Equatable {
         self.videos = decoder.decodeInt32ForKey("v", orElse: 0) == 1
         self.soundOnHover = decoder.decodeInt32ForKey("soh", orElse: 0) == 1
         self.preloadVideos = decoder.decodeInt32ForKey("pv", orElse: 0) == 1
+        self.loopAnimatedStickers = decoder.decodeInt32ForKey("las", orElse: 0) == 1
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -39,10 +42,11 @@ class AutoplayMediaPreferences : PreferencesEntry, Equatable {
         encoder.encodeInt32(videos ? 1 : 0, forKey: "v")
         encoder.encodeInt32(soundOnHover ? 1 : 0, forKey: "soh")
         encoder.encodeInt32(preloadVideos ? 1 : 0, forKey: "pv")
+        encoder.encodeInt32(loopAnimatedStickers ? 1 : 0, forKey: "las")
     }
     
     static func == (lhs: AutoplayMediaPreferences, rhs: AutoplayMediaPreferences) -> Bool {
-        return lhs.gifs == rhs.gifs && lhs.videos == rhs.videos && lhs.soundOnHover == rhs.soundOnHover && lhs.preloadVideos == rhs.preloadVideos
+        return lhs.gifs == rhs.gifs && lhs.videos == rhs.videos && lhs.soundOnHover == rhs.soundOnHover && lhs.preloadVideos == rhs.preloadVideos && lhs.loopAnimatedStickers == rhs.loopAnimatedStickers
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -54,16 +58,19 @@ class AutoplayMediaPreferences : PreferencesEntry, Equatable {
     }
     
     func withUpdatedAutoplayGifs(_ gifs: Bool) -> AutoplayMediaPreferences {
-        return AutoplayMediaPreferences(gifs: gifs, videos: self.videos, soundOnHover: self.soundOnHover, preloadVideos: self.preloadVideos)
+        return AutoplayMediaPreferences(gifs: gifs, videos: self.videos, soundOnHover: self.soundOnHover, preloadVideos: self.preloadVideos, loopAnimatedStickers: self.loopAnimatedStickers)
     }
     func withUpdatedAutoplayVideos(_ videos: Bool) -> AutoplayMediaPreferences {
-        return AutoplayMediaPreferences(gifs: self.gifs, videos: videos, soundOnHover: self.soundOnHover, preloadVideos: self.preloadVideos)
+        return AutoplayMediaPreferences(gifs: self.gifs, videos: videos, soundOnHover: self.soundOnHover, preloadVideos: self.preloadVideos, loopAnimatedStickers: self.loopAnimatedStickers)
     }
     func withUpdatedAutoplaySoundOnHover(_ soundOnHover: Bool) -> AutoplayMediaPreferences {
-        return AutoplayMediaPreferences(gifs: self.gifs, videos: self.videos, soundOnHover: soundOnHover, preloadVideos: self.preloadVideos)
+        return AutoplayMediaPreferences(gifs: self.gifs, videos: self.videos, soundOnHover: soundOnHover, preloadVideos: self.preloadVideos, loopAnimatedStickers: self.loopAnimatedStickers)
     }
     func withUpdatedAutoplayPreloadVideos(_ preloadVideos: Bool) -> AutoplayMediaPreferences {
-        return AutoplayMediaPreferences(gifs: self.gifs, videos: self.videos, soundOnHover: self.soundOnHover, preloadVideos: preloadVideos)
+        return AutoplayMediaPreferences(gifs: self.gifs, videos: self.videos, soundOnHover: self.soundOnHover, preloadVideos: preloadVideos, loopAnimatedStickers: self.loopAnimatedStickers)
+    }
+    func withUpdatedLoopAnimatedStickers(_ loopAnimatedStickers: Bool) -> AutoplayMediaPreferences {
+        return AutoplayMediaPreferences(gifs: self.gifs, videos: self.videos, soundOnHover: self.soundOnHover, preloadVideos: self.preloadVideos, loopAnimatedStickers: loopAnimatedStickers)
     }
 }
 

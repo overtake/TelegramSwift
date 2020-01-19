@@ -65,7 +65,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                             if file.isVideo && file.isAnimated {
                                 thumbedFile = data.0.path + ".mp4"
                             } else {
-                                thumbedFile = data.0.path.appending(".\(file.fileName?.nsstring.pathExtension ?? data.1 ?? "jpg")")
+                                thumbedFile = data.0.path.appending(".\(file.fileName?.nsstring.pathExtension ?? data.1 ?? "mp4")")
                             }
                         }
                         
@@ -91,6 +91,9 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                             imageGenerator.appliesPreferredTrackTransform = true
                             thumbImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
    
+                        }
+                        if thumbedFile != resource?.localFilePath {
+                            try? FileManager.default.removeItem(atPath: thumbedFile)
                         }
                         
                         if let image = thumbImage {

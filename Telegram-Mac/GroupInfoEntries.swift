@@ -86,6 +86,8 @@ final class GroupInfoArguments : PeerInfoArguments {
         }
     }
     
+    var loadMore: (()->Void)? = nil
+    
     override func updateEditable(_ editable:Bool, peerView:PeerView) {
         
         let context = self.context
@@ -242,6 +244,15 @@ final class GroupInfoArguments : PeerInfoArguments {
         pushViewController(LinkInvationController(context, peerId: peerId))
     }
     
+    func showMore() {
+        let updateState:((GroupInfoState)->GroupInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        updateState {
+            return $0.withUpdatedHasShowMoreButton(nil)
+        }
+    }
+    
     func updatePhoto(_ path:String) -> Void {
         
         let updateState:((GroupInfoState)->GroupInfoState)->Void = { [weak self] f in
@@ -380,7 +391,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                                 
                                                 return state.withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
                                             }
-                                        } |> `catch` { _ -> Signal<Void, NoError> in
+                                        } |> `catch` { error -> Signal<Void, NoError> in
                                             updateState { state in
                                                 var temporaryParticipants = state.temporaryParticipants
                                                 for i in 0 ..< temporaryParticipants.count {
@@ -394,12 +405,48 @@ final class GroupInfoArguments : PeerInfoArguments {
                                                 
                                                 return state.withUpdatedTemporaryParticipants(temporaryParticipants).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
                                             }
-                                            
                                             return .complete()
                                     }
                                     
                                 } else if peer.isSupergroup {
-                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: memberIds) |> `catch` { _ in return .complete() }
+                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: memberIds) |> deliverOnMainQueue |> `catch` { error in
+                                        let text: String
+                                        switch error {
+                                        case .limitExceeded:
+                                            text = L10n.channelErrorAddTooMuch
+                                        case .botDoesntSupportGroups:
+                                            text = L10n.channelBotDoesntSupportGroups
+                                        case .tooMuchBots:
+                                            text = L10n.channelTooMuchBots
+                                        case .tooMuchJoined:
+                                            text = L10n.inviteChannelsTooMuch
+                                        case .generic:
+                                            text = L10n.unknownError
+                                        case let .bot(memberId):
+                                            let _ = (context.account.postbox.transaction { transaction in
+                                                return transaction.getPeer(peerId)
+                                                }
+                                                |> deliverOnMainQueue).start(next: { peer in
+                                                    guard let peer = peer as? TelegramChannel else {
+                                                        alert(for: context.window, info: L10n.unknownError)
+                                                        return
+                                                    }
+                                                    if peer.hasPermission(.addAdmins) {
+                                                        confirm(for: context.window, information: L10n.channelAddBotErrorHaveRights, okTitle: L10n.channelAddBotAsAdmin, successHandler: { _ in
+                                                            showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _, f in f() }), for: context.window)
+                                                        })
+                                                    } else {
+                                                        alert(for: context.window, info: L10n.channelAddBotErrorHaveRights)
+                                                    }
+                                                })
+                                            return .complete()
+                                        case .restricted:
+                                            text = L10n.channelErrorAddBlocked
+                                        }
+                                        alert(for: context.window, info: text)
+                                        
+                                        return .complete()
+                                    }
                                 }
                             }
                             
@@ -509,7 +556,9 @@ class GroupInfoState: PeerInfoState {
     
     let savingData: Bool
     
-    init(editingState: GroupInfoEditingState?, updatingName:String?, temporaryParticipants:[TemporaryParticipant], successfullyAddedParticipantIds:Set<PeerId>, removingParticipantIds:Set<PeerId>, savingData: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?) {
+    let hasShowMoreButton: Bool?
+    
+    init(editingState: GroupInfoEditingState?, updatingName:String?, temporaryParticipants:[TemporaryParticipant], successfullyAddedParticipantIds:Set<PeerId>, removingParticipantIds:Set<PeerId>, savingData: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, hasShowMoreButton: Bool?) {
         self.editingState = editingState
         self.updatingName = updatingName
         self.temporaryParticipants = temporaryParticipants
@@ -517,6 +566,7 @@ class GroupInfoState: PeerInfoState {
         self.removingParticipantIds = removingParticipantIds
         self.savingData = savingData
         self.updatingPhotoState = updatingPhotoState
+        self.hasShowMoreButton = hasShowMoreButton
     }
     
     override init() {
@@ -527,6 +577,7 @@ class GroupInfoState: PeerInfoState {
         self.removingParticipantIds = Set()
         self.savingData = false
         self.updatingPhotoState = nil
+        self.hasShowMoreButton = true
     }
     
     func isEqual(to: PeerInfoState) -> Bool {
@@ -537,35 +588,38 @@ class GroupInfoState: PeerInfoState {
     }
     
     func withUpdatedEditingState(_ editingState: GroupInfoEditingState?) -> GroupInfoState {
-        return GroupInfoState(editingState: editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState)
+        return GroupInfoState(editingState: editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, hasShowMoreButton: self.hasShowMoreButton)
     }
     
     func withUpdatedUpdatingName(_ updatingName: String?) -> GroupInfoState {
-        return GroupInfoState(editingState: self.editingState, updatingName: updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState)
+        return GroupInfoState(editingState: self.editingState, updatingName: updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, hasShowMoreButton: self.hasShowMoreButton)
     }
     
     
     func withUpdatedTemporaryParticipants(_ temporaryParticipants: [TemporaryParticipant]) -> GroupInfoState {
-        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState)
+        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, hasShowMoreButton: self.hasShowMoreButton)
     }
     
     func withUpdatedSuccessfullyAddedParticipantIds(_ successfullyAddedParticipantIds: Set<PeerId>) -> GroupInfoState {
-        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState)
+        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, hasShowMoreButton: self.hasShowMoreButton)
     }
     
     func withUpdatedRemovingParticipantIds(_ removingParticipantIds: Set<PeerId>) -> GroupInfoState {
-        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState)
+        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, hasShowMoreButton: self.hasShowMoreButton)
     }
     
     func withUpdatedSavingData(_ savingData: Bool) -> GroupInfoState {
-        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: savingData, updatingPhotoState: self.updatingPhotoState)
+        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: savingData, updatingPhotoState: self.updatingPhotoState, hasShowMoreButton: self.hasShowMoreButton)
     }
     
     func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> GroupInfoState {
-        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: f(self.updatingPhotoState))
+        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: f(self.updatingPhotoState), hasShowMoreButton: self.hasShowMoreButton)
     }
     func withoutUpdatingPhotoState() -> GroupInfoState {
-        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: nil)
+        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: nil, hasShowMoreButton: self.hasShowMoreButton)
+    }
+    func withUpdatedHasShowMoreButton(_ hasShowMoreButton: Bool?) -> GroupInfoState {
+        return GroupInfoState(editingState: self.editingState, updatingName: self.updatingName, temporaryParticipants: self.temporaryParticipants, successfullyAddedParticipantIds: self.successfullyAddedParticipantIds, removingParticipantIds: self.removingParticipantIds, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, hasShowMoreButton: hasShowMoreButton)
     }
     
 }
@@ -614,6 +668,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case administrators(section:Int, count: String, viewType: GeneralViewType)
     case permissions(section:Int, count: String, viewType: GeneralViewType)
     case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, enabled:Bool, viewType: GeneralViewType)
+    case showMore(section:Int, index: Int, viewType: GeneralViewType)
     case leave(section:Int, text: String, viewType: GeneralViewType)
     case section(Int)
     
@@ -638,6 +693,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .administrators(section, count, _): return .administrators(section: section, count: count, viewType: viewType)
         case let .permissions(section, count, _): return .permissions(section: section, count: count, viewType: viewType)
         case let .member(section, index, peerId, peer, presence, activity, memberStatus, editing, enabled, _): return .member(section: section, index: index, peerId: peerId, peer: peer, presence: presence, activity: activity, memberStatus: memberStatus, editing: editing, enabled: enabled, viewType: viewType)
+        case let .showMore(section, index, _): return .showMore(section: section, index: index, viewType: viewType)
         case let .leave(section, text, _): return  .leave(section: section, text: text, viewType: viewType)
         case .section: return self
         }
@@ -845,6 +901,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .showMore(sectionId, index, viewType):
+            if case .showMore(sectionId, index, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .leave(sectionId, text, viewType):
             if case .leave(sectionId, text, viewType) = entry {
                 return true
@@ -910,8 +972,10 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 17
         case .member:
             fatalError("no stableIndex")
-        case .leave:
+        case .showMore:
             return 19
+        case .leave:
+            return 20
         case let .section(id):
             return (id + 1) * 100000 - id
         }
@@ -956,6 +1020,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .usersHeader(sectionId, _, _):
             return sectionId
         case let .member(sectionId, _, _, _, _, _, _, _, _, _):
+            return sectionId
+        case let .showMore(sectionId, _, _):
             return sectionId
         case let .leave(sectionId, _, _):
             return sectionId
@@ -1004,6 +1070,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .member(sectionId, index, _, _, _, _, _, _, _, _):
             return (sectionId * 100000) + index + 200
+        case let .showMore(sectionId, index, _):
+            return (sectionId * 100000) + index + 200
         case let .leave(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .section(sectionId):
@@ -1049,7 +1117,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                            showModal(with: controller, for: mainWindow)
+                            showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
                             _ = controller.result.start(next: { url, _ in
                                 arguments.updatePhoto(url.path)
                             })
@@ -1154,7 +1222,10 @@ enum GroupInfoEntry: PeerInfoEntry {
             return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
                 arguments.peerInfo(peer!.id)
             }, inputActivity: inputActivity)
-            
+        case let .showMore(_, _, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+                arguments.showMore()
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
         case let .leave(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.delete()
@@ -1205,7 +1276,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 applyBlock(infoBlock)
                 
-                entries.append(GroupInfoEntry.groupDescriptionSetup(section: GroupInfoSection.desc.rawValue, text: editingState.editingDescriptionText, viewType: .singleItem))
+               // entries.append(GroupInfoEntry.groupDescriptionSetup(section: GroupInfoSection.desc.rawValue, text: editingState.editingDescriptionText, viewType: .singleItem))
                 entries.append(GroupInfoEntry.groupAboutDescription(section:  GroupInfoSection.desc.rawValue, viewType: .textBottomItem))
             } else {
                 applyBlock(infoBlock)
@@ -1215,7 +1286,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             if let group = view.peers[view.peerId] as? TelegramGroup, let cachedGroupData = view.cachedData as? CachedGroupData {
                 if case .creator = group.role {
                     if cachedGroupData.flags.contains(.canChangeUsername) {
-                        entries.append(GroupInfoEntry.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
+                  //      entries.append(GroupInfoEntry.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
                         entries.append(GroupInfoEntry.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
                     }
                     
@@ -1407,6 +1478,8 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     usersBlock.append(.member(section: GroupInfoSection.members.rawValue, index: i, peerId: peer.id, peer: peer, presence: view.peerPresences[peer.id], activity: inputActivities[peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(peer.id), viewType: .singleItem))
                 }
             }
+            
+           
             applyBlock(usersBlock)
         }
         
@@ -1446,7 +1519,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
             }
             
-            let sortedParticipants = participants.filter({$0.peer.displayTitle != L10n.peerDeletedUser}).sorted(by: { lhs, rhs in
+            
+            
+            var sortedParticipants = participants.filter({!$0.peer.rawDisplayTitle.isEmpty}).sorted(by: { lhs, rhs in
                 let lhsPresence = lhs.presences[lhs.peer.id] as? TelegramUserPresence
                 let rhsPresence = rhs.presences[rhs.peer.id] as? TelegramUserPresence
                 
@@ -1469,6 +1544,10 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 return lhs < rhs
             })
+            
+            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
+                sortedParticipants = Array(sortedParticipants.prefix(min(50, sortedParticipants.count)))
+            }
             
             for i in 0 ..< sortedParticipants.count {
                 let memberStatus: GroupInfoMemberStatus
@@ -1493,6 +1572,10 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
                 
                 usersBlock.append(GroupInfoEntry.member(section: GroupInfoSection.members.rawValue, index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
+            }
+            
+            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
+                usersBlock.append(.showMore(section: GroupInfoSection.members.rawValue, index: sortedParticipants.count + 1, viewType: .singleItem))
             }
             applyBlock(usersBlock)
         }

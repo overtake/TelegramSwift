@@ -24,6 +24,9 @@
 		9FAA268820D457A300D26CF3 /* RemoteStorageConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EA188120D3D2B1001AEE19 /* RemoteStorageConfiguration.swift */; };
 		9FC8ADA9206BBD000094F7B4 /* SaveSecureIdValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093D805206539D000BC3599 /* SaveSecureIdValue.swift */; };
 		9FC8ADAC206BC00A0094F7B4 /* RecentWebSessions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8ADAA206BBFF10094F7B4 /* RecentWebSessions.swift */; };
+		A71DC83D2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */; };
+		A71DC83F2387CE10000EEDE2 /* AuthTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */; };
+		A754972823A3A8C80091F293 /* InactiveChannels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972723A3A8C80091F293 /* InactiveChannels.swift */; };
 		A7D281DE236C25500000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281DD236C25500000A9BF /* SwiftSignalKit.framework */; };
 		A7D281E2236C25710000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E1236C25710000A9BF /* Postbox.framework */; };
 		A7D281E4236C257C0000A9BF /* TelegramApi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E3236C257C0000A9BF /* TelegramApi.framework */; };
@@ -37,6 +40,7 @@
 		A7D281F9236C32AA0000A9BF /* Crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D281F7236C32AA0000A9BF /* Crypto.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7D281FB236C34670000A9BF /* SynchronizeInstalledStickerPacksOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D281FA236C34660000A9BF /* SynchronizeInstalledStickerPacksOperation.swift */; };
 		A7D281FD236C35E30000A9BF /* TelegramMediaWebFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D281FC236C35E30000A9BF /* TelegramMediaWebFile.swift */; };
+		A7F2833D239E4EE300742C20 /* ContentSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2833C239E4EE300742C20 /* ContentSettings.swift */; };
 		C205FEA91EB3B75900455808 /* ExportMessageLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205FEA71EB3B75900455808 /* ExportMessageLink.swift */; };
 		C22EE61C1E67418000334C38 /* ToggleChannelSignatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22EE61A1E67418000334C38 /* ToggleChannelSignatures.swift */; };
 		C230BEB71EE9A3760029586C /* ChannelAdminEventLogs.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230BEB51EE9A3760029586C /* ChannelAdminEventLogs.swift */; };
@@ -265,7 +269,6 @@
 		D0B8444B1DAB91FD005F29E1 /* ManagedSynchronizePeerReadStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AB0B991D666520002C78E7 /* ManagedSynchronizePeerReadStates.swift */; };
 		D0B8444C1DAB91FD005F29E1 /* UpdateCachedPeerData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B843861DA6F705005F29E1 /* UpdateCachedPeerData.swift */; };
 		D0B85AC61F6B2B9400B8B5CE /* RecentlyUsedHashtags.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B85AC41F6B2B9400B8B5CE /* RecentlyUsedHashtags.swift */; };
-		D0BAAA15230FDB4100AFC473 /* ProcessRemovedMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BAAA13230FDB4100AFC473 /* ProcessRemovedMedia.swift */; };
 		D0BC387C1E40D2880044D6FE /* TogglePeerChatPinned.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BC387A1E40D2880044D6FE /* TogglePeerChatPinned.swift */; };
 		D0BE303B20619EE800FBE6D8 /* SecureIdForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BE303920619EE800FBE6D8 /* SecureIdForm.swift */; };
 		D0BE303E2061A29100FBE6D8 /* RequestSecureIdForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BE303C2061A29100FBE6D8 /* RequestSecureIdForm.swift */; };
@@ -285,6 +288,8 @@
 		D0CA3F85207391560042D2B6 /* SecureIdPadding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA3F83207391560042D2B6 /* SecureIdPadding.swift */; };
 		D0CA8E4C227209C4008A74C3 /* ManagedSynchronizeGroupMessageStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA8E4A227209C4008A74C3 /* ManagedSynchronizeGroupMessageStats.swift */; };
 		D0D376E722DCCFD600FA7D7C /* SlowMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D376E522DCCFD600FA7D7C /* SlowMode.swift */; };
+		D0D3CE4023BB3F1100864F3C /* PendingUpdateMessageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */; };
+		D0D3CE4423BB3FD200864F3C /* ChatUpdatingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */; };
 		D0D748031E7AE98B00F4B1F6 /* StickerPackInteractiveOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D748011E7AE98B00F4B1F6 /* StickerPackInteractiveOperations.swift */; };
 		D0DA1D331F7043D50034E892 /* ManagedPendingPeerNotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DA1D311F7043D50034E892 /* ManagedPendingPeerNotificationSettings.swift */; };
 		D0DB7F041F43030C00591D48 /* InstallInteractiveReadMessagesAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DB7F021F43030C00591D48 /* InstallInteractiveReadMessagesAction.swift */; };
@@ -370,6 +375,9 @@
 		09FC986C22FD99D400915E37 /* ScheduledMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledMessages.swift; sourceTree = "<group>"; };
 		9F06830F21A40DEC001D8EDB /* NotificationExceptionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationExceptionsList.swift; sourceTree = "<group>"; };
 		9FC8ADAA206BBFF10094F7B4 /* RecentWebSessions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentWebSessions.swift; sourceTree = "<group>"; };
+		A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnauthorizedAccountStateManager.swift; sourceTree = "<group>"; };
+		A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthTransfer.swift; sourceTree = "<group>"; };
+		A754972723A3A8C80091F293 /* InactiveChannels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannels.swift; sourceTree = "<group>"; };
 		A7D281D7236C25370000A9BF /* libphonenumber.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libphonenumber.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281D9236C253C0000A9BF /* TelegramApi.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApi.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281DB236C25440000A9BF /* MtProtoKitMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MtProtoKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -387,6 +395,7 @@
 		A7D281F7236C32AA0000A9BF /* Crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Crypto.h; path = "../../../submodules/telegram-ios/submodules/TelegramCore/Sources/Crypto.h"; sourceTree = "<group>"; };
 		A7D281FA236C34660000A9BF /* SynchronizeInstalledStickerPacksOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SynchronizeInstalledStickerPacksOperation.swift; sourceTree = "<group>"; };
 		A7D281FC236C35E30000A9BF /* TelegramMediaWebFile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramMediaWebFile.swift; sourceTree = "<group>"; };
+		A7F2833C239E4EE300742C20 /* ContentSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentSettings.swift; sourceTree = "<group>"; };
 		C205FEA71EB3B75900455808 /* ExportMessageLink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExportMessageLink.swift; sourceTree = "<group>"; };
 		C210DD611FBDB90800F673D8 /* SourceReferenceMessageAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReferenceMessageAttribute.swift; sourceTree = "<group>"; };
 		C22EE61A1E67418000334C38 /* ToggleChannelSignatures.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToggleChannelSignatures.swift; sourceTree = "<group>"; };
@@ -709,6 +718,8 @@
 		D0CC4ADB22BA47280088F36D /* TelegramApiMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApiMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0D1026B2212FE52003ADA5E /* AccountSortOrderAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSortOrderAttribute.swift; sourceTree = "<group>"; };
 		D0D376E522DCCFD600FA7D7C /* SlowMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlowMode.swift; sourceTree = "<group>"; };
+		D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PendingUpdateMessageManager.swift; sourceTree = "<group>"; };
+		D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatUpdatingMessageMedia.swift; sourceTree = "<group>"; };
 		D0D748011E7AE98B00F4B1F6 /* StickerPackInteractiveOperations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPackInteractiveOperations.swift; sourceTree = "<group>"; };
 		D0DA1D311F7043D50034E892 /* ManagedPendingPeerNotificationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedPendingPeerNotificationSettings.swift; sourceTree = "<group>"; };
 		D0DB7F021F43030C00591D48 /* InstallInteractiveReadMessagesAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstallInteractiveReadMessagesAction.swift; sourceTree = "<group>"; };
@@ -1115,6 +1126,9 @@
 		D03B0D601D631A7200955575 /* Account */ = {
 			isa = PBXGroup;
 			children = (
+				A7F2833C239E4EE300742C20 /* ContentSettings.swift */,
+				A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */,
+				A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */,
 				D03B0D611D631A8B00955575 /* Account.swift */,
 				D049EAF41E44DF3300A2CD3A /* AccountState.swift */,
 				D03B0D631D631A8B00955575 /* AccountViewTracker.swift */,
@@ -1155,6 +1169,8 @@
 		D03B0D6E1D631AA900955575 /* Messages */ = {
 			isa = PBXGroup;
 			children = (
+				D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */,
+				D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */,
 				D03B0D711D631ABA00955575 /* SearchMessages.swift */,
 				D0EC55992101ED0800D1992C /* DeleteMessages.swift */,
 				D01AC91C1DD5DA5E00E8160F /* RequestMessageActionCallback.swift */,
@@ -1484,6 +1500,7 @@
 				090E778F22AAABC600CD99F5 /* PeersNearby.swift */,
 				D0D376E522DCCFD600FA7D7C /* SlowMode.swift */,
 				D03E416B2304D5B30049C28B /* ValidateAddressNameInteractive.swift */,
+				A754972723A3A8C80091F293 /* InactiveChannels.swift */,
 			);
 			name = Peers;
 			sourceTree = "<group>";
@@ -1689,6 +1706,7 @@
 				C205FEA91EB3B75900455808 /* ExportMessageLink.swift in Sources */,
 				D0448CA31E291B14005A61A7 /* FetchSecretFileResource.swift in Sources */,
 				D0B8444C1DAB91FD005F29E1 /* UpdateCachedPeerData.swift in Sources */,
+				A71DC83D2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift in Sources */,
 				D0329EA322FC5A7C00F9F071 /* MessageReactions.swift in Sources */,
 				D0FA8B9F1E1F973B001E855B /* SecretChatIncomingEncryptedOperation.swift in Sources */,
 				D03C536C1DAD5CA9004C17B3 /* TelegramChannel.swift in Sources */,
@@ -1702,8 +1720,10 @@
 				D0E35A141DE4C69C00BC6096 /* FetchHttpResource.swift in Sources */,
 				D0B8440D1DAB91CD005F29E1 /* ImageRepresentationsUtils.swift in Sources */,
 				D03C536A1DAD5CA9004C17B3 /* TelegramUser.swift in Sources */,
+				D0D3CE4023BB3F1100864F3C /* PendingUpdateMessageManager.swift in Sources */,
 				D001F3EA1E128A1C007A8C60 /* TelegramPeerNotificationSettings.swift in Sources */,
 				D0E412F5206B9BDC00BEE4A2 /* SecureIdVerificationDocumentReference.swift in Sources */,
+				A754972823A3A8C80091F293 /* InactiveChannels.swift in Sources */,
 				D0467D0C20D7F1E60055C28F /* SynchronizeMarkAllUnseenPersonalMessagesOperation.swift in Sources */,
 				C23BC3881E9BE3CB00D79F92 /* ImportContact.swift in Sources */,
 				D0B85AC61F6B2B9400B8B5CE /* RecentlyUsedHashtags.swift in Sources */,
@@ -1724,6 +1744,7 @@
 				D0CA3F85207391560042D2B6 /* SecureIdPadding.swift in Sources */,
 				D0F3CC791DDE2859008148FA /* SearchMessages.swift in Sources */,
 				D093D7EF206413F600BC3599 /* SecureIdDataTypes.swift in Sources */,
+				A71DC83F2387CE10000EEDE2 /* AuthTransfer.swift in Sources */,
 				D06CA13622772EB20094E707 /* ManagedNotificationSettingsBehaviors.swift in Sources */,
 				D0C44B621FC616E200227BE0 /* SearchGroupMembers.swift in Sources */,
 				D00BDA1A1EE593D600C64C5E /* TelegramChannelAdminRights.swift in Sources */,
@@ -1849,6 +1870,7 @@
 				D0B844471DAB91FD005F29E1 /* ManagedServiceViews.swift in Sources */,
 				D0F3A8A91E82CD7D00B4C64C /* UpdatePeerChatInterfaceState.swift in Sources */,
 				D03C53691DAD5CA9004C17B3 /* PeerAccessRestrictionInfo.swift in Sources */,
+				D0D3CE4423BB3FD200864F3C /* ChatUpdatingMessageMedia.swift in Sources */,
 				C2FD33E21E680E9E008D13D4 /* RequestUserPhotos.swift in Sources */,
 				A7D281FB236C34670000A9BF /* SynchronizeInstalledStickerPacksOperation.swift in Sources */,
 				D0B8440E1DAB91CD005F29E1 /* MessageUtils.swift in Sources */,
@@ -1874,6 +1896,7 @@
 				D0F8C3A12017AF2700236FC5 /* GlobalTelegramCoreConfiguration.swift in Sources */,
 				D058E0D21E8AD65C00A442DE /* StandaloneSendMessage.swift in Sources */,
 				D03C536F1DAD5CA9004C17B3 /* BotInfo.swift in Sources */,
+				A7F2833D239E4EE300742C20 /* ContentSettings.swift in Sources */,
 				D033FEB41E61F3C000644997 /* ReportPeer.swift in Sources */,
 				D0FA8BAE1E1FD6E2001E855B /* MemoryBufferExtensions.swift in Sources */,
 				D01B264A23324CF900A6448B /* Wallets.swift in Sources */,
@@ -1911,7 +1934,6 @@
 				D0B418971D7E0580004562A4 /* TelegramMediaImage.swift in Sources */,
 				D01843A92190C28100278AFF /* ConfirmTwoStepRecoveryEmail.swift in Sources */,
 				D041E3F91E535A88008C24B4 /* RemovePeerMember.swift in Sources */,
-				D0BAAA15230FDB4100AFC473 /* ProcessRemovedMedia.swift in Sources */,
 				D049EAF61E44DF3300A2CD3A /* AccountState.swift in Sources */,
 				D0467D1620D7F2C90055C28F /* ManagedSynchronizeMarkAllUnseenPersonalMessagesOperations.swift in Sources */,
 				D041E3F61E535464008C24B4 /* AddPeerMember.swift in Sources */,
@@ -1926,6 +1948,86 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		A7F282E1238EAB5B00742C20 /* Github */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D03B0E591D63215200955575 /* TelegramCore.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/third-party/FFmpeg-iOS/include";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Github;
+		};
+		A7F282E2238EAB5B00742C20 /* Github */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D03B0E591D63215200955575 /* TelegramCore.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				INFOPLIST_FILE = TelegramCore/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/TelegramCore/Sources/module.private.modulemap";
+				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.TelegramCore;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Github;
+		};
 		C22069BE1E8EB4A200E82730 /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D03B0E591D63215200955575 /* TelegramCore.xcconfig */;
@@ -2073,17 +2175,18 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				FRAMEWORK_VERSION = A;
 				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				INFOPLIST_FILE = TelegramCore/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/TelegramCore/Sources/module.private.modulemap";
-				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.TelegramCore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 5.0;
 			};
@@ -2253,17 +2356,18 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				FRAMEWORK_VERSION = A;
 				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				INFOPLIST_FILE = TelegramCore/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/TelegramCore/Sources/module.private.modulemap";
-				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Telegram.TelegramCore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 5.0;
 			};
@@ -2285,6 +2389,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				INFOPLIST_FILE = TelegramCore/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -2295,6 +2400,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -2339,6 +2445,7 @@
 				D09D8C131D4FAB1D0081DBEC /* DebugHockeyapp */,
 				D0364D4D22B3E37C002A6EF0 /* HockeyappMacAlpha */,
 				D09D8C141D4FAB1D0081DBEC /* DebugAppStore */,
+				A7F282E1238EAB5B00742C20 /* Github */,
 				C22069BE1E8EB4A200E82730 /* ReleaseHockeyapp */,
 				D06706551D51162400DED3E3 /* ReleaseAppStore */,
 			);
@@ -2351,6 +2458,7 @@
 				D0B4186D1D7E03D5004562A4 /* DebugHockeyapp */,
 				D0364D5022B3E37C002A6EF0 /* HockeyappMacAlpha */,
 				D0B4186E1D7E03D5004562A4 /* DebugAppStore */,
+				A7F282E2238EAB5B00742C20 /* Github */,
 				C22069C11E8EB4A200E82730 /* ReleaseHockeyapp */,
 				D0B4186F1D7E03D5004562A4 /* ReleaseAppStore */,
 			);

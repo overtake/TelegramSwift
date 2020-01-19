@@ -232,7 +232,7 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        layout.measure(NSMakeSize(min(width, 420), min(width, 320)), spacing: hasBubble ? 2 : 4)
+        layout.measure(NSMakeSize(min(width, 360), min(width, 320)), spacing: hasBubble ? 2 : 4)
         return layout.dimensions
     }
     
@@ -264,12 +264,12 @@ class ChatGroupedItem: ChatRowItem {
         
         var items: [ContextMenuItem] = []
         
-        if chatInteraction.mode == .scheduled {
+        if chatInteraction.mode == .scheduled, let peer = chatInteraction.peer {
             items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
                 _ = sendScheduledMessageNowInteractively(postbox: context.account.postbox, messageId: message.id).start()
             }))
             items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
-                showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)) , scheduleAt: { date in
+                showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { date in
                     _ = showModalProgress(signal: requestEditMessage(account: context.account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start()
                 }), for: context.window)
             }))
@@ -428,6 +428,10 @@ class ChatGroupedItem: ChatRowItem {
             
             return items
         }
+    }
+    
+    override var instantlyResize: Bool {
+        return true
     }
     
     override func viewClass() -> AnyClass {
@@ -625,6 +629,8 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         assert(contents.count == item.layout.count)
         
         let approximateSynchronousValue = item.approximateSynchronousValue
+        
+        contentView.frame = self.contentFrame
         
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)

@@ -76,6 +76,13 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
                 }))
             }
+            if let file = reference?.0.fileReference?.media {
+                menu.addItem(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak item] in
+                    item?.chatInteraction.sendAppFile(file, true)
+                    item?.chatInteraction.clearInput()
+                }))
+            }
+          
         }
         return menu
     }
@@ -107,7 +114,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         if let slowMode = item?.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                             showSlowModeTimeoutTooltip(slowMode, for: control)
                         } else {
-                            item?.chatInteraction.sendAppFile(data.file)
+                            item?.chatInteraction.sendAppFile(data.file, false)
                             item?.chatInteraction.clearInput()
                         }
                     }, for: .Click)
@@ -131,7 +138,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
                         let view = TransformImageView()
                         view.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
+                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
                             if let file = file {
                                 cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                             }

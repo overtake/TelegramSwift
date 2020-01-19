@@ -353,7 +353,6 @@ class ChatRowItem: TableRowItem {
     }
     
     var forwardNameInset:NSPoint {
-        
         var top:CGFloat = forwardHeaderInset.y
         
         if let header = forwardHeader, !isBubbled {
@@ -568,13 +567,19 @@ class ChatRowItem: TableRowItem {
         if let peer = peer {
             peers.append(peer)
         }
+        
+        guard let message = message else {
+            return false
+        }
+        
         if authorIsChannel {
             return false
         }
-        if let message = message, message.isScheduledMessage {
+        if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
             return false
         }
-        if let info = message?.forwardInfo {
+        
+        if let info = message.forwardInfo {
             if let author = info.author {
                 peers.append(author)
             }
@@ -766,8 +771,8 @@ class ChatRowItem: TableRowItem {
     }
     
     let renderType: ChatItemRenderType
-    var modernBubbleImage:(CGImage, NSEdgeInsets)? = nil
-    var selectedBubbleImage:(CGImage, NSEdgeInsets)? = nil
+    var bubbleImage:(CGImage, NSEdgeInsets)? = nil
+    var bubbleBorderImage:(CGImage, NSEdgeInsets)? = nil
     
     private let downloadSettings: AutomaticMediaDownloadSettings
     
@@ -905,9 +910,10 @@ class ChatRowItem: TableRowItem {
                 } else {
                     isFull = false
                 }
-                
-                modernBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.bubbleBorderColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
-                selectedBubbleImage = messageBubbleImageModern(incoming: isIncoming, fillColor: presentation.chat.backgoundSelectedColor(isIncoming, object.renderType == .bubble), strokeColor: presentation.chat.backgoundSelectedColor(isIncoming, renderType == .bubble), neighbors: isFull && !message.isHasInlineKeyboard ? .none : .both)
+                let icons = presentation.icons
+                let neighbors: MessageBubbleImageNeighbors = isFull && !message.isHasInlineKeyboard ? .none : .both
+                bubbleImage = isIncoming ? (neighbors == .none ? icons.chatBubble_none_incoming_withInset : icons.chatBubble_both_incoming_withInset) : (neighbors == .none ? icons.chatBubble_none_outgoing_withInset : icons.chatBubble_both_outgoing_withInset)
+                bubbleBorderImage = isIncoming ? (neighbors == .none ? icons.chatBubbleBorder_none_incoming_withInset : icons.chatBubbleBorder_both_incoming_withInset) : (neighbors == .none ? icons.chatBubbleBorder_none_outgoing_withInset : icons.chatBubbleBorder_both_outgoing_withInset)
             }
             
             self.itemType = itemType
@@ -1172,7 +1178,7 @@ class ChatRowItem: TableRowItem {
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId]  {
-                    let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?   presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
+                    let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
                     self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account: context.account, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
                         guard let `self` = self else {return}
@@ -1663,12 +1669,12 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
 
     
-    if message.isScheduledMessage {
+    if message.isScheduledMessage, let peer = peer {
         items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
             _ = sendScheduledMessageNowInteractively(postbox: account.postbox, messageId: message.id).start()
         }))
         items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
-            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)) , scheduleAt: { date in
+            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { date in
                 _ = showModalProgress(signal: requestEditMessage(account: account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start(next: { result in
                     
                 }, error: { error in
@@ -1905,7 +1911,9 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         if canReportMessage(message, account) {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
                 _ = reportReasonSelector(context: context).start(next: { reason in
-                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start()
+                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start(completed: {
+                        alert(for: context.window, info: L10n.messageContextReportAlertOK)
+                    })
                 })
             }))
         }

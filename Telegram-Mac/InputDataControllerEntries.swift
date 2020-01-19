@@ -188,16 +188,18 @@ struct InputDataInputPlaceholder : Equatable {
     let icon: CGImage?
     let action: (()-> Void)?
     let hasLimitationText: Bool
-    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, action: (()-> Void)? = nil) {
+    let insets: NSEdgeInsets
+    init(_ placeholder: String? = nil, icon: CGImage? = nil, drawBorderAfterPlaceholder: Bool = false, hasLimitationText: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(), action: (()-> Void)? = nil) {
         self.drawBorderAfterPlaceholder = drawBorderAfterPlaceholder
         self.hasLimitationText = hasLimitationText
         self.placeholder = placeholder
         self.icon = icon
         self.action = action
+        self.insets = insets
     }
     
     static func ==(lhs: InputDataInputPlaceholder, rhs: InputDataInputPlaceholder) -> Bool {
-        return lhs.placeholder == rhs.placeholder && lhs.icon === rhs.icon && lhs.drawBorderAfterPlaceholder == rhs.drawBorderAfterPlaceholder
+        return lhs.placeholder == rhs.placeholder && lhs.icon === rhs.icon && lhs.drawBorderAfterPlaceholder == rhs.drawBorderAfterPlaceholder && lhs.insets == rhs.insets
     }
 }
 
@@ -210,7 +212,10 @@ final class InputDataGeneralData : Equatable {
     let viewType: GeneralViewType
     let description: String?
     let action: (()->Void)?
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, description: String? = nil, action: (()->Void)? = nil) {
+    let disabledAction:(()->Void)?
+    let enabled: Bool
+    let justUpdate: Int64?
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
@@ -218,10 +223,13 @@ final class InputDataGeneralData : Equatable {
         self.viewType = viewType
         self.description = description
         self.action = action
+        self.enabled = enabled
+        self.justUpdate = justUpdate
+        self.disabledAction = disabledAction
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
-        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType
+        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate
     }
 }
 
@@ -254,14 +262,16 @@ final class InputDataGeneralTextData : Equatable {
     let detectBold: Bool
     let viewType: GeneralViewType
     let rightItem: InputDataGeneralTextRightData
-    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil)) {
+    let fontSize: CGFloat?
+    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil) {
         self.color = color
         self.detectBold = detectBold
         self.viewType = viewType
         self.rightItem = rightItem
+        self.fontSize = fontSize
     }
     static func ==(lhs: InputDataGeneralTextData, rhs: InputDataGeneralTextData) -> Bool {
-        return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem
+        return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.fontSize == rhs.fontSize
     }
 }
 
@@ -410,7 +420,7 @@ enum InputDataEntry : Identifiable, Comparable {
             }
             return GeneralRowItem(initialSize, height: type.height, stableId: stableId, viewType: viewType)
         case let .desc(_, _, text, data):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType, rightItem: data.rightItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize)
         case let .custom(_, _, _, _, _, item):
             return item(initialSize, stableId)
         case let .selector(_, _, value, error, _, placeholder, values):
@@ -420,7 +430,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .general(_, _, value, error, identifier, data):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
-            }, error: error)
+            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {})
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):

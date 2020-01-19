@@ -194,6 +194,7 @@ fileprivate class PreviewSenderView : Control {
         headerView.addSubview(archiveButton)
         
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
+        sendButton.autohighlight = false
         _ = sendButton.sizeToFit()
         
         emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
@@ -242,7 +243,7 @@ fileprivate class PreviewSenderView : Control {
                 switch chatInteraction.mode {
                 case .history:
                     items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
-                        showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak controller] date in
+                        showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak controller] date in
                             controller?.send(false, atDate: date)
                         }), for: context.window)
                     }))
@@ -811,9 +812,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     func send(_ silent: Bool, atDate: Date? = nil) {
         switch chatInteraction.mode {
         case .scheduled:
-            showModal(with: ScheduledMessageModalController(context: context, scheduleAt: { [weak self] date in
-                self?.sendCurrentMedia?(silent, date)
-            }), for: context.window)
+            if let peer = chatInteraction.peer {
+                showModal(with: ScheduledMessageModalController(context: context, sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { [weak self] date in
+                    self?.sendCurrentMedia?(silent, date)
+                }), for: context.window)
+            }
         case .history:
             sendCurrentMedia?(silent, atDate)
         }
@@ -1105,7 +1108,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             let data = editedData[url]
             let editor = EditImageModalController(data?.originalUrl ?? url, defaultData: data)
-            showModal(with: editor, for: mainWindow)
+            showModal(with: editor, for: mainWindow, animationType: .scaleCenter)
             self.editorDisposable.set((editor.result |> deliverOnMainQueue).start(next: { [weak self] new, editedData in
                 guard let `self` = self else {return}
                 if let index = self.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {

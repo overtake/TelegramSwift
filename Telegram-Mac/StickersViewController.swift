@@ -15,16 +15,18 @@ import Postbox
 
 final class StickerPanelArguments {
     let context: AccountContext
-    let sendMedia:(Media, NSView)->Void
+    let sendMedia:(Media, NSView, Bool)->Void
     let showPack:(StickerPackReference)->Void
     let navigate:(ItemCollectionViewEntryIndex)->Void
     let addPack: (StickerPackReference)->Void
-    init(context: AccountContext, sendMedia: @escaping(Media, NSView)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void) {
+    let clearRecent:()->Void
+    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void) {
         self.context = context
         self.sendMedia = sendMedia
         self.showPack = showPack
         self.addPack = addPack
         self.navigate = navigate
+        self.clearRecent = clearRecent
     }
 }
 
@@ -669,12 +671,12 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         let previousPacks:Atomic<[AppearanceWrapperEntry<PackEntry>]> = Atomic(value: [])
 
         
-        let arguments = StickerPanelArguments(context: context, sendMedia: { [weak self] media, view in
+        let arguments = StickerPanelArguments(context: context, sendMedia: { [weak self] media, view, silent in
             guard let `self` = self, let chatInteraction = self.chatInteraction else { return }
             if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else if let file = media as? TelegramMediaFile {
-                self.interactions?.sendSticker(file)
+                self.interactions?.sendSticker(file, silent)
             }
         }, showPack: { [weak self] reference in
             if let peerId = self?.chatInteraction?.peerId {
@@ -709,6 +711,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 })
         }, navigate: { [weak self] index in
             self?.position.set(.navigate(index: .sticker(index)))
+        }, clearRecent: {
+            _ = context.account.postbox.transaction({ transaction in
+                clearRecentlyUsedStickers(transaction: transaction)
+            }).start()
         })
         
         let specificPackData: Signal<Tuple2<PeerSpecificStickerPackData, Peer>?, NoError> = self.specificPeerId.get() |> mapToSignal { peerId -> Signal<Peer, NoError> in
@@ -723,7 +729,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             }
         }
         
-        let signal = combineLatest(queue: self.queue, self.searchValue.get(), self.position.get()) |> mapToSignal { values -> Signal<StickerPacksUpdateData, NoError> in
+        let signal = combineLatest(queue: prepareQueue, self.searchValue.get(), self.position.get()) |> mapToSignal { values -> Signal<StickerPacksUpdateData, NoError> in
             
             let count = initialSize.with { size -> Int in
                 return Int(round((size.height * (values.1 == .initial ? 2 : 20)) / 60 * 5))
@@ -984,6 +990,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     override func scrollup() {
         self.position.set(.initial)
+        self.genericView.packsView.scroll(to: .up(true))
       //  self.genericView.tableView.scroll(to: .up(true))
     }
     

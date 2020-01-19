@@ -90,9 +90,9 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         
         self.messageLayout = TextViewLayout(messageTitle, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
-        
-        if let selectRange = rangeOfSearch(searchText, in: messageTitle.string) {
-            self.messageLayout.additionalSelections = [TextSelectedRange.init(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
+        let selectRange = messageTitle.string.nsstring.range(of: searchText)
+        if selectRange.location != NSNotFound {
+            self.messageLayout.additionalSelections = [TextSelectedRange(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
         }
         
         
@@ -133,10 +133,10 @@ class ContextSearchMessageItem: GeneralRowItem {
         if let dateLayout = dateLayout {
             dateSize = dateLayout.0.size.width
         }
-        return size.width - 50 - margin * 4 - dateSize
+        return size.width - 70 - margin * 4 - dateSize
     }
     
-    let leftInset:CGFloat = 40 + 10;
+    let leftInset:CGFloat = 40 + 20;
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
@@ -245,7 +245,7 @@ private class ContextSearchMessageView : GeneralRowView {
                 
                 
                 if let dateLayout = item.ctxDateLayout {
-                    let dateX = frame.width - dateLayout.0.size.width - 10
+                    let dateX = frame.width - dateLayout.0.size.width - 20
                     let dateFrame = focus(dateLayout.0.size)
                     dateLayout.1.draw(NSMakeRect(dateX, dateFrame.minY, dateLayout.0.size.width, dateLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     
@@ -263,7 +263,7 @@ private class ContextSearchMessageView : GeneralRowView {
         super.init(frame: frameRect)
         layerContentsRedrawPolicy = .onSetNeedsDisplay
         photo.userInteractionEnabled = false
-        photo.frame = NSMakeRect(10, 8, 30, 30)
+        photo.frame = NSMakeRect(20, 8, 30, 30)
         addSubview(photo)
         addSubview(messageText)
         messageText.userInteractionEnabled = false
@@ -274,7 +274,7 @@ private class ContextSearchMessageView : GeneralRowView {
     override func layout() {
         super.layout()
         guard let item = item as? ContextSearchMessageItem else {return}
-        photo.centerY(x: 10)
+        photo.centerY(x: 20)
         messageText.setFrameOrigin(item.leftInset, frame.height - messageText.frame.height - item.margin - 1)
     }
     

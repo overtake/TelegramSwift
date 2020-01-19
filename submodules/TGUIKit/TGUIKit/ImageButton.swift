@@ -43,6 +43,12 @@ open class ImageButton: Button {
         self.addSubview(imageView)
     }
     
+    
+    public override var animates: Bool {
+        didSet {
+            imageView.animates = animates
+        }
+    }
     override public func apply(state: ControlState) {
         let state:ControlState = self.isSelected ? .Highlight : state
         super.apply(state: state)

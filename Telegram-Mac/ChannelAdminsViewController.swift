@@ -142,10 +142,7 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
     
     let participants = participants ?? []
     
-//    guard let participants = participants else {
-//        return [.loading]
-//    }
-    
+
     var sectionId:Int32 = 1
     
     entries.append(.section(sectionId))
@@ -205,9 +202,6 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
             index += 1
         }
     } else  if let peer = view.peers[view.peerId] as? TelegramGroup {
-        
-        entries.append(.section(sectionId))
-        sectionId += 1
         
         entries.append(.adminsHeader(sectionId: sectionId, L10n.adminsGroupAdmins, .textTopItem))
         

@@ -20,7 +20,6 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerC
         return interfaceState
     }
 }, fetchResource: { account, resource, range, tag in
-    
     if let resource = resource as? LocalFileGifMediaResource {
         return fetchGifMediaResource(resource: resource)
     } else if let resource = resource as? LocalFileArchiveMediaResource {
@@ -31,6 +30,8 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerC
         return fetchExternalMusicAlbumArtResource(account: account, resource: resource)
     } else if let resource = resource as? LocalFileVideoMediaResource {
         return fetchMovMediaResource(resource: resource)
+    } else if let resource = resource as? LottieSoundMediaResource {
+        return fetchLottieSoundData(resource: resource)
     }
     return nil
 }, fetchResourceMediaReferenceHash: { resource in

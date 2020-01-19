@@ -37,7 +37,7 @@ struct AutoNightThemePreferences: PreferencesEntry, Equatable {
     
     init() {
         self.schedule = nil
-        self.theme = DefaultTheme(local: .tintedNight, cloud: nil)
+        self.theme = DefaultTheme(local: .nightAccent, cloud: nil)
         if #available(OSX 10.14, *) {
             self.systemBased = true
         } else {
@@ -54,7 +54,7 @@ struct AutoNightThemePreferences: PreferencesEntry, Equatable {
     init(decoder: PostboxDecoder) {
         let type = decoder.decodeInt32ForKey("t", orElse: 0)
         
-        let defaultTheme = DefaultTheme(local: .tintedNight, cloud: nil)
+        let defaultTheme = DefaultTheme(local: .nightAccent, cloud: nil)
         
         self.theme = decoder.decodeObjectForKey("defTheme", decoder: { DefaultTheme(decoder: $0) }) as? DefaultTheme ?? defaultTheme
         self.systemBased = decoder.decodeBoolForKey("sb", orElse: false)

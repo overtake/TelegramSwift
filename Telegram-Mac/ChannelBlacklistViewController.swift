@@ -14,6 +14,9 @@ import SyncCore
 import SwiftSignalKit
 
 
+
+
+
 private final class ChannelBlacklistControllerArguments {
     let context: AccountContext
     
@@ -188,11 +191,11 @@ private struct ChannelBlacklistControllerState: Equatable {
     }
 }
 
-private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBlacklistControllerState, participants: [RenderedChannelParticipant]?) -> [ChannelBlacklistEntry] {
+private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBlacklistControllerState, participants: [RenderedChannelParticipant]?, inSearch: Bool) -> [ChannelBlacklistEntry] {
     
     var entries: [ChannelBlacklistEntry] = []
     
-    var index:Int32 = 0
+    var index:Int32 = 10
     var sectionId:Int32 = 1
     
    
@@ -201,16 +204,12 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
         entries.append(.section(sectionId))
         sectionId += 1
        
-        if peer.hasPermission(.banMembers) {
-             entries.append(.addMember(sectionId, index, .singleItem))
-            index += 1
-            
-            entries.append(.header(sectionId, index, peer.isGroup ? L10n.channelBlacklistDescGroup : L10n.channelBlacklistDescChannel, .textBottomItem))
-            index += 1
-
+        if peer.hasPermission(.banMembers), !inSearch {
+            entries.append(.addMember(sectionId, 0, .singleItem))
+            entries.append(.header(sectionId, 1, peer.isGroup ? L10n.channelBlacklistDescGroup : L10n.channelBlacklistDescChannel, .textBottomItem))
         }
         if let participants = participants {
-            if !participants.isEmpty {
+            if !participants.isEmpty, peer.hasPermission(.banMembers) || inSearch {
                 entries.append(.section(sectionId))
                 sectionId += 1
             }
@@ -245,13 +244,19 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
     return entries
 }
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelBlacklistEntry>], right: [AppearanceWrapperEntry<ChannelBlacklistEntry>], initialSize:NSSize, arguments:ChannelBlacklistControllerArguments) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelBlacklistEntry>], right: [AppearanceWrapperEntry<ChannelBlacklistEntry>], initialSize:NSSize, arguments:ChannelBlacklistControllerArguments, inSearch: Bool, searchData: TableSearchVisibleData) -> TableUpdateTransition {
     
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments, initialSize: initialSize)
     }
+    let searchState: TableSearchViewState?
+    if inSearch {
+        searchState = .visible(searchData)
+    } else {
+        searchState = .none
+    }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true, searchState: searchState)
 }
 
 
@@ -265,6 +270,12 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
     private let updatePeerDisposable = MetaDisposable()
     private let disposable:MetaDisposable = MetaDisposable()
     
+    private let _inSearch: ValuePromise<Bool> = ValuePromise(false)
+    private var inSearch: Bool = false {
+        didSet {
+            _inSearch.set(self.inSearch)
+        }
+    }
     init(_ context:AccountContext, peerId:PeerId) {
         self.peerId = peerId
         super.init(context)
@@ -274,6 +285,8 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         super.viewDidLoad()
         let context = self.context
         let peerId = self.peerId
+        
+        
         
         genericView.getBackgroundColor = {
             theme.colors.listBackground
@@ -288,6 +301,8 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         }
         
         let blacklistPromise = Promise<[RenderedChannelParticipant]?>(nil)
+        let listDisposable = MetaDisposable()
+        
         let viewValue:Atomic<PeerView?> = Atomic(value: nil)
         
         let restrict:(PeerId, Bool) -> Void = { [weak self] memberId, unban in
@@ -360,38 +375,85 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         let peerView = context.account.viewTracker.peerView(peerId)
         
         
-        let (listDisposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
+        var (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
             if case .loading(true) = listState.loadingState, listState.list.isEmpty {
                 blacklistPromise.set(.single(nil))
             } else {
                 blacklistPromise.set(.single(listState.list))
             }
         })
+        
+        listDisposable.set(disposable)
+        
         actionsDisposable.add(listDisposable)
-
+        
         let initialSize = atomicSize
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChannelBlacklistEntry>]> = Atomic(value: [])
 
         
-        let signal = combineLatest(statePromise.get(), peerView, blacklistPromise.get(), appearanceSignal)
+        let searchData = TableSearchVisibleData(cancelImage: theme.icons.chatSearchCancel, cancel: { [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.inSearch = !strongSelf.inSearch
+            
+            (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
+                if case .loading(true) = listState.loadingState, listState.list.isEmpty {
+                    blacklistPromise.set(.single(nil))
+                } else {
+                    blacklistPromise.set(.single(listState.list))
+                }
+            })
+            listDisposable.set(disposable)
+            
+        }, updateState: { state in
+            if !state.request.isEmpty {
+                (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.restrictedAndBanned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, searchQuery: state.request, updated: { listState in
+                    blacklistPromise.set(.single(listState.list))
+                })
+                listDisposable.set(disposable)
+            } else {
+                (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
+                    if case .loading(true) = listState.loadingState, listState.list.isEmpty {
+                        blacklistPromise.set(.single(nil))
+                    } else {
+                        blacklistPromise.set(.single(listState.list))
+                    }
+                })
+                listDisposable.set(disposable)
+            }
+        })
+        
+      
+        let signal = combineLatest(statePromise.get(), peerView, blacklistPromise.get(), appearanceSignal, _inSearch.get())
             |> deliverOnMainQueue
-            |> map { state, view, blacklist, appearance -> (TableUpdateTransition, PeerView) in
+            |> map { state, view, blacklist, appearance, inSearch -> (TableUpdateTransition, PeerView) in
                 _ = viewValue.swap(view)
-                let entries = channelBlacklistControllerEntries(view: view, state: state, participants: blacklist).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-                return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), view)
+                let entries = channelBlacklistControllerEntries(view: view, state: state, participants: blacklist, inSearch: inSearch).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, inSearch: inSearch, searchData: searchData), view)
         } |> afterDisposed {
             actionsDisposable.dispose()
-        }
+        } |> deliverOnMainQueue
         
-        disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] transition, peerView in
-            if let strongSelf = self {
-                strongSelf.genericView.merge(with: transition)
-                strongSelf.readyOnce()
-                strongSelf.rightBarView.isHidden = strongSelf.genericView.item(at: 0) is SearchEmptyRowItem
-                if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
-                    strongSelf.rightBarView.isHidden = strongSelf.rightBarView.isHidden || !peer.hasPermission(.banMembers)
-                }
+        self.disposable.set(signal.start(next: { [weak self] transition, peerView in
+            guard let `self` = self else {
+                return
             }
+            self.genericView.merge(with: transition)
+            self.readyOnce()
+            self.rightBarView.isHidden = self.genericView.item(at: 0) is SearchEmptyRowItem
+            if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
+                self.rightBarView.isHidden = self.rightBarView.isHidden || !peer.hasPermission(.banMembers)
+            }
+            
+            var hasItems: Bool = false
+            self.genericView.enumerateItems(with: { item -> Bool in
+                if item is ShortPeerRowItem {
+                    hasItems = true
+                }
+                return !hasItems
+            })
+            (self.centerBarView as? SearchTitleBarView)?.updateSearchVisibility(hasItems || self.inSearch)
         }))
         
         genericView.setScrollHandler { position in
@@ -404,6 +466,32 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                 }
             }
         }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            guard let `self` = self else {
+                return .rejected
+            }
+            self.inSearch = !self.inSearch
+            return .invoked
+        }, with: self, for: .F, modifierFlags: [.command])
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
+    }
+    
+    override func getCenterBarViewOnce() -> TitledBarView {
+        return SearchTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.inSearch = !strongSelf.inSearch
+        })
     }
     
     deinit {

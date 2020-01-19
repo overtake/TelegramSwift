@@ -13,45 +13,6 @@ import SyncCore
 import SwiftSignalKit
 import Postbox
 
-class PeerInfoTitleBarView : TitledBarView {
-    private var search:ImageButton = ImageButton()
-    init(controller: ViewController, title:NSAttributedString, handler:@escaping() ->Void) {
-        super.init(controller: controller, title)
-        search.set(handler: { _ in
-            handler()
-        }, for: .Click)
-        addSubview(search)
-        updateLocalizationAndTheme(theme: theme)
-    }
-    
-    func updateSearchVisibility(_ visible: Bool) {
-        search.isHidden = !visible
-    }
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
-        search.set(image: theme.icons.chatSearch, for: .Normal)
-        _ = search.sizeToFit()
-        backgroundColor = theme.colors.background
-        needsLayout = true
-    }
-    
-    override func layout() {
-        super.layout()
-        search.centerY(x: frame.width - search.frame.width)
-    }
-    
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
 
 
 class PeerInfoArguments {
@@ -280,7 +241,7 @@ class PeerInfoController: EditableViewController<TableView> {
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
-        return PeerInfoTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+        return SearchTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
             self?.searchSupergroupUsers()
         })
     }
@@ -450,7 +411,7 @@ class PeerInfoController: EditableViewController<TableView> {
                 } else {
                     editable = false
                 }
-                (self?.centerBarView as? PeerInfoTitleBarView)?.updateSearchVisibility(peer.isSupergroup)
+                (self?.centerBarView as? SearchTitleBarView)?.updateSearchVisibility(peer.isSupergroup)
             } else {
                 editable = false
             }
@@ -463,7 +424,7 @@ class PeerInfoController: EditableViewController<TableView> {
         
        
      
-        genericView.setScrollHandler { position in
+        genericView.setScrollHandler { [weak self] position in
             if let loadMoreControl = loadMoreControl {
                 switch position.direction {
                 case .bottom:

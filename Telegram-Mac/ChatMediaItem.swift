@@ -48,7 +48,7 @@ class ChatMediaLayoutParameters : Equatable {
         }
     }
     
-    private let autoplayMedia: AutoplayMediaPreferences
+    let autoplayMedia: AutoplayMediaPreferences
     
     var autoplay: Bool
     var soundOnHover: Bool {
@@ -318,6 +318,7 @@ class ChatMediaItem: ChatRowItem {
             canAddCaption = false
         }
         
+        
         self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
             guard let `self` = self else {return}
             
@@ -374,7 +375,8 @@ class ChatMediaItem: ChatRowItem {
                 self?.parameters?.showMedia(message)
             }).mutableCopy() as! NSMutableAttributedString
             
-            if !hasEntities {
+            
+            if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
             captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false)
@@ -388,7 +390,7 @@ class ChatMediaItem: ChatRowItem {
             captionLayout?.interactions = interactions
             
             if let textLayout = self.captionLayout {
-                if let highlightFoundText = entry.additionalData?.highlightFoundText {
+                if let highlightFoundText = entry.additionalData.highlightFoundText {
                     if highlightFoundText.isMessage {
                         if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
                             textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
@@ -540,7 +542,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
                     representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource))
-                    let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference)
+                    let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
                 }

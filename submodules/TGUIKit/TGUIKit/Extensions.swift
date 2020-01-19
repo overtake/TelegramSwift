@@ -428,8 +428,15 @@ public extension NSView {
     }
     
     func removeAllSubviews() -> Void {
-        while (self.subviews.count > 0) {
-            self.subviews[0].removeFromSuperview();
+        var filtered = self.subviews.filter { view -> Bool in
+            if let view = view as? View {
+                return !view.noWayToRemoveFromSuperview
+            } else {
+                return true
+            }
+        }
+        while (filtered.count > 0) {
+            filtered.removeFirst().removeFromSuperview()
         }
     }
     
@@ -541,8 +548,8 @@ public extension NSView {
     }
     
     
-    func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
-        if animated {
+    func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, forceAnimateIfHasAnimation: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
+        if animated || (forceAnimateIfHasAnimation && self.layer?.animation(forKey:"position") != nil) {
             
             var presentX = NSMinX(self.frame)
             var presentY = NSMinY(self.frame)
@@ -551,8 +558,8 @@ public extension NSView {
                 presentY =  presentation.frame.minY
                 presentX = presentation.frame.minX
             }
-            
             self.layer?.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
+
         } else {
             self.layer?.removeAnimation(forKey: "position")
         }
@@ -565,12 +572,14 @@ public extension NSView {
       
     }
     
-    func shake() {
+    func shake(beep: Bool = true) {
         let a:CGFloat = 3
         if let layer = layer {
             self.layer?.shake(0.04, from:NSMakePoint(-a + layer.position.x,layer.position.y), to:NSMakePoint(a + layer.position.x, layer.position.y))
         }
-        NSSound.beep()
+        if beep {
+            NSSound.beep()
+        }
     }
     
     func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
@@ -581,8 +590,8 @@ public extension NSView {
                 presentBounds.size.width = NSWidth(presentation.bounds)
                 presentBounds.size.height = NSHeight(presentation.bounds)
             }
-            
             self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+
             
         } else {
             self.layer?.removeAnimation(forKey: "bounds")
@@ -594,8 +603,14 @@ public extension NSView {
     
     func _changeBounds(from: NSRect, to: NSRect, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         
+       
         if save {
             self.bounds = to
+        }
+        
+        if from == to {
+            completion?(true)
+            return
         }
         
         if animated {
@@ -760,7 +775,7 @@ public extension CGSize {
 
 public extension NSImage {
     
-    func precomposed(_ color:NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
         
         let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
         
@@ -776,12 +791,27 @@ public extension NSImage {
             var imageRect:CGRect = NSMakeRect(0, 0, image.size.width, image.size.height)
 
             let cimage = image.cgImage(forProposedRect: &imageRect, context: nil, hints: nil)
-            //CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithData(image.tiffRepresentation! as CFData, nil)!, 0, nil)
             
             if let color = color {
                 ctx.clip(to: rect, mask: cimage!)
-                ctx.setFillColor(color.cgColor)
-                ctx.fill(rect)
+                if let bottomColor = bottomColor {
+                    let colors = [color, bottomColor]
+                    let rect = NSMakeRect(0, 0, rect.width, rect.height)
+                    let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                } else {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
+                }
+             
             } else {
                 ctx.draw(cimage!, in: imageRect)
             }
@@ -1446,6 +1476,27 @@ public extension String {
         return String(stringLiteral: self)
     }
     
+    var transformKeyboard:[String] {
+        let russianQwerty = "йцукенгшщзфывапролдячсмить".map { String($0) }
+        let englishQwerty = "qwertyuiopasdfghjklzxcvbnm".map { String($0) }
+
+        
+        let value = self.lowercased()
+        
+        var russian: [String] = value.map { String($0) }
+        var english: [String] = value.map { String($0) }
+        
+        for (i, char) in value.enumerated() {
+            if let index = russianQwerty.firstIndex(of: String(char)) {
+                english[i] = englishQwerty[index]
+            }
+            if let index = englishQwerty.firstIndex(of: String(char)) {
+                russian[i] = russianQwerty[index]
+            }
+        }
+        return [english.joined(), russian.joined()]
+    }
+    
     func fromSuffix(_ by:Int) -> String {
         if let index = index(startIndex, offsetBy: by, limitedBy: endIndex) {
             return String(self[index..<self.endIndex])
@@ -1688,25 +1739,13 @@ public extension String {
 public extension UnicodeScalar {
     
     var isEmoji: Bool {
-        switch value {
-        case 0x1F600...0x1F64F:
-            return true// Emoticons
-        case 0x1F300...0x1F5FF:
-            return true// Misc Symbols and Pictographs
-        case 0x1F680...0x1F6FF:
-            return true// Transport and Map
-        case 0x2600...0x26FF:
-            return true// Misc symbols
-        case 0x2700...0x27BF:
-            return true// Dingbats
-        case 0xFE00...0xFE0F:
-            return true// Variation Selectors
-        case 0x1F900...0x1F9FF:
-            return true// Supplemental Symbols and Pictographs
-        case 0x1F1E6...0x1F1FF: // Flags
+        switch self.value {
+        case 0x1F600...0x1F64F, 0x1F300...0x1F5FF, 0x1F680...0x1F6FF, 0x1F1E6...0x1F1FF, 0xE0020...0xE007F, 0xFE00...0xFE0F, 0x1F900...0x1F9FF, 0x1F018...0x1F0F5, 0x1F200...0x1F270, 65024...65039, 9100...9300, 8400...8447, 0x1F004, 0x1F18E, 0x1F191...0x1F19A, 0x1F5E8:
             return true
-            
-        default: return false
+        case 0x265F, 0x267E, 0x2692, 0x26C8, 0x26CE, 0x26CF, 0x26D1...0x26D3, 0x26E9, 0x26F0...0x26F9, 0x2705, 0x270A, 0x270B, 0x2728, 0x274E, 0x2753...0x2755, 0x274C, 0x2795...0x2797, 0x27B0, 0x27BF:
+            return true
+        default:
+            return false
         }
     }
 
@@ -1885,5 +1924,17 @@ public extension Formatter {
 public extension BinaryInteger {
     var formattedWithSeparator: String {
         return Formatter.withSeparator.string(for: self) ?? ""
+    }
+}
+
+
+public extension String {
+    var persistentHashValue: UInt64 {
+        var result = UInt64 (5381)
+        let buf = [UInt8](self.utf8)
+        for b in buf {
+            result = 127 * (result & 0x00ffffffffffffff) + UInt64(b)
+        }
+        return result
     }
 }

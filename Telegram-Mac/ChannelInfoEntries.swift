@@ -784,7 +784,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { path in
                             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                            showModal(with: controller, for: arguments.context.window)
+                            showModal(with: controller, for: arguments.context.window, animationType: .scaleCenter)
                             _ = controller.result.start(next: { url, _ in
                                 arguments.updatePhoto(url.path)
                             })

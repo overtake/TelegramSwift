@@ -107,7 +107,7 @@ private func prepareTransition(left:[AppearanceWrapperEntry<GroupsInCommonEntry>
         return entry.entry.item(arguments: arguments, initialSize: initialSize)
     })
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: false, grouping: false)
 }
 
 private func <(lhs:GroupsInCommonEntry, rhs: GroupsInCommonEntry) -> Bool {
@@ -116,8 +116,10 @@ private func <(lhs:GroupsInCommonEntry, rhs: GroupsInCommonEntry) -> Bool {
 
 class GroupsInCommonViewController: TableViewController {
     private let peerId:PeerId
-    init(_ context: AccountContext, peerId:PeerId) {
+    private let commonGroups:[Peer]
+    init(_ context: AccountContext, peerId:PeerId, commonGroups: [Peer] = []) {
         self.peerId = peerId
+        self.commonGroups = commonGroups
         super.init(context)
     }
     
@@ -135,16 +137,8 @@ class GroupsInCommonViewController: TableViewController {
         
         let previous:Atomic<[AppearanceWrapperEntry<GroupsInCommonEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        let signal = combineLatest(Signal<([Peer], Bool), NoError>.single(([], true)), appearanceSignal |> take(1)) |> then(combineLatest(groupsInCommon(account: context.account, peerId: peerId) |> mapToSignal { peerIds -> Signal<([Peer], Bool), NoError> in
-            return context.account.postbox.transaction { transaction -> ([Peer], Bool) in
-                var peers:[Peer] = []
-                for peerId in peerIds {
-                    if let peer = transaction.getPeer(peerId) {
-                        peers.append(peer)
-                    }
-                }
-                return (peers, false)
-            }
+        let signal = combineLatest(Signal<([Peer], Bool), NoError>.single((commonGroups, commonGroups.isEmpty)), appearanceSignal |> take(1)) |> then(combineLatest(groupsInCommon(account: context.account, peerId: peerId) |> map { peers -> ([Peer], Bool) in
+            return (peers, false)
         }, appearanceSignal)) |> map { result -> TableUpdateTransition in
             let entries = groupsInCommonEntries(result.0.0, loading: result.0.1).map {AppearanceWrapperEntry(entry: $0, appearance: result.1)}
             

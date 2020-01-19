@@ -73,11 +73,15 @@ class ChatEmptyPeerItem: TableRowItem {
                 if let restriction = chatInteraction.presentation.restrictionInfo {
                     var hasRule: Bool = false
                     for rule in restriction.rules {
+                        #if APP_STORE
                         if rule.platform == "ios" || rule.platform == "all" {
-                            _ = attr.append(string: rule.reason, color: theme.colors.grayText, font: .medium(.text))
-                            hasRule = true
-                            break
+                            if !chatInteraction.context.contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
+                                _ = attr.append(string: rule.text, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                                hasRule = true
+                                break
+                            }
                         }
+                        #endif
                     }
                     if !hasRule {
                         _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
@@ -103,17 +107,24 @@ class ChatEmptyPeerItem: TableRowItem {
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser {
             peerViewDisposable.set((chatInteraction.context.account.postbox.peerView(id: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
-                if let cachedData = peerView.cachedData as? CachedUserData, let user = peerView.peers[peerView.peerId], user.isBot {
-                    if let about = cachedData.botInfo?.description {
-                        let about = user.isScam ? L10n.peerInfoScamWarning : about
-                        guard let `self` = self else {return}
-                        let attr = NSMutableAttributedString()
-                        _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))
-                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
-                        self.textViewLayout = TextViewLayout(attr, alignment: .left)
-                        self.textViewLayout.interactions = globalLinkExecutor
-                        self.view?.layout()
+                if let cachedData = peerView.cachedData as? CachedUserData, let user = peerView.peers[peerView.peerId], let botInfo = cachedData.botInfo {
+                    var about = botInfo.description
+                    if about.isEmpty {
+                        about = cachedData.about ?? L10n.chatEmptyChat
                     }
+                    if about.isEmpty {
+                        about = L10n.chatEmptyChat
+                    }
+                    if user.isScam {
+                        about = L10n.peerInfoScamWarning
+                    }
+                    guard let `self` = self else {return}
+                    let attr = NSMutableAttributedString()
+                    _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                    attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                    self.textViewLayout = TextViewLayout(attr, alignment: .left)
+                    self.textViewLayout.interactions = globalLinkExecutor
+                    self.view?.layout()
                 }
             }))
         }

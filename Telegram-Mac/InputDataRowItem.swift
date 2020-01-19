@@ -167,7 +167,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
                 return 102
             } else {
                 if let icon = placeholder.icon {
-                    return icon.backingSize.width + 6
+                    return icon.backingSize.width + 6 + placeholder.insets.left
                 } else {
                     return -2
                 }
@@ -264,14 +264,13 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     private let placeholderTextView = TextView()
     private let rightActionView: ImageButton = ImageButton()
     private var loadingView: ProgressIndicator? = nil
-    private var placeholderAction: ImageButton = ImageButton()
+    private var placeholderAction: ImageButton?
     internal let textView: TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect, unscrollable: true)
     private let secureField: InputDataSecureField = InputDataSecureField(frame: NSMakeRect(0, 0, 100, 16))
     private let textLimitation: TextViewLabel = TextViewLabel(frame: NSMakeRect(0, 0, 16, 14))
     private let separator: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        containerView.addSubview(placeholderAction)
         containerView.addSubview(placeholderTextView)
         containerView.addSubview(textView)
         containerView.addSubview(secureField)
@@ -279,7 +278,6 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         containerView.addSubview(textLimitation)
         containerView.addSubview(rightActionView)
         addSubview(containerView)
-        placeholderAction.autohighlight = false
         rightActionView.autohighlight = false
         
         containerView.userInteractionEnabled = false
@@ -335,6 +333,34 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     }
 
     
+    private var separatorFrame: NSRect {
+        
+        guard let item = item as? InputDataRowItem else { return NSZeroRect }
+        
+        switch item.viewType {
+        case .legacy:
+            if let placeholder = item.placeholder {
+                if placeholder.drawBorderAfterPlaceholder {
+                    return NSMakeRect(item.inset.left + item.textFieldLeftInset + 4, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - item.inset.right - item.textFieldLeftInset - 4, .borderSize)
+                } else {
+                    return NSMakeRect(item.inset.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - item.inset.right, .borderSize)
+                }
+            } else {
+                return NSMakeRect(item.inset.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - item.inset.right, .borderSize)
+            }
+        case let .modern(_, innerInsets):
+            if let placeholder = item.placeholder {
+                if placeholder.drawBorderAfterPlaceholder {
+                    return NSMakeRect(innerInsets.left + item.textFieldLeftInset + 4, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInsets.left - innerInsets.right - item.textFieldLeftInset - 4, .borderSize)
+                } else {
+                    return NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - innerInsets.right, .borderSize)
+                }
+            } else {
+                return NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInsets.left - innerInsets.right, .borderSize)
+            }
+        }
+    }
+    
     override func layout() {
         super.layout()
         guard let item = item as? InputDataRowItem else {return}
@@ -343,27 +369,18 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         case .legacy:
             self.containerView.frame = bounds
             placeholderTextView.setFrameOrigin(item.inset.left, 14)
-            placeholderAction.setFrameOrigin(item.inset.left, 12)
+            placeholderAction?.setFrameOrigin(item.inset.left, 12)
             
-            
-            if let placeholder = item.placeholder {
-                if placeholder.drawBorderAfterPlaceholder {
-                    separator.frame = NSMakeRect(item.inset.left + item.textFieldLeftInset + 4, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - item.inset.right - item.textFieldLeftInset, .borderSize)
-                } else {
-                    separator.frame = NSMakeRect(item.inset.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - item.inset.right, .borderSize)
+            separator.frame = separatorFrame
+
+            if let rightItem = item.rightItem {
+                switch rightItem {
+                case .action:
+                    rightActionView.setFrameOrigin(NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - item.inset.right + 4, 14))
+                default:
+                    break
                 }
-                if let rightItem = item.rightItem {
-                    switch rightItem {
-                    case .action:
-                        rightActionView.setFrameOrigin(NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - item.inset.right + 4, 14))
-                    default:
-                        break
-                    }
-                }
-            } else {
-                separator.frame = NSMakeRect(item.inset.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - item.inset.right, .borderSize)
             }
-            
             
             secureField.setFrameSize(NSMakeSize(self.containerView.frame.width - item.inset.left - item.inset.right - item.textFieldLeftInset - item.additionRightInset, item.inputHeight))
             secureField.setFrameOrigin(item.inset.left + item.textFieldLeftInset, 14)
@@ -377,18 +394,13 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
          
             self.separator.isHidden = !position.border
             
-            placeholderTextView.setFrameOrigin(innerInsets.left, innerInsets.top)
-            placeholderAction.setFrameOrigin(innerInsets.left, innerInsets.top)
+            let textX = innerInsets.left + item.textFieldLeftInset - 3
             
-            if let placeholder = item.placeholder {
-                if placeholder.drawBorderAfterPlaceholder {
-                    separator.frame = NSMakeRect(innerInsets.left + item.textFieldLeftInset + 4, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInsets.left - innerInsets.right - item.textFieldLeftInset, .borderSize)
-                } else {
-                    separator.frame = NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - innerInsets.right, .borderSize)
-                }
-            } else {
-                separator.frame = NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInsets.left - innerInsets.right, .borderSize)
-            }
+            placeholderTextView.setFrameOrigin(NSMakePoint(innerInsets.left, innerInsets.top))
+            placeholderAction?.setFrameOrigin(NSMakePoint(innerInsets.left, innerInsets.top - 1))
+            
+            separator.frame = separatorFrame
+        
             
             if let rightItem = item.rightItem {
                 switch rightItem {
@@ -416,9 +428,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             textView.setFrameSize(NSMakeSize(item.blockWidth - innerInsets.left - innerInsets.right - item.textFieldLeftInset - item.additionRightInset, item.inputHeight))
             
             if item.realInputHeight <= 16 {
-                textView.setFrameOrigin(innerInsets.left + item.textFieldLeftInset - 3, innerInsets.top - 8)
+                textView.setFrameOrigin(textX, innerInsets.top - 8)
             } else {
-                textView.setFrameOrigin(innerInsets.left + item.textFieldLeftInset - 3, innerInsets.top )
+                textView.setFrameOrigin(textX, innerInsets.top )
             }
             
             textLimitation.setFrameOrigin(NSMakePoint(item.blockWidth - innerInsets.right - textLimitation.frame.width, self.containerView.frame.height - innerInsets.bottom - textLimitation.frame.height))
@@ -452,7 +464,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         if let item = item as? InputDataRowItem, let pasteFilter = item.pasteFilter {
-            if let string = pasteboard.string(forType: .string) {
+            if let string = pasteboard.string(forType: .string)?.trimmed {
                 let value = pasteFilter(string)
                 let updatedText = item.filter(value.1)
                 if value.0 {
@@ -645,6 +657,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         return super.firstResponder
     }
     
+    func showPlaceholderActionTooltip(_ text: String) -> Void {
+        if let placeholderAction = placeholderAction {
+            tooltip(for: placeholderAction, text: text)
+        }
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         
         guard let item = item as? InputDataRowItem else {return}
@@ -655,7 +673,6 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         
         placeholderTextView.isHidden = item.placeholderLayout == nil
         placeholderTextView.update(item.placeholderLayout)
-        placeholderAction.isHidden = item.placeholder?.icon == nil
         
         let containerRect: NSRect
         switch item.viewType {
@@ -713,21 +730,98 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         
         if let placeholder = item.placeholder {
             if let icon = placeholder.icon {
+                if placeholderAction == nil {
+                    self.placeholderAction = ImageButton()
+                    containerView.addSubview(self.placeholderAction!)
+                    if animated {
+                        placeholderAction!.layer?.animateAlpha(from: 0, to: 2, duration: 0.2)
+                        separator.change(size: separatorFrame.size, animated: animated)
+                        separator.change(pos: separatorFrame.origin, animated: animated)
+                    }
+                    
+                    switch item.viewType {
+                    case .legacy:
+                        textView._change(pos: NSMakePoint(item.inset.left + item.textFieldLeftInset - 3, 6), animated: animated)
+                    case let .modern(_, innerInsets):
+                        let textX = innerInsets.left + item.textFieldLeftInset - 3
+                        if item.realInputHeight <= 16 {
+                            textView._change(pos: NSMakePoint(textX, innerInsets.top - 8), animated: animated)
+                        } else {
+                            textView._change(pos: NSMakePoint(textX, innerInsets.top), animated: animated)
+                        }
+                    }
+                    
+                }
+                guard let placeholderAction = self.placeholderAction else {
+                    return
+                }
                 placeholderAction.set(image: icon, for: .Normal)
+                placeholderAction.set(image: icon, for: .Highlight)
+                placeholderAction.set(image: icon, for: .Hover)
                 _ = placeholderAction.sizeToFit()
                 placeholderAction.removeAllHandlers()
                 placeholderAction.set(handler: { _ in
                     placeholder.action?()
                 }, for: .SingleClick)
+            } else {
+                if animated {
+                    if let placeholderAction = placeholderAction {
+                        self.placeholderAction = nil
+                        placeholderAction.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak placeholderAction] _ in
+                            placeholderAction?.removeFromSuperview()
+                        })
+                        separator.change(size: separatorFrame.size, animated: animated)
+                        separator.change(pos: separatorFrame.origin, animated: animated)
+                    }
+                } else {
+                    placeholderAction?.removeFromSuperview()
+                    placeholderAction = nil
+                }
+                
+                switch item.viewType {
+                case .legacy:
+                    textView._change(pos: NSMakePoint(item.inset.left + item.textFieldLeftInset - 3, 6), animated: animated)
+                case let .modern(_, innerInsets):
+                    let textX = innerInsets.left + item.textFieldLeftInset - 3
+                    if item.realInputHeight <= 16 {
+                        textView._change(pos: NSMakePoint(textX, innerInsets.top - 8), animated: animated)
+                    } else {
+                        textView._change(pos: NSMakePoint(textX, innerInsets.top), animated: animated)
+                    }
+                }
             }
             
             if placeholder.hasLimitationText {
                 textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2
                 textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: theme.colors.grayText, font: .normal(.small))
-                
-                
             } else {
                 textLimitation.isHidden = true
+            }
+        } else {
+            if animated {
+                if let placeholderAction = placeholderAction {
+                    self.placeholderAction = nil
+                    placeholderAction.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak placeholderAction] _ in
+                        placeholderAction?.removeFromSuperview()
+                    })
+                    separator.change(size: separatorFrame.size, animated: animated)
+                    separator.change(pos: separatorFrame.origin, animated: animated)
+                }
+            } else {
+                placeholderAction?.removeFromSuperview()
+                placeholderAction = nil
+            }
+            
+            switch item.viewType {
+            case .legacy:
+                textView._change(pos: NSMakePoint(item.inset.left + item.textFieldLeftInset - 3, 6), animated: animated)
+            case let .modern(_, innerInsets):
+                let textX = innerInsets.left + item.textFieldLeftInset - 3
+                if item.realInputHeight <= 16 {
+                    textView._change(pos: NSMakePoint(textX, innerInsets.top - 8), animated: animated)
+                } else {
+                    textView._change(pos: NSMakePoint(textX, innerInsets.top), animated: animated)
+                }
             }
         }
         

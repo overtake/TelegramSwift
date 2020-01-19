@@ -97,11 +97,20 @@ enum ChatHistoryEntryId : Hashable {
 
 }
 
+struct ChatPollStateData : Equatable {
+    let identifiers: [Data]
+    let isLoading: Bool
+    init(identifiers: [Data] = [], isLoading: Bool = false) {
+        self.identifiers = identifiers
+        self.isLoading = isLoading
+    }
+}
+
 struct MessageEntryAdditionalData : Equatable {
-    let opaqueIdentifier: Data?
+    let pollStateData: ChatPollStateData
     let highlightFoundText: HighlightFoundText?
-    init(opaqueIdentifier: Data?, highlightFoundText: HighlightFoundText?) {
-        self.opaqueIdentifier = opaqueIdentifier
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil) {
+        self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
     }
 }
@@ -117,9 +126,9 @@ struct HighlightFoundText : Equatable {
 
 final class ChatHistoryEntryData : Equatable {
     let location: MessageHistoryEntryLocation?
-    let additionData: MessageEntryAdditionalData?
+    let additionData: MessageEntryAdditionalData
     let autoPlay: AutoplayMediaPreferences?
-    init(_ location: MessageHistoryEntryLocation?, _ additionData: MessageEntryAdditionalData?, _ autoPlay: AutoplayMediaPreferences?) {
+    init(_ location: MessageHistoryEntryLocation?, _ additionData: MessageEntryAdditionalData, _ autoPlay: AutoplayMediaPreferences?) {
         self.location = location
         self.additionData = additionData
         self.autoPlay = autoPlay
@@ -180,12 +189,12 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     }
     
     
-    var additionalData: MessageEntryAdditionalData? {
+    var additionalData: MessageEntryAdditionalData {
         switch self {
         case let .MessageEntry(_,_,_,_,_,_,data):
             return data.additionData
         default:
-            return nil
+            return MessageEntryAdditionalData()
         }
     }
     
@@ -232,6 +241,15 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return index
         case .bottom:
             return MessageIndex.absoluteUpperBound()
+        }
+    }
+    
+    func withUpdatedItemType(_ itemType: ChatItemType) -> ChatHistoryEntry {
+        switch self {
+        case let .MessageEntry(values):
+            return .MessageEntry(values.0, values.1, values.2, values.3, itemType, values.5, values.6)
+        default:
+            return self
         }
     }
 
@@ -357,7 +375,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : Data] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:]) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:]) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -384,9 +402,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 name = L10n.chatMessageMTProxyConfig
             }
             
-            let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent(url: message.text, displayUrl: "", hash: 0, type: "proxy", websiteName: name, title: L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port)), text: textInfo, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: nil, file: nil, files: nil, instantPage: nil)))
+            let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent(url: message.text, displayUrl: "", hash: 0, type: "proxy", websiteName: name, title: L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port)), text: textInfo, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: nil, file: nil, attributes: [], instantPage: nil)))
             message = message.withUpdatedMedia([media]).withUpdatedText("")
         }
+        
         
         if message.media.isEmpty {
             if message.text.length <= 6 {
@@ -410,10 +429,17 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                             return attribute
                         }
                     }
-                    
-                    attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
-                    file = file.withUpdatedAttributes(attributes)
-                    message = message.withUpdatedMedia([file])
+                    var disableStickers: Bool = false
+                    if let peer = messageMainPeer(message) as? TelegramChannel {
+                        if permissionText(from: peer, for: [.banSendGifs, .banSendStickers]) != nil {
+                            disableStickers = true
+                        }
+                    }
+                    if !disableStickers {
+                        attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
+                        file = file.withUpdatedAttributes(attributes)
+                        message = message.withUpdatedMedia([file])
+                    }
                 }
             }
         }
@@ -513,10 +539,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         itemType = .Full(rank: rank)
                     } else {
                         var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
-                        for attr in message.attributes {
+                        attrsLoop: for attr in message.attributes {
                             if !(attr is OutgoingMessageInfoAttribute) && !(attr is TextEntitiesMessageAttribute) && !(attr is EditedMessageAttribute) && !(attr is ForwardSourceInfoAttribute) && !(attr is ViewCountMessageAttribute) && !(attr is ConsumableContentMessageAttribute) && !(attr is NotificationInfoMessageAttribute) && !(attr is ChannelMessageStateVersionAttribute) && !(attr is AutoremoveTimeoutMessageAttribute) {
                                 canShort = false
-                                break
+                                break attrsLoop
                             }
                         }
                         itemType = !canShort ? .Full(rank: rank) : .Short
@@ -553,15 +579,12 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     if prev.message.forwardInfo != nil, message.timestamp - prev.message.timestamp < simpleDif  {
                         fwdType = .Inside
                         if let next = next  {
-                            
                             if message.author?.id != next.message.author?.id || next.message.timestamp - message.timestamp > simpleDif || next.message.forwardInfo == nil {
                                 fwdType = .Bottom
                             }
-                            
                         } else {
                             fwdType = .Bottom
                         }
-                        
                     } else {
                         fwdType = .ShortHeader
                     }
@@ -583,7 +606,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
         }
         
-        let additionalData: MessageEntryAdditionalData?
+        let additionalData: MessageEntryAdditionalData
         var highlightFoundText: HighlightFoundText? = nil
         
         
@@ -592,21 +615,20 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         
-        if let opaqueData = pollAnswersLoading[message.id] {
-            additionalData = MessageEntryAdditionalData(opaqueIdentifier: opaqueData, highlightFoundText: highlightFoundText)
+        if let data = pollAnswersLoading[message.id] {
+            additionalData = MessageEntryAdditionalData(pollStateData: data, highlightFoundText: highlightFoundText)
         } else {
-            additionalData = MessageEntryAdditionalData(opaqueIdentifier: nil, highlightFoundText: highlightFoundText)
+            additionalData = MessageEntryAdditionalData(pollStateData: ChatPollStateData(), highlightFoundText: highlightFoundText)
         }
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, data)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
-            
             if groupInfo == nil {
                 groupInfo = key
-                groupedPhotos.append(entry)
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
             } else if groupInfo == key {
-                groupedPhotos.append(entry)
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
             } else {
                 if groupedPhotos.count > 0 {
                     if let groupInfo = groupInfo {
@@ -616,7 +638,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
                 
                 groupInfo = key
-                groupedPhotos.append(entry)
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
             }
         } else {
             entries.append(entry)

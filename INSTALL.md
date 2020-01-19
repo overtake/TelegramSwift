@@ -5,23 +5,17 @@
 	```sh
 	git clone https://github.com/overtake/TelegramSwift.git --recurse-submodules
 	```
-2. Open `Telegram-Mac.xcworkspace` in **Xcode 10**.  Avoid Xcode 10.2 because it causes additional errors when building the libraries with optimizations turned on.  **Warning:** this project is heavy, so if you have an older Mac, you should probably connect your power adapter.
-3. Create `Config.swift` following the example below.  Replace `api_id` and `api_hash` with your own [ID and hash](https://my.telegram.org/apps), and `_YOUR_FORK_NAME_` with your fork name:
+2. Open `Telegram-Mac.xcworkspace` in **Xcode 10.3**.  Avoid Xcode 10.11+ because it causes additional errors when building the libraries with optimizations turned on.  
+3. Select build target to **Github** and **Run** build.
 
-	```swift
-	let API_ID:Int32 = api_id
-	let API_HASH:String = "api_hash"
-	let TEST_SERVER:Bool = false
-	let languagesCategory = "macos"
 
-	var appVersion: String {
-		return (Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "") + " _YOUR_FORK_NAME_"
-	}
-	```
-4. Change build target from **Distrubution** to **Telegram**.
-5. Change product team and bundle ID in project, as well as `appGroupName` on [line 86 of `AppDelegate.swift`](https://github.com/overtake/TelegramSwift/blob/master/Telegram-Mac/AppDelegate.swift#L86) to your custom name and bundle ID.  This ensures that your container folder will be different from the official application’s, avoiding potential state corruption problems.
-6. You're all set up! Click **Run** and start developing.
 
-## Disable Sparkle Auto-Updater
+# If you want to develop a fork
 
-The Sparkle auto-updater can overwrite your build by automatically updating to the latest official Telegram version on quit. If you wish to disable this, comment out the contents of the `resetUpdater()` function on [lines 403–430 of `ui/updater/AppUpdateViewController.swift`](https://github.com/overtake/TelegramSwift/blob/master/Telegram-Mac/AppUpdateViewController.swift#L403-L430).  If you just want to make it update from somewhere else, you can change the HockeyApp URL in project settings.
+1. Do first and second step above.
+2. Change bundle Identifier and team-id. Easiest way is to search all mentions `ru.keepcoder.Telegram` and change it to your own. Team-id you can find on apple developer portal.
+3. Obtain your [API ID](https://core.telegram.org/api/obtaining_api_id). **Note:** The built-in `apiId` is highly limited for api usage. **Do not use it** in any circumstances except verify binaries.
+4. Open `Telegram-Mac/Config.swift` and repalce `apiId` and `apiHash` from previous step. **Note:** Do not forget to change `teamId` either.
+5. Replace or remove `SFEED_URL` and  `APPCENTER_SECRET`  in `*.xcconfig` files. (First uses for in-app updates and second for collecting crashes on [appcenter](https://appcenter.ms))
+6. Write new better code.
+7. If you still have a questions feel free to open new issue [here](https://github.com/overtake/TelegramSwift/issues/new).

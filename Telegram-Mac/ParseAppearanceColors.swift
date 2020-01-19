@@ -358,7 +358,7 @@ func importPalette(_ path: String) -> ColorPalette? {
         var copyright: String = "Telegram"
         var wallpaper: PaletteWallpaper?
         var parent: TelegramBuiltinTheme = .dayClassic
-        var accentList:[NSColor] = []
+        var accentList:[PaletteAccentColor] = []
         var colors:[String: NSColor] = [:]
         
         /*
@@ -449,7 +449,8 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 selectTextBubble_incoming: colors["selectTextBubble_incoming"] ?? parent.palette.selectTextBubble_incoming,
                                 selectTextBubble_outgoing: colors["selectTextBubble_outgoing"] ?? parent.palette.selectTextBubble_outgoing,
                                 bubbleBackground_incoming: colors["bubbleBackground_incoming"] ?? parent.palette.bubbleBackground_incoming,
-                                bubbleBackground_outgoing: colors["bubbleBackground_outgoing"] ?? parent.palette.bubbleBackground_outgoing,
+                                bubbleBackgroundTop_outgoing: colors["bubbleBackgroundBottom_outgoing"] ?? colors["bubbleBackground_outgoing"] ?? parent.palette.bubbleBackgroundTop_outgoing,
+                                bubbleBackgroundBottom_outgoing: colors["bubbleBackgroundBottom_outgoing"] ?? colors["bubbleBackground_outgoing"] ?? parent.palette.bubbleBackgroundTop_outgoing,
                                 bubbleBorder_incoming: colors["bubbleBorder_incoming"] ?? parent.palette.bubbleBorder_incoming,
                                 bubbleBorder_outgoing: colors["bubbleBorder_outgoing"] ?? parent.palette.bubbleBorder_outgoing,
                                 grayTextBubble_incoming: colors["grayTextBubble_incoming"] ?? parent.palette.grayTextBubble_incoming,

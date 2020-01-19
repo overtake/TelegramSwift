@@ -83,6 +83,7 @@ public final class ConstantDisplayLinkAnimator {
                 if self.isPaused {
                     self.displayLink?.invalidate()
                 } else {
+                    
                     self.displayLink = SwiftSignalKit.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
                         self?.tick()
                     }, queue: .mainQueue())

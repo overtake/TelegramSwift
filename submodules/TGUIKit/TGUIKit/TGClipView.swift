@@ -11,7 +11,13 @@ import CoreVideo
 import SwiftSignalKit
 public class TGClipView: NSClipView,CALayerDelegate {
     
-    var border:BorderType?
+    var border:BorderType? {
+        didSet {
+            self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+            super.needsDisplay = true
+             self.layerContentsRedrawPolicy = .never
+        }
+    }
     
     var displayLink:CVDisplayLink?
     var shouldAnimateOriginChange:Bool = false

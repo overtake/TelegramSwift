@@ -48,7 +48,17 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
                 }
                 return fetchCachedBlurredWallpaperRepresentation(account: account, resource: resource, resourceData: data, representation: representation)
         }
+    } else if let representation = representation as? CachedPatternWallpaperMaskRepresentation {
+        return account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
+            |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+                if !data.complete {
+                    return .complete()
+                }
+                return fetchCachedPatternWallpaperMaskRepresentation(resource: resource, resourceData: data, representation: representation)
+        }
     }
+
+
 
     return .never()
 }
@@ -58,6 +68,169 @@ public func fetchCachedSharedResourceRepresentation(accountManager: AccountManag
     fatalError()
 }
 
+
+private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResource, resourceData: MediaResourceData, representation: CachedPatternWallpaperMaskRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    return Signal({ subscriber in
+        if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+            
+            var svgPath: String?
+            
+            let path = NSTemporaryDirectory() + "\(arc4random64())"
+            let url = URL(fileURLWithPath: path)
+            
+            if let data = TGGUnzipData(data, 8 * 1024 * 1024), data.count > 5, let string = String(data: data.subdata(in: 0 ..< 5), encoding: .utf8), string == "<?xml" {
+                let size = representation.size ?? CGSize(width: 1440.0, height: 2960.0).aspectFilled(NSMakeSize(800, 800))
+                
+                if let image = drawSvgImageNano(data, size)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                    if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                        CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
+                        
+                        let colorQuality: Float = 0.87
+                        
+                        let options = NSMutableDictionary()
+                        options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                        
+                        CGImageDestinationAddImage(alphaDestination, image, options as CFDictionary)
+                        if CGImageDestinationFinalize(alphaDestination) {
+                           svgPath = path
+                        }
+                    }
+                }
+            } else if let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                let size = representation.size.flatMap { image.backingSize.aspectFitted($0) } ?? image.size.aspectFilled(NSMakeSize(800, 800))
+                
+                let alphaImage = generateImage(size, contextGenerator: { size, context in
+                    context.setFillColor(NSColor.black.cgColor)
+                    context.fill(CGRect(origin: CGPoint(), size: size))
+                    context.clip(to: CGRect(origin: CGPoint(), size: size), mask: image)
+                    context.setFillColor(NSColor.white.cgColor)
+                    context.fill(CGRect(origin: CGPoint(), size: size))
+                }, scale: representation.size != nil ? 2.0 : 1.0)
+                
+                if let alphaImage = alphaImage, let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                    CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
+                    
+                    let colorQuality: Float = 0.87
+                    
+                    let options = NSMutableDictionary()
+                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                    
+                    CGImageDestinationAddImage(alphaDestination, alphaImage, options as CFDictionary)
+                    if CGImageDestinationFinalize(alphaDestination) {
+                        svgPath = path
+                    }
+                }
+            }
+            
+            if let path = svgPath {
+                if let settings = representation.settings {
+                    if let image = NSImage(contentsOfFile: path)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                        let image = generateImage(image.size, contextGenerator: { size, ctx in
+                            let imageRect = NSMakeRect(0, 0, size.width, size.height)
+                            let colors:[NSColor]
+                            let color: NSColor
+                            var intensity: CGFloat = 0.5
+                            
+                            if let combinedColor = settings.color, settings.bottomColor == nil {
+                                let combinedColor = NSColor(UInt32(combinedColor))
+                                if let i = settings.intensity {
+                                    intensity = CGFloat(i) / 100.0
+                                }
+                                color = combinedColor.withAlphaComponent(1.0)
+                                intensity = combinedColor.alpha
+                                colors = [color]
+                            } else if let t = settings.color, let b = settings.bottomColor {
+                                let top = NSColor(UInt32(t))
+                                let bottom = NSColor(UInt32(b))
+                                color = top.withAlphaComponent(1.0)
+                                if let i = settings.intensity {
+                                    intensity = CGFloat(i) / 100.0
+                                }
+                                colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
+                            } else {
+                                colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
+                                color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
+                            }
+                            
+                            ctx.setBlendMode(.copy)
+                            if colors.count == 1 {
+                                ctx.setFillColor(color.cgColor)
+                                ctx.fill(imageRect)
+                            } else {
+                                let gradientColors = colors.map { $0.cgColor } as CFArray
+                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                                
+                                var locations: [CGFloat] = []
+                                for i in 0 ..< colors.count {
+                                    locations.append(delta * CGFloat(i))
+                                }
+                                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                
+                                ctx.saveGState()
+                                ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                                ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                                ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                                
+                                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                                ctx.restoreGState()
+                            }
+                            
+                            ctx.setBlendMode(.normal)
+                            ctx.interpolationQuality = .medium
+                            
+                            ctx.clip(to: imageRect, mask: image)
+                            if colors.count == 1 {
+                                ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
+                                ctx.fill(imageRect)
+                            } else {
+                                let gradientColors = colors.map { patternColor(for: $0, intensity: intensity).cgColor } as CFArray
+                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                                
+                                var locations: [CGFloat] = []
+                                for i in 0 ..< colors.count {
+                                    locations.append(delta * CGFloat(i))
+                                }
+                                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                
+                                ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
+                                ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
+                                ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
+                                
+                                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                            }
+                        })!
+                        
+                        let finalPath = NSTemporaryDirectory() + "\(arc4random64())"
+                        let url = URL(fileURLWithPath: finalPath)
+                        
+                        if let dest = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                            CGImageDestinationSetProperties(dest, [:] as CFDictionary)
+                            
+                            let colorQuality: Float = 0.87
+                            
+                            let options = NSMutableDictionary()
+                            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                            
+                            CGImageDestinationAddImage(dest, image, options as CFDictionary)
+                            if CGImageDestinationFinalize(dest) {
+                                try? FileManager.default.removeItem(atPath: path)
+                                subscriber.putNext(.temporaryPath(finalPath))
+                                subscriber.putCompletion()
+                            }
+                        }
+                    }
+                } else {
+                    subscriber.putNext(.temporaryPath(path))
+                    subscriber.putCompletion()
+                }
+            }
+            
+        }
+        return EmptyDisposable
+    }) |> runOn(Queue.concurrentDefaultQueue())
+}
 
 
 private func accountRecordIdPathName(_ id: AccountRecordId) -> String {
@@ -244,7 +417,7 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
                 let unmanaged = convertFromWebP(data)
                 let image = unmanaged?.takeUnretainedValue()
                 unmanaged?.release()
-                let appGroupName = "6N38VWS5BX.ru.keepcoder.Telegram"
+                let appGroupName = ApiEnvironment.group
                 if let image = image, let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) {
                     var randomId: Int64 = 0
                     arc4random_buf(&randomId, 8)

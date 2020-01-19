@@ -59,20 +59,20 @@ class GeneralTextRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId, type: .none, viewType: viewType, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil)) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil) {
        
         let attributedText: NSMutableAttributedString
         self.textColor = textColor
         switch text {
         case let .plain(text):
-            attributedText = NSAttributedString.initialize(string: text, color: textColor, font: .normal(11.5)).mutableCopy() as! NSMutableAttributedString
+            attributedText = NSAttributedString.initialize(string: text, color: textColor, font: .normal(fontSize ?? 11.5)).mutableCopy() as! NSMutableAttributedString
         case let .markdown(text, handler):
-            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(11.5), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(11.5), textColor: textColor), link: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.link), linkAttribute: { contents in
+            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(fontSize ?? 11.5), textColor: textColor), link: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: theme.colors.link), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, handler))
             })).mutableCopy() as! NSMutableAttributedString
         }
         if detectBold {
-            attributedText.detectBoldColorInString(with: .bold(11.5))
+            attributedText.detectBoldColorInString(with: .bold(fontSize ?? 11.5))
         }
         self.rightItem = rightItem
         self.text = attributedText
@@ -122,7 +122,13 @@ class GeneralTextRowItem: GeneralRowItem {
         case .legacy:
             layout.measure(width: width - inset.left - inset.right)
         case let .modern(_, insets):
-            layout.measure(width: self.blockWidth - insets.left - insets.right)
+            var addition: CGFloat = 0
+            if let text = rightItem.text {
+                let layout = TextViewLayout(text)
+                layout.measure(width: .greatestFiniteMagnitude)
+                addition += layout.layoutSize.width + 20
+            }
+            layout.measure(width: self.blockWidth - insets.left - insets.right - addition)
         }
 
         return success
@@ -271,7 +277,7 @@ class GeneralTextRowView : GeneralRowView {
                         progressView.progressColor = item.textColor
                     }
                     if let rightTextView = self.rightTextView {
-                        rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, item.inset.top + insets.top))
+                        rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, frame.height - insets.bottom - rightTextView.frame.height))
                         
                         if let layout = rightTextView.layout {
                             var animatedRange: NSRange? = nil

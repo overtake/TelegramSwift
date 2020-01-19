@@ -145,6 +145,10 @@ internal final class L10n {
   internal static var adminsWhoCanInviteText: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Text") }
   /// Cancel
   internal static var alertCancel: String  { return L10n.tr("Localizable", "Alert.Cancel") }
+  /// Discard
+  internal static var alertDiscard: String  { return L10n.tr("Localizable", "Alert.Discard") }
+  /// No
+  internal static var alertNO: String  { return L10n.tr("Localizable", "Alert.NO") }
   /// OK
   internal static var alertOK: String  { return L10n.tr("Localizable", "Alert.OK") }
   /// Sorry, this user doesn't seem to exist.
@@ -233,9 +237,13 @@ internal final class L10n {
   internal static var appearanceExportTheme: String  { return L10n.tr("Localizable", "Appearance.ExportTheme") }
   /// New Theme
   internal static var appearanceNewTheme: String  { return L10n.tr("Localizable", "Appearance.NewTheme") }
+  /// Reset to Defaults
+  internal static var appearanceReset: String  { return L10n.tr("Localizable", "Appearance.Reset") }
   /// Incompatible with macOS, click to edit
   internal static var appearanceCloudThemeUnsupported: String  { return L10n.tr("Localizable", "Appearance.CloudTheme.Unsupported") }
-  /// Are you sure you want to remove this theme?
+  /// Remove
+  internal static var appearanceConfirmRemoveOK: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveOK") }
+  /// Are you sure you want to delete this theme?
   internal static var appearanceConfirmRemoveText: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveText") }
   /// Theme
   internal static var appearanceConfirmRemoveTitle: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveTitle") }
@@ -255,6 +263,12 @@ internal final class L10n {
   internal static var appearanceThemeShare: String  { return L10n.tr("Localizable", "Appearance.Theme.Share") }
   /// Follow System Appearance
   internal static var appearanceSettingsFollowSystemAppearance: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance") }
+  /// Good morning! 👋
+  internal static var appearanceSettingsChatPreview1: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.1") }
+  /// Do you know what time it is?
+  internal static var appearanceSettingsChatPreview2: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.2") }
+  /// It's morning in Tokyo 😎
+  internal static var appearanceSettingsChatPreview3: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.3") }
   /// Ah, you kids today with techno music! You should enjoy the classics, like Hasselhoff!
   internal static var appearanceSettingsChatPreviewFirstText: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatPreview.FirstText") }
   /// CHAT PREVIEW
@@ -273,18 +287,16 @@ internal final class L10n {
   internal static var appearanceSettingsChatViewClassic: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatView.Classic") }
   /// CHAT VIEW
   internal static var appearanceSettingsChatViewHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.ChatView.Header") }
-  /// Dark
-  internal static var appearanceSettingsColorThemeDark: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.dark") }
   /// Day
   internal static var appearanceSettingsColorThemeDay: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.day") }
   /// Day Classic
-  internal static var appearanceSettingsColorThemeDayClassic: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.day_classic") }
+  internal static var appearanceSettingsColorThemeDayClassic: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.dayClassic") }
   /// COLOR THEME
   internal static var appearanceSettingsColorThemeHeader: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.Header") }
-  /// Dark Mojave
-  internal static var appearanceSettingsColorThemeMojave: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.mojave") }
-  /// Night Blue
-  internal static var appearanceSettingsColorThemeNightBlue: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.night_blue") }
+  /// Night Accent
+  internal static var appearanceSettingsColorThemeNightAccent: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.nightAccent") }
+  /// System
+  internal static var appearanceSettingsColorThemeSystem: String  { return L10n.tr("Localizable", "AppearanceSettings.ColorTheme.system") }
   /// Select default dark palette which one will be used in dark system appearance mode.
   internal static var appearanceSettingsFollowSystemAppearanceDefaultDark: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance.DefaultDark") }
   /// Select default day palette which one will be used in light system appearance mode.
@@ -1067,6 +1079,10 @@ internal final class L10n {
   internal static var chatCopySelectedText: String  { return L10n.tr("Localizable", "Chat.CopySelectedText") }
   /// without compression
   internal static var chatDropAsFilesDesc: String  { return L10n.tr("Localizable", "Chat.DropAsFilesDesc") }
+  /// Edit Media
+  internal static var chatDropEditDesc: String  { return L10n.tr("Localizable", "Chat.DropEditDesc") }
+  /// Drop file there to edit media
+  internal static var chatDropEditTitle: String  { return L10n.tr("Localizable", "Chat.DropEditTitle") }
   /// in a quick way
   internal static var chatDropQuickDesc: String  { return L10n.tr("Localizable", "Chat.DropQuickDesc") }
   /// Drop files here to send them
@@ -1189,6 +1205,8 @@ internal final class L10n {
   }
   /// Scheduled for today
   internal static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
+  /// Scheduled until online
+  internal static var chatDateScheduledUntilOnline: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledUntilOnline") }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
@@ -1313,33 +1331,35 @@ internal final class L10n {
   }
   /// Stop Poll
   internal static var chatPollStop: String  { return L10n.tr("Localizable", "Chat.Poll.Stop") }
+  /// Vote
+  internal static var chatPollSubmitVote: String  { return L10n.tr("Localizable", "Chat.Poll.SubmitVote") }
   /// %d
-  internal static func chatPollTotalVotesCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_countable", p1)
+  internal static func chatPollTotalVotes1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_countable", p1)
   }
-  /// %d voted
-  internal static func chatPollTotalVotesFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_few", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Few(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_few", p1)
   }
-  /// %d voted
-  internal static func chatPollTotalVotesMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_many", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Many(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_many", p1)
   }
-  /// %d voted
-  internal static func chatPollTotalVotesOne(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_one", p1)
+  /// %d vote
+  internal static func chatPollTotalVotes1One(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_one", p1)
   }
-  /// %d voted
-  internal static func chatPollTotalVotesOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_other", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Other(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_other", p1)
   }
-  /// %d voted
-  internal static func chatPollTotalVotesTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_two", p1)
+  /// %d votes
+  internal static func chatPollTotalVotes1Two(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_two", p1)
   }
-  /// %d voted
-  internal static func chatPollTotalVotesZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Poll.TotalVotes_zero", p1)
+  /// %d vote
+  internal static func chatPollTotalVotes1Zero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Poll.TotalVotes1_zero", p1)
   }
   /// No votes yet
   internal static var chatPollTotalVotesEmpty: String  { return L10n.tr("Localizable", "Chat.Poll.TotalVotesEmpty") }
@@ -1347,6 +1367,8 @@ internal final class L10n {
   internal static var chatPollTotalVotesResultEmpty: String  { return L10n.tr("Localizable", "Chat.Poll.TotalVotesResultEmpty") }
   /// Retract Vote
   internal static var chatPollUnvote: String  { return L10n.tr("Localizable", "Chat.Poll.Unvote") }
+  /// View Results
+  internal static var chatPollViewResults: String  { return L10n.tr("Localizable", "Chat.Poll.ViewResults") }
   /// Stop Poll?
   internal static var chatPollStopConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Poll.Stop.Confirm.Header") }
   /// If you stop this poll now, nobody will be able to vote in it anymore. This action cannot be undone.
@@ -1365,7 +1387,7 @@ internal final class L10n {
   internal static func chatPollTooltipVotesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_many", p1)
   }
-  /// %d votes
+  /// %d vote
   internal static func chatPollTooltipVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_one", p1)
   }
@@ -1383,8 +1405,14 @@ internal final class L10n {
   }
   /// Anonymous Poll
   internal static var chatPollTypeAnonymous: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Anonymous") }
+  /// Anonymous Quiz
+  internal static var chatPollTypeAnonymousQuiz: String  { return L10n.tr("Localizable", "Chat.Poll.Type.AnonymousQuiz") }
   /// Final Results
   internal static var chatPollTypeClosed: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Closed") }
+  /// Poll
+  internal static var chatPollTypePublic: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Public") }
+  /// Quiz
+  internal static var chatPollTypeQuiz: String  { return L10n.tr("Localizable", "Chat.Poll.Type.Quiz") }
   /// Proxy Sponsor
   internal static var chatProxySponsoredAlertHeader: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.AlertHeader") }
   /// Settings
@@ -1395,6 +1423,74 @@ internal final class L10n {
   internal static var chatProxySponsoredCapDesc: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.CapDesc") }
   /// Proxy Sponsor
   internal static var chatProxySponsoredCapTitle: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.CapTitle") }
+  /// Stop Quiz
+  internal static var chatQuizStop: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop") }
+  /// %d
+  internal static func chatQuizTotalVotesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_countable", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTotalVotesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_few", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTotalVotesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_many", p1)
+  }
+  /// %d answer
+  internal static func chatQuizTotalVotesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_one", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTotalVotesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_other", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTotalVotesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_two", p1)
+  }
+  /// %d answer
+  internal static func chatQuizTotalVotesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_zero", p1)
+  }
+  /// No answers yet
+  internal static var chatQuizTotalVotesEmpty: String  { return L10n.tr("Localizable", "Chat.Quiz.TotalVotesEmpty") }
+  /// No answers
+  internal static var chatQuizTotalVotesResultEmpty: String  { return L10n.tr("Localizable", "Chat.Quiz.TotalVotesResultEmpty") }
+  /// Stop Quiz?
+  internal static var chatQuizStopConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Header") }
+  /// If you stop this quiz now, nobody will be able to answer in it anymore. This action cannot be undone.
+  internal static var chatQuizStopConfirmText: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Text") }
+  /// no answers
+  internal static var chatQuizTooltipNoVotes: String  { return L10n.tr("Localizable", "Chat.Quiz.Tooltip.NoVotes") }
+  /// %d
+  internal static func chatQuizTooltipVotesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_countable", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTooltipVotesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_few", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTooltipVotesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_many", p1)
+  }
+  /// %d answer
+  internal static func chatQuizTooltipVotesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_one", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTooltipVotesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_other", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTooltipVotesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_two", p1)
+  }
+  /// %d answers
+  internal static func chatQuizTooltipVotesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_zero", p1)
+  }
   /// Are you sure you want to cancel recording?
   internal static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
   /// Reminder
@@ -1981,6 +2077,8 @@ internal final class L10n {
   internal static var crashOnLaunchMessage: String  { return L10n.tr("Localizable", "CrashOnLaunch.Message") }
   /// Log out
   internal static var crashOnLaunchOK: String  { return L10n.tr("Localizable", "CrashOnLaunch.OK") }
+  /// Sorry, you are a member of too many groups and channels. Please leave some before creating a new one.
+  internal static var createChannelsTooMuch: String  { return L10n.tr("Localizable", "Create.ChannelsTooMuch") }
   /// Group Name
   internal static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
   /// Night Mode
@@ -2119,6 +2217,8 @@ internal final class L10n {
   internal static var editAccountLogout: String  { return L10n.tr("Localizable", "EditAccount.Logout") }
   /// Enter your name and add a profile photo.
   internal static var editAccountNameDesc: String  { return L10n.tr("Localizable", "EditAccount.NameDesc") }
+  /// Edit Profile
+  internal static var editAccountTitle: String  { return L10n.tr("Localizable", "EditAccount.Title") }
   /// Username
   internal static var editAccountUsername: String  { return L10n.tr("Localizable", "EditAccount.Username") }
   /// RESET
@@ -2517,8 +2617,6 @@ internal final class L10n {
   internal static var generalSettingsInputSettings: String  { return L10n.tr("Localizable", "GeneralSettings.InputSettings") }
   /// INSTANT VIEW
   internal static var generalSettingsInstantViewHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InstantViewHeader") }
-  /// Large Font
-  internal static var generalSettingsLargeFonts: String  { return L10n.tr("Localizable", "GeneralSettings.LargeFonts") }
   /// Handle media keys for in-app player
   internal static var generalSettingsMediaKeysForInAppPlayer: String  { return L10n.tr("Localizable", "GeneralSettings.MediaKeysForInAppPlayer") }
   /// Automatically Open Latest Chat
@@ -2713,6 +2811,98 @@ internal final class L10n {
   internal static var inAppLinksConfirmOpenExternalHeader: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.Header") }
   /// Open
   internal static var inAppLinksConfirmOpenExternalOK: String  { return L10n.tr("Localizable", "InAppLinks.Confirm.OpenExternal.OK") }
+  /// Too many groups and channels
+  internal static var inactiveChannelsBlockHeader: String  { return L10n.tr("Localizable", "InactiveChannels.BlockHeader") }
+  /// LEAST ACTIVE
+  internal static var inactiveChannelsHeader: String  { return L10n.tr("Localizable", "InactiveChannels.Header") }
+  /// %d
+  internal static func inactiveChannelsInactiveMonthCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_countable", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_few", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_many", p1)
+  }
+  /// inactive %d month
+  internal static func inactiveChannelsInactiveMonthOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_one", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_other", p1)
+  }
+  /// inactive %d months
+  internal static func inactiveChannelsInactiveMonthTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_two", p1)
+  }
+  /// inactive %d month
+  internal static func inactiveChannelsInactiveMonthZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveMonth_zero", p1)
+  }
+  /// %d
+  internal static func inactiveChannelsInactiveWeekCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_countable", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_few", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_many", p1)
+  }
+  /// inactive %d week
+  internal static func inactiveChannelsInactiveWeekOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_one", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_other", p1)
+  }
+  /// inactive %d weeks
+  internal static func inactiveChannelsInactiveWeekTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_two", p1)
+  }
+  /// inactive %d week
+  internal static func inactiveChannelsInactiveWeekZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveWeek_zero", p1)
+  }
+  /// %d
+  internal static func inactiveChannelsInactiveYearCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_countable", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_few", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_many", p1)
+  }
+  /// inactive %d year
+  internal static func inactiveChannelsInactiveYearOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_one", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_other", p1)
+  }
+  /// inactive %d years
+  internal static func inactiveChannelsInactiveYearTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_two", p1)
+  }
+  /// inactive %d year
+  internal static func inactiveChannelsInactiveYearZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InactiveChannels.InactiveYear_zero", p1)
+  }
+  /// Leave
+  internal static var inactiveChannelsOK: String  { return L10n.tr("Localizable", "InactiveChannels.OK") }
+  /// Limit Reached
+  internal static var inactiveChannelsTitle: String  { return L10n.tr("Localizable", "InactiveChannels.Title") }
   /// Select a user or chat to share content via %@
   internal static func inlineModalActionDesc(_ p1: String) -> String {
     return L10n.tr("Localizable", "InlineModalAction.Desc", p1)
@@ -2755,6 +2945,8 @@ internal final class L10n {
   internal static var installedStickersArchived: String  { return L10n.tr("Localizable", "InstalledStickers.Archived") }
   /// Artists are welcome to add their own sticker sets using our @stickers bot.\n\nTap on a sticker to view and add the whole set.
   internal static var installedStickersDescrpiption: String  { return L10n.tr("Localizable", "InstalledStickers.Descrpiption") }
+  /// Loop Animated Stickers
+  internal static var installedStickersLoopAnimated: String  { return L10n.tr("Localizable", "InstalledStickers.LoopAnimated") }
   /// STICKER SETS
   internal static var installedStickersPacksTitle: String  { return L10n.tr("Localizable", "InstalledStickers.PacksTitle") }
   /// Trending Stickers
@@ -2771,8 +2963,12 @@ internal final class L10n {
   internal static func instantPageRelatedArticleAuthorAndDateTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "InstantPage.RelatedArticleAuthorAndDateTitle", p1, p2)
   }
+  /// Sorry, the target user is a member of too many groups and channels. Please ask them to leave some first.
+  internal static var inviteChannelsTooMuch: String  { return L10n.tr("Localizable", "Invite.ChannelsTooMuch") }
   /// Sorry, you are a member of too many groups and channels. Please leave some before joining one.
   internal static var joinChannelsTooMuch: String  { return L10n.tr("Localizable", "Join.ChannelsTooMuch") }
+  /// Inactive Chats
+  internal static var joinInactiveChannels: String  { return L10n.tr("Localizable", "Join.InactiveChannels") }
   /// Join
   internal static var joinLinkJoin: String  { return L10n.tr("Localizable", "JoinLink.Join") }
   /// Show All
@@ -2921,6 +3117,18 @@ internal final class L10n {
   internal static var loginHeaderSignUp: String  { return L10n.tr("Localizable", "Login.Header.SignUp") }
   /// Switch
   internal static var loginPhoneNumberAlreadyAuthorizedSwitch: String  { return L10n.tr("Localizable", "Login.PhoneNumberAlreadyAuthorized.Switch") }
+  /// Log in by phone Number
+  internal static var loginQRCancel: String  { return L10n.tr("Localizable", "Login.QR.Cancel") }
+  /// Open Telegram on your phone
+  internal static var loginQRHelp1: String  { return L10n.tr("Localizable", "Login.QR.Help1") }
+  /// Go to **Settings** > **Devices** > **Scan QR**
+  internal static var loginQRHelp2: String  { return L10n.tr("Localizable", "Login.QR.Help2") }
+  /// Point your phone at this screen to confirm login
+  internal static var loginQRHelp3: String  { return L10n.tr("Localizable", "Login.QR.Help3") }
+  /// Log in by QR Code
+  internal static var loginQRLogin: String  { return L10n.tr("Localizable", "Login.QR.Login") }
+  /// Log in to Telegram by QR Code
+  internal static var loginQRTitle: String  { return L10n.tr("Localizable", "Login.QR.Title") }
   /// Enter your name and add a profile picture.
   internal static var loginRegisterDesc: String  { return L10n.tr("Localizable", "Login.Register.Desc") }
   /// add\nphoto
@@ -3051,6 +3259,8 @@ internal final class L10n {
   internal static var messageContextConfirmNotifyPin: String  { return L10n.tr("Localizable", "Message.Context.Confirm.NotifyPin") }
   /// Would you like to pin this message?
   internal static var messageContextConfirmPin1: String  { return L10n.tr("Localizable", "Message.Context.Confirm.Pin1") }
+  /// Thank you! Your report will be reviewed by our team very soon.
+  internal static var messageContextReportAlertOK: String  { return L10n.tr("Localizable", "Message.Context.Report.AlertOK") }
   /// archived folder
   internal static var messageStatusArchived: String  { return L10n.tr("Localizable", "Message.Status.Archived") }
   /// preparing archive
@@ -3159,10 +3369,14 @@ internal final class L10n {
   internal static func newContactPhoneHiddenText(_ p1: String) -> String {
     return L10n.tr("Localizable", "NewContact.Phone.Hidden.Text", p1)
   }
+  /// Anonymous Votes
+  internal static var newPollAnonymous: String  { return L10n.tr("Localizable", "NewPoll.Anonymous") }
   /// Are you sure you want to discard this poll?
   internal static var newPollDisacardConfirm: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm") }
   /// Poll
   internal static var newPollDisacardConfirmHeader: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirmHeader") }
+  /// Multiple Choice
+  internal static var newPollMultipleChoice: String  { return L10n.tr("Localizable", "NewPoll.MultipleChoice") }
   /// Add an Option
   internal static var newPollOptionsAddOption: String  { return L10n.tr("Localizable", "NewPoll.OptionsAddOption") }
   /// %d
@@ -3235,12 +3449,22 @@ internal final class L10n {
   }
   /// Ask a question
   internal static var newPollQuestionPlaceholder: String  { return L10n.tr("Localizable", "NewPoll.QuestionPlaceholder") }
+  /// Quiz Mode
+  internal static var newPollQuiz: String  { return L10n.tr("Localizable", "NewPoll.Quiz") }
+  /// Quiz has only one right answer. You can't revoke their votes.
+  internal static var newPollQuizDesc: String  { return L10n.tr("Localizable", "NewPoll.QuizDesc") }
+  /// Select the correct option
+  internal static var newPollQuizTooltip: String  { return L10n.tr("Localizable", "NewPoll.QuizTooltip") }
   /// New Poll
   internal static var newPollTitle: String  { return L10n.tr("Localizable", "NewPoll.Title") }
   /// No
   internal static var newPollDisacardConfirmNo: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.No") }
   /// Discard
   internal static var newPollDisacardConfirmYes: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.Yes") }
+  /// A quiz has one correct answer.
+  internal static var newPollQuizMultipleError: String  { return L10n.tr("Localizable", "NewPoll.QuizMultiple.Error") }
+  /// New Quiz
+  internal static var newPollTitleQuiz: String  { return L10n.tr("Localizable", "NewPoll.Title.Quiz") }
   /// Create
   internal static var newThemeCreate: String  { return L10n.tr("Localizable", "NewTheme.Create") }
   /// This theme will be based on your current theme.
@@ -3261,6 +3485,8 @@ internal final class L10n {
   internal static var notificationSettingsAllAccounts: String  { return L10n.tr("Localizable", "NotificationSettings.AllAccounts") }
   /// Switch off to show the number of unread chats instead of messages.
   internal static var notificationSettingsBadgeDesc: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeDesc") }
+  /// Enabled
+  internal static var notificationSettingsBadgeEnabled: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeEnabled") }
   /// BADGE COUNTER
   internal static var notificationSettingsBadgeHeader: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeHeader") }
   /// New Contacts
@@ -3821,6 +4047,8 @@ internal final class L10n {
   internal static var peerInfoSharelink: String  { return L10n.tr("Localizable", "PeerInfo.sharelink") }
   /// Share My Contact Info
   internal static var peerInfoShareMyInfo: String  { return L10n.tr("Localizable", "PeerInfo.ShareMyInfo") }
+  /// Show More
+  internal static var peerInfoShowMore: String  { return L10n.tr("Localizable", "PeerInfo.ShowMore") }
   /// Sign Messages
   internal static var peerInfoSignMessages: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages") }
   /// Start Secret Chat
@@ -3963,6 +4191,42 @@ internal final class L10n {
   internal static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
   /// Invite to Group via Link
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
+  /// Sorry, public polls can’t be forwarded to channels.
+  internal static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
+  /// collapse
+  internal static var pollResultsCollapse: String  { return L10n.tr("Localizable", "PollResults.Collapse") }
+  /// %d
+  internal static func pollResultsLoadMoreCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_countable", p1)
+  }
+  /// Show More (%d)
+  internal static func pollResultsLoadMoreFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_few", p1)
+  }
+  /// Show More (%d)
+  internal static func pollResultsLoadMoreMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_many", p1)
+  }
+  /// Show More (%d)
+  internal static func pollResultsLoadMoreOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_one", p1)
+  }
+  /// Show More (%d)
+  internal static func pollResultsLoadMoreOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_other", p1)
+  }
+  /// Show More (%d)
+  internal static func pollResultsLoadMoreTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_two", p1)
+  }
+  /// Show More (%d)
+  internal static func pollResultsLoadMoreZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PollResults.LoadMore_zero", p1)
+  }
+  /// Poll Results
+  internal static var pollResultsTitlePoll: String  { return L10n.tr("Localizable", "PollResults.Title.Poll") }
+  /// Quiz Results
+  internal static var pollResultsTitleQuiz: String  { return L10n.tr("Localizable", "PollResults.Title.Quiz") }
   /// Warning, this will unlink the group from "%@"
   internal static func preHistoryConfirmUnlink(_ p1: String) -> String {
     return L10n.tr("Localizable", "PreHistory.Confirm.Unlink", p1)
@@ -4175,6 +4439,12 @@ internal final class L10n {
   internal static var privacyAndSecurityClearCloudDrafts: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDrafts") }
   /// CHATS
   internal static var privacyAndSecurityClearCloudDraftsHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.ClearCloudDraftsHeader") }
+  /// Display sensitive media in public channels on all your Telegram devices.
+  internal static var privacyAndSecuritySensitiveDesc: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveDesc") }
+  /// SENSITIVE CONTENT
+  internal static var privacyAndSecuritySensitiveHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveHeader") }
+  /// Disable filtering
+  internal static var privacyAndSecuritySensitiveText: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SensitiveText") }
   /// CONNECTED WEBSITES
   internal static var privacyAndSecurityWebAuthorizationHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.WebAuthorizationHeader") }
   /// Are you sure you want to clear all cloud drafts?
@@ -4529,6 +4799,8 @@ internal final class L10n {
   internal static func scheduleSendToday(_ p1: String) -> String {
     return L10n.tr("Localizable", "Schedule.SendToday", p1)
   }
+  /// Send When Online
+  internal static var scheduleSendWhenOnline: String  { return L10n.tr("Localizable", "Schedule.SendWhenOnline") }
   /// at
   internal static var scheduleControllerAt: String  { return L10n.tr("Localizable", "ScheduleController.at") }
   /// Schedule Message
@@ -5107,6 +5379,186 @@ internal final class L10n {
   internal static var sessionsTerminateDescription: String  { return L10n.tr("Localizable", "Sessions.TerminateDescription") }
   /// Terminate all other sessions
   internal static var sessionsTerminateOthers: String  { return L10n.tr("Localizable", "Sessions.TerminateOthers") }
+  /// Search results from Settings and the Telegram FAQ will appear here.
+  internal static var settingsSearchEmptyItem: String  { return L10n.tr("Localizable", "SettingsSearch.EmptyItem") }
+  /// RECENT
+  internal static var settingsSearchRecent: String  { return L10n.tr("Localizable", "SettingsSearch.Recent") }
+  /// clear
+  internal static var settingsSearchRecentClear: String  { return L10n.tr("Localizable", "SettingsSearch.Recent.Clear") }
+  ///  
+  internal static var settingsSearchSynonymsAppLanguage: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.AppLanguage") }
+  ///  
+  internal static var settingsSearchSynonymsFAQ: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.FAQ") }
+  ///  
+  internal static var settingsSearchSynonymsPassport: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Passport") }
+  ///  
+  internal static var settingsSearchSynonymsSavedMessages: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.SavedMessages") }
+  /// Support
+  internal static var settingsSearchSynonymsSupport: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Support") }
+  /// Apple Watch
+  internal static var settingsSearchSynonymsWatch: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Watch") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceAutoNightTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.AutoNightTheme") }
+  /// Wallpaper
+  internal static var settingsSearchSynonymsAppearanceChatBackground: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground") }
+  /// bubbles
+  internal static var settingsSearchSynonymsAppearanceChatMode: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatMode") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceColorTheme: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ColorTheme") }
+  /// font
+  internal static var settingsSearchSynonymsAppearanceTextSize: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.TextSize") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.Title") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceChatBackgroundCustom: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground.Custom") }
+  ///  
+  internal static var settingsSearchSynonymsAppearanceChatBackgroundSetColor: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Appearance.ChatBackground.SetColor") }
+  ///  
+  internal static var settingsSearchSynonymsCallsCallTab: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Calls.CallTab") }
+  ///  
+  internal static var settingsSearchSynonymsCallsTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Calls.Title") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoDownloadReset: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoDownloadReset") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoDownloadUsingCellular: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoDownloadUsingCellular") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoDownloadUsingWifi: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoDownloadUsingWifi") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoplayGifs: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoplayGifs") }
+  ///  
+  internal static var settingsSearchSynonymsDataAutoplayVideos: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.AutoplayVideos") }
+  ///  
+  internal static var settingsSearchSynonymsDataCallsUseLessData: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.CallsUseLessData") }
+  ///  
+  internal static var settingsSearchSynonymsDataDownloadInBackground: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.DownloadInBackground") }
+  ///  
+  internal static var settingsSearchSynonymsDataNetworkUsage: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.NetworkUsage") }
+  ///  
+  internal static var settingsSearchSynonymsDataSaveEditedPhotos: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.SaveEditedPhotos") }
+  ///  
+  internal static var settingsSearchSynonymsDataSaveIncomingPhotos: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.SaveIncomingPhotos") }
+  ///  
+  internal static var settingsSearchSynonymsDataTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Title") }
+  ///  
+  internal static var settingsSearchSynonymsDataStorageClearCache: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Storage.ClearCache") }
+  ///  
+  internal static var settingsSearchSynonymsDataStorageKeepMedia: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Storage.KeepMedia") }
+  /// Cache
+  internal static var settingsSearchSynonymsDataStorageTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Data.Storage.Title") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileAddAccount: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.AddAccount") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileBio: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Bio") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileLogout: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Logout") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfilePhoneNumber: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.PhoneNumber") }
+  ///  
+  internal static var settingsSearchSynonymsEditProfileTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Title") }
+  /// nickname
+  internal static var settingsSearchSynonymsEditProfileUsername: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.EditProfile.Username") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeCountUnreadMessages: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeCountUnreadMessages") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeIncludeMutedChannels: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeIncludeMutedChannels") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeIncludeMutedChats: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeIncludeMutedChats") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsBadgeIncludeMutedPublicGroups: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.BadgeIncludeMutedPublicGroups") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsAlert: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsAlert") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsExceptions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsExceptions") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsChannelNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ChannelNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsContactJoined: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ContactJoined") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsDisplayNamesOnLockScreen: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.DisplayNamesOnLockScreen") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsAlert: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsAlert") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsExceptions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsExceptions") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsGroupNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.GroupNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsInAppNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.InAppNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsInAppNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.InAppNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsInAppNotificationsVibrate: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.InAppNotificationsVibrate") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsAlert: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsAlert") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsExceptions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsExceptions") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsPreview") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsMessageNotificationsSound: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.MessageNotificationsSound") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsResetAllNotifications: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.ResetAllNotifications") }
+  ///  
+  internal static var settingsSearchSynonymsNotificationsTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Notifications.Title") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyAuthSessions: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.AuthSessions") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyBlockedUsers: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.BlockedUsers") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyCalls: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Calls") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDeleteAccountIfAwayFor: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.DeleteAccountIfAwayFor") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyForwards: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Forwards") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyGroupsAndChannels: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.GroupsAndChannels") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyLastSeen: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.LastSeen") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyPasscode: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Passcode") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyPasscodeAndFaceId: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.PasscodeAndFaceId") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyPasscodeAndTouchId: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.PasscodeAndTouchId") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyProfilePhoto: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.ProfilePhoto") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Title") }
+  /// Password
+  internal static var settingsSearchSynonymsPrivacyTwoStepAuth: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.TwoStepAuth") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataClearPaymentsInfo: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.ClearPaymentsInfo") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataContactsReset: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.ContactsReset") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataContactsSync: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.ContactsSync") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataDeleteDrafts: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.DeleteDrafts") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataSecretChatLinkPreview: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.SecretChatLinkPreview") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.Title") }
+  ///  
+  internal static var settingsSearchSynonymsPrivacyDataTopPeers: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Privacy.Data.TopPeers") }
+  ///  
+  internal static var settingsSearchSynonymsProxyAddProxy: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Proxy.AddProxy") }
+  /// SOCKS5\nMTProto
+  internal static var settingsSearchSynonymsProxyTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Proxy.Title") }
+  ///  
+  internal static var settingsSearchSynonymsProxyUseForCalls: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Proxy.UseForCalls") }
+  ///  
+  internal static var settingsSearchSynonymsStickersArchivedPacks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.ArchivedPacks") }
+  ///  
+  internal static var settingsSearchSynonymsStickersFeaturedPacks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.FeaturedPacks") }
+  ///  
+  internal static var settingsSearchSynonymsStickersMasks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.Masks") }
+  ///  
+  internal static var settingsSearchSynonymsStickersSuggestStickers: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.SuggestStickers") }
+  ///  
+  internal static var settingsSearchSynonymsStickersTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.Title") }
   /// Copied to Clipboard
   internal static var shareLinkCopied: String  { return L10n.tr("Localizable", "Share.Link.Copied") }
   /// Cancel
@@ -5977,6 +6429,8 @@ internal final class L10n {
   internal static func updatedYesterdayAt(_ p1: String) -> String {
     return L10n.tr("Localizable", "Updated.YesterdayAt", p1)
   }
+  /// Sorry, you are a member of too many groups and channels. For technical reasons, you need to leave some first before changing this setting in your groups.
+  internal static var upgradeChannelsTooMuch: String  { return L10n.tr("Localizable", "Upgrade.ChannelsTooMuch") }
   /// %@ is available
   internal static func usernameSettingsAvailable(_ p1: String) -> String {
     return L10n.tr("Localizable", "UsernameSettings.available", p1)

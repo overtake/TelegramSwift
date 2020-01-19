@@ -96,3 +96,32 @@ public class HorizontalTableView: TableView {
     }
     
 }
+
+
+open class HorizontalScrollView : ScrollView {
+    override open func scrollWheel(with event: NSEvent) {
+        
+        var scrollPoint = contentView.bounds.origin
+        let isInverted: Bool = System.isScrollInverted
+        if event.scrollingDeltaY != 0 {
+            if isInverted {
+                scrollPoint.x += -event.scrollingDeltaY
+            } else {
+                scrollPoint.x -= event.scrollingDeltaY
+            }
+        }
+        if event.scrollingDeltaX != 0 {
+            if !isInverted {
+                scrollPoint.x += -event.scrollingDeltaX
+            } else {
+                scrollPoint.x -= event.scrollingDeltaX
+            }
+        }
+        if documentView!.frame.width > frame.width {
+            scrollPoint.x = min(max(0, scrollPoint.x), documentView!.frame.width - frame.width)
+            clipView.scroll(to: scrollPoint)
+        } else {
+            superview?.scrollWheel(with: event)
+        }
+    }
+}

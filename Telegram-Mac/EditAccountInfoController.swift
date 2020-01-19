@@ -13,6 +13,26 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 
+
+enum EditSettingsEntryTag: ItemListItemTag {
+    case bio
+    
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? EditSettingsEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
+    var stableId: InputDataEntryId {
+        switch self {
+        case .bio:
+            return .input(_id_about)
+        }
+    }
+}
+
+
 private func valuesRequiringUpdate(state: EditInfoState, view: PeerView) -> ((fn: String, ln: String)?, about: String?) {
     if let peer = view.peers[view.peerId] as? TelegramUser {
         var names:(String, String)? = nil
@@ -209,7 +229,8 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
 }
 
 
-func EditAccountInfoController(context: AccountContext, f: @escaping((ViewController)) -> Void) -> Void {
+func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSettingsEntryTag? = nil, f: @escaping((ViewController)) -> Void) -> Void {
+    
     let state: Promise<EditInfoState> = Promise()
     let stateValue: Atomic<EditInfoState> = Atomic(value: EditInfoState())
     let actionsDisposable = DisposableSet()
@@ -250,7 +271,7 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
                 
                 _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                     let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                    showModal(with: controller, for: mainWindow)
+                    showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
                     
                     let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
                         return LocalFileReferenceMediaResource(localFilePath: path.path, randomId: arc4random64())
@@ -307,7 +328,7 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     })
     
-    f(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.navigationEdit, validateData: { data -> InputDataValidation in
+    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.editAccountTitle, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -340,7 +361,7 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
                     updateState { $0 }
                 }))
             }
-        })
+            })
     }, updateDatas: { data in
         updateState { current in
             return current.withUpdatedAbout(data[_id_about]?.stringValue ?? "")
@@ -358,5 +379,13 @@ func EditAccountInfoController(context: AccountContext, f: @escaping((ViewContro
                 f(.disabled(L10n.navigationDone))
             }
         }
-    }, removeAfterDisappear: false, identifier: "account"))
+    }, removeAfterDisappear: false, identifier: "account")
+    
+    controller.didLoaded = { controller, _ in
+        if let focusOnItemTag = focusOnItemTag {
+            controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
+        }
+    }
+    
+    f(controller)
 }

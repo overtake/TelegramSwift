@@ -3124,7 +3124,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         updateState { current in
                             return current.withUpdatedAddressState(nil).withUpdatedValues(current.values).withRemovedInputErrors()
                         }
-                    }, didLoaded: { data in
+                    }, didLoaded: { _, data in
                         loadedData = AddressIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if AddressIntermediateState(data) != loadedData {
@@ -3457,7 +3457,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         updateState { current in
                             return current.withUpdatedDetailsState(nil).withUpdatedValues(current.values).withRemovedInputErrors()
                         }
-                    }, didLoaded: { data in
+                    }, didLoaded: { _, data in
                         loadedData = DetailsIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if DetailsIntermediateState(data) != loadedData {

@@ -339,7 +339,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 
         item.popoverTouchBar = ChatStickersTouchBarPopover(chatInteraction: chatInteraction, dismiss: { [weak item, weak self] file in
             if let file = file {
-                self?.chatInteraction?.sendAppFile(file)
+                self?.chatInteraction?.sendAppFile(file, false)
             }
             item?.dismissPopover(nil)
         }, entries: entries)
@@ -607,7 +607,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
                 switch result {
                 case let .stickers(stickers):
                     return StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, sendSticker: { [weak self] file in
-                        self?.chatInteraction?.sendAppFile(file)
+                        self?.chatInteraction?.sendAppFile(file, false)
                         self?.chatInteraction?.clearInput()
                     }, entries: stickers.map({.sticker($0.file)}))
                 default:

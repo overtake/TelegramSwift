@@ -79,7 +79,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case recentlySearch(Peer, Int, SearchSecretChatWrapper?, PeerStatusStringResult, UnreadSearchBadge, Bool)
     case globalPeer(FoundPeer, Int)
     case savedMessages(Peer)
-    case message(Message, String,Int)
+    case message(Message, String, CombinedPeerReadState?, Int)
     case separator(text: String, index:Int, state:SeparatorBlockState)
     case topPeers(Int, articlesEnabled: Bool, unreadArticles: Int32, selfPeer: Peer, peers: [Peer], unread: [PeerId: UnreadSearchBadge], online: [PeerId : Bool])
     case emptySearch
@@ -92,7 +92,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .localPeerId(peer.id)
         case let .globalPeer(found, _):
             return .globalPeerId(found.peer.id)
-        case let .message(message, _, _):
+        case let .message(message, _, _, _):
             return .messageId(message.id)
         case .savedMessages:
             return .savedMessages
@@ -116,7 +116,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return index
         case let .globalPeer(_,index):
             return index
-        case let .message(_, _, index):
+        case let .message(_, _, _, index):
             return index
         case .savedMessages:
             return -1
@@ -157,15 +157,9 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .message(lhsMessage, lhsSearchText, lhsIndex):
-            if case let .message(rhsMessage, rhsSearchText, rhsIndex) = rhs {
-                
-                if lhsIndex != rhsIndex {
-                    return false
-                }
-                if lhsSearchText != rhsSearchText {
-                    return false
-                }
+        case let .message(lhsMessage, text, combinedState, index):
+            if case .message(let rhsMessage, text, combinedState, index) = rhs {
+
                 if lhsMessage.id != rhsMessage.id {
                     return false
                 }
@@ -247,8 +241,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
     
     let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
         switch entry.entry {
-        case let .message(message, query, _):
-            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, query: query, renderedPeer: RenderedPeer(message: message))
+        case let .message(message, query, combinedState, _):
+            var peer = RenderedPeer(message: message)
+            if let group = message.peers[message.id.peerId] as? TelegramGroup, let migrationReference = group.migrationReference {
+                if let channelPeer = message.peers[migrationReference.peerId] {
+                    peer = RenderedPeer(peer: channelPeer)
+                }
+            }
+            let item = ChatListMessageRowItem(initialSize, context: arguments.context, message: message, query: query, renderedPeer: peer, readState: combinedState)
             return item
         case let .globalPeer(foundPeer,_):
             var status: String? = nil
@@ -276,8 +276,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 
@@ -299,8 +297,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 
@@ -328,8 +324,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 
@@ -351,8 +345,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                             isPinned = true
                             break
                         }
-                    default:
-                        break
                     }
                 }
                 
@@ -438,6 +430,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private let statePromise:Promise<(SeparatorBlockState,SeparatorBlockState)> = Promise((SeparatorBlockState.short, SeparatorBlockState.short))
     private let disposable:MetaDisposable = MetaDisposable()
     private let pinnedPromise: ValuePromise<[PinnedItemId]> = ValuePromise([], ignoreRepeated: true)
+    
+    private let isRevealed: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    
     var pinnedItems:[PinnedItemId] = [] {
         didSet {
             pinnedPromise.set(pinnedItems)
@@ -463,6 +458,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let searchMessagesState: ValuePromise<SearchMessagesState?> = ValuePromise()
         let searchMessagesStateValue: Atomic<SearchMessagesState?> = Atomic(value: nil)
 
+        let isRevealed = self.isRevealed.get()
         
         let arguments = self.arguments
         let statePromise = self.statePromise.get()
@@ -471,18 +467,53 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let groupId: PeerGroupId = self.groupId
         let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?), NoError> in
             if let query = query, !query.isEmpty {
+                
+
                 var ids:[PeerId:PeerId] = [:]
                 
-                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(context.account.postbox.searchPeers(query: query.lowercased()), context.account.postbox.loadedPeerWithId(context.peerId))
-                    |> map { peers, accountPeer -> [ChatListSearchEntry] in
+                let foundQueryPeers: Promise<Peer?> = Promise()
+                
+                let callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void = { peerId, _, _, _ in }
+                
+                let link = inApp(for: query as NSString, context: context, peerId: nil, openInfo: callback, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                
+                switch link {
+                case let .followResolvedName(_, username, _, context, _, _):
+                    foundQueryPeers.set(resolveUsername(username: username, context: context))
+                default:
+                    foundQueryPeers.set(.single(nil))
+                }
+                
+                var all = query.transformKeyboard
+                all.insert(query.lowercased(), at: 0)
+                all = all.uniqueElements
+                let localPeers:Signal<[RenderedPeer], NoError> = combineLatest(all.map {
+                    return context.account.postbox.searchPeers(query: $0)
+                }) |> map { result in
+                    return Array(result.joined())
+                }
+                
+                
+                
+                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(localPeers, context.account.postbox.loadedPeerWithId(context.peerId), foundQueryPeers.get())
+                    |> map { peers, accountPeer, inLinkPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
                         
                         
                         if L10n.peerSavedMessages.lowercased().hasPrefix(query.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.lowercased()) {
                             entries.append(.savedMessages(accountPeer))
+                            ids[accountPeer.id] = accountPeer.id
                         }
                         
                         var index = 1
+                        
+                        if let peer = inLinkPeer {
+                            if ids[peer.id] == nil {
+                                entries.append(.localPeer(peer, index, nil, true))
+                                index += 1
+                            }
+                        }
+                        
                         for rendered in peers {
                             if ids[rendered.peerId] == nil {
                                 ids[rendered.peerId] = rendered.peerId
@@ -556,7 +587,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             var entries: [ChatListSearchEntry] = []
                             var index = 20001
                             for message in result.0.messages {
-                                entries.append(.message(message, query, index))
+                                entries.append(.message(message, query, result.0.readStates[message.id.peerId], index))
                                 index += 1
                             }
                             
@@ -567,18 +598,44 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?), NoError> = !options.contains(.messages) ? .single(([], false, nil)) : .single(([], true, nil)) |> then(remoteSearch)
                 
-                return combineLatest(foundLocalPeers |> deliverOnPrepareQueue, foundRemotePeers |> deliverOnPrepareQueue, foundRemoteMessages |> deliverOnPrepareQueue)
-                    |> map { localPeers, remotePeers, remoteMessages -> ([ChatListSearchEntry], Bool, SearchMessagesState?) in
+                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed)
+                    |> map { localPeers, remotePeers, remoteMessages, isRevealed -> ([ChatListSearchEntry], Bool, SearchMessagesState?) in
                         
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
+                            
+                            let peers = localPeers + remotePeers.0
+
+                            
+
+                            
                             entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: .none))
-                            entries += localPeers
-                            entries += remotePeers.0
+                            if !remoteMessages.0.isEmpty {
+                                entries += peers
+                            } else {
+                                entries += peers
+                            }
                         }
                         if !remotePeers.1.isEmpty {
-                            entries.append(.separator(text: L10n.searchSeparatorGlobalPeers, index: 10000, state: .none))
-                            entries += remotePeers.1
+                            
+                            let state: SeparatorBlockState
+                            if remotePeers.1.count > 5 {
+                                if isRevealed {
+                                    state = .all
+                                } else {
+                                    state = .short
+                                }
+                            } else {
+                                state = .none
+                            }
+
+                            entries.append(.separator(text: L10n.searchSeparatorGlobalPeers, index: 10000, state: state))
+                            
+                            if !isRevealed {
+                                entries += remotePeers.1.prefix(5)
+                            } else {
+                                entries += remotePeers.1
+                            }
                         }
                         if !remoteMessages.0.isEmpty {
                             entries.append(.separator(text: L10n.searchSeparatorMessages, index: 20000, state: .none))
@@ -647,7 +704,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                 } |> deliverOnPrepareQueue
                 
-                return combineLatest(context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnPrepareQueue, top, recently, statePromise |> deliverOnPrepareQueue) |> map { user, top, recent, state -> ([ChatListSearchEntry], Bool) in
+                return combineLatest(queue: prepareQueue, context.account.postbox.loadedPeerWithId(context.peerId), top, recently, statePromise) |> map { user, top, recent, state -> ([ChatListSearchEntry], Bool) in
                     var entries:[ChatListSearchEntry] = []
                     var i:Int = 0
                     var ids:[PeerId:PeerId] = [:]
@@ -690,7 +747,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }
         
         
-        let transition = combineLatest(searchItems |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.globalPeerHandler.get() |> deliverOnPrepareQueue |> distinctUntilChanged, pinnedPromise.get() |> deliverOnPrepareQueue) |> map { value, appearance, location, pinnedItems in
+        let transition = combineLatest(queue: prepareQueue, searchItems, appearanceSignal, context.globalPeerHandler.get() |> distinctUntilChanged, pinnedPromise.get()) |> map { value, appearance, location, pinnedItems in
             return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2, pinnedItems, value.3)
         }
         |> map { entries, loading, location, animated, pinnedItems, searchMessagesState -> (TableUpdateTransition, Bool, ChatLocation?, SearchMessagesState?) in
@@ -745,6 +802,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         isLoading.set(.single(false))
+        context.isInGlobalSearch = false
         self.window?.remove(object: self, for: .UpArrow)
         self.window?.remove(object: self, for: .DownArrow)
         openPeerDisposable.set(nil)
@@ -842,6 +900,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        context.isInGlobalSearch = true
         request(with: nil)
     }
     
@@ -935,16 +994,28 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
             peer = item.peer
         } else if let item = item as? SeparatorRowItem {
-            switch item.state {
-            case .short:
-                statePromise.set(.single((.all, .short)))
-            case .all:
-                statePromise.set(.single((.short, .short)))
-            case .clear:
-                arguments.clearRecent()
-            default:
-                break
+            if item.stableId == AnyHashable(ChatListSearchEntryStableId.separator(10000)) {
+                switch item.state {
+                case .short:
+                    self.isRevealed.set(true)
+                case .all:
+                    self.isRevealed.set(false)
+                default:
+                    break
+                }
+            } else {
+                switch item.state {
+                case .short:
+                    statePromise.set(.single((.all, .short)))
+                case .all:
+                    statePromise.set(.single((.short, .short)))
+                case .clear:
+                    arguments.clearRecent()
+                default:
+                    break
+                }
             }
+            
 
             return
         } else if item is PopularPeersRowItem {

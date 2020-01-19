@@ -364,7 +364,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 
                 
                 
-                window.setFrame(NSMakeRect(state.rect.minX, screen.frame.height - state.rect.maxY, state.rect.width, state.rect.height), display: true, animate: true)
+                window.setFrame(NSMakeRect(screen.frame.minX + state.rect.minX, screen.frame.minY + screen.frame.height - state.rect.maxY, state.rect.width, state.rect.height), display: true, animate: true)
                 window.orderOut(nil)
                 view.frame = state.rect
                 state.view.addSubview(view)

@@ -106,7 +106,7 @@ class SharedWakeupManager {
                     pullCurrentSession( { session in
                         if let state = states.first {
                             if session != nil {
-                                account.callSessionManager.drop(internalId: state.id, reason: .busy)
+                                account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
                             } else {
                                 showPhoneCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, peerId: state.peerId, id: state.id))
                             }
