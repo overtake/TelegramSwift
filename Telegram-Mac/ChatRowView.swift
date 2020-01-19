@@ -284,7 +284,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
         mouseDragged = false
-        shakeContentView()
     }
     
     override func mouseUp(with event: NSEvent) {
