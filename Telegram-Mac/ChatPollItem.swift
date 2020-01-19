@@ -725,44 +725,7 @@ final class ChatPollItemView : ChatRowView {
         }
     }
     func doWhenIncorrectAnswer() {
-        guard let item = item as? ChatPollItem else { return }
-
-        let translation = CAKeyframeAnimation(keyPath: "transform.translation.x");
-        translation.timingFunction = CAMediaTimingFunction(name: .linear)
-        translation.values = [-2, 2, -2, 2, -2, 2, -2, 2, 0]
-        
-        let rotation = CAKeyframeAnimation(keyPath: "transform.rotation.z")
-        rotation.values = [-0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0].map {
-            ( degrees: Double) -> Double in
-            let radians: Double = (.pi * degrees) / 180.0
-            return radians
-        }
-        
-        let shakeGroup: CAAnimationGroup = CAAnimationGroup()
-        shakeGroup.isRemovedOnCompletion = true
-        shakeGroup.animations = [translation, rotation]
-        shakeGroup.timingFunction = .init(name: .easeInEaseOut)
-        shakeGroup.duration = 0.5
-        
-        
-        
-        let frame = bubbleFrame
-        let contentFrame = self.contentFrameModifier
-        
-        contentView.layer?.position = NSMakePoint(contentFrame.minX + contentFrame.width / 2, contentFrame.minY + contentFrame.height / 2)
-        contentView.layer?.anchorPoint = NSMakePoint(0.5, 0.5);
-        contentView.layer?.add(shakeGroup, forKey: "shake")
-        
-        bubbleView.layer?.position = NSMakePoint(frame.minX + frame.width / 2, frame.minY + frame.height / 2)
-        bubbleView.layer?.anchorPoint = NSMakePoint(0.5, 0.5);
-        bubbleView.layer?.add(shakeGroup, forKey: "shake")
-        
-        if item.hasBubble {
-            let rightFrame = self.rightFrame
-            rightView.layer?.position = NSMakePoint(rightFrame.minX + rightFrame.width / 2, rightFrame.minY + rightFrame.height / 2)
-            rightView.layer?.anchorPoint = NSMakePoint(0.5, 0.5);
-            rightView.layer?.add(shakeGroup, forKey: "shake")
-        }
+        shakeContentView()
         
         if FastSettings.inAppSounds {
             NSSound.beep()
@@ -976,10 +939,10 @@ private final class PollOptionView : Control {
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
 
         if let progress = option.percent {
-            var totalOptionVotes = L10n.chatPollTooltipVotesCountable(Int(option.voteCount))
+            var totalOptionVotes = option.isQuiz ? L10n.chatQuizTooltipVotesCountable(Int(option.voteCount)) : L10n.chatPollTooltipVotesCountable(Int(option.voteCount))
             totalOptionVotes = totalOptionVotes.replacingOccurrences(of: "\(option.voteCount)", with: Int(option.voteCount).separatedNumber)
             
-            toolTip = option.voteCount == 0 ? L10n.chatPollTooltipNoVotes : totalOptionVotes
+            toolTip = option.voteCount == 0 ? (option.isQuiz ? L10n.chatQuizTooltipNoVotes : L10n.chatPollTooltipNoVotes) : totalOptionVotes
             
             progressView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5, frame.width - nameView.frame.minX - defaultInset, progressView.frame.height)
             progressView.set(progress: CGFloat(progress), animated: animated, duration: duration / 2)
