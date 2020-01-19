@@ -849,6 +849,7 @@
 		D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */; };
 		D0CD3095221970F8005D23DD /* FFMpegRemuxer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD3094221970F8005D23DD /* FFMpegRemuxer.m */; };
 		D0CD309822197E62005D23DD /* FFMpegGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD309722197E62005D23DD /* FFMpegGlobals.m */; };
+		D0D3CE6C23D465FA00864F3C /* PollResultStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE6B23D465FA00864F3C /* PollResultStickItem.swift */; };
 		D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */ = {isa = PBXBuildFile; fileRef = D0D71385227ADE9400EC88B1 /* maccheck.json */; };
 		D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D752C722F8A76100E2CB74 /* Geocoding.swift */; };
 		D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
@@ -1957,6 +1958,7 @@
 		D0CD3094221970F8005D23DD /* FFMpegRemuxer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegRemuxer.m; sourceTree = "<group>"; };
 		D0CD309622197E62005D23DD /* FFMpegGlobals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FFMpegGlobals.h; sourceTree = "<group>"; };
 		D0CD309722197E62005D23DD /* FFMpegGlobals.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FFMpegGlobals.m; sourceTree = "<group>"; };
+		D0D3CE6B23D465FA00864F3C /* PollResultStickItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultStickItem.swift; sourceTree = "<group>"; };
 		D0D71385227ADE9400EC88B1 /* maccheck.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = maccheck.json; sourceTree = "<group>"; };
 		D0D752C722F8A76100E2CB74 /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
@@ -2477,6 +2479,7 @@
 			isa = PBXGroup;
 			children = (
 				A72D7AE823C471A7005BAC59 /* PollResultController.swift */,
+				D0D3CE6B23D465FA00864F3C /* PollResultStickItem.swift */,
 			);
 			name = polls;
 			sourceTree = "<group>";
@@ -5461,6 +5464,7 @@
 				C2FD33EE1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift in Sources */,
 				D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */,
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
+				D0D3CE6C23D465FA00864F3C /* PollResultStickItem.swift in Sources */,
 				C2057FAA1EBC6A3C000423DC /* ChatCallRowItem.swift in Sources */,
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
 				C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */,
