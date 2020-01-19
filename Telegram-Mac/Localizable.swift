@@ -4193,6 +4193,8 @@ internal final class L10n {
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// Sorry, public polls can’t be forwarded to channels.
   internal static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
+  /// collapse
+  internal static var pollResultsCollapse: String  { return L10n.tr("Localizable", "PollResults.Collapse") }
   /// %d
   internal static func pollResultsLoadMoreCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_countable", p1)
