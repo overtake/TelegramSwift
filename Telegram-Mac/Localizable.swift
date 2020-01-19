@@ -1331,7 +1331,7 @@ internal final class L10n {
   }
   /// Stop Poll
   internal static var chatPollStop: String  { return L10n.tr("Localizable", "Chat.Poll.Stop") }
-  /// Submit Vote
+  /// Vote
   internal static var chatPollSubmitVote: String  { return L10n.tr("Localizable", "Chat.Poll.SubmitVote") }
   /// %d
   internal static func chatPollTotalVotes1Countable(_ p1: Int) -> String {
@@ -4163,31 +4163,33 @@ internal final class L10n {
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// Sorry, public polls can’t be forwarded to channels.
   internal static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
+  /// collapse
+  internal static var pollResultsCollapse: String  { return L10n.tr("Localizable", "PollResults.Collapse") }
   /// %d
   internal static func pollResultsLoadMoreCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_countable", p1)
   }
-  /// Show %d More
+  /// Show More (%d)
   internal static func pollResultsLoadMoreFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_few", p1)
   }
-  /// Show %d More
+  /// Show More (%d)
   internal static func pollResultsLoadMoreMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_many", p1)
   }
-  /// Show %d More
+  /// Show More (%d)
   internal static func pollResultsLoadMoreOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_one", p1)
   }
-  /// Show %d More
+  /// Show More (%d)
   internal static func pollResultsLoadMoreOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_other", p1)
   }
-  /// Show %d More
+  /// Show More (%d)
   internal static func pollResultsLoadMoreTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_two", p1)
   }
-  /// Show %d More
+  /// Show More (%d)
   internal static func pollResultsLoadMoreZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PollResults.LoadMore_zero", p1)
   }
