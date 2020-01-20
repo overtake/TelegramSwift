@@ -745,9 +745,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                     case let .modern(_, innerInsets):
                         let textX = innerInsets.left + item.textFieldLeftInset - 3
                         if item.realInputHeight <= 16 {
-                            textView._change(pos: NSMakePoint(textX, innerInsets.top - 8), animated: animated)
+                            textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                         } else {
-                            textView._change(pos: NSMakePoint(textX, innerInsets.top), animated: animated)
+                            textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                         }
                     }
                     
@@ -784,9 +784,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 case let .modern(_, innerInsets):
                     let textX = innerInsets.left + item.textFieldLeftInset - 3
                     if item.realInputHeight <= 16 {
-                        textView._change(pos: NSMakePoint(textX, innerInsets.top - 8), animated: animated)
+                        textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                     } else {
-                        textView._change(pos: NSMakePoint(textX, innerInsets.top), animated: animated)
+                        textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                     }
                 }
             }
@@ -818,9 +818,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             case let .modern(_, innerInsets):
                 let textX = innerInsets.left + item.textFieldLeftInset - 3
                 if item.realInputHeight <= 16 {
-                    textView._change(pos: NSMakePoint(textX, innerInsets.top - 8), animated: animated)
+                    textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                 } else {
-                    textView._change(pos: NSMakePoint(textX, innerInsets.top), animated: animated)
+                    textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                 }
             }
         }
