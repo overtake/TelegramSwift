@@ -1387,7 +1387,7 @@ internal final class L10n {
   internal static func chatPollTooltipVotesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_many", p1)
   }
-  /// %d vote
+  /// %d votes
   internal static func chatPollTooltipVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_one", p1)
   }
@@ -1461,33 +1461,33 @@ internal final class L10n {
   internal static var chatQuizStopConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Header") }
   /// If you stop this quiz now, nobody will be able to answer in it anymore. This action cannot be undone.
   internal static var chatQuizStopConfirmText: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Text") }
-  /// no answers
+  /// no votes
   internal static var chatQuizTooltipNoVotes: String  { return L10n.tr("Localizable", "Chat.Quiz.Tooltip.NoVotes") }
   /// %d
   internal static func chatQuizTooltipVotesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_countable", p1)
   }
-  /// %d answers
+  /// %d votes
   internal static func chatQuizTooltipVotesFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_few", p1)
   }
-  /// %d answers
+  /// %d votes
   internal static func chatQuizTooltipVotesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_many", p1)
   }
-  /// %d answer
+  /// %d votes
   internal static func chatQuizTooltipVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_one", p1)
   }
-  /// %d answers
+  /// %d votes
   internal static func chatQuizTooltipVotesOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_other", p1)
   }
-  /// %d answers
+  /// %d votes
   internal static func chatQuizTooltipVotesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_two", p1)
   }
-  /// %d answers
+  /// %d votes
   internal static func chatQuizTooltipVotesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_zero", p1)
   }
@@ -4193,7 +4193,7 @@ internal final class L10n {
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// Sorry, public polls can’t be forwarded to channels.
   internal static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
-  /// collapse
+  /// [collapse]()
   internal static var pollResultsCollapse: String  { return L10n.tr("Localizable", "PollResults.Collapse") }
   /// %d
   internal static func pollResultsLoadMoreCountable(_ p1: Int) -> String {

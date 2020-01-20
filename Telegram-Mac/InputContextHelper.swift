@@ -696,8 +696,8 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 genericView.separatorView.change(pos: NSMakePoint(0, frame.height - genericView.separatorView.frame.height), animated: animated)
             }
             
-            let y = genericView.position == .above ? relativeView.frame.minY - frame.height : relativeView.frame.maxY
-            genericView.change(pos: NSMakePoint(0, y), animated: animated)
+//            let y = genericView.position == .above ? relativeView.frame.minY - frame.height : relativeView.frame.maxY
+//            genericView.change(pos: NSMakePoint(0, y), animated: animated)
             
             CATransaction.commit()
         }
@@ -809,8 +809,9 @@ class InputContextHelper: NSObject {
                     controller.genericView.isHidden = false
                     controller.genericView.change(opacity: 1, animated: animated)
                     let y = position == .above ? relativeView.frame.minY - controller.frame.height : relativeView.frame.maxY
-                    controller.genericView.change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring)
-
+                    if y != controller.genericView.frame.minY {
+                        controller.genericView._change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, forceAnimateIfHasAnimation: true)
+                    }
                 }
                 
             } else if let controller = self?.controller, let relativeView = relativeView {
@@ -818,7 +819,7 @@ class InputContextHelper: NSObject {
                 controller?.viewWillDisappear(animated)
                 controller?.markAsNeedShown = false
                 if animated {
-                    controller?.genericView.change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, completion: { completed in
+                    controller?.genericView._change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, forceAnimateIfHasAnimation: true, completion: { completed in
                         if controller?.markAsNeedShown == false {
                             controller?.removeFromSuperview()
                             controller?.genericView.removeAll()
