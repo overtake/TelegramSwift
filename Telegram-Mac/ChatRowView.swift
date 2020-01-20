@@ -96,12 +96,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             return
         }
         let gradientRect = item.chatInteraction.getGradientOffsetRect()
-        let size = NSMakeSize(gradientRect.width, gradientRect.height + 30)
+        let size = NSMakeSize(gradientRect.width, gradientRect.height + 60)
         
         let inset = size.height - gradientRect.minY + (frame.height - bubbleFrame.maxY) - 30
-       // if visibleRect.height > 0 {
+        if visibleRect.height > 0 {
             bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
-      //  }
+        }
     }
     
     var selectableTextViews: [TextView] {

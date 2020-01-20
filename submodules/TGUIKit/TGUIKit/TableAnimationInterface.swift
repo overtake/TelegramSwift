@@ -38,7 +38,7 @@ open class TableAnimationInterface: NSObject {
             checkBelowAfter = true
         }
         
-        let range:NSRange = table.visibleRows(height)
+        var range:NSRange = table.visibleRows(height)
         
         let added = added.filter { item in
             if item.index < range.location || item.index > range.location + range.length {
@@ -63,6 +63,8 @@ open class TableAnimationInterface: NSObject {
         for item in removed {
             height -= item.height
         }
+        
+        range = table.visibleRows(height)
         
         if added.isEmpty && removed.isEmpty {
             return

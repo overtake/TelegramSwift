@@ -1941,7 +1941,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
-        return self.tableView.rows(in: NSMakeRect(self.documentOffset.x, self.documentOffset.y, self.frame.width, self.frame.height + insetHeight))
+        return self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
     }
     
     public var listHeight:CGFloat {

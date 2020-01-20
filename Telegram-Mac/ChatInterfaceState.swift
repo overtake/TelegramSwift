@@ -388,13 +388,13 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         
         
         for attr in localAttributes {
-            var newRange = NSMakeRange(attr.range.lowerBound - range.location, (attr.range.upperBound - attr.range.lowerBound) - range.location) //Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
+            var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound)) //Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
             for offsetRange in offsetRanges {
                 if offsetRange.0.max < newRange.location {
                     newRange.location -= offsetRange.1
                 }
             }
-            if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
+            //if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
                 switch attr {
                 case .bold:
                     attributes.append(.bold(newRange.min ..< newRange.max))
@@ -409,7 +409,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 case let .url(_, url):
                     attributes.append(.url(newRange.min ..< newRange.max, url))
                 }
-            }
+          //  }
         }
         
         return ChatTextInputState(inputText: appliedText, selectionRange: 0 ..< 0, attributes: attributes)
