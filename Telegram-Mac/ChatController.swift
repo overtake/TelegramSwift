@@ -1883,6 +1883,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let postId = postId {
                             strongSelf.chatInteraction.focusMessageId(nil, postId, TableScrollState.center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
                         }
+                        if let action = action {
+                            strongSelf.chatInteraction.update({ $0.updatedInitialAction(action) })
+                        }
                     } else {
                        strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
                     }
