@@ -915,9 +915,11 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                 }
                 
                 applyBlock(infoBlock)
+                if !infoBlock.isEmpty {
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                }
                 
-                entries.append(UserInfoEntry.section(sectionId: sectionId))
-                sectionId += 1
                 
                 
                
