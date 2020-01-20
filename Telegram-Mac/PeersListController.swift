@@ -561,35 +561,38 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     private func showSearchController(animated: Bool) {
         if searchController == nil {
-            let rect = genericView.tableView.frame
-            let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
-                if let peerId = peerId {
-                    self?.open(with: .chatId(peerId), messageId: messageId, close:close)
-                } else {
-                    self?.genericView.searchView.cancel(true)
-                }
-            }, options: searchOptions, frame:NSMakeRect(rect.minX, rect.minY, frame.width, rect.height))
-            
-            searchController.pinnedItems = collectPinnedItems
-           
-            self.searchController = searchController
-            self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
-                 self?.genericView.tableView.isHidden = true
-            })
-            searchController.navigationController = self.navigationController
-            searchController.viewWillAppear(true)
-            if animated {
-                searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
-                    if complete {
-                        self?.searchController?.viewDidAppear(animated)
+            delay(0.15, closure: {
+                let rect = self.genericView.tableView.frame
+                let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
+                    if let peerId = peerId {
+                        self?.open(with: .chatId(peerId), messageId: messageId, close:close)
+                    } else {
+                        self?.genericView.searchView.cancel(true)
                     }
+                    }, options: self.searchOptions, frame:NSMakeRect(rect.minX, rect.minY, self.frame.width, rect.height))
+                
+                searchController.pinnedItems = self.collectPinnedItems
+                
+                self.searchController = searchController
+                self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
+                    self?.genericView.tableView.isHidden = true
                 })
-            } else {
-                searchController.viewDidAppear(animated)
-            }
-            
-            
-            self.addSubview(searchController.view)
+                searchController.navigationController = self.navigationController
+                searchController.viewWillAppear(true)
+                
+                
+                
+                if animated {
+                    searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
+                        if complete {
+                            self?.searchController?.viewDidAppear(animated)
+                        }
+                    })
+                } else {
+                    searchController.viewDidAppear(animated)
+                }
+                self.addSubview(searchController.view)
+            })
         }
     }
     
