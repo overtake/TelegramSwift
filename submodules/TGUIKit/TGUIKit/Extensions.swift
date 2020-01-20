@@ -1490,11 +1490,8 @@ public extension String {
             if let index = russianQwerty.firstIndex(of: String(char)) {
                 english[i] = englishQwerty[index]
             }
-            if let index = englishQwerty.firstIndex(of: String(char)) {
-                russian[i] = russianQwerty[index]
-            }
         }
-        return [english.joined(), russian.joined()]
+        return [english.joined()]
     }
     
     func fromSuffix(_ by:Int) -> String {

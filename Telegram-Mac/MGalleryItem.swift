@@ -437,8 +437,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                         magnify.contentSize = size
                     }
                 } else {
-                    let size = magnify.contentSize
-                    magnify.contentSize = value.size ?? size
+                    var size = magnify.contentSize
+                    if let s = value.size, magnify.magnify == 1.0 {
+                        size = s
+                    }
+                    magnify.contentSize = size
                 }
             }
             first = false
