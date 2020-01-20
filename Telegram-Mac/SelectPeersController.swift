@@ -759,19 +759,30 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                         }
                     }
                     
-                    var common:[SelectPeerEntry] = []
+                    
                     
                     if entries.isEmpty {
-                        common.append(.searchEmpty)
+                        return .single([.searchEmpty])
                     } else {
-                        var index:Int32 = 0
-                        for peer in entries {
-                            common.append(.peer(SelectPeerValue(peer: peer, presence: nil, subscribers: nil), index, true))
-                            index += 1
+                        return context.account.postbox.transaction { transaction -> [SelectPeerEntry] in
+                            var common:[SelectPeerEntry] = []
+                            var index:Int32 = 0
+                            for value in entries {
+                                let cachedData = transaction.getPeerCachedData(peerId: value.id)
+                                let subscribers: Int?
+                                if let cachedData = cachedData as? CachedGroupData {
+                                    subscribers = cachedData.participants?.participants.count
+                                } else if let cachedData = cachedData as? CachedChannelData {
+                                    subscribers = Int(cachedData.participantsSummary.memberCount ?? 0)
+                                } else {
+                                    subscribers = nil
+                                }
+                                common.append(.peer(SelectPeerValue(peer: value, presence: nil, subscribers: subscribers), index, true))
+                                index += 1
+                            }
+                            return common
                         }
-                        
                     }
-                    return .single(common)
                 }
             } else {
                 return context.account.postbox.searchPeers(query: search.request.lowercased()) |> map {
