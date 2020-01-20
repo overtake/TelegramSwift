@@ -235,10 +235,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     public init() {
         super.init(frame: NSZeroRect)
         assertOnMainThread()
+        self.autoresizesSubviews = false
         self.wantsLayer = true
         acceptsTouchEvents = true
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-        self.autoresizesSubviews = false
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
        // self.layer?.delegate = self

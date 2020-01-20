@@ -22,7 +22,7 @@ class PollResultStickItem: TableStickItem {
         self._stableId = stableId
         self.inset = NSEdgeInsets(left: 30, right: 30)
         self.collapse = collapse
-        self.leftLayout = TextViewLayout(.initialize(string: left, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+        self.leftLayout = TextViewLayout(.initialize(string: left, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .middle, alignment: .center)
         
         if let collapse = collapse {
             
@@ -65,7 +65,7 @@ class PollResultStickItem: TableStickItem {
         rightLayout.measure(width: .greatestFiniteMagnitude)
         
         let blockWidth = min(600, width - inset.left - inset.right)
-        leftLayout.measure(width: blockWidth - rightLayout.layoutSize.width - viewType.innerInset.left * 2)
+        leftLayout.measure(width: blockWidth - rightLayout.layoutSize.width - viewType.innerInset.left * 3)
         
         return success
     }

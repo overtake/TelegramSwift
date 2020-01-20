@@ -105,8 +105,15 @@ class MGalleryPhotoItem: MGalleryItem {
                 return lhs == rhs
             })
             
+            
             let result = combineLatest(sizeValue, rotateValue) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
                 guard let `self` = self else {return .complete()}
+                
+                var size = size
+                if self.sizeValue.width > self.sizeValue.height && size.width < size.height
+                    || self.sizeValue.width < self.sizeValue.height && size.width > size.height {
+                    size = NSMakeSize(size.height, size.width)
+                }
                 
                 var newSize = self.smallestValue(for: size)
                 if let orientation = orientation {
