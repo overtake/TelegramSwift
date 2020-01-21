@@ -57,7 +57,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     @objc func invalidToken(_ notification:Notification) {
         if self.tokenRequestRetries < 3 {
-            let signal = self.context.get() |> take(1)
+            let signal = self.context.get() |> take(1) |> delay(1.0, queue: .mainQueue())
             |> mapToSignal { context -> Signal<Void, NoError> in
                 self.tokenRequestRetries += 1
                 if let context = context {

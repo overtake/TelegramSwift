@@ -668,10 +668,7 @@ class ChatListRowItem: TableRowItem {
         if let peerId = peerId {
             _ = (updatePeerGroupIdInteractively(postbox: self.context.account.postbox, peerId: peerId, groupId: id)
             |> mapToSignal {
-                Circles.updateSettings(postbox: self.context.account.postbox) { entry in
-                    entry.localInclusions[peerId] = id
-                    return entry
-                }
+                return Circles.addToCircle(postbox: self.context.account.postbox, network: self.context.account.network, peerId: peerId, groupId: id, userId: self.context.account.peerId)
             }).start()
             context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(id)
         }

@@ -4715,8 +4715,7 @@
 				TargetAttributes = {
 					C232EA901E1D07E700C4D38C = {
 						CreatedOnToolsVersion = 8.2;
-						DevelopmentTeam = WDEGJM2L33;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.Mac = {
 								enabled = 1;
@@ -5769,6 +5768,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
@@ -5833,8 +5833,10 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = WDEGJM2L33;
+				CURRENT_PROJECT_VERSION = 181000;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -5920,6 +5922,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = WDEGJM2L33;
 				ENABLE_BITCODE = NO;
@@ -5977,8 +5980,10 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = WDEGJM2L33;
+				CURRENT_PROJECT_VERSION = 181000;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6012,8 +6017,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEVELOPMENT_TEAM = WDEGJM2L33;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6045,6 +6051,7 @@
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEVELOPMENT_TEAM = WDEGJM2L33;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6130,6 +6137,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = WDEGJM2L33;
 				ENABLE_BITCODE = NO;
@@ -6187,8 +6195,10 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = WDEGJM2L33;
+				CURRENT_PROJECT_VERSION = 181000;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6280,6 +6290,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = WDEGJM2L33;
@@ -6341,8 +6352,10 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = WDEGJM2L33;
+				CURRENT_PROJECT_VERSION = 181000;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6485,6 +6498,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = WDEGJM2L33;
@@ -6554,10 +6568,11 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = NO;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 181000;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = WDEGJM2L33;

@@ -109,7 +109,7 @@ private func circlesControllerEntries(settings: Circles,
     
     entries.append(.group(groupId: Namespaces.PeerGroup.archive, title: "Archived", unread: 0))
     if settings.botPeerId != nil {
-        entries.append(.group(groupId: PeerGroupId(rawValue: 2), title: "New Circle", unread: 0))
+        entries.append(.group(groupId: PeerGroupId(rawValue: 2), title: "New", unread: 0))
     }
     return entries
 }
@@ -118,6 +118,8 @@ class CirclesRowView: TableRowView {
     private let titleTextView:TextView
     private let iconView:ImageView
     private var badgeView:View?
+    private var plus = CAShapeLayer()
+    private var dottedBorder = CAShapeLayer()
     
     required init(frame frameRect: NSRect) {
         iconView = ImageView(frame: NSMakeRect(16, 10, 48, 48))
@@ -156,19 +158,17 @@ class CirclesRowView: TableRowView {
                     maskLayer.frame = layer.bounds
                     maskLayer.contents = origImage
                     
-                    var plus = CAShapeLayer()
                     plus.frame = iconView.bounds
                     plus.backgroundColor = theme.colors.text.cgColor
                     plus.mask = maskLayer
                     layer.addSublayer(plus)
                     
-                    var border = CAShapeLayer()
-                    border.strokeColor = theme.colors.grayIcon.cgColor
-                    border.lineDashPattern = [5, 5]
-                    border.frame = iconView.bounds
-                    border.fillColor = nil
-                    border.path = NSBezierPath(roundedRect: iconView.bounds, xRadius: 10.0, yRadius: 10.0).cgPath
-                    layer.addSublayer(border)
+                    dottedBorder.strokeColor = theme.colors.grayIcon.cgColor
+                    dottedBorder.lineDashPattern = [5, 5]
+                    dottedBorder.frame = iconView.bounds
+                    dottedBorder.fillColor = nil
+                    dottedBorder.path = NSBezierPath(roundedRect: iconView.bounds, xRadius: 10.0, yRadius: 10.0).cgPath
+                    layer.addSublayer(dottedBorder)
                 }
                 
                 badgeView?.removeFromSuperview()
@@ -177,6 +177,8 @@ class CirclesRowView: TableRowView {
                 iconView.layer?.backgroundColor = NSColor.clear.cgColor
                 iconView.image = nil
             } else {
+                plus.removeFromSuperlayer()
+                dottedBorder.removeFromSuperlayer()
                 let icon:CGImage = {
                     switch item.groupId {
 
@@ -356,30 +358,26 @@ class CirclesController: TelegramGenericViewController<CirclesListView>, TableVi
         if let item = item as? CirclesRowItem {
             if item.groupId == PeerGroupId(rawValue: 2) {
                 
+                let modalController = NewCircleModalController(context)
                 
-                
-                
-                let signal = Circles.getSettings(postbox: self.context.account.postbox)
-                |> deliverOnMainQueue
-                |> mapToSignal { settings -> Signal<Never, NoError> in
-                    if let botId = settings.botPeerId {
-                        let controller = ChatController(context: self.context, chatLocation: .peer(botId))
-                        self.context.sharedContext.bindings.rootNavigation().push(controller)
-                        
-                        return controller.ready.get() |> filter {$0} |> take(1) |> ignoreValues
-                    }
-                    return .complete()
-                }
-                
-                signal.start()
+                showModal(with: modalController, for: mainWindow)
             } else {
-                let controller = ChatListController(context, modal: false, groupId: item.groupId)
-                //self.chatListNavigationController.stackInsert(controller, at: 0)
-                self.tabController.select(index: 2)
-                self.chatListNavigationController.empty = controller
-                self.chatListNavigationController.gotoEmpty(true)
+                (baseAppSettings(accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
+                    guard let `self` = self else {return}
+                    
+                    let chatTabIndex:Int
+                    if settings.showCallsTab {
+                        chatTabIndex = 2
+                    } else {
+                        chatTabIndex = 1
+                    }
+                    
+                    let controller = ChatListController(self.context, modal: false, groupId: item.groupId)
+                    self.tabController.select(index: chatTabIndex)
+                    self.chatListNavigationController.empty = controller
+                    self.chatListNavigationController.gotoEmpty(true)
+                })
             }
-
         }
         return
     }
@@ -560,5 +558,87 @@ func CirclesSettingsController(_ context: AccountContext) -> ViewController {
     
     return InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: "Circles", hasDone: false, identifier: "circles-settings")
     
+}
+
+
+
+private let _id_circle_name = InputDataIdentifier("_id_circle_name")
+private func newCircleModalEntries() -> [InputDataEntry] {
+    var entries: [InputDataEntry] = []
+    
+    var sectionId: Int32 = 0
+    var index: Int32 = 0
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("CIRCLE NAME"), color: theme.colors.text, detectBold: true))
+    index += 1
+    
+    entries.append(
+        InputDataEntry.input(
+            sectionId: sectionId,
+            index: index,
+            value: .none,
+            error: nil,
+            identifier: _id_circle_name,
+            mode: .plain,
+            placeholder: nil,
+            inputPlaceholder: "",
+            filter: { $0 },
+            limit: 255)
+    )
+    index += 1
+    return entries
+}
+func NewCircleModalController(_ context: AccountContext) -> InputDataModalController {
+
+    var name:String = ""
+    
+    let signal = Signal<[InputDataEntry], NoError> { subscriber in
+        subscriber.putNext(newCircleModalEntries())
+        subscriber.putCompletion()
+        return EmptyDisposable
+    }
+    
+    let controller = InputDataController(
+        dataSignal: signal |> map { InputDataSignalValue(entries: $0) },
+        title: "New circle",
+        validateData: { data in
+            return .none
+        }, updateDatas: { data in
+            if let value = data[_id_circle_name]?.stringValue {
+                name = value
+            }
+            return .none
+        }, returnKeyInvocation: { identifier, event in
+            let signal:Signal<Void, NoError> = Circles.getSettings(postbox: context.account.postbox) |> mapToSignal { settings in
+                if let botId = settings.botPeerId, name != "" {
+                    return standaloneSendMessage(account: context.account, peerId: botId, text: "/create "+name, attributes: [], media: nil, replyToMessageId: nil) |> `catch` {_ in return .complete()} |> map {_ in return Void()}
+                } else {
+                    return .single(Void())
+                }
+            }
+            _ = signal.start()
+            return .default
+        }
+    )
+    
+    var close: (() -> Void)? = nil
+    
+    let modalInteractions = ModalInteractions(acceptTitle: "Create", accept: { [weak controller] in
+        if name != "" {
+            _ = controller?.returnKeyAction()
+            close?()
+        }
+    }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
+    
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    close = { [weak modalController] in
+        modalController?.modal?.close()
+    }
+    
+    return modalController
 }
 

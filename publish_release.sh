@@ -1,7 +1,11 @@
-BUILD_DIR=/Users/sergeymihalenko/Library/Developer/Xcode/DerivedData/Telegram-Mac-guxmjwupseovsldwenuhhkcghcqt/Build/Products
-GITHUB_ACCESS_TOKEN="121acdaa8db499dec4c411182a79fdf143b4ffed"
+BUILD_DIR=
+GITHUB_ACCESS_TOKEN=
 BRANCH="circles"
 SCHEME="Circles for Telegram"
+USER=
+PASSWORD=
+TEAM="WDEGJM2L33"
+BUILD_PATH=
 
 read -p 'Version: ' VERSION
 
@@ -12,18 +16,11 @@ pandoc -f html -t markdown -i /tmp/release_notes.html -o /tmp/release_notes.md
 RELEASE_NOTES_MD=$(cat /tmp/release_notes.md)
 
 
-cp Telegram-Mac/Info.plist Telegram-Mac/Info.plist.prev
-echo "setting plist.info version to $VERSION"
-xmlstarlet ed -L -u '/plist/dict/key[text()="CFBundleShortVersionString"]/following-sibling::string[1]' -v $VERSION Telegram-Mac/Info.plist
-
-echo "building app..."
-xcodebuild -workspace Telegram-Mac.xcworkspace -scheme "$SCHEME"
-
 echo "archiving app..."
-ditto -c -k --sequesterRsrc --keepParent "$BUILD_DIR/DebugAppStore/$SCHEME.app" updates/circles-$VERSION.zip
+ditto -c -k --sequesterRsrc --keepParent "$BUILD_PATH/$SCHEME.app" updates/circles-$VERSION.zip
 
 echo "appcast and deltas generation..."
-$BUILD_DIR/Release/generate_appcast updates
+$BUILD_DIR/DebugAppStore/generate_appcast updates
 
 echo "fixing release download paths"
 xmlstarlet sel -t -m '/rss/channel/item/title' -v 'text()' -n updates/appcast.xml | while read version
