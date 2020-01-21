@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+  <channel>
+    <title>Circles for Telegram</title>
+    <item>
+      <description>&lt;ul&gt;
+&lt;li&gt;Codesigned release&lt;/li&gt;
+&lt;li&gt;Users without a message history will not be shown in circles&lt;/li&gt;
+&lt;li&gt;Proper "Show Calls Tab" setting handling&lt;/li&gt;
+&lt;li&gt;Circle creation trough plus button&lt;/li&gt;
+&lt;li&gt;Api calls on right click circles actions&lt;/li&gt;
+&lt;li&gt;Fixed bug when plus icon and dashed border was shown on circle button&lt;/li&gt;
+&lt;/ul&gt;</description>
+      <title>v0.0.31</title>
+      <pubDate>Tue, 21 Jan 2020 12:41:17 +0300</pubDate>
+      <sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/Shimbo/TelegramSwift/releases/download/v0.0.31/circles-v0.0.31.zip" sparkle:version="181253" sparkle:shortVersionString="v0.0.31" length="39898614" type="application/octet-stream" sparkle:edSignature="NbFS8bcCSlkHjLrrrBUzhHJwfJmII1gEeyfJQCJoySTMWYG0zJWKXTGsaxIIH8fuJDyfif1U/+oz/QuigRSJBw=="/>
+    </item>
+  </channel>
+</rss>
