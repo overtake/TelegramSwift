@@ -266,7 +266,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         forwardName?.backgroundColor = contentColor
         captionView?.backgroundColor = contentColor
         replyMarkupView?.backgroundColor = backdorColor
-        
+        bubbleView.background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
+
         for view in contentView.subviews {
             if let view = view as? View {
                 view.backgroundColor = contentColor
@@ -1045,11 +1046,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
             bubbleView.setType(image: item.bubbleImage, border: item.bubbleBorderImage, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
-            bubbleView.background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
-           // updateBackground(animated: animated, item: item)
         } else {
             bubbleView.setType(image: nil, border: nil, background: item.isIncoming ? item.presentation.icons.chatGradientBubble_incoming : item.presentation.icons.chatGradientBubble_outgoing)
-            bubbleView.background = .clear
         }
     }
     

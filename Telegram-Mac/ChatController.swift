@@ -4307,7 +4307,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds {
                 let signal = (context.account.postbox.messagesAtIds(value.interfaceState.forwardMessageIds)) |> deliverOnMainQueue
                 forwardMessagesDisposable.set(signal.start(next: { [weak self] messages in
-                    self?.chatInteraction.update({
+                    self?.chatInteraction.update(animated: animated, {
                         $0.updatedInterfaceState {
                             $0.withUpdatedForwardMessages(messages)
                         }

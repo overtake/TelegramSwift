@@ -448,8 +448,17 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 } else {
                     var size = magnify.contentSize
                     if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem {
-                       // if rotation == .left || rotation == .right {
+                      //  if magnify.magnify > 1 {
+                        if value.rotation == nil {
+                            size = value.size?.aspectFilled(size) ?? size
+                        } else {
                             size = value.size ?? size
+                        }
+                       // } else {
+                         //   size = value.size ?? size
+                       // }
+                       // if rotation == .left || rotation == .right {
+                           // size = value.size ?? size
                       //  }
                     }
                     magnify.contentSize = size
