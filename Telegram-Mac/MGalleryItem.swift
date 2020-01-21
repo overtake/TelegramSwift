@@ -15,12 +15,12 @@ import TGUIKit
 
 
 enum GPreviewValue {
-    case image(NSImage?)
+    case image(NSImage?, ImageOrientation?)
     case view(NSView?)
     
     var hasValue: Bool {
         switch self {
-        case let .image(img):
+        case let .image(img, _):
             return img != nil
         case let .view(view):
             return view != nil
@@ -28,16 +28,25 @@ enum GPreviewValue {
     }
     var size: NSSize? {
         switch self {
-        case let .image(img):
+        case let .image(img, _):
             return img?.size
         case let .view(view):
             return view?.frame.size
         }
     }
     
+    var rotation: ImageOrientation? {
+        switch self {
+        case let .image(_, rotation):
+            return rotation
+        case .view:
+            return nil
+        }
+    }
+    
     var image: NSImage? {
         switch self {
-        case let .image(img):
+        case let .image(img, _):
             return img
         case .view:
             return nil
@@ -438,8 +447,10 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                     }
                 } else {
                     var size = magnify.contentSize
-                    if let s = value.size, magnify.magnify == 1.0 {
-                        size = s
+                    if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem {
+                       // if rotation == .left || rotation == .right {
+                            size = value.size ?? size
+                      //  }
                     }
                     magnify.contentSize = size
                 }

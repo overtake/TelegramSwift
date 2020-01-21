@@ -90,7 +90,7 @@ class MGalleryGIFItem: MGalleryItem {
             return .never()
         })
 
-        self.image.set(result |> map { .image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil) } |> deliverOnMainQueue)
+        self.image.set(result |> map { .image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil, nil) } |> deliverOnMainQueue)
     
         fetch()
     }

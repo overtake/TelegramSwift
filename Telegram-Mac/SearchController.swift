@@ -980,7 +980,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         if let item = item as? ChatListMessageRowItem {
             peer = item.peer
             messageId = item.message?.id
-            peerId = item.message!.id.peerId
+            peerId = item.peer?.id
         } else if let item = item as? ShortPeerRowItem {
             if let stableId = item.stableId.base as? ChatListSearchEntryStableId {
                 switch stableId {

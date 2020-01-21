@@ -123,20 +123,20 @@ class MGalleryPhotoItem: MGalleryItem {
                 }
                 return .single((newSize, orientation))
                 
-            } |> mapToSignal { size, orientation -> Signal<NSImage?, NoError> in
+            } |> mapToSignal { size, orientation -> Signal<(NSImage?, ImageOrientation?), NoError> in
                     return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
                         |> map { transform in
                             let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                             if let orientation = orientation {
                                 let transformed = image?.createMatchingBackingDataWithImage(orienation: orientation)
                                 if let transformed = transformed {
-                                    return NSImage(cgImage: transformed, size: transformed.size)
+                                    return (NSImage(cgImage: transformed, size: transformed.size), orientation)
                                 }
                             }
                             if let image = image {
-                                return NSImage(cgImage: image, size: image.size)
+                                return (NSImage(cgImage: image, size: image.size), orientation)
                             } else {
-                                return nil
+                                return (nil, orientation)
                             }
                     }
             }
@@ -148,7 +148,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 return .never()
             })
             
-            self.image.set(result |> map { .image($0) } |> deliverOnMainQueue)
+            self.image.set(result |> map { .image($0.0, $0.1) } |> deliverOnMainQueue)
             
             
             fetch()

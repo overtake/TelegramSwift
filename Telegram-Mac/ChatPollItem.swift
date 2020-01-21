@@ -359,7 +359,11 @@ class ChatPollItem: ChatRowItem {
     
     var actionButtonText: String? {
         if poll.isClosed {
-            return nil
+            if poll.publicity != .anonymous {
+                return L10n.chatPollViewResults
+            } else {
+                return nil
+            }
         }
         let hasSelected = options.contains(where: { $0.isSelected })
         if poll.isMultiple {
@@ -580,7 +584,7 @@ class ChatPollItem: ChatRowItem {
             }
             chatInteraction.vote(message.id, identifiers, !self.poll.isMultiple)
         } else {
-            if self.options.contains(where: { $0.isSelected }), self.poll.publicity == .public {
+            if self.options.contains(where: { $0.isSelected }) || self.poll.isClosed, self.poll.publicity == .public {
                 guard let message = message else {
                     return
                 }

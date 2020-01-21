@@ -777,7 +777,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             if let oldView = from(item.stableId), let oldWindow = oldView.window, let oldScreen = oldWindow.screen {
                 selectedView.isHidden = true
                 
-                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
+                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
                     
                     if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame, let oldView = oldView {
                         let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset: contentInset)
@@ -838,7 +838,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let newView:NSView //
 
         switch contents {
-        case let .image(contents):
+        case let .image(contents, _):
             newView = NSView(frame: newRect)
             newView.wantsLayer = true
             newView.layer?.contents = contents
@@ -905,7 +905,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 newRect.origin = newRect.origin.offsetBy(dx: -screen.frame.minX, dy: -screen.frame.minY)
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
-                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil)))).start(next: { [weak self] value in
+                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self] value in
                     self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: value, oldView: oldView, completion: {
                         completion?((true, item.stableId))
                     }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)

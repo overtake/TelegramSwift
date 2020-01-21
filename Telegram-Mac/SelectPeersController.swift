@@ -188,13 +188,15 @@ struct SelectPeerValue : Equatable {
         return true
     }
     
-    func status(_ context: AccountContext) -> (String, NSColor) {
+    func status(_ context: AccountContext) -> (String?, NSColor) {
         var color:NSColor = theme.colors.grayText
         var string:String = L10n.peerStatusLongTimeAgo
         
         if let count = subscribers, peer.isGroup || peer.isSupergroup {
             let countValue = L10n.privacySettingsGroupMembersCountCountable(count)
             string = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
+        } else if peer.isGroup || peer.isSupergroup {
+            return (nil, color)
         } else if let presence = presence as? TelegramUserPresence {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
             (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
@@ -764,24 +766,13 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                     if entries.isEmpty {
                         return .single([.searchEmpty])
                     } else {
-                        return context.account.postbox.transaction { transaction -> [SelectPeerEntry] in
-                            var common:[SelectPeerEntry] = []
-                            var index:Int32 = 0
-                            for value in entries {
-                                let cachedData = transaction.getPeerCachedData(peerId: value.id)
-                                let subscribers: Int?
-                                if let cachedData = cachedData as? CachedGroupData {
-                                    subscribers = cachedData.participants?.participants.count
-                                } else if let cachedData = cachedData as? CachedChannelData {
-                                    subscribers = Int(cachedData.participantsSummary.memberCount ?? 0)
-                                } else {
-                                    subscribers = nil
-                                }
-                                common.append(.peer(SelectPeerValue(peer: value, presence: nil, subscribers: subscribers), index, true))
-                                index += 1
-                            }
-                            return common
+                        var common:[SelectPeerEntry] = []
+                        var index:Int32 = 0
+                        for value in entries {
+                            common.append(.peer(SelectPeerValue(peer: value, presence: nil, subscribers: nil), index, true))
+                            index += 1
                         }
+                        return .single(common)
                     }
                 }
             } else {

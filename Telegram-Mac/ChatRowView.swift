@@ -811,13 +811,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if scamButton == nil {
                 scamButton = ImageButton()
                 scamButton?.autohighlight = false
-                scamButton?.setFrameSize(theme.icons.scam.backingSize)
+                scamButton?.setFrameSize(item.presentation.icons.chatScam.backingSize)
                 rowView.addSubview(scamButton!)
                 scamButton?.set(handler: { control in
                     tooltip(for: control, text: L10n.peerInfoScamWarning)
                 }, for: .Click)
             }
-            scamButton?.set(image: theme.icons.chatScam, for: .Normal)
+            scamButton?.set(image: item.presentation.icons.chatScam, for: .Normal)
             
         } else {
             scamButton?.removeFromSuperview()
@@ -830,13 +830,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if scamForwardButton == nil {
                 scamForwardButton = ImageButton()
                 scamForwardButton?.autohighlight = false
-                scamForwardButton?.setFrameSize(theme.icons.scam.backingSize)
+                scamForwardButton?.setFrameSize(item.presentation.icons.chatScam.backingSize)
                 rowView.addSubview(scamForwardButton!)
                 scamForwardButton?.set(handler: { control in
                     tooltip(for: control, text: L10n.peerInfoScamWarning)
                 }, for: .Click)
             }
-            scamForwardButton?.set(image: theme.icons.chatScam, for: .Normal)
+            scamForwardButton?.set(image: item.presentation.icons.chatScam, for: .Normal)
             
         } else {
             scamForwardButton?.removeFromSuperview()

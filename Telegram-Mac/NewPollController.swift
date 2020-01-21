@@ -314,20 +314,22 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     sectionId += 1
 
     
-    if canBePublic {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: .firstItem, justUpdate: arc4random64(), action: {
-            updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
-        })))
-        index += 1
-    }
-
     
     var hideMultiple: Bool = false
     var hideQuiz: Bool = false
     if let isQuiz = state.isQuiz {
         hideMultiple = isQuiz
-        hideQuiz = !isQuiz
+        hideQuiz = true
     }
+    
+    if canBePublic {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: hideQuiz && hideMultiple ? .singleItem : .firstItem, justUpdate: arc4random64(), action: {
+            updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
+        })))
+        index += 1
+    }
+    
+    
     
     if !hideMultiple {
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: canBePublic ? hideQuiz ? .lastItem : .innerItem : hideQuiz ? .lastItem : .firstItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {

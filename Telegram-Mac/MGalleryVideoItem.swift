@@ -191,7 +191,7 @@ class MGalleryVideoItem: MGalleryItem {
             return .never()
         })
         
-        self.image.set(media.previewRepresentations.isEmpty ? .single(.image(nil)) |> deliverOnMainQueue : result |> map { .image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil) } |> deliverOnMainQueue)
+        self.image.set(media.previewRepresentations.isEmpty ? .single(.image(nil, nil)) |> deliverOnMainQueue : result |> map { .image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil, nil) } |> deliverOnMainQueue)
         
         fetch()
     }
