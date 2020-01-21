@@ -450,7 +450,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                     if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem {
                       //  if magnify.magnify > 1 {
                         if value.rotation == nil {
-                            size = value.size?.aspectFilled(size) ?? size
+                            size = value.size?.aspectFitted(size) ?? size
                         } else {
                             size = value.size ?? size
                         }
