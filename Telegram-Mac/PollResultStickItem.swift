@@ -12,20 +12,21 @@ import TGUIKit
 class PollResultStickItem: TableStickItem {
     
     let leftLayout:TextViewLayout
+    let leftAdditionLayout: TextViewLayout
     let rightLayout: TextViewLayout
     let viewType: GeneralViewType
     let inset: NSEdgeInsets
     let collapse: (()->Void)?
     let _stableId: AnyHashable
-    init(_ initialSize:NSSize, stableId: AnyHashable, left: String, right: String, collapse: (()->Void)?, viewType: GeneralViewType) {
+    init(_ initialSize:NSSize, stableId: AnyHashable, left: String, additionText: String, right: String, collapse: (()->Void)?, viewType: GeneralViewType) {
         self.viewType = viewType
         self._stableId = stableId
         self.inset = NSEdgeInsets(left: 30, right: 30)
         self.collapse = collapse
-        self.leftLayout = TextViewLayout(.initialize(string: left, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .middle, alignment: .center)
-        
+        self.leftLayout = TextViewLayout(.initialize(string: left, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end)
+        self.leftAdditionLayout = TextViewLayout(.initialize(string: additionText, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end)
+
         if let collapse = collapse {
-            
             let attrs = parseMarkdownIntoAttributedString(L10n.pollResultsCollapse, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(11.5), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.link), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  { _ in }))
             }))
@@ -54,6 +55,7 @@ class PollResultStickItem: TableStickItem {
         self.viewType = .legacy
         self.leftLayout = TextViewLayout(NSAttributedString())
         self.rightLayout = TextViewLayout(NSAttributedString())
+        self.leftAdditionLayout = TextViewLayout(NSAttributedString())
         self.inset = NSEdgeInsets(left: 30, right: 30)
         self.collapse = nil
         self._stableId = arc4random()
@@ -63,9 +65,10 @@ class PollResultStickItem: TableStickItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
         rightLayout.measure(width: .greatestFiniteMagnitude)
+        leftAdditionLayout.measure(width: .greatestFiniteMagnitude)
         
         let blockWidth = min(600, width - inset.left - inset.right)
-        leftLayout.measure(width: blockWidth - rightLayout.layoutSize.width - viewType.innerInset.left * 3)
+        leftLayout.measure(width: blockWidth - rightLayout.layoutSize.width - viewType.innerInset.left * 3 - leftAdditionLayout.layoutSize.width)
         
         return success
     }
@@ -88,6 +91,8 @@ class PollResultStickItem: TableStickItem {
 private final class PollResultStickView : TableStickView {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let textView = TextView()
+    private let textAdditionView = TextView()
+
     private let rightView = TextView()
     
     required init(frame frameRect: NSRect) {
@@ -95,10 +100,14 @@ private final class PollResultStickView : TableStickView {
         addSubview(self.containerView)
         containerView.addSubview(self.textView)
         containerView.addSubview(self.rightView)
+        containerView.addSubview(self.textAdditionView)
         self.textView.disableBackgroundDrawing = true
         self.textView.isSelectable = false
         self.textView.userInteractionEnabled = false
         
+        self.textAdditionView.disableBackgroundDrawing = true
+        self.textAdditionView.isSelectable = false
+        self.textAdditionView.userInteractionEnabled = false
         
         self.rightView.disableBackgroundDrawing = true
         self.rightView.isSelectable = false
@@ -136,6 +145,7 @@ private final class PollResultStickView : TableStickView {
         self.containerView.setCorners([])
         
         textView.centerY(x: item.viewType.innerInset.left)
+        textAdditionView.centerY(x: textView.frame.maxX)
         rightView.centerY(x: self.containerView.frame.width - item.viewType.innerInset.left - rightView.frame.width)
     }
     
@@ -146,6 +156,7 @@ private final class PollResultStickView : TableStickView {
             return
         }
         self.textView.update(item.leftLayout)
+        self.textAdditionView.update(item.leftAdditionLayout)
         self.rightView.update(item.rightLayout)
 
         needsLayout = true

@@ -136,8 +136,8 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 sectionId += 1
             }
             
-            let text = "\(option.option.text) — \(option.percent) %"
-            
+            let text = option.option.text
+            let additionText:String = " — \(option.percent)%"
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_header(option.option.opaqueIdentifier), equatable: InputDataEquatable(state), item: { initialSize, stableId in
                 
                 let collapse:(()->Void)?
@@ -149,7 +149,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                     collapse = nil
                 }
                 
-                return PollResultStickItem(initialSize, stableId: stableId, left: text, right: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(option.votesCount) : L10n.chatPollTotalVotes1Countable(option.votesCount), collapse: collapse, viewType: .textTopItem)
+                return PollResultStickItem(initialSize, stableId: stableId, left: text, additionText: additionText, right: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(option.votesCount) : L10n.chatPollTotalVotes1Countable(option.votesCount), collapse: collapse, viewType: .textTopItem)
                 
             }))
             index += 1
