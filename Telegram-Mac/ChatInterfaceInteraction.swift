@@ -348,7 +348,7 @@ final class ChatInteraction : InterfaceObserver  {
                         if same {
                             strongSelf.updateInput(with: text)
                         } else {
-                            if let peer = keyboardMessage.inlinePeer {
+                            if let peer = keyboardMessage.inlinePeer ?? keyboardMessage.effectiveAuthor {
                                 strongSelf.context.sharedContext.bindings.rootNavigation().set(modalAction: ShareInlineResultNavigationAction(payload: text, botName: peer.displayTitle), strongSelf.context.sharedContext.layout != .single)
                                 if strongSelf.context.sharedContext.layout == .single {
                                     strongSelf.context.sharedContext.bindings.rootNavigation().push(ForwardChatListController(strongSelf.context))
@@ -357,7 +357,7 @@ final class ChatInteraction : InterfaceObserver  {
                             
                         }
                     case .payment:
-                        alert(for: mainWindow, info: tr(L10n.paymentsUnsupported))
+                        alert(for: strongSelf.context.window, info: L10n.paymentsUnsupported)
                     case let .urlAuth(url, buttonId):
                         let context = strongSelf.context
                         _ = showModalProgress(signal: requestMessageActionUrlAuth(account: strongSelf.context.account, messageId: keyboardMessage.id, buttonId: buttonId), for: context.window).start(next: { result in
