@@ -744,8 +744,10 @@ class ChatMessageItem: ChatRowItem {
             if let index = index {
                 let index = min(index, items.count)
                 items.insert(ContextMenuItem(L10n.textCopyText, handler: { [weak self] in
-                    if let string = self?.textLayout.attributedString.string {
-                        copyToClipboard(string)
+                    if let string = self?.textLayout.attributedString {
+                        if !globalLinkExecutor.copyAttributedString(string) {
+                            copyToClipboard(string.string)
+                        }
                     }
                 }), at: index)
             }

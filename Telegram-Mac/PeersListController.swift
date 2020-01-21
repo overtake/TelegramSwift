@@ -530,6 +530,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }, { [weak self] state in
             guard let `self` = self else {return}
             self.searchController?.request(with: state.request)
+        }, responderModified: { [weak self] state in
+            self?.context.isInGlobalSearch = state.responder
         })
         
         

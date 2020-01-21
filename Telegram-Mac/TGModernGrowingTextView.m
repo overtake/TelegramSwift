@@ -291,7 +291,12 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)boldWord:(id)sender {
-    [self changeFontMarkdown:[NSFontManager.sharedFontManager convertFont:self.font toHaveTrait:NSBoldFontMask] makeBold:YES makeItalic:NO];
+    
+    NSRange effectiveRange;
+    NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
+
+    
+    [self changeFontMarkdown:[NSFontManager.sharedFontManager convertFont:effectiveFont toHaveTrait:NSBoldFontMask] makeBold:YES makeItalic:NO];
 
    // [self.textStorage addAttribute:NSFontAttributeName value:[NSFont boldSystemFontOfSize:self.font.pointSize] range:self.selectedRange];
    // [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
@@ -310,12 +315,17 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)italicWord:(id)sender {
-    [self changeFontMarkdown:[[NSFontManager sharedFontManager] convertFont:self.font toHaveTrait:NSFontItalicTrait] makeBold:NO makeItalic:YES];
+    
+    NSRange effectiveRange;
+    NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
+    
+    [self changeFontMarkdown:[[NSFontManager sharedFontManager] convertFont:effectiveFont toHaveTrait:NSFontItalicTrait] makeBold:NO makeItalic:YES];
     
 //    [self.textStorage addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:[NSFont systemFontOfSize:13] toHaveTrait:NSFontItalicTrait] range:self.selectedRange];
 //    [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
     
 }
+
 
 -(void)codeWord:(id)sender {
     [self changeFontMarkdown:[NSFont fontWithName:@"Menlo-Regular" size:self.font.pointSize] makeBold:NO makeItalic:NO];
