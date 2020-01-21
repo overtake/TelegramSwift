@@ -47,7 +47,8 @@ class ChatMapContentView: ChatMediaContentView {
     }
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
-        var mediaUpdated = true
+        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
+        var mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || versionUpdated
         iconView.image = theme.icons.chatMapPin
         iconView.sizeToFit()
 
@@ -99,7 +100,7 @@ class ChatMapContentView: ChatMediaContentView {
             imageView.setSignal(signal: cachedMedia(media: media, arguments: parameters.arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
             mediaUpdated = mediaUpdated && !self.imageView.hasImage
             
-            imageView.setSignal( chatWebpageSnippetPhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: parameters.image) : ImageMediaReference.standalone(media: parameters.image), scale: backingScaleFactor, small: parameters.isVenue), animate: mediaUpdated, cacheImage: { [weak media] result in
+            imageView.setSignal( chatWebpageSnippetPhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: parameters.image) : ImageMediaReference.standalone(media: parameters.image), scale: backingScaleFactor, small: parameters.isVenue), clearInstantly: mediaUpdated, animate: mediaUpdated, cacheImage: { [weak media] result in
                 if let media = media {
                     cacheMedia(result, media: media, arguments: parameters.arguments, scale: System.backingScale, positionFlags: positionFlags)
                 }

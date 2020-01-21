@@ -561,7 +561,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     private func showSearchController(animated: Bool) {
         if searchController == nil {
-            delay(0.15, closure: {
+            delay(0.1, closure: {
                 let rect = self.genericView.tableView.frame
                 let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
                     if let peerId = peerId {

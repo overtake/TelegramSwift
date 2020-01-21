@@ -170,10 +170,6 @@ class ShareViewController: NSViewController {
                 }
             })
         
-
-        
-      
-        
     }
 
 }

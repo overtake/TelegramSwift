@@ -73,7 +73,7 @@ public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGConte
     return image
 }
 
-public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = nil, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
+public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = 2.0, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
     let selectedScale = scale ?? System.backingScale
     let scaledSize = CGSize(width: size.width * selectedScale, height: size.height * selectedScale)
     let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
