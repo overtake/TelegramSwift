@@ -250,7 +250,7 @@ final class TelegramChatColors {
     }
     
     func backgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? .clear : .clear : palette.chatBackground
+        return bubbled ? incoming ? System.supportsTransparentFontDrawing ? .clear : palette.bubbleBackground_incoming : System.supportsTransparentFontDrawing ?  .clear : palette.bubbleBackgroundTop_outgoing.blended(withFraction: 0.5, of: palette.bubbleBackgroundBottom_outgoing)! : palette.chatBackground
     }
     
     func backgoundSelectedColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
