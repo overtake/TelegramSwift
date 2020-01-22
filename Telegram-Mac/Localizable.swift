@@ -1145,6 +1145,8 @@ internal final class L10n {
   internal static var chatConfirmReportSpamChannel: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam.Channel") }
   /// Report Spam and leave group?
   internal static var chatConfirmReportSpamGroup: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam.Group") }
+  /// Report Spam
+  internal static var chatConfirmReportSpamHeader: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam.Header") }
   /// Unpin message
   internal static var chatConfirmUnpinHeader: String  { return L10n.tr("Localizable", "Chat.Confirm.Unpin.Header") }
   /// Unpin
@@ -1387,7 +1389,7 @@ internal final class L10n {
   internal static func chatPollTooltipVotesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_many", p1)
   }
-  /// %d votes
+  /// %d vote
   internal static func chatPollTooltipVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Tooltip.Votes_one", p1)
   }
@@ -1461,33 +1463,33 @@ internal final class L10n {
   internal static var chatQuizStopConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Header") }
   /// If you stop this quiz now, nobody will be able to answer in it anymore. This action cannot be undone.
   internal static var chatQuizStopConfirmText: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop.Confirm.Text") }
-  /// no votes
+  /// no answers
   internal static var chatQuizTooltipNoVotes: String  { return L10n.tr("Localizable", "Chat.Quiz.Tooltip.NoVotes") }
   /// %d
   internal static func chatQuizTooltipVotesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_countable", p1)
   }
-  /// %d votes
+  /// %d answers
   internal static func chatQuizTooltipVotesFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_few", p1)
   }
-  /// %d votes
+  /// %d answers
   internal static func chatQuizTooltipVotesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_many", p1)
   }
-  /// %d votes
+  /// %d answer
   internal static func chatQuizTooltipVotesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_one", p1)
   }
-  /// %d votes
+  /// %d answers
   internal static func chatQuizTooltipVotesOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_other", p1)
   }
-  /// %d votes
+  /// %d answers
   internal static func chatQuizTooltipVotesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_two", p1)
   }
-  /// %d votes
+  /// %d answers
   internal static func chatQuizTooltipVotesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_zero", p1)
   }
@@ -3369,7 +3371,7 @@ internal final class L10n {
   internal static func newContactPhoneHiddenText(_ p1: String) -> String {
     return L10n.tr("Localizable", "NewContact.Phone.Hidden.Text", p1)
   }
-  /// Anonymous Votes
+  /// Anonymous Voting
   internal static var newPollAnonymous: String  { return L10n.tr("Localizable", "NewPoll.Anonymous") }
   /// Are you sure you want to discard this poll?
   internal static var newPollDisacardConfirm: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm") }
@@ -4193,7 +4195,7 @@ internal final class L10n {
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// Sorry, public polls can’t be forwarded to channels.
   internal static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
-  /// [collapse]()
+  /// [Collapse]()
   internal static var pollResultsCollapse: String  { return L10n.tr("Localizable", "PollResults.Collapse") }
   /// %d
   internal static func pollResultsLoadMoreCountable(_ p1: Int) -> String {

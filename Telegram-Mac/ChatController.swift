@@ -457,7 +457,6 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             state = .none
         }
-        
         CATransaction.begin()
         header.updateState(state, animated: animated, for: self)
         
@@ -1717,28 +1716,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         chatInteraction.blockContact = { [weak self] in
             if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.mainPeer {
-                let options: [ModalOptionSet] = [ModalOptionSet(title: L10n.blockContactOptionsReport, selected: true, editable: true), ModalOptionSet(title: L10n.blockContactOptionsDeleteChat, selected: true, editable: true)]
-                
-                showModal(with: ModalOptionSetController(context: chatInteraction.context, options: options, actionText: (L10n.blockContactOptionsAction(peer.compactDisplayTitle), theme.colors.redUI), desc: L10n.blockContactTitle(peer.compactDisplayTitle), title: L10n.blockContactOptionsTitle, result: { result in
+                if peer.isUser || peer.isBot {
+                    let options: [ModalOptionSet] = [ModalOptionSet(title: L10n.blockContactOptionsReport, selected: true, editable: true), ModalOptionSet(title: L10n.blockContactOptionsDeleteChat, selected: true, editable: true)]
                     
-                    var signals:[Signal<Never, NoError>] = []
-                    
-                    signals.append(context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() })
-                    
-                    if result[1] == .selected {
-                        signals.append(removePeerChat(account: context.account, peerId: chatInteraction.peerId, reportChatSpam: result[0] == .selected) |> ignoreValues)
-                    } else if result[0] == .selected {
-                        signals.append(reportPeer(account: context.account, peerId: peer.id) |> ignoreValues)
-                    }
-                    let closeChat = result[1] == .selected
-                    
-                    _ = showModalProgress(signal: combineLatest(signals), for: context.window).start(completed: {
-                        if closeChat {
-                            context.sharedContext.bindings.rootNavigation().back()
+                    showModal(with: ModalOptionSetController(context: chatInteraction.context, options: options, actionText: (L10n.blockContactOptionsAction(peer.compactDisplayTitle), theme.colors.redUI), desc: L10n.blockContactTitle(peer.compactDisplayTitle), title: L10n.blockContactOptionsTitle, result: { result in
+                        
+                        var signals:[Signal<Never, NoError>] = []
+                        
+                        signals.append(context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() })
+                        
+                        if result[1] == .selected {
+                            signals.append(removePeerChat(account: context.account, peerId: chatInteraction.peerId, reportChatSpam: result[0] == .selected) |> ignoreValues)
+                        } else if result[0] == .selected {
+                            signals.append(reportPeer(account: context.account, peerId: peer.id) |> ignoreValues)
                         }
-                    })
-                    
-                }), for: context.window)
+                        let closeChat = result[1] == .selected
+                        
+                        _ = showModalProgress(signal: combineLatest(signals), for: context.window).start(completed: {
+                            if closeChat {
+                                context.sharedContext.bindings.rootNavigation().back()
+                            }
+                        })
+                        
+                    }), for: context.window)
+                } else {
+                    chatInteraction.reportSpamAndClose()
+                }
+               
             }
             
         }
@@ -2581,7 +2585,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     title = L10n.chatConfirmReportSpam
                 }
                 
-                strongSelf.reportPeerDisposable.set((confirmSignal(for: context.window, header: appName, information: title, okTitle: L10n.messageContextReport, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ in
+                strongSelf.reportPeerDisposable.set((confirmSignal(for: context.window, header: L10n.chatConfirmReportSpamHeader, information: title, okTitle: L10n.messageContextReport, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ in
                     return reportPeer(account: context.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
                         if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
                             if peer.id.namespace == Namespaces.Peer.CloudUser {

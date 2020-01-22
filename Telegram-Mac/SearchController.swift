@@ -1070,7 +1070,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         marked = true
         
         if let peerId = peerId {
-            self.open(peerId, messageId, self.closeNext)
+            self.open(peerId, messageId, self.closeNext || messageId == nil)
         }
         
     }
