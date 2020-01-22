@@ -359,6 +359,9 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         
         entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
+    } else if state.isQuiz == true {
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
     }
    
     

@@ -203,7 +203,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         let bundleId = Bundle.main.bundleIdentifier
         if let bundleId = bundleId {
             LSSetDefaultHandlerForURLScheme("tg" as CFString, bundleId as CFString)
-            LSSetDefaultHandlerForURLScheme("ton" as CFString, bundleId as CFString)
         }
         
         

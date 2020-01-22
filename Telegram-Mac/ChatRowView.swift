@@ -100,7 +100,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         let inset = size.height - gradientRect.minY + (frame.height - bubbleFrame.maxY) - 30
         if visibleRect.height > 0 {
-            bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
+            bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: false, rotated: rotated)
         }
     }
     

@@ -600,7 +600,7 @@ class ChatMessageItem: ChatRowItem {
             if contentOffset.x + textLayout.layoutSize.width - (rightSize.width + insetBetweenContentAndDate) > width {
                 return rightSize.height
             }
-        } else if let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+        } else if let line = textLayout.lines.last, max(realContentSize.width, nameWidth) < line.frame.width + (rightSize.width + insetBetweenContentAndDate) {
             return rightSize.height
         }
         return nil
