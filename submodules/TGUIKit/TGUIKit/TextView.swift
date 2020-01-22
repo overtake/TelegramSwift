@@ -1088,8 +1088,12 @@ public class TextView: Control, NSViewToolTipOwner {
         if let layout = layout {
             
             
+            ctx.setAllowsFontSubpixelPositioning(true)
+            ctx.setShouldSubpixelPositionFonts(true)
+            
             if !System.supportsTransparentFontDrawing {
                 ctx.setAllowsAntialiasing(true)
+                
                 ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
                 ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
                 

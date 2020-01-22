@@ -256,6 +256,9 @@ public class TextNode: NSObject {
             ctx.setAllowsAntialiasing(true)
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
+            
+            ctx.setAllowsFontSubpixelPositioning(true)
+            ctx.setShouldSubpixelPositionFonts(true)
         } else {
             ctx.setAllowsFontSubpixelPositioning(true)
             ctx.setShouldSubpixelPositionFonts(true)
