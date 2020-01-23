@@ -142,8 +142,9 @@ class ChatInputAttachView: ImageButton, Notifable {
                 Queue.mainQueue().justDispatch {
                     if self.chatInteraction.presentation.interfaceState.editState != nil {
                         self.chatInteraction.updateEditingMessageMedia(nil, true)
+                    } else {
+                        self.chatInteraction.attachFile(true)
                     }
-                    self.chatInteraction.attachFile(true)
                 }
             }
         }, for: .Click)
