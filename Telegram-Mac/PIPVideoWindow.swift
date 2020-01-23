@@ -310,7 +310,10 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.isMovableByWindowBackground = true
 
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: self)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidMove(_:)), name: NSWindow.didMoveNotification, object: self)
 
+        
+        
         eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown], handler: { [weak self] event in
             guard let `self` = self else {return event}
             self._window.sendEvent(event)
@@ -323,6 +326,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         })
         
     }
+    
     
 
     func hide() {
@@ -371,6 +375,9 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     @objc func windowDidResized(_ notification: Notification) {
     
     }
+    @objc func windowDidMove(_ notification: Notification) {
+    }
+    
 
     override var isResizable: Bool {
         return true

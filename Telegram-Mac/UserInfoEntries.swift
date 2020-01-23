@@ -940,7 +940,10 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
                         if botInfo.flags.contains(.worksWithGroups) {
                             actionBlock.append(.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
                         }
-                        actionBlock.append(.botShare(sectionId: sectionId, name: user.addressName ?? "", viewType: .singleItem))
+                        let username = user.addressName ?? ""
+                        if !username.isEmpty {
+                            actionBlock.append(.botShare(sectionId: sectionId, name: user.addressName ?? "", viewType: .singleItem))
+                        }
                         if let cachedData = view.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
                             for command in botInfo.commands {
                                 if command.text == "settings" {
