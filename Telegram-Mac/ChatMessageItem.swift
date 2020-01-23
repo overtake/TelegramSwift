@@ -291,7 +291,8 @@ class ChatMessageItem: ChatRowItem {
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {
                 if highlightFoundText.isMessage {
-                    if let range = rangeOfSearch(highlightFoundText.query, in: copy.string) {
+                    let range = copy.string.lowercased().nsstring.range(of: highlightFoundText.query.lowercased())
+                    if range.location != NSNotFound {
                         textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
                     }
                 } else {
