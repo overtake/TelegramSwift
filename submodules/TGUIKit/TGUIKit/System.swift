@@ -39,7 +39,7 @@ public struct System {
         if #available(OSX 10.15, *) {
             return true
         } else {
-            return false
+            return System.backingScale > 1.0
         }
     }
  
