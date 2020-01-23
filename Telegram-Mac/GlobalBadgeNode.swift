@@ -219,7 +219,7 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
     
     let generated: CGImage?
     if unreadCount > 0 {
-        generated = generateImage(NSMakeSize(max((textLayout.0.size.width + 4), (textLayout.0.size.height + 4)), (textLayout.0.size.height + 2)), rotatedContext: { size, ctx in
+        generated = generateImage(NSMakeSize(max((textLayout.0.size.width + 4), (textLayout.0.size.height + 4)), (textLayout.0.size.height + 2)), scale: nil, rotatedContext: { size, ctx in
             let rect = NSMakeRect(0, 0, size.width, size.height)
             ctx.clear(rect)
             
