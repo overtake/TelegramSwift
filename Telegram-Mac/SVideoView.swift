@@ -493,6 +493,11 @@ class SVideoView: NSView {
         bufferingIndicator.center()
         bufferingIndicator.progressColor = .white
         backgroundView.frame = bounds
+        
+    }
+    
+    override var mouseDownCanMoveWindow: Bool {
+        return true
     }
     
     func hideControls(_ hide: Bool, animated: Bool) {

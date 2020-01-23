@@ -1104,8 +1104,6 @@ public class TextView: Control, NSViewToolTipOwner {
                     }
                 }
             } else {
-                ctx.setAllowsFontSubpixelPositioning(true)
-                ctx.setShouldSubpixelPositionFonts(true)
                 
                 ctx.setAllowsAntialiasing(true)
                 ctx.setShouldAntialias(true)

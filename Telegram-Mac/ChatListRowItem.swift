@@ -148,7 +148,7 @@ class ChatListRowItem: TableRowItem {
     private var displaySelectedNode:TextNode = TextNode()
     private var messageSelectedNode:TextNode = TextNode()
     
-    private let messageText:NSAttributedString?
+    private var messageText:NSAttributedString?
     private let titleText:NSAttributedString?
     
     
@@ -366,7 +366,8 @@ class ChatListRowItem: TableRowItem {
         
         let mutedCount = unreadState.count(countingCategory: unreadCountDisplayCategory == .chats ? .chats : .messages, mutedCategory: .all)
         
-        
+        self.highlightText = nil
+        self.embeddedState = nil
         
         photo = .ArchivedChats
         
@@ -391,7 +392,10 @@ class ChatListRowItem: TableRowItem {
 
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
-
+    
+    private let highlightText: String?
+    private let embeddedState:PeerChatListEmbeddedInterfaceState?
+    
     init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true) {
         
         
@@ -431,10 +435,12 @@ class ChatListRowItem: TableRowItem {
         self.pinnedType = pinnedType
         self.archiveStatus = nil
         self.hasDraft = embeddedState != nil
+        self.embeddedState = embeddedState
         self.peer = renderedPeer.chatMainPeer
         self.groupId = .root
         self.hasFailed = hasFailed
         self.associatedGroupId = associatedGroupId
+        self.highlightText = highlightText
         if let peer = peer {
             self.isVerified = peer.isVerified
             self.isScam = peer.isScam
@@ -453,17 +459,7 @@ class ChatListRowItem: TableRowItem {
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
 
         self.titleText = titleText
-        var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState:embeddedState)
-        
-        if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
-            if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
-                copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
-                copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
-                messageText = copy
-            }
-            
-        }
-        self.messageText = messageText
+    
         
         if case .ad = pinnedType {
             let sponsored:NSMutableAttributedString = NSMutableAttributedString()
@@ -549,6 +545,22 @@ class ChatListRowItem: TableRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
+        
+        if self.groupId == .root {
+            var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState, maxWidth: messageWidth - 15)
+            if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
+                if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
+                    copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
+                    copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
+                    messageText = copy
+                }
+                
+            }
+            self.messageText = messageText
+        }
+        
+       
+        
         if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
             displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
         }
