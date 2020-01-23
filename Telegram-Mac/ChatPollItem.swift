@@ -962,7 +962,7 @@ private final class PollOptionView : Control {
             percentView?.animates = animated
             percentView?.image = option.currentPercentImage
             percentView?.setFrameSize(36, 16)
-            percentView?.setFrameOrigin(NSMakePoint(nameView.frame.minX - percentView!.frame.width - PollOption.spaceBetweenTexts, nameView.frame.minY + 2))
+            percentView?.setFrameOrigin(NSMakePoint(nameView.frame.minX - percentView!.frame.width - PollOption.spaceBetweenTexts, nameView.frame.minY + 1))
             
             if previousPercent != option.realPercent, animated {
                 let images = option.presentation.chat.pollPercentAnimatedIcons(option.isIncoming, option.isBubbled, from: CGFloat(previousPercent ?? 0), to: CGFloat(option.realPercent), duration: duration / 2)
