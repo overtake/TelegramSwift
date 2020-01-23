@@ -43,6 +43,7 @@ struct ChatInterfaceSelectionState: Equatable {
 
 enum ChatTextInputAttribute : Equatable, PostboxCoding {
     case bold(Range<Int>)
+    case strikethrough(Range<Int>)
     case italic(Range<Int>)
     case pre(Range<Int>)
     case code(Range<Int>)
@@ -65,6 +66,8 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
             self = .code(range)
         case 5:
             self = .url(range, decoder.decodeStringForKey("url", orElse: ""))
+        case 6:
+            self = .strikethrough(range)
         default:
             fatalError("input attribute not supported")
         }
@@ -82,6 +85,8 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
             encoder.encodeInt32(2, forKey: "_rawValue")
         case .code:
             encoder.encodeInt32(4, forKey: "_rawValue")
+        case .strikethrough:
+            encoder.encodeInt32(6, forKey: "_rawValue")
         case let .uid(_, uid):
             encoder.encodeInt32(3, forKey: "_rawValue")
             encoder.encodeInt32(uid, forKey: "uid")
@@ -98,6 +103,8 @@ extension ChatTextInputAttribute {
         switch self {
         case let .bold(range):
             return (NSAttributedString.Key.font.rawValue, NSFont.bold(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .strikethrough(range):
+            return (NSAttributedString.Key.font.rawValue, NSFont.normal(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .italic(range):
             return (NSAttributedString.Key.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .pre(range), let .code(range):
@@ -113,7 +120,7 @@ extension ChatTextInputAttribute {
     
     var range:Range<Int> {
         switch self {
-        case let .bold(range), let .italic(range), let .pre(range), let .code(range):
+        case let .bold(range), let .italic(range), let .pre(range), let .code(range), let .strikethrough(range):
             return range
         case let .uid(range, _):
             return range
@@ -186,7 +193,8 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
 }
 
 //x/m
-private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)" //"(^|\\s)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`)([^\\n]+?)\\7([\\s\\.,:?!;]|$)"
+private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__|~~)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)"
+
 
 private let markdownRegex = try? NSRegularExpression(pattern: markdownRegexFormat, options: [.caseInsensitive, .anchorsMatchLines])
 
@@ -366,6 +374,9 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                     case "**":
                         offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
                         attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
+                    case "~~":
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
+                        attributes.append(.strikethrough(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
                     case "__":
                         offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
                         attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
@@ -404,6 +415,8 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                     attributes.append(.pre(newRange.min ..< newRange.max))
                 case .code:
                     attributes.append(.code(newRange.min ..< newRange.max))
+                case .strikethrough:
+                    attributes.append(.strikethrough(newRange.min ..< newRange.max))
                 case let .uid(_, uid):
                     attributes.append(.uid(newRange.min ..< newRange.max, uid))
                 case let .url(_, url):
@@ -422,6 +435,8 @@ struct ChatTextInputState: PostboxCoding, Equatable {
             switch attribute {
             case let .bold(range):
                 entities.append(.init(range: range, type: .Bold))
+            case let .strikethrough(range):
+                entities.append(.init(range: range, type: .Strikethrough))
             case let .italic(range):
                 entities.append(.init(range: range, type: .Italic))
             case let .pre(range):
