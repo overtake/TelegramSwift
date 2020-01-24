@@ -974,6 +974,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             case keyURLStart:
                                 action = .start(parameter: value, behavior: .none)
                                 break loop;
+                            case keyURLStartGroup:
+                                if let context = context {
+                                    return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .none), callback: openInfo)
+                                }
                             default:
                                 break
                             }
