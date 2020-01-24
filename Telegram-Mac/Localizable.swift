@@ -1821,10 +1821,14 @@ internal final class L10n {
   internal static var chatListFeeds: String  { return L10n.tr("Localizable", "ChatList.Feeds") }
   /// Group Channel
   internal static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
+  /// Hide Muted
+  internal static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
   /// Proxy Sponsor
   internal static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Feed
   internal static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
+  /// Unhide Muted
+  internal static var chatListUnhideMuted: String  { return L10n.tr("Localizable", "ChatList.UnhideMuted") }
   /// Message is not supported
   internal static var chatListUnsupportedMessage: String  { return L10n.tr("Localizable", "ChatList.UnsupportedMessage") }
   /// You
@@ -2651,6 +2655,12 @@ internal final class L10n {
   internal static var generalSettingsForceTouchReply: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Reply") }
   /// Scroll With Spacebar
   internal static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
+  /// When you need extra productivity you can hide all muted chats. Right Click on **Chats** tab icon to switch between modes instantly.
+  internal static var generalSettingsWorkModeDesc: String  { return L10n.tr("Localizable", "GeneralSettings.WorkMode.Desc") }
+  /// PRODUCTIVITY
+  internal static var generalSettingsWorkModeHeader: String  { return L10n.tr("Localizable", "GeneralSettings.WorkMode.Header") }
+  /// Hide Muted Chats
+  internal static var generalSettingsWorkModeHideMuted: String  { return L10n.tr("Localizable", "GeneralSettings.WorkMode.HideMuted") }
   /// More Info
   internal static var genericErrorMoreInfo: String  { return L10n.tr("Localizable", "Generic.ErrorMoreInfo") }
   /// New Group
