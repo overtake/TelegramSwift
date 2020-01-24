@@ -349,15 +349,35 @@ class MainViewController: TelegramViewController {
         var items: [SPopoverItem] = []
         let context = self.context
         
-        if unreadCount > 0 {
-            items.append(SPopoverItem(L10n.chatListPopoverReadAll, {
-                confirm(for: context.window, information: L10n.chatListPopoverConfirm, successHandler: { _ in
-                    _ = context.account.postbox.transaction ({ transaction -> Void in
-                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root)
-                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive)
-                    }).start()
-                })
+        switch self.chatList.mode {
+        case .plain:
+            let mode = self.chatList.filterValue
+            
+            items.append(SPopoverItem(mode != .workMode ? L10n.chatListHideMuted : L10n.chatListUnhideMuted, {
+                var newMode = mode
+                if mode != .workMode {
+                    newMode = .workMode
+                } else {
+                    newMode = .all
+                }
+                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                    $0.withUpdatedFilter(newMode)
+                }).start()
             }))
+            
+            if unreadCount > 0 {
+                items.append(SPopoverItem(L10n.chatListPopoverReadAll, {
+                    confirm(for: context.window, information: L10n.chatListPopoverConfirm, successHandler: { _ in
+                        _ = context.account.postbox.transaction ({ transaction -> Void in
+                            markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root)
+                            markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive)
+                        }).start()
+                    })
+                }))
+            }
+            
+        default:
+            break
         }
         
         if self.tabController.current == chatListNavigation, !items.isEmpty {
