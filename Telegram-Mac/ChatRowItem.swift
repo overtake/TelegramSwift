@@ -1532,7 +1532,7 @@ class ChatRowItem: TableRowItem {
         return additionBubbleInset
     }
     
-    var nameWidth: CGFloat {
+    var maxTitleWidth: CGFloat {
         let nameWidth:CGFloat
         if hasBubble {
             nameWidth = (authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)
@@ -1541,7 +1541,10 @@ class ChatRowItem: TableRowItem {
         }
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
         
-        return max(nameWidth, forwardWidth)
+        let replyWidth = hasBubble ? (replyModel?.size.width ?? 0) : 0
+
+        
+        return max(max(nameWidth, forwardWidth), replyWidth)
     }
     
     var bubbleFrame: NSRect {
