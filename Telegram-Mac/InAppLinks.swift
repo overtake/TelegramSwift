@@ -214,56 +214,48 @@ func copyContextText(from type: LinkType) -> String {
 }
 
 func execute(inapp:inAppLink) {
-    
     switch inapp {
-    case let .external(link,needConfirm):
-        var url:String = link.trimmed
-        
-        var reversedUrl = String(url.reversed())
-        while reversedUrl.components(separatedBy: "#").count > 2 {
-            if let index = reversedUrl.range(of: "#") {
-                reversedUrl.replaceSubrange(index, with: "32%")
-            }
-        }
-        url = String(reversedUrl.reversed())
-        
-        if !url.hasPrefix("http") && !url.hasPrefix("ftp"), url.range(of: "://") == nil {
+    case let .external(link, needConfirm):
+        var urlString: String = link.trimmed
+        let firstHashIndex = urlString.index(after: (urlString.firstIndex(of: "#") ?? urlString.index(before: urlString.endIndex)))
+
+        urlString = urlString.replacingOccurrences(
+            of: "#",
+            with: "%23",
+            options: [],
+            range: firstHashIndex..<urlString.endIndex
+        )
+
+        var urlComponents = URLComponents(string: urlString)
+
+        if urlComponents?.scheme == nil {
             if isValidEmail(link) {
               //  url = "mailto:" + url
             } else {
-                url = "http://" + url
+                urlComponents?.scheme = "http"
             }
         }
-        let escaped = escape(with:url)
-        if let url = URL(string: escaped) {
-            let success:()->Void = {
-                
-                var path = url.absoluteString
-                let supportSchemes:[String] = ["itunes.apple.com"]
-                for scheme in supportSchemes {
-                    var url:URL? = nil
-                    if path.contains(scheme) {
-                        switch scheme {
-                        case supportSchemes[0]: // itunes
-                           path = "itms://" + path.nsstring.substring(from: path.nsstring.range(of: scheme).location)
-                           url = URL(string: path)
-                        default:
-                            continue
-                        }
-                    }
-                    if let url = url {
-                        NSWorkspace.shared.open(url)
-                        return
-                    }
-                }
 
-                NSWorkspace.shared.open(url)
-            }
-            if needConfirm {
-                confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternalNew(url.absoluteString.removingPercentEncoding ?? url.absoluteString), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()})
-            } else {
-                success()
-            }
+        let supportHosts: [String] = ["itunes.apple.com", "apps.apple.com"]
+        switch urlComponents?.host {
+        case supportHosts[0], supportHosts[1]:
+            urlComponents?.scheme = "itms"
+        default:
+            break
+        }
+
+        guard let url = urlComponents?.url else {
+            break
+        }
+
+        let success:()->Void = {
+            NSWorkspace.shared.open(url)
+        }
+
+        if needConfirm {
+                confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternal(url.absoluteString.removingPercentEncoding ?? url.absoluteString), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()})
+        } else {
+            success()
         }
     case let .peerInfo(_, peerId, action, openChat, postId, callback):
         let messageId:MessageId?
