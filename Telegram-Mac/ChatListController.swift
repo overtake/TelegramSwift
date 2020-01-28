@@ -26,8 +26,10 @@ private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Pee
         if includePeers.contains(peer.id) {
             return true
         }
-        if preset.includeCategories.contains(.unreadChats) {
-            return isUnread
+        if !preset.includeCategories.contains(.read) {
+            if !isUnread {
+                return false
+            }
         }
         if !preset.includeCategories.contains(.muted) {
             if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
