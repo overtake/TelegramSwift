@@ -54,7 +54,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let showNotificationsOutOfFocus: Bool
     let badgeEnabled: Bool
     static var defaultSettings: InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: [.regularChatsAndPrivateGroups, .channels, .publicGroups], notifyAllAccounts: true, showNotificationsOutOfFocus: true, badgeEnabled: true)
+        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: [.privateChat, .privateGroup, .channel, .publicGroup], notifyAllAccounts: true, showNotificationsOutOfFocus: true, badgeEnabled: true)
     }
     
     init(enabled:Bool, playSounds: Bool, tone: String, displayPreviews: Bool, muteUntil: Int32, totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: PeerSummaryCounterTags, notifyAllAccounts: Bool, showNotificationsOutOfFocus: Bool, badgeEnabled: Bool) {
@@ -83,7 +83,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
         if let value = decoder.decodeOptionalInt32ForKey("totalUnreadCountIncludeTags") {
             self.totalUnreadCountIncludeTags = PeerSummaryCounterTags(rawValue: value)
         } else {
-            self.totalUnreadCountIncludeTags = [.regularChatsAndPrivateGroups, .channels, .publicGroups]
+            self.totalUnreadCountIncludeTags = [.privateChat, .privateGroup, .channel, .publicGroup]
         }
         self.showNotificationsOutOfFocus = decoder.decodeInt32ForKey("snoof", orElse: 1) != 0
         self.badgeEnabled = decoder.decodeBoolForKey("badge", orElse: true)

@@ -173,6 +173,64 @@ import SyncCore
  */
 
 
+final class RevealAllChatsView : Control {
+    let textView: TextView = TextView()
+
+    var layoutState: SplitViewState = .dual {
+        didSet {
+            needsLayout = true
+        }
+    }
+    
+    
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        addSubview(textView)
+        
+        let layout = TextViewLayout(.initialize(string: L10n.chatListCloseFilter, color: .white, font: .medium(.title)))
+        layout.measure(width: max(280, frame.width))
+        textView.update(layout)
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.shadowOffset = NSMakeSize(0, 2)
+        self.shadow = shadow
+        set(background: theme.colors.accent, for: .Normal)
+    }
+    
+    override func cursorUpdate(with event: NSEvent) {
+        NSCursor.pointingHand.set()
+    }
+    
+    override var backgroundColor: NSColor {
+        didSet {
+            textView.backgroundColor = backgroundColor
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+    }
+    
+    
+    
+    override func layout() {
+        super.layout()
+        textView.center()
+        
+        layer?.cornerRadius = frame.height / 2
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 class PeerListContainerView : View {
     private let backgroundView = BackgroundView(frame: NSZeroRect)
     var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
@@ -187,6 +245,49 @@ class PeerListContainerView : View {
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
     private var searchState: SearchFieldState = .None
     
+//    private var revealView: RevealAllChatsView?
+//
+//
+//    func setNeedShowReveal(_ showReveal: Bool, animated: Bool, callback: @escaping()->Void) -> Void {
+//        if showReveal {
+//            if self.revealView == nil {
+//                self.revealView = RevealAllChatsView(frame: NSMakeRect(0, 0, frame.width - 60, 30))
+//                self.addSubview(self.revealView!)
+//
+//                guard let revealView = self.revealView else {
+//                    return
+//                }
+//                revealView.frame = NSMakeRect(30, frame.height - revealView.frame.height - 10, revealView.textView.frame.width + 40, 30)
+//
+//
+//                if animated {
+//                    revealView.layer?.animatePosition(from: NSMakePoint(revealView.frame.minX, frame.height), to: revealView.frame.origin, timingFunction: .spring)
+//                    revealView.layer?.animateAlpha(from: 0, to: 0.1, duration: 0.4, timingFunction: .spring)
+//                }
+//            }
+//
+//            revealView?.removeAllHandlers()
+//            revealView?.set(handler: { _ in
+//                callback()
+//            }, for: .Click)
+//
+//        } else {
+//            if animated {
+//                if let revealView = self.revealView {
+//                    self.revealView = nil
+//                    revealView.change(pos: NSMakePoint(revealView.frame.minX, frame.height), animated: true, timingFunction: .spring)
+//                    revealView.layer?.animateAlpha(from: 1, to: 0, duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak revealView] _ in
+//                        revealView?.removeFromSuperview()
+//
+//                    })
+//                }
+//            } else {
+//                self.revealView?.removeFromSuperview()
+//                self.revealView = nil
+//            }
+//        }
+//    }
+//
     var mode: PeerListMode = .plain {
         didSet {
             switch mode {
@@ -563,7 +664,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     private func showSearchController(animated: Bool) {
         if searchController == nil {
-            delay(0.1, closure: {
+            delay(0.15, closure: {
                 let rect = self.genericView.tableView.frame
                 let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
                     if let peerId = peerId {
@@ -677,6 +778,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         case let .groupId(groupId):
             self.navigationController?.push(ChatListController(context, modal: false, groupId: groupId))
+        case .reveal:
+            break
         }
         if close {
             self.genericView.searchView.cancel(true)

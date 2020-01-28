@@ -275,7 +275,7 @@ private final class GeneralSettingsArguments {
    
 }
 
-private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSettings: BaseApplicationSettings, appearance: Appearance, launchSettings: LaunchSettings, secretChatSettings: SecretChatSettings, chatListFilter: ChatListFilter) -> [GeneralSettingsEntry] {
+private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSettings: BaseApplicationSettings, appearance: Appearance, launchSettings: LaunchSettings, secretChatSettings: SecretChatSettings) -> [GeneralSettingsEntry] {
     var sectionId:Int = 1
     var entries:[GeneralSettingsEntry] = []
     
@@ -295,16 +295,6 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsWorkModeHeader))
-    headerUnique -= 1
-    
-
-    entries.append(.workMode(sectionId: sectionId, enabled: chatListFilter == .workMode, viewType: .singleItem))
-    entries.append(.workModeDesc(sectionId: sectionId, text: L10n.generalSettingsWorkModeDesc, viewType: .textBottomItem))
-
-    entries.append(.section(sectionId: sectionId))
-    sectionId += 1
 
     
     entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsGeneralSettings))
@@ -421,13 +411,7 @@ class GeneralSettingsViewController: TableViewController {
                 })
             }).start()
         }, toggleWorkMode: { value in
-            _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, { current in
-                if value {
-                    return current.withUpdatedFilter(.workMode)
-                } else {
-                    return current.withUpdatedFilter(.all)
-                }
-            }).start()
+            
         })
         
         let initialSize = atomicSize
@@ -436,16 +420,13 @@ class GeneralSettingsViewController: TableViewController {
         
         let baseSettingsSignal: Signal<BaseApplicationSettings, NoError> = .single(context.sharedContext.baseSettings) |> then(baseAppSettings(accountManager: context.sharedContext.accountManager))
         
-        let signal = combineLatest(queue: prepareQueue, baseSettingsSignal, inputPromise.get(), forceTouchPromise.get(), appearanceSignal, appLaunchSettings(postbox: context.account.postbox), context.account.postbox.preferencesView(keys: [PreferencesKeys.secretChatSettings, ApplicationSpecificPreferencesKeys.chatListSettings])) |> map { settings, _, _, appearance, launchSettings, preferencesView -> TableUpdateTransition in
+        let signal = combineLatest(queue: prepareQueue, baseSettingsSignal, inputPromise.get(), forceTouchPromise.get(), appearanceSignal, appLaunchSettings(postbox: context.account.postbox), context.account.postbox.preferencesView(keys: [PreferencesKeys.secretChatSettings])) |> map { settings, _, _, appearance, launchSettings, preferencesView -> TableUpdateTransition in
             
             let baseSettings: BaseApplicationSettings = settings
             
             let secretChatSettings = preferencesView.values[PreferencesKeys.secretChatSettings] as? SecretChatSettings ?? SecretChatSettings.defaultSettings
             
-            let chatListPreferences = preferencesView.values[ApplicationSpecificPreferencesKeys.chatListSettings] as? ChatListFilterPreferences ?? ChatListFilterPreferences.defaultSettings
-
-            
-            let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance, launchSettings: launchSettings, secretChatSettings: secretChatSettings, chatListFilter: chatListPreferences.filter).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance, launchSettings: launchSettings, secretChatSettings: secretChatSettings).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = previos.swap(entries)
             return prepareEntries(left: previous, right: entries, arguments: arguments, initialSize: initialSize.modify({$0}))
             

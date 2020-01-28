@@ -39,16 +39,6 @@ private final class ChannelVisibilityControllerArguments {
 fileprivate enum ChannelVisibilityEntryStableId: Hashable {
     case index(Int32)
     case peer(PeerId)
-    
-    var hashValue: Int {
-        switch self {
-        case let .index(index):
-            return index.hashValue
-        case let .peer(peerId):
-            return peerId.hashValue
-        }
-    }
-    
 }
 
 private enum ChannelVisibilityEntry: TableItemListNodeEntry {
@@ -802,16 +792,39 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                         }
                         
                         if let updatedAddressNameValue = updatedAddressNameValue {
-                            updateState { state in
-                                return state.withUpdatedUpdatingAddressName(true)
-                            }
+                           
                             
                             let signal: Signal<PeerId?, ConvertGroupToSupergroupError>
+                            
+                            let csignal: Signal<Void, UpdateAddressNameError>
+                            
+                            if updatedAddressNameValue.isEmpty && peer.addressName != updatedAddressNameValue, let address = peer.addressName {
+                                let text: String
+                                if peer.isChannel {
+                                    text = L10n.channelVisibilityConfirmMakePrivateChannel(address)
+                                } else {
+                                    text = L10n.channelVisibilityConfirmMakePrivateGroup(address)
+                                }
+                                csignal = confirmSignal(for: context.window, information: text) |> filter { $0 } |> take(1) |> map { _ in
+                                    updateState { state in
+                                        return state.withUpdatedUpdatingAddressName(true)
+                                    }
+                                } |> castError(UpdateAddressNameError.self)
+                            } else {
+                                csignal = .single(Void()) |> map {
+                                    updateState { state in
+                                        return state.withUpdatedUpdatingAddressName(true)
+                                    }
+                                }
+                            }
                             
                             if peer.isGroup {
                                 signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                                     |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
-                                        return updateAddressName(account: context.account, domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
+                                        return csignal
+                                            |> mapToSignal {
+                                                showModalProgress(signal: updateAddressName(account: context.account, domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue), for: context.window)
+                                            }
                                         |> mapError {_ in return ConvertGroupToSupergroupError.generic}
                                         |> mapToSignal { _ in
                                             return .single(Optional(upgradedPeerId))
@@ -819,7 +832,11 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                     }
                                     |> deliverOnMainQueue
                             } else {
-                                signal = updateAddressName(account: context.account, domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue)
+                               
+                                signal = csignal
+                                    |> mapToSignal {
+                                        showModalProgress(signal: updateAddressName(account: context.account, domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue), for: context.window)
+                                    }
                                     |> mapToSignal { _ in
                                         return .single(nil)
                                     }
@@ -828,7 +845,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                     }
                             }
                             
-                            self?.updateAddressNameDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { updatedPeerId in
+                            self?.updateAddressNameDisposable.set(signal.start(next: { updatedPeerId in
                                 self?.onComplete.set(.single(updatedPeerId))
                             }, error: { error in
                                 switch error {

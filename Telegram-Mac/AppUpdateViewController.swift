@@ -23,8 +23,8 @@ final class TelegramUpdater : NSObject, SUUpdaterPrivate {
     
     var userAgentString: String!
     
-    var domain: String!
-    var host: String!
+    var domain: String! = nil
+    var host: String! = nil
     
     var httpHeaders: [AnyHashable : Any]!
     
@@ -258,11 +258,7 @@ func AppUpdateViewController() -> InputDataController {
     
 }
 
-#if DEBUG
-private let updates_channel_xml = "macos_test_env_versions"
-#else
 private let updates_channel_xml = "macos_stable_updates_xml"
-#endif
 
 
 
@@ -486,7 +482,6 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
         updateState { state in
             return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: L10n.unknownError, code: 0, userInfo: nil)))
         }
-        trySwitchUpdaterBetweenSources()
     }
     
     override func abortUpdateWithError(_ error: Error!) {
@@ -512,13 +507,11 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
 private let disposable = MetaDisposable()
 
 func setAppUpdaterBaseDomain(_ domain: String?) {
-    if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-        if let v = Int(version.replacingOccurrences(of: ".", with: "")), v >= 582 {
-            updater.domain = domain
-            if let domain = domain {
-                updater.host = URL(string: domain)?.host
-            }
-        }
+    updater.domain = domain
+    if let domain = domain {
+        updater.host = URL(string: domain)?.host
+    } else {
+        updater.host = nil
     }
 }
 

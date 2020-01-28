@@ -84,7 +84,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     private let animateContainer:View = View()
     
-    public let inset:CGFloat = 6
+    public let inset:CGFloat = 10
     public let leftInset:CGFloat = 10.0
     
     public var searchInteractions:SearchInteractions?
