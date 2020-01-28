@@ -129,53 +129,51 @@ struct ChatListFilter: OptionSet {
     static let groups = ChatListFilter(rawValue: 1 << 3)
     static let bots = ChatListFilter(rawValue: 1 << 4)
     static let channels = ChatListFilter(rawValue: 1 << 5)
-    static let unreadChats = ChatListFilter(rawValue: 1 << 6)
+    static let read = ChatListFilter(rawValue: 1 << 6)
     static let all: ChatListFilter = [
         .muted,
         .privateChats,
         .groups,
         .bots,
         .channels,
-        .unreadChats
+        .read
     ]
-    static let workMode: ChatListFilter = [
+    static let _workMode: ChatListFilter = [
         .privateChats,
         .groups,
         .bots,
         .channels,
-        .unreadChats]
+        .read]
     
+    static let _unread: ChatListFilter = [
+        .muted,
+        .privateChats,
+        .groups,
+        .bots,
+        .channels]
+    
+    static let _channels: ChatListFilter = [
+        .muted,
+        .channels,
+        .read
+    ]
+    static let _groups: ChatListFilter = [
+        .muted,
+        .groups,
+        .read
+    ]
+    static let _privateChats: ChatListFilter = [
+        .muted,
+        .privateChats,
+        .read
+    ]
+    static let _bots: ChatListFilter = [
+        .muted,
+        .bots,
+        .read
+    ]
     var string: String {
-        if self == .all {
-            return L10n.chatListFilterAll
-        }
-        
-        var list:[String] = []
-        
-        if !self.contains(.muted)  {
-            list.append(L10n.chatListFilterUnmutedChats)
-        }
-        
-        if self.contains(.privateChats) {
-            list.append(L10n.chatListFilterPrivateChats)
-        }
-        
-        if self.contains(.groups) {
-            list.append(L10n.chatListFilterGroups)
-        }
-        
-        if self.contains(.channels) {
-            list.append(L10n.chatListFilterChannels)
-        }
-        
-        if self.contains(.bots) {
-            list.append(L10n.chatListFilterBots)
-        }
-        
-        if self.contains(.bots) {
-            list.append(L10n.chatListFilterUnreadChats)
-        }
-        return list.joined(separator: ", ").lowercased()
+        return ""
     }
 }
 
@@ -186,12 +184,12 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     static var defaultSettings: ChatListFilterPreferences {
         var presets: [ChatListFilterPreset] = []
         
-        presets.append(ChatListFilterPreset(name: .privateChats, includeCategories: .privateChats, additionallyIncludePeers: [], uniqueId: 0))
-        presets.append(ChatListFilterPreset(name: .channels, includeCategories: .channels, additionallyIncludePeers: [], uniqueId: 1))
-        presets.append(ChatListFilterPreset(name: .groups, includeCategories: .groups, additionallyIncludePeers: [], uniqueId: 2))
-        presets.append(ChatListFilterPreset(name: .bots, includeCategories: .bots, additionallyIncludePeers: [], uniqueId: 3))
-        presets.append(ChatListFilterPreset(name: .unread, includeCategories: .unreadChats, additionallyIncludePeers: [], uniqueId: 4))
-        presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: .workMode, additionallyIncludePeers: [], uniqueId: 5))
+        presets.append(ChatListFilterPreset(name: .privateChats, includeCategories: ._privateChats, additionallyIncludePeers: [], uniqueId: 0))
+        presets.append(ChatListFilterPreset(name: .channels, includeCategories: ._channels, additionallyIncludePeers: [], uniqueId: 1))
+        presets.append(ChatListFilterPreset(name: .groups, includeCategories: ._groups, additionallyIncludePeers: [], uniqueId: 2))
+        presets.append(ChatListFilterPreset(name: .bots, includeCategories: ._bots, additionallyIncludePeers: [], uniqueId: 3))
+        presets.append(ChatListFilterPreset(name: .unread, includeCategories: ._unread, additionallyIncludePeers: [], uniqueId: 4))
+        presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._workMode, additionallyIncludePeers: [], uniqueId: 5))
         
         return ChatListFilterPreferences(current: nil, presets: presets)
     }
