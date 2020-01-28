@@ -35,15 +35,15 @@ extension Peer {
             switch peer.info {
             case .group:
                 if let addressName = peer.addressName, !addressName.isEmpty {
-                    return [.publicGroups]
+                    return [.publicGroup]
                 } else {
-                    return [.regularChatsAndPrivateGroups]
+                    return [.privateChat, .privateGroup]
                 }
             case .broadcast:
-                return [.channels]
+                return [.channel]
             }
         } else {
-            return [.regularChatsAndPrivateGroups]
+            return [.privateChat, .privateGroup]
         }
     }
     

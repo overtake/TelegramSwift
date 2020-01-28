@@ -1067,6 +1067,14 @@ internal final class L10n {
   internal static var channelVisibilityLoading: String  { return L10n.tr("Localizable", "ChannelVisibility.Loading") }
   /// Are you sure you want to make this channel private and remove its username?
   internal static var channelVisibilityConfirmRevoke: String  { return L10n.tr("Localizable", "ChannelVisibility.Confirm.Revoke") }
+  /// If you make this channel private, the name @%@ will be removed. Anyone else will be able to take it for their public groups or channels.
+  internal static func channelVisibilityConfirmMakePrivateChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelVisibility.Confirm.MakePrivate.Channel", p1)
+  }
+  /// If you make this group private, the name @%@ will be removed. Anyone else will be able to take it for their public groups or channels.
+  internal static func channelVisibilityConfirmMakePrivateGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelVisibility.Confirm.MakePrivate.Group", p1)
+  }
   /// admin
   internal static var chatAdminBadge: String  { return L10n.tr("Localizable", "Chat.AdminBadge") }
   /// ADD PROXY
@@ -1813,6 +1821,8 @@ internal final class L10n {
   internal static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
   /// Archived Chats
   internal static var chatListArchivedChats: String  { return L10n.tr("Localizable", "ChatList.ArchivedChats") }
+  /// Show All Chats
+  internal static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
   /// Draft:
   internal static var chatListDraft: String  { return L10n.tr("Localizable", "ChatList.Draft") }
   /// **You have no conversations yet**\nStart messaging by tapping the pencil button in the top right corner or got to the Contacts section.
@@ -1863,6 +1873,28 @@ internal final class L10n {
   internal static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
   internal static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
+  /// All
+  internal static var chatListFilterAll: String  { return L10n.tr("Localizable", "ChatList.Filter.All") }
+  /// Bots
+  internal static var chatListFilterBots: String  { return L10n.tr("Localizable", "ChatList.Filter.Bots") }
+  /// Channels
+  internal static var chatListFilterChannels: String  { return L10n.tr("Localizable", "ChatList.Filter.Channels") }
+  /// The filter is empty.\n[Show All Chats]()
+  internal static var chatListFilterEmpty: String  { return L10n.tr("Localizable", "ChatList.Filter.Empty") }
+  /// Groups
+  internal static var chatListFilterGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Groups") }
+  /// Private Chats
+  internal static var chatListFilterPrivateChats: String  { return L10n.tr("Localizable", "ChatList.Filter.PrivateChats") }
+  /// Setup
+  internal static var chatListFilterSetup: String  { return L10n.tr("Localizable", "ChatList.Filter.Setup") }
+  /// Unmuted Chats
+  internal static var chatListFilterUnmutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnmutedChats") }
+  /// Unread Chats
+  internal static var chatListFilterUnreadChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnreadChats") }
+  /// Add New
+  internal static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
+  /// Chat List Filters
+  internal static var chatListFilterListTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Title") }
   /// For 1 Day
   internal static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }
   /// For 1 Hour
@@ -2655,7 +2687,7 @@ internal final class L10n {
   internal static var generalSettingsForceTouchReply: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Reply") }
   /// Scroll With Spacebar
   internal static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
-  /// When you need extra productivity you can hide all muted chats. Right Click on **Chats** tab icon to switch between modes instantly.
+  /// Right Click on the **Chats** tab icon to switch between modes instantly.
   internal static var generalSettingsWorkModeDesc: String  { return L10n.tr("Localizable", "GeneralSettings.WorkMode.Desc") }
   /// PRODUCTIVITY
   internal static var generalSettingsWorkModeHeader: String  { return L10n.tr("Localizable", "GeneralSettings.WorkMode.Header") }
@@ -5565,8 +5597,6 @@ internal final class L10n {
   internal static var settingsSearchSynonymsStickersArchivedPacks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.ArchivedPacks") }
   ///  
   internal static var settingsSearchSynonymsStickersFeaturedPacks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.FeaturedPacks") }
-  ///  
-  internal static var settingsSearchSynonymsStickersMasks: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.Masks") }
   ///  
   internal static var settingsSearchSynonymsStickersSuggestStickers: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.SuggestStickers") }
   ///  

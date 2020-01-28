@@ -15,55 +15,63 @@ import SyncCore
 
 
 
-private func chatListFilterPredicate(for filter: ChatListFilter) -> ((Peer, PeerNotificationSettings?) -> Bool)? {
-    let filterPredicate: ((Peer, PeerNotificationSettings?) -> Bool)?
-    if filter == .all {
-        filterPredicate = nil
-    } else {
-        filterPredicate = { peer, notificationSettings in
-            if !filter.contains(.muted) {
-                if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
-                    if case let .muted(until) = notificationSettings.muteState {
-                        return until < Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
-                    }
-                } else {
-                    return false
-                }
-            }
-            if !filter.contains(.privateChats) {
-                if let user = peer as? TelegramUser {
-                    if user.botInfo == nil {
-                        return false
-                    }
-                } else if let _ = peer as? TelegramSecretChat {
-                    return false
-                }
-            }
-            if !filter.contains(.bots) {
-                if let user = peer as? TelegramUser {
-                    if user.botInfo != nil {
-                        return false
-                    }
-                }
-            }
-            if !filter.contains(.groups) {
-                if let _ = peer as? TelegramGroup {
-                    return false
-                } else if let channel = peer as? TelegramChannel {
-                    if case .group = channel.info {
-                        return false
-                    }
-                }
-            }
-            if !filter.contains(.channels) {
-                if let channel = peer as? TelegramChannel {
-                    if case .broadcast = channel.info {
-                        return false
-                    }
-                }
-            }
+private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Peer, PeerNotificationSettings?, Bool) -> Bool)? {
+    let filterPredicate: ((Peer, PeerNotificationSettings?, Bool) -> Bool)?
+    
+    guard let preset = preset else {
+        return nil
+    }
+    let includePeers = Set(preset.additionallyIncludePeers)
+    filterPredicate = { peer, notificationSettings, isUnread in
+        if includePeers.contains(peer.id) {
             return true
         }
+        if preset.includeCategories.contains(.unreadChats) {
+            return isUnread
+        }
+        if !preset.includeCategories.contains(.muted) {
+            if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
+                if case let .muted(until) = notificationSettings.muteState {
+                    return until < Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+                }
+            } else {
+                return false
+            }
+        }
+        if !preset.includeCategories.contains(.privateChats) {
+            if let user = peer as? TelegramUser {
+                if user.botInfo == nil {
+                    return false
+                }
+            } else if let _ = peer as? TelegramSecretChat {
+                return false
+            }
+        }
+        if !preset.includeCategories.contains(.bots) {
+            if let user = peer as? TelegramUser {
+                if user.botInfo != nil {
+                    return false
+                }
+            }
+        }
+        if !preset.includeCategories.contains(.groups) {
+            if let _ = peer as? TelegramGroup {
+                return false
+            } else if let channel = peer as? TelegramChannel {
+                if case .group = channel.info {
+                    return false
+                }
+            }
+        }
+        if !preset.includeCategories.contains(.channels) {
+            if let channel = peer as? TelegramChannel {
+                if case .broadcast = channel.info {
+                    return false
+                }
+            }
+        }
+        
+        return true
     }
     return filterPredicate
 }
@@ -72,6 +80,7 @@ private func chatListFilterPredicate(for filter: ChatListFilter) -> ((Peer, Peer
 enum UIChatListEntryId : Hashable {
     case chatId(PeerId)
     case groupId(PeerGroupId)
+    case reveal
 }
 
 struct ChatListInputActivity : Equatable {
@@ -105,7 +114,7 @@ struct ChatListState: Equatable {
 enum UIChatListEntry : Identifiable, Comparable {
     case chat(ChatListEntry, [ChatListInputActivity], isSponsored: Bool)
     case group(Int, PeerGroupId, [ChatListGroupReferencePeer], Message?, PeerGroupUnreadCountersCombinedSummary, TotalUnreadCountDisplayCategory, Bool, HiddenArchiveStatus)
-    
+    case reveal(ChatListFilterPreset?)
     
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
@@ -127,6 +136,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
+        case let .reveal(filter):
+            if case .reveal(filter) = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -145,6 +160,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
+        case .reveal:
+            if case .reveal = rhs {
+                return false
+            } else {
+                return true
+            }
         }
     }
     
@@ -154,6 +175,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .chatId(entry.index.messageIndex.id.peerId)
         case let .group(_, groupId, _, _, _, _, _, _):
             return .groupId(groupId)
+        case .reveal:
+            return .reveal
         }
     }
     
@@ -184,6 +207,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
                 return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
+            case .reveal:
+                return ChatListRevealItem(initialSize, action: {
+                    _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                        $0.withUpdatedCurrentPreset(nil)
+                    }).start()
+                })
             }
         }
         
@@ -194,7 +223,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
         })
         
         let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: nState, animateVisibleOnly: false)
+        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: nState, animateVisibleOnly: false)
         
         subscriber.putNext(transition)
         subscriber.putCompletion()
@@ -245,16 +274,15 @@ enum HiddenArchiveStatus : Equatable {
 
 class ChatListController : PeersListController {
     
-    private let filter = ValuePromise<ChatListFilter>(ignoreRepeated: true)
-    private let _filterValue = Atomic<ChatListFilter>(value: [])
-    var filterValue: ChatListFilter {
+    private let filter = ValuePromise<ChatListFilterPreset?>(ignoreRepeated: true)
+    private let _filterValue = Atomic<ChatListFilterPreset?>(value: nil)
+    var filterValue: ChatListFilterPreset? {
         return _filterValue.with { $0 }
     }
-    private func setFilter(_ value: ChatListFilter) {
-        if filterValue != value {
-            scrollup()
-            filter.set(_filterValue.modify( { _ in return value }))
-        }
+    private func setPreset(_ value: ChatListFilterPreset?) {
+        filter.set(_filterValue.modify( { _ in return value }))
+        _  = first.swap(true)
+        self.request.set(.single(.Initial(50, .up(true))))
     }
     
     private let request = Promise<ChatListIndexRequest>()
@@ -284,7 +312,6 @@ class ChatListController : PeersListController {
         super.viewDidLoad()
         
         
-        genericView.tableView.emptyItem = ChatListEmptyRowItem(frame.size)
         
         let initialSize = self.atomicSize
         let context = self.context
@@ -305,6 +332,8 @@ class ChatListController : PeersListController {
             statePromise.set(stateValue.modify(f))
         }
         
+        genericView.tableView.emptyItem = ChatListEmptyRowItem(frame.size, context: context)
+
         
         let postbox = context.account.postbox
         let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
@@ -398,21 +427,22 @@ class ChatListController : PeersListController {
         
         let signal = combineLatest(request.get() |> distinctUntilChanged, filter.get())
         
-        let chatHistoryView: Signal<(ChatListView, ViewUpdateType, Bool), NoError> = signal |> mapToSignal { location, filter -> Signal<(ChatListView, ViewUpdateType, Bool), NoError> in
+        let chatHistoryView: Signal<(ChatListView, ViewUpdateType, Bool, ChatListFilterPreset?), NoError> = signal |> mapToSignal { location, preset -> Signal<(ChatListView, ViewUpdateType, Bool, ChatListFilterPreset?), NoError> in
             
             var signal:Signal<(ChatListView,ViewUpdateType), NoError>
             var removeNextAnimation: Bool = false
             switch location {
             case let .Initial(count, st):
-                signal = context.account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: filter), count: count)
+                signal = context.account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: preset), count: count)
                 scroll = st
             case let .Index(index, st):
-                signal = context.account.viewTracker.aroundChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: filter), index: index, count: 50)
+                signal = context.account.viewTracker.aroundChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: preset), index: index, count: 50)
                 scroll = st
                 removeNextAnimation = st != nil
             }
-            return signal |> map { ($0.0, $0.1, removeNextAnimation)}
+            return signal |> map { ($0.0, $0.1, removeNextAnimation, preset)}
         }
+        
         
 
         let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings -> Signal<TableUpdateTransition, NoError> in
@@ -446,11 +476,19 @@ class ChatListController : PeersListController {
             var mapped: [UIChatListEntry] = prepare.map {
                 return .chat($0, state.activities.activities[$0.index.messageIndex.id.peerId] ?? [], isSponsored: $1)
             }
-            if value.0.laterIndex == nil {
-                for (i, group) in value.0.groupEntries.reversed().enumerated() {
-                    mapped.append(.group(i, group.groupId, group.renderedPeers, group.message, group.unreadState, inAppSettings.totalUnreadCountDisplayCategory, animateGroupNextTransition.swap(nil) == group.groupId, archiveIsHidden))
+            
+            if value.3 != nil, mapped.isEmpty {} else {
+                if value.0.laterIndex == nil {
+                    for (i, group) in value.0.groupEntries.reversed().enumerated() {
+                        mapped.append(.group(i, group.groupId, group.renderedPeers, group.message, group.unreadState, inAppSettings.totalUnreadCountDisplayCategory, animateGroupNextTransition.swap(nil) == group.groupId, archiveIsHidden))
+                    }
+                }
+                
+                if value.3 != nil {
+                    mapped.append(.reveal(value.3))
                 }
             }
+            
            
             
             let entries = mapped.compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
@@ -477,12 +515,18 @@ class ChatListController : PeersListController {
                     }
                 case .group:
                     return AppearanceWrapperEntry(entry: entry, appearance: appearance)
+                case .reveal:
+                    return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                 }
             }
             
             let prev = previousEntries.swap(entries)
             
-            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, groupId: groupId)
+            var animated = animated.swap(true)
+//            if value.3 != previousFilter.swap(value.3) {
+//                animated = false
+//            }
+            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated, scrollState: scroll, groupId: groupId)
         }
         
         
@@ -525,6 +569,9 @@ class ChatListController : PeersListController {
             self?.removeRevealStateIfNeeded(nil)
         }))
         
+        genericView.tableView.set(stickClass: ChatListRevealItem.self, handler: { _ in
+            
+        })
         
 
         genericView.tableView.setScrollHandler({ [weak self] scroll in
@@ -571,10 +618,10 @@ class ChatListController : PeersListController {
         let filterView = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue
         switch mode {
         case .folder:
-            self.setFilter(.all)
+            self.setPreset(nil)
         default:
             filterDisposable.set(filterView.start(next: { [weak self] settings in
-                self?.setFilter(settings.filter)
+                self?.setPreset(settings.current)
             }))
         }
        
@@ -637,7 +684,16 @@ class ChatListController : PeersListController {
             break
         }
         
-        if let first = self.genericView.tableView.firstItem as? ChatListRowItem, let archiveStatus = first.archiveStatus {
+        var first: ChatListRowItem?
+        self.genericView.tableView.enumerateItems { item -> Bool in
+            if let item = item as? ChatListRowItem, item.archiveStatus != nil {
+                first = item
+            }
+            
+            return first == nil
+        }
+        
+        if let first = first, let archiveStatus = first.archiveStatus {
             self.genericView.tableView.autohide = TableAutohide(item: first, hideUntilOverscroll: archiveStatus.isHidden, hideHandler: { [weak self] hidden in
                 self?.updateHiddenStateState { _ in
                     return .hidden(hidden)
@@ -729,7 +785,9 @@ class ChatListController : PeersListController {
             return
         }
         
-        if self.genericView.tableView.contentOffset.y == 0 {
+        let view = self.previousChatList.with { $0 }
+        
+        if self.genericView.tableView.contentOffset.y == 0, view?.laterIndex == nil {
             navigationController?.back()
             return
         }
@@ -778,6 +836,33 @@ class ChatListController : PeersListController {
             scrollToTop()
        // #endif
         
+        
+    }
+    
+    var filterMenuItems: Signal<[SPopoverItem], NoError> {
+        let context = self.context
+       
+        return chatListFilterPreferences(postbox: context.account.postbox)
+            |> take(1)
+            |> deliverOnMainQueue
+            |> map { settings -> [SPopoverItem] in
+                var items:[SPopoverItem] = []
+                
+//                items.append(SPopoverItem(L10n.chatListFilterSetup, {
+//                    showModal(with: ChatListPresetController(context: context), for: context.window)
+//                }))
+
+                for preset in settings.presets {
+                    if preset.uniqueId != settings.current?.uniqueId {
+                        items.append(SPopoverItem(preset.title, {
+                            _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                                $0.withUpdatedCurrentPreset(preset)
+                            }).start()
+                        }))
+                    }
+                }
+                return items
+        }
         
     }
     

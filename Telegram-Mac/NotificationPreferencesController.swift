@@ -171,13 +171,13 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludePublicGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.publicGroups)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
-        arguments.toggleIncludePublicGroups(!settings.totalUnreadCountIncludeTags.contains(.publicGroups))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludePublicGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.publicGroup)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
+        arguments.toggleIncludePublicGroups(!settings.totalUnreadCountIncludeTags.contains(.publicGroup))
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_channels, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeChannels, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.channels)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
-        arguments.toggleIncludeChannels(!settings.totalUnreadCountIncludeTags.contains(.channels))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_channels, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeChannels, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.channel)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
+        arguments.toggleIncludeChannels(!settings.totalUnreadCountIncludeTags.contains(.channel))
     })))
     index += 1
     
@@ -244,9 +244,9 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
             var tags: PeerSummaryCounterTags = value.totalUnreadCountIncludeTags
             if enable {
-                tags.insert(.publicGroups)
+                tags.insert(.publicGroup)
             } else {
-                tags.remove(.publicGroups)
+                tags.remove(.publicGroup)
             }
             return value.withUpdatedTotalUnreadCountIncludeTags(tags)
         }).start()
@@ -254,9 +254,9 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
             var tags: PeerSummaryCounterTags = value.totalUnreadCountIncludeTags
             if enable {
-                tags.insert(.channels)
+                tags.insert(.channel)
             } else {
-                tags.remove(.channels)
+                tags.remove(.channel)
             }
             return value.withUpdatedTotalUnreadCountIncludeTags(tags)
         }).start()

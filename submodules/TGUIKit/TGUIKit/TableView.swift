@@ -883,7 +883,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                 liveScrollStartPosition = nil
                 liveScrollStack.removeAll()
-                self.merge(with: TableUpdateTransition(deleted: [0], inserted: [(0, item)], updated: [], animated: false, state: .saveVisible(.upper)))
+                self.merge(with: TableUpdateTransition(deleted: [item.index], inserted: [(item.index, item)], updated: [], animated: false, state: .saveVisible(.upper)))
                 
                 autohide.hideHandler(true)
             }
@@ -1166,7 +1166,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                     if let item = stickItem {
                         if let view = (viewNecessary(at: item.index) as? TableStickView) {
-                            view.updateIsVisible(!firstTime || !view.header, animated: false)
+                            view.updateIsVisible((!firstTime || !view.header), animated: false)
                         }
                     }
                     
@@ -1210,7 +1210,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             for row in rows {
                                 let row = min(max(0, row), list.count - 1)
                                 if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
-                                    view.updateIsVisible(yTopOffset < 0, animated: false)
+                                    view.updateIsVisible(yTopOffset < 0 && documentOffset.y > 0, animated: false)
                                     applied = true
                                 }
                             }
