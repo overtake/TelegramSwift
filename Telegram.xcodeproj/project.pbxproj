@@ -217,7 +217,7 @@
 		A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC3223C8988300DD307B /* quiz-correct.mp3 */; };
 		A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */; };
 		A778DC4323CDBB6600DD307B /* WalletCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A789E08423E05EAE00AEB34A /* ChatListPresetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E08323E05EAE00AEB34A /* ChatListPresetController.swift */; };
+		A789E08423E05EAE00AEB34A /* ChatListPresetListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
 		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
 		A7C1377D23D1A62800803ED3 /* PeerEmptyHolderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C1377C23D1A62700803ED3 /* PeerEmptyHolderItem.swift */; };
@@ -1256,7 +1256,7 @@
 		A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-incorrect.mp3"; sourceTree = "<group>"; };
 		A778DC3223C8988300DD307B /* quiz-correct.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-correct.mp3"; sourceTree = "<group>"; };
 		A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSettingsEmptyItem.swift; sourceTree = "<group>"; };
-		A789E08323E05EAE00AEB34A /* ChatListPresetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListPresetController.swift; sourceTree = "<group>"; };
+		A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListPresetListController.swift; sourceTree = "<group>"; };
 		A7B5030E23B62E0000C9838E /* nanosvg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanosvg.c; sourceTree = "<group>"; };
 		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
 		A7B5031123B62E1700C9838E /* Svg.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Svg.m; sourceTree = "<group>"; };
@@ -2503,7 +2503,7 @@
 		A789E08223E05E9A00AEB34A /* presets */ = {
 			isa = PBXGroup;
 			children = (
-				A789E08323E05EAE00AEB34A /* ChatListPresetController.swift */,
+				A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */,
 			);
 			name = presets;
 			sourceTree = "<group>";
@@ -5382,7 +5382,7 @@
 				C2A16E551E117BD000585A85 /* CreateChannelViewController.swift in Sources */,
 				9F7D422C222415C9007B68BB /* SharedAccountContext.swift in Sources */,
 				9F1AE5E420B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift in Sources */,
-				A789E08423E05EAE00AEB34A /* ChatListPresetController.swift in Sources */,
+				A789E08423E05EAE00AEB34A /* ChatListPresetListController.swift in Sources */,
 				9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
 				D0C39EC3233A5D9B003CD402 /* WalletTransactionPreviewController.swift in Sources */,
 				C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */,
