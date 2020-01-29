@@ -60,7 +60,7 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
     return entries
 }
 
-func ChatListPresetListController(context: AccountContext) -> InputDataController {
+func ChatListPresetController(context: AccountContext) -> InputDataController {
     
     let arguments = ChatListPresetArguments(context: context)
     

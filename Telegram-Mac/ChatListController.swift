@@ -850,9 +850,9 @@ class ChatListController : PeersListController {
             |> map { settings -> [SPopoverItem] in
                 var items:[SPopoverItem] = []
                 
-//                items.append(SPopoverItem(L10n.chatListFilterSetup, {
-//                    showModal(with: ChatListPresetController(context: context), for: context.window)
-//                }))
+                items.append(SPopoverItem(L10n.chatListFilterSetup, {
+                    context.sharedContext.bindings.rootNavigation().push(ChatListPresetListController(context: context))
+                }))
 
                 for preset in settings.presets {
                     if preset.uniqueId != settings.current?.uniqueId {

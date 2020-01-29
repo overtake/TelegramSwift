@@ -130,7 +130,7 @@ class ChatMessageItem: ChatRowItem {
             execute(inapp: link)
         } else if unsupported {
             #if APP_STORE
-            execute(inapp: inAppLink.external(link: "https://itunes.apple.com/us/app/telegram/id747648890", false))
+            execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
             #else
             (NSApp.delegate as? AppDelegate)?.checkForUpdates("")
             #endif
