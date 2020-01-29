@@ -99,6 +99,7 @@
 		D0B166EB1F9D142A00976B40 /* MessageOfInterestHolesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B166E91F9D142A00976B40 /* MessageOfInterestHolesView.swift */; };
 		D0B167211F9EAAA900976B40 /* OrderedList.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B1671F1F9EAAA900976B40 /* OrderedList.swift */; };
 		D0B2F75E204F551D00D3BFB9 /* DeviceContactImportInfoTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B2F75C204F551D00D3BFB9 /* DeviceContactImportInfoTable.swift */; };
+		D0B36A5D23E173CF00745212 /* AllChatListHolesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B36A5C23E173CF00745212 /* AllChatListHolesView.swift */; };
 		D0B418171D7DFAF3004562A4 /* Postbox.h in Headers */ = {isa = PBXBuildFile; fileRef = D0B418151D7DFAF3004562A4 /* Postbox.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0B418221D7DFE0C004562A4 /* Coding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3A7871B28AE9C00A402D9 /* Coding.swift */; };
 		D0B418231D7DFE0C004562A4 /* SimpleDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0F9E8741C5A334100037222 /* SimpleDictionary.swift */; };
@@ -327,6 +328,7 @@
 		D0B166E91F9D142A00976B40 /* MessageOfInterestHolesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageOfInterestHolesView.swift; sourceTree = "<group>"; };
 		D0B1671F1F9EAAA900976B40 /* OrderedList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderedList.swift; sourceTree = "<group>"; };
 		D0B2F75C204F551D00D3BFB9 /* DeviceContactImportInfoTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceContactImportInfoTable.swift; sourceTree = "<group>"; };
+		D0B36A5C23E173CF00745212 /* AllChatListHolesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AllChatListHolesView.swift; path = "../../submodules/telegram-ios/submodules/Postbox/Sources/AllChatListHolesView.swift"; sourceTree = "<group>"; };
 		D0B418131D7DFAF2004562A4 /* Postbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Postbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0B418151D7DFAF3004562A4 /* Postbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Postbox.h; sourceTree = "<group>"; };
 		D0B418161D7DFAF3004562A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -706,6 +708,7 @@
 		D0E3A7401B28A7E300A402D9 = {
 			isa = PBXGroup;
 			children = (
+				D0B36A5C23E173CF00745212 /* AllChatListHolesView.swift */,
 				A72D451C236AF37F0052FA81 /* Postbox.xcconfig */,
 				D0E3A74C1B28A7E300A402D9 /* Sources */,
 				D0B418141D7DFAF3004562A4 /* Postbox */,
@@ -843,6 +846,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9F291C9B2264CFCC00C66267 /* (null) in Sources */,
+				D0B36A5D23E173CF00745212 /* AllChatListHolesView.swift in Sources */,
 				9F5B6E762011449F00C58B2A /* PostboxLogging.swift in Sources */,
 				C20EB2A31F7179DC00DD3A57 /* PeerNotificationSettingsView.swift in Sources */,
 				C25B56FE1F431C3300581D02 /* MessageHistoryTagsSummaryTable.swift in Sources */,
