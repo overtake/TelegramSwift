@@ -230,6 +230,7 @@ class MainViewController: TelegramViewController {
     private let phoneCalls:RecentCallsViewController
     private let layoutDisposable:MetaDisposable = MetaDisposable()
     private let badgeCountDisposable: MetaDisposable = MetaDisposable()
+    private let tooltipDisposable = MetaDisposable()
     #if !APP_STORE
     private let updateController: UpdateTabController
     #endif
@@ -264,6 +265,9 @@ class MainViewController: TelegramViewController {
     
     override func loadView() {
         super.loadView()
+        
+        let context = self.context
+        
         tabController._frameRect = self._frameRect
         self.bar = NavigationBarStyle(height: 0)
         backgroundColor = theme.colors.background
@@ -287,8 +291,20 @@ class MainViewController: TelegramViewController {
         
         tabController.updateLocalizationAndTheme(theme: theme)
 
+        let s:Signal<Bool, NoError> = Signal<Bool, NoError>.single(arc4random() % 2 == 5) |> then(deferred {
+            return Signal<Bool, NoError>.single(arc4random() % 2 == 5)
+        } |> delay(10 * 10, queue: .mainQueue()) |> restart)
+        |> filter { $0 }
+        |> mapToSignal { _ in
+            return chatListFilterPreferences(postbox: context.account.postbox) |> take(1) |> map { $0.needShowTooltip }
+        } |> filter { $0 }
+        |> deliverOnMainQueue
         
-
+        tooltipDisposable.set(s.start(next: { [weak self] show in
+            
+            self?.showFilterTooltip()
+            
+        }))
         
 //        account.postbox.transaction ({ transaction -> Void in
 //          
@@ -322,6 +338,10 @@ class MainViewController: TelegramViewController {
     }
     private func hideCallsTab() {
         tabController.remove(at: 1)
+    }
+    
+    private func showFilterTooltip() {
+        tabController.showTooltip(text: "You can organize your chats by right click.", for: showCallTabs ? 2 : 1)
     }
     
     private var showCallTabs: Bool = true

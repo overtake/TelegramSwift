@@ -49,7 +49,7 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
         if i + 2 == 11 {
             shortCut = "⌃⌘-"
         }
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(preset), data: .init(name: preset.title, color: theme.colors.text, type: .nextContext(shortCut), viewType: viewType, enabled: true, description: nil, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(preset), data: .init(name: preset.title, color: theme.colors.text, type: .nextContext(shortCut), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
             arguments.openPreset(preset)
         }, menuItems: {
             return [ContextMenuItem("Remove", handler: {
@@ -92,7 +92,7 @@ func ChatListPresetListController(context: AccountContext) -> InputDataControlle
     }
     
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle + " (BETA)", removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.updateDatas = { data in
         return .none

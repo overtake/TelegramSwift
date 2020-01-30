@@ -88,6 +88,9 @@ public class TabBarView: View {
     public func tab(at index:Int) -> TabItem {
         return self.tabs[index]
     }
+    public func showTooltip(text: String, for index: Int) -> Void {
+        tooltip(for: self.subviews[index], text: text)
+    }
     
     func redraw() {
         let width = NSWidth(self.bounds)

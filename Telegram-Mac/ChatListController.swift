@@ -865,7 +865,7 @@ class ChatListController : PeersListController {
                 
                 items.append(SPopoverItem(L10n.chatListFilterSetup, {
                     context.sharedContext.bindings.rootNavigation().push(ChatListPresetListController(context: context))
-                }))
+                }, theme.icons.peerInfoAddMember))
 
                 for preset in settings.presets {
                     if preset.uniqueId != settings.current?.uniqueId {
@@ -873,7 +873,7 @@ class ChatListController : PeersListController {
                             _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
                                 $0.withUpdatedCurrentPreset(preset)
                             }).start()
-                        }))
+                        }, generateTextIcon(.initialize(string: settings.shortcut(for: preset), color: theme.colors.accent, font: .medium(.text)))))
                     }
                 }
                 return items

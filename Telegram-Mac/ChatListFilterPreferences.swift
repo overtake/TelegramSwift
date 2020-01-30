@@ -217,7 +217,7 @@ struct ChatListFilter: OptionSet {
 struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     let current: ChatListFilterPreset?
     let presets: [ChatListFilterPreset]
-
+    let needShowTooltip: Bool
     static var defaultSettings: ChatListFilterPreferences {
         var presets: [ChatListFilterPreset] = []
         
@@ -228,17 +228,19 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         presets.append(ChatListFilterPreset(name: .unread, includeCategories: ._unread, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 4))
         presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._workMode, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 5))
         
-        return ChatListFilterPreferences(current: nil, presets: presets)
+        return ChatListFilterPreferences(current: nil, presets: presets, needShowTooltip: true)
     }
     
-    init(current: ChatListFilterPreset?, presets: [ChatListFilterPreset]) {
+    init(current: ChatListFilterPreset?, presets: [ChatListFilterPreset], needShowTooltip: Bool) {
         self.current = current
         self.presets = presets
+        self.needShowTooltip = needShowTooltip
     }
     
     init(decoder: PostboxDecoder) {
         self.current = decoder.decodeObjectForKey("current") as? ChatListFilterPreset
         self.presets = decoder.decodeObjectArrayWithDecoderForKey("presets")
+        self.needShowTooltip = decoder.decodeBoolForKey("needShowTooltip", orElse: true)
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -248,6 +250,7 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
             encoder.encodeNil(forKey: "current")
         }
         encoder.encodeObjectArray(self.presets, forKey: "presets")
+        encoder.encodeBool(self.needShowTooltip, forKey: "needShowTooltip")
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -259,11 +262,11 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     }
     
     static func ==(lhs: ChatListFilterPreferences, rhs: ChatListFilterPreferences) -> Bool {
-        return lhs.current == rhs.current && lhs.presets == rhs.presets
+        return lhs.current == rhs.current && lhs.presets == rhs.presets && lhs.needShowTooltip == rhs.needShowTooltip
     }
     
     func withUpdatedCurrentPreset(_ current: ChatListFilterPreset?) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(current: current, presets: self.presets)
+        return ChatListFilterPreferences(current: current, presets: self.presets, needShowTooltip: false)
     }
     func withAddedPreset(_ preset: ChatListFilterPreset, onlyReplace: Bool = false) -> ChatListFilterPreferences {
         var presets = self.presets
@@ -276,7 +279,7 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         if current?.uniqueId == preset.uniqueId {
             current = preset
         }
-        return ChatListFilterPreferences(current: current, presets: presets)
+        return ChatListFilterPreferences(current: current, presets: presets, needShowTooltip: false)
     }
     
     func withRemovedPreset(_ preset: ChatListFilterPreset) -> ChatListFilterPreferences {
@@ -286,20 +289,37 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         if current?.uniqueId == preset.uniqueId {
             current = nil
         }
-        return ChatListFilterPreferences(current: current, presets: presets)
+        return ChatListFilterPreferences(current: current, presets: presets, needShowTooltip: false)
     }
     
     func withMovePreset(_ from: Int, _ to: Int) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.move(at: from, to: to)
-        return ChatListFilterPreferences(current: self.current, presets: presets)
+        return ChatListFilterPreferences(current: self.current, presets: presets, needShowTooltip: false)
     }
     func withSelectedAtIndex(_ index: Int) -> ChatListFilterPreferences {
         var current = self.current
         if index < self.presets.count {
             current = self.presets[index]
         }
-        return ChatListFilterPreferences(current: current, presets: self.presets)
+        return ChatListFilterPreferences(current: current, presets: self.presets, needShowTooltip: false)
+    }
+    
+    func withUpdatedNeedShowTooltip(_ needShowTooltip: Bool) -> ChatListFilterPreferences {
+        return ChatListFilterPreferences(current: self.current, presets: self.presets, needShowTooltip: needShowTooltip)
+    }
+    
+    func shortcut(for preset: ChatListFilterPreset) -> String {
+        for (i, value) in self.presets.enumerated() {
+            if preset.uniqueId == value.uniqueId {
+                var shortcut: String = "⌃⌘\(i + 2)"
+                if i + 2 == 11 {
+                    shortcut = "⌃⌘-"
+                }
+                return shortcut
+            }
+        }
+        return ""
     }
 }
 
