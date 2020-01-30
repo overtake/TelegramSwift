@@ -867,6 +867,12 @@ class ChatListController : PeersListController {
                     context.sharedContext.bindings.rootNavigation().push(ChatListPresetListController(context: context))
                 }, theme.icons.peerInfoAddMember))
 
+                if !settings.presets.isEmpty {
+                    if (settings.presets.count == 1 && settings.presets.first == settings.current) || settings.presets.count > 1 {
+                        items.append(SPopoverItem())
+                    }
+                }
+                
                 for preset in settings.presets {
                     if preset.uniqueId != settings.current?.uniqueId {
                         items.append(SPopoverItem(preset.title, {
