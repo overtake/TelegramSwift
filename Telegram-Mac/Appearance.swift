@@ -46,6 +46,18 @@ func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: 
 }
 
 
+func generateTextIcon(_ text: NSAttributedString) -> CGImage {
+    
+    let textNode = TextNode.layoutText(text, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    
+    return generateImage(textNode.0.size, rotatedContext: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        
+        textNode.1.draw(rect.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })!
+}
+
 private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImage {
     
     var bottom = bottom

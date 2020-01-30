@@ -140,5 +140,8 @@ public class TabBarController: ViewController, TabViewDelegate {
     public var isEmpty:Bool {
         return genericView.tabView.isEmpty
     }
+    public func showTooltip(text: String, for index: Int) -> Void {
+        genericView.tabView.showTooltip(text: text, for: index)
+    }
     
 }

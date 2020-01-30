@@ -34,6 +34,9 @@ class SelectCallbackObject : ShareObject {
     override var searchPlaceholderKey: String {
         return "ChatList.Add.Placeholder"
     }
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        return !self.excludePeerIds.contains(peer.id)
+    }
     
 }
 
@@ -53,12 +56,14 @@ private final class ChatListPresetArguments {
     let addPeer:()->Void
     let removePeer:(PeerId)->Void
     let toggleApplyForExceptions: (Bool)->Void
-    init(context: AccountContext, toggleOption:@escaping(ChatListFilter)->Void, addPeer: @escaping()->Void, removePeer: @escaping(PeerId)->Void, toggleApplyForExceptions: @escaping(Bool)->Void) {
+    let openInfo:(PeerId)->Void
+    init(context: AccountContext, toggleOption:@escaping(ChatListFilter)->Void, addPeer: @escaping()->Void, removePeer: @escaping(PeerId)->Void, toggleApplyForExceptions: @escaping(Bool)->Void, openInfo: @escaping(PeerId)->Void) {
         self.context = context
         self.toggleOption = toggleOption
         self.addPeer = addPeer
         self.removePeer = removePeer
         self.toggleApplyForExceptions = toggleApplyForExceptions
+        self.openInfo = openInfo
     }
 }
 
@@ -142,6 +147,9 @@ private func chatListPresetEntries(state: ChatListPresetState, peers: [Peer], ar
         } else if !state.preset.includeCategories.contains(.muted) {
             applyText = "All **Muted** chats including the exceptions will be excluded from chat list."
         }
+        if applyText == nil {
+            applyText = "You can exclude **Read** or **Muted** chats even if a chat in the exceptions."
+        }
     } else {
         applyText = "You can exclude **Read** or **Muted** chats even if a chat in the exceptions."
     }
@@ -175,10 +183,16 @@ private func chatListPresetEntries(state: ChatListPresetState, peers: [Peer], ar
     }
     
     for (i, peer) in peers.enumerated() {
+        
+        struct E : Equatable {
+            let viewType: GeneralViewType
+            let peer: PeerEquatable
+        }
+        
         let viewType = bestGeneralViewType(fake, for: i + 1)
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(PeerEquatable(peer)), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
-                
+                arguments.openInfo(peer.id)
             }, contextMenuItems: {
                 return [ContextMenuItem.init("Remove", handler: {
                     arguments.removePeer(peer.id)
@@ -247,6 +261,8 @@ func ChatListPresetController(context: AccountContext, preset: ChatListFilterPre
             $0.withUpdatedPreset($0.preset.withUpdatedApplyReadMutedForExceptions(value))
         }
         save()
+    }, openInfo: { peerId in
+        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
     })
     
     let dataSignal = statePromise.get() |> mapToSignal { state -> Signal<(ChatListPresetState, [Peer]), NoError> in
@@ -261,7 +277,7 @@ func ChatListPresetController(context: AccountContext, preset: ChatListFilterPre
           return InputDataSignalValue(entries: $0)
     }
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterPresetTitle)
+    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterPresetTitle, removeAfterDisappear: false)
     
     controller.updateDatas = { data in
         
@@ -291,6 +307,12 @@ func ChatListPresetController(context: AccountContext, preset: ChatListFilterPre
 
     
     controller.validateData = { data in
+        
+        let emptyTitle = stateValue.with { $0.preset.title.isEmpty }
+        
+        if emptyTitle {
+            return .fail(.fields([_id_name_input : .shake]))
+        }
         
         _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
             $0.withAddedPreset(stateValue.with { $0.preset })
