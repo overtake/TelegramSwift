@@ -39,6 +39,7 @@ class SearchSettingsEmptyView : TableRowView {
         super.init(frame: frameRect)
         addSubview(textView)
         textView.isSelectable = false
+        border = [.Right]
     }
     
     override var backdorColor: NSColor {

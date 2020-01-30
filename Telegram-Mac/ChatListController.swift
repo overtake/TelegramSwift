@@ -23,9 +23,11 @@ private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Pee
     }
     let includePeers = Set(preset.additionallyIncludePeers)
     filterPredicate = { peer, notificationSettings, isUnread in
-        if includePeers.contains(peer.id) {
+        
+        if includePeers.contains(peer.id) && !preset.applyReadMutedForExceptions {
             return true
         }
+        
         if !preset.includeCategories.contains(.read) {
             if !isUnread {
                 return false
@@ -40,6 +42,11 @@ private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Pee
                 return false
             }
         }
+        
+        if includePeers.contains(peer.id) {
+            return true
+        }
+        
         if !preset.includeCategories.contains(.privateChats) {
             if let user = peer as? TelegramUser {
                 if user.botInfo == nil {
@@ -790,6 +797,12 @@ class ChatListController : PeersListController {
         let view = self.previousChatList.with { $0 }
         
         if self.genericView.tableView.contentOffset.y == 0, view?.laterIndex == nil {
+            if filterValue != nil {
+                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                    $0.withUpdatedCurrentPreset(nil)
+                }).start()
+                return
+            }
             navigationController?.back()
             return
         }
@@ -1016,8 +1029,6 @@ class ChatListController : PeersListController {
                     break
                 }
                 
-
-                
                 view.completeReveal(direction: direction)
             }
             
@@ -1082,6 +1093,16 @@ class ChatListController : PeersListController {
             if let item = archiveItem, item.isAutohidden || item.archiveStatus == .collapsed {
                 index += 1
             }
+            if archiveItem == nil {
+                index += 1
+                if genericView.tableView.count > 1 {
+                    let archiveItem = genericView.tableView.item(at: 1) as? ChatListRowItem
+                    if let item = archiveItem, item.isAutohidden || item.archiveStatus == .collapsed {
+                        index += 1
+                    }
+                }
+            }
+            
             if genericView.tableView.count > index {
                 _ = genericView.tableView.select(item: genericView.tableView.item(at: index), notify: true, byClick: true)
             }

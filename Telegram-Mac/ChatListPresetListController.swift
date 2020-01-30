@@ -16,8 +16,12 @@ import TGUIKit
 
 private final class ChatListPresetArguments {
     let context: AccountContext
-    init(context: AccountContext) {
+    let openPreset:(ChatListFilterPreset)->Void
+    let removePreset: (ChatListFilterPreset)->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilterPreset)->Void, removePreset: @escaping(ChatListFilterPreset)->Void) {
         self.context = context
+        self.openPreset = openPreset
+        self.removePreset = removePreset
     }
 }
 private func _id_preset(_ preset: ChatListFilterPreset) -> InputDataIdentifier {
@@ -34,24 +38,35 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    for preset in state.presets {
+    for (i, preset) in state.presets.enumerated() {
         var viewType = bestGeneralViewType(state.presets, for: preset)
         if state.presets.count == 1 {
             viewType = .firstItem
         } else if preset == state.presets.last, state.presets.count < 10 {
             viewType = .innerItem
         }
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(preset), data: .init(name: preset.title, color: theme.colors.text, type: .next, viewType: viewType, enabled: true, description: nil, action: {
-            
+        var shortCut: String = "⌃⌘\(i + 2)"
+        if i + 2 == 11 {
+            shortCut = "⌃⌘-"
+        }
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(preset), data: .init(name: preset.title, color: theme.colors.text, type: .nextContext(shortCut), viewType: viewType, enabled: true, description: nil, action: {
+            arguments.openPreset(preset)
+        }, menuItems: {
+            return [ContextMenuItem("Remove", handler: {
+                arguments.removePreset(preset)
+            })]
         })))
         index += 1
     }
     
     if state.presets.count < 10 {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: .lastItem, action: {
-            
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, icon: theme.icons.peerInfoAddMember, type: .next, viewType: .lastItem, action: {
+            arguments.openPreset(ChatListFilterPreset.new)
         })))
     }
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Use **⌃⌘1** to return to all chats."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -60,9 +75,15 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
     return entries
 }
 
-func ChatListPresetController(context: AccountContext) -> InputDataController {
+func ChatListPresetListController(context: AccountContext) -> InputDataController {
     
-    let arguments = ChatListPresetArguments(context: context)
+    let arguments = ChatListPresetArguments(context: context, openPreset: { preset in
+        context.sharedContext.bindings.rootNavigation().push(ChatListPresetController(context: context, preset: preset))
+    }, removePreset: { preset in
+        _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+            $0.withRemovedPreset(preset)
+        }).start()
+    })
     
     let dataSignal = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnPrepareQueue |> map { state in
         return chatListPresetEntries(state: state, arguments: arguments)
@@ -71,7 +92,7 @@ func ChatListPresetController(context: AccountContext) -> InputDataController {
     }
     
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle)
+    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle + " (BETA)", removeAfterDisappear: false, hasDone: false)
     
     controller.updateDatas = { data in
         return .none
@@ -84,6 +105,25 @@ func ChatListPresetController(context: AccountContext) -> InputDataController {
         })
     }
     
+    
+    controller.afterTransaction = { controller in
+        let count = controller.tableView.count - 3
+        if count > 0 {
+            controller.tableView.resortController = TableResortController(resortRange: NSMakeRange(1, controller.tableView.count - 3), start: { row in
+                
+            }, resort: { row in
+                
+            }, complete: { from, to in
+                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                    $0.withMovePreset(from - 1, to - 1)
+                }).start()
+            })
+        } else {
+            controller.tableView.resortController = nil
+        }
+      
+        
+    }
     
     return controller
     

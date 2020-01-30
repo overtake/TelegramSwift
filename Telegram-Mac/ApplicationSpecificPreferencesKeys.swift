@@ -30,7 +30,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case walletPasscodeTimeout = 37
     case passcodeSettings = 38
     case appConfiguration = 39
-    case chatListSettings = 45
+    case chatListSettings = 46
 }
 
 struct ApplicationSpecificPreferencesKeys {

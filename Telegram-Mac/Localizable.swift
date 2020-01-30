@@ -1843,6 +1843,10 @@ internal final class L10n {
   internal static var chatListUnsupportedMessage: String  { return L10n.tr("Localizable", "ChatList.UnsupportedMessage") }
   /// You
   internal static var chatListYou: String  { return L10n.tr("Localizable", "ChatList.You") }
+  /// Select chats...
+  internal static var chatListAddPlaceholder: String  { return L10n.tr("Localizable", "ChatList.Add.Placeholder") }
+  /// Add
+  internal static var chatListAddSave: String  { return L10n.tr("Localizable", "ChatList.Add.Save") }
   /// Call
   internal static var chatListContextCall: String  { return L10n.tr("Localizable", "ChatList.Context.Call") }
   /// Clear History
@@ -1895,6 +1899,10 @@ internal final class L10n {
   internal static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
   /// Chat List Filters
   internal static var chatListFilterListTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Title") }
+  /// New Preset
+  internal static var chatListFilterPresetNewName: String  { return L10n.tr("Localizable", "ChatList.Filter.Preset.NewName") }
+  /// Preset
+  internal static var chatListFilterPresetTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.Preset.Title") }
   /// For 1 Day
   internal static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }
   /// For 1 Hour

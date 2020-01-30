@@ -215,7 +215,8 @@ final class InputDataGeneralData : Equatable {
     let disabledAction:(()->Void)?
     let enabled: Bool
     let justUpdate: Int64?
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil) {
+    let menuItems:(()->[ContextMenuItem])?
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
@@ -226,6 +227,7 @@ final class InputDataGeneralData : Equatable {
         self.enabled = enabled
         self.justUpdate = justUpdate
         self.disabledAction = disabledAction
+        self.menuItems = menuItems
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
@@ -430,7 +432,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .general(_, _, value, error, identifier, data):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
-            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {})
+            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems)
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):

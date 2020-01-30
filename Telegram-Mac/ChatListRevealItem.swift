@@ -66,7 +66,9 @@ private final class ChatListRevealView : TableStickView {
         separator.change(opacity: visible ? 1 : 0, animated: false)
     }
     
-
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
     
     override func updateColors() {
         super.updateColors()

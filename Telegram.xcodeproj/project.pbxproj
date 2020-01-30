@@ -857,6 +857,7 @@
 		D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D752C722F8A76100E2CB74 /* Geocoding.swift */; };
 		D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
 		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
+		D0FFC4AC23E184BA0044D305 /* ChatListPresetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListPresetController.swift */; };
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
 /* End PBXBuildFile section */
 
@@ -1968,6 +1969,7 @@
 		D0D71385227ADE9400EC88B1 /* maccheck.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = maccheck.json; sourceTree = "<group>"; };
 		D0D752C722F8A76100E2CB74 /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
+		D0FFC4AB23E184BA0044D305 /* ChatListPresetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListPresetController.swift; sourceTree = "<group>"; };
 		D0FFCEBD215A7CB700995AFE /* emoji14.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji14.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -2504,6 +2506,7 @@
 			isa = PBXGroup;
 			children = (
 				A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */,
+				D0FFC4AB23E184BA0044D305 /* ChatListPresetController.swift */,
 			);
 			name = presets;
 			sourceTree = "<group>";
@@ -5212,6 +5215,7 @@
 				C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */,
 				9F10CE9A206284F8002DD61A /* InputDataDateRowItem.swift in Sources */,
 				C24DABA41E083185005EE404 /* YTVimeoURLParser.m in Sources */,
+				D0FFC4AC23E184BA0044D305 /* ChatListPresetController.swift in Sources */,
 				C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */,
 				C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */,
 				9FC8ADA22062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift in Sources */,

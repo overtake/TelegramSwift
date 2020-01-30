@@ -8,6 +8,9 @@
 
 import Postbox
 import SwiftSignalKit
+import TelegramCore
+import Postbox
+import SyncCore
 
 public enum ChatListFilterPresetName: Equatable, Hashable, PostboxCoding {
     case unmuted
@@ -84,19 +87,22 @@ public enum ChatListFilterPresetName: Equatable, Hashable, PostboxCoding {
 struct ChatListFilterPreset: Equatable, PostboxCoding {
     let name: ChatListFilterPresetName
     let includeCategories: ChatListFilter
+    let applyReadMutedForExceptions: Bool
     let additionallyIncludePeers: [PeerId]
     let uniqueId: Int32
-    init(name: ChatListFilterPresetName, includeCategories: ChatListFilter, additionallyIncludePeers: [PeerId], uniqueId: Int32) {
+    init(name: ChatListFilterPresetName, includeCategories: ChatListFilter, additionallyIncludePeers: [PeerId], applyReadMutedForExceptions: Bool, uniqueId: Int32) {
         self.name = name
         self.includeCategories = includeCategories
         self.additionallyIncludePeers = additionallyIncludePeers
         self.uniqueId = uniqueId
+        self.applyReadMutedForExceptions = applyReadMutedForExceptions
     }
     
     init(decoder: PostboxDecoder) {
         self.name = decoder.decodeObjectForKey("name", decoder: { ChatListFilterPresetName(decoder: $0) }) as? ChatListFilterPresetName ?? ChatListFilterPresetName.custom("Preset")
         self.includeCategories = ChatListFilter(rawValue: decoder.decodeInt32ForKey("includeCategories", orElse: 0))
         self.additionallyIncludePeers = decoder.decodeInt64ArrayForKey("additionallyIncludePeers").map(PeerId.init)
+        self.applyReadMutedForExceptions = decoder.decodeBoolForKey("applyReadMutedForExceptions", orElse: false)
         self.uniqueId = decoder.decodeInt32ForKey("uniqueId", orElse: 0)
     }
     
@@ -105,6 +111,7 @@ struct ChatListFilterPreset: Equatable, PostboxCoding {
         encoder.encodeInt32(self.includeCategories.rawValue, forKey: "includeCategories")
         encoder.encodeInt64Array(self.additionallyIncludePeers.map { $0.toInt64() }, forKey: "additionallyIncludePeers")
         encoder.encodeInt32(self.uniqueId, forKey: "uniqueId")
+        encoder.encodeBool(self.applyReadMutedForExceptions, forKey: "applyReadMutedForExceptions")
     }
     
     var title: String {
@@ -112,6 +119,36 @@ struct ChatListFilterPreset: Equatable, PostboxCoding {
     }
     var desc: String {
         return self.includeCategories.string
+    }
+    
+    static var new: ChatListFilterPreset {
+        return ChatListFilterPreset(name: .custom(L10n.chatListFilterPresetNewName), includeCategories: .all, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: Int32(bitPattern: arc4random()))
+    }
+    
+    func withToggleOption(_ option: ChatListFilter) -> ChatListFilterPreset {
+        var includeCategories = self.includeCategories
+        if includeCategories.contains(option) {
+            includeCategories.remove(option)
+        } else {
+            includeCategories.insert(option)
+        }
+        return ChatListFilterPreset(name: self.name, includeCategories: includeCategories, additionallyIncludePeers: self.additionallyIncludePeers, applyReadMutedForExceptions: self.applyReadMutedForExceptions, uniqueId: self.uniqueId)
+    }
+    func withUpdatedName(_ name: ChatListFilterPresetName) -> ChatListFilterPreset {
+        return ChatListFilterPreset(name: name, includeCategories: self.includeCategories, additionallyIncludePeers: self.additionallyIncludePeers, applyReadMutedForExceptions: self.applyReadMutedForExceptions, uniqueId: self.uniqueId)
+    }
+    func withUpdatedApplyReadMutedForExceptions(_ applyReadMutedForExceptions: Bool) -> ChatListFilterPreset {
+        return ChatListFilterPreset(name: name, includeCategories: self.includeCategories, additionallyIncludePeers: self.additionallyIncludePeers, applyReadMutedForExceptions: applyReadMutedForExceptions, uniqueId: self.uniqueId)
+    }
+    func withAddedPeerIds(_ peerIds: [PeerId]) -> ChatListFilterPreset {
+        var additionallyIncludePeers = self.additionallyIncludePeers
+        additionallyIncludePeers.append(contentsOf: peerIds)
+        return ChatListFilterPreset(name: self.name, includeCategories: self.includeCategories, additionallyIncludePeers: additionallyIncludePeers, applyReadMutedForExceptions: self.applyReadMutedForExceptions, uniqueId: self.uniqueId)
+    }
+    func withRemovedPeerId(_ peerId: PeerId) -> ChatListFilterPreset {
+        var additionallyIncludePeers = self.additionallyIncludePeers
+        additionallyIncludePeers.removeAll(where: { $0 == peerId })
+        return ChatListFilterPreset(name: self.name, includeCategories: self.includeCategories, additionallyIncludePeers: additionallyIncludePeers, applyReadMutedForExceptions: self.applyReadMutedForExceptions, uniqueId: self.uniqueId)
     }
 }
 
@@ -184,12 +221,12 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     static var defaultSettings: ChatListFilterPreferences {
         var presets: [ChatListFilterPreset] = []
         
-        presets.append(ChatListFilterPreset(name: .privateChats, includeCategories: ._privateChats, additionallyIncludePeers: [], uniqueId: 0))
-        presets.append(ChatListFilterPreset(name: .channels, includeCategories: ._channels, additionallyIncludePeers: [], uniqueId: 1))
-        presets.append(ChatListFilterPreset(name: .groups, includeCategories: ._groups, additionallyIncludePeers: [], uniqueId: 2))
-        presets.append(ChatListFilterPreset(name: .bots, includeCategories: ._bots, additionallyIncludePeers: [], uniqueId: 3))
-        presets.append(ChatListFilterPreset(name: .unread, includeCategories: ._unread, additionallyIncludePeers: [], uniqueId: 4))
-        presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._workMode, additionallyIncludePeers: [], uniqueId: 5))
+//        presets.append(ChatListFilterPreset(name: .privateChats, includeCategories: ._privateChats, additionallyIncludePeers: [], uniqueId: 0))
+//        presets.append(ChatListFilterPreset(name: .channels, includeCategories: ._channels, additionallyIncludePeers: [], uniqueId: 1))
+//        presets.append(ChatListFilterPreset(name: .groups, includeCategories: ._groups, additionallyIncludePeers: [], uniqueId: 2))
+//        presets.append(ChatListFilterPreset(name: .bots, includeCategories: ._bots, additionallyIncludePeers: [], uniqueId: 3))
+        presets.append(ChatListFilterPreset(name: .unread, includeCategories: ._unread, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 4))
+        presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._workMode, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 5))
         
         return ChatListFilterPreferences(current: nil, presets: presets)
     }
@@ -228,20 +265,41 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     func withUpdatedCurrentPreset(_ current: ChatListFilterPreset?) -> ChatListFilterPreferences {
         return ChatListFilterPreferences(current: current, presets: self.presets)
     }
-    func withAddedPreset(_ preset: ChatListFilterPreset) -> ChatListFilterPreferences {
+    func withAddedPreset(_ preset: ChatListFilterPreset, onlyReplace: Bool = false) -> ChatListFilterPreferences {
         var presets = self.presets
         if let index = presets.firstIndex(where: {$0.uniqueId == preset.uniqueId}) {
             presets[index] = preset
-        } else {
+        } else if !onlyReplace {
             presets.append(preset)
         }
-        return ChatListFilterPreferences(current: self.current, presets: presets)
+        var current = self.current
+        if current?.uniqueId == preset.uniqueId {
+            current = preset
+        }
+        return ChatListFilterPreferences(current: current, presets: presets)
     }
     
     func withRemovedPreset(_ preset: ChatListFilterPreset) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.removeAll(where: {$0.uniqueId == preset.uniqueId })
+        var current = self.current
+        if current?.uniqueId == preset.uniqueId {
+            current = nil
+        }
+        return ChatListFilterPreferences(current: current, presets: presets)
+    }
+    
+    func withMovePreset(_ from: Int, _ to: Int) -> ChatListFilterPreferences {
+        var presets = self.presets
+        presets.move(at: from, to: to)
         return ChatListFilterPreferences(current: self.current, presets: presets)
+    }
+    func withSelectedAtIndex(_ index: Int) -> ChatListFilterPreferences {
+        var current = self.current
+        if index < self.presets.count {
+            current = self.presets[index]
+        }
+        return ChatListFilterPreferences(current: current, presets: self.presets)
     }
 }
 

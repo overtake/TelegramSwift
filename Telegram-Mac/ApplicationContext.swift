@@ -349,18 +349,89 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
         
         
+        let applyChatPreset:(Int?)->Void = { atIndex in
+            if let index = atIndex {
+                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                    $0.withSelectedAtIndex(index)
+                }).start()
+            } else {
+                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                    $0.withUpdatedCurrentPreset(nil)
+                }).start()
+            }
+        }
+        
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(nil)
+            return .invoked
+        }, with: self, for: .One, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(0)
+            return .invoked
+        }, with: self, for: .Two, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(1)
+            return .invoked
+        }, with: self, for: .Three, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(2)
+            return .invoked
+        }, with: self, for: .Four, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(3)
+            return .invoked
+        }, with: self, for: .Five, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(4)
+            return .invoked
+        }, with: self, for: .Six, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(5)
+            return .invoked
+        }, with: self, for: .Seven, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(6)
+            return .invoked
+        }, with: self, for: .Eight, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(7)
+            return .invoked
+        }, with: self, for: .Nine, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(8)
+            return .invoked
+        }, with: self, for: .Minus, priority: .low, modifierFlags: [.command, .control])
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            applyChatPreset(9)
+            return .invoked
+        }, with: self, for: .Zero, priority: .low, modifierFlags: [.command, .control])
+        
+        
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.leftController.focusSearch(animated: true)
             return .invoked
         }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .option])
         
-        #if DEBUG
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
-            PlayConfetti(for: window)
-            playSoundEffect(.confetti)
-            return .invoked
-        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
-        #endif
+        
+        
+//        #if DEBUG
+//        window.set(handler: { [weak self] () -> KeyHandlerResult in
+//            PlayConfetti(for: window)
+//            playSoundEffect(.confetti)
+//            return .invoked
+//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
+//        #endif
         
         
         appUpdateDisposable.set((context.account.stateManager.appUpdateInfo |> deliverOnMainQueue).start(next: { info in

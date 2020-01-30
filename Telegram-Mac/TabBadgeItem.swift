@@ -86,7 +86,7 @@ class TabBadgeItem: TabItem {
         super.init(image: image, selectedImage: selectedImage, controller: controller, subNode:GlobalBadgeNode(context.account, sharedContext: context.sharedContext, dockTile: true, view: View()), longHoverHandler: longHoverHandler)
     }
     override func withUpdatedImages(_ image: CGImage, _ selectedImage: CGImage) -> TabItem {
-        return TabBadgeItem(context, controller: self.controller, image: image, selectedImage: selectedImage)
+        return TabBadgeItem(context, controller: self.controller, image: image, selectedImage: selectedImage, longHoverHandler: self.longHoverHandler)
     }
 }
 class TabAllBadgeItem: TabItem {
