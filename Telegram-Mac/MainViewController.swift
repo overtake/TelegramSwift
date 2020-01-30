@@ -360,7 +360,6 @@ class MainViewController: TelegramViewController {
     }
     
     private func showFastChatSettings(_ control: Control) {
-        let context = self.context
         
         filterMenuDisposable.set(self.chatList.filterMenuItems.start(next: { [weak self] items in
             self?._showFastChatSettings(control, items: items)

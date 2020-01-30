@@ -175,6 +175,15 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         }
     }
     
+    var hasCommentView: Bool = true {
+        didSet {
+            textContainerView.isHidden = !hasCommentView
+            bottomSeparator.isHidden = !hasCommentView
+            actionsContainerView.isHidden = !hasCommentView
+            needsLayout = true
+        }
+    }
+    
     
     
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {
@@ -189,7 +198,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         textContainerView.change(size: NSMakeSize(frame.width, height + 16), animated: animated)
         textContainerView.change(pos: NSMakePoint(0, frame.height - textContainerView.frame.height), animated: animated)
         textView._change(pos: NSMakePoint(10, height == 34 ? 8 : 11), animated: animated)
-        tableView.change(size: NSMakeSize(frame.width, frame.height - searchView.frame.height - 20 - (hasCaptionView ? 50 : 0)), animated: animated)
+        tableView.change(size: NSMakeSize(frame.width, frame.height - searchView.frame.height - 20 - (!textContainerView.isHidden ? 50 : 0)), animated: animated)
 
         actionsContainerView.change(pos: NSMakePoint(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height), animated: animated)
         
@@ -210,7 +219,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         share.setFrameOrigin(frame.width - share.frame.width - 10, 10)
         dismiss.setFrameOrigin(10, 10)
         searchView.setFrameOrigin(10 + (!dismiss.isHidden ? 40 : 0), 10)
-        tableView.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, frame.height - searchView.frame.height - 20 - (hasCaptionView ? 50 : 0))
+        tableView.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, frame.height - searchView.frame.height - 20 - (!textContainerView.isHidden ? 50 : 0))
         topSeparator.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, .borderSize)
         actionsContainerView.setFrameOrigin(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height)
         
@@ -239,13 +248,21 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
 class ShareObject {
     let context: AccountContext
     let emptyPerformOnClose: Bool
-    init(_ context:AccountContext, emptyPerformOnClose: Bool = false) {
+    let excludePeerIds: Set<PeerId>
+    init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = []) {
         self.context = context
         self.emptyPerformOnClose = emptyPerformOnClose
+        self.excludePeerIds = excludePeerIds
     }
     
     var multipleSelection: Bool {
         return true
+    }
+    var hasCaptionView: Bool {
+        return true
+    }
+    var interactionOk: String {
+        return L10n.modalOK
     }
     
     var searchPlaceholderKey: String {
@@ -266,8 +283,10 @@ class ShareObject {
     }
     
     func possibilityPerformTo(_ peer:Peer) -> Bool {
-        return peer.canSendMessage
+        return peer.canSendMessage && !self.excludePeerIds.contains(peer.id)
     }
+    
+    
 }
 
 class ShareLinkObject : ShareObject {
@@ -330,6 +349,9 @@ class ShareCallbackObject : ShareObject {
     }
     
 }
+
+
+
 
 class ShareMessageObject : ShareObject {
     fileprivate let messageIds:[MessageId]
@@ -624,7 +646,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             for item in removed {
                 genericView.tokenizedView.removeToken(uniqueId: item.toInt64(), animated: animated)
             }
-            
+            self.modal?.interactions?.updateEnables(!value.selected.isEmpty)
+
         }
     }
     
@@ -788,7 +811,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         genericView.textView.delegate = self
         genericView.hasShareMenu = self.share.hasLink
         genericView.hasCaptionView = self.share.multipleSelection
-
+        genericView.hasCommentView = self.share.hasCaptionView
+        
         if self.share.multipleSelection {
             search.set(combineLatest(genericView.tokenizedView.textUpdater, genericView.tokenizedView.stateValue.get()) |> map { SearchState(state: $1, request: $0)})
         } else {
@@ -848,6 +872,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         let previousChatList:Atomic<ChatListView?> = Atomic(value: nil)
 
         let multipleSelection = self.share.multipleSelection
+        
+        
         
         
         let list:Signal<TableUpdateTransition, NoError> = combineLatest(request.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue) |> mapToSignal { location, query -> Signal<TableUpdateTransition, NoError> in
@@ -1065,6 +1091,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             self?.genericView.tableView.cancelHighlight()
             
             self?.readyOnce()
+            
         }))
         
         
@@ -1300,6 +1327,16 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     private func updateSize(_ width: CGFloat, animated: Bool) {
         if let contentSize = self.window?.contentView?.frame.size {
             self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 100, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: animated)
+        }
+    }
+    
+    override var modalInteractions: ModalInteractions? {
+        if !share.hasCaptionView {
+            return ModalInteractions(acceptTitle: share.interactionOk, accept: { [weak self] in
+                _ = self?.invoke()
+            }, drawBorder: true, height: 50, singleButton: true)
+        } else {
+            return nil
         }
     }
     
