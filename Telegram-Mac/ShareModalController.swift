@@ -188,7 +188,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
     
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {
         searchView._change(pos: NSMakePoint(50, 10), animated: animated)
-        tableView.change(size: NSMakeSize(frame.width, frame.height - height - 20 - textView.frame.height - 16), animated: animated)
+        tableView.change(size: NSMakeSize(frame.width, frame.height - height - 20 - (textContainerView.isHidden ? 0 : textContainerView.frame.height)), animated: animated)
         tableView.change(pos: NSMakePoint(0, height + 20), animated: animated)
         topSeparator.change(pos: NSMakePoint(0, searchView.frame.maxY + 10), animated: animated)
     }

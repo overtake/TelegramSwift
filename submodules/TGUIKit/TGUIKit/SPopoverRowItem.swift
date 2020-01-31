@@ -34,20 +34,23 @@ class SPopoverRowItem: TableRowItem {
         return SPopoverRowView.self
     }
     let alignAsImage: Bool
-    init(_ initialSize:NSSize, height: CGFloat, image:CGImage? = nil, alignAsImage: Bool, title:String, textColor: NSColor, clickHandler:@escaping() ->Void = {}) {
+    let additionView: SPopoverAdditionItemView?
+    init(_ initialSize:NSSize, height: CGFloat, image:CGImage? = nil, alignAsImage: Bool, title:String, textColor: NSColor, additionView: SPopoverAdditionItemView? = nil, clickHandler:@escaping() ->Void = {}) {
         self.image = image
         self._height = height
         self.alignAsImage = alignAsImage
-        self.title = TextViewLayout(.initialize(string: title, color: textColor, font: .normal(.title)))
-        self.activeTitle = TextViewLayout(.initialize(string: title, color: presentation.colors.underSelectedColor, font: .normal(.title)))
-        
-        self.title.measure(width: .greatestFiniteMagnitude)
-        self.activeTitle.measure(width: .greatestFiniteMagnitude)
+        self.title = TextViewLayout(.initialize(string: title, color: textColor, font: .normal(.title)), maximumNumberOfLines: 1)
+        self.activeTitle = TextViewLayout(.initialize(string: title, color: presentation.colors.underSelectedColor, font: .normal(.title)), maximumNumberOfLines: 1)
+        self.additionView = additionView
+        self.title.measure(width: 200)
+        self.activeTitle.measure(width: 200)
         self.clickHandler = clickHandler
         unique = Int64(arc4random())
         super.init(initialSize)
     }
-    
+    var itemWidth: CGFloat {
+        return self.title.layoutSize.width + (additionView != nil ? 40 : 0)
+    }
 }
 
 
@@ -55,7 +58,7 @@ private class SPopoverRowView: TableRowView {
     
     var image:ImageView = ImageView()
     
-    var overlay:OverlayControl = OverlayControl();
+    var overlay:OverlayControl = OverlayControl()
     
     var text:TextView = TextView();
     
@@ -63,9 +66,9 @@ private class SPopoverRowView: TableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.addSubview(overlay)
-        self.addSubview(image)
+        overlay.addSubview(image)
         
-        self.addSubview(text)
+        overlay.addSubview(text)
         text.isSelectable = false
         text.userInteractionEnabled = false
         
@@ -77,8 +80,9 @@ private class SPopoverRowView: TableRowView {
                 }
                 self?.text.backgroundColor = presentation.colors.accentSelect
                 self?.text.update(item.activeTitle)
+                item.additionView?.updateIsSelected?(self?.mouseInside() ?? false)
             }
-            }, for: .Hover)
+        }, for: .Hover)
         
         overlay.set(handler: {[weak self] (state) in
             self?.overlay.backgroundColor = presentation.colors.background
@@ -86,8 +90,9 @@ private class SPopoverRowView: TableRowView {
                 self?.image.image = item.image
                 self?.text.backgroundColor = presentation.colors.background
                 self?.text.update(item.title)
+                item.additionView?.updateIsSelected?(self?.mouseInside() ?? false)
             }
-            }, for: .Normal)
+        }, for: .Normal)
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -111,6 +116,12 @@ private class SPopoverRowView: TableRowView {
         overlay.backgroundColor = presentation.colors.background
         text.backgroundColor = presentation.colors.background
         if let item = item as? SPopoverRowItem {
+            
+            if let view = item.additionView {
+                overlay.addSubview(view.view)
+                view.view.setFrameOrigin(NSMakePoint(frame.width - 34, 10))
+            }
+            
             image.image = item.image
             overlay.removeAllHandlers()
             overlay.set(handler: {_ in

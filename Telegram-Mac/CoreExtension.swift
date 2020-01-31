@@ -750,6 +750,23 @@ func canForwardMessage(_ message:Message, account:Account) -> Bool {
     return true
 }
 
+public struct ChatAvailableMessageActionOptions: OptionSet {
+    public var rawValue: Int32
+    
+    public init(rawValue: Int32) {
+        self.rawValue = rawValue
+    }
+    
+    public init() {
+        self.rawValue = 0
+    }
+    
+    public static let deleteLocally = ChatAvailableMessageActionOptions(rawValue: 1 << 0)
+    public static let deleteGlobally = ChatAvailableMessageActionOptions(rawValue: 1 << 1)
+    public static let unsendPersonal = ChatAvailableMessageActionOptions(rawValue: 1 << 7)
+}
+
+
 
 func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> Bool {
     if message.peers[message.id.peerId] is TelegramChannel || message.peers[message.id.peerId] is TelegramSecretChat {
@@ -758,19 +775,31 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
         if context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser {
             return true
         }
-        if Int(context.limitConfiguration.maxMessageEditingInterval) + Int(message.timestamp) > Int(Date().timeIntervalSince1970) {
-            if context.account.peerId != messageMainPeer(message)?.id {
-                return !(message.media.first is TelegramMediaAction)
-            }
-        } else if let peer = message.peers[message.id.peerId] as? TelegramGroup {
+        if let peer = message.peers[message.id.peerId] as? TelegramGroup {
             switch peer.role {
             case .creator, .admin:
                 return true
             default:
+                if Int(context.limitConfiguration.maxMessageEditingInterval) + Int(message.timestamp) > Int(Date().timeIntervalSince1970) {
+                    if context.account.peerId == message.effectiveAuthor?.id {
+                        return !(message.media.first is TelegramMediaAction)
+                    }
+                }
                 return false
             }
             
+        } else if Int(context.limitConfiguration.maxMessageEditingInterval) + Int(message.timestamp) > Int(Date().timeIntervalSince1970) {
+            if context.account.peerId == message.author?.id {
+                return !(message.media.first is TelegramMediaAction)
+            }
         }
+    }
+    return false
+}
+
+func mustDeleteForEveryoneMessage(_ message:Message) -> Bool {
+    if message.peers[message.id.peerId] is TelegramChannel || message.peers[message.id.peerId] is TelegramSecretChat {
+        return true
     }
     return false
 }

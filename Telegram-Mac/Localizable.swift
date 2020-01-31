@@ -1139,8 +1139,38 @@ internal final class L10n {
   internal static var chatChannelUnaccessible: String  { return L10n.tr("Localizable", "Chat.Channel.Unaccessible") }
   /// This action can't be undone
   internal static var chatConfirmActionUndonable: String  { return L10n.tr("Localizable", "Chat.Confirm.ActionUndonable") }
+  /// %d
+  internal static func chatConfirmDeleteForEveryoneCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_countable", p1)
+  }
+  /// Are you sure you want to delete this messages for everyone?
+  internal static var chatConfirmDeleteForEveryoneFew: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_few") }
+  /// Are you sure you want to delete this messages for everyone?
+  internal static var chatConfirmDeleteForEveryoneMany: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_many") }
+  /// Are you sure you want to delete this message for everyone?
+  internal static var chatConfirmDeleteForEveryoneOne: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_one") }
+  /// Are you sure you want to delete this messages for everyone?
+  internal static var chatConfirmDeleteForEveryoneOther: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_other") }
+  /// Are you sure you want to delete this messages for everyone?
+  internal static var chatConfirmDeleteForEveryoneTwo: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_two") }
+  /// Are you sure you want to delete this messages for everyone?
+  internal static var chatConfirmDeleteForEveryoneZero: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_zero") }
+  /// %d
+  internal static func chatConfirmDeleteMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_countable", p1)
+  }
   /// Delete selected messages?
-  internal static var chatConfirmDeleteMessages: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages") }
+  internal static var chatConfirmDeleteMessagesFew: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_few") }
+  /// Delete selected messages?
+  internal static var chatConfirmDeleteMessagesMany: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_many") }
+  /// Delete selected message?
+  internal static var chatConfirmDeleteMessagesOne: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_one") }
+  /// Delete selected messages?
+  internal static var chatConfirmDeleteMessagesOther: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_other") }
+  /// Delete selected messages?
+  internal static var chatConfirmDeleteMessagesTwo: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_two") }
+  /// Delete selected messages?
+  internal static var chatConfirmDeleteMessagesZero: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_zero") }
   /// Delete for Everyone
   internal static var chatConfirmDeleteMessagesForEveryone: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessagesForEveryone") }
   /// Report Spam?
@@ -1321,8 +1351,22 @@ internal final class L10n {
   }
   /// edited
   internal static var chatMessageEdited: String  { return L10n.tr("Localizable", "Chat.Message.edited") }
+  /// %d
+  internal static func chatMessageUnsendMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.UnsendMessages_countable", p1)
+  }
   /// Unsend my messages
-  internal static var chatMessageUnsendMessages: String  { return L10n.tr("Localizable", "Chat.Message.UnsendMessages") }
+  internal static var chatMessageUnsendMessagesFew: String  { return L10n.tr("Localizable", "Chat.Message.UnsendMessages_few") }
+  /// Unsend my messages
+  internal static var chatMessageUnsendMessagesMany: String  { return L10n.tr("Localizable", "Chat.Message.UnsendMessages_many") }
+  /// Unsend my message
+  internal static var chatMessageUnsendMessagesOne: String  { return L10n.tr("Localizable", "Chat.Message.UnsendMessages_one") }
+  /// Unsend my messages
+  internal static var chatMessageUnsendMessagesOther: String  { return L10n.tr("Localizable", "Chat.Message.UnsendMessages_other") }
+  /// Unsend my messages
+  internal static var chatMessageUnsendMessagesTwo: String  { return L10n.tr("Localizable", "Chat.Message.UnsendMessages_two") }
+  /// Unsend my messages
+  internal static var chatMessageUnsendMessagesZero: String  { return L10n.tr("Localizable", "Chat.Message.UnsendMessages_zero") }
   /// This message is not supported by your version of Telegram. Please update to the latest version from the AppStore or install it from https://macos.telegram.org
   internal static var chatMessageUnsupported: String  { return L10n.tr("Localizable", "Chat.Message.Unsupported") }
   /// This message is not supported by your version Telegram. Please update to the latest version.
@@ -1897,11 +1941,11 @@ internal final class L10n {
   internal static var chatListFilterUnreadChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnreadChats") }
   /// Add New
   internal static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
-  /// Chat List Filters
+  /// Chat List
   internal static var chatListFilterListTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Title") }
-  /// New Preset
+  /// New Filter
   internal static var chatListFilterPresetNewName: String  { return L10n.tr("Localizable", "ChatList.Filter.Preset.NewName") }
-  /// Preset
+  /// Filter
   internal static var chatListFilterPresetTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.Preset.Title") }
   /// For 1 Day
   internal static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }

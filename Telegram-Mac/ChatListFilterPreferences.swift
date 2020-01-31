@@ -294,7 +294,7 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     
     func withMovePreset(_ from: Int, _ to: Int) -> ChatListFilterPreferences {
         var presets = self.presets
-        presets.move(at: from, to: to)
+        presets.insert(presets.remove(at: from), at: to)
         return ChatListFilterPreferences(current: self.current, presets: presets, needShowTooltip: false)
     }
     func withSelectedAtIndex(_ index: Int) -> ChatListFilterPreferences {
@@ -309,16 +309,21 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         return ChatListFilterPreferences(current: self.current, presets: self.presets, needShowTooltip: needShowTooltip)
     }
     
-    func shortcut(for preset: ChatListFilterPreset) -> String {
-        for (i, value) in self.presets.enumerated() {
-            if preset.uniqueId == value.uniqueId {
-                var shortcut: String = "⌃⌘\(i + 2)"
-                if i + 2 == 11 {
-                    shortcut = "⌃⌘-"
+    func shortcut(for preset: ChatListFilterPreset?) -> String {
+        if let preset = preset {
+            for (i, value) in self.presets.enumerated() {
+                if preset.uniqueId == value.uniqueId {
+                    var shortcut: String = "⌃⌘\(i + 2)"
+                    if i + 2 == 11 {
+                        shortcut = "⌃⌘-"
+                    }
+                    return shortcut
                 }
-                return shortcut
             }
+        } else {
+            return "⌃⌘1"
         }
+        
         return ""
     }
 }

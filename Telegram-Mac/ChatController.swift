@@ -1797,19 +1797,30 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let strongSelf = strongSelf, let peer = strongSelf.chatInteraction.peer {
                         var canDelete:Bool = true
                         var canDeleteForEveryone = true
-                        var unsendMyMessages: Bool = peer.id != context.peerId
                         var otherCounter:Int32 = 0
                         let peerId = peer.id
+                        var _mustDeleteForEveryoneMessage: Bool = true
                         for message in messages {
                             if !canDeleteMessage(message, account: context.account) {
                                 canDelete = false
                             }
+                            if !mustDeleteForEveryoneMessage(message) {
+                                _mustDeleteForEveryoneMessage = false
+                            }
                             if !canDeleteForEveryoneMessage(message, context: context) {
                                 canDeleteForEveryone = false
-                                unsendMyMessages = false
                             } else {
-                                if message.author?.id != context.peerId && !(context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser)  {
-                                    otherCounter += 1
+                                if message.effectiveAuthor?.id != context.peerId && !(context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser)  {
+                                    if let peer = message.peers[message.id.peerId] as? TelegramGroup {
+                                        inner: switch peer.role {
+                                        case .member:
+                                            otherCounter += 1
+                                        default:
+                                            break inner
+                                        }
+                                    } else {
+                                        otherCounter += 1
+                                    }
                                 }
                             }
                         }
@@ -1852,9 +1863,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }), for: context.window)
                                 
                             } else if let `self` = self {
-                                let thrid:String? = self.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : unsendMyMessages ? L10n.chatMessageUnsendMessages : nil)
+                                let thrid:String? = self.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : nil)
                                 
-                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages, information: thrid == nil ? L10n.chatConfirmDeleteMessages : nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessagesCountable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? L10n.chatConfirmDeleteForEveryoneCountable(messages.count) : L10n.chatConfirmDeleteMessagesCountable(messages.count) : nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
                                     
                                     guard let strongSelf = strongSelf else {return}
                                     

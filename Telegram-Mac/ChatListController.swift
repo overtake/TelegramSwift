@@ -217,7 +217,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
                 return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
             case .reveal:
-                return ChatListRevealItem(initialSize, action: {
+                return ChatListRevealItem(initialSize, context: context, action: {
                     _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
                         $0.withUpdatedCurrentPreset(nil)
                     }).start()
@@ -873,13 +873,40 @@ class ChatListController : PeersListController {
                     }
                 }
                 
+                if settings.current != nil {
+                    
+                    let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
+                        
+                    }, getColor: { isSelected in
+                        return isSelected ? .white : theme.colors.accent
+                    }, applyFilter: false)
+                    let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
+                        badge?.isSelected = isSelected
+                    })
+                    
+                    items.append(SPopoverItem(L10n.chatListFilterAll, {
+                        _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                            $0.withUpdatedCurrentPreset(nil)
+                        }).start()
+                    }, generateTextIcon(.initialize(string: settings.shortcut(for: nil), color: theme.colors.accent, font: .medium(.text))), additionView: additionView))
+                }
+                
                 for preset in settings.presets {
                     if preset.uniqueId != settings.current?.uniqueId {
+                        let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
+                            
+                        }, getColor: { isSelected in
+                            return isSelected ? .white : theme.colors.accent
+                        }, preset: preset)
+                        let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
+                            badge?.isSelected = isSelected
+                        })
+                        
                         items.append(SPopoverItem(preset.title, {
                             _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
                                 $0.withUpdatedCurrentPreset(preset)
                             }).start()
-                        }, generateTextIcon(.initialize(string: settings.shortcut(for: preset), color: theme.colors.accent, font: .medium(.text)))))
+                        }, generateTextIcon(.initialize(string: settings.shortcut(for: preset), color: theme.colors.accent, font: .medium(.text))), additionView: additionView))
                     }
                 }
                 return items
