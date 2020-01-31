@@ -218,6 +218,7 @@
 		A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */; };
 		A778DC4323CDBB6600DD307B /* WalletCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A789E08423E05EAE00AEB34A /* ChatListPresetListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */; };
+		A789E09723E427CE00AEB34A /* ChatListFilterPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C1379123DB00D900803ED3 /* ChatListFilterPreferences.swift */; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
 		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
 		A7C1377D23D1A62800803ED3 /* PeerEmptyHolderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C1377C23D1A62700803ED3 /* PeerEmptyHolderItem.swift */; };
@@ -4926,6 +4927,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A789E09723E427CE00AEB34A /* ChatListFilterPreferences.swift in Sources */,
 				A7F2831923994B9700742C20 /* AutoplayPreferences.swift in Sources */,
 				A71DC8342386D512000EEDE2 /* Signature.swift in Sources */,
 				A71DC8352386D512000EEDE2 /* Config.swift in Sources */,
