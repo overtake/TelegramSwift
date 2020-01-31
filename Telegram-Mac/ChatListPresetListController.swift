@@ -63,10 +63,12 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, icon: theme.icons.peerInfoAddMember, type: .next, viewType: .lastItem, action: {
             arguments.openPreset(ChatListFilterPreset.new)
         })))
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add up to 10 filters."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+
     }
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Use **⌃⌘1** to return to all chats."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
