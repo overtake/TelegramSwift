@@ -308,8 +308,8 @@ class GlobalBadgeNode: Node {
                 }
                 strongSelf.layoutChanged?()
                 
-                if let dockText = result.dockText {
-                    NSApplication.shared.dockTile.badgeLabel = dockText
+                if dockTile {
+                    NSApplication.shared.dockTile.badgeLabel = result.dockText
                     forceUpdateStatusBarIconByDockTile(sharedContext: sharedContext)
                 }
             }
