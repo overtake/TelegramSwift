@@ -1814,7 +1814,8 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 return items
             } |> mapToSignal { items in
                 var items = items
-                return account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
+                
+                return combineLatest(queue: .mainQueue(), account.postbox.mediaBox.resourceData(file.resource), downloadFilePath(file, context.account.postbox)) |> mapToSignal { data, downloadPath in
                     if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isStaticSticker && !file.isGraphicFile {
                         let quickLook = ContextMenuItem(L10n.contextOpenInQuickLook, handler: {
                             FastSettings.toggleOpenInQuickLook(fileExtenstion(file))
@@ -1829,9 +1830,14 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                         }))
                         
                         if !file.isVoice {
-                            let path = data.path + "." + fileExtenstion(file)
-                            try? FileManager.default.removeItem(atPath: path)
-                            try? FileManager.default.linkItem(atPath: data.path, toPath: path)
+                            let path: String
+                            if FileManager.default.fileExists(atPath: downloadPath.1) {
+                                path = downloadPath.1
+                            } else {
+                                path = data.path + "." + fileExtenstion(file)
+                                try? FileManager.default.removeItem(atPath: path)
+                                try? FileManager.default.linkItem(atPath: data.path, toPath: path)
+                            }
                             let result = ObjcUtils.apps(forFileUrl: path)
                             if let result = result, !result.isEmpty {
                                 let item = ContextMenuItem(L10n.messageContextOpenWith, handler: {})

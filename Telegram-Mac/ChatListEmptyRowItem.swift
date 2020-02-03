@@ -96,6 +96,8 @@ private class ChatListEmptyRowView : TableRowView {
         })).mutableCopy() as! NSMutableAttributedString
         
         
+        attr.detectBoldColorInString(with: .bold(.text))
+        
         let layout = TextViewLayout(attr, alignment: .center)
 
         layout.measure(width: frame.width - 40)

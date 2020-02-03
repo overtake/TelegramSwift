@@ -443,7 +443,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             
             closeAllModals()
             
-            if notification.activationType == .replied, let text = notification.response?.string {
+            if notification.activationType == .replied, let text = notification.response?.string, !text.isEmpty {
                 var replyToMessageId:MessageId?
                 if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
                     replyToMessageId = messageId

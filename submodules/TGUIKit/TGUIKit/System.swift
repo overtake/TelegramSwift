@@ -15,7 +15,7 @@ public struct System {
     
     public static var isRetina:Bool {
         get {
-            return scaleFactor.modify({$0}) == 2.0
+            return scaleFactor.modify({$0}) >= 2.0
         }
     }
     

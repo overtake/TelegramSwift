@@ -184,6 +184,13 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         }
     }
     
+    var hasSendView: Bool = true {
+        didSet {
+            sendButton.isHidden = !hasSendView
+            needsLayout = true
+        }
+    }
+    
     
     
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {
@@ -215,6 +222,12 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
     
     fileprivate override func layout() {
         super.layout()
+        
+        emojiButton.centerY(x: 0)
+        actionsContainerView.setFrameSize((sendButton.isHidden ? 0 : (sendButton.frame.width + 20)) + emojiButton.frame.width + 20, 50)
+
+        sendButton.centerY(x: emojiButton.frame.maxX + 20)
+        
         searchView.setFrameSize(frame.width - 10 - (!dismiss.isHidden ? 40 : 0) - (share.isHidden ? 10 : 50), searchView.frame.height)
         share.setFrameOrigin(frame.width - share.frame.width - 10, 10)
         dismiss.setFrameOrigin(10, 10)
@@ -812,7 +825,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         genericView.hasShareMenu = self.share.hasLink
         genericView.hasCaptionView = self.share.multipleSelection
         genericView.hasCommentView = self.share.hasCaptionView
-        
+        genericView.hasSendView = self.share.multipleSelection
         if self.share.multipleSelection {
             search.set(combineLatest(genericView.tokenizedView.textUpdater, genericView.tokenizedView.stateValue.get()) |> map { SearchState(state: $1, request: $0)})
         } else {

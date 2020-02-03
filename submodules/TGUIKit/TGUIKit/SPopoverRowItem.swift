@@ -100,6 +100,17 @@ private class SPopoverRowView: TableRowView {
         overlay.setFrameSize(newSize)
     }
     
+    override func layout() {
+        super.layout()
+        if let item = item as? SPopoverRowItem {
+            if item.image != nil || item.alignAsImage {
+                text.centerY(self, x: 45)
+            } else {
+                text.center()
+            }
+        }
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

@@ -147,6 +147,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.uid(entity.range, peerId.id))
         case let .TextUrl(url):
             inputAttributes.append(.url(entity.range, url))
+        case .Strikethrough:
+            inputAttributes.append(.strikethrough(entity.range))
         default:
             break
         }
@@ -296,6 +298,8 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         let string = NSMutableAttributedString()
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
         var pres:[Range<Int>] = []
+        var strikethrough:[Range<Int>] = []
+
         for attribute in attributes {
             let attr = attribute.attribute
             
@@ -306,6 +310,8 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 } else {
                     string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
                 }
+            case let .strikethrough(range):
+                strikethrough.append(range)
             default:
                 string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
             }
@@ -317,6 +323,13 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: pre.lowerBound + offset)
                 offset += symbols.count
                 string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: pre.upperBound + offset)
+                offset += symbols.count
+            }
+            for strikethrough in strikethrough.sorted(by: { $0.lowerBound < $1.lowerBound }) {
+                let symbols = "~~"
+                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: strikethrough.lowerBound + offset)
+                offset += symbols.count
+                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: strikethrough.upperBound + offset)
                 offset += symbols.count
             }
         }

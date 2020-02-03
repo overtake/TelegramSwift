@@ -765,7 +765,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     
     for domain in telegram_me {
         let range = url.range(of: domain)
-        if range.location != NSNotFound && (range.location == 0 || url.substring(from: range.location - 1).hasPrefix("/")) {
+        if range.location != NSNotFound && (range.location == 0 || (range.location <= 8 && url.substring(from: range.location - 1).hasPrefix("/"))) {
             let string = external.substring(from: range.location + range.length)
             for action in actions_me {
                 if string.hasPrefix(action) {
