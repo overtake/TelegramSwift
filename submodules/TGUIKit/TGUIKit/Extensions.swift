@@ -1676,8 +1676,7 @@ public extension String {
     }
     
     var containsOnlyEmoji: Bool {
-        
-        return unicodeScalars.first(where: { !$0.isEmoji && !$0.isZeroWidthJoiner }) == nil
+        return !isEmpty && unicodeScalars.first(where: { !$0.isEmoji && !$0.isZeroWidthJoiner }) == nil
     }
     
 

@@ -1636,7 +1636,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         _ = (invokeSignal |> deliverOnMainQueue).start(completed: scrollAfterSend)
                         
                         if setNextToTransaction {
-                            controller.nextTransaction.set(handler: afterSentTransition)
+                            if atDate != nil {
+                                afterSentTransition()
+                            } else {
+                                controller.nextTransaction.set(handler: afterSentTransition)
+                            }
                         }
                     }
                     

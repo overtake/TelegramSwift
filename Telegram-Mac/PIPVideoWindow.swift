@@ -301,9 +301,18 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         }, with: self, for: .mouseExited, priority: .low)
         
         
-        _window.set(mouseHandler: { event -> KeyHandlerResult in
+        _window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            if event.clickCount == 2 {
+                self?.hide()
+            }
             return .invoked
         }, with: self, for: .leftMouseDown, priority: .low)
+        
+        
+        _window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            self?.windowDidMove(Notification(name: NSWindow.didMoveNotification))
+            return .rejected
+        }, with: self, for: .leftMouseUp, priority: .low)
         
         
         self.level = .modalPanel
@@ -314,13 +323,13 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
 
         
         
-        eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown], handler: { [weak self] event in
+        eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
             guard let `self` = self else {return event}
             self._window.sendEvent(event)
             return event
         })
         
-        eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown], handler: { [weak self] event in
+        eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
             guard let `self` = self else {return}
             self._window.sendEvent(event)
         })
@@ -376,6 +385,17 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     
     }
     @objc func windowDidMove(_ notification: Notification) {
+        if let event = NSApp.currentEvent, (NSEvent.pressedMouseButtons & (1 << 0)) == 0 {
+            findAndMoveToCorner()
+        }
+    }
+    
+    private func findAndMoveToCorner() {
+        if let screen = NSScreen.main {
+            let frame = screen.frame
+            
+            
+        }
     }
     
 
@@ -393,6 +413,12 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             let convert_s = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
             self.aspectRatio = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
             self.minSize = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
+            
+            let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
+            
+            self.maxSize = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(frame.width / 3, frame.height / 3))
+
+            
             self.setFrame(NSMakeRect(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50, convert_s.width, convert_s.height), display: true, animate: true)
            
         }

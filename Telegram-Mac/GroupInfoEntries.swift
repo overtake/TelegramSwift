@@ -1469,7 +1469,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     let editing:ShortPeerDeleting?
                     
                     if state.editingState != nil, let group = group as? TelegramGroup {
-                        let deletable:Bool = group.canRemoveParticipant(sortedParticipants[i]) || sortedParticipants[i].invitedBy == arguments.context.peerId
+                        let deletable:Bool = group.canRemoveParticipant(sortedParticipants[i]) || (sortedParticipants[i].invitedBy == arguments.context.peerId && sortedParticipants[i].peerId != arguments.context.peerId)
                         editing = ShortPeerDeleting(editable: deletable)
                     } else {
                         editing = nil
