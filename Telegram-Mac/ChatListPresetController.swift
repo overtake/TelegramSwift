@@ -304,7 +304,6 @@ func ChatListPresetController(context: AccountContext, preset: ChatListFilterPre
         updateDisposable.dispose()
     }
     
-
     
     controller.validateData = { data in
         

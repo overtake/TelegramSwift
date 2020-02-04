@@ -64,7 +64,7 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
             arguments.openPreset(ChatListFilterPreset.new)
         })))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add up to 10 filters."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add up to 10 filters. Drag and drop filter to sort it."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
 
     }
@@ -111,7 +111,7 @@ func ChatListPresetListController(context: AccountContext) -> InputDataControlle
     controller.afterTransaction = { controller in
         let count = controller.tableView.count - 3
         if count > 0 {
-            controller.tableView.resortController = TableResortController(resortRange: NSMakeRange(1, controller.tableView.count - 3), start: { row in
+            controller.tableView.resortController = TableResortController(resortRange: NSMakeRange(1, controller.tableView.count - 4), start: { row in
                 
             }, resort: { row in
                 

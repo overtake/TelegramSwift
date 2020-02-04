@@ -68,7 +68,7 @@ class AccountViewController: NavigationViewController {
         disposable.set(context.hasPassportSettings.get().start(next: { [weak self] value in
             self?.layoutController.passportPromise.set(.single(value))
         }))
-        
+        self.applyAppearOnLoad = false
     }
     
     override func viewDidLoad() {
@@ -753,6 +753,13 @@ class LayoutAccountController : TableViewController {
         genericView.getBackgroundColor = {
             return .clear//            theme.colors.background
         }
+        
+        settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(requestAccountPrivacySettings(account: context.account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, NoError>.single(nil) |> then(webSessions(network: context.account.network) |> map {Optional($0)}), proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
+            return context.account.network.connectionStatus |> map {(settings, $0)}
+            }, passportPromise.get()))
+        
+        
+        syncLocalizations.set(synchronizedLocalizationListState(postbox: context.account.postbox, network: context.account.network).start())
         
         self.hasWallet.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
         |> map { view -> Bool in

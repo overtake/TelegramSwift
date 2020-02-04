@@ -211,12 +211,10 @@ private class PictureInpictureView : Control {
     
     override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
-        NSLog("entered")
     }
     
     override func mouseExited(with event: NSEvent) {
         super.mouseEntered(with: event)
-        NSLog("exited")
     }
     
     required init?(coder decoder: NSCoder) {
@@ -302,15 +300,18 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         
         
         _window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
-            if event.clickCount == 2 {
-                self?.hide()
+            if event.clickCount == 2, let strongSelf = self {
+                let inner = strongSelf.control.view.convert(event.locationInWindow, from: nil)
+                if NSPointInRect(event.locationInWindow, strongSelf.bounds), strongSelf.control.view.hitTest(inner) is MediaPlayerView {
+                    strongSelf.hide()
+                }
             }
             return .invoked
         }, with: self, for: .leftMouseDown, priority: .low)
         
         
         _window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
-            self?.windowDidMove(Notification(name: NSWindow.didMoveNotification))
+            self?.findAndMoveToCorner()
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .low)
         
@@ -319,7 +320,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.isMovableByWindowBackground = true
 
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: self)
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidMove(_:)), name: NSWindow.didMoveNotification, object: self)
 
         
         
@@ -384,17 +384,52 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     @objc func windowDidResized(_ notification: Notification) {
     
     }
-    @objc func windowDidMove(_ notification: Notification) {
-        if let event = NSApp.currentEvent, (NSEvent.pressedMouseButtons & (1 << 0)) == 0 {
-            findAndMoveToCorner()
-        }
-    }
-    
+
     private func findAndMoveToCorner() {
-        if let screen = NSScreen.main {
-            let frame = screen.frame
+        if let screen = self.screen {
+            let rect = screen.frame.offsetBy(dx: -screen.visibleFrame.minX, dy: -screen.visibleFrame.minY)
+            
+            let point = self.frame.offsetBy(dx: -screen.visibleFrame.minX, dy: -screen.visibleFrame.minY)
+            
+            var options:BorderType = []
+            
+            if point.maxX > rect.width && point.minX < rect.width {
+                options.insert(.Right)
+            }
+            
+            if point.minX < 0 {
+                options.insert(.Left)
+            }
+            
+            if point.minY < 0 {
+                options.insert(.Bottom)
+            }
             
             
+            var newFrame = self.frame
+            
+            if options.contains(.Right) {
+                newFrame.origin.x = screen.visibleFrame.maxX - newFrame.width - 30
+            }
+            if options.contains(.Bottom) {
+                newFrame.origin.y = screen.visibleFrame.minY + 30
+            }
+            if options.contains(.Left) {
+                newFrame.origin.x = screen.visibleFrame.minX + 30
+            }
+            setFrame(newFrame, display: true, animate: true)
+
+            
+//            switch alignment {
+//            case .topLeft:
+//                setFrame(NSMakeRect(30, 30, self.frame.width, self.frame.height), display: true, animate: true)
+//            case .topRight:
+//                setFrame(NSMakeRect(frame.width - self.frame.width - 30, 30, self.frame.width, self.frame.height), display: true, animate: true)
+//            case .bottomLeft:
+//                setFrame(NSMakeRect(30, frame.height - self.frame.height - 30, self.frame.width, self.frame.height), display: true, animate: true)
+//            case .bottomRight:
+//                setFrame(NSMakeRect(frame.width - self.frame.width - 30, frame.height - self.frame.height - 30, self.frame.width, self.frame.height), display: true, animate: true)
+//            }
         }
     }
     

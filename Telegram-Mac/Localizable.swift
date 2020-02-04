@@ -1251,6 +1251,8 @@ internal final class L10n {
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
   internal static var chatDropFolderTitle: String  { return L10n.tr("Localizable", "Chat.DropFolder.Title") }
+  /// Are you sure you want to discard all changes?
+  internal static var chatEditCancelText: String  { return L10n.tr("Localizable", "Chat.Edit.Cancel.Text") }
   /// Click to edit Media
   internal static var chatEditMessageMedia: String  { return L10n.tr("Localizable", "Chat.EditMessage.Media") }
   /// Link Preview
@@ -1867,6 +1869,8 @@ internal final class L10n {
   internal static var chatListArchivedChats: String  { return L10n.tr("Localizable", "ChatList.ArchivedChats") }
   /// Show All Chats
   internal static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
+  /// Show All
+  internal static var chatListCloseFilterShort: String  { return L10n.tr("Localizable", "ChatList.CloseFilterShort") }
   /// Draft:
   internal static var chatListDraft: String  { return L10n.tr("Localizable", "ChatList.Draft") }
   /// **You have no conversations yet**\nStart messaging by tapping the pencil button in the top right corner or got to the Contacts section.
@@ -1933,7 +1937,7 @@ internal final class L10n {
   internal static var chatListFilterGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Groups") }
   /// Private Chats
   internal static var chatListFilterPrivateChats: String  { return L10n.tr("Localizable", "ChatList.Filter.PrivateChats") }
-  /// Setup
+  /// Filters
   internal static var chatListFilterSetup: String  { return L10n.tr("Localizable", "ChatList.Filter.Setup") }
   /// Unmuted Chats
   internal static var chatListFilterUnmutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnmutedChats") }

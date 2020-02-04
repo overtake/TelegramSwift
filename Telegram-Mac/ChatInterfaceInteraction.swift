@@ -48,6 +48,7 @@ final class ChatInteraction : InterfaceObserver  {
     private let startBotDisposable:MetaDisposable = MetaDisposable()
     private let addContactDisposable:MetaDisposable = MetaDisposable()
     private let requestSessionId:MetaDisposable = MetaDisposable()
+    let editDisposable = MetaDisposable()
     private let disableProxyDisposable = MetaDisposable()
     private let enableProxyDisposable = MetaDisposable()
     init(chatLocation: ChatLocation, context: AccountContext, mode: ChatMode = .history, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
@@ -147,6 +148,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     let loadingMessage: Promise<Bool> = Promise()
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
+    
+    
     
     
     func disableProxy() {
@@ -250,6 +253,28 @@ final class ChatInteraction : InterfaceObserver  {
         self.update({$0.withUpdatedEffectiveInputState(state)})
         
         return selectedRange.lowerBound ..< selectedRange.lowerBound + text.length
+    }
+    
+    func cancelEditing() {
+        if let editState = self.presentation.interfaceState.editState {
+            let oldState = ChatEditState(message: editState.message)
+            switch editState.loadingState {
+            case .loading, .progress:
+                editDisposable.set(nil)
+                self.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(.none)})})})
+                return
+            default:
+                if oldState != editState {
+                    confirm(for: context.window, information: L10n.chatEditCancelText, okTitle: L10n.alertDiscard, cancelTitle: L10n.alertNO, successHandler: { [weak self] _ in
+                        self?.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
+                    })
+                } else {
+                    self.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
+                }
+            }
+            
+        }
+        
     }
     
     func invokeInitialAction(includeAuto:Bool = false, animated: Bool = true) {
@@ -424,6 +449,7 @@ final class ChatInteraction : InterfaceObserver  {
         requestSessionId.dispose()
         disableProxyDisposable.dispose()
         enableProxyDisposable.dispose()
+        editDisposable.dispose()
     }
     
     
