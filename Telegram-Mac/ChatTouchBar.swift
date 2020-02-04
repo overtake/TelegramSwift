@@ -382,7 +382,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         chatInteraction?.updateEditingMessageMedia(mediaExts, true)
     }
     @objc private func cancelMessageEditing() {
-        chatInteraction?.update({$0.withoutEditMessage()})
+        chatInteraction?.cancelEditing()
     }
     @objc private func infoAndAttach(_ sender: Any?) {
         

@@ -94,7 +94,7 @@ class ChatDateStickItem : TableStickItem {
         }
         
         
-        self.layout = TextViewLayout(.initialize(string: text, color: theme.chatServiceItemTextColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+        self.layout = TextViewLayout(.initialize(string: text, color: theme.chatServiceItemTextColor, font: .medium(theme.fontSize)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
 
         
         super.init(initialSize)

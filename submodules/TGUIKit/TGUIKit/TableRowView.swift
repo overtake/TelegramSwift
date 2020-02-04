@@ -15,6 +15,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     private var animatedView: RowAnimateView?
 
+    public internal(set) var isResorting: Bool = false {
+        didSet {
+            updateIsResorting()
+        }
+    }
     
     open private(set) weak var item:TableRowItem?
     private let menuDisposable = MetaDisposable()
@@ -71,7 +76,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         var bp:Int = 0
         bp += 1
     }
-    
+    open func updateIsResorting() {
+        
+    }
 
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {

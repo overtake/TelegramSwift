@@ -572,7 +572,7 @@ class ChatMessageItem: ChatRowItem {
             if let webpageLayout = webpageLayout as? WPArticleLayout {
                 if let textLayout = webpageLayout.textLayout {
                     if webpageLayout.hasInstantPage {
-                        return rightSize.height
+                        return rightSize.height + 4
                     }
                     if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
                         return rightSize.height
@@ -581,7 +581,7 @@ class ChatMessageItem: ChatRowItem {
                         return rightSize.height
                     }
                     if actionButtonText != nil {
-                        return rightSize.height
+                        return rightSize.height + 4
                     }
                     if webpageLayout.groupLayout != nil {
                         return rightSize.height

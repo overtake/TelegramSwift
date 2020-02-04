@@ -39,7 +39,7 @@ class ChatInputAccessory: Node {
             self?.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil).withUpdatedDismissedForceReplyId($0.replyMessageId)})})
         }
         dismissEdit = { [weak self] in
-            self?.chatInteraction.update({$0.withoutEditMessage()})
+            self?.chatInteraction.cancelEditing()
         }
         dismissUrlPreview = { [weak self] in
             self?.chatInteraction.update({ state -> ChatPresentationInterfaceState in

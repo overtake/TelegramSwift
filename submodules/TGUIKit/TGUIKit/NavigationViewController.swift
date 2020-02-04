@@ -324,6 +324,8 @@ final class NavigationShadowView : View {
 
 open class NavigationViewController: ViewController, CALayerDelegate,CAAnimationDelegate {
 
+    public var applyAppearOnLoad: Bool = true
+    
     public private(set) var modalAction:NavigationModalAction?
     let shadowView:NavigationShadowView = NavigationShadowView(frame: NSMakeRect(0, 0, 20, 0))
     let navigationRightBorder: View = View()
@@ -467,7 +469,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         //containerView.autoresizingMask = [.width, .height]
         self.view.addSubview(containerView, positioned: .below, relativeTo: self.view.subviews.first)
         controller._frameRect = bounds
-        controller.viewWillAppear(false)
+        if self.applyAppearOnLoad {
+            controller.viewWillAppear(false)
+        }
         controller.navigationController = self
         
         containerView.addSubview(navigationBar)
@@ -482,10 +486,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.view.addSubview(navigationRightBorder)
         navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, 50)
 
-        
-        Queue.mainQueue().justDispatch {
-            self.controller.viewDidAppear(false)
+        if self.applyAppearOnLoad {
+            Queue.mainQueue().justDispatch {
+                self.controller.viewDidAppear(false)
+            }
         }
+        
 
     }
     

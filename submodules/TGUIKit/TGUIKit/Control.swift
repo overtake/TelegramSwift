@@ -113,6 +113,11 @@ open class Control: View {
     
     public func apply(state:ControlState) -> Void {
         let state:ControlState = self.isSelected ? .Highlight : state
+        if state == .Highlight, (NSEvent.pressedMouseButtons & (1 << 0)) == 0 {
+            self.mouseIsDown = false
+            self.updateState()
+            return
+        }
         if isEnabled {
             if let color = backgroundState[state] {
                 self.layer?.backgroundColor = color.cgColor

@@ -98,6 +98,10 @@ final class GeneralViewItemCorners : OptionSet {
     public static let topRight = GeneralViewItemCorners(rawValue: (1 << 1))
     public static let bottomLeft = GeneralViewItemCorners(rawValue: (1 << 2))
     public static let bottomRight = GeneralViewItemCorners(rawValue: (1 << 3))
+    
+    static var all: GeneralViewItemCorners {
+        return [.topLeft, .topRight, .bottomLeft, .bottomRight]
+    }
 
 }
 

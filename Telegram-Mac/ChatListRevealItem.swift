@@ -98,10 +98,7 @@ private final class ChatListRevealView : TableStickView {
             containerView.addSubview(self.badgeNode!.view!)
         }
         
-        
-        let layout = TextViewLayout(.initialize(string: L10n.chatListCloseFilter, color: theme.colors.accent, font: .normal(.text)))
-        textView.update(layout)
-        needsLayout = true
+      
     }
     
     override func layout() {
@@ -109,14 +106,18 @@ private final class ChatListRevealView : TableStickView {
         
         containerView.frame = bounds
         
-        let layout = textView.layout
-        layout?.measure(width: frame.width - 40)
+        
+        let layout = TextViewLayout(.initialize(string: self.frame.width < 200 ? L10n.chatListCloseFilterShort : L10n.chatListCloseFilter, color: theme.colors.accent, font: .normal(.text)), maximumNumberOfLines: 1)
+        layout.measure(width: frame.width - 40)
         textView.update(layout)
         
-        let badgeSize = self.badgeNode?.view?.frame.size ?? .zero
-        
-        textView.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - (textView.frame.width + badgeSize.width + 10)) / 2))
-        
+        let badgeSize = self.frame.width < 200 ? .zero : self.badgeNode?.view?.frame.size ?? .zero
+        if badgeSize == .zero {
+            textView.center()
+        } else {
+            textView.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - (textView.frame.width + badgeSize.width + 10)) / 2))
+        }
+        self.badgeNode?.view?.isHidden = self.frame.width < 200
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
         
         self.badgeNode?.view?.setFrameOrigin(NSMakePoint(textView.frame.maxX + 10, 6))

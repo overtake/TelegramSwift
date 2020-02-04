@@ -72,7 +72,15 @@ public enum TableBackgroundMode {
 public class TableResortController {
     fileprivate let startTimeout: Double
     fileprivate var resortRow: Int?
-    internal fileprivate(set) var resortView: TableRowView?
+    internal fileprivate(set) var resortView: TableRowView? {
+        didSet {
+            if resortView == nil {
+                oldValue?.isResorting = false
+            } else {
+                resortView?.isResorting = true
+            }
+        }
+    }
     fileprivate var inResorting: Bool = false
     fileprivate var startLocation: NSPoint = NSZeroPoint
     fileprivate var startRowLocation: NSPoint = NSZeroPoint

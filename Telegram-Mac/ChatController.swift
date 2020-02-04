@@ -966,7 +966,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let dateDisposable:MetaDisposable = MetaDisposable()
     private let interactiveReadingDisposable: MetaDisposable = MetaDisposable()
     private let showRightControlsDisposable: MetaDisposable = MetaDisposable()
-    private let editMessageDisposable: MetaDisposable = MetaDisposable()
     private let deleteChatDisposable: MetaDisposable = MetaDisposable()
     private let loadSelectionMessagesDisposable: MetaDisposable = MetaDisposable()
     private let updateMediaDisposable = MetaDisposable()
@@ -1539,7 +1538,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             let scheduleTime:Int32? = atDate != nil ? Int32(atDate!.timeIntervalSince1970) : nil
             
-            self.editMessageDisposable.set((requestEditMessage(account: context.account, messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime)
+            self.chatInteraction.editDisposable.set((requestEditMessage(account: context.account, messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime)
             |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
                     switch progress {
@@ -1882,7 +1881,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     if let editingState = strongSelf.chatInteraction.presentation.interfaceState.editState {
                                         if messageIds.contains(editingState.message.id) {
-                                            strongSelf.chatInteraction.update({$0.withoutEditMessage()})
+                                            strongSelf.chatInteraction.cancelEditing()
                                         }
                                     }
                                     _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: type).start()
@@ -2012,7 +2011,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let message = message {
                 self?.chatInteraction.update({$0.withEditMessage(message)})
             } else {
-                self?.chatInteraction.update({$0.withoutEditMessage()})
+                self?.chatInteraction.cancelEditing()
             }
             self?.chatInteraction.focusInputField()
         }
@@ -3660,8 +3659,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.changeState()
             result = .invoked
         } else if chatInteraction.presentation.state == .editing {
-            editMessageDisposable.set(nil)
-            chatInteraction.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
+            chatInteraction.cancelEditing()
             result = .invoked
         } else if case let .contextRequest(request) = chatInteraction.presentation.inputContext {
             if request.query.isEmpty {
@@ -3801,7 +3799,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func didRemovedFromStack() {
         super.didRemovedFromStack()
-        editMessageDisposable.dispose()
+        chatInteraction.clean()
     }
     
     private var splitStateFirstUpdate: Bool = true
